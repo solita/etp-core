@@ -1,0 +1,8 @@
+# IntelliJ IDEA
+*.iml
+.idea
+
+# target-folders
+etp-core/target
+etp-db/target
+
