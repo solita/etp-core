@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+
+  db:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: etp
+
+  admin:
+    image: dpage/pgadmin4
+    ports:
+      - 9090:80
+    environment:
+      PGADMIN_DEFAULT_PASSWORD: etp
+      PGADMIN_DEFAULT_EMAIL: etp@solita.fi
+
