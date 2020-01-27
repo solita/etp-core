@@ -1,9 +1,13 @@
-version: '3'
+version: '3.7'
 
 services:
-
   db:
     image: postgres
+    volumes:
+      - type: bind
+        source: ./initdb
+        target: /docker-entrypoint-initdb.d
+        read_only: true
     ports:
       - 5432:5432
     environment:
