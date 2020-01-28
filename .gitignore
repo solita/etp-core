@@ -3,8 +3,9 @@
 .idea
 .nrepl-port
 
-# target-folders
-etp-core/target
+# target-folders and other build related files
+etp-backend/target
+etp-backend/.cpcache
 etp-db/target
 
 # clojure
