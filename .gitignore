@@ -7,3 +7,6 @@
 etp-core/target
 etp-db/target
 
+# clojure
+.cpcache
+
