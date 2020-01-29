@@ -37,6 +37,10 @@ https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-using-the-reposi
 Muista suorittaa ohjeet myös [Dockerin post-install] -kohdasta.
 Tämän jälkeen kirjaudu ulos ja takaisin sisään.
 
+Asenna myös Docker-compose
+
+https://docs.docker.com/compose/install/
+
 ### Clojure + CLI Tools
 
 Ubuntulla seuraavia ohjeita noudattaen:
