@@ -2,6 +2,11 @@
   (:require [integrant.core :as ig]
             [solita.etp.db]))
 
+(def config-file-path "src/main/resources/config.edn")
+
 ;; TODO read env variables and override the config file
+(defn load-config []
+  (-> config-file-path slurp ig/read-string))
+
 (defn start! []
-  (-> "src/main/resources/config.edn" slurp ig/read-string ig/init))
+  (ig/init (load-config)))
