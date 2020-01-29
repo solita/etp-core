@@ -1,0 +1,5 @@
+{:solita.etp/db {:adapter "postgresql"
+                 :server-name "localhost"
+                 :username "etp_app"
+                 :password "etp"
+                 :database-name "postgres"}}

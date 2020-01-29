@@ -1,4 +1,5 @@
-(ns solita.etp.core)
+(ns solita.etp.core
+  (:require [solita.etp.system :as system]))
 
 (defn -main []
-  (println "Hello world!"))
+  (system/start!))
