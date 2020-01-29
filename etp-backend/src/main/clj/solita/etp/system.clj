@@ -1,6 +1,7 @@
 (ns solita.etp.system
   (:require [integrant.core :as ig]
-            [solita.etp.db]))
+            [solita.etp.db]
+            [solita.etp.http-server]))
 
 (def config-file-path "src/main/resources/config.edn")
 

@@ -2,4 +2,5 @@
                  :server-name "localhost"
                  :username "etp_app"
                  :password "etp"
-                 :database-name "postgres"}}
+                 :database-name "postgres"}
+ :solita.etp/http-server {:port 8080}}
