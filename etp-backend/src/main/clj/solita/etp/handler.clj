@@ -40,7 +40,7 @@
     {:get {:summary "Responds with message from given recipient. For testing..."
            :parameters {:query {:from s/Str}}
            :swagger {:tags "hello"}
-           :handler hello-handler}}]])
+           :handler #'hello-handler}}]])
 
 (defn route-opts [ctx]
   {;; Uncomment line below to see diffs of requests in middleware chain
