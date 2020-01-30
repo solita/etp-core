@@ -14,10 +14,20 @@
             [muuntaja.core :as m]
             [schema.core :as s]))
 
-(defn hello-handler [{:keys [parameters]}]
+(defn hello-handler [{:keys [ctx parameters]}]
   {:status 200
-   :body {:msg (str "Hello from" (-> parameters :query :from) "!")
+   :body {:msg (str "Hello from " (-> parameters :query :from) "!")
+          :ctx (str ctx)
           :parameters parameters}})
+
+(defn wrap-ctx-fn [handler ctx]
+  (fn [req]
+    (handler (assoc req :ctx ctx))))
+
+(def wrap-ctx
+  {:name ::wrap-ctx-fn
+   :description "Middleware for adding context from outside to every request"
+   :wrap wrap-ctx-fn})
 
 (def routes
   [["/swagger.json"
@@ -28,11 +38,11 @@
 
    ["/hello"
     {:get {:summary "Responds with message from given recipient. For testing..."
-           :parameters {:qquery {:from s/Str}}
+           :parameters {:query {:from s/Str}}
            :swagger {:tags "hello"}
            :handler hello-handler}}]])
 
-(def route-opts
+(defn route-opts [ctx]
   {;; Uncomment line below to see diffs of requests in middleware chain
    ;;:reitit.middleware/transform dev/print-request-diffs
    :exception pretty/exception
@@ -47,13 +57,14 @@
                        muuntaja/format-request-middleware
                        coercion/coerce-response-middleware
                        coercion/coerce-request-middleware
-                       multipart/multipart-middleware]}})
+                       multipart/multipart-middleware
+                       [wrap-ctx ctx]]}})
 
-(def router
-  (ring/router routes route-opts))
+(defn router [ctx]
+  (ring/router routes (route-opts ctx)))
 
-(def handler
-  (ring/ring-handler router
+(defn handler [ctx]
+  (ring/ring-handler (router ctx)
                      (ring/routes
                       (swagger-ui/create-swagger-ui-handler
                        {:path "/"

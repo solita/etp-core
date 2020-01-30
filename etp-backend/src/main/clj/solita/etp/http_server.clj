@@ -9,8 +9,9 @@
           :req req}})
 
 (defmethod ig/init-key :solita.etp/http-server
-  [_ opts]
-  (assoc opts :server (http-kit/run-server handler/handler opts)))
+  [_ {:keys [ctx] :as opts}]
+  (assoc opts :server (http-kit/run-server (handler/handler ctx)
+                                           (dissoc opts :ctx))))
 
 (defmethod ig/halt-key! :solita.etp/http-server
   [_ {:keys [server]}]
