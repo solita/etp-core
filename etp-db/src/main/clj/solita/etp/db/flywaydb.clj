@@ -28,9 +28,14 @@
       (.configuration flyway-configuration)
       .load))
 
+(defn env [name default]
+  (or (System/getenv name) default))
+
 (defn run [args]
   (let [command (str/trim (or (first args) "<empty string>"))
-        db {:user "etp" :password "etp" :url "jdbc:postgresql://localhost:5432/postgres"}
+        db {:user "etp"
+            :password (env "DB_PASSWORD" "etp")
+            :url (env "DB_URL" "jdbc:postgresql://localhost:5432/postgres")}
         flyway (configure-flyway db)]
     (case command
       "clean" (.clean flyway)
