@@ -3,11 +3,6 @@
             [org.httpkit.server :as http-kit]
             [solita.etp.handler :as handler]))
 
-(defn hello-handler [req]
-  {:status 200
-   :body {:msg "Hello from HTTP server!"
-          :req req}})
-
 (defmethod ig/init-key :solita.etp/http-server
   [_ {:keys [ctx] :as opts}]
   (assoc opts :server (http-kit/run-server (handler/handler ctx)
