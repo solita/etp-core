@@ -1,78 +1,76 @@
 ARA - Energiatodistuspalvelu
 ===
 
-TODO
+The components of the system are:
+- User interface for different stakeholders
+- Backend / application layer
+- Database (PostgreSQL)
 
-Järjestelmä muodostuu:
-- Käyttöliittymistä eri sidosryhmille
-- Sovelluskerroksesta
-- Tietokannasta
-
-Sovelluskerros
+Backend / Application layer
 --------------
-Sovelluskerros sisältää komponentit:
-- [etp-backend](/etp-backend) - julkiset ja viranomaisille suunnatut taustapalvelut
-- [etp-db](/etp-db) - tietokannan migraatiotyökalu
+The backend contains the following components:
+- [etp-backend](/etp-backend) - backend services for both the public and
+  authorities -sections
+- [etp-db](/etp-db) - database migration tool
 
-Käyttöliittymät
+User interface
 ---------------
 
-Käyttöliittymä: https://github.com/solita/etp-front
+Separate repository at https://github.com/solita/etp-front
 
-Kehitysympäristön asentaminen
+Installing the development environment
 -----------------------------
 
 ### Java 11
 
-Ubuntulla asennetaan seuraavasti:
+For Ubuntu:
 
     sudo apt install openjdk-11-jdk
 
 ### Docker
 
-Ubuntulla seuraavia ohjeita noudattaen:
+Installation for Linux by following the instructions at the following URL:
 
 https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-using-the-repository
 
-Muista suorittaa ohjeet myös [Dockerin post-install] -kohdasta.
-Tämän jälkeen kirjaudu ulos ja takaisin sisään.
+Remember to follow the [Docker postinstall] -guide. Then logout and login.
 
-Asenna myös Docker-compose
+Docker-compose is also required:
 
 https://docs.docker.com/compose/install/
 
 ### Clojure + CLI Tools
 
-Ubuntulla seuraavia ohjeita noudattaen:
+For Ubuntu:
 
 https://clojure.org/guides/getting_started#_installation_on_linux
 
-Kehitysympäristön käynnistäminen
+Starting the development environment
 --------------------------------
 
-Käynnistä [oheispalvelut](/docker) esim. tietokanta:
+Start [the required services](/docker) (database etc):
 
     cd docker
     docker-compose up
 
-Luo [skeema](/etp-db) tietokantaan.
+Run [migrations](/etp-db) to database.
 
     cd etp-db
-    TODO komennot
+    TODO commands 
 
-Käynnistä [backend-palvelu](/etp-backend). Backend-kehittäjien kannattaa
-käynnistää oman IDEnsa kautta REPL ja käynnistää palvelin sieltä kutsumalla
-´´´reset´´´-funktiota. Komentoriviltä sovelluksen saa käyntiin nopeasti näin:
+Start [the backend](/etp-backend). Backend developers should start the REPL from
+their IDE and start the services from there by calling the ´´´reset´´´ function.
+The application can be also started from the command line with the following
+command:
 
     cd etp-backend
-    TODO komennot
+    clojure -m solita.etp.core
 
-Muut ympäristöt
+Other environments
 ---
 
-TODO miten tehdään uberjar?
-TODO halutaanko ajaa kontissa lokaalisti?
-TODO miten ajetaan yksikkö- ja integraatiotestit?
-TODO miten ajetaan e2e-testit?
+TODO How to uberjar?
+TODO How to run unit- and integration tests?
+TODO How to run e2e-tests?
 
-[Dockerin post-install](https://docs.docker.com/install/linux/linux-postinstall/)
+[Docker postinstall](https://docs.docker.com/install/linux/linux-postinstall/)
