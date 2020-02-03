@@ -1,9 +1,7 @@
-{:deps
-  {org.clojure/clojure {:mvn/version "1.10.1"}
-   org.flywaydb/flyway-core {:mvn/version "6.2.0"}
-   org.postgresql/postgresql {:mvn/version "42.2.9"}}
- :paths ["src/main/clj" "src/main/sql"]
-
- :aliases {
- :uberjar {:extra-deps {uberdeps {:mvn/version "0.1.8"}}
-           :main-opts ["-m" "uberdeps.uberjar"]}}}
+{:paths ["src/main/clj" "src/main/sql"]
+ :deps
+ {org.clojure/clojure {:mvn/version "1.10.1"}
+  org.flywaydb/flyway-core {:mvn/version "6.2.0"}
+  org.postgresql/postgresql {:mvn/version "42.2.9"}}
+ :aliases {:uberjar {:extra-deps {uberdeps {:mvn/version "0.1.8"}}
+                     :main-opts ["-m" "uberdeps.uberjar"]}}}
