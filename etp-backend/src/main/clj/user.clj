@@ -4,4 +4,4 @@
 (integrant.repl/set-prep!
  (fn []
    (require 'solita.etp.system)
-   ((resolve 'solita.etp.system/load-config))))
+   ((resolve 'solita.etp.system/load-config) "dev.edn")))

@@ -68,6 +68,12 @@ command:
     cd etp-backend
     clojure -m solita.etp.core
 
+It's possible to also give the name of the config file to be used. Without
+specifying anything, [prod.edn](/etp-backend/src/main/resources/prod.edn) is
+used. To use config better suited for development, use command
+
+    clojure -m solita.etp.core dev.edn
+
 About database usage
 --------------------
 
