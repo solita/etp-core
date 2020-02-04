@@ -1,4 +1,3 @@
-
 create user etp with password 'etp';
 create user etp_app with password 'etp';
 
