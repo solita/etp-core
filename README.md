@@ -68,6 +68,27 @@ command:
     cd etp-backend
     clojure -m solita.etp.core
 
+About database usage
+--------------------
+
+The default ```postgres``` database is used. There are two users for the
+database:
+
+ * ```etp```: has all privileges to ```postgres``` database.
+ * ```etp_app```: can read and write to tables in ```postgres``` database.
+
+In production and test environments the database is used normally. It's created
+during instance setup and migrations are ran as ```etp```. ```etp_app```
+writes and reads data from tables.
+
+In development environment the ```postgres``` database is used as a template
+that can be used for setting up new databases. The dockerized Postgres sets up
+a function that ```etp_app``` can call to copy the database under a new name.
+
+Tests will use this extensively as each test will create their own database
+using this function. During development the ```reset``` function will also
+call that function to create a ```etp_dev``` database.
+
 Other environments
 ---
 
