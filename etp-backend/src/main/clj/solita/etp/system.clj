@@ -3,14 +3,11 @@
             [solita.etp.db]
             [solita.etp.http-server]))
 
-(def config-file-dir "src/main/resources/")
-
-(defn config-file-path [config-file-name]
-  (str config-file-dir config-file-name))
+(def config-file-path "src/main/resources/config.edn")
 
 ;; TODO read env variables and override the config file
-(defn load-config [config-file-name]
-  (-> (config-file-path config-file-name) slurp ig/read-string))
+(defn load-config []
+  (-> config-file-path slurp ig/read-string))
 
-(defn start! [config-file-name]
-  (ig/init (load-config config-file-name)))
+(defn start! []
+  (ig/init (load-config)))
