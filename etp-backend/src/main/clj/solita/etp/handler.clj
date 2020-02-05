@@ -22,15 +22,6 @@
           :ctx (str ctx)
           :parameters parameters}})
 
-(defn wrap-ctx-fn [handler ctx]
-  (fn [req]
-    (handler (assoc req :ctx ctx))))
-
-(def wrap-ctx
-  {:name ::wrap-ctx-fn
-   :description "Middleware for adding context from outside to every request"
-   :wrap wrap-ctx-fn})
-
 (def routes
   [["/swagger.json"
     {:get {:no-doc true
@@ -39,12 +30,12 @@
            :handler (swagger/create-swagger-handler)}}]
 
    ["/hello"
-    {:get {:summary "Responds with message from given recipient. For testing..."
+    {:get {:summary "Responds with message from given recipient. For testing only."
            :parameters {:query {:from s/Str}}
            :tags #{"Testing"}
-           :handler #'hello-handler}}]])
+           :handler hello-handler}}]])
 
-(defn route-opts [ctx]
+(def route-opts
   {;; Uncomment line below to see diffs of requests in middleware chain
    ;;:reitit.middleware/transform dev/print-request-diffs
    :exception pretty/exception
@@ -59,8 +50,7 @@
                        muuntaja/format-request-middleware
                        coercion/coerce-response-middleware
                        coercion/coerce-request-middleware
-                       multipart/multipart-middleware
-                       [wrap-ctx ctx]]}})
+                       multipart/multipart-middleware]}})
 
 (defn assoc-tag-for-route [tag route]
   (update route 1 (partial map/map-values #(assoc % :tags #{tag}))))
@@ -68,17 +58,17 @@
 (defn tag [tag routes]
   (map (partial assoc-tag-for-route tag) routes))
 
-(defn router [ctx]
-  (ring/router (concat routes
+(def router (ring/router
+              (concat routes
                        (tag "Users" user-api/routes))
-               (route-opts ctx)))
+              route-opts))
 
-(defn handler [ctx]
-  (ring/ring-handler (router ctx)
+(def handler
+  (ring/ring-handler router
                      (ring/routes
-                      (swagger-ui/create-swagger-ui-handler
-                       {:path "/"
-                        :config {:validationUrl nil}
-                        :operationsSorter "alpha"})
-                      (ring/create-default-handler))))
+                        (swagger-ui/create-swagger-ui-handler
+                          {:path "/documentation/"
+                           :config {:validationUrl nil}
+                           :operationsSorter "alpha"})
+                        (ring/create-default-handler))))
 
