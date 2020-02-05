@@ -1,2 +1,5 @@
 
-grant select on all tables in schema etp to etp_app
+grant select on all tables in schema etp to etp_app;
+
+grant insert, update on table laatija to etp_app;
+grant insert, update on table energiatodistus to etp_app;
