@@ -12,7 +12,9 @@
             [reitit.ring.middleware.dev :as dev]
             [reitit.dev.pretty :as pretty]
             [muuntaja.core :as m]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [solita.etp.api.user :as user-api]
+            [solita.common.map :as map]))
 
 (defn hello-handler [{:keys [ctx parameters]}]
   {:status 200
@@ -39,7 +41,7 @@
    ["/hello"
     {:get {:summary "Responds with message from given recipient. For testing..."
            :parameters {:query {:from s/Str}}
-           :swagger {:tags "hello"}
+           :tags #{"Testing"}
            :handler #'hello-handler}}]])
 
 (defn route-opts [ctx]
@@ -60,8 +62,16 @@
                        multipart/multipart-middleware
                        [wrap-ctx ctx]]}})
 
+(defn assoc-tag-for-route [tag route]
+  (update route 1 (partial map/map-values #(assoc % :tags #{tag}))))
+
+(defn tag [tag routes]
+  (map (partial assoc-tag-for-route tag) routes))
+
 (defn router [ctx]
-  (ring/router routes (route-opts ctx)))
+  (ring/router (concat routes
+                       (tag "Users" user-api/routes))
+               (route-opts ctx)))
 
 (defn handler [ctx]
   (ring/ring-handler (router ctx)
