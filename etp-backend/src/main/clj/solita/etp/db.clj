@@ -4,8 +4,10 @@
 
 (defmethod ig/init-key :solita.etp/db
   [_ opts]
-  (hikari/make-datasource opts))
+  (-> opts
+      (select-keys [:server-name :database-name])
+      (assoc :datasource (hikari/make-datasource opts))))
 
 (defmethod ig/halt-key! :solita.etp/db
-  [_ datasource]
+  [_ {:keys [datasource]}]
   (hikari/close-datasource datasource))
