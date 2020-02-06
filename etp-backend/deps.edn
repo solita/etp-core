@@ -20,5 +20,7 @@
         ;; TODO Spec-tools can be removed when the issue below has been fixed:
         ;; https://github.com/metosin/reitit/issues/355
         metosin/spec-tools {:mvn/version "0.10.1"}}
- :aliases {:uberjar {:extra-deps {uberdeps {:mvn/version "0.1.8"}}
+ :aliases {:test {:extra-deps [eftest {:mvn/version "0.5.9"}]
+                  :main-opts ["-e" "(run-tests)"]}
+           :uberjar {:extra-depths {uberdeps {:mvn/version "0.1.8"}}
                      :main-opts ["-m" "uberdeps.uberjar"]}}}
