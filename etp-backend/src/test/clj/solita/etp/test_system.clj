@@ -29,8 +29,7 @@
                          db-name)
         management-system (ig/init config [[:solita.etp/db :db/etp]])
         _ (create-db! (get management-system [:solita.etp/db :db/etp]) db-name)
-        system (ig/init config [[:solita.etp/db :db/etp-app]])
-        ]
+        system (ig/init config [[:solita.etp/db :db/etp-app]])]
     (with-bindings {#'*db* (get system [:solita.etp/db :db/etp-app])}
       (f))
     (ig/halt! system)
