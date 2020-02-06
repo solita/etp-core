@@ -1,5 +1,7 @@
-create user etp with password 'etp';
+create user etp with createdb password 'etp';
 create user etp_app with password 'etp';
+
+alter database postgres is_template true;
 
 grant all privileges on database postgres to etp;
 
