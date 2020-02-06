@@ -66,6 +66,11 @@ command:
     cd etp-backend
     clojure -m solita.etp.core
 
+Tests can be run with
+
+    cd etp-backend
+    clojure -A:test
+
 About database usage
 --------------------
 
