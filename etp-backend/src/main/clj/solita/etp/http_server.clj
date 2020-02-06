@@ -5,7 +5,7 @@
 
 (defn wrap-ctx [ctx handler]
   (fn [req]
-    (handler (assoc req :ctx ctx))))
+    (handler (assoc req :db (:db ctx)))))
 
 (defmethod ig/init-key :solita.etp/http-server
   [_ {:keys [ctx] :as opts}]
