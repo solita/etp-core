@@ -7,16 +7,10 @@
 
 (def config-file-path "src/main/resources/config-for-tests.edn")
 
-(def db-names (for [i (range 5500 5600)] (str "etp_test_" i)))
+(def db-name-counter (atom 0))
 
-(defonce free-db-names (atom (apply sorted-set db-names)))
-
-(defn reserve-db-name []
-  (ffirst (swap-vals! free-db-names #(->> % rest (apply sorted-set)))))
-
-(defn release-db-name [s]
-  (swap! free-db-names conj s)
-  s)
+(defn next-db-name []
+  (str "etp_test_" (first (swap-vals! db-name-counter inc))))
 
 (defn create-db! [db db-name]
   (jdbc/execute! db
@@ -29,7 +23,7 @@
                  {:transaction? false}))
 
 (defn fixture [f]
-  (let [db-name (reserve-db-name)
+  (let [db-name (next-db-name)
         config (assoc-in (-> config-file-path slurp ig/read-string)
                          [[:solita.etp/db :db/etp-app] :database-name]
                          db-name)
