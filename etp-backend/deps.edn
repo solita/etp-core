@@ -1,9 +1,11 @@
-{:paths ["src/main/clj"]
+{:paths ["src/main/clj"
+         "src/test/clj"]
  :deps {org.clojure/clojure {:mvn/version "1.10.1"}
         integrant {:mvn/version "0.8.0"}
         integrant/repl {:mvn/version "0.3.1"}
         hikari-cp {:mvn/version "2.10.0"}
         org.postgresql/postgresql {:mvn/version "42.2.9"}
+        org.clojure/java.jdbc {:mvn/version "0.7.11"}
         http-kit {:mvn/version "2.3.0"}
         ring/ring-core {:mvn/version "1.8.0"}
         javax.servlet/servlet-api {:mvn/version "2.5"}
@@ -18,5 +20,7 @@
         ;; TODO Spec-tools can be removed when the issue below has been fixed:
         ;; https://github.com/metosin/reitit/issues/355
         metosin/spec-tools {:mvn/version "0.10.1"}}
- :aliases {:uberjar {:extra-deps {uberdeps {:mvn/version "0.1.8"}}
+ :aliases {:test {:extra-deps [eftest {:mvn/version "0.5.9"}]
+                  :main-opts ["-e" "(run-tests)"]}
+           :uberjar {:extra-depths {uberdeps {:mvn/version "0.1.8"}}
                      :main-opts ["-m" "uberdeps.uberjar"]}}}
