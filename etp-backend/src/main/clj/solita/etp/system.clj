@@ -3,11 +3,14 @@
             [solita.etp.db]
             [solita.etp.http-server]))
 
-(def config-file-path "src/main/resources/config.edn")
-
-;; TODO read env variables and override the config file
-(defn load-config []
-  (-> config-file-path slurp ig/read-string))
+;; TODO read env variables and override keys in this configuration
+(def config {:solita.etp/db {:adapter "postgresql"
+                             :server-name "localhost"
+                             :username "etp_app"
+                             :password "etp"
+                             :database-name "postgres"}
+             :solita.etp/http-server {:port 8080
+                                      :ctx {:db (ig/ref :solita.etp/db)}}})
 
 (defn start! []
-  (ig/init (load-config)))
+  (ig/init config))

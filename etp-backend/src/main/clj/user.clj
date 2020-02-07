@@ -4,7 +4,7 @@
 (integrant.repl/set-prep!
  (fn []
    (require 'solita.etp.system)
-   ((resolve 'solita.etp.system/load-config) "config.edn")))
+   (eval 'solita.etp.system/config)))
 
 (defn run-tests []
   (require 'eftest.runner)

@@ -5,7 +5,16 @@
 
 (def ^:dynamic *db* nil)
 
-(def config-file-path "src/main/resources/config-for-tests.edn")
+(def config-for-management {:solita.etp/db {:adapter "postgresql"
+                                            :server-name "localhost"
+                                            :username "etp"
+                                            :password "etp"
+                                            :database-name "postgres"}})
+
+(def config-for-tests {:solita.etp/db {:adapter "postgresql"
+                                       :server-name "localhost"
+                                       :username "etp_app"
+                                       :password "etp"}})
 
 (def db-name-counter (atom 0))
 
@@ -24,14 +33,15 @@
 
 (defn fixture [f]
   (let [db-name (next-db-name)
-        config (assoc-in (-> config-file-path slurp ig/read-string)
-                         [[:solita.etp/db :db/etp-app] :database-name]
+        management-system (ig/init config-for-management)
+        management-db (:solita.etp/db management-system)
+        _ (create-db! management-db db-name)
+        config (assoc-in config-for-tests
+                         [:solita.etp/db :database-name]
                          db-name)
-        management-system (ig/init config [[:solita.etp/db :db/etp]])
-        _ (create-db! (get management-system [:solita.etp/db :db/etp]) db-name)
-        system (ig/init config [[:solita.etp/db :db/etp-app]])]
-    (with-bindings {#'*db* (get system [:solita.etp/db :db/etp-app])}
+        system (ig/init config)]
+    (with-bindings {#'*db* (:solita.etp/db system)}
       (f))
     (ig/halt! system)
-    (drop-db! (get management-system [:solita.etp/db :db/etp]) db-name)
+    (drop-db! management-db db-name)
     (ig/halt! management-system)))
