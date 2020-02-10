@@ -13,7 +13,7 @@
   (jdbc/insert! db :etp.laatija laatija))
 
 (defn get-laatija-count [db]
-  (-> db (jdbc/query ["SELECT COUNT(id) FROM etp.laatija"]) first :count))
+  (-> db (jdbc/query ["SELECT COUNT(id) FROM laatija"]) first :count))
 
 (t/deftest example-1
   (t/is (zero? (get-laatija-count ts/*db*)))
