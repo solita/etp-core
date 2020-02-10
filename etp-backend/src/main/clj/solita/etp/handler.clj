@@ -23,7 +23,8 @@
           :parameters parameters}})
 
 (def routes
-  [["/swagger.json"
+  ["/api"
+   ["/swagger.json"
     {:get {:no-doc true
            :swagger {:info {:title "Energiatodistuspalvelu API"
                             :description ""}}
@@ -67,7 +68,8 @@
   (ring/ring-handler router
                      (ring/routes
                         (swagger-ui/create-swagger-ui-handler
-                          {:path "/documentation/"
+                          {:path "/api/documentation"
+                           :url "/api/swagger.json"
                            :config {:validationUrl nil}
                            :operationsSorter "alpha"})
                         (ring/create-default-handler))))
