@@ -8,6 +8,7 @@
                              :server-name "localhost"
                              :username "etp_app"
                              :password "etp"
+                             :current-schema "etp"
                              :database-name "postgres"}
              :solita.etp/http-server {:port 8080
                                       :ctx {:db (ig/ref :solita.etp/db)}}})
