@@ -22,6 +22,9 @@
           :ctx (str ctx)
           :parameters parameters}})
 
+(defn health-handler [_]
+  {:status 200})
+
 (def routes
   ["/api"
    ["/swagger.json"
@@ -33,8 +36,12 @@
    ["/hello"
     {:get {:summary "Responds with message from given recipient. For testing only."
            :parameters {:query {:from s/Str}}
-           :tags #{"Testing"}
-           :handler hello-handler}}]])
+           :tags #{"To be removed"}
+           :handler hello-handler}}]
+   ["/health"
+    {:get {:summary "Health check"
+           :tags #{"System"}
+           :handler health-handler}}]])
 
 (def route-opts
   {;; Uncomment line below to see diffs of requests in middleware chain
