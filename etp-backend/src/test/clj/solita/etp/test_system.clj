@@ -1,20 +1,27 @@
 (ns solita.etp.test-system
   (:require [integrant.core :as ig]
             [clojure.java.jdbc :as jdbc]
+            [solita.etp.config :as config]
             [solita.etp.db]))
 
 (def ^:dynamic *db* nil)
 
-(def config-for-management {:solita.etp/db {:adapter "postgresql"
-                                            :server-name "localhost"
-                                            :username "etp"
-                                            :password "etp"
-                                            :database-name "postgres"}})
+(defn config-for-management []
+  (config/db (config/env "DB_HOST" "localhost")
+             (config/env "DB_PORT" 5432)
+             (config/env "DB_MANAGEMENT_USER" "etp")
+             (config/env "DB_MANAGEMENT_PASSWORD" "etp")
+             (config/env "DB_DATABASE" "postgres")
+             (config/env "DB_SCHEMA" "etp")))
 
-(def config-for-tests {:solita.etp/db {:adapter "postgresql"
-                                       :server-name "localhost"
-                                       :username "etp_app"
-                                       :password "etp"}})
+(defn config-for-tests [db-name]
+  (config/db (config/env "DB_HOST" "localhost")
+             (config/env "DB_PORT" 5432)
+             (config/env "DB_USER" "etp_app")
+             (config/env "DB_PASSWORD" "etp")
+             (config/env "DB_SCHEMA" "etp")
+             db-name))
+
 
 (def db-name-counter (atom 0))
 
@@ -33,15 +40,12 @@
 
 (defn fixture [f]
   (let [db-name (next-db-name)
-        management-system (ig/init config-for-management)
+        management-system (ig/init (config-for-management))
         management-db (:solita.etp/db management-system)
         _ (create-db! management-db db-name)
-        config (assoc-in config-for-tests
-                         [:solita.etp/db :database-name]
-                         db-name)
-        system (ig/init config)]
-    (with-bindings {#'*db* (:solita.etp/db system)}
+        test-system (ig/init (config-for-tests db-name))]
+    (with-bindings {#'*db* (:solita.etp/db test-system)}
       (f))
-    (ig/halt! system)
+    (ig/halt! test-system)
     (drop-db! management-db db-name)
     (ig/halt! management-system)))
