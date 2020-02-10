@@ -2,6 +2,7 @@
   (:require [ring.util.response :as r]
             [solita.etp.api.response :as api-response]
             [solita.etp.schema.yritys :as yritys-schema]
+            [solita.etp.schema.common :as common-schema]
             [solita.etp.service.yritys :as yritys-service]
             [schema.core :as schema]))
 
@@ -10,9 +11,10 @@
     [""
      {:post {:summary    "Tallenna yrityksen tiedot"
             :parameters {:body yritys-schema/YritysSave}
-            :responses  {200 {:body schema/Str}}
-            :handler    (fn [{:keys [db body-params]}]
-                          (r/response (str (yritys-service/add-yritys! db body-params))))}}]
+            :responses  {201 {:body common-schema/Id}}
+            :handler    (fn [{:keys [db body-params uri]}]
+                          (api-response/created uri
+                            (yritys-service/add-yritys! db body-params)))}}]
 
     ["/:id"
       {:get {:summary    "Hae yrityksen tiedot"

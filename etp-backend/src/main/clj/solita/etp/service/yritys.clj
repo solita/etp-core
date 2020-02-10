@@ -11,7 +11,7 @@
 (def coerce-yritys (coerce/coercer yritys-schema/Yritys coerce/+json-coercions+))
 
 (defn add-yritys! [db yritys]
-  (yritys-db/insert-yritys! db {:data (json/write-value-as-string yritys)}))
+  (:id (yritys-db/insert-yritys<! db {:data (json/write-value-as-string yritys)})))
 
 (defn merge-data [row]
   (let [data (-> row :data .getValue json/read-value)]

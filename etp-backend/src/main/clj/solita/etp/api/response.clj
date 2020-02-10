@@ -5,3 +5,6 @@
   (if (nil? body)
     (r/not-found not-found)
     (r/response body)))
+
+(defn created [path id]
+  (r/created (str path "/" id) {:id id}))
