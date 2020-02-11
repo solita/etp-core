@@ -19,32 +19,28 @@
             [solita.etp.api.yritys :as yritys-api]
             [solita.common.map :as map]))
 
-(defn hello-handler [{:keys [db parameters]}]
-  {:status 200
-   :body {:msg (str "Hello from " (-> parameters :query :from) "!")
-          :db (str db)
-          :parameters parameters}})
+(defn tag [tag routes]
+  (w/prewalk
+   #(if (and (map? %) (contains? % :summary))
+      (assoc % :tags #{tag}) %)
+   routes))
 
-(defn health-handler [_]
-  {:status 200})
-
-(def routes
-  ["/api"
-   ["/swagger.json"
+(def system-routes
+  [["/swagger.json"
     {:get {:no-doc true
            :swagger {:info {:title "Energiatodistuspalvelu API"
                             :description ""}}
            :handler (swagger/create-swagger-handler)}}]
-
-   ["/hello"
-    {:get {:summary "Responds with message from given recipient. For testing only."
-           :parameters {:query {:from s/Str}}
-           :tags #{"To be removed"}
-           :handler hello-handler}}]
    ["/health"
     {:get {:summary "Health check"
            :tags #{"System"}
-           :handler health-handler}}]])
+           :handler (constantly {:status 200})}}]])
+
+(def routes
+  ["/api"
+   (concat system-routes
+           (tag "User API" user-api/routes)
+           (tag "Yritys API" yritys-api/routes))])
 
 (def route-opts
   {;; Uncomment line below to see diffs of requests in middleware chain
@@ -64,17 +60,7 @@
                        coercion/coerce-request-middleware
                        multipart/multipart-middleware]}})
 
-(defn tag [tag routes]
-  (w/prewalk
-    #(if (and (map? %) (contains? % :summary))
-       (assoc % :tags #{tag}) %)
-    routes))
-
-(def router (ring/router
-              (concat routes
-                      (tag "User API" user-api/routes)
-                      (tag "Yritys API" yritys-api/routes))
-              route-opts))
+(def router (ring/router routes route-opts))
 
 (def handler
   (ring/ring-handler router

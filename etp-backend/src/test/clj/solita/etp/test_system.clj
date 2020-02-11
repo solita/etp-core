@@ -7,21 +7,13 @@
 (def ^:dynamic *db* nil)
 
 (defn config-for-management []
-  (config/db (config/env "DB_HOST" "localhost")
-             (config/env "DB_PORT" 5432)
-             (config/env "DB_MANAGEMENT_USER" "etp")
-             (config/env "DB_MANAGEMENT_PASSWORD" "etp")
-             (config/env "DB_DATABASE" "postgres")
-             (config/env "DB_SCHEMA" "etp")))
+  (config/db {:username (config/env "DB_MANAGEMENT_USER" "etp")
+              :password (config/env "DB_MANAGEMENT_PASSWORD" "etp")
+              :database-name "template1"
+              :current-schema "public"}))
 
 (defn config-for-tests [db-name]
-  (config/db (config/env "DB_HOST" "localhost")
-             (config/env "DB_PORT" 5432)
-             (config/env "DB_USER" "etp_app")
-             (config/env "DB_PASSWORD" "etp")
-             (config/env "DB_SCHEMA" "etp")
-             db-name))
-
+  (config/db {:database-name db-name}))
 
 (def db-name-counter (atom 0))
 
