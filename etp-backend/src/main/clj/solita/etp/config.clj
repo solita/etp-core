@@ -13,8 +13,7 @@
                            :username (env "DB_USER" "etp_app")
                            :password (env "DB_PASSWORD" "etp")
                            :database-name (env "DB_DATABASE" "etp_dev")
-                           :current-schema (env "DB_SCHEMA" "etp")
-                           }
+                           :current-schema (env "DB_SCHEMA" "etp")}
                           opts)}))
 
 (defn http-server
