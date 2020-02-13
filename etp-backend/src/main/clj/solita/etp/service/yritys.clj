@@ -9,6 +9,7 @@
 
 ; *** Conversions from database data types ***
 (def coerce-yritys (coerce/coercer yritys-schema/Yritys coerce/+json-coercions+))
+(def coerce-laskutusosoite (coerce/coercer yritys-schema/Laskutusosoite coerce/+json-coercions+))
 
 (defn add-yritys! [db yritys]
   (:id (yritys-db/insert-yritys<! db {:data (json/write-value-as-string yritys)})))
@@ -19,3 +20,11 @@
 
 (defn find-yritys [db id]
   (first (map (comp coerce-yritys merge-data) (yritys-db/select-yritys db {:id id}))))
+
+(defn add-laskutusosoite! [db yritysid laskutusosoite]
+  (:id (yritys-db/insert-laskutusosoite<! db {:yritysid yritysid
+                                              :data (json/write-value-as-string laskutusosoite)})))
+
+(defn find-laskutusosoitteet [db yritysid]
+  (map (comp coerce-laskutusosoite merge-data)
+       (yritys-db/select-laskutusosoitteet db {:yritysid yritysid})))
