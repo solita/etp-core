@@ -14,17 +14,13 @@
 (defn add-yritys! [db yritys]
   (:id (yritys-db/insert-yritys<! db {:data (json/write-value-as-string yritys)})))
 
-(defn merge-data [row]
-  (let [data (-> row :data .getValue json/read-value)]
-    (merge data (dissoc row :data))))
-
 (defn find-yritys [db id]
-  (first (map (comp coerce-yritys merge-data) (yritys-db/select-yritys db {:id id}))))
+  (first (map (comp coerce-yritys json/merge-data) (yritys-db/select-yritys db {:id id}))))
 
 (defn add-laskutusosoite! [db yritysid laskutusosoite]
   (:id (yritys-db/insert-laskutusosoite<! db {:yritysid yritysid
                                               :data (json/write-value-as-string laskutusosoite)})))
 
 (defn find-laskutusosoitteet [db yritysid]
-  (map (comp coerce-laskutusosoite merge-data)
+  (map (comp coerce-laskutusosoite json/merge-data)
        (yritys-db/select-laskutusosoitteet db {:yritysid yritysid})))
