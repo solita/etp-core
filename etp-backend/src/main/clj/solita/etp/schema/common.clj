@@ -4,6 +4,13 @@
 
 (def Id {:id schema/Num})
 
+(def Postiosoite
+  {:katuosoite                        schema/Str
+   (schema/optional-key :postilokero) schema/Str
+   :postinumero                       schema/Str
+   :postitoimipaikka                  schema/Str
+   :maa                               schema/Str})
+
 (defn hetu-checksum [s]
   (try
     (->> (mod (. Integer parseInt s) 31)
