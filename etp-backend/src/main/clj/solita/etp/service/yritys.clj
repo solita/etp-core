@@ -18,8 +18,8 @@
   (first (map (comp coerce-yritys json/merge-data) (yritys-db/select-yritys db {:id id}))))
 
 (defn add-laskutusosoite! [db yritysid laskutusosoite]
-  (:id (yritys-db/insert-laskutusosoite<! db {:yritysid yritysid
-                                              :data (json/write-value-as-string laskutusosoite)})))
+  (:id (yritys-db/insert-laskutusosoite! db {:yritysid yritysid
+                                             :data (json/write-value-as-string laskutusosoite)})))
 
 (defn find-laskutusosoitteet [db yritysid]
   (map (comp coerce-laskutusosoite json/merge-data)
