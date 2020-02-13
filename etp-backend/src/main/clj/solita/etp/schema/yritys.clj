@@ -24,4 +24,4 @@
 
 (def Laskutusosoite
   "Yritys schema contains basic information about persistent yritys"
-  (assoc YritysSave :id schema/Num))
+  (assoc LaskutusosoiteSave :id schema/Num :yritysid schema/Num))
