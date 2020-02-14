@@ -13,8 +13,8 @@
   (assoc YritysSave :id schema/Num))
 
 (def LaskutusosoiteSave
-  {:postiosoite common-schema/Postiosoite
-   :verkkolaskuosoite schema/Str})
+  (merge {(schema/optional-key :verkkolaskuosoite) schema/Str}
+         common-schema/Postiosoite))
 
 (def Laskutusosoite
   "Yritys schema contains basic information about persistent yritys"
