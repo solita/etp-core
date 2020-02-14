@@ -29,4 +29,4 @@
          (contains? #{\+ \- \a} century-sign)
          (= checksum (hetu-checksum (str date-part individual-number))))))
 
-(def Hetu (schema/pred valid-hetu?))
+(def Hetu (schema/constrained schema/Str valid-hetu?))
