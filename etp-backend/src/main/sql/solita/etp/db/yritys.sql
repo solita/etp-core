@@ -1,5 +1,5 @@
 
--- name: insert-yritys!
+-- name: insert-yritys<!
 insert into yritys (data) values (:data :: JSONB) returning id
 
 -- name: select-yritys
