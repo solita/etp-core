@@ -8,5 +8,5 @@
 (def write-value-as-string json/write-value-as-string)
 
 (defn merge-data [db-row]
-  (let [data (-> db-row :data .getValue json/read-value)]
+  (let [data (-> db-row :data .getValue read-value)]
     (merge data (dissoc db-row :data))))
