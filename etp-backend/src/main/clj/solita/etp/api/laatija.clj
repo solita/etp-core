@@ -23,4 +23,9 @@
             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                           (-> (laatija-service/find-laatija db id)
                               (api-response/get-response
-                               (str "Laatija " id " does not exist."))))}}]]])
+                               (str "Laatija " id " does not exist."))))}}]]
+   ["/patevyydet/"
+    {:get {:summary    "Hae pätevyydet-koodisto"
+           :responses  {200 {:body [laatija-schema/Patevyys]}}
+           :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                         (r/response (laatija-service/find-patevyydet)))}}]])

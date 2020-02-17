@@ -15,3 +15,12 @@
 
 (defn find-laatija [db id]
   (first (map (comp coerce-laatija json/merge-data) (laatija-db/select-laatija db {:id id}))))
+
+;;
+;; Pätevyydet
+;;
+
+(def patevyydet [{:id 0 :label "Perustaso"}
+                 {:id 1 :label "Ylempi taso"}])
+
+(defn find-patevyydet [] patevyydet)
