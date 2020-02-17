@@ -93,6 +93,16 @@ both databases with a single call.
 Tests will utilize ```postgres``` database as template extensively as each test
 will create their own database from it.
 
+Third-party licenses
+--------------------
+
+To generate a site of used licenses:
+
+    cd etp-backend
+    clojure -Spom
+    # Now add Clojars to repositories in generated pom.xml
+    mvn project-info-reports:dependencies
+
 Other environments
 ---
 
