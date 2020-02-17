@@ -2,6 +2,10 @@
   (:require [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]))
 
+(def Patevyys
+  {:id schema/Int
+   :label schema/Str})
+
 ;; TODO missing things real typing for patevyys, fields for voimassaoloaika,
 ;; laskentaohjelmistot and toiminta-alueet. Needs specs...
 
@@ -12,7 +16,7 @@
           :henkilotunnus    common-schema/Hetu
           :email            schema/Str
           :puhelin          schema/Str
-          :patevyys         schema/Str
+          :patevyys         schema/Int
           :julkinen-puhelin schema/Bool
           :julkinen-email   schema/Bool}
          common-schema/Postiosoite))
