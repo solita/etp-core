@@ -17,6 +17,7 @@
             [schema.core :as s]
             [solita.etp.api.user :as user-api]
             [solita.etp.api.yritys :as yritys-api]
+            [solita.etp.api.laatija :as laatija-api]
             [solita.common.map :as map]))
 
 (defn tag [tag routes]
@@ -40,7 +41,8 @@
   ["/api"
    (concat system-routes
            (tag "User API" user-api/routes)
-           (tag "Yritys API" yritys-api/routes))])
+           (tag "Yritys API" yritys-api/routes)
+           (tag "Laatijat API" laatija-api/routes))])
 
 (def route-opts
   {;; Uncomment line below to see diffs of requests in middleware chain
