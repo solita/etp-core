@@ -5,8 +5,7 @@
 (def Id {:id schema/Num})
 
 (def Postiosoite
-  {:katuosoite                        schema/Str
-   (schema/optional-key :postilokero) schema/Str
+  {:jakeluosoite                      schema/Str
    :postinumero                       schema/Str
    :postitoimipaikka                  schema/Str
    :maa                               schema/Str})
