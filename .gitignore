@@ -10,3 +10,4 @@ etp-db/target
 # clojure
 .cpcache
 .nrepl-port
+pom.xml
