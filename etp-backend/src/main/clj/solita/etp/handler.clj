@@ -42,8 +42,7 @@
    (concat system-routes
            (tag "User API" user-api/routes)
            (tag "Yritys API" yritys-api/routes)
-           (tag "Laatijat API" laatija-api/laatija-routes)
-           (tag "Pätevyydet API" laatija-api/patevyys-routes))])
+           (tag "Laatijat API" laatija-api/routes))])
 
 (def route-opts
   {;; Uncomment line below to see diffs of requests in middleware chain

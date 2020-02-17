@@ -6,7 +6,7 @@
             [solita.etp.service.laatija :as laatija-service]
             [schema.core :as schema]))
 
-(def laatija-routes
+(def routes
   [["/laatijat"
     [""
      {:post {:summary    "Lisää uuden laatijan tiedot laatijarekisteriin"
@@ -23,10 +23,8 @@
             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                           (-> (laatija-service/find-laatija db id)
                               (api-response/get-response
-                               (str "Laatija " id " does not exist."))))}}]]])
-
-(def patevyys-routes
-  [["/patevyydet/"
+                               (str "Laatija " id " does not exist."))))}}]]
+   ["/patevyydet/"
     {:get {:summary    "Hae pätevyydet-koodisto"
            :responses  {200 {:body [laatija-schema/Patevyys]}}
            :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
