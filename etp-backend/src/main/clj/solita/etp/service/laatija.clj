@@ -23,4 +23,4 @@
 (def patevyydet [{:id 0 :label "Perustaso"}
                  {:id 1 :label "Ylempi taso"}])
 
-(defn get-patevyydet [] patevyydet)
+(defn find-patevyydet [] patevyydet)
