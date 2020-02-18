@@ -7,3 +7,7 @@
    :postinumero         schema/Str
    :postitoimipaikka    schema/Str
    :maa                 schema/Str})
+
+(def Maakunta
+  {:id schema/Int
+   :label schema/Str})
