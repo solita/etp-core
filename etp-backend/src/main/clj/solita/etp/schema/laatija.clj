@@ -7,21 +7,28 @@
   {:id schema/Int
    :label schema/Str})
 
-;; TODO missing fields for voimassaoloaika, laskentaohjelmistot and
-;; toiminta-alueet.
+(defn valid-muut-toimitaalueet? [toimintaalueet]
+  (and (<= 0 (count toimintaalueet) 6)
+       (apply distinct? toimintaalueet)))
 
+(def MuutToimintaalueet (schema/constrained [schema/Int]
+                                            valid-muut-toimitaalueet?))
+
+;; TODO missing fields for voimassaoloaika and laskentaohjelmistot
 (def LaatijaSave
   "This schema is used in add-laatija and update-laatija services"
-  (merge {:etunimi           schema/Str
-          :sukunimi          schema/Str
-          :henkilotunnus     common-schema/Hetu
-          :email             schema/Str
-          :puhelin           schema/Str
-          :patevyys          schema/Int
-          :patevyys-voimassa schema/Bool
-          :julkinen-puhelin  schema/Bool
-          :julkinen-email    schema/Bool
-          :ensitallennus     schema/Bool}
+  (merge {:etunimi                schema/Str
+          :sukunimi               schema/Str
+          :henkilotunnus          common-schema/Hetu
+          :email                  schema/Str
+          :puhelin                schema/Str
+          :patevyys               schema/Int
+          :patevyys-voimassa      schema/Bool
+          :paa-toimintaalue       schema/Int
+          :muut-toimintaalueet    MuutToimintaalueet
+          :julkinen-puhelin       schema/Bool
+          :julkinen-email         schema/Bool
+          :ensitallennus          schema/Bool}
          geo-schema/Postiosoite))
 
 (def Laatija
