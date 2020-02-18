@@ -27,5 +27,5 @@
    ["/patevyydet/"
     {:get {:summary    "Hae pätevyydet-koodisto"
            :responses  {200 {:body [laatija-schema/Patevyys]}}
-           :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+           :handler    (fn [_]
                          (r/response (laatija-service/find-patevyydet)))}}]])
