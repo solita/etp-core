@@ -1,6 +1,7 @@
 (ns solita.etp.schema.laatija
   (:require [schema.core :as schema]
-            [solita.etp.schema.common :as common-schema]))
+            [solita.etp.schema.common :as common-schema]
+            [solita.etp.schema.geo :as geo-schema]))
 
 (def Patevyys
   {:id schema/Int
@@ -21,7 +22,7 @@
           :julkinen-puhelin  schema/Bool
           :julkinen-email    schema/Bool
           :ensitallennus     schema/Bool}
-         common-schema/Postiosoite))
+         geo-schema/Postiosoite))
 
 (def Laatija
   "Laatija schema contains basic information about persistent laatija"

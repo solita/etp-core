@@ -1,6 +1,6 @@
 (ns solita.etp.schema.yritys
   (:require [schema.core :as schema]
-            [solita.etp.schema.common :as common-schema]))
+            [solita.etp.schema.geo :as geo-schema]))
 
 (def YritysSave
   "This schema is used in add-yritys and update-yritys services"
@@ -14,7 +14,7 @@
 
 (def LaskutusosoiteSave
   (merge {:verkkolaskuosoite (schema/maybe schema/Str)}
-         common-schema/Postiosoite))
+         geo-schema/Postiosoite))
 
 (def Laskutusosoite
   "Yritys schema contains basic information about persistent yritys"
