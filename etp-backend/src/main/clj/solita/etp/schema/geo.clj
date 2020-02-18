@@ -8,6 +8,5 @@
    :postitoimipaikka    schema/Str
    :maa                 schema/Str})
 
-(def Maakunta
-  {:id schema/Int
-   :label schema/Str})
+(def Toimintaalue
+  (merge {:label schema/Str} common-schema/Id))

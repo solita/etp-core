@@ -5,9 +5,8 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(t/deftest find-maakunnat-test
-  (let [maakunnat (->> (service/find-maakunnat) (map :label) set)]
-    (t/is (every? #(contains? maakunnat %) ["Ahvenanmaa"
-                                            "Pirkanmaa"
-                                            "Etelä-Savo"]))
-    (t/is (= 19 (count maakunnat)))))
+(t/deftest find-toimintaalueet-test
+  (let [toimintaalueet (->> (service/find-toimintaalueet) (map :label) set)]
+    (t/is (every? #(contains? toimintaalueet %) ["Pirkanmaa" "Etelä-Savo"]))
+    (t/is (-> toimintaalueet (contains? "Ahvenanmaa") not))
+    (t/is (= 18 (count toimintaalueet)))))

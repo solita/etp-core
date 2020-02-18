@@ -5,8 +5,8 @@
             [solita.etp.service.geo :as geo-service]))
 
 (def routes
-  [["/maakunnat/"
-    {:get {:summary    "Hae maakunnat-koodisto"
-           :responses  {200 {:body [geo-schema/Maakunta]}}
+  [["/toimintaalueet/"
+    {:get {:summary    "Hae toiminta-alueet -koodisto"
+           :responses  {200 {:body [geo-schema/Toimintaalue]}}
            :handler    (fn [_]
-                         (r/response (geo-service/find-maakunnat)))}}]])
+                         (r/response (geo-service/find-toimintaalueet)))}}]])
