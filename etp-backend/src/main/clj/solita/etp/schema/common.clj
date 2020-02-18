@@ -2,13 +2,7 @@
   (:require [clojure.string :as str]
             [schema.core :as schema]))
 
-(def Id {:id schema/Num})
-
-(def Postiosoite
-  {:jakeluosoite                      schema/Str
-   :postinumero                       schema/Str
-   :postitoimipaikka                  schema/Str
-   :maa                               schema/Str})
+(def Id {:id schema/Int})
 
 (defn hetu-checksum [s]
   (try
