@@ -7,12 +7,12 @@
   {:id schema/Int
    :label schema/Str})
 
-(defn valid-muut-toimitaalueet? [toimintaalueet]
+(defn valid-muut-toimintaalueet? [toimintaalueet]
   (and (<= 0 (count toimintaalueet) 6)
        (apply distinct? toimintaalueet)))
 
 (def MuutToimintaalueet (schema/constrained [schema/Int]
-                                            valid-muut-toimitaalueet?))
+                                            valid-muut-toimintaalueet?))
 
 ;; TODO missing fields for voimassaoloaika and laskentaohjelmistot
 (def LaatijaSave
@@ -24,7 +24,7 @@
           :puhelin                schema/Str
           :patevyys               schema/Int
           :patevyys-voimassa      schema/Bool
-          :paa-toimintaalue       schema/Int
+          :toimintaalue           schema/Int
           :muut-toimintaalueet    MuutToimintaalueet
           :julkinen-puhelin       schema/Bool
           :julkinen-email         schema/Bool
