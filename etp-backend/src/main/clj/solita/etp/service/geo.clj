@@ -3,57 +3,57 @@
 
 (def toimintaalueet [{:id 0
                       :label-fi "Etelä-Karjala"
-                      :label-swe "Södra Karelen"}
+                      :label-se "Södra Karelen"}
                      {:id 1
                       :label-fi "Etelä-Pohjanmaa"
-                      :label-swe "Södra Österbotten"}
+                      :label-se "Södra Österbotten"}
                      {:id 2
                       :label-fi "Etelä-Savo"
-                      :label-swe "Södra Savolax"}
+                      :label-se "Södra Savolax"}
                      {:id 3
                       :label-fi "Kainuu"
-                      :label-swe "Kajanaland"}
+                      :label-se "Kajanaland"}
                      {:id 4
                       :label-fi "Kanta-Häme"
-                      :label-swe "Egentliga Tavastland"}
+                      :label-se "Egentliga Tavastland"}
                      {:id 5
                       :label-fi "Keski-Pohjanmaa"
-                      :label-swe "Mellersta Österbotten"}
+                      :label-se "Mellersta Österbotten"}
                      {:id 6
                       :label-fi "Keski-Suomi"
-                      :label-swe "Mellersta Finland"}
+                      :label-se "Mellersta Finland"}
                      {:id 7
                       :label-fi "Kymenlaakso"
-                      :label-swe "Kymmenedalen"}
+                      :label-se "Kymmenedalen"}
                      {:id 8
                       :label-fi "Lappi"
-                      :label-swe  "Lappland"}
+                      :label-se  "Lappland"}
                      {:id 9
                       :label-fi "Pirkanmaa"
-                      :label-swe "Birkaland"}
+                      :label-se "Birkaland"}
                      {:id 10
                       :label-fi "Pohjanmaa"
-                      :label-swe "Österbotten"}
+                      :label-se "Österbotten"}
                      {:id 11
                       :label-fi "Pohjois-Karjala"
-                      :label-swe "Norra Karelen"}
+                      :label-se "Norra Karelen"}
                      {:id 12
                       :label-fi "Pohjois-Pohjanmaa"
-                      :label-swe "Norra Österbotten"}
+                      :label-se "Norra Österbotten"}
                      {:id 13
                       :label-fi "Pohjois-Savo"
-                      :label-swe "Norra Savolax"}
+                      :label-se "Norra Savolax"}
                      {:id 14
                       :label-fi "Päijät-Häme"
-                      :label-swe "Päijänne-Tavastland"}
+                      :label-se "Päijänne-Tavastland"}
                      {:id 15
                       :label-fi "Satakunta"
-                      :label-swe "Satakunta"}
+                      :label-se "Satakunta"}
                      {:id 16
                       :label-fi "Uusimaa"
-                      :label-swe "Nyland"}
+                      :label-se "Nyland"}
                      {:id 17
                       :label-fi "Varsinais-Suomi"
-                      :label-swe "Egentliga Finland"}])
+                      :label-se "Egentliga Finland"}])
 
 (defn find-toimintaalueet [] toimintaalueet)

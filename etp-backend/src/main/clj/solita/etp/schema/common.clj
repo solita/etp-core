@@ -6,7 +6,7 @@
 (def Id {:id Key})
 
 (def Luokittelu (merge Id {:label-fi schema/Str
-                           :label-swe schema/Str
+                           :label-se schema/Str
                            (schema/optional-key :deleted) schema/Bool}))
 
 (defn henkilotunnus-checksum [s]
