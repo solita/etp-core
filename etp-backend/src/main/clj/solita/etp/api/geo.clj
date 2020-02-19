@@ -6,7 +6,7 @@
 
 (def routes
   [["/toimintaalueet/"
-    {:get {:summary    "Hae toiminta-alueet -koodisto"
+    {:get {:summary    "Hae toiminta-alueet -luokittelu"
            :responses  {200 {:body [geo-schema/Toimintaalue]}}
            :handler    (fn [_]
                          (r/response (geo-service/find-toimintaalueet)))}}]])

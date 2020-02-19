@@ -3,7 +3,7 @@
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.geo :as geo-schema]))
 
-(def Patevyys (merge common-schema/Id {:label schema/Str}))
+(def Patevyys common-schema/Luokittelu)
 
 (defn valid-muut-toimintaalueet? [toimintaalueet]
   (and (<= 0 (count toimintaalueet) 6)

@@ -8,4 +8,4 @@
    :postitoimipaikka    schema/Str
    :maa                 schema/Str})
 
-(def Toimintaalue (merge common-schema/Id {:label schema/Str}))
+(def Toimintaalue common-schema/Luokittelu)
