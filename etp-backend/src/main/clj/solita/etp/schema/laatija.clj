@@ -17,7 +17,7 @@
   "This schema is used in add-laatija and update-laatija services"
   (merge {:etunimi                schema/Str
           :sukunimi               schema/Str
-          :henkilotunnus          common-schema/Hetu
+          :henkilotunnus          common-schema/Henkilotunnus
           :email                  schema/Str
           :puhelin                schema/Str
           :patevyys               common-schema/Key

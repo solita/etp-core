@@ -9,7 +9,7 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(def laatija-generators {common-schema/Hetu (g/always "130200A892S")
+(def laatija-generators {common-schema/Henkilotunnus (g/always "130200A892S")
                          laatija-schema/MuutToimintaalueet
                          (g/always [0,1,2,3,17])})
 
@@ -20,4 +20,4 @@
 
 (t/deftest find-patevyydet-test
   (t/is (= ["Perustaso" "Ylempi taso"] (->> (service/find-patevyydet)
-                                             (map :label)))))
+                                            (map :label)))))
