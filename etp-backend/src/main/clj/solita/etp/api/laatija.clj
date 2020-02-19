@@ -17,7 +17,7 @@
                                 (api-response/created uri)))}}]
     ["/:id"
      {:get {:summary    "Hae laatijan tiedot"
-            :parameters {:path {:id schema/Num}}
+            :parameters {:path {:id common-schema/Key}}
             :responses  {200 {:body laatija-schema/Laatija}
                          404 {:body schema/Str}}
             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
@@ -25,7 +25,7 @@
                               (api-response/get-response
                                (str "Laatija " id " does not exist."))))}}]]
    ["/patevyydet/"
-    {:get {:summary    "Hae pätevyydet-koodisto"
+    {:get {:summary    "Hae pätevyydet-luokittelu"
            :responses  {200 {:body [laatija-schema/Patevyys]}}
            :handler    (fn [_]
                          (r/response (laatija-service/find-patevyydet)))}}]])

@@ -9,7 +9,7 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(def laatija-generators {common-schema/Hetu (g/always "130200A892S")
+(def laatija-generators {common-schema/Henkilotunnus (g/always "130200A892S")
                          laatija-schema/MuutToimintaalueet
                          (g/always [0,1,2,3,17])})
 
@@ -19,5 +19,8 @@
     (t/is (= (assoc laatija :id id) (service/find-laatija ts/*db* id)))))
 
 (t/deftest find-patevyydet-test
-  (t/is (= ["Perustaso" "Ylempi taso"] (->> (service/find-patevyydet)
-                                             (map :label)))))
+  (let [patevyydet (service/find-patevyydet)
+        fi-labels (map :label-fi patevyydet)
+        se-labels (map :label-se patevyydet)]
+    (t/is (= ["Perustaso" "Ylempi taso"] fi-labels))
+    (t/is (= ["Basnivå" "Högre nivå"] se-labels))))

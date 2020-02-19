@@ -19,7 +19,7 @@
     ["/:id"
      [""
       {:get {:summary    "Hae yrityksen perustiedot"
-             :parameters {:path {:id schema/Num}}
+             :parameters {:path {:id common-schema/Key}}
              :responses  {200 {:body yritys-schema/Yritys}
                           404 {:body schema/Str}}
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
@@ -29,13 +29,13 @@
 
      ["/laskutusosoitteet"
       {:get  {:summary    "Hae yrityksen kaikki laskutusosoitetiedot"
-              :parameters {:path {:id schema/Num}}
+              :parameters {:path {:id common-schema/Key}}
               :responses  {200 {:body [yritys-schema/Laskutusosoite]}}
               :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                             (r/response (yritys-service/find-laskutusosoitteet db id)))}
 
        :post {:summary    "Lisää uusi laskutustieto yritykseen"
-              :parameters {:path {:id schema/Num}
+              :parameters {:path {:id common-schema/Key}
                            :body yritys-schema/LaskutusosoiteSave}
               :responses  {201 {:body common-schema/Id}
                            404 {:body schema/Str}}

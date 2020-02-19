@@ -20,7 +20,7 @@
 ;; Pätevyydet
 ;;
 
-(def patevyydet [{:id 0 :label "Perustaso"}
-                 {:id 1 :label "Ylempi taso"}])
+(def patevyydet [{:id 0 :label-fi "Perustaso" :label-se "Basnivå"}
+                 {:id 1 :label-fi "Ylempi taso" :label-se "Högre nivå"}])
 
 (defn find-patevyydet [] patevyydet)
