@@ -8,7 +8,7 @@
 (db/require-queries 'yritys)
 
 ; *** Conversions from database data types ***
-(def coerce-yritys (coerce/coercer yritys-schema/Yritys coerce/+json-coercions+))
+(def coerce-yritys (coerce/coercer yritys-schema/Yritys json/json-coercions))
 (def coerce-laskutusosoite (coerce/coercer yritys-schema/Laskutusosoite coerce/+json-coercions+))
 
 (defn add-yritys! [db yritys]

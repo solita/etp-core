@@ -9,6 +9,10 @@
                            :label-se schema/Str
                            (schema/optional-key :deleted) schema/Bool}))
 
+(def Date java.time.LocalDate)
+(def DateInterval {:start Date
+                   :end Date})
+
 (defn henkilotunnus-checksum [s]
   (try
     (->> (mod (. Integer parseInt s) 31)
