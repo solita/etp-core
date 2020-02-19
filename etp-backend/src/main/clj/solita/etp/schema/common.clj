@@ -2,7 +2,8 @@
   (:require [clojure.string :as str]
             [schema.core :as schema]))
 
-(def Id {:id schema/Int})
+(def Key schema/Int)
+(def Id {:id Key})
 
 (defn hetu-checksum [s]
   (try

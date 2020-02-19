@@ -3,15 +3,13 @@
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.geo :as geo-schema]))
 
-(def Patevyys
-  {:id schema/Int
-   :label schema/Str})
+(def Patevyys (merge common-schema/Id {:label schema/Str}))
 
 (defn valid-muut-toimintaalueet? [toimintaalueet]
   (and (<= 0 (count toimintaalueet) 6)
        (apply distinct? toimintaalueet)))
 
-(def MuutToimintaalueet (schema/constrained [schema/Int]
+(def MuutToimintaalueet (schema/constrained [common-schema/Key]
                                             valid-muut-toimintaalueet?))
 
 ;; TODO missing fields for voimassaoloaika and laskentaohjelmistot
@@ -22,9 +20,9 @@
           :henkilotunnus          common-schema/Hetu
           :email                  schema/Str
           :puhelin                schema/Str
-          :patevyys               schema/Int
+          :patevyys               common-schema/Key
           :patevyys-voimassa      schema/Bool
-          :toimintaalue           schema/Int
+          :toimintaalue           common-schema/Key
           :muut-toimintaalueet    MuutToimintaalueet
           :julkinen-puhelin       schema/Bool
           :julkinen-email         schema/Bool
@@ -33,4 +31,4 @@
 
 (def Laatija
   "Laatija schema contains basic information about persistent laatija"
-  (assoc LaatijaSave :id schema/Num))
+  (merge common-schema/Id LaatijaSave))
