@@ -25,20 +25,4 @@
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                            (api-response/get-response
                              (yritys-service/find-yritys db id)
-                             (str "Yritys " id " does not exists.")))}}]
-
-     ["/laskutusosoitteet"
-      {:get  {:summary    "Hae yrityksen kaikki laskutusosoitetiedot"
-              :parameters {:path {:id common-schema/Key}}
-              :responses  {200 {:body [yritys-schema/Laskutusosoite]}}
-              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
-                            (r/response (yritys-service/find-laskutusosoitteet db id)))}
-
-       :post {:summary    "Lisää uusi laskutustieto yritykseen"
-              :parameters {:path {:id common-schema/Key}
-                           :body yritys-schema/LaskutusosoiteSave}
-              :responses  {201 {:body common-schema/Id}
-                           404 {:body schema/Str}}
-              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db body-params uri]}]
-                            (api-response/created uri
-                              (yritys-service/add-laskutusosoite! db id body-params)))}}]]]])
+                             (str "Yritys " id " does not exists.")))}}]]]])
