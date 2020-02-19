@@ -11,7 +11,8 @@
 
 (def laatija-generators {common-schema/Henkilotunnus (g/always "130200A892S")
                          laatija-schema/MuutToimintaalueet
-                         (g/always [0,1,2,3,17])})
+                         (g/always [0,1,2,3,17])
+                         common-schema/Date (g/always (java.time.LocalDate/now))})
 
 (t/deftest add-and-find-test
   (doseq [laatija (repeatedly 100 #(g/generate schema/LaatijaSave laatija-generators))
