@@ -22,7 +22,7 @@
           :puhelin                       schema/Str
           :patevyys                      common-schema/Key
           :patevyys-voimassa             schema/Bool
-          :patevyyden-voimassaoloaika    common-schema/DateInterval
+          :patevyys-voimassaoloaika      common-schema/DateInterval
           :toimintaalue                  common-schema/Key
           :muut-toimintaalueet           MuutToimintaalueet
           :julkinen-puhelin              schema/Bool
