@@ -8,7 +8,7 @@
 (db/require-queries 'yritys)
 
 ; *** Conversions from database data types ***
-(def coerce-yritys (coerce/coercer yritys-schema/Yritys coerce/+json-coercions+))
+(def coerce-yritys (coerce/coercer yritys-schema/Yritys json/json-coercions))
 
 (defn add-yritys! [db yritys]
   (:id (yritys-db/insert-yritys<! db {:data (json/write-value-as-string yritys)})))

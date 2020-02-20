@@ -8,7 +8,7 @@
 (db/require-queries 'laatija)
 
 ; *** Conversions from database data types ***
-(def coerce-laatija (coerce/coercer laatija-schema/Laatija coerce/+json-coercions+))
+(def coerce-laatija (coerce/coercer laatija-schema/Laatija json/json-coercions))
 
 (defn add-laatija! [db laatija]
   (:id (laatija-db/insert-laatija<! db {:data (json/write-value-as-string laatija)})))
