@@ -1,6 +1,6 @@
 
 -- name: insert-yritys<!
-insert into yritys (data) values (:data :: JSONB) returning id
+insert into yritys (ytunnus, data) values (:ytunnus, :data :: JSONB) returning id
 
 -- name: update-yritys!
 update yritys set data = :data :: JSONB where id = :id

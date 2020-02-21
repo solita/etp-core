@@ -11,7 +11,7 @@
 (def coerce-yritys (coerce/coercer yritys-schema/Yritys json/json-coercions))
 
 (defn add-yritys! [db yritys]
-  (:id (yritys-db/insert-yritys<! db {:data (json/write-value-as-string yritys)})))
+  (:id (yritys-db/insert-yritys<! db (json/data-db-row yritys :ytunnus))))
 
 (defn update-yritys! [db id yritys]
   (yritys-db/update-yritys! db {:id id :data (json/write-value-as-string yritys)}))
