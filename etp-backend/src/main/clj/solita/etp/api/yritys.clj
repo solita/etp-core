@@ -25,4 +25,14 @@
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                            (api-response/get-response
                              (yritys-service/find-yritys db id)
+                             (str "Yritys " id " does not exists.")))}
+
+       :put {:summary    "Päivitä yrityksen perustiedot"
+             :parameters {:path {:id common-schema/Key}
+                          :body yritys-schema/YritysSave}
+             :responses  {200 {:body nil}
+                          404 {:body schema/Str}}
+             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db body-params]}]
+                           (api-response/put-response
+                             (yritys-service/update-yritys! db id body-params)
                              (str "Yritys " id " does not exists.")))}}]]]])
