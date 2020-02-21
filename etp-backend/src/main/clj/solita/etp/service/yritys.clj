@@ -13,5 +13,8 @@
 (defn add-yritys! [db yritys]
   (:id (yritys-db/insert-yritys<! db {:data (json/write-value-as-string yritys)})))
 
+(defn update-yritys! [db id yritys]
+  (yritys-db/update-yritys! db {:id id :data (json/write-value-as-string yritys)}))
+
 (defn find-yritys [db id]
   (first (map (comp coerce-yritys json/merge-data) (yritys-db/select-yritys db {:id id}))))
