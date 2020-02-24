@@ -19,3 +19,12 @@
           :let [id (service/add-yritys! ts/*db* yritys)]]
     (t/is (= (assoc yritys :id id) (service/find-yritys ts/*db* id)))))
 
+
+(t/deftest add-duplicate-ytunnus
+  (let [ytunnus (next-ytunnus)
+        yritys1 (c/complete {:ytunnus ytunnus} schema/YritysSave)
+        yritys2 (c/complete {:ytunnus ytunnus} schema/YritysSave)]
+    (service/add-yritys! ts/*db* yritys1)
+    (t/is (= (ex-data (t/is (thrown? Exception (service/add-yritys! ts/*db* yritys2))))
+             {:type       :unique-violation
+              :constraint :yritys-ytunnus-key}))))
