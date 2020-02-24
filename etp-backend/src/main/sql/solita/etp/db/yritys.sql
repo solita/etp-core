@@ -6,5 +6,5 @@ insert into yritys (ytunnus, data) values (:ytunnus, :data :: JSONB) returning i
 update yritys set data = :data :: JSONB where id = :id
 
 -- name: select-yritys
-select id, data from yritys where id = :id
+select id, ytunnus, data from yritys where id = :id
 
