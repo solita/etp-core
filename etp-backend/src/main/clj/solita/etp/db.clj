@@ -2,6 +2,7 @@
   (:require [integrant.core :as ig]
             [hikari-cp.core :as hikari]
             [jeesql.core :as jeesql]
+            [jeesql.generate :as jeesql-generate]
             [clojure.string :as str])
   (:import (org.postgresql.util PSQLException)))
 
@@ -28,9 +29,7 @@
               psqle)
             psqle))))))
 
-(def original-generate-query-fn jeesql.generate/generate-query-fn)
-
-(defn- generate-query-fn [ns query query-options]
+(defn- generate-query-fn [original-generate-query-fn ns query query-options]
   (let [db-function (original-generate-query-fn ns query query-options)]
     (with-meta
       (fn [& args]
@@ -40,8 +39,10 @@
 (defn require-queries
   ([name] (require-queries name {}))
   ([name options]
-   (let [db-namespace (symbol (str "solita.etp.db." name))]
+   (let [db-namespace (symbol (str "solita.etp.db." name))
+         original-generate-query-fn jeesql-generate/generate-query-fn]
      (binding [*ns* (create-ns db-namespace)]
-       (with-redefs [jeesql.generate/generate-query-fn generate-query-fn]
+       (with-redefs [jeesql-generate/generate-query-fn
+                     (partial generate-query-fn original-generate-query-fn)]
          (jeesql/defqueries (str "solita/etp/db/" name ".sql") options)))
      (alias (symbol (str name "-db")) db-namespace))))
