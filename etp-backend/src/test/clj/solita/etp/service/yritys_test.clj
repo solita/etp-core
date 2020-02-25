@@ -8,20 +8,20 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(def counter (atom 0))
-(defn next-ytunnus []
-  (let [value (format "%07d" (swap! counter inc))
-        checksum (common-schema/ytunnus-checksum value)]
-    (if (= checksum 10) (next-ytunnus) (str value "-" checksum))))
+(defn unique-ytunnus-range [to]
+  (->> (range 0 to)
+       (map (partial format "%07d"))
+       (filter #(not= (common-schema/ytunnus-checksum %) 10))
+       (map #(str % "-" (common-schema/ytunnus-checksum %)))))
 
 (t/deftest add-and-find-yritys-test
-  (doseq [yritys (repeatedly 100 #(c/complete {:ytunnus (next-ytunnus)} schema/YritysSave))
+  (doseq [yritys (map #(c/complete {:ytunnus %} schema/YritysSave) (unique-ytunnus-range 100))
           :let [id (service/add-yritys! ts/*db* yritys)]]
     (t/is (= (assoc yritys :id id) (service/find-yritys ts/*db* id)))))
 
 
 (t/deftest add-duplicate-ytunnus
-  (let [ytunnus (next-ytunnus)
+  (let [ytunnus "0000001-9"
         yritys1 (c/complete {:ytunnus ytunnus} schema/YritysSave)
         yritys2 (c/complete {:ytunnus ytunnus} schema/YritysSave)]
     (service/add-yritys! ts/*db* yritys1)
