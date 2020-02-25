@@ -8,7 +8,6 @@
             [reitit.ring.schema :as schema]
             [reitit.ring.middleware.parameters :as parameters]
             [reitit.ring.middleware.muuntaja :as muuntaja]
-            [reitit.ring.middleware.exception :as exception]
             [reitit.ring.middleware.multipart :as multipart]
             [reitit.ring.middleware.dev :as dev]
             [reitit.spec :as rs]
@@ -19,6 +18,7 @@
             [solita.etp.api.yritys :as yritys-api]
             [solita.etp.api.laatija :as laatija-api]
             [solita.etp.api.geo :as geo-api]
+            [solita.etp.exception :as exception]
             [solita.common.map :as map]))
 
 (defn tag [tag routes]

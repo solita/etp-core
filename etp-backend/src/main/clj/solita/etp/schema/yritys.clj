@@ -7,7 +7,7 @@
   "This schema is used in add-yritys and update-yritys services"
   (assoc
     geo-schema/Postiosoite
-    :ytunnus   schema/Str
+    :ytunnus   common-schema/Ytunnus
     :nimi      schema/Str
     :wwwosoite (schema/maybe schema/Str)
     :verkkolaskuosoite (schema/maybe schema/Str)))
