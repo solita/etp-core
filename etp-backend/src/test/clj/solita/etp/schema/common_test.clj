@@ -20,4 +20,7 @@
   (t/is (nil? (schema/check common/Ytunnus "1060155-5")))
   (t/is (some? (schema/check common/Ytunnus "1060155-6")))
   (t/is (some? (schema/check common/Ytunnus "1060155-7")))
-  (t/is (nil? (schema/check common/Ytunnus "0000001-9"))))
+  (t/is (nil? (schema/check common/Ytunnus "0000001-9")))
+
+  (t/is (some? (schema/check common/Ytunnus "a060155-7")))
+  (t/is (some? (schema/check common/Ytunnus "aaaaaaa-b"))))
