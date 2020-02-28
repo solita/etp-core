@@ -1,5 +1,17 @@
 (ns solita.etp.service.geo
-  (:require [solita.etp.schema.geo :as geo-schema]))
+  (:require [solita.etp.db :as db]
+            [solita.etp.service.json :as json]
+            [solita.etp.schema.geo :as geo-schema]
+            [schema.coerce :as coerce]))
+
+; *** Require sql functions ***
+(db/require-queries 'geo)
+
+; *** Conversions from database data types ***
+(def coerce-country (coerce/coercer geo-schema/Country json/json-coercions))
+
+(defn find-all-countries [db]
+  (map coerce-country (geo-db/select-countries db)))
 
 (def toimintaalueet [{:id 0
                       :label-fi "Etelä-Karjala"
