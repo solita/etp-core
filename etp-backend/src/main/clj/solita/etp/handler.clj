@@ -36,7 +36,14 @@
    ["/health"
     {:get {:summary "Health check"
            :tags #{"System"}
-           :handler (constantly {:status 200})}}]])
+           :handler (constantly {:status 200})}}]
+   ["/login"
+    {:get {:summary "Callback used to redirect user back to where they were"
+           :tags #{"System"}
+           :parameters {:query {:redirect s/Str}}
+           :handler (fn [{:keys [parameters]}]
+                      {:status 302
+                       :headers {"Location" (-> parameters :query :redirect)}})}}] ])
 
 (def routes
   ["/api"
