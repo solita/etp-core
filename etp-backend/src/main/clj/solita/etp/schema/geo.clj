@@ -9,3 +9,6 @@
    :maa                 schema/Str})
 
 (def Toimintaalue common-schema/Luokittelu)
+
+(def Country (assoc common-schema/Luokittelu
+               :id schema/Str))

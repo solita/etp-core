@@ -22,6 +22,6 @@
 (t/deftest find-patevyydet-test
   (let [patevyydet (service/find-patevyydet)
         fi-labels (map :label-fi patevyydet)
-        se-labels (map :label-se patevyydet)]
+        se-labels (map :label-sv patevyydet)]
     (t/is (= ["Perustaso" "Ylempi taso"] fi-labels))
     (t/is (= ["Basnivå" "Högre nivå"] se-labels))))

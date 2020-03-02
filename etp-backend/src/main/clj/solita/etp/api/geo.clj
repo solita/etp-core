@@ -9,4 +9,10 @@
     {:get {:summary    "Hae toiminta-alueet -luokittelu"
            :responses  {200 {:body [geo-schema/Toimintaalue]}}
            :handler    (fn [_]
-                         (r/response (geo-service/find-toimintaalueet)))}}]])
+                         (r/response (geo-service/find-toimintaalueet)))}}]
+
+   ["/countries/"
+    {:get {:summary    "Hae toiminta-alueet -luokittelu"
+           :responses  {200 {:body [geo-schema/Country]}}
+           :handler    (fn [{:keys [db]}]
+                         (r/response (geo-service/find-all-countries db)))}}]])

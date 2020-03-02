@@ -6,7 +6,7 @@
 (def Id {:id Key})
 
 (def Luokittelu (merge Id {:label-fi schema/Str
-                           :label-se schema/Str
+                           :label-sv schema/Str
                            (schema/optional-key :deleted) schema/Bool}))
 
 (def Date java.time.LocalDate)
