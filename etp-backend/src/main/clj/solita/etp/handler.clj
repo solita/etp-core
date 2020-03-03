@@ -43,7 +43,14 @@
            :parameters {:query {:redirect s/Str}}
            :handler (fn [{:keys [parameters]}]
                       {:status 302
-                       :headers {"Location" (-> parameters :query :redirect)}})}}] ])
+                       :headers {"Location" (-> parameters :query :redirect)}})}}]
+   ;; TODO Temporary endpoint for seeing headers added by load balancer
+   ["/headers"
+    {:get {:summary "Endpoint for seeing request headers"
+           :tags #{"System"}
+           :handler (fn [{:keys [headers]}]
+                      {:status 200
+                       :body headers})}}]])
 
 (def routes
   ["/api"
