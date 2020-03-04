@@ -1,4 +1,4 @@
-(ns solita.etp.security
+(ns solita.etp.jwt-security
   (:require [clojure.string :as str]
             [buddy.core.codecs :as codecs]
             [buddy.core.codecs.base64 :as base64]
@@ -6,6 +6,8 @@
             ;; TODO json namespace should probably not be
             ;; under service namespace
             [solita.etp.service.json :as json]))
+
+#_(def trusted-issuers #{"https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_qUrLSca82"})
 
 (defn decode-jwt-section [jwt-s-section]
   (try

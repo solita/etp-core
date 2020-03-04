@@ -1,7 +1,7 @@
-(ns solita.etp.security-test
+(ns solita.etp.jwt-security-test
   (:require [clojure.test :as t]
             [clojure.string :as str]
-            [solita.etp.security :as security]))
+            [solita.etp.jwt-security :as jwt]))
 
 ;; Private key that was used to write the test token.
 ;; This is not needed in tests, but handy if you want to
@@ -45,16 +45,16 @@ tArJZ44AEL8sefk9Mnbsxb5hLh8PYpcCZCQ44zSP2EBO/aOVQm1zkQIDAQAB
                                :username "test-username"})
 
 (t/deftest decode-jwt-section
-  (t/is (nil? (security/decode-jwt-section "aaa")))
-  (t/is (= (security/decode-jwt-section test-jwt-header)
+  (t/is (nil? (jwt/decode-jwt-section "aaa")))
+  (t/is (= (jwt/decode-jwt-section test-jwt-header)
            test-jwt-decoded-header))
-  (t/is (= (security/decode-jwt-section test-jwt-payload)
+  (t/is (= (jwt/decode-jwt-section test-jwt-payload)
            test-jwt-decoded-payload)))
 
 (t/deftest decoded-jwt-test
-  (t/is (nil? (security/decoded-jwt "aaa.bbb")))
-  (t/is (nil? (security/decoded-jwt (str test-jwt ".ddd"))))
-  (t/is (= (security/decoded-jwt test-jwt)
+  (t/is (nil? (jwt/decoded-jwt "aaa.bbb")))
+  (t/is (nil? (jwt/decoded-jwt (str test-jwt ".ddd"))))
+  (t/is (= (jwt/decoded-jwt test-jwt)
            {:header test-jwt-decoded-header
             :payload test-jwt-decoded-payload
             :signature test-jwt-signature})))
