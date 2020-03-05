@@ -1,5 +1,6 @@
 (ns solita.etp.jwt-security-test
   (:require [clojure.test :as t]
+            [clojure.java.io :as io]
             [buddy.core.keys :as keys]
             [solita.etp.service.json :as json]
             [solita.etp.jwt-security :as jwt-security]))
@@ -48,7 +49,7 @@ zI6qYxXKEuxvD4MQFVc90/nB+nNLVQjDCfY91p/Ty0VjPIenVMV99QIDAQAB
                      :client_id "test-client_id",
                      :username "test-username"})
 
-(def jwks (-> "src/main/resources/.well-known/jwks.json" slurp json/read-value))
+(def jwks (-> ".well-known/jwks.json" io/resource slurp json/read-value))
 
 (t/deftest trusted-iss->jwks-url-test
   (t/is (= (jwt-security/trusted-iss->jwks-url nil)

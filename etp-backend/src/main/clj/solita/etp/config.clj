@@ -31,4 +31,4 @@
 ;; Misc config
 ;;
 
-(def default-trusted-iss (env "TRUSTED_JWT_ISS" "https://raw.githubusercontent.com/solita/etp-core/develop/etp-backend/src/main/resources"))
+(def default-trusted-iss (env "TRUSTED_JWT_ISS" "https://raw.githubusercontent.com/solita/etp-core/develop/etp-backend/src/test/resources"))
