@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
-package='target/etp-db.jar';
+package='target/etp-db';
 
-if [[ ! -f $package ]]; then
-  echo "Database migration tool package $package does not exists.";
-  echo "Build migration tool using: clj -A:uberjar.";
+if [[ ! -d $package ]]; then
+  echo "Database migration tool directory $package does not exists.";
   exit 1;
 fi
 
