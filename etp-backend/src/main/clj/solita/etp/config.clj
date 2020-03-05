@@ -31,4 +31,4 @@
 ;; Misc config
 ;;
 
-(def default-trusted-iss (env "TRUSTED_JWT_ISS" "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_qUrLSca82"))
+(def default-trusted-iss (env "TRUSTED_JWT_ISS" "https://raw.githubusercontent.com/solita/etp-core/develop/etp-backend/src/main/resources"))
