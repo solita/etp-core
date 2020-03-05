@@ -72,3 +72,14 @@ zI6qYxXKEuxvD4MQFVc90/nB+nNLVQjDCfY91p/Ty0VjPIenVMV99QIDAQAB
 
   (t/is (= (jwt-security/verified-jwt-payload ok-jwt public-key)
            ok-jwt-payload)))
+
+(t/deftest alb-headers-test
+  (t/is (nil? (jwt-security/alb-headers
+               {:headers {"x-amzn-oidc-identity" "123"}})))
+  (t/is (nil? (jwt-security/alb-headers
+               {:headers {"x-amzn-oidc-accesstoken" "abc"}})))
+  (t/is (= (jwt-security/alb-headers
+            {:headers {"x-amzn-oidc-identity" "123"
+                       "x-amzn-oidc-accesstoken" "abc"}})
+           {:id "123"
+            :jwt "abc"})))
