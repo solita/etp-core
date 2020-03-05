@@ -4,6 +4,10 @@
 (defn env [name default]
   (or (System/getenv name) default))
 
+;;
+;; For Integrant components
+;;
+
 (defn db
   ([] (db {}))
   ([opts]
@@ -22,3 +26,9 @@
    {:solita.etp/http-server (merge {:port (env "HTTP_SERVER_PORT" 8080)
                                     :ctx {:db (ig/ref :solita.etp/db)}}
                                    opts)}))
+
+;;
+;; Misc config
+;;
+
+(def default-trusted-iss (env "TRUSTED_JWT_ISS" "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_qUrLSca82"))

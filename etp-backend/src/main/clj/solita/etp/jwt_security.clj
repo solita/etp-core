@@ -1,23 +1,34 @@
 (ns solita.etp.jwt-security
-  (:require [clojure.string :as str]
-            [buddy.core.codecs :as codecs]
-            [buddy.core.codecs.base64 :as base64]
+  (:require [buddy.core.keys :as keys]
+            [buddy.sign.jwe :as jwe]
+            [buddy.sign.jwt :as jwt]
+            [org.httpkit.client :as http]
 
             ;; TODO json namespace should probably not be
             ;; under service namespace
-            [solita.etp.service.json :as json]))
+            [solita.etp.service.json :as json]
+            [solita.etp.config :as config]))
 
-#_(def trusted-issuers #{"https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_qUrLSca82"})
+(defn trusted-iss->jwks-url [trusted-iss]
+  (str trusted-iss "/.well-known/jwks.json"))
 
-(defn decode-jwt-section [jwt-s-section]
-  (try
-    (->> jwt-s-section base64/decode codecs/bytes->str json/read-value)
-    (catch Exception e (do (.printStackTrace e)
-                           nil))))
+(defn get-public-key [url]
+  (let [{:keys [status body]} @(http/get url)]
+    (when (= status 200)
+      (-> body json/read-value keys/jwk->public-key))))
 
-(defn decoded-jwt [jwt-s]
-  (let [[header payload signature :as all] (str/split jwt-s #"\.")]
-    (when (= (count all) 3)
-      {:header (decode-jwt-section header)
-       :payload (decode-jwt-section payload)
-       :signature signature})))
+(def get-public-key-by-iss
+  (memoize (fn [iss] (-> iss trusted-iss->jwks-url get-public-key))))
+
+(defn verified-jwt-payload [jwt public-key]
+  (jwt/unsign jwt public-key {:alg (-> jwt jwe/decode-header :alg)}))
+
+(defn middleware-for-alb [handler]
+  (fn [{:keys [headers] :as req}]
+    (let [{id "x-amzn-oidc-identity"
+           jwt "x-amzn-oidc-accesstoken"} headers
+          public-key (get-public-key-by-iss config/default-trusted-iss)
+          payload (verified-jwt-payload jwt public-key)]
+      (if (= (:sub payload) id)
+        payload
+        (throw (ex-info "x-amzn-oidc-access-token \"sub\" did not match x-amzn-oidc-identity"))))))
