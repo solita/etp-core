@@ -1,6 +1,7 @@
 (ns solita.etp.jwt-security-test
   (:require [clojure.test :as t]
             [buddy.core.keys :as keys]
+            [solita.etp.service.json :as json]
             [solita.etp.jwt-security :as jwt-security]))
 
 ;; It would be possible to just create a jwt for tests with buddy. However,
@@ -47,11 +48,19 @@ zI6qYxXKEuxvD4MQFVc90/nB+nNLVQjDCfY91p/Ty0VjPIenVMV99QIDAQAB
                      :client_id "test-client_id",
                      :username "test-username"})
 
+(def jwks (-> "src/main/resources/.well-known/jwks.json" slurp json/read-value))
+
 (t/deftest trusted-iss->jwks-url-test
   (t/is (= (jwt-security/trusted-iss->jwks-url nil)
            "/.well-known/jwks.json"))
   (t/is (= (jwt-security/trusted-iss->jwks-url "https://example.com")
            "https://example.com/.well-known/jwks.json")))
+
+(t/deftest public-key-from-jwks-test
+  (t/is (= (-> jwks
+               (jwt-security/public-key-from-jwks "test-kid")
+               .getPublicExponent)
+           65537)))
 
 (t/deftest verify-jwt-test
   (t/is (thrown? clojure.lang.ExceptionInfo
@@ -62,4 +71,4 @@ zI6qYxXKEuxvD4MQFVc90/nB+nNLVQjDCfY91p/Ty0VjPIenVMV99QIDAQAB
                  (jwt-security/verified-jwt-payload expired-jwt public-key)))
 
   (t/is (= (jwt-security/verified-jwt-payload ok-jwt public-key)
-           test-jwt-payload)))
+           ok-jwt-payload)))
