@@ -18,6 +18,7 @@
             [solita.etp.api.yritys :as yritys-api]
             [solita.etp.api.laatija :as laatija-api]
             [solita.etp.api.geo :as geo-api]
+            [solita.etp.jwt-security :as jwt-security]
             [solita.etp.exception :as exception]
             [solita.common.map :as map]))
 
@@ -54,11 +55,12 @@
 
 (def routes
   ["/api"
-   (concat system-routes
-           (tag "User API" user-api/routes)
-           (tag "Yritys API" yritys-api/routes)
-           (tag "Laatijat API" laatija-api/routes)
-           (tag "Geo API" geo-api/routes))])
+   system-routes
+   ["/private" {:middleware [[jwt-security/middleware-for-alb]]}
+    (concat (tag "User API" user-api/routes)
+            (tag "Yritys API" yritys-api/routes)
+            (tag "Laatijat API" laatija-api/routes)
+            (tag "Geo API" geo-api/routes))]])
 
 (def route-opts
   {;; Uncomment line below to see diffs of requests in middleware chain
