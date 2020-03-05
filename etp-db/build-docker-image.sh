@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-rm -rf target
-clojure -A:uberjar
-docker build . --tag etp-db
+containername=${1:-'etp-db'}
+
+./build.sh
+docker build . --tag $containername
