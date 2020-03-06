@@ -58,18 +58,18 @@ zI6qYxXKEuxvD4MQFVc90/nB+nNLVQjDCfY91p/Ty0VjPIenVMV99QIDAQAB
            "https://example.com/.well-known/jwks.json")))
 
 (t/deftest public-key-from-jwks-test
+  (t/is (nil? (jwt-security/public-key-from-jwks jwks "nonexisting-kid")))
   (t/is (= (-> jwks
                (jwt-security/public-key-from-jwks "test-kid")
                .getPublicExponent)
            65537)))
 
-(t/deftest verify-jwt-test
-  (t/is (thrown? clojure.lang.ExceptionInfo
-                 #"Message seems corrupt or manipulated."
-                 (jwt-security/verified-jwt-payload ok-jwt wrong-public-key)))
-  (t/is (thrown? clojure.lang.ExceptionInfo
-                 #"Token is expored (1583020800)"
-                 (jwt-security/verified-jwt-payload expired-jwt public-key)))
+(t/deftest verified-jwt-test
+  (t/is (nil? (jwt-security/verified-jwt-payload nil public-key)))
+  (t/is (nil? (jwt-security/verified-jwt-payload ok-jwt nil)))
+  (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
+                          #"Token is expired \(1583020800\)"
+                          (jwt-security/verified-jwt-payload expired-jwt public-key)))
 
   (t/is (= (jwt-security/verified-jwt-payload ok-jwt public-key)
            ok-jwt-payload)))
