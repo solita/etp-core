@@ -69,8 +69,12 @@ zI6qYxXKEuxvD4MQFVc90/nB+nNLVQjDCfY91p/Ty0VjPIenVMV99QIDAQAB
   (t/is (nil? (jwt-security/verified-jwt-payload ok-jwt nil)))
   (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
                           #"Token is expired \(1583020800\)"
-                          (jwt-security/verified-jwt-payload expired-jwt public-key)))
-
+                          (jwt-security/verified-jwt-payload expired-jwt
+                                                             public-key)))
+  (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
+                          #"Message seems corrupt or manipulated"
+                          (jwt-security/verified-jwt-payload ok-jwt
+                                                             wrong-public-key)))
   (t/is (= (jwt-security/verified-jwt-payload ok-jwt public-key)
            ok-jwt-payload)))
 
