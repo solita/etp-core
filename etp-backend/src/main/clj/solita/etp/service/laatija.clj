@@ -1,5 +1,6 @@
 (ns solita.etp.service.laatija
-  (:require [solita.etp.db :as db]
+  (:require [clojure.java.jdbc :as jdbc]
+            [solita.etp.db :as db]
             [solita.etp.schema.laatija :as laatija-schema]
             [solita.etp.service.json :as json]
             [schema.coerce :as coerce]))
@@ -10,17 +11,30 @@
 ; *** Conversions from database data types ***
 (def coerce-laatija (coerce/coercer laatija-schema/Laatija json/json-coercions))
 
-(defn add-laatija! [db laatija]
-  (:id (laatija-db/insert-laatija<! db {:data (json/write-value-as-string laatija)})))
-
 (defn find-laatija [db id]
   (first (map (comp coerce-laatija json/merge-data) (laatija-db/select-laatija db {:id id}))))
+
+(defn find-laatija-with-henkilotunnus [db henkilotunnus]
+  (first (map (comp coerce-laatija json/merge-data) (laatija-db/select-laatija-with-henkilotunnus db {:henkilotunnus henkilotunnus}))))
+
+(defn add-or-update-existing-laatijat! [ctx laatijat]
+  (jdbc/with-db-transaction
+    [db ctx]
+    (mapv (fn [{:keys [henkilotunnus] :as laatija}]
+            ; TODO: use upsert instead
+            (if-let [{:keys [id] :as existing-laatija} (find-laatija-with-henkilotunnus db henkilotunnus)]
+              (let [laatija-update (merge existing-laatija (select-keys laatija [:patevyys :patevyys-voimassaoloaika]))]
+                (laatija-db/update-laatija! db {:id   id
+                                                :data (json/write-value-as-string laatija-update)})
+                id)
+              (:id (laatija-db/insert-laatija<! db {:data (json/write-value-as-string laatija)})))) laatijat)))
 
 ;;
 ;; Pätevyydet
 ;;
 
-(def patevyydet [{:id 0 :label-fi "Perustaso" :label-sv "Basnivå"}
-                 {:id 1 :label-fi "Ylempi taso" :label-sv "Högre nivå"}])
+(def patevyystasot [{:id 1 :label-fi "Perustaso" :label-sv "Basnivå"}
+                    {:id 2 :label-fi "Ylempi taso" :label-sv "Högre nivå"}])
 
-(defn find-patevyydet [] patevyydet)
+(defn find-patevyydet [] patevyystasot)
+
