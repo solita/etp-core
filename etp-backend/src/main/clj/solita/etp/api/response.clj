@@ -13,3 +13,6 @@
 
 (defn created [path id]
   (r/created (str path "/" id) {:id id}))
+
+(defn items-created [path ids]
+  (r/created (str path "/") {:ids ids}))

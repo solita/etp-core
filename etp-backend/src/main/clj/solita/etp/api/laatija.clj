@@ -9,12 +9,12 @@
 (def routes
   [["/laatijat"
     [""
-     {:post {:summary    "Lisää uuden laatijan tiedot laatijarekisteriin"
-             :parameters {:body laatija-schema/LaatijaSave}
-             :responses  {201 {:body common-schema/Id}}
+     {:post {:summary    "Lisää laatijat laatijarekisteriin"
+             :parameters {:body laatija-schema/LaatijatSave}
+             :responses  {201 {:body common-schema/Ids}}
              :handler    (fn [{:keys [db body-params uri]}]
-                           (->> (laatija-service/add-laatija! db body-params)
-                                (api-response/created uri)))}}]
+                           (->> (laatija-service/add-or-update-existing-laatijat! db body-params)
+                                (api-response/items-created uri)))}}]
     ["/:id"
      {:get {:summary    "Hae laatijan tiedot"
             :parameters {:path {:id common-schema/Key}}
@@ -25,7 +25,7 @@
                               (api-response/get-response
                                (str "Laatija " id " does not exist."))))}}]]
    ["/patevyydet/"
-    {:get {:summary    "Hae pätevyydet-luokittelu"
-           :responses  {200 {:body [laatija-schema/Patevyys]}}
-           :handler    (fn [_]
-                         (r/response (laatija-service/find-patevyydet)))}}]])
+    {:get {:summary   "Hae pätevyydet-luokittelu"
+           :responses {200 {:body [laatija-schema/Patevyys]}}
+           :handler   (fn [_]
+                        (r/response (laatija-service/find-patevyystasot)))}}]])

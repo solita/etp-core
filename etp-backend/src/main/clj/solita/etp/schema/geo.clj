@@ -3,10 +3,10 @@
             [solita.etp.schema.common :as common-schema]))
 
 (def Postiosoite
-  {:jakeluosoite        schema/Str
-   :postinumero         schema/Str
-   :postitoimipaikka    schema/Str
-   :maa                 schema/Str})
+  {:jakeluosoite              schema/Str
+   :postinumero               schema/Str
+   :postitoimipaikka          schema/Str
+   (schema/optional-key :maa) schema/Str})
 
 (def Toimintaalue common-schema/Luokittelu)
 

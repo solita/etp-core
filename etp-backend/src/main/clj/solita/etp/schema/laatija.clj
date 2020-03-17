@@ -12,24 +12,33 @@
 (def MuutToimintaalueet (schema/constrained [common-schema/Key]
                                             valid-muut-toimintaalueet?))
 
-;; TODO missing field for laskentaohjelmistot
-(def LaatijaSave
-  "This schema is used in add-laatija and update-laatija services"
-  (merge {:etunimi                       schema/Str
-          :sukunimi                      schema/Str
-          :henkilotunnus                 common-schema/Henkilotunnus
-          :email                         schema/Str
-          :puhelin                       schema/Str
-          :patevyys                      common-schema/Key
-          :patevyys-voimassa             schema/Bool
-          :patevyys-voimassaoloaika      common-schema/DateInterval
-          :toimintaalue                  common-schema/Key
-          :muut-toimintaalueet           MuutToimintaalueet
-          :julkinen-puhelin              schema/Bool
-          :julkinen-email                schema/Bool
-          :ensitallennus                 schema/Bool}
-         geo-schema/Postiosoite))
+(def PatevyydenToteaja (schema/enum "FISE" "KIINKO"))
 
+;; TODO missing field for laskentaohjelmistot
+;
 (def Laatija
   "Laatija schema contains basic information about persistent laatija"
-  (merge common-schema/Id LaatijaSave))
+  (merge {:etunimi                                   schema/Str
+          :sukunimi                                  schema/Str
+          :henkilotunnus                             common-schema/Henkilotunnus
+          :email                                     schema/Str
+          :puhelin                                   schema/Str
+          :patevyystaso                              common-schema/Key
+          :toteamispaivamaara                        common-schema/Date
+          :toteaja                                   PatevyydenToteaja
+          (schema/optional-key :laatimiskielto)      schema/Bool
+          (schema/optional-key :toimintaalue)        common-schema/Key
+          (schema/optional-key :muut-toimintaalueet) MuutToimintaalueet
+          (schema/optional-key :julkinen-puhelin)    schema/Bool
+          (schema/optional-key :julkinen-email)      schema/Bool
+          (schema/optional-key :ensitallennus)       schema/Bool}
+         common-schema/Id
+         geo-schema/Postiosoite))
+
+(def LaatijaSave
+  "This schema is used in add-laatija"
+  (-> Laatija
+      (dissoc :id)))
+
+(def LaatijatSave
+  [LaatijaSave])
