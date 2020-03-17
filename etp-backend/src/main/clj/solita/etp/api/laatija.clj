@@ -25,7 +25,7 @@
                               (api-response/get-response
                                (str "Laatija " id " does not exist."))))}}]]
    ["/patevyydet/"
-    {:get {:summary    "Hae pätevyydet-luokittelu"
-           :responses  {200 {:body [laatija-schema/Patevyys]}}
-           :handler    (fn [_]
-                         (r/response (laatija-service/find-patevyydet)))}}]])
+    {:get {:summary   "Hae pätevyydet-luokittelu"
+           :responses {200 {:body [laatija-schema/Patevyys]}}
+           :handler   (fn [_]
+                        (r/response (laatija-service/find-patevyystasot)))}}]])

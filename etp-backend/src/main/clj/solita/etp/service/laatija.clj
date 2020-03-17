@@ -11,15 +11,18 @@
 ; *** Conversions from database data types ***
 (def coerce-laatija (coerce/coercer laatija-schema/Laatija json/json-coercions))
 
+(defn find-all-laatijat [db]
+  (map (comp coerce-laatija json/merge-data) (laatija-db/select-laatijat db)))
+
 (defn find-laatija [db id]
   (first (map (comp coerce-laatija json/merge-data) (laatija-db/select-laatija db {:id id}))))
 
 (defn find-laatija-with-henkilotunnus [db henkilotunnus]
   (first (map (comp coerce-laatija json/merge-data) (laatija-db/select-laatija-with-henkilotunnus db {:henkilotunnus henkilotunnus}))))
 
-(defn add-or-update-existing-laatijat! [ctx laatijat]
+(defn add-or-update-existing-laatijat! [db laatijat]
   (jdbc/with-db-transaction
-    [db ctx]
+    [db db]
     (mapv (fn [{:keys [henkilotunnus] :as laatija}]
             ; TODO: use upsert instead
             (if-let [{:keys [id] :as existing-laatija} (find-laatija-with-henkilotunnus db henkilotunnus)]
@@ -36,5 +39,5 @@
 (def patevyystasot [{:id 1 :label-fi "Perustaso" :label-sv "Basnivå"}
                     {:id 2 :label-fi "Ylempi taso" :label-sv "Högre nivå"}])
 
-(defn find-patevyydet [] patevyystasot)
+(defn find-patevyystasot [] patevyystasot)
 

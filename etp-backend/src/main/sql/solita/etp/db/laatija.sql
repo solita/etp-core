@@ -9,3 +9,6 @@ select id, data from laatija where id = :id
 
 -- name: select-laatija-with-henkilotunnus
 select id, data from laatija where data->> 'henkilotunnus' = :henkilotunnus
+
+-- name: select-laatijat
+select id, data from laatija
