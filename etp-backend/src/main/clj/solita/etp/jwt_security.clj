@@ -44,7 +44,7 @@
           public-key (get-public-key config/trusted-jwt-iss kid)
           payload (verified-jwt-payload jwt public-key)]
       (when (and payload (= (:sub payload) id)) payload))
-    (catch Throwable e (.printStackTrace e))))
+    (catch Exception e (.printStackTrace e))))
 
 (defn middleware-for-alb [handler]
   (fn [req]
