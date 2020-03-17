@@ -37,15 +37,17 @@
 
 (def forbidden {:status 403 :body "Forbidden"})
 
+(defn req->jwt-payload [req]
+  (try
+    (let [{:keys [id jwt]} (alb-headers req)
+          kid (-> jwt jwe/decode-header :kid)
+          public-key (get-public-key config/trusted-jwt-iss kid)
+          payload (verified-jwt-payload jwt public-key)]
+      (when (and payload (= (:sub payload) id)) payload))
+    (catch Exception e (.printStackTrace e))))
+
 (defn middleware-for-alb [handler]
   (fn [req]
-    (try
-      (let [{:keys [id jwt]} (alb-headers req)
-            kid (-> jwt jwe/decode-header :kid)
-            public-key (get-public-key config/trusted-jwt-iss kid)
-            payload (verified-jwt-payload jwt public-key)]
-        (if (and payload (= (:sub payload) id))
-          (handler (assoc req :jwt-payload payload))
-          forbidden))
-      (catch Throwable e (do (.printStackTrace e)
-                             forbidden)))))
+    (if-let [payload (req->jwt-payload req)]
+      (handler (assoc req :jwt-payload payload))
+      forbidden)))
