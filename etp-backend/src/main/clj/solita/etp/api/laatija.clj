@@ -16,14 +16,22 @@
                            (->> (laatija-service/add-or-update-existing-laatijat! db body-params)
                                 (api-response/items-created uri)))}}]
     ["/:id"
-     {:get {:summary    "Hae laatijan tiedot"
-            :parameters {:path {:id common-schema/Key}}
-            :responses  {200 {:body laatija-schema/Laatija}
-                         404 {:body schema/Str}}
-            :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
-                          (-> (laatija-service/find-laatija db id)
-                              (api-response/get-response
-                               (str "Laatija " id " does not exist."))))}}]]
+      [""
+       {:get {:summary    "Hae laatijan tiedot"
+              :parameters {:path {:id common-schema/Key}}
+              :responses  {200 {:body laatija-schema/Laatija}
+                           404 {:body schema/Str}}
+              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                            (-> (laatija-service/find-laatija db id)
+                                (api-response/get-response
+                                 (str "Laatija " id " does not exist."))))}}]
+      ["/yritykset"
+       {:get {:summary    "Hae laatijan yritykset"
+              :parameters {:path {:id common-schema/Key}}
+              :responses  {200 {:body [common-schema/Id]}}
+              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                            (-> (laatija-service/find-laatija-yritykset db id)
+                                (api-response/get-response nil)))}}]]]
    ["/patevyydet/"
     {:get {:summary   "Hae pätevyydet-luokittelu"
            :responses {200 {:body [laatija-schema/Patevyys]}}

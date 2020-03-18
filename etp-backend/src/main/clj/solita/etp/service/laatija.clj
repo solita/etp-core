@@ -17,6 +17,9 @@
 (defn find-laatija [db id]
   (first (map (comp coerce-laatija json/merge-data) (laatija-db/select-laatija db {:id id}))))
 
+(defn find-laatija-yritykset [db id]
+  (map :yritys-id (laatija-db/select-laatija-yritykset db {:id id})))
+
 (defn find-laatija-with-henkilotunnus [db henkilotunnus]
   (first (map (comp coerce-laatija json/merge-data) (laatija-db/select-laatija-with-henkilotunnus db {:henkilotunnus henkilotunnus}))))
 
