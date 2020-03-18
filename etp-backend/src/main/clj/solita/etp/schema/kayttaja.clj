@@ -5,15 +5,19 @@
 
 (def Whoami (merge common-schema/Id {:username schema/Str}))
 
+(def KayttajaAdd {:etunimi       schema/Str
+                  :sukunimi      schema/Str
+                  :email         schema/Str
+                  :puhelin       schema/Str})
+
+(def KayttajaUpdate (merge KayttajaAdd
+                           {:passivoitu schema/Bool
+                            :rooli      common-schema/Key}))
+
 (def Kayttaja
-  "Schema for käyttäjä without laatija"
-  (merge {:etunimi       schema/Str
-          :sukunimi      schema/Str
-          :email         schema/Str
-          :puhelin       schema/Str
-          :passivoitu    schema/Bool
-          :rooli         common-schema/Key
-          :login         common-schema/Date
+  "Schema representing the persistent kayttaja"
+  (merge KayttajaUpdate
+         common-schema/Id
+         {:login         (schema/maybe common-schema/Date)
           :ensitallennus schema/Bool
-          :cognitoid     schema/Str}
-         common-schema/Id))
+          :cognitoid     (schema/maybe schema/Str)}))
