@@ -1,5 +1,6 @@
 (ns solita.etp.service.laatija
   (:require [clojure.java.jdbc :as jdbc]
+            [solita.common.map :as map]
             [solita.etp.db :as db]
             [solita.etp.schema.laatija :as laatija-schema]
             [solita.etp.service.json :as json]
@@ -19,6 +20,9 @@
 
 (defn find-laatija-yritykset [db id]
   (map :yritys-id (laatija-db/select-laatija-yritykset db {:id id})))
+
+(defn attach-laatija-yritys [db laatija-id yritys-id]
+  (laatija-db/insert-laatija-yritys! db (map/bindings->map laatija-id yritys-id)))
 
 (defn find-laatija-with-henkilotunnus [db henkilotunnus]
   (first (map (comp coerce-laatija json/merge-data) (laatija-db/select-laatija-with-henkilotunnus db {:henkilotunnus henkilotunnus}))))
