@@ -21,6 +21,6 @@
 (def exception-middleware
   (exception/create-exception-middleware
     (assoc exception/default-handlers
-      :default default-handler
+      ::exception/default default-handler
       :unique-violation unique-exception-handler)))
 
