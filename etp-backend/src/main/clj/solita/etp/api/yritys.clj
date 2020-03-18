@@ -14,7 +14,13 @@
              :responses  {201 {:body common-schema/Id}}
              :handler    (fn [{:keys [db body-params uri]}]
                            (api-response/created uri
-                             (yritys-service/add-yritys! db body-params)))}}]
+                             (yritys-service/add-yritys! db body-params)))}
+
+      :get {:summary    "Hae kaikki yritykset"
+            :responses  {200 {:body [yritys-schema/Yritys]}}
+            :handler    (fn [{:keys [db]}]
+                           (api-response/get-response
+                              (yritys-service/find-all-yritykset db) nil))}}]
 
     ["/:id"
      [""

@@ -18,3 +18,6 @@
 
 (defn find-yritys [db id]
   (first (map (comp coerce-yritys json/merge-data) (yritys-db/select-yritys db {:id id}))))
+
+(defn find-all-yritykset [db]
+  (map (comp coerce-yritys json/merge-data) (yritys-db/select-all-yritykset db)))

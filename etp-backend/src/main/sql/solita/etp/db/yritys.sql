@@ -8,3 +8,6 @@ update yritys set data = :data :: JSONB where id = :id
 -- name: select-yritys
 select id, ytunnus, data from yritys where id = :id
 
+-- name: select-all-yritykset
+select id, ytunnus, data from yritys
+
