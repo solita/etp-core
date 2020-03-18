@@ -8,8 +8,8 @@ create table kayttaja (
   katuosoite text NOT NULL,
   postinumero text NOT NULL,
   postitoimipaikka text NOT NULL,
-  maa char(2) REFERENCES country (id),
-  passivoitu boolean NOT NULL DEFAULT false,
-  rooli int NOT NULL default 0,
-  cognito_id TEXT
+  maa char(2) DEFAULT 'FI' NOT NULL REFERENCES country (id),
+  passivoitu boolean DEFAULT false NOT NULL,
+  rooli int DEFAULT 0 NOT NULL,
+  cognito_id text
 );
