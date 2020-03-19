@@ -14,7 +14,7 @@ select id, data from laatija where data->> 'henkilotunnus' = :henkilotunnus
 select id, data from laatija
 
 -- name: select-laatija-yritykset
-select yritys_id from laatija_yritys where laatija_id = :id
+select yritys_id "yritys-id" from laatija_yritys where laatija_id = :id
 
 -- name: insert-laatija-yritys!
 insert into laatija_yritys (laatija_id, yritys_id)
