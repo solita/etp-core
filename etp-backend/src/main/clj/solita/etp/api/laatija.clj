@@ -41,7 +41,9 @@
                              404 common-schema/ConstraintError}
                 :handler    (fn [{{{:keys [id yritys-id]} :path} :parameters :keys [db]}]
                               (api-response/response-with-exceptions
-                                #(laatija-service/attach-laatija-yritys db id yritys-id)
+                                #(do
+                                   (laatija-service/attach-laatija-yritys db id yritys-id)
+                                   nil)
                                 [{:constraint :laatija-yritys-laatija-id-fkey :response 404}
                                  {:constraint :laatija-yritys-yritys-id-fkey :response 404}]))}}]]]]
    ["/patevyydet/"
