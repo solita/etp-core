@@ -1,32 +1,41 @@
 (ns solita.etp.schema.laatija
   (:require [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]
-            [solita.etp.schema.geo :as geo-schema]))
+            [solita.etp.schema.geo :as geo-schema]
+            [solita.etp.schema.kayttaja :as kayttaja-schema]))
 
 (def Patevyystaso common-schema/Luokittelu)
 
 (defn valid-muut-toimintaalueet? [toimintaalueet]
   (and (<= 0 (count toimintaalueet) 6)
-       (apply distinct? toimintaalueet)))
+       (or (empty? toimintaalueet)
+           (apply distinct? toimintaalueet))))
 
 (def MuutToimintaalueet (schema/constrained [common-schema/Key] valid-muut-toimintaalueet?))
 
 (def PatevyydenToteaja (schema/enum "FISE" "KIINKO"))
 
+(def LaatijaAdd (merge {:henkilotunnus      common-schema/Henkilotunnus
+                        :patevyystaso       common-schema/Key
+                        :toteamispaivamaara common-schema/Date
+                        :toteaja            PatevyydenToteaja}
+                       geo-schema/Postiosoite))
+
+(def LaatijaUpdate (merge LaatijaAdd {:laatimiskielto     schema/Bool
+                                      :toimintaalue       (schema/maybe common-schema/Key)
+                                      :muuttoimintaalueet MuutToimintaalueet
+                                      :julkinenpuhelin    schema/Bool
+                                      :julkinenemail      schema/Bool
+                                      :julkinenosoite     schema/Bool}))
+
 (def Laatija
-  "Schema for persistent laatija without käyttäjä"
-  (merge {:kayttaja            common-schema/Key
-          :henkilotunnus       common-schema/Henkilotunnus
-          :patevyystaso        common-schema/Key
-          :toteamispaivamaara  common-schema/Date
-          :toteaja             PatevyydenToteaja
-          :laatimiskielto      schema/Bool
-          :toimintaalue        common-schema/Key
-          :muut-toimintaalueet MuutToimintaalueet
-          :julkisuus           {:puhelin schema/Bool
-                                :email   schema/Bool
-                                :osoite  schema/Bool}}
-         geo-schema/Postiosoite
+  "Schema representing the persistent laatija"
+  (merge LaatijaUpdate {:kayttaja common-schema/Key}
          common-schema/Id))
 
-(def LaatijaSave (dissoc Laatija :id))
+(def KayttajaLaatijaAdd {:kayttaja kayttaja-schema/KayttajaAdd
+                         :laatija LaatijaAdd})
+
+(def KayttajaLaatija
+  {:kayttaja kayttaja-schema/Kayttaja
+   :laatija Laatija})
