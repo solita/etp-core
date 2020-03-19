@@ -51,5 +51,4 @@
 
 (def ConstraintError
   { :type schema/Keyword
-    :constraint schema/Keyword
-   })
+    :constraint schema/Keyword})
