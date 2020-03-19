@@ -29,7 +29,7 @@
         [""
          {:get {:summary    "Hae laatijan yritykset"
                 :parameters {:path {:id common-schema/Key}}
-                :responses  {200 {:body [common-schema/Id]}}
+                :responses  {200 {:body [common-schema/Key]}}
                 :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                               (-> (laatija-service/find-laatija-yritykset db id)
                                   (api-response/get-response nil)))}}]
@@ -41,7 +41,9 @@
                              404 common-schema/ConstraintError}
                 :handler    (fn [{{{:keys [id yritys-id]} :path} :parameters :keys [db]}]
                               (api-response/response-with-exceptions
-                                #(laatija-service/attach-laatija-yritys db id yritys-id)
+                                #(do
+                                   (laatija-service/attach-laatija-yritys db id yritys-id)
+                                   nil)
                                 [{:constraint :laatija-yritys-laatija-id-fkey :response 404}
                                  {:constraint :laatija-yritys-yritys-id-fkey :response 404}]))}}]]]]
    ["/patevyydet/"
