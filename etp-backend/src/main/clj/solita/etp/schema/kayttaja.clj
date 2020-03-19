@@ -1,7 +1,6 @@
 (ns solita.etp.schema.kayttaja
   (:require [schema.core :as schema]
-            [solita.etp.schema.common :as common-schema]
-            [solita.etp.schema.laatija :as laatija-schema]))
+            [solita.etp.schema.common :as common-schema]))
 
 (def Whoami (merge common-schema/Id {:username schema/Str}))
 

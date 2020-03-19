@@ -12,7 +12,7 @@
 
 (t/deftest add-and-find-test
   (doseq [kayttaja (repeatedly 100 #(g/generate kayttaja-schema/KayttajaAdd))
-          :let [id (service/add-kayttaja! ts/*db* kayttaja)]
-          found-kayttaja (service/find-kayttaja ts/*db* id)]
-    (schema/validate kayttaja-schema/Kayttaja found-kayttaja)
-    (t/is (solita-map/submap? kayttaja found-kayttaja))))
+          :let [id (service/add-kayttaja! ts/*db* kayttaja)
+                found (service/find-kayttaja ts/*db* id)]]
+    (schema/validate kayttaja-schema/Kayttaja found)
+    (t/is (solita-map/submap? kayttaja found))))

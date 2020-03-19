@@ -11,8 +11,9 @@
 ; *** Conversions from database data types ***
 (def coerce-kayttaja (coerce/coercer kayttaja-schema/Kayttaja json/json-coercions))
 
+(defn find-kayttaja [db id]
+  (->> {:id id}
+       (kayttaja-db/select-kayttaja db) (map coerce-kayttaja) first))
+
 (defn add-kayttaja! [db kayttaja]
   (:id (kayttaja-db/insert-kayttaja<! db kayttaja)))
-
-(defn find-kayttaja [db id]
-  (map coerce-kayttaja (kayttaja-db/select-kayttaja db {:id id})))
