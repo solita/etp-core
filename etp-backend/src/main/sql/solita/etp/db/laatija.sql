@@ -1,17 +1,11 @@
 -- name: insert-laatija<!
-insert into laatija (data) values (:data :: JSONB) returning id
+INSERT INTO laatija (kayttaja, henkilotunnus, patevyystaso, toteamispaivamaara, toteaja, jakeluosoite, postinumero, postitoimipaikka, maa) VALUES (:kayttaja, :henkilotunnus, :patevyystaso, :toteamispaivamaara, :toteaja, :jakeluosoite, :postinumero, :postitoimipaikka, :maa) returning id
 
 -- name: update-laatija!
-update laatija set data = :data :: JSONB where id = :id
+UPDATE laatija SET patevyystaso = :patevyystaso, toteamispaivamaara = :toteamispaivamaara, toteaja = :toteaja, laatimiskielto = :laatimiskielto, toimintaalue = :toimintaalue, muut_toimintaalueet = array_remove(ARRAY[ :muuttoimintaalueet ] ::int[], NULL), julkinen_puhelin = :julkinenpuhelin, julkinen_email = :julkinenemail, julkinen_osoite = :julkinenosoite, jakeluosoite = :jakeluosoite, postinumero = :postinumero, postitoimipaikka = :postitoimipaikka, maa = :maa WHERE id = :id
 
--- name: select-laatija
-select id, data from laatija where id = :id
-
--- name: select-laatija-with-henkilotunnus
-select id, data from laatija where data->> 'henkilotunnus' = :henkilotunnus
-
--- name: select-laatijat
-select id, data from laatija
+  --name: select-laatija-with-henkilotunnus
+SELECT id, kayttaja, henkilotunnus, patevyystaso, toteamispaivamaara, toteaja, laatimiskielto, toimintaalue, muut_toimintaalueet as muuttoimintaalueet, julkinen_puhelin as julkinenpuhelin, julkinen_email as julkinenemail, julkinen_osoite as julkinenosoite, jakeluosoite, postinumero, postitoimipaikka, maa FROM laatija WHERE henkilotunnus = :henkilotunnus
 
 -- name: select-laatija-yritykset
 select yritys_id "yritys-id" from laatija_yritys where laatija_id = :id
