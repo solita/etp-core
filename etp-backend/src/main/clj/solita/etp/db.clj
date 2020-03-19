@@ -17,7 +17,7 @@
 (defn constraint [^ServerErrorMessage error]
   (keyword (str/replace (.getConstraint error) "_" "-")))
 
-(defn translatePSQLException [psqle]
+(defn translatePSQLException [^PSQLException psqle]
   (let [error (.getServerErrorMessage psqle)]
     (case (.getSQLState error)
       "23505"
