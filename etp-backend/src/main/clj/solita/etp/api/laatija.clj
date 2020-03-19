@@ -29,7 +29,7 @@
         [""
          {:get {:summary    "Hae laatijan yritykset"
                 :parameters {:path {:id common-schema/Key}}
-                :responses  {200 {:body [schema/Int]}}
+                :responses  {200 {:body [common-schema/Key]}}
                 :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                               (-> (laatija-service/find-laatija-yritykset db id)
                                   (api-response/get-response nil)))}}]
