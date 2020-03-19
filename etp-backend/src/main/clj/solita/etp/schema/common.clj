@@ -48,3 +48,7 @@
          (= checksum (Integer/parseInt (str (get ytunnus 8)))))))
 
 (def Ytunnus (schema/constrained schema/Str valid-ytunnus?))
+
+(def ConstraintError
+  { :type schema/Keyword
+    :constraint schema/Keyword})

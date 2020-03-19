@@ -37,10 +37,13 @@
          {:put {:summary    "Liitä laatija yritykseen"
                 :parameters {:path {:id common-schema/Key
                                     :yritys-id common-schema/Key}}
-                :responses  {200 {:body nil}}
+                :responses  {200 {:body nil}
+                             404 common-schema/ConstraintError}
                 :handler    (fn [{{{:keys [id yritys-id]} :path} :parameters :keys [db]}]
-                              (do (laatija-service/attach-laatija-yritys db id yritys-id)
-                                  (api-response/get-response nil nil)))}}]]]]
+                              (api-response/response-with-exceptions
+                                #(laatija-service/attach-laatija-yritys db id yritys-id)
+                                [{:constraint :laatija-yritys-laatija-id-fkey :response 404}
+                                 {:constraint :laatija-yritys-yritys-id-fkey :response 404}]))}}]]]]
    ["/patevyydet/"
     {:get {:summary   "Hae pätevyydet-luokittelu"
            :responses {200 {:body [laatija-schema/Patevyys]}}

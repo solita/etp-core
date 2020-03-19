@@ -4,7 +4,7 @@
             [jeesql.core :as jeesql]
             [jeesql.generate :as jeesql-generate]
             [clojure.string :as str])
-  (:import (org.postgresql.util PSQLException)))
+  (:import (org.postgresql.util PSQLException ServerErrorMessage)))
 
 (defmethod ig/init-key :solita.etp/db
   [_ opts]
@@ -14,20 +14,36 @@
   [_ {:keys [datasource]}]
   (hikari/close-datasource datasource))
 
+(defn constraint [^ServerErrorMessage error]
+  (keyword (str/replace (.getConstraint error) "_" "-")))
+
+(defn translatePSQLException [^PSQLException psqle]
+  (let [error (.getServerErrorMessage psqle)]
+    (case (.getSQLState error)
+      "23505"
+      (ex-info
+        (.getMessage psqle)
+        {:type       :unique-violation
+         :constraint (constraint error)}
+        psqle)
+      "23503"
+      (ex-info
+        (.getMessage psqle)
+        {:type       :foreign-key-violation
+         :constraint (constraint error)}
+        psqle)
+      psqle)))
+
 (defn with-db-exception-translation [db-function args]
   (try
     (apply db-function args)
     (catch PSQLException psqle
-      (let [error (.getServerErrorMessage psqle)]
-        (throw
-          (case (.getSQLState error)
-            "23505"
-            (ex-info
-              (.getMessage psqle)
-              {:type       :unique-violation
-               :constraint (keyword (str/replace (.getConstraint error) "_" "-"))}
-              psqle)
-            psqle))))))
+      (throw (translatePSQLException psqle)))
+    (catch Exception e
+      (throw
+        (let [cause (.getCause e)]
+          (if (instance? PSQLException cause)
+            (translatePSQLException cause) e))))))
 
 (defn- generate-query-fn [original-generate-query-fn ns query query-options]
   (let [db-function (original-generate-query-fn ns query query-options)]
