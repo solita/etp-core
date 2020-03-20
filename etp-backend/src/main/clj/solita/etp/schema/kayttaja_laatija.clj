@@ -1,5 +1,6 @@
 (ns solita.etp.schema.kayttaja-laatija
-  (:require [solita.etp.schema.kayttaja :as kayttaja-schema]
+  (:require [schema.core :as schema]
+            [solita.etp.schema.kayttaja :as kayttaja-schema]
             [solita.etp.schema.laatija :as laatija-schema]))
 
 (def KayttajaLaatijaAdd {:kayttaja kayttaja-schema/KayttajaAdd
@@ -7,4 +8,4 @@
 
 (def KayttajaLaatija
   {:kayttaja kayttaja-schema/Kayttaja
-   :laatija laatija-schema/Laatija})
+   :laatija (schema/maybe laatija-schema/Laatija)})

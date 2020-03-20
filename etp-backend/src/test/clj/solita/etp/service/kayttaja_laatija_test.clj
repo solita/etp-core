@@ -5,7 +5,9 @@
             [solita.etp.test-system :as ts]
             [solita.common.map :as map]
             [solita.etp.service.kayttaja-laatija :as service]
+            [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.schema.common :as common-schema]
+            [solita.etp.schema.kayttaja :as kayttaja-schema]
             [solita.etp.schema.laatija :as laatija-schema]
             [solita.etp.schema.kayttaja-laatija :as kayttaja-laatija-schema]))
 
@@ -45,6 +47,13 @@
     (t/is (map/submap? (:kayttaja kayttaja-laatija) (:kayttaja found)))
     (t/is (map/submap? (:laatija kayttaja-laatija) (:laatija found)))))
 
+(t/deftest add-and-find-kayttaja-laatijat-without-laatija-test
+  (doseq [kayttaja (repeatedly 100 #(g/generate kayttaja-schema/KayttajaAdd))
+          :let [id (kayttaja-service/add-kayttaja! ts/*db* kayttaja)
+                found (service/find-kayttaja-laatija ts/*db* id)]]
+    (schema/validate kayttaja-laatija-schema/KayttajaLaatija found)
+    (t/is (map/submap? kayttaja (:kayttaja found)))
+    (t/is (-> found :laatija nil?))))
 
 (t/deftest add-and-find-with-henkilotunnus-test
   (doseq [kayttaja-laatija (generate-KayttajaLaatijaAdds 100)
