@@ -24,6 +24,9 @@
 (defn attach-laatija-yritys [db laatija-id yritys-id]
   (laatija-db/insert-laatija-yritys! db (map/bindings->map laatija-id yritys-id)))
 
+(defn detach-laatija-yritys [db laatija-id yritys-id]
+  (laatija-db/delete-laatija-yritys! db (map/bindings->map laatija-id yritys-id)))
+
 (defn find-laatija-with-henkilotunnus [db henkilotunnus]
   (first (map (comp coerce-laatija json/merge-data) (laatija-db/select-laatija-with-henkilotunnus db {:henkilotunnus henkilotunnus}))))
 
