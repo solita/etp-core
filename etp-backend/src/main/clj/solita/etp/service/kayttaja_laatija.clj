@@ -5,6 +5,14 @@
             [solita.etp.service.laatija :as laatija-service]))
 
 ;; TODO doing this with a join instead of two queries would be slighty more efficient
+(defn find-kayttaja-laatija [db id]
+  (jdbc/with-db-transaction
+    [db db]
+    (when-let [kayttaja (kayttaja-service/find-kayttaja db id)]
+      {:kayttaja kayttaja
+       :laatija (laatija-service/find-laatija-with-kayttaja-id db (:id kayttaja))})))
+
+;; TODO doing this with a join instead of two queries would be slighty more efficient
 (defn find-kayttaja-laatija-with-henkilotunnus [db henkilotunnus]
   (jdbc/with-db-transaction
     [db db]

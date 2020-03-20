@@ -33,7 +33,20 @@
                                   laatija-generators))
        (unique-henkilotunnus-range n)))
 
-(t/deftest add-and-find-test
+(t/deftest add-and-find-kayttaja-laatijat-test
+  (doseq [kayttaja-laatija (generate-KayttajaLaatijaAdds 100)
+          :let [upsert-results (service/upsert-kayttaja-laatijat!
+                                ts/*db*
+                                [kayttaja-laatija])
+                found (service/find-kayttaja-laatija
+                       ts/*db*
+                       (-> upsert-results first :kayttaja))]]
+    (schema/validate kayttaja-laatija-schema/KayttajaLaatija found)
+    (t/is (map/submap? (:kayttaja kayttaja-laatija) (:kayttaja found)))
+    (t/is (map/submap? (:laatija kayttaja-laatija) (:laatija found)))))
+
+
+(t/deftest add-and-find-with-henkilotunnus-test
   (doseq [kayttaja-laatija (generate-KayttajaLaatijaAdds 100)
           :let [_ (service/upsert-kayttaja-laatijat! ts/*db* [kayttaja-laatija])
                 found (service/find-kayttaja-laatija-with-henkilotunnus

@@ -11,6 +11,12 @@
 ;; *** Conversions from database data types ***
 (def coerce-laatija (coerce/coercer laatija-schema/Laatija json/json-coercions))
 
+(defn find-laatija-with-kayttaja-id [db kayttaja-id]
+  (->> {:kayttaja kayttaja-id}
+       (laatija-db/select-laatija-with-kayttaja db)
+       (map coerce-laatija)
+       first))
+
 (defn find-laatija-with-henkilotunnus [db henkilotunnus]
   (->> {:henkilotunnus henkilotunnus}
        (laatija-db/select-laatija-with-henkilotunnus db)
