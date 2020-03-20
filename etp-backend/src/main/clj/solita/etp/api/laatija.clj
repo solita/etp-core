@@ -13,23 +13,14 @@
     [""
      {:put {:summary "Lisää laatijat laatijarekisteriin (luo myös käyttäjä)"
             :parameters {:body [kayttaja-laatija-schema/KayttajaLaatijaAdd]}
-            :responses  {201 {:body [kayttaja-laatija-schema/KayttajaLaatijaResponse]}}
+            :responses  {200 {:body [kayttaja-laatija-schema/KayttajaLaatijaResponse]}}
             :handler    (fn [{:keys [db body-params uri]}]
-                          (println body-params)
-                          (->> (kayttaja-laatija-service/upsert-kayttaja-laatijat!
-                                db
-                                body-params)
-                               (api-response/raw-created uri)))}}]
+                          (-> (kayttaja-laatija-service/upsert-kayttaja-laatijat!
+                               db
+                               body-params)
+                              (api-response/get-response
+                               "Käyttäjien / laatijoiden lisääminen tai päivittäminen epäonnistui")))}}]
     ["/:id"
-     [""
-      {:get {:summary    "Hae laatijan tiedot"
-             :parameters {:path {:id common-schema/Key}}
-             :responses  {200 {:body laatija-schema/Laatija}
-                          404 {:body schema/Str}}
-             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
-                           (-> (laatija-service/find-laatija db id)
-                               (api-response/get-response
-                                (str "Laatija " id " does not exist."))))}}]
      ["/yritykset"
       [""
        {:get {:summary    "Hae laatijan yritykset"
@@ -61,6 +52,6 @@
                                 (str "Laatija and yritys liitos " id "/" yritys-id " does not exist.")))}}]]]]
    ["/patevyydet/"
     {:get {:summary   "Hae pätevyydet-luokittelu"
-           :responses {200 {:body [laatija-schema/Patevyys]}}
+           :responses {200 {:body [laatija-schema/Patevyystaso]}}
            :handler   (fn [_]
                         (r/response (laatija-service/find-patevyystasot)))}}]])

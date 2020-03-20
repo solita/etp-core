@@ -4,7 +4,6 @@
 
 (def Key schema/Int)
 (def Id {:id Key})
-(def Ids {:ids [Key]})
 
 (def Luokittelu (merge Id {:label-fi schema/Str
                            :label-sv schema/Str
