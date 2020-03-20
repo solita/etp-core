@@ -2,19 +2,24 @@
   (:require [ring.util.response :as r]
             [schema.core :as schema]
             [solita.etp.api.response :as api-response]
-            [solita.etp.schema.laatija :as laatija-schema]
             [solita.etp.schema.common :as common-schema]
-            [solita.etp.service.laatija :as laatija-service]))
+            [solita.etp.schema.laatija :as laatija-schema]
+            [solita.etp.schema.kayttaja-laatija :as kayttaja-laatija-schema]
+            [solita.etp.service.laatija :as laatija-service]
+            [solita.etp.service.kayttaja-laatija :as kayttaja-laatija-service]))
 
 (def routes
   [["/laatijat"
     [""
-     {:post {:summary "Lisää laatijat laatijarekisteriin (luo myös käyttäjä)"
-             :parameters {:body laatija-schema/LaatijatSave}
-             :responses  {201 {:body common-schema/Ids}}
-             :handler    (fn [{:keys [db body-params uri]}]
-                           (->> (laatija-service/add-or-update-existing-laatijat! db body-params)
-                                (api-response/items-created uri)))}}]
+     {:put {:summary "Lisää laatijat laatijarekisteriin (luo myös käyttäjä)"
+            :parameters {:body [kayttaja-laatija-schema/KayttajaLaatijaAdd]}
+            :responses  {201 {:body [kayttaja-laatija-schema/KayttajaLaatijaResponse]}}
+            :handler    (fn [{:keys [db body-params uri]}]
+                          (println body-params)
+                          (->> (kayttaja-laatija-service/upsert-kayttaja-laatijat!
+                                db
+                                body-params)
+                               (api-response/raw-created uri)))}}]
     ["/:id"
      [""
       {:get {:summary    "Hae laatijan tiedot"
