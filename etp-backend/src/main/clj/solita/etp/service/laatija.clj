@@ -35,9 +35,6 @@
 (defn attach-laatija-yritys [db laatija-id yritys-id]
   (laatija-db/insert-laatija-yritys! db (map/bindings->map laatija-id yritys-id)))
 
-(defn attach-laatija-yritys [db laatija-id yritys-id]
-  (laatija-db/insert-laatija-yritys! db (map/bindings->map laatija-id yritys-id)))
-
 (defn detach-laatija-yritys [db laatija-id yritys-id]
   (laatija-db/delete-laatija-yritys! db (map/bindings->map laatija-id yritys-id)))
 
