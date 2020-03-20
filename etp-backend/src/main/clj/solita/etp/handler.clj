@@ -14,7 +14,7 @@
             [reitit.dev.pretty :as pretty]
             [muuntaja.core :as m]
             [schema.core :as s]
-            [solita.etp.api.user :as user-api]
+            [solita.etp.api.kayttaja :as kayttaja-api]
             [solita.etp.api.yritys :as yritys-api]
             [solita.etp.api.laatija :as laatija-api]
             [solita.etp.api.geo :as geo-api]
@@ -57,7 +57,7 @@
   ["/api"
    system-routes
    ["/private" {:middleware [[jwt-security/middleware-for-alb]]}
-    (concat (tag "User API" user-api/routes)
+    (concat (tag "Käyttäjä API" kayttaja-api/routes)
             (tag "Yritys API" yritys-api/routes)
             (tag "Laatijat API" laatija-api/routes)
             (tag "Geo API" geo-api/routes))]])
