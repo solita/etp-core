@@ -15,17 +15,8 @@
 ; *** Conversions from database data types ***
 (def coerce-laatija (coerce/coercer laatija-schema/Laatija json/json-coercions))
 
-(defn find-laatija-yritykset [db id]
-  (map :yritys-id (laatija-db/select-laatija-yritykset db {:id id})))
-
-(defn attach-laatija-yritys [db laatija-id yritys-id]
-  (laatija-db/insert-laatija-yritys! db (map/bindings->map laatija-id yritys-id)))
-
-(defn detach-laatija-yritys [db laatija-id yritys-id]
-  (laatija-db/delete-laatija-yritys! db (map/bindings->map laatija-id yritys-id)))
-
 ;; TODO doing this with a join instead of two queries would be more efficient
-(defn find-laatija-with-henkilotunnus [db henkilotunnus]
+(defn find-kayttaja-laatija-with-henkilotunnus [db henkilotunnus]
   (jdbc/with-db-transaction
     [db db]
     (when-let [laatija (->> {:henkilotunnus henkilotunnus}
@@ -37,7 +28,7 @@
 
 (defn- upsert-kayttaja-laatija! [db {:keys [kayttaja laatija]}]
   "Upserts käyttäjä and laatija WITHOUT transaction."
-  (if-let [existing-kayttaja-laatija (find-laatija-with-henkilotunnus
+  (if-let [existing-kayttaja-laatija (find-kayttaja-laatija-with-henkilotunnus
                                       db
                                       (:henkilotunnus laatija))]
     (let [existing-kayttaja (:kayttaja existing-kayttaja-laatija)
@@ -53,6 +44,18 @@
   (jdbc/with-db-transaction
     [db db]
     (mapv #(upsert-kayttaja-laatija! db %) kayttaja-laatijat)))
+
+(defn find-laatija-yritykset [db id]
+  (map :yritys-id (laatija-db/select-laatija-yritykset db {:id id})))
+
+(defn attach-laatija-yritys [db laatija-id yritys-id]
+  (laatija-db/insert-laatija-yritys! db (map/bindings->map laatija-id yritys-id)))
+
+(defn attach-laatija-yritys [db laatija-id yritys-id]
+  (laatija-db/insert-laatija-yritys! db (map/bindings->map laatija-id yritys-id)))
+
+(defn detach-laatija-yritys [db laatija-id yritys-id]
+  (laatija-db/delete-laatija-yritys! db (map/bindings->map laatija-id yritys-id)))
 
 ;;
 ;; Pätevyydet

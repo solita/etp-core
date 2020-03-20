@@ -37,9 +37,10 @@
 (t/deftest add-and-find-test
   (doseq [kayttaja-laatija (generate-KayttajaLaatijaAdds 100)
           :let [_ (service/upsert-kayttaja-laatijat! ts/*db* [kayttaja-laatija])
-                found (service/find-laatija-with-henkilotunnus ts/*db* (-> kayttaja-laatija
-                                                                           :laatija
-                                                                           :henkilotunnus))]]
+                found (service/find-kayttaja-laatija-with-henkilotunnus
+                       ts/*db* (-> kayttaja-laatija
+                                   :laatija
+                                   :henkilotunnus))]]
     (schema/validate laatija-schema/KayttajaLaatija found)
     (t/is (solita-map/submap? (:kayttaja kayttaja-laatija) (:kayttaja found)))
     (t/is (solita-map/submap? (:laatija kayttaja-laatija) (:laatija found)))))
@@ -48,10 +49,12 @@
   (let [kayttaja-laatijat (generate-KayttajaLaatijaAdds 2)
         [original-1 original-2] kayttaja-laatijat
         _ (service/upsert-kayttaja-laatijat! ts/*db* kayttaja-laatijat)
-        found-original-1 (service/find-laatija-with-henkilotunnus ts/*db* (-> original-1
-                                                                              :laatija
-                                                                              :henkilotunnus))
-        found-original-2 (service/find-laatija-with-henkilotunnus ts/*db* (-> original-2
+        found-original-1 (service/find-kayttaja-laatija-with-henkilotunnus
+                          ts/*db*
+                          (-> original-1
+                              :laatija
+                              :henkilotunnus))
+        found-original-2 (service/find-kayttaja-laatija-with-henkilotunnus ts/*db* (-> original-2
                                                                              :laatija
                                                                              :henkilotunnus))
         updated-1 (-> original-1
@@ -59,12 +62,16 @@
                       (assoc-in [:laatija :laatimiskielto] true)
                       (assoc-in [:laatija :julkinenemail] true))
         _ (service/upsert-kayttaja-laatijat! ts/*db* [original-2 updated-1])
-        found-updated-1 (service/find-laatija-with-henkilotunnus ts/*db* (-> original-1
-                                                                            :laatija
-                                                                            :henkilotunnus))
-        found-updated-2 (service/find-laatija-with-henkilotunnus ts/*db* (-> original-2
-                                                                             :laatija
-                                                                             :henkilotunnus))]
+        found-updated-1 (service/find-kayttaja-laatija-with-henkilotunnus
+                         ts/*db*
+                         (-> original-1
+                             :laatija
+                             :henkilotunnus))
+        found-updated-2 (service/find-kayttaja-laatija-with-henkilotunnus
+                         ts/*db*
+                         (-> original-2
+                             :laatija
+                             :henkilotunnus))]
     (schema/validate laatija-schema/KayttajaLaatija found-original-1)
     (schema/validate laatija-schema/KayttajaLaatija found-original-2)
     (schema/validate laatija-schema/KayttajaLaatija found-updated-1)
