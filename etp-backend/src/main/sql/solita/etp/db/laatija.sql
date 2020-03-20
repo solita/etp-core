@@ -20,3 +20,6 @@ select yritys_id "yritys-id" from laatija_yritys where laatija_id = :id
 insert into laatija_yritys (laatija_id, yritys_id)
 values (:laatija-id, :yritys-id)
 on conflict (laatija_id, yritys_id) do nothing
+
+-- name: delete-laatija-yritys!
+delete from laatija_yritys where laatija_id = :laatija-id and yritys_id = :yritys-id

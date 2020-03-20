@@ -45,7 +45,15 @@
                                    (laatija-service/attach-laatija-yritys db id yritys-id)
                                    nil)
                                 [{:constraint :laatija-yritys-laatija-id-fkey :response 404}
-                                 {:constraint :laatija-yritys-yritys-id-fkey :response 404}]))}}]]]]
+                                 {:constraint :laatija-yritys-yritys-id-fkey :response 404}]))}
+          :delete {:summary    "Poista laatija yrityksestä"
+                   :parameters {:path {:id common-schema/Key
+                                       :yritys-id common-schema/Key}}
+                   :responses  {200 {:body nil}}
+                   :handler    (fn [{{{:keys [id yritys-id]} :path} :parameters :keys [db]}]
+                                 (api-response/put-response
+                                   (laatija-service/detach-laatija-yritys db id yritys-id)
+                                   (str "Laatija and yritys liitos " id "/" yritys-id " does not exist.")))}}]]]]
    ["/patevyydet/"
     {:get {:summary   "Hae pätevyydet-luokittelu"
            :responses {200 {:body [laatija-schema/Patevyys]}}
