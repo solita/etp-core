@@ -1,8 +1,7 @@
 (ns solita.etp.schema.laatija
   (:require [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]
-            [solita.etp.schema.geo :as geo-schema]
-            [solita.etp.schema.kayttaja :as kayttaja-schema]))
+            [solita.etp.schema.geo :as geo-schema]))
 
 (def Patevyystaso common-schema/Luokittelu)
 
@@ -32,10 +31,3 @@
   "Schema representing the persistent laatija"
   (merge LaatijaUpdate {:kayttaja common-schema/Key}
          common-schema/Id))
-
-(def KayttajaLaatijaAdd {:kayttaja kayttaja-schema/KayttajaAdd
-                         :laatija LaatijaAdd})
-
-(def KayttajaLaatija
-  {:kayttaja kayttaja-schema/Kayttaja
-   :laatija Laatija})

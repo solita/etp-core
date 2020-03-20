@@ -2,7 +2,7 @@
   (:require [clojure.test :as t]
             [schema.core :as schema]
             [schema-generators.generators :as g]
-            [solita.common.map :as solita-map]
+            [solita.common.map :as map]
             [solita.etp.test-system :as ts]
             [solita.etp.service.kayttaja :as service]
             [solita.etp.schema.common :as common-schema]
@@ -15,4 +15,4 @@
           :let [id (service/add-kayttaja! ts/*db* kayttaja)
                 found (service/find-kayttaja ts/*db* id)]]
     (schema/validate kayttaja-schema/Kayttaja found)
-    (t/is (solita-map/submap? kayttaja found))))
+    (t/is (map/submap? kayttaja found))))
