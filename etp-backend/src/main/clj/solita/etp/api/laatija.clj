@@ -13,11 +13,11 @@
     [""
      {:put {:summary "Lisää laatijat laatijarekisteriin (luo myös käyttäjä)"
             :parameters {:body [kayttaja-laatija-schema/KayttajaLaatijaAdd]}
-            :responses  {200 {:body [kayttaja-laatija-schema/KayttajaLaatijaResponse]}}
-            :handler    (fn [{:keys [db body-params uri]}]
+            :responses  {200 {:body [kayttaja-laatija-schema/KayttajaLaatijaAddResponse]}}
+            :handler    (fn [{:keys [db parameters uri]}]
                           (-> (kayttaja-laatija-service/upsert-kayttaja-laatijat!
                                db
-                               body-params)
+                               (:body parameters))
                               (api-response/get-response
                                "Käyttäjien / laatijoiden lisääminen tai päivittäminen epäonnistui")))}}]
     ["/:id"
