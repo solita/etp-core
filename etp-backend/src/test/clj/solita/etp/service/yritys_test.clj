@@ -15,15 +15,15 @@
        (map #(str % "-" (common-schema/ytunnus-checksum %)))))
 
 (t/deftest add-and-find-yritys-test
-  (doseq [yritys (map #(c/complete {:ytunnus %} schema/YritysSave) (unique-ytunnus-range 100))
+  (doseq [yritys (map #(c/complete {:ytunnus % :maa "FI"} schema/YritysSave) (unique-ytunnus-range 100))
           :let [id (service/add-yritys! ts/*db* yritys)]]
     (t/is (= (assoc yritys :id id) (service/find-yritys ts/*db* id)))))
 
 
 (t/deftest add-duplicate-ytunnus
   (let [ytunnus "0000001-9"
-        yritys1 (c/complete {:ytunnus ytunnus} schema/YritysSave)
-        yritys2 (c/complete {:ytunnus ytunnus} schema/YritysSave)]
+        yritys1 (c/complete {:ytunnus ytunnus :maa "FI"} schema/YritysSave)
+        yritys2 (c/complete {:ytunnus ytunnus :maa "FI"} schema/YritysSave)]
     (service/add-yritys! ts/*db* yritys1)
     (t/is (= (ex-data (t/is (thrown? Exception (service/add-yritys! ts/*db* yritys2))))
              {:type       :unique-violation
