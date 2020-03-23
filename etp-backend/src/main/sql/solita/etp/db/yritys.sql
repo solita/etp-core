@@ -1,4 +1,3 @@
-
 -- name: insert-yritys<!
 insert into yritys (ytunnus, data) values (:ytunnus, :data :: JSONB) returning id
 
@@ -10,4 +9,3 @@ select id, ytunnus, data from yritys where id = :id
 
 -- name: select-all-yritykset
 select id, ytunnus, data from yritys
-
