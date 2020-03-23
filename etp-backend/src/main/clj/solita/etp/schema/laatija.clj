@@ -14,18 +14,20 @@
 
 (def PatevyydenToteaja (schema/enum "FISE" "KIINKO"))
 
-(def LaatijaAdd (merge {:henkilotunnus      common-schema/Henkilotunnus
+(def LaatijaAdd (merge geo-schema/PostiosoiteWithoutMaa
+                       {:henkilotunnus      common-schema/Henkilotunnus
                         :patevyystaso       common-schema/Key
                         :toteamispaivamaara common-schema/Date
-                        :toteaja            PatevyydenToteaja}
-                       geo-schema/Postiosoite))
+                        :toteaja            PatevyydenToteaja}))
 
-(def LaatijaUpdate (merge LaatijaAdd {:laatimiskielto     schema/Bool
-                                      :toimintaalue       (schema/maybe common-schema/Key)
-                                      :muuttoimintaalueet MuutToimintaalueet
-                                      :julkinenpuhelin    schema/Bool
-                                      :julkinenemail      schema/Bool
-                                      :julkinenosoite     schema/Bool}))
+(def LaatijaUpdate (merge LaatijaAdd
+                          geo-schema/Postiosoite
+                          {:laatimiskielto     schema/Bool
+                           :toimintaalue       (schema/maybe common-schema/Key)
+                           :muuttoimintaalueet MuutToimintaalueet
+                           :julkinenpuhelin    schema/Bool
+                           :julkinenemail      schema/Bool
+                           :julkinenosoite     schema/Bool}))
 
 (def Laatija
   "Schema representing the persistent laatija"
