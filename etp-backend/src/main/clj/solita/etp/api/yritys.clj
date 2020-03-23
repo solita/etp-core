@@ -12,9 +12,9 @@
      {:post {:summary    "Lisää uuden yrityksen tiedot yritysrekisteriin"
              :parameters {:body yritys-schema/YritysSave}
              :responses  {201 {:body common-schema/Id}}
-             :handler    (fn [{:keys [db body-params uri]}]
+             :handler    (fn [{:keys [db parameters uri]}]
                            (api-response/created uri
-                             (yritys-service/add-yritys! db body-params)))}
+                             (yritys-service/add-yritys! db (:body parameters))))}
 
       :get {:summary    "Hae kaikki yritykset"
             :responses  {200 {:body [yritys-schema/Yritys]}}
@@ -38,7 +38,7 @@
                           :body yritys-schema/YritysSave}
              :responses  {200 {:body nil}
                           404 {:body schema/Str}}
-             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db body-params]}]
+             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
                            (api-response/put-response
-                             (yritys-service/update-yritys! db id body-params)
+                             (yritys-service/update-yritys! db id (:body parameters))
                              (str "Yritys " id " does not exists.")))}}]]]])
