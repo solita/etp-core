@@ -1,6 +1,7 @@
 (ns solita.etp.schema.energiatodistus
   (:require [schema.core :as schema]
-            [solita.etp.schema.common :as common-schema]))
+            [solita.etp.schema.common :as common-schema]
+            [solita.etp.schema.geo :as geo-schema]))
 
 (def Kayttotarkoitus
   (schema/enum "T" "TG" "UH" "TE" "MYR" "TT" "RT" "MU" "KK" "AK3" "YAT" "TOKK" "JH" "PK" "PT" "MR" "S" "PTK" "SR"
@@ -22,7 +23,7 @@
    :onko-julkinen-rakennus   schema/Bool
    :havainnointikaynti       (schema/maybe common-schema/Date)
    :rakennustunnus           (schema/maybe Rakennustunnus)
-   :postinumero              common-schema/Postinumero
+   :postinumero              geo-schema/Postinumero
    :keskeiset-suositukset-fi (schema/maybe common-schema/String2500)
    :keskeiset-suositukset-sv (schema/maybe common-schema/String2500)
    :laatimisvaihe            (schema/enum 0 1 2)
@@ -39,7 +40,7 @@
   {:rva common-schema/FloatPos
    :rvu (common-schema/FloatBase mininclusive maxinclusive)})
 
-(def LahtotiedotRakenneusvaippa
+(def LahtotiedotRakennusvaippa
   {:ilmanvuotoluku (schema/maybe common-schema/Float50)
    :ulkoseinat     (Rakenneusvaippa 0.05 2.0)
    :ylapohja       (Rakenneusvaippa 0.03 2.0)
@@ -112,7 +113,7 @@
 
 (def Lahtotiedot
   {:lammitetty-nettoala  common-schema/FloatPos
-   :rakennusvaippa       LahtotiedotRakenneusvaippa
+   :rakennusvaippa       LahtotiedotRakennusvaippa
    :ikkunat              LahtotiedotIkkunat
    :ilmanvaihto          LahtotiedotIlmanvaihto
    :lammitys             LahtotiedotLammitys
@@ -128,7 +129,7 @@
 
 
 (def Tulokset
-  {:kaytettavat-energiamuodot    [{:energiamuoto-vakio   (schema/enum "fossiilinen polttoaine"
+  {:kaytettavat-energiamuodot    [{:vakio                (schema/enum "fossiilinen polttoaine"
                                                                       "sähkö"
                                                                       "kaukojäähdytys"
                                                                       "kaukolämpö"
@@ -169,10 +170,10 @@
                                              :pilkkeet-havu-sekapuu (schema/maybe common-schema/FloatPos),
                                              :pilkkeet-koivu        (schema/maybe common-schema/FloatPos),
                                              :puupelletit           (schema/maybe common-schema/FloatPos),
-                                             :vapaa                 {:nimi           common-schema/String30,
-                                                                     :yksikko        common-schema/String12,
-                                                                     :muunnoskerroin common-schema/FloatPos,
-                                                                     :maara-vuodessa common-schema/FloatPos}},
+                                             :vapaa                 [{:nimi           common-schema/String30,
+                                                                      :yksikko        common-schema/String12,
+                                                                      :muunnoskerroin common-schema/FloatPos,
+                                                                      :maara-vuodessa common-schema/FloatPos}]},
    :to-sahko-vuosikulutus-yhteensa          (schema/maybe common-schema/FloatPos),
    :to-kaukolampo-vuosikulutus-yhteensa     (schema/maybe common-schema/FloatPos),
    :to-polttoaineet-vuosikulutus-yhteensa   (schema/maybe common-schema/FloatPos),
@@ -182,12 +183,12 @@
 (def Huomio
   {:teksti-fi  (schema/maybe common-schema/String1000)
    :teksti-sv  (schema/maybe common-schema/String1000),
-   :toimenpide {:nimi-fi       (schema/maybe common-schema/String100)
-                :nimi-sv       (schema/maybe common-schema/String100)
-                :lampo         (schema/maybe common-schema/FloatPos),
-                :sahko         (schema/maybe common-schema/FloatPos),
-                :jaahdytys     (schema/maybe common-schema/FloatPos),
-                :eluvun-muutos (schema/maybe common-schema/FloatPos)}})
+   :toimenpide [{:nimi-fi       (schema/maybe common-schema/String100)
+                 :nimi-sv       (schema/maybe common-schema/String100)
+                 :lampo         (schema/maybe common-schema/FloatPos),
+                 :sahko         (schema/maybe common-schema/FloatPos),
+                 :jaahdytys     (schema/maybe common-schema/FloatPos),
+                 :eluvun-muutos (schema/maybe common-schema/FloatPos)}]})
 
 
 (def Huomiot

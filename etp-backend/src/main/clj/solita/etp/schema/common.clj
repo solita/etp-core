@@ -24,9 +24,6 @@
 (def String2500 (StringBase 2500))
 (def String6300 (StringBase 6300))
 
-(def Postinumero
-  (schema/constrained schema/Str #(re-find #"\d{5}" %)))
-
 (def Year
   (schema/constrained schema/Int #(<= 0 % 9999)))
 
