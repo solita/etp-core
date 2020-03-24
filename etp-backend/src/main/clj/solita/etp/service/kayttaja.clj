@@ -18,3 +18,6 @@
 
 (defn add-kayttaja! [db kayttaja]
   (:id (kayttaja-db/insert-kayttaja<! db kayttaja)))
+
+(defn update-kayttaja! [db id kayttaja]
+  (kayttaja-db/update-kayttaja! db (assoc kayttaja :id id)))
