@@ -13,7 +13,9 @@
         existing-laatija (laatija-service/find-laatija-with-henkilotunnus db henkilotunnus)]
     (if existing-laatija
       (do
-        (laatija-service/update-laatija! db (merge existing-laatija laatija))
+        (laatija-service/update-laatija-with-kayttaja-id! db
+                                                          (:kayttaja existing-laatija)
+                                                          (merge existing-laatija laatija))
         {:kayttaja (:kayttaja existing-laatija)
          :laatija (:id existing-laatija)})
       (let [kayttaja-id (kayttaja-service/add-kayttaja! db kayttaja)]
