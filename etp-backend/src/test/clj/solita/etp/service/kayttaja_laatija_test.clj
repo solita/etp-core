@@ -9,6 +9,7 @@
             [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.service.laatija :as laatija-service]
             [solita.etp.schema.common :as common-schema]
+            [solita.etp.schema.geo :as geo-schema]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
             [solita.etp.schema.laatija :as laatija-schema]
             [solita.etp.schema.kayttaja-laatija :as kayttaja-laatija-schema]))
@@ -24,15 +25,16 @@
 (def laatija-generators
   {common-schema/Henkilotunnus       (g/always "130200A892S")
    laatija-schema/MuutToimintaalueet (g/always [0, 1, 2, 3, 17])
-   common-schema/Date                (g/always (java.time.LocalDate/now))})
+   common-schema/Date                (g/always (java.time.LocalDate/now))
+   geo-schema/Maa                    (g/always "FI")})
 
 (defn generate-KayttajaLaatijaAdds [n]
-  (map #(assoc %1 :henkilotunnus %2 :maa "FI")
+  (map #(assoc %1 :henkilotunnus %2)
        (repeatedly n #(g/generate kayttaja-laatija-schema/KayttajaLaatijaAdd
                                   laatija-generators))
        (unique-henkilotunnus-range n)))
 
-(t/deftest add-and-find-kayttaja-laatijat-test
+(t/deftest upsert-test
   (doseq [kayttaja-laatija (generate-KayttajaLaatijaAdds 100)
           :let [upsert-results (service/upsert-kayttaja-laatijat!
                                 ts/*db*
@@ -51,7 +53,7 @@
                                          laatija-schema/LaatijaAdd)
                        found-laatija))))
 
-(t/deftest add-and-update-existing-test
+(t/deftest upsert-existing-test
   (let [[original-1 original-2] (generate-KayttajaLaatijaAdds 2)
         original-1 (assoc original-1 :patevyystaso 0 :toteaja "FISE")
         _ (service/upsert-kayttaja-laatijat! ts/*db* [original-1 original-2])
