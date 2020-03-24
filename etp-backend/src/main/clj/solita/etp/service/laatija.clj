@@ -27,7 +27,7 @@
   (:id (laatija-db/insert-laatija<! db laatija)))
 
 (defn update-laatija! [db laatija]
-  (laatija-db/update-laatija! db  laatija))
+  (laatija-db/update-laatija! db laatija))
 
 (defn find-laatija-yritykset [db id]
   (map :yritys-id (laatija-db/select-laatija-yritykset db {:id id})))
