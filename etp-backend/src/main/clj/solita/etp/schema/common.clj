@@ -6,6 +6,52 @@
 (def Id {:id Key})
 (def Ids {:ids [Key]})
 
+(defn StringBase [max]
+  (schema/constrained schema/Str #(<= 1 (count %) max)))
+
+(def String8 (StringBase 8))
+(def String12 (StringBase 12))
+(def String30 (StringBase 30))
+(def String35 (StringBase 35))
+(def String50 (StringBase 75))
+(def String60 (StringBase 60))
+(def String75 (StringBase 75))
+(def String100 (StringBase 100))
+(def String150 (StringBase 150))
+(def String200 (StringBase 200))
+(def String500 (StringBase 500))
+(def String1000 (StringBase 1000))
+(def String1500 (StringBase 1500))
+(def String2500 (StringBase 2500))
+(def String6300 (StringBase 6300))
+
+(def Postinumero
+  (schema/constrained schema/Str #(re-find #"\d{5}" %)))
+
+(def Year
+  (schema/constrained schema/Int #(<= 0 % 9999)))
+
+(def Integer100
+  (schema/constrained schema/Int #(<= 0 % 100)))
+
+(defn FloatBase
+  ([mininclusive]
+   (FloatBase mininclusive Float/MAX_VALUE))
+  ([mininclusive maxinclusive]
+   (schema/constrained schema/Num #(<= mininclusive % maxinclusive))))
+
+(def Float1
+  (FloatBase 0.0 1.0))
+
+(def Float10
+  (FloatBase 0.0 10.0))
+
+(def Float50
+  (FloatBase 0.0 50.0))
+
+(def FloatPos
+  (FloatBase 0.0))
+
 (def Luokittelu (merge Id {:label-fi schema/Str
                            :label-sv schema/Str
                            (schema/optional-key :deleted) schema/Bool}))
