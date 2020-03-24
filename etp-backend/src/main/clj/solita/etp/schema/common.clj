@@ -4,7 +4,6 @@
 
 (def Key schema/Int)
 (def Id {:id Key})
-(def Ids {:ids [Key]})
 
 (defn StringBase [max]
   (schema/constrained schema/Str #(<= 1 (count %) max)))

@@ -1,5 +1,6 @@
 (ns solita.etp.db
-  (:require [integrant.core :as ig]
+  (:require [clojure.java.jdbc :as jdbc]
+            [integrant.core :as ig]
             [hikari-cp.core :as hikari]
             [jeesql.core :as jeesql]
             [jeesql.generate :as jeesql-generate]
@@ -62,3 +63,16 @@
                      (partial generate-query-fn original-generate-query-fn)]
          (jeesql/defqueries (str "solita/etp/db/" name ".sql") options)))
      (alias (symbol (str name "-db")) db-namespace))))
+
+;;
+;; Protocol extensions
+;;
+
+(extend-protocol jdbc/IResultSetReadColumn
+  java.sql.Date
+  (result-set-read-column [x _ _]
+    (.toLocalDate x))
+
+  org.postgresql.jdbc.PgArray
+  (result-set-read-column [x _ _]
+    (-> x .getArray vec)))
