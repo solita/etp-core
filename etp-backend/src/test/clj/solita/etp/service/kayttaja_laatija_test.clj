@@ -27,7 +27,7 @@
    common-schema/Date                (g/always (java.time.LocalDate/now))})
 
 (defn generate-KayttajaLaatijaAdds [n]
-  (map #(assoc %1 :henkilotunnus %2)
+  (map #(assoc %1 :henkilotunnus %2 :maa "FI")
        (repeatedly n #(g/generate kayttaja-laatija-schema/KayttajaLaatijaAdd
                                   laatija-generators))
        (unique-henkilotunnus-range n)))

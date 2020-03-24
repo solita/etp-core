@@ -14,7 +14,7 @@
 
 (def PatevyydenToteaja (schema/enum "FISE" "KIINKO"))
 
-(def LaatijaAdd (merge geo-schema/PostiosoiteWithoutMaa
+(def LaatijaAdd (merge geo-schema/Postiosoite
                        {:henkilotunnus      common-schema/Henkilotunnus
                         :patevyystaso       common-schema/Key
                         :toteamispaivamaara common-schema/Date

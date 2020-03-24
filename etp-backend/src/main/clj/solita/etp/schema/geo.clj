@@ -4,13 +4,10 @@
 
 (defn valid-maa? [maa] (= (count maa) 2))
 
-(def PostiosoiteWithoutMaa {:jakeluosoite     schema/Str
-                            :postinumero      schema/Str
-                            :postitoimipaikka schema/Str})
-
-(def Postiosoite (assoc PostiosoiteWithoutMaa
-                        :maa
-                        (schema/constrained schema/Str valid-maa?)))
+(def Postiosoite {:jakeluosoite     schema/Str
+                  :postinumero      schema/Str
+                  :postitoimipaikka schema/Str
+                  :maa              (schema/constrained schema/Str valid-maa?)})
 
 (def Toimintaalue common-schema/Luokittelu)
 
