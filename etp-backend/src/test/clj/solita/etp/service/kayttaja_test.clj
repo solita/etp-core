@@ -16,3 +16,13 @@
                 found (service/find-kayttaja ts/*db* id)]]
     (schema/validate kayttaja-schema/Kayttaja found)
     (t/is (map/submap? kayttaja found))))
+
+(t/deftest add-update-and-find-test
+  (doseq [kayttaja (repeatedly 100 #(g/generate kayttaja-schema/KayttajaAdd))
+          :let [id (service/add-kayttaja! ts/*db* kayttaja)
+                found (service/find-kayttaja ts/*db* id)
+                updated-kayttaja (g/generate kayttaja-schema/KayttajaUpdate)
+                _ (service/update-kayttaja! ts/*db* id updated-kayttaja)
+                found (service/find-kayttaja ts/*db* id)]]
+    (schema/validate kayttaja-schema/Kayttaja found)
+    (t/is (map/submap? updated-kayttaja found))))

@@ -21,7 +21,6 @@
                         :toteaja            PatevyydenToteaja}))
 
 (def LaatijaUpdate (merge LaatijaAdd
-                          geo-schema/Postiosoite
                           {:laatimiskielto     schema/Bool
                            :toimintaalue       (schema/maybe common-schema/Key)
                            :muuttoimintaalueet MuutToimintaalueet

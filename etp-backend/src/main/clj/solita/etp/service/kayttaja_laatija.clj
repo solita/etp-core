@@ -13,7 +13,9 @@
         existing-laatija (laatija-service/find-laatija-with-henkilotunnus db henkilotunnus)]
     (if existing-laatija
       (do
-        (laatija-service/update-laatija! db (merge existing-laatija laatija))
+        (laatija-service/update-laatija-with-kayttaja-id! db
+                                                          (:kayttaja existing-laatija)
+                                                          (merge existing-laatija laatija))
         {:kayttaja (:kayttaja existing-laatija)
          :laatija (:id existing-laatija)})
       (let [kayttaja-id (kayttaja-service/add-kayttaja! db kayttaja)]
@@ -24,3 +26,11 @@
   (jdbc/with-db-transaction
     [db db]
     (mapv #(upsert-kayttaja-laatija! db %) kayttaja-laatijat)))
+
+(defn update-kayttaja-laatija! [db id kayttaja-laatija]
+  (let [kayttaja (st/select-schema kayttaja-laatija kayttaja-schema/KayttajaUpdate)
+        laatija (st/select-schema kayttaja-laatija laatija-schema/LaatijaUpdate)]
+    (jdbc/with-db-transaction
+      [db db]
+      (kayttaja-service/update-kayttaja! db id kayttaja)
+      (laatija-service/update-laatija-with-kayttaja-id! db id laatija))))

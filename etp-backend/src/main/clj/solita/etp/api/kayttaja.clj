@@ -5,7 +5,9 @@
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
             [solita.etp.schema.laatija :as laatija-schema]
+            [solita.etp.schema.kayttaja-laatija :as kayttaja-laatija-schema]
             [solita.etp.service.kayttaja :as kayttaja-service]
+            [solita.etp.service.kayttaja-laatija :as kayttaja-laatija-service]
             [solita.etp.service.laatija :as laatija-service]))
 
 (def routes
@@ -23,7 +25,19 @@
              :handler (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                         (-> (kayttaja-service/find-kayttaja db id)
                             (api-response/get-response
-                             (str "Käyttäjä " id " does not exist."))))}}]
+                             (str "Käyttäjä " id " does not exist."))))}
+       :put {:summary "Päivitä käyttäjän ja käyttäjään liittyvän laatijan tiedot"
+             :parameters {:path {:id common-schema/Key}
+                          :body kayttaja-laatija-schema/KayttajaLaatijaUpdate}
+             :responses {200 {:body nil}
+                         404 {:body schema/Str}}
+             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
+                        (api-response/put-response
+                         (kayttaja-laatija-service/update-kayttaja-laatija!
+                          db
+                          id
+                          (:body parameters))
+                         (str "Käyttäjä " id " does not exists.")))}}]
      ["/laatija"
       {:get {:summary "Hae käyttäjään liittyvät laatijatiedot"
              :parameters {:path {:id common-schema/Key}}

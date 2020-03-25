@@ -4,6 +4,8 @@
 
 (defn valid-maa? [maa] (= (count maa) 2))
 
+(def Maa (schema/constrained schema/Str valid-maa?))
+
 (def Postiosoite {:jakeluosoite     schema/Str
                   :postinumero      schema/Str
                   :postitoimipaikka schema/Str
