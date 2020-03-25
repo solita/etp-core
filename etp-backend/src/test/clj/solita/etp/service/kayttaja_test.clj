@@ -26,3 +26,12 @@
                 found (service/find-kayttaja ts/*db* id)]]
     (schema/validate kayttaja-schema/Kayttaja found)
     (t/is (map/submap? updated-kayttaja found))))
+
+(t/deftest find-roolit-test
+  (let [roolit (service/find-roolit)
+        fi-labels (set (map :label-fi roolit))]
+    (t/is (= fi-labels #{"Laatija"
+                         "Pätevyyden toteaja"
+                         "Pääkäyttäjä"}))
+    ;; TODO test swedish labels when they exist
+    ))

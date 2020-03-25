@@ -46,4 +46,9 @@
              :handler (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                         (-> (laatija-service/find-laatija-with-kayttaja-id db id)
                             (api-response/get-response
-                             (str "No laatija information for käyttäjä id " id))))}}]]]])
+                             (str "No laatija information for käyttäjä id " id))))}}]]]
+   ["/roolit"
+    {:get {:summary    "Hae roolit -luokittelu"
+           :responses  {200 {:body [kayttaja-schema/Rooli]}}
+           :handler    (fn [_]
+                         (r/response (kayttaja-service/find-roolit)))}}]])

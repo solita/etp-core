@@ -20,3 +20,5 @@
          {:login         (schema/maybe common-schema/Date)
           :ensitallennus schema/Bool
           :cognitoid     (schema/maybe schema/Str)}))
+
+(def Rooli common-schema/Luokittelu)
