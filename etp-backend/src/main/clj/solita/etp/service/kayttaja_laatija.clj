@@ -26,3 +26,11 @@
   (jdbc/with-db-transaction
     [db db]
     (mapv #(upsert-kayttaja-laatija! db %) kayttaja-laatijat)))
+
+(defn update-kayttaja-laatija! [db id kayttaja-laatija]
+  (let [kayttaja (st/select-schema kayttaja-laatija kayttaja-schema/KayttajaUpdate)
+        laatija (st/select-schema kayttaja-laatija laatija-schema/LaatijaUpdate)]
+    (jdbc/with-db-transaction
+      [db db]
+      (kayttaja-service/update-kayttaja! db id kayttaja)
+      (laatija-service/update-laatija-with-kayttaja-id! db id laatija))))

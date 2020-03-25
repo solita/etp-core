@@ -28,11 +28,16 @@
    common-schema/Date                (g/always (java.time.LocalDate/now))
    geo-schema/Maa                    (g/always "FI")})
 
-(defn generate-KayttajaLaatijaAdds [n]
+(defn generate-kayttaja-laatija [n schema]
   (map #(assoc %1 :henkilotunnus %2)
-       (repeatedly n #(g/generate kayttaja-laatija-schema/KayttajaLaatijaAdd
-                                  laatija-generators))
+       (repeatedly n #(g/generate schema laatija-generators))
        (unique-henkilotunnus-range n)))
+
+(defn generate-KayttajaLaatijaAdds [n]
+  (generate-kayttaja-laatija n kayttaja-laatija-schema/KayttajaLaatijaAdd))
+
+(defn generate-KayttajaLaatijaUpdates [n]
+  (generate-kayttaja-laatija n kayttaja-laatija-schema/KayttajaLaatijaUpdate))
 
 (t/deftest upsert-test
   (doseq [kayttaja-laatija (generate-KayttajaLaatijaAdds 100)
@@ -108,3 +113,34 @@
 
     ;; The second laatija has not changed at all
     (t/is (= found-original-laatija-2 found-updated-laatija-2))))
+
+(t/deftest update-kayttaja-laatija!-test
+  (let [[id-1 id-2] (->> (generate-KayttajaLaatijaAdds 2)
+                         (service/upsert-kayttaja-laatijat! ts/*db*)
+                         (map :kayttaja))
+        [update-1 update-2] (generate-KayttajaLaatijaUpdates 2)
+        _ (service/update-kayttaja-laatija! ts/*db* id-1 update-1)
+        _ (service/update-kayttaja-laatija! ts/*db* id-2 update-2)
+        found-kayttaja-1 (kayttaja-service/find-kayttaja ts/*db* id-1)
+        found-kayttaja-2 (kayttaja-service/find-kayttaja ts/*db* id-2)
+        found-laatija-1 (laatija-service/find-laatija-with-kayttaja-id ts/*db*
+                                                                       id-1)
+        found-laatija-2 (laatija-service/find-laatija-with-kayttaja-id ts/*db*
+                                                                       id-2)]
+    (schema/validate kayttaja-schema/Kayttaja found-kayttaja-1)
+    (schema/validate kayttaja-schema/Kayttaja found-kayttaja-2)
+    (schema/validate laatija-schema/Laatija found-laatija-1)
+    (schema/validate laatija-schema/Laatija found-laatija-2)
+
+    (t/is (map/submap?
+           (st/select-schema update-1 kayttaja-schema/KayttajaUpdate)
+           found-kayttaja-1))
+    (t/is (map/submap?
+           (st/select-schema update-1 laatija-schema/LaatijaUpdate)
+           found-laatija-1))
+    (t/is (map/submap?
+           (st/select-schema update-2 kayttaja-schema/KayttajaUpdate)
+           found-kayttaja-2))
+    (t/is (map/submap?
+           (st/select-schema update-2 laatija-schema/LaatijaUpdate)
+           found-laatija-2))))

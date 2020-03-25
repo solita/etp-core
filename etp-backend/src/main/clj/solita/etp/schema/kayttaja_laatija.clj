@@ -5,8 +5,11 @@
             [solita.etp.schema.kayttaja :as kayttaja-schema]
             [solita.etp.schema.laatija :as laatija-schema]))
 
-(def KayttajaLaatijaAdd (merge kayttaja-schema/KayttajaAdd
-                               laatija-schema/LaatijaAdd))
+(def KayttajaLaatijaAdd (merge laatija-schema/LaatijaAdd
+                               kayttaja-schema/KayttajaAdd))
+
+(def KayttajaLaatijaUpdate (merge laatija-schema/LaatijaUpdate
+                                  kayttaja-schema/KayttajaUpdate))
 
 (def KayttajaLaatijaAddResponse
   {:kayttaja common-schema/Key
