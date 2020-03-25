@@ -9,7 +9,9 @@
 (def Postiosoite {:jakeluosoite     schema/Str
                   :postinumero      schema/Str
                   :postitoimipaikka schema/Str
-                  :maa              Maa})
+                  :maa              (schema/constrained schema/Str valid-maa?)})
+(def Postinumero
+  (schema/constrained schema/Str #(re-find #"\d{5}" %)))
 
 (def Toimintaalue common-schema/Luokittelu)
 
