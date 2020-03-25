@@ -21,3 +21,15 @@
 
 (defn update-kayttaja! [db id kayttaja]
   (kayttaja-db/update-kayttaja! db (assoc kayttaja :id id)))
+
+(def roolit [{:id 0
+              :label-fi "Laatija"
+              :label-sv "Laatija-SV"}
+             {:id 1
+              :label-fi "Pätevyyden toteaja"
+              :label-sv "Pätevyyden toteaja -SV"}
+             {:id 2
+              :label-fi "Pääkäyttäjä"
+              :label-sv "Pääkäyttäjä-SV"}])
+
+(defn find-roolit [] roolit)
