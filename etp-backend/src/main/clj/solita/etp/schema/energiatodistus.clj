@@ -10,10 +10,13 @@
 (def Rakennustunnus
   (schema/constrained schema/Str #(= (count %) 10)))
 
+(def YritysPostinumero
+  (schema/maybe common-schema/String8))
+
 (def Yritys
   {:nimi             common-schema/String150
    :katuosoite       (schema/maybe common-schema/String100)
-   :postinumero      (schema/maybe common-schema/String8)
+   :postinumero      YritysPostinumero
    :postitoimipaikka (schema/maybe common-schema/String30)})
 
 (def Perustiedot
@@ -35,7 +38,6 @@
    :nimi                     (schema/maybe common-schema/String50)
    :kayttotarkoitus          Kayttotarkoitus})
 
-
 (defn Rakenneusvaippa [mininclusive maxinclusive]
   {:rva common-schema/FloatPos
    :rvu (common-schema/FloatBase mininclusive maxinclusive)})
@@ -54,7 +56,6 @@
    :ikkU (common-schema/FloatBase 0.4 6.5)
    :ikkG (common-schema/FloatBase 0.1 1.0)})
 
-
 (def LahtotiedotIkkunat
   {:pohjoinen LahtotiedotIkkuna
    :koillinen LahtotiedotIkkuna
@@ -65,22 +66,19 @@
    :lansi     LahtotiedotIkkuna
    :luode     LahtotiedotIkkuna})
 
-(def LahtotiedotIlmanvaihto
-  {:paaiv-jaatymisenesto  (schema/maybe (common-schema/FloatBase -20.0 10.0))
-   :paaiv-poisto          (schema/maybe common-schema/FloatPos)
-   :kuvaus-sv             (schema/maybe common-schema/String75)
-   :kuvaus-fi             (schema/maybe common-schema/String75)
-   :ivjarjestelma-poisto  (schema/maybe common-schema/FloatPos)
-   :ivjarjestelma-tulo    (schema/maybe common-schema/FloatPos)
-   :erillispoistot-poisto (schema/maybe common-schema/FloatPos)
-   :erillispoistot-sfp    (schema/maybe common-schema/Float10)
-   :erillispoistot-tulo   (schema/maybe common-schema/FloatPos)
-   :paaiv-lampotilasuhde  (schema/maybe common-schema/Float1)
-   :ivjarjestelma-sfp     (schema/maybe common-schema/Float10)
-   :paaiv-sfp             (schema/maybe common-schema/Float10)
-   :lto-vuosihyotysuhde   (schema/maybe common-schema/Float1)
-   :paaiv-tulo            (schema/maybe common-schema/FloatPos)})
+(def PoistoTuloSfp
+  {:poisto (schema/maybe common-schema/FloatPos)
+   :tulo   (schema/maybe common-schema/FloatPos)
+   :sfp    (schema/maybe common-schema/Float10)})
 
+(def LahtotiedotIlmanvaihto
+  {:erillispoistot      PoistoTuloSfp
+   :ivjarjestelma       PoistoTuloSfp
+   :kuvaus-fi           (schema/maybe common-schema/String75)
+   :kuvaus-sv           (schema/maybe common-schema/String75)
+   :lto-vuosihyotysuhde (schema/maybe common-schema/Float1)
+   :paaiv               (merge PoistoTuloSfp {:lampotilasuhde (schema/maybe common-schema/Float1)
+                                              :jaatymisenesto (schema/maybe (common-schema/FloatBase -20.0 10.0))})})
 
 (def Hyotysuhde
   {:tuoton-hyotysuhde (schema/maybe common-schema/FloatPos),
@@ -101,7 +99,6 @@
    :takka             MaaraTuotto
    :ilmanlampopumppu  MaaraTuotto})
 
-
 (def SisKuorma
   {:selite-fi         (schema/maybe common-schema/String35)
    :selite-sv         (schema/maybe common-schema/String35)
@@ -109,7 +106,6 @@
    :henkilot          (schema/maybe (common-schema/FloatBase 1.0 14.0))
    :kuluttajalaitteet (schema/maybe (common-schema/FloatBase 0.0 12.0))
    :valaistus         (schema/maybe (common-schema/FloatBase 0.0 19.0))})
-
 
 (def Lahtotiedot
   {:lammitetty-nettoala  common-schema/FloatPos
@@ -122,11 +118,9 @@
                           :vuosikulutus      (schema/maybe common-schema/FloatPos)}
    :sis-kuorma           [SisKuorma]})
 
-
 (def SahkoLampo
   {:sahko (schema/maybe common-schema/FloatPos)
    :lampo (schema/maybe common-schema/FloatPos)})
-
 
 (def Tulokset
   {:kaytettavat-energiamuodot    [{:vakio                (schema/enum "fossiilinen polttoaine"
@@ -159,7 +153,6 @@
                                   :kvesi             (schema/maybe common-schema/FloatPos)},
    :laskentatyokalu              (schema/maybe common-schema/String60)})
 
-
 (def ToteutunutOstoenergiankulutus
   {:ostettu-energia                         {:kaukolampo-vuosikulutus      (schema/maybe common-schema/FloatPos),
                                              :kokonaissahko-vuosikulutus   (schema/maybe common-schema/FloatPos),
@@ -179,7 +172,6 @@
    :to-polttoaineet-vuosikulutus-yhteensa   (schema/maybe common-schema/FloatPos),
    :to-kaukojaahdytys-vuosikulutus-yhteensa (schema/maybe common-schema/FloatPos)})
 
-
 (def Huomio
   {:teksti-fi  (schema/maybe common-schema/String1000)
    :teksti-sv  (schema/maybe common-schema/String1000),
@@ -189,7 +181,6 @@
                  :sahko         (schema/maybe common-schema/FloatPos),
                  :jaahdytys     (schema/maybe common-schema/FloatPos),
                  :eluvun-muutos (schema/maybe common-schema/FloatPos)}]})
-
 
 (def Huomiot
   {:suositukset-fi    (schema/maybe common-schema/String1500)
@@ -202,7 +193,8 @@
    :ymparys           Huomio
    :alapohja-ylapohja Huomio})
 
-(def Energiatodistus
+(def EnergiatodistusSave
+  "This schema is used in add-energiatodistus and update-energiatodistus services"
   {:perustiedot                    Perustiedot
    :lahtotiedot                    Lahtotiedot
    :tulokset                       Tulokset
@@ -210,3 +202,10 @@
    :huomiot                        Huomiot
    :lisamerkintoja-fi              (schema/maybe common-schema/String6300)
    :lisamerkintoja-sv              (schema/maybe common-schema/String6300)})
+
+(def EnergiatodistusTila
+  {:tila (schema/enum "luonnos" "valmis")})
+
+(def Energiatodistus
+  "Energiatodistus schema contains basic information about persistent energiatodistus"
+  (merge common-schema/Id EnergiatodistusTila EnergiatodistusSave))

@@ -6,7 +6,7 @@
 (def routes
   [["/energiatodistus/"
     {:post {:summary    "Lisää luonnostilaisen energiatodistuksen"
-            :parameters {:body energiatodistus/Energiatodistus}
+            :parameters {:body energiatodistus/EnergiatodistusSave}
             :responses  {200 {:body {:ok schema/Str}}}
             :handler    (fn []
                           (r/response {:ok "ok"}))}}]])
