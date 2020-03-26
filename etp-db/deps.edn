@@ -4,5 +4,6 @@
   org.flywaydb/flyway-core {:mvn/version "6.2.0"}
   org.postgresql/postgresql {:mvn/version "42.2.9"}
   ch.qos.logback/logback-classic {:mvn/version "1.2.3"}}
- :aliases {:uberjar {:extra-deps {uberdeps {:mvn/version "0.1.8"}}
+ :aliases {:test {:extra-paths ["src/test/sql"]}
+           :uberjar {:extra-deps {uberdeps {:mvn/version "0.1.8"}}
                      :main-opts ["-m" "uberdeps.uberjar"]}}}
