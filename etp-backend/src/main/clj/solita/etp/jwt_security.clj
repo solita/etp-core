@@ -1,5 +1,6 @@
 (ns solita.etp.jwt-security
-  (:require [buddy.core.keys :as keys]
+  (:require [clojure.tools.logging :as log]
+            [buddy.core.keys :as keys]
             [buddy.sign.jwe :as jwe]
             [buddy.sign.jwt :as jwt]
             [org.httpkit.client :as http]
@@ -71,7 +72,8 @@
         (when  (= id (:sub data-payload) (:sub access-payload))
           ;; TODO get user from db, do things
           access-payload)))
-    (catch Exception e (.printStackTrace e))))
+    (catch Exception e (log/error e (str "Exception when verifying JWTs: "
+                                         (.getMessage e))))))
 
 
 
