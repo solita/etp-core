@@ -48,8 +48,7 @@
   (let [{id "x-amzn-oidc-identity"
          data "x-amzn-oidc-data"
          access "x-amzn-oidc-accesstoken"} headers]
-    (when (and id data access)
-      {:id id :data data :access access})))
+    {:id id :data data :access access}))
 
 (def forbidden {:status 403 :body "Forbidden"})
 
