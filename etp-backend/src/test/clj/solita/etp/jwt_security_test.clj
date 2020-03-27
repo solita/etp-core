@@ -51,12 +51,6 @@ zI6qYxXKEuxvD4MQFVc90/nB+nNLVQjDCfY91p/Ty0VjPIenVMV99QIDAQAB
 
 (def jwks (-> ".well-known/jwks.json" io/resource slurp json/read-value))
 
-(t/deftest trusted-iss->jwks-url-test
-  (t/is (= (jwt-security/trusted-iss->jwks-url nil)
-           "/.well-known/jwks.json"))
-  (t/is (= (jwt-security/trusted-iss->jwks-url "https://example.com")
-           "https://example.com/.well-known/jwks.json")))
-
 (t/deftest public-key-from-jwks-test
   (t/is (nil? (jwt-security/public-key-from-jwks jwks "nonexisting-kid")))
   (t/is (= (-> jwks
@@ -64,7 +58,7 @@ zI6qYxXKEuxvD4MQFVc90/nB+nNLVQjDCfY91p/Ty0VjPIenVMV99QIDAQAB
                .getPublicExponent)
            65537)))
 
-(t/deftest verified-jwt-test
+(t/deftest verified-jwt-payload-test
   (t/is (nil? (jwt-security/verified-jwt-payload nil public-key)))
   (t/is (nil? (jwt-security/verified-jwt-payload ok-jwt nil)))
   (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
@@ -83,8 +77,11 @@ zI6qYxXKEuxvD4MQFVc90/nB+nNLVQjDCfY91p/Ty0VjPIenVMV99QIDAQAB
                {:headers {"x-amzn-oidc-identity" "123"}})))
   (t/is (nil? (jwt-security/alb-headers
                {:headers {"x-amzn-oidc-accesstoken" "abc"}})))
+  (t/is (nil? (jwt-security/alb-headers
+               {:headers {"x-amzn-oidc-identity" "123"
+                          "x-amzn-oidc-accesstoken" "abc"}})))
   (t/is (= (jwt-security/alb-headers
             {:headers {"x-amzn-oidc-identity" "123"
+                       "x-amzn-oidc-data" "xyz"
                        "x-amzn-oidc-accesstoken" "abc"}})
-           {:id "123"
-            :jwt "abc"})))
+           {:id "123" :data "xyz" :access "abc"})))
