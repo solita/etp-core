@@ -3,7 +3,7 @@
             [buddy.core.keys :as keys]
             [buddy.sign.jwe :as jwe]
             [buddy.sign.jwt :as jwt]
-            [org.httpkit.client :as http]
+            [clj-http.client :as http]
 
             ;; TODO json namespace should probably not be
             ;; under service namespace
@@ -11,7 +11,7 @@
             [solita.etp.config :as config]))
 
 (defn http-get [url f]
-  (let [{:keys [status body]} (-> url http/get deref)]
+  (let [{:keys [status body]} (http/get url)]
     (when (= status 200) (f body))))
 
 ;;
@@ -74,9 +74,6 @@
           access-payload)))
     (catch Exception e (log/error e (str "Exception when verifying JWTs: "
                                          (.getMessage e))))))
-
-
-
 
 (defn middleware-for-alb [handler]
   (fn [req]

@@ -25,6 +25,7 @@
         ;; https://github.com/metosin/reitit/issues/355
         metosin/spec-tools {:mvn/version "0.10.1"}
         webjure/jeesql {:mvn/version "0.4.7"}
+        clj-http {:mvn/version "3.10.0"}
         buddy/buddy-sign {:mvn/version "3.1.0"}}
  :aliases {:test {:extra-paths ["src/test/clj"
                                 "src/test/resources"]
