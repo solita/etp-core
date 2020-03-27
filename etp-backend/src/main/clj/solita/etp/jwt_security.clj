@@ -9,21 +9,35 @@
             [solita.etp.service.json :as json]
             [solita.etp.config :as config]))
 
-(defn trusted-iss->jwks-url [trusted-iss]
-  (str trusted-iss "/.well-known/jwks.json"))
+(defn http-get [url f]
+  (let [{:keys [status body]} (-> url http/get deref)]
+    (when (= status 200) (f body))))
+
+;;
+;; Access token related
+;;
 
 (defn public-key-from-jwks [jwks kid]
   (some->> jwks :keys (filter #(= (:kid %) kid)) first keys/jwk->public-key))
 
-(defn get-public-key* [trusted-iss kid]
-  (let [{:keys [status body]} (-> trusted-iss
-                                  trusted-iss->jwks-url
-                                  http/get
-                                  deref)]
-    (when (= status 200)
-      (-> body json/read-value (public-key-from-jwks kid)))))
+(defn get-public-key-for-access-token* [trusted-iss kid]
+  (http-get (str trusted-iss ".well-known/jwks.json")
+            #(-> % json/read-value (public-key-from-jwks kid))))
 
-(def get-public-key (memoize get-public-key*))
+(def get-public-key-for-access-token (memoize get-public-key-for-access-token*))
+
+;;
+;; Data token related
+;;
+
+(defn get-public-key-for-data-token* [base-url kid]
+  (http-get (str base-url kid) keys/str->public-key))
+
+(def get-public-key-for-data-token (memoize get-public-key-for-data-token*))
+
+;;
+;; Common
+;;
 
 (defn verified-jwt-payload [jwt public-key]
   (when (and jwt public-key)
@@ -31,23 +45,39 @@
 
 (defn alb-headers [{:keys [headers]}]
   (let [{id "x-amzn-oidc-identity"
-         jwt "x-amzn-oidc-accesstoken"} headers]
-    (when (and id jwt)
-      {:id id :jwt jwt})))
+         data "x-amzn-oidc-data"
+         access "x-amzn-oidc-accesstoken"} headers]
+    (when (and id data access)
+      {:id id :data data :access access})))
 
 (def forbidden {:status 403 :body "Forbidden"})
 
-(defn req->jwt-payload [req]
+(defn req->jwt-info [req]
   (try
-    (let [{:keys [id jwt]} (alb-headers req)
-          kid (-> jwt jwe/decode-header :kid)
-          public-key (get-public-key config/trusted-jwt-iss kid)
-          payload (verified-jwt-payload jwt public-key)]
-      (when (and payload (= (:sub payload) id)) payload))
+    (do
+      (let [{:keys [id data access]} (alb-headers req)
+            data-kid (-> data jwe/decode-header :kid)
+            data-public-key (get-public-key-for-data-token
+                             config/data-jwt-public-key-base-url
+                             data-kid)
+            {:keys [email] :as data-payload} (verified-jwt-payload
+                                              data
+                                              data-public-key)
+            access-kid (-> access jwe/decode-header :kid)
+            access-public-key (get-public-key-for-access-token
+                               config/trusted-jwt-iss
+                               access-kid)
+            access-payload (verified-jwt-payload access access-public-key)]
+        (when  (= id (:sub data-payload) (:sub access-payload))
+          ;; TODO get user from db, do things
+          access-payload)))
     (catch Exception e (.printStackTrace e))))
+
+
+
 
 (defn middleware-for-alb [handler]
   (fn [req]
-    (if-let [payload (req->jwt-payload req)]
+    (if-let [payload (req->jwt-info req)]
       (handler (assoc req :jwt-payload payload))
       forbidden)))
