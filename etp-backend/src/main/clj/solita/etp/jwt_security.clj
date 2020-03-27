@@ -24,7 +24,7 @@
   (some->> jwks :keys (filter #(= (:kid %) kid)) first keys/jwk->public-key))
 
 (defn get-public-key-for-access-token* [trusted-iss kid]
-  (http-get (str trusted-iss ".well-known/jwks.json")
+  (http-get (str trusted-iss "/.well-known/jwks.json")
             #(-> % json/read-value (public-key-from-jwks kid))))
 
 (def get-public-key-for-access-token (memoize get-public-key-for-access-token*))
