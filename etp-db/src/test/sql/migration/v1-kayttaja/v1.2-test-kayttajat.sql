@@ -1,4 +1,5 @@
-INSERT INTO kayttaja (etunimi, sukunimi, email, rooli) VALUES ('Päivi', 'Pääkäyttäjä', 'paakayttaja@example.com', 2);
-INSERT INTO kayttaja (etunimi, sukunimi, email, rooli) VALUES ('Pauli', 'Pätevyyden toteaja', 'patevyydentoteaja@example.com', 1);
-INSERT INTO kayttaja (etunimi, sukunimi, email, rooli) VALUES ('Liisa', 'Laatija', 'laatija1@example.com', 0);
-INSERT INTO kayttaja (etunimi, sukunimi, email, rooli) VALUES ('Lauri', 'Laatija', 'laatija2@example.com', 0);
+INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli) VALUES
+('Päivi', 'Pääkäyttäjä', 'paakayttaja@example.com', '0501234567', 2),
+('Pauli', 'Pätevyyden toteaja', 'patevyydentoteaja@example.com', '0401234567', 1),
+('Liisa', 'Laatija', 'laatija1@example.com', '0441234567', 0),
+('Lauri', 'Laatija', 'laatija2@example.com', '0451234567', 0);

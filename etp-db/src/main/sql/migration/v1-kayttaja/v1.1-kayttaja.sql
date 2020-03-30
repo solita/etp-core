@@ -3,7 +3,7 @@ create table kayttaja (
   etunimi text NOT NULL,
   sukunimi text NOT NULL,
   email text NOT NULL,
-  puhelin text,
+  puhelin text NOT NULL,
   passivoitu boolean DEFAULT false NOT NULL,
   rooli int DEFAULT 0 NOT NULL,
   login timestamp with time zone,
