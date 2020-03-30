@@ -73,6 +73,10 @@
   (result-set-read-column [x _ _]
     (.toLocalDate x))
 
+  java.sql.Timestamp
+  (result-set-read-column [x _ _]
+    (.toInstant x))
+
   org.postgresql.jdbc.PgArray
   (result-set-read-column [x _ _]
     (-> x .getArray vec)))
