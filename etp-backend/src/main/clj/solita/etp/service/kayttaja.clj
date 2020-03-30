@@ -22,6 +22,9 @@
        (map coerce-kayttaja)
        first))
 
+(defn update-login! [db id cognitoid]
+  (kayttaja-db/update-login! db {:id id :cognitoid cognitoid}))
+
 (defn add-kayttaja! [db kayttaja]
   (:id (kayttaja-db/insert-kayttaja<! db kayttaja)))
 
