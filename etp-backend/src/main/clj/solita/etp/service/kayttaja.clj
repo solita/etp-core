@@ -16,6 +16,12 @@
        (map coerce-kayttaja)
        first))
 
+(defn find-kayttaja-with-email [db email]
+  (->> {:email email}
+       (kayttaja-db/select-kayttaja-with-email db)
+       (map coerce-kayttaja)
+       first))
+
 (defn add-kayttaja! [db kayttaja]
   (:id (kayttaja-db/insert-kayttaja<! db kayttaja)))
 

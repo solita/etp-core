@@ -6,3 +6,6 @@ UPDATE kayttaja SET etunimi = :etunimi, sukunimi = :sukunimi, email = :email, pu
 
 -- name: select-kayttaja
 select id, etunimi, sukunimi, email, puhelin, passivoitu, rooli, login, ensitallennus, cognito_id as cognitoid from kayttaja where id = :id
+
+-- name: select-kayttaja-with-email
+select id, etunimi, sukunimi, email, puhelin, passivoitu, rooli, login, ensitallennus, cognito_id as cognitoid from kayttaja where email = :email
