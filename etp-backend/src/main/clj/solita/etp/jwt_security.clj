@@ -44,14 +44,17 @@
 ;;
 
 (defn verified-jwt-payload [jwt public-key]
-  (when (and jwt public-key)
-    (jwt/unsign jwt public-key {:alg (-> jwt jwe/decode-header :alg)})))
+  (if (and jwt public-key)
+    (jwt/unsign jwt public-key {:alg (-> jwt jwe/decode-header :alg)})
+    (log/warn "JWT verification was not possible due to missing token or public key")))
 
 (defn alb-headers [{:keys [headers]}]
   (let [{id "x-amzn-oidc-identity"
          data "x-amzn-oidc-data"
          access "x-amzn-oidc-accesstoken"} headers]
-    {:id id :data data :access access}))
+    (if (and id data access)
+      {:id id :data data :access access}
+      (log/warn "Missing at least one of the required authentication headers."))))
 
 (def forbidden {:status 403 :body "Forbidden"})
 
@@ -71,7 +74,7 @@
                                config/trusted-jwt-iss
                                access-kid)
             access-payload (verified-jwt-payload access access-public-key)]
-        (when  (= id (:sub data-payload) (:sub access-payload))
+        (when (= id (:sub data-payload) (:sub access-payload))
           ;; TODO get user from db, do things
           access-payload)))
     (catch Exception e (log/error e (str "Exception when verifying JWTs: "
