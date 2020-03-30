@@ -14,7 +14,8 @@
   (let [{:keys [status body] :as resp} (http/get url {:throw-exceptions false})]
     (if (= status 200)
       (f body)
-      (log/error "Fail when requesting %s. Response was: %s" url resp))))
+      (log/error "Fail in HTTP GET: " {:url url
+                                       :response resp}))))
 
 ;;
 ;; Access token related
