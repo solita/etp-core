@@ -36,17 +36,23 @@
 ;; Käyttäjä
 ;;
 
-(defn find-kayttaja [db id]
-  (->> {:id id}
-       (kayttaja-db/select-kayttaja db)
-       (map coerce-kayttaja)
-       first))
+(defn find-kayttaja [db current-kayttaja id]
+  (when (or (= id (:id current-kayttaja))
+            (paakayttaja? current-kayttaja)
+            (patevyydentoteaja? current-kayttaja))
+    (->> {:id id}
+         (kayttaja-db/select-kayttaja db)
+         (map coerce-kayttaja)
+         first)))
 
-(defn find-kayttaja-with-email [db email]
-  (->> {:email email}
-       (kayttaja-db/select-kayttaja-with-email db)
-       (map coerce-kayttaja)
-       first))
+(defn find-kayttaja-with-email [db current-kayttaja email]
+  (when (or (= email (:email current-kayttaja))
+            (paakayttaja? current-kayttaja)
+            (patevyydentoteaja? current-kayttaja))
+    (->> {:email email}
+         (kayttaja-db/select-kayttaja-with-email db)
+         (map coerce-kayttaja)
+         first)))
 
 (defn update-login! [db id cognitoid]
   (kayttaja-db/update-login! db {:id id :cognitoid cognitoid}))
@@ -54,5 +60,8 @@
 (defn add-kayttaja! [db kayttaja]
   (:id (kayttaja-db/insert-kayttaja<! db kayttaja)))
 
-(defn update-kayttaja! [db id kayttaja]
-  (kayttaja-db/update-kayttaja! db (assoc kayttaja :id id)))
+(defn update-kayttaja! [db current-kayttaja id kayttaja]
+  (when (or (= id (:id current-kayttaja))
+            (paakayttaja? current-kayttaja)
+            (patevyydentoteaja? current-kayttaja))
+    (kayttaja-db/update-kayttaja! db (assoc kayttaja :id id))))
