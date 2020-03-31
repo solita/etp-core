@@ -93,10 +93,13 @@
 
 (defn wrap-kayttaja [handler]
   (fn [{:keys [db jwt-payloads] :as req}]
-    (if-let [kayttaja (kayttaja-service/find-kayttaja-with-email
-                       db
-                       (-> req :jwt-payloads :data :email))]
-      (handler (assoc req :kayttaja kayttaja))
-      (do
-        (log/error "Unable to find käyttäjä using email in data JWT")
-        forbidden))))
+    (let [email (-> req :jwt-payloads :data :email)
+          kayttaja (kayttaja-service/find-kayttaja-with-email
+                    db
+                    {:email email}
+                    email)]
+      (if kayttaja
+        (handler (assoc req :kayttaja kayttaja))
+        (do
+          (log/error "Unable to find käyttäjä using email in data JWT")
+          forbidden)))))
