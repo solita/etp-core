@@ -14,7 +14,11 @@
   [["/whoami"
     {:get {:summary "Kirjautuneen käyttäjän tiedot"
            :responses {200 {:body kayttaja-schema/Kayttaja}}
-           :handler (fn [{:keys [kayttaja]}]
+           :handler (fn [{:keys [kayttaja jwt-payloads db]}]
+                      (kayttaja-service/update-login!
+                       db
+                       (:id kayttaja)
+                       (-> jwt-payloads :data :sub))
                       (r/response kayttaja))}}]
    ["/kayttajat"
     ["/:id"
