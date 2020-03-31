@@ -5,6 +5,7 @@
             [buddy.sign.jwt :as jwt]
             [clj-http.client :as http]
 
+            [solita.etp.service.kayttaja :as kayttaja-service]
             ;; TODO json namespace should probably not be
             ;; under service namespace
             [solita.etp.service.json :as json]
@@ -58,7 +59,7 @@
 
 (def forbidden {:status 403 :body "Forbidden"})
 
-(defn req->jwt-info [req]
+(defn req->verified-jwt-payloads [req]
   (try
     (do
       (let [{:keys [id data access]} (alb-headers req)
@@ -75,13 +76,27 @@
                                access-kid)
             access-payload (verified-jwt-payload access access-public-key)]
         (when (= id (:sub data-payload) (:sub access-payload))
-          ;; TODO get user from db, do things
-          access-payload)))
+          {:data data-payload
+           :access access-payload})))
     (catch Exception e (log/error e (str "Exception when verifying JWTs: "
                                          (.getMessage e))))))
 
-(defn middleware-for-alb [handler]
+;;
+;; Middleware
+;;
+
+(defn wrap-jwt-payloads [handler]
   (fn [req]
-    (if-let [payload (req->jwt-info req)]
-      (handler (assoc req :jwt-payload payload))
+    (if-let [jwt-payloads (req->verified-jwt-payloads req)]
+      (handler (assoc req :jwt-payloads jwt-payloads))
       forbidden)))
+
+(defn wrap-kayttaja [handler]
+  (fn [{:keys [db jwt-payloads] :as req}]
+    (if-let [kayttaja (kayttaja-service/find-kayttaja-with-email
+                       db
+                       (-> req :jwt-payloads :data :email))]
+      (handler (assoc req :kayttaja kayttaja))
+      (do
+        (log/error "Unable to find käyttäjä using email in data JWT")
+        forbidden))))

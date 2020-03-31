@@ -13,8 +13,9 @@
 (def routes
   [["/whoami"
     {:get {:summary "Kirjautuneen käyttäjän tiedot"
-           :responses {200 {:body kayttaja-schema/Whoami}}
-           :handler (constantly (r/response {:id 1234 :username "Testi"}))}}]
+           :responses {200 {:body kayttaja-schema/Kayttaja}}
+           :handler (fn [{:keys [kayttaja]}]
+                      (r/response kayttaja))}}]
    ["/kayttajat"
     ["/:id"
      [""

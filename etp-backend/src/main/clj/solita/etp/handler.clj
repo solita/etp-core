@@ -57,7 +57,8 @@
 (def routes
   ["/api"
    system-routes
-   ["/private" {:middleware [[jwt-security/middleware-for-alb]]}
+   ["/private" {:middleware [[jwt-security/wrap-jwt-payloads]
+                             [jwt-security/wrap-kayttaja]]}
     (concat (tag "Käyttäjä API" kayttaja-api/routes)
             (tag "Yritys API" yritys-api/routes)
             (tag "Laatijat API" laatija-api/routes)
