@@ -5,6 +5,7 @@
             [buddy.sign.jwt :as jwt]
             [clj-http.client :as http]
 
+            [solita.etp.service.kayttaja :as kayttaja-service]
             ;; TODO json namespace should probably not be
             ;; under service namespace
             [solita.etp.service.json :as json]
@@ -76,8 +77,7 @@
             access-payload (verified-jwt-payload access access-public-key)]
         (when (= id (:sub data-payload) (:sub access-payload))
           {:data data-payload
-           :access access-payload}
-          access-payload)))
+           :access access-payload})))
     (catch Exception e (log/error e (str "Exception when verifying JWTs: "
                                          (.getMessage e))))))
 
@@ -90,3 +90,13 @@
     (if-let [jwt-payloads (req->verified-jwt-payloads req)]
       (handler (assoc req :jwt-payloads jwt-payloads))
       forbidden)))
+
+(defn wrap-kayttaja [handler]
+  (fn [{:keys [db jwt-payloads] :as req}]
+    (if-let [kayttaja (kayttaja-service/find-kayttaja-with-email
+                       db
+                       (-> req :jwt-payloads :data :email))]
+      (handler (assoc req :kayttaja kayttaja))
+      (do
+        (log/error "Unable to find käyttäjä using email in data JWT")
+        forbidden))))
