@@ -17,7 +17,7 @@
   "Schema representing the persistent kayttaja"
   (merge KayttajaUpdate
          common-schema/Id
-         {:login         (schema/maybe common-schema/Date)
+         {:login         (schema/maybe common-schema/Instant)
           :ensitallennus schema/Bool
           :cognitoid     (schema/maybe schema/Str)}))
 

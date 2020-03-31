@@ -55,6 +55,7 @@
 (def Date java.time.LocalDate)
 (def DateInterval {:start Date
                    :end Date})
+(def Instant java.time.Instant)
 
 (defn henkilotunnus-checksum [s]
   (try
