@@ -58,7 +58,7 @@
 
 (def forbidden {:status 403 :body "Forbidden"})
 
-(defn req->jwt-info [req]
+(defn req->verified-jwt-payloads [req]
   (try
     (do
       (let [{:keys [id data access]} (alb-headers req)
@@ -75,13 +75,18 @@
                                access-kid)
             access-payload (verified-jwt-payload access access-public-key)]
         (when (= id (:sub data-payload) (:sub access-payload))
-          ;; TODO get user from db, do things
+          {:data data-payload
+           :access access-payload}
           access-payload)))
     (catch Exception e (log/error e (str "Exception when verifying JWTs: "
                                          (.getMessage e))))))
 
-(defn middleware-for-alb [handler]
+;;
+;; Middleware
+;;
+
+(defn wrap-jwt-payloads [handler]
   (fn [req]
-    (if-let [payload (req->jwt-info req)]
-      (handler (assoc req :jwt-payload payload))
+    (if-let [jwt-payloads (req->verified-jwt-payloads req)]
+      (handler (assoc req :jwt-payloads jwt-payloads))
       forbidden)))
