@@ -42,3 +42,9 @@
               :label-sv "Pääkäyttäjä-SV"}])
 
 (defn find-roolit [] roolit)
+
+(defn patevyydentoteaja? [{:keys [role]}]
+  (= role 1))
+
+(defn paakayttaja? [{:keys [role]}]
+  (= role 2))

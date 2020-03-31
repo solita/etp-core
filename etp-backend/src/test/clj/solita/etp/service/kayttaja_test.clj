@@ -61,3 +61,13 @@
                          "Pääkäyttäjä"}))
     ;; TODO test swedish labels when they exist
     ))
+
+(t/deftest patevyydentoteaja?-test
+  (t/is (false? (service/patevyydentoteaja? nil?)))
+  (t/is (false? (service/patevyydentoteaja? {:role 2})))
+  (t/is (true? (service/patevyydentoteaja? {:role 1}))))
+
+(t/deftest paakayttaja?-test
+  (t/is (false? (service/paakayttaja? nil?)))
+  (t/is (false? (service/paakayttaja? {:role 1})))
+  (t/is (true? (service/paakayttaja? {:role 2}))))
