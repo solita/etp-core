@@ -8,7 +8,7 @@
     (r/response body)))
 
 (defn put-response [updated not-found]
-  (if (= updated 0)
+  (if (or (nil? updated) (= updated 0))
     (r/not-found not-found)
     (r/response nil)))
 
