@@ -2,8 +2,6 @@
   (:require [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]))
 
-(def Whoami (merge common-schema/Id {:username schema/Str}))
-
 (def KayttajaAdd {:etunimi       schema/Str
                   :sukunimi      schema/Str
                   :email         schema/Str
