@@ -15,9 +15,9 @@
 (t/deftest add-and-find-test
   (doseq [kayttaja (repeatedly 100 #(g/generate kayttaja-schema/KayttajaAdd))
           :let [id (service/add-kayttaja! ts/*db* kayttaja)
-                current-kayttaja (rand-nth [{:id id} laatija paakayttaja])
-                found (service/find-kayttaja ts/*db* current-kayttaja id)]]
-    (if (= current-kayttaja laatija)
+                whoami (rand-nth [{:id id} laatija paakayttaja])
+                found (service/find-kayttaja ts/*db* whoami id)]]
+    (if (= whoami laatija)
       (t/is (nil? found))
       (do
         (schema/validate kayttaja-schema/Kayttaja found)
@@ -32,11 +32,11 @@
                 kayttaja (-> (g/generate kayttaja-schema/KayttajaAdd)
                              (assoc :email email))
                 _ (service/add-kayttaja! ts/*db* kayttaja)
-                current-kayttaja (rand-nth [{:email email} laatija paakayttaja])
+                whoami (rand-nth [{:email email} laatija paakayttaja])
                 found (service/find-kayttaja-with-email ts/*db*
-                                                        current-kayttaja
+                                                        whoami
                                                         email)]]
-    (if (= current-kayttaja laatija)
+    (if (= whoami laatija)
       (t/is (nil? found))
       (do
         (schema/validate kayttaja-schema/Kayttaja found)
@@ -46,14 +46,14 @@
   (doseq [kayttaja (repeatedly 100 #(g/generate kayttaja-schema/KayttajaAdd))
           :let [id (service/add-kayttaja! ts/*db* kayttaja)
                 updated-kayttaja (g/generate kayttaja-schema/KayttajaUpdate)
-                current-kayttaja (rand-nth [{:id id} laatija paakayttaja])
+                whoami (rand-nth [{:id id} laatija paakayttaja])
                 _ (service/update-kayttaja! ts/*db*
-                                            current-kayttaja
+                                            whoami
                                             id
                                             updated-kayttaja)
                 found (service/find-kayttaja ts/*db* paakayttaja id)]]
     (schema/validate kayttaja-schema/Kayttaja found)
-    (if (= current-kayttaja laatija)
+    (if (= whoami laatija)
       (t/is (map/submap? kayttaja found))
       (t/is (map/submap? updated-kayttaja found)))))
 
