@@ -18,14 +18,14 @@
    geo-schema/Postinumero   (g/always "00100")})
 
 (t/deftest add-and-find-energiatodistus-test
-  (doseq [energiatodistus (repeatedly 100 #(g/generate schema/EnergiatodistusSave energiatodistus-generators))
+  (doseq [energiatodistus (repeatedly 100 #(g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))
           :let [id (service/add-energiatodistus! ts/*db* energiatodistus)]]
     (t/is (= (assoc energiatodistus :id id :tila "luonnos") (service/find-energiatodistus ts/*db* id))))
   (t/is (= 100 (count (service/find-all-luonnos-energiatodistukset ts/*db*))))
   (t/is (= 100 (count (service/find-all-energiatodistukset ts/*db*)))))
 
 (t/deftest create-energiatodistus-and-set-valmis-test
-  (let [id (service/add-energiatodistus! ts/*db* (g/generate schema/EnergiatodistusSave energiatodistus-generators))]
+  (let [id (service/add-energiatodistus! ts/*db* (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))]
     (t/is (= "luonnos" (:tila (service/find-energiatodistus ts/*db* id))))
     (t/is (= 1 (count (service/find-all-luonnos-energiatodistukset ts/*db*))))
     (t/is (= 1 (count (service/find-all-energiatodistukset ts/*db*))))
@@ -36,8 +36,8 @@
     (t/is (thrown? IllegalStateException (service/delete-energiatodistus-when-luonnos! ts/*db* id)))))
 
 (t/deftest update-energiatodistus-test
-  (let [id                     (service/add-energiatodistus! ts/*db* (g/generate schema/EnergiatodistusSave energiatodistus-generators))
-        update-energiatodistus (g/generate schema/EnergiatodistusSave energiatodistus-generators)]
+  (let [id                     (service/add-energiatodistus! ts/*db* (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))
+        update-energiatodistus (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators)]
     (t/is (= "luonnos" (:tila (service/find-energiatodistus ts/*db* id))))
     (service/update-energiatodistus-when-luonnos! ts/*db* id update-energiatodistus)
     (t/is (= (assoc update-energiatodistus :id id :tila "luonnos") (service/find-energiatodistus ts/*db* id)))
@@ -45,6 +45,6 @@
     (t/is (thrown? IllegalStateException (service/update-energiatodistus-when-luonnos! ts/*db* id update-energiatodistus)))))
 
 (t/deftest create-energiatodistus-and-delete-test
-  (let [id (service/add-energiatodistus! ts/*db* (g/generate schema/EnergiatodistusSave energiatodistus-generators))]
+  (let [id (service/add-energiatodistus! ts/*db* (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))]
     (service/delete-energiatodistus-when-luonnos! ts/*db* id)))
 

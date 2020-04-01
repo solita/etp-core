@@ -9,7 +9,7 @@
 (db/require-queries 'energiatodistus)
 
 ; *** Conversions from database data types ***
-(def coerce-energiatodistus (coerce/coercer energiatodistus-schema/Energiatodistus json/json-coercions))
+(def coerce-energiatodistus (coerce/coercer energiatodistus-schema/Energiatodistus2018 json/json-coercions))
 
 (defn find-energiatodistus [db id]
   (first (map (comp coerce-energiatodistus json/merge-data) (energiatodistus-db/select-energiatodistus db {:id id}))))

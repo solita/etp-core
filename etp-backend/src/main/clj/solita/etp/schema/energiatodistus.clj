@@ -193,7 +193,7 @@
    :ymparys           Huomio
    :alapohja-ylapohja Huomio})
 
-(def EnergiatodistusSave
+(def EnergiatodistusSave2018
   "This schema is used in add-energiatodistus and update-energiatodistus services"
   {:perustiedot                    Perustiedot
    :lahtotiedot                    Lahtotiedot
@@ -206,6 +206,6 @@
 (def EnergiatodistusTila
   {:tila (schema/enum "luonnos" "valmis")})
 
-(def Energiatodistus
+(def Energiatodistus2018
   "Energiatodistus schema contains basic information about persistent energiatodistus"
-  (merge common-schema/Id EnergiatodistusTila EnergiatodistusSave))
+  (merge common-schema/Id EnergiatodistusTila EnergiatodistusSave2018))
