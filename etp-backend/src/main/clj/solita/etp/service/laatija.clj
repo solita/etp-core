@@ -20,13 +20,11 @@
          (map coerce-laatija)
          first)))
 
-(defn find-laatija-with-henkilotunnus [db whoami henkilotunnus]
-  (when (or (= henkilotunnus (:henkilotunnus whoami))
-            (rooli-service/more-than-laatija? whoami))
-    (->> {:henkilotunnus henkilotunnus}
-         (laatija-db/select-laatija-with-henkilotunnus db)
-         (map coerce-laatija)
-         first)))
+(defn find-laatija-with-henkilotunnus [db henkilotunnus]
+  (->> {:henkilotunnus henkilotunnus}
+       (laatija-db/select-laatija-with-henkilotunnus db)
+       (map coerce-laatija)
+       first))
 
 (defn add-laatija!
   ([db laatija]
