@@ -49,8 +49,8 @@
   (let [kayttaja (st/select-schema kayttaja-laatija kayttaja-schema/KayttajaUpdate)
         laatija (st/select-schema kayttaja-laatija laatija-schema/LaatijaUpdate)]
     (when (or (= id (:id whoami))
-              (rooli-service/paakayttaja? whoami)))
-    (jdbc/with-db-transaction
-      [db db]
-      (kayttaja-service/update-kayttaja! db id kayttaja)
-      (laatija-service/update-laatija-with-kayttaja-id! db id laatija))))
+              (rooli-service/paakayttaja? whoami))
+      (jdbc/with-db-transaction
+        [db db]
+        (kayttaja-service/update-kayttaja! db id kayttaja)
+        (laatija-service/update-laatija-with-kayttaja-id! db id laatija)))))
