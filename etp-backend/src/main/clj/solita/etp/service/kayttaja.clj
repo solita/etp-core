@@ -2,6 +2,7 @@
   (:require [schema.coerce :as coerce]
             [solita.etp.db :as db]
             [solita.etp.service.json :as json]
+            [solita.etp.service.rooli :as rooli-service]
             [solita.etp.schema.kayttaja :as kayttaja-schema]))
 
 ;; *** Require sql functions ***
@@ -10,36 +11,9 @@
 ;; *** Conversions from database data types ***
 (def coerce-kayttaja (coerce/coercer kayttaja-schema/Kayttaja json/json-coercions))
 
-;;
-;; Roolit
-;;
-
-(def roolit [{:id 0
-              :label-fi "Laatija"
-              :label-sv "Laatija-SV"}
-             {:id 1
-              :label-fi "Pätevyyden toteaja"
-              :label-sv "Pätevyyden toteaja -SV"}
-             {:id 2
-              :label-fi "Pääkäyttäjä"
-              :label-sv "Pääkäyttäjä-SV"}])
-
-(defn find-roolit [] roolit)
-
-(defn patevyydentoteaja? [{:keys [role]}]
-  (= role 1))
-
-(defn paakayttaja? [{:keys [role]}]
-  (= role 2))
-
-;;
-;; Käyttäjä
-;;
-
 (defn find-kayttaja [db current-kayttaja id]
   (when (or (= id (:id current-kayttaja))
-            (paakayttaja? current-kayttaja)
-            (patevyydentoteaja? current-kayttaja))
+            (rooli-service/more-than-laatija? current-kayttaja))
     (->> {:id id}
          (kayttaja-db/select-kayttaja db)
          (map coerce-kayttaja)
@@ -47,8 +21,7 @@
 
 (defn find-kayttaja-with-email [db current-kayttaja email]
   (when (or (= email (:email current-kayttaja))
-            (paakayttaja? current-kayttaja)
-            (patevyydentoteaja? current-kayttaja))
+            (rooli-service/more-than-laatija? current-kayttaja))
     (->> {:email email}
          (kayttaja-db/select-kayttaja-with-email db)
          (map coerce-kayttaja)
@@ -62,6 +35,5 @@
 
 (defn update-kayttaja! [db current-kayttaja id kayttaja]
   (when (or (= id (:id current-kayttaja))
-            (paakayttaja? current-kayttaja)
-            (patevyydentoteaja? current-kayttaja))
+            (rooli-service/more-than-laatija? current-kayttaja))
     (kayttaja-db/update-kayttaja! db (assoc kayttaja :id id))))

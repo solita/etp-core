@@ -5,29 +5,9 @@
             [solita.common.map :as map]
             [solita.etp.test-system :as ts]
             [solita.etp.service.kayttaja :as service]
-            [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.kayttaja :as kayttaja-schema]))
 
 (t/use-fixtures :each ts/fixture)
-
-(t/deftest find-roolit-test
-  (let [roolit (service/find-roolit)
-        fi-labels (set (map :label-fi roolit))]
-    (t/is (= fi-labels #{"Laatija"
-                         "Pätevyyden toteaja"
-                         "Pääkäyttäjä"}))
-    ;; TODO test swedish labels when they exist
-    ))
-
-(t/deftest patevyydentoteaja?-test
-  (t/is (false? (service/patevyydentoteaja? nil?)))
-  (t/is (false? (service/patevyydentoteaja? {:role 2})))
-  (t/is (true? (service/patevyydentoteaja? {:role 1}))))
-
-(t/deftest paakayttaja?-test
-  (t/is (false? (service/paakayttaja? nil?)))
-  (t/is (false? (service/paakayttaja? {:role 1})))
-  (t/is (true? (service/paakayttaja? {:role 2}))))
 
 (def laatija {:role 0})
 (def paakayttaja {:role 2})
