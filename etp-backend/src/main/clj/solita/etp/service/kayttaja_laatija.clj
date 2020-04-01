@@ -6,6 +6,7 @@
             [solita.etp.service.json :as json]
             [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.service.laatija :as laatija-service]
+            [solita.etp.service.rooli :as rooli-service]
             [solita.etp.schema.kayttaja-laatija :as kayttaja-laatija-schema]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
             [solita.etp.schema.laatija :as laatija-schema]))
@@ -44,9 +45,11 @@
     [db db]
     (mapv #(upsert-kayttaja-laatija! db %) kayttaja-laatijat)))
 
-(defn update-kayttaja-laatija! [db id kayttaja-laatija]
+(defn update-kayttaja-laatija! [db whoami id kayttaja-laatija]
   (let [kayttaja (st/select-schema kayttaja-laatija kayttaja-schema/KayttajaUpdate)
         laatija (st/select-schema kayttaja-laatija laatija-schema/LaatijaUpdate)]
+    (when (or (= id (:id whoami))
+              (rooli-service/paakayttaja? whoami)))
     (jdbc/with-db-transaction
       [db db]
       (kayttaja-service/update-kayttaja! db id kayttaja)

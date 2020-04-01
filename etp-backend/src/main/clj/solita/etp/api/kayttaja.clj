@@ -38,10 +38,13 @@
                           :body kayttaja-laatija-schema/KayttajaLaatijaUpdate}
              :responses {200 {:body nil}
                          404 {:body schema/Str}}
-             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
+             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db
+                                                                   whoami
+                                                                   parameters]}]
                         (api-response/put-response
                          (kayttaja-laatija-service/update-kayttaja-laatija!
                           db
+                          whoami
                           id
                           (:body parameters))
                          (str "Käyttäjä " id " does not exists.")))}}]
