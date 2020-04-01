@@ -11,3 +11,5 @@
         se-labels  (map :label-sv patevyydet)]
     (t/is (= ["Perustaso" "Ylempi taso"] fi-labels))
     (t/is (= ["Basnivå" "Högre nivå"] se-labels))))
+
+;; TODO test for finding, attaching and detaching yritys from laatija

@@ -50,8 +50,11 @@
              :parameters {:path {:id common-schema/Key}}
              :responses {200 {:body laatija-schema/Laatija}
                          404 {:body schema/Str}}
-             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
-                        (-> (laatija-service/find-laatija-with-kayttaja-id db id)
+             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+                        (-> (laatija-service/find-laatija-with-kayttaja-id
+                             db
+                             whoami
+                             id)
                             (api-response/get-response
                              (str "No laatija information for käyttäjä id " id))))}}]]]
    ["/roolit"

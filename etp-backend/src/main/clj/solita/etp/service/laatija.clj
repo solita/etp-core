@@ -3,6 +3,7 @@
             [solita.common.map :as map]
             [solita.etp.db :as db]
             [solita.etp.service.json :as json]
+            [solita.etp.service.rooli :as rooli-service]
             [solita.etp.schema.laatija :as laatija-schema]))
 
 ;; *** Require sql functions ***
@@ -11,32 +12,53 @@
 ;; *** Conversions from database data types ***
 (def coerce-laatija (coerce/coercer laatija-schema/Laatija json/json-coercions))
 
-(defn find-laatija-with-kayttaja-id [db kayttaja-id]
-  (->> {:kayttaja kayttaja-id}
-       (laatija-db/select-laatija-with-kayttaja db)
-       (map coerce-laatija)
-       first))
+(defn find-laatija-with-kayttaja-id [db whoami kayttaja-id]
+  (when (or (= kayttaja-id (:id whoami))
+            (rooli-service/more-than-laatija? whoami))
+    (->> {:kayttaja kayttaja-id}
+         (laatija-db/select-laatija-with-kayttaja db)
+         (map coerce-laatija)
+         first)))
 
-(defn find-laatija-with-henkilotunnus [db henkilotunnus]
-  (->> {:henkilotunnus henkilotunnus}
-       (laatija-db/select-laatija-with-henkilotunnus db)
-       (map coerce-laatija)
-       first))
+(defn find-laatija-with-henkilotunnus [db whoami henkilotunnus]
+  (when (or (= henkilotunnus (:henkilotunnus whoami))
+            (rooli-service/more-than-laatija? whoami))
+    (->> {:henkilotunnus henkilotunnus}
+         (laatija-db/select-laatija-with-henkilotunnus db)
+         (map coerce-laatija)
+         first)))
 
-(defn add-laatija! [db laatija]
-  (:id (laatija-db/insert-laatija<! db laatija)))
+(defn add-laatija!
+  ([db laatija]
+   (:id (laatija-db/insert-laatija<! db laatija)))
+  ([db whoami laatija]
+   (when (rooli-service/more-than-laatija? whoami)
+     (add-laatija! db laatija))))
 
-(defn update-laatija-with-kayttaja-id! [db kayttaja-id laatija]
-  (laatija-db/update-laatija! db (assoc laatija :kayttaja kayttaja-id)))
+(defn update-laatija-with-kayttaja-id!
+  ([db kayttaja-id laatija]
+   (laatija-db/update-laatija! db (assoc laatija :kayttaja kayttaja-id)))
+  ([db whoami kayttaja-id laatija]
+   (when (or (= kayttaja-id (:id whoami))
+             (rooli-service/paakayttaja? whoami))
+     (update-laatija-with-kayttaja-id! db kayttaja-id laatija))))
 
-(defn find-laatija-yritykset [db id]
-  (map :yritys-id (laatija-db/select-laatija-yritykset db {:id id})))
+(defn find-laatija-yritykset [db whoami id]
+  (when (or (= id (:laatija whoami))
+            (rooli-service/more-than-laatija? whoami))
+    (map :yritys-id (laatija-db/select-laatija-yritykset db {:id id}))))
 
-(defn attach-laatija-yritys [db laatija-id yritys-id]
-  (laatija-db/insert-laatija-yritys! db (map/bindings->map laatija-id yritys-id)))
+(defn attach-laatija-yritys [db whoami laatija-id yritys-id]
+  (when (= laatija-id (:laatija whoami))
+    (laatija-db/insert-laatija-yritys!
+     db
+     (map/bindings->map laatija-id yritys-id))))
 
-(defn detach-laatija-yritys [db laatija-id yritys-id]
-  (laatija-db/delete-laatija-yritys! db (map/bindings->map laatija-id yritys-id)))
+(defn detach-laatija-yritys [db whoami laatija-id yritys-id]
+  (when (= laatija-id (:laatija whoami))
+    (laatija-db/delete-laatija-yritys!
+     db
+     (map/bindings->map laatija-id yritys-id))))
 
 ;;
 ;; Pätevyydet
