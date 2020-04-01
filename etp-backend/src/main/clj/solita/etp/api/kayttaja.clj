@@ -7,19 +7,20 @@
             [solita.etp.schema.laatija :as laatija-schema]
             [solita.etp.schema.kayttaja-laatija :as kayttaja-laatija-schema]
             [solita.etp.service.kayttaja :as kayttaja-service]
+            [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.kayttaja-laatija :as kayttaja-laatija-service]
             [solita.etp.service.laatija :as laatija-service]))
 
 (def routes
   [["/whoami"
     {:get {:summary "Kirjautuneen käyttäjän tiedot"
-           :responses {200 {:body kayttaja-schema/Kayttaja}}
-           :handler (fn [{:keys [kayttaja jwt-payloads db]}]
+           :responses {200 {:body kayttaja-laatija-schema/Whoami}}
+           :handler (fn [{:keys [whoami jwt-payloads db]}]
                       (kayttaja-service/update-login!
                        db
-                       (:id kayttaja)
+                       (:id whoami)
                        (-> jwt-payloads :data :sub))
-                      (r/response kayttaja))}}]
+                      (r/response whoami))}}]
    ["/kayttajat"
     ["/:id"
      [""
@@ -57,4 +58,4 @@
     {:get {:summary    "Hae roolit -luokittelu"
            :responses  {200 {:body [kayttaja-schema/Rooli]}}
            :handler    (fn [_]
-                         (r/response (kayttaja-service/find-roolit)))}}]])
+                         (r/response (rooli-service/find-roolit)))}}]])

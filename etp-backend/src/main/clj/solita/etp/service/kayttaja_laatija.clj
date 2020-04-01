@@ -1,10 +1,22 @@
 (ns solita.etp.service.kayttaja-laatija
   (:require [clojure.java.jdbc :as jdbc]
+            [schema.coerce :as coerce]
             [schema-tools.core :as st]
-            [solita.etp.schema.kayttaja :as kayttaja-schema]
-            [solita.etp.schema.laatija :as laatija-schema]
+            [solita.etp.db :as db]
+            [solita.etp.service.json :as json]
             [solita.etp.service.kayttaja :as kayttaja-service]
-            [solita.etp.service.laatija :as laatija-service]))
+            [solita.etp.service.laatija :as laatija-service]
+            [solita.etp.schema.kayttaja :as kayttaja-schema]
+            [solita.etp.schema.laatija :as laatija-schema]))
+
+;; *** Require sql functions ***
+(db/require-queries 'kayttaja-laatija)
+
+;; *** Conversions from database data types ***
+(def coerce-whoami (coerce/coercer kayttaja-schema/Kayttaja json/json-coercions))
+
+(defn find-whoami [db email]
+  (kayttaja-laatija-db/select-whoami db {:email email}))
 
 (defn- upsert-kayttaja-laatija! [db {:keys [henkilotunnus] :as kayttaja-laatija}]
   "Upserts käyttäjä and laatija WITHOUT transaction."
