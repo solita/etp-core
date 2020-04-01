@@ -10,12 +10,14 @@
 (t/use-fixtures :each ts/fixture)
 
 (def laatija {:rooli 0})
+(def patevyydentoteaja {:rooli 1})
 (def paakayttaja {:rooli 2})
+(def roolit [laatija patevyydentoteaja paakayttaja])
 
 (t/deftest add-and-find-test
   (doseq [kayttaja (repeatedly 100 #(g/generate kayttaja-schema/KayttajaAdd))
           :let [id (service/add-kayttaja! ts/*db* kayttaja)
-                whoami (rand-nth [{:id id} laatija paakayttaja])
+                whoami (rand-nth (conj roolit {:id id}))
                 found (service/find-kayttaja ts/*db* whoami id)]]
     (if (= whoami laatija)
       (t/is (nil? found))
@@ -32,7 +34,7 @@
                 kayttaja (-> (g/generate kayttaja-schema/KayttajaAdd)
                              (assoc :email email))
                 _ (service/add-kayttaja! ts/*db* kayttaja)
-                whoami (rand-nth [{:email email} laatija paakayttaja])
+                whoami (rand-nth (conj roolit {:email email}))
                 found (service/find-kayttaja-with-email ts/*db*
                                                         whoami
                                                         email)]]
@@ -46,14 +48,14 @@
   (doseq [kayttaja (repeatedly 100 #(g/generate kayttaja-schema/KayttajaAdd))
           :let [id (service/add-kayttaja! ts/*db* kayttaja)
                 updated-kayttaja (g/generate kayttaja-schema/KayttajaUpdate)
-                whoami (rand-nth [{:id id} laatija paakayttaja])
+                whoami (rand-nth (conj roolit {:id id}))
                 _ (service/update-kayttaja! ts/*db*
                                             whoami
                                             id
                                             updated-kayttaja)
                 found (service/find-kayttaja ts/*db* paakayttaja id)]]
     (schema/validate kayttaja-schema/Kayttaja found)
-    (if (= whoami laatija)
+    (if (contains? #{laatija patevyydentoteaja} whoami)
       (t/is (map/submap? kayttaja found))
       (t/is (map/submap? updated-kayttaja found)))))
 
