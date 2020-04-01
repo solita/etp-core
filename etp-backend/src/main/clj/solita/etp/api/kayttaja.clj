@@ -6,6 +6,7 @@
             [solita.etp.schema.kayttaja :as kayttaja-schema]
             [solita.etp.schema.laatija :as laatija-schema]
             [solita.etp.schema.kayttaja-laatija :as kayttaja-laatija-schema]
+            [solita.etp.schema.rooli :as rooli-schema]
             [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.kayttaja-laatija :as kayttaja-laatija-service]
@@ -56,6 +57,6 @@
                              (str "No laatija information for käyttäjä id " id))))}}]]]
    ["/roolit"
     {:get {:summary    "Hae roolit -luokittelu"
-           :responses  {200 {:body [kayttaja-schema/Rooli]}}
+           :responses  {200 {:body [rooli-schema/Rooli]}}
            :handler    (fn [_]
                          (r/response (rooli-service/find-roolit)))}}]])

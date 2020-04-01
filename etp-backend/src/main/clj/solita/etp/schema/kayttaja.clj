@@ -18,5 +18,3 @@
          {:login         (schema/maybe common-schema/Instant)
           :ensitallennus schema/Bool
           :cognitoid     (schema/maybe schema/Str)}))
-
-(def Rooli common-schema/Luokittelu)
