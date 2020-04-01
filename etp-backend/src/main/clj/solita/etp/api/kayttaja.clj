@@ -29,9 +29,8 @@
              :parameters {:path {:id common-schema/Key}}
              :responses {200 {:body kayttaja-schema/Kayttaja}
                          404 {:body schema/Str}}
-             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db
-                                                                   kayttaja]}]
-                        (-> (kayttaja-service/find-kayttaja db kayttaja id)
+             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+                        (-> (kayttaja-service/find-kayttaja db whoami id)
                             (api-response/get-response
                              (str "Käyttäjä " id " does not exist."))))}
        :put {:summary "Päivitä käyttäjän ja käyttäjään liittyvän laatijan tiedot"

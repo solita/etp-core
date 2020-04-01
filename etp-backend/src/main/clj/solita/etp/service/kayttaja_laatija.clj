@@ -6,6 +6,7 @@
             [solita.etp.service.json :as json]
             [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.service.laatija :as laatija-service]
+            [solita.etp.schema.kayttaja-laatija :as kayttaja-laatija-schema]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
             [solita.etp.schema.laatija :as laatija-schema]))
 
@@ -13,10 +14,14 @@
 (db/require-queries 'kayttaja-laatija)
 
 ;; *** Conversions from database data types ***
-(def coerce-whoami (coerce/coercer kayttaja-schema/Kayttaja json/json-coercions))
+(def coerce-whoami (coerce/coercer kayttaja-laatija-schema/Whoami
+                                   json/json-coercions))
 
 (defn find-whoami [db email]
-  (kayttaja-laatija-db/select-whoami db {:email email}))
+  (->> {:email email}
+       (kayttaja-laatija-db/select-whoami db)
+       (map coerce-whoami)
+       first))
 
 (defn- upsert-kayttaja-laatija! [db {:keys [henkilotunnus] :as kayttaja-laatija}]
   "Upserts käyttäjä and laatija WITHOUT transaction."

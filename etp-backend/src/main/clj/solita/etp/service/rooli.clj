@@ -12,14 +12,14 @@
 
 (defn find-roolit [] roolit)
 
-(defn laatija? [{:keys [role]}]
-  (= role 0))
+(defn laatija? [{:keys [rooli]}]
+  (= rooli 0))
 
-(defn patevyydentoteaja? [{:keys [role]}]
-  (= role 1))
+(defn patevyydentoteaja? [{:keys [rooli]}]
+  (= rooli 1))
 
-(defn paakayttaja? [{:keys [role]}]
-  (= role 2))
+(defn paakayttaja? [{:keys [rooli]}]
+  (= rooli 2))
 
-(defn more-than-laatija? [{:keys [role]}]
-  (contains? #{1 2} role))
+(defn more-than-laatija? [{:keys [rooli]}]
+  (contains? #{1 2} rooli))

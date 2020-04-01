@@ -9,8 +9,8 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(def laatija {:role 0})
-(def paakayttaja {:role 2})
+(def laatija {:rooli 0})
+(def paakayttaja {:rooli 2})
 
 (t/deftest add-and-find-test
   (doseq [kayttaja (repeatedly 100 #(g/generate kayttaja-schema/KayttajaAdd))
