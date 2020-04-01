@@ -11,13 +11,16 @@
 ;; *** Conversions from database data types ***
 (def coerce-kayttaja (coerce/coercer kayttaja-schema/Kayttaja json/json-coercions))
 
-(defn find-kayttaja [db whoami id]
-  (when (or (= id (:id whoami))
-            (rooli-service/more-than-laatija? whoami))
-    (->> {:id id}
-         (kayttaja-db/select-kayttaja db)
-         (map coerce-kayttaja)
-         first)))
+(defn find-kayttaja
+  ([db id]
+   (->> {:id id}
+        (kayttaja-db/select-kayttaja db)
+        (map coerce-kayttaja)
+        first))
+  ([db whoami id]
+   (when (or (= id (:id whoami))
+             (rooli-service/more-than-laatija? whoami))
+     (find-kayttaja db id))))
 
 (defn find-kayttaja-with-email [db whoami email]
   (when (or (= email (:email whoami))
