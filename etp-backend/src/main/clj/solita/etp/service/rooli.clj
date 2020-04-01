@@ -20,3 +20,6 @@
 
 (defn paakayttaja? [{:keys [role]}]
   (= role 2))
+
+(defn more-than-laatija? [{:keys [role]}]
+  (contains? #{1 2} role))

@@ -28,3 +28,9 @@
   (t/is (false? (service/paakayttaja? {:role 0})))
   (t/is (false? (service/paakayttaja? {:role 1})))
   (t/is (true? (service/paakayttaja? {:role 2}))))
+
+(t/deftest more-than-laatija?-test
+  (t/is (false? (service/more-than-laatija? nil?)))
+  (t/is (false? (service/more-than-laatija? {:role 0})))
+  (t/is (true? (service/more-than-laatija? {:role 1})))
+  (t/is (true? (service/more-than-laatija? {:role 2}))))
