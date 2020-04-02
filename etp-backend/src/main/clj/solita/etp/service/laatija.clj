@@ -20,7 +20,7 @@
         first))
   ([db whoami kayttaja-id]
    (when (or (= kayttaja-id (:id whoami))
-             (rooli-service/more-than-laatija? whoami))
+             (rooli-service/laatija-maintainer? whoami))
      (find-laatija-with-kayttaja-id db kayttaja-id))))
 
 (defn find-laatija-with-henkilotunnus [db henkilotunnus]
@@ -33,10 +33,10 @@
   ([db laatija]
    (:id (laatija-db/insert-laatija<! db laatija)))
   ([db whoami laatija]
-   (when (rooli-service/more-than-laatija? whoami)
+   (when (rooli-service/laatija-maintainer? whoami)
      (add-laatija! db laatija))))
 
-(defn update-laatija-with-kayttaja-id!
+(defn update-laatija-with-kayttaja-id! kayttaja-id!
   ([db kayttaja-id laatija]
    (laatija-db/update-laatija! db (assoc laatija :kayttaja kayttaja-id)))
   ([db whoami kayttaja-id laatija]
@@ -46,7 +46,7 @@
 
 (defn find-laatija-yritykset [db whoami id]
   (when (or (= id (:laatija whoami))
-            (rooli-service/more-than-laatija? whoami))
+            (rooli-service/laatija-maintainer? whoami))
     (map :yritys-id (laatija-db/select-laatija-yritykset db {:id id}))))
 
 (defn attach-laatija-yritys [db whoami laatija-id yritys-id]

@@ -21,5 +21,5 @@
 (defn paakayttaja? [{:keys [rooli]}]
   (= rooli 2))
 
-(defn more-than-laatija? [{:keys [rooli]}]
+(defn laatija-maintainer? [{:keys [rooli]}]
   (contains? #{1 2} rooli))

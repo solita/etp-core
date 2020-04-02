@@ -29,8 +29,8 @@
   (t/is (false? (service/paakayttaja? {:rooli 1})))
   (t/is (true? (service/paakayttaja? {:rooli 2}))))
 
-(t/deftest more-than-laatija?-test
-  (t/is (false? (service/more-than-laatija? nil?)))
-  (t/is (false? (service/more-than-laatija? {:rooli 0})))
-  (t/is (true? (service/more-than-laatija? {:rooli 1})))
-  (t/is (true? (service/more-than-laatija? {:rooli 2}))))
+(t/deftest laatija-maintainer?-test
+  (t/is (false? (service/laatija-maintainer? nil?)))
+  (t/is (false? (service/laatija-maintainer? {:rooli 0})))
+  (t/is (true? (service/laatija-maintainer? {:rooli 1})))
+  (t/is (true? (service/laatija-maintainer? {:rooli 2}))))
