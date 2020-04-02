@@ -10,7 +10,7 @@
 (def KayttajaUpdate
   (merge KayttajaAdd
          {(schema/optional-key :passivoitu) schema/Bool
-          (schema/optional-key :rooli)      common-schema/Key}))
+          (schema/optional-key :rooli)      (schema/enum 0 1 2)}))
 
 (def Kayttaja
   "Schema representing the persistent kayttaja"

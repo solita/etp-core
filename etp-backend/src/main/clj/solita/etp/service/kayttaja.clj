@@ -1,5 +1,6 @@
 (ns solita.etp.service.kayttaja
-  (:require [schema.coerce :as coerce]
+  (:require [clojure.java.jdbc :as jdbc]
+            [schema.coerce :as coerce]
             [solita.etp.db :as db]
             [solita.etp.service.json :as json]
             [solita.etp.service.rooli :as rooli-service]
@@ -28,17 +29,8 @@
 (defn update-login! [db id cognitoid]
   (kayttaja-db/update-login! db {:id id :cognitoid cognitoid}))
 
-(defn add-kayttaja!
-  ([db kayttaja]
-   (:id (kayttaja-db/insert-kayttaja<! db kayttaja)))
-  ([db whoami kayttaja]
-   (when (rooli-service/paakayttaja? whoami)
-     (add-kayttaja! db kayttaja))))
+(defn add-kayttaja! [db kayttaja]
+  (-> (jdbc/insert! db :kayttaja kayttaja) first :id))
 
-(defn update-kayttaja!
-  ([db id kayttaja]
-   (kayttaja-db/update-kayttaja! db (assoc kayttaja :id id)))
-  ([db whoami id kayttaja]
-   (when (or (= id (:id whoami))
-             (rooli-service/paakayttaja? whoami))
-     (update-kayttaja! db id kayttaja))))
+(defn update-kayttaja! [db id kayttaja]
+  (-> (jdbc/update! db :kayttaja kayttaja ["id = ?" id])))

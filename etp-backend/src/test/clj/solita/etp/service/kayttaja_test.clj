@@ -5,6 +5,7 @@
             [solita.common.map :as map]
             [solita.etp.test-system :as ts]
             [solita.etp.service.kayttaja :as service]
+            [solita.etp.service.rooli :as rooli-service]
             [solita.etp.schema.kayttaja :as kayttaja-schema]))
 
 (t/use-fixtures :each ts/fixture)
@@ -32,16 +33,18 @@
   (doseq [kayttaja (repeatedly 100 #(g/generate kayttaja-schema/KayttajaAdd))
           :let [id (service/add-kayttaja! ts/*db* kayttaja)
                 updated-kayttaja (g/generate kayttaja-schema/KayttajaUpdate)
-                whoami (rand-nth (conj roolit {:id id}))
                 _ (service/update-kayttaja! ts/*db*
-                                            whoami
                                             id
                                             updated-kayttaja)
-                found (service/find-kayttaja ts/*db* paakayttaja id)]]
-    (schema/validate kayttaja-schema/Kayttaja found)
-    (if (contains? #{laatija patevyydentoteaja} whoami)
-      (t/is (map/submap? kayttaja found))
-      (t/is (map/submap? updated-kayttaja found)))))
+                whoami (rand-nth (conj roolit {:id id}))
+                found (service/find-kayttaja ts/*db* whoami id)]]
+    (if (or (= whoami laatija)
+            (and (= whoami patevyydentoteaja)
+                 (rooli-service/laatija-maintainer? updated-kayttaja)))
+      (t/is (nil? found))
+      (do
+        (schema/validate kayttaja-schema/Kayttaja found)
+        (t/is (map/submap? updated-kayttaja found))))))
 
 (t/deftest update-login!-test
   (doseq [kayttaja (repeatedly 100 #(g/generate kayttaja-schema/KayttajaAdd))
