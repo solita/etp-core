@@ -20,13 +20,18 @@
                         :toteamispaivamaara common-schema/Date
                         :toteaja            PatevyydenToteaja}))
 
-(def LaatijaUpdate (merge LaatijaAdd
-                          {:laatimiskielto     schema/Bool
-                           :toimintaalue       (schema/maybe common-schema/Key)
-                           :muuttoimintaalueet MuutToimintaalueet
-                           :julkinenpuhelin    schema/Bool
-                           :julkinenemail      schema/Bool
-                           :julkinenosoite     schema/Bool}))
+(def LaatijaUpdate
+  (merge geo-schema/Postiosoite
+         {:henkilotunnus                            common-schema/Henkilotunnus
+          (schema/optional-key :patevyystaso)       common-schema/Key
+          (schema/optional-key :toteamispaivamaara) common-schema/Date
+          (schema/optional-key :toteaja)            PatevyydenToteaja
+          (schema/optional-key :laatimiskielto)     schema/Bool
+          :toimintaalue                             (schema/maybe common-schema/Key)
+          :muuttoimintaalueet                       MuutToimintaalueet
+          :julkinenpuhelin                          schema/Bool
+          :julkinenemail                            schema/Bool
+          :julkinenosoite                           schema/Bool}))
 
 (def Laatija
   "Schema representing the persistent laatija"
