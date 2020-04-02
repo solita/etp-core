@@ -33,4 +33,4 @@
   (-> (jdbc/insert! db :kayttaja kayttaja) first :id))
 
 (defn update-kayttaja! [db id kayttaja]
-  (-> (jdbc/update! db :kayttaja kayttaja ["id = ?" id])))
+  (jdbc/update! db :kayttaja kayttaja ["id = ?" id]))

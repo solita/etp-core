@@ -1,5 +1,6 @@
 (ns solita.etp.service.laatija
-  (:require [schema.coerce :as coerce]
+  (:require [clojure.java.jdbc :as jdbc]
+            [schema.coerce :as coerce]
             [solita.common.map :as map]
             [solita.etp.db :as db]
             [solita.etp.service.json :as json]
@@ -29,20 +30,11 @@
        (map coerce-laatija)
        first))
 
-(defn add-laatija!
-  ([db laatija]
-   (:id (laatija-db/insert-laatija<! db laatija)))
-  ([db whoami laatija]
-   (when (rooli-service/laatija-maintainer? whoami)
-     (add-laatija! db laatija))))
+(defn add-laatija! [db laatija]
+  (-> (jdbc/insert! db :laatija laatija) first :id))
 
-(defn update-laatija-with-kayttaja-id! kayttaja-id!
-  ([db kayttaja-id laatija]
-   (laatija-db/update-laatija! db (assoc laatija :kayttaja kayttaja-id)))
-  ([db whoami kayttaja-id laatija]
-   (when (or (= kayttaja-id (:id whoami))
-             (rooli-service/paakayttaja? whoami))
-     (update-laatija-with-kayttaja-id! db kayttaja-id laatija))))
+(defn update-laatija-with-kayttaja-id! [db kayttaja-id laatija]
+  (jdbc/update! db :laatija laatija ["kayttaja = ?" kayttaja-id]))
 
 (defn find-laatija-yritykset [db whoami id]
   (when (or (= id (:laatija whoami))
