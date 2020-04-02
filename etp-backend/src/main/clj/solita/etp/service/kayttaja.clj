@@ -22,14 +22,6 @@
              (rooli-service/more-than-laatija? whoami))
      (find-kayttaja db id))))
 
-(defn find-kayttaja-with-email [db whoami email]
-  (when (or (= email (:email whoami))
-            (rooli-service/more-than-laatija? whoami))
-    (->> {:email email}
-         (kayttaja-db/select-kayttaja-with-email db)
-         (map coerce-kayttaja)
-         first)))
-
 (defn update-login! [db id cognitoid]
   (kayttaja-db/update-login! db {:id id :cognitoid cognitoid}))
 
