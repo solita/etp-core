@@ -45,11 +45,18 @@
     [db db]
     (mapv #(upsert-kayttaja-laatija! db %) kayttaja-laatijat)))
 
+(def ks-only-for-paakayttaja [:passivoitu :rooli :patevyystaso :toteamispaivamaara
+                              :toteaja :laatimiskielto])
+
+;; TODO should throw exception if ks-only-for-paakayttaja is used when
+;; whoami is not paakayttaja
 (defn update-kayttaja-laatija! [db whoami id kayttaja-laatija]
-  (let [kayttaja (st/select-schema kayttaja-laatija kayttaja-schema/KayttajaUpdate)
-        laatija (st/select-schema kayttaja-laatija laatija-schema/LaatijaUpdate)]
-    (when (or (= id (:id whoami))
-              (rooli-service/paakayttaja? whoami))
+  (when (or (and (= id (:id whoami))
+                 (every? #(not (contains? kayttaja-laatija %))
+                         ks-only-for-paakayttaja))
+            (rooli-service/paakayttaja? whoami))
+    (let [kayttaja (st/select-schema kayttaja-laatija kayttaja-schema/KayttajaUpdate)
+          laatija (st/select-schema kayttaja-laatija laatija-schema/LaatijaUpdate)]
       (jdbc/with-db-transaction
         [db db]
         (kayttaja-service/update-kayttaja! db id kayttaja)

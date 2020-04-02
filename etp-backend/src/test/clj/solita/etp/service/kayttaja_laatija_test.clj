@@ -169,30 +169,34 @@
     (schema/validate laatija-schema/Laatija found-laatija-2)
 
     (cond
-      (= whoami kayttaja-1)
+      (and (= whoami kayttaja-1)
+           (every? #(not (contains? update-1 %))
+                   service/ks-only-for-paakayttaja))
       (do
         (t/is (true? kayttaja-1-updated?))
         (t/is (true? laatija-1-updated?))
         (t/is (false? kayttaja-2-updated?))
         (t/is (false? laatija-2-updated?)))
 
-      (= whoami kayttaja-2)
+      (and (= whoami kayttaja-2)
+           (every? #(not (contains? update-1 %))
+                   service/ks-only-for-paakayttaja))
       (do
         (t/is (false? kayttaja-1-updated?))
         (t/is (false? laatija-1-updated?))
         (t/is (true? kayttaja-2-updated?))
         (t/is (true? laatija-2-updated?)))
 
-      (contains? #{laatija patevyydentoteaja} whoami)
-      (do
-        (t/is (false? kayttaja-1-updated?))
-        (t/is (false? laatija-1-updated?))
-        (t/is (false? kayttaja-2-updated?))
-        (t/is (false? laatija-2-updated?)))
-
       (= whoami paakayttaja)
       (do
         (t/is (true? kayttaja-1-updated?))
         (t/is (true? laatija-1-updated?))
         (t/is (true? kayttaja-2-updated?))
-        (t/is (true? laatija-2-updated?))))))
+        (t/is (true? laatija-2-updated?)))
+
+      :else
+      (do
+        (t/is (false? kayttaja-1-updated?))
+        (t/is (false? laatija-1-updated?))
+        (t/is (false? kayttaja-2-updated?))
+        (t/is (false? laatija-2-updated?))))))

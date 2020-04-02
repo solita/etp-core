@@ -1,5 +1,6 @@
 (ns solita.etp.service.laatija
-  (:require [clojure.java.jdbc :as jdbc]
+  (:require [clojure.set :as set]
+            [clojure.java.jdbc :as jdbc]
             [schema.coerce :as coerce]
             [solita.common.map :as map]
             [solita.etp.db :as db]
@@ -30,11 +31,22 @@
        (map coerce-laatija)
        first))
 
+(def db-keymap {:muuttoimintaalueet :muut_toimintaalueet
+                :julkinenpuhelin :julkinen_puhelin
+                :julkinenemail :julkinen_email
+                :julkinenosoite :julkinen_osoite})
+
 (defn add-laatija! [db laatija]
-  (-> (jdbc/insert! db :laatija laatija) first :id))
+  (->> (set/rename-keys laatija db-keymap)
+       (jdbc/insert! db :laatija)
+       first
+       :id))
 
 (defn update-laatija-with-kayttaja-id! [db kayttaja-id laatija]
-  (jdbc/update! db :laatija laatija ["kayttaja = ?" kayttaja-id]))
+  (jdbc/update! db
+                :laatija
+                (set/rename-keys laatija db-keymap)
+                ["kayttaja = ?" kayttaja-id]))
 
 (defn find-laatija-yritykset [db whoami id]
   (when (or (= id (:laatija whoami))
