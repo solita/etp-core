@@ -18,9 +18,12 @@
         (map coerce-kayttaja)
         first))
   ([db whoami id]
-   (when (or (= id (:id whoami))
-             (rooli-service/more-than-laatija? whoami))
-     (find-kayttaja db id))))
+   (let [kayttaja (find-kayttaja db id)]
+     (when (or (= id (:id whoami))
+               (rooli-service/paakayttaja? whoami)
+               (and (rooli-service/patevyydentoteaja? whoami)
+                    (rooli-service/laatija? kayttaja)))
+       kayttaja))))
 
 (defn update-login! [db id cognitoid]
   (kayttaja-db/update-login! db {:id id :cognitoid cognitoid}))
