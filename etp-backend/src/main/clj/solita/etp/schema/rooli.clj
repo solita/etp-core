@@ -1,4 +1,5 @@
 (ns solita.etp.schema.rooli
-  (:require [solita.etp.schema.common :as common-schema]))
+  (:require [schema.core :as schema]
+            [solita.etp.schema.common :as common-schema]))
 
-(def Rooli common-schema/Luokittelu)
+(def Rooli (assoc common-schema/Luokittelu :k schema/Keyword))
