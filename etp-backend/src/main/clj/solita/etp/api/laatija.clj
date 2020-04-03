@@ -6,15 +6,16 @@
             [solita.etp.schema.laatija :as laatija-schema]
             [solita.etp.schema.kayttaja-laatija :as kayttaja-laatija-schema]
             [solita.etp.service.laatija :as laatija-service]
-            [solita.etp.service.kayttaja-laatija :as kayttaja-laatija-service]))
+            [solita.etp.service.kayttaja-laatija :as kayttaja-laatija-service]
+            [solita.etp.service.rooli :as rooli-service]))
 
 (def routes
   [["/laatijat"
     [""
-     {:put {:summary "Lisää laatijat laatijarekisteriin (luo myös käyttäjä)"
+     {:put {:summary    "Lisää laatijat laatijarekisteriin (luo myös käyttäjä)"
             :parameters {:body [kayttaja-laatija-schema/KayttajaLaatijaAdd]}
             :responses  {200 {:body [kayttaja-laatija-schema/KayttajaLaatijaAddResponse]}}
-            :roolit     #{:patevyyden-toteaja}
+            :access     rooli-service/patevyydentoteaja?
             :handler    (fn [{:keys [db parameters uri]}]
                           (-> (kayttaja-laatija-service/upsert-kayttaja-laatijat!
                                db

@@ -59,7 +59,7 @@
    system-routes
    ["/private" {:middleware [[jwt-security/wrap-jwt-payloads]
                              [jwt-security/wrap-kayttaja]
-                             [jwt-security/wrap-require-rooli]]}
+                             [jwt-security/wrap-access]]}
     (concat (tag "Käyttäjä API" kayttaja-api/routes)
             (tag "Yritys API" yritys-api/routes)
             (tag "Laatijat API" laatija-api/routes)

@@ -101,18 +101,15 @@
           (log/error "Unable to find käyttäjä using email in data JWT")
           response/forbidden)))))
 
-(defn wrap-require-rooli [handler]
+(defn wrap-access [handler]
   (fn [{:keys [request-method whoami] :as req}]
-    (let [roolit (-> req :reitit.core/match :data (get request-method) :roolit)
-          whoami-rooli (->> rooli-service/roolit
-                            (filter #(= (:id %) (:rooli whoami)))
-                            first
-                            :k)]
-      (if (or (nil? roolit)
-              (contains? roolit whoami-rooli))
+    (let [access (-> req :reitit.core/match :data (get request-method) :access)]
+      (if (or (nil? access)
+              (access whoami))
         (handler req)
         (do
-          (log/warn "Route requires a rooli that was not granted to a käyttäjä: "
-                    {:roolit roolit
+          (log/warn "Current käyttäjä did not satisfy the access preficate for route:"
+                    {:method request-method
+                     :url (-> req :reitit.core/match :template)
                      :whoami whoami})
           response/forbidden)))))

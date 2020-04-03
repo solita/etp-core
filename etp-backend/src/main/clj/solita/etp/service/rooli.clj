@@ -1,15 +1,12 @@
 (ns solita.etp.service.rooli)
 
 (def roolit [{:id 0
-              :k :laatija
               :label-fi "Laatija"
               :label-sv "Laatija-SV"}
              {:id 1
-              :k :patevyyden-toteaja
               :label-fi "Pätevyyden toteaja"
               :label-sv "Pätevyyden toteaja -SV"}
              {:id 2
-              :k :paakayttaja
               :label-fi "Pääkäyttäjä"
               :label-sv "Pääkäyttäjä-SV"}])
 
