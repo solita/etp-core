@@ -32,3 +32,5 @@
 
 (defn created [path id]
   (r/created (str path "/") {:id id}))
+
+(def forbidden {:status 403 :body "Forbidden"})
