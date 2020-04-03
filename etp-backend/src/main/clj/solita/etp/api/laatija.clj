@@ -14,6 +14,7 @@
      {:put {:summary "Lisää laatijat laatijarekisteriin (luo myös käyttäjä)"
             :parameters {:body [kayttaja-laatija-schema/KayttajaLaatijaAdd]}
             :responses  {200 {:body [kayttaja-laatija-schema/KayttajaLaatijaAddResponse]}}
+            :roolit     #{:patevyyden-toteaja}
             :handler    (fn [{:keys [db parameters uri]}]
                           (-> (kayttaja-laatija-service/upsert-kayttaja-laatijat!
                                db
