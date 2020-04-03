@@ -5,7 +5,7 @@
             [buddy.sign.jwt :as jwt]
             [clj-http.client :as http]
 
-            [solita.etp.service.kayttaja :as kayttaja-service]
+            [solita.etp.service.kayttaja-laatija :as kayttaja-laatija-service]
             ;; TODO json namespace should probably not be
             ;; under service namespace
             [solita.etp.service.json :as json]
@@ -93,10 +93,10 @@
 
 (defn wrap-kayttaja [handler]
   (fn [{:keys [db jwt-payloads] :as req}]
-    (if-let [kayttaja (kayttaja-service/find-kayttaja-with-email
-                       db
-                       (-> req :jwt-payloads :data :email))]
-      (handler (assoc req :kayttaja kayttaja))
-      (do
-        (log/error "Unable to find käyttäjä using email in data JWT")
-        forbidden))))
+    (let [email (-> req :jwt-payloads :data :email)
+          whoami (kayttaja-laatija-service/find-whoami db email)]
+      (if whoami
+        (handler (assoc req :whoami whoami))
+        (do
+          (log/error "Unable to find käyttäjä using email in data JWT")
+          forbidden)))))

@@ -6,16 +6,22 @@
             [solita.etp.schema.kayttaja :as kayttaja-schema]
             [solita.etp.schema.laatija :as laatija-schema]
             [solita.etp.schema.kayttaja-laatija :as kayttaja-laatija-schema]
+            [solita.etp.schema.rooli :as rooli-schema]
             [solita.etp.service.kayttaja :as kayttaja-service]
+            [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.kayttaja-laatija :as kayttaja-laatija-service]
             [solita.etp.service.laatija :as laatija-service]))
 
 (def routes
   [["/whoami"
     {:get {:summary "Kirjautuneen käyttäjän tiedot"
-           :responses {200 {:body kayttaja-schema/Kayttaja}}
-           :handler (fn [{:keys [kayttaja]}]
-                      (r/response kayttaja))}}]
+           :responses {200 {:body kayttaja-laatija-schema/Whoami}}
+           :handler (fn [{:keys [whoami jwt-payloads db]}]
+                      (kayttaja-service/update-login!
+                       db
+                       (:id whoami)
+                       (-> jwt-payloads :data :sub))
+                      (r/response whoami))}}]
    ["/kayttajat"
     ["/:id"
      [""
@@ -23,8 +29,8 @@
              :parameters {:path {:id common-schema/Key}}
              :responses {200 {:body kayttaja-schema/Kayttaja}
                          404 {:body schema/Str}}
-             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
-                        (-> (kayttaja-service/find-kayttaja db id)
+             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+                        (-> (kayttaja-service/find-kayttaja db whoami id)
                             (api-response/get-response
                              (str "Käyttäjä " id " does not exist."))))}
        :put {:summary "Päivitä käyttäjän ja käyttäjään liittyvän laatijan tiedot"
@@ -32,10 +38,13 @@
                           :body kayttaja-laatija-schema/KayttajaLaatijaUpdate}
              :responses {200 {:body nil}
                          404 {:body schema/Str}}
-             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
+             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db
+                                                                   whoami
+                                                                   parameters]}]
                         (api-response/put-response
                          (kayttaja-laatija-service/update-kayttaja-laatija!
                           db
+                          whoami
                           id
                           (:body parameters))
                          (str "Käyttäjä " id " does not exists.")))}}]
@@ -44,12 +53,15 @@
              :parameters {:path {:id common-schema/Key}}
              :responses {200 {:body laatija-schema/Laatija}
                          404 {:body schema/Str}}
-             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
-                        (-> (laatija-service/find-laatija-with-kayttaja-id db id)
+             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+                        (-> (laatija-service/find-laatija-with-kayttaja-id
+                             db
+                             whoami
+                             id)
                             (api-response/get-response
                              (str "No laatija information for käyttäjä id " id))))}}]]]
    ["/roolit"
     {:get {:summary    "Hae roolit -luokittelu"
-           :responses  {200 {:body [kayttaja-schema/Rooli]}}
+           :responses  {200 {:body [rooli-schema/Rooli]}}
            :handler    (fn [_]
-                         (r/response (kayttaja-service/find-roolit)))}}]])
+                         (r/response (rooli-service/find-roolit)))}}]])

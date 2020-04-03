@@ -7,9 +7,10 @@
                   :email         schema/Str
                   :puhelin       schema/Str})
 
-(def KayttajaUpdate (merge KayttajaAdd
-                           {:passivoitu schema/Bool
-                            :rooli      common-schema/Key}))
+(def KayttajaUpdate
+  (merge KayttajaAdd
+         {(schema/optional-key :passivoitu) schema/Bool
+          (schema/optional-key :rooli)      (schema/enum 0 1 2)}))
 
 (def Kayttaja
   "Schema representing the persistent kayttaja"
@@ -18,5 +19,3 @@
          {:login         (schema/maybe common-schema/Instant)
           :ensitallennus schema/Bool
           :cognitoid     (schema/maybe schema/Str)}))
-
-(def Rooli common-schema/Luokittelu)

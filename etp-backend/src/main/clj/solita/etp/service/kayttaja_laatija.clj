@@ -1,10 +1,28 @@
 (ns solita.etp.service.kayttaja-laatija
   (:require [clojure.java.jdbc :as jdbc]
+            [schema.coerce :as coerce]
             [schema-tools.core :as st]
-            [solita.etp.schema.kayttaja :as kayttaja-schema]
-            [solita.etp.schema.laatija :as laatija-schema]
+            [solita.etp.db :as db]
+            [solita.etp.service.json :as json]
             [solita.etp.service.kayttaja :as kayttaja-service]
-            [solita.etp.service.laatija :as laatija-service]))
+            [solita.etp.service.laatija :as laatija-service]
+            [solita.etp.service.rooli :as rooli-service]
+            [solita.etp.schema.kayttaja-laatija :as kayttaja-laatija-schema]
+            [solita.etp.schema.kayttaja :as kayttaja-schema]
+            [solita.etp.schema.laatija :as laatija-schema]))
+
+;; *** Require sql functions ***
+(db/require-queries 'kayttaja-laatija)
+
+;; *** Conversions from database data types ***
+(def coerce-whoami (coerce/coercer kayttaja-laatija-schema/Whoami
+                                   json/json-coercions))
+
+(defn find-whoami [db email]
+  (->> {:email email}
+       (kayttaja-laatija-db/select-whoami db)
+       (map coerce-whoami)
+       first))
 
 (defn- upsert-kayttaja-laatija! [db {:keys [henkilotunnus] :as kayttaja-laatija}]
   "Upserts käyttäjä and laatija WITHOUT transaction."
@@ -27,10 +45,19 @@
     [db db]
     (mapv #(upsert-kayttaja-laatija! db %) kayttaja-laatijat)))
 
-(defn update-kayttaja-laatija! [db id kayttaja-laatija]
-  (let [kayttaja (st/select-schema kayttaja-laatija kayttaja-schema/KayttajaUpdate)
-        laatija (st/select-schema kayttaja-laatija laatija-schema/LaatijaUpdate)]
-    (jdbc/with-db-transaction
-      [db db]
-      (kayttaja-service/update-kayttaja! db id kayttaja)
-      (laatija-service/update-laatija-with-kayttaja-id! db id laatija))))
+(def ks-only-for-paakayttaja [:passivoitu :rooli :patevyystaso :toteamispaivamaara
+                              :toteaja :laatimiskielto])
+
+;; TODO should throw exception if ks-only-for-paakayttaja is used when
+;; whoami is not paakayttaja
+(defn update-kayttaja-laatija! [db whoami id kayttaja-laatija]
+  (when (or (and (= id (:id whoami))
+                 (every? #(not (contains? kayttaja-laatija %))
+                         ks-only-for-paakayttaja))
+            (rooli-service/paakayttaja? whoami))
+    (let [kayttaja (st/select-schema kayttaja-laatija kayttaja-schema/KayttajaUpdate)
+          laatija (st/select-schema kayttaja-laatija laatija-schema/LaatijaUpdate)]
+      (jdbc/with-db-transaction
+        [db db]
+        (kayttaja-service/update-kayttaja! db id kayttaja)
+        (laatija-service/update-laatija-with-kayttaja-id! db id laatija)))))

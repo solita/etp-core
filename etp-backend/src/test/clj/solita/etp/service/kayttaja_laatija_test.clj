@@ -16,6 +16,11 @@
 
 (t/use-fixtures :each ts/fixture)
 
+(def laatija {:rooli 0})
+(def patevyydentoteaja {:rooli 1})
+(def paakayttaja {:rooli 2})
+(def roolit [laatija patevyydentoteaja paakayttaja])
+
 (defn unique-henkilotunnus-range [to]
   (->> (range 0 to)
        (map (partial format "%09d"))
@@ -115,32 +120,83 @@
     (t/is (= found-original-laatija-2 found-updated-laatija-2))))
 
 (t/deftest update-kayttaja-laatija!-test
-  (let [[id-1 id-2] (->> (generate-KayttajaLaatijaAdds 2)
-                         (service/upsert-kayttaja-laatijat! ts/*db*)
-                         (map :kayttaja))
-        [update-1 update-2] (generate-KayttajaLaatijaUpdates 2)
-        _ (service/update-kayttaja-laatija! ts/*db* id-1 update-1)
-        _ (service/update-kayttaja-laatija! ts/*db* id-2 update-2)
-        found-kayttaja-1 (kayttaja-service/find-kayttaja ts/*db* id-1)
-        found-kayttaja-2 (kayttaja-service/find-kayttaja ts/*db* id-2)
-        found-laatija-1 (laatija-service/find-laatija-with-kayttaja-id ts/*db*
-                                                                       id-1)
-        found-laatija-2 (laatija-service/find-laatija-with-kayttaja-id ts/*db*
-                                                                       id-2)]
+  (doseq [[add-1 update-1 add-2 update-2]
+          (partition 4 (interleave (generate-KayttajaLaatijaAdds 100)
+                                   (generate-KayttajaLaatijaUpdates 100)))
+          :let [[id-1 id-2] (->> [add-1 add-2]
+                                 (service/upsert-kayttaja-laatijat! ts/*db*)
+                                 (map :kayttaja))
+                kayttaja-1 {:id id-1}
+                kayttaja-2 {:id id-2}
+                whoami (rand-nth (concat [kayttaja-1 kayttaja-2] roolit))
+                _ (service/update-kayttaja-laatija! ts/*db*
+                                                    whoami
+                                                    id-1
+                                                    update-1)
+                _ (service/update-kayttaja-laatija! ts/*db*
+                                                    whoami
+                                                    id-2
+                                                    update-2)
+                found-kayttaja-1 (kayttaja-service/find-kayttaja ts/*db* id-1)
+                found-kayttaja-2 (kayttaja-service/find-kayttaja ts/*db* id-2)
+                found-laatija-1 (laatija-service/find-laatija-with-kayttaja-id
+                                 ts/*db*
+                                 id-1)
+                found-laatija-2 (laatija-service/find-laatija-with-kayttaja-id
+                                 ts/*db*
+                                 id-2)
+                kayttaja-1-updated? (map/submap?
+                                     (st/select-schema
+                                      update-1
+                                      kayttaja-schema/KayttajaUpdate)
+                                     found-kayttaja-1)
+                kayttaja-2-updated? (map/submap?
+                                     (st/select-schema
+                                      update-2
+                                      kayttaja-schema/KayttajaUpdate)
+                                     found-kayttaja-2)
+                laatija-1-updated? (map/submap? (st/select-schema
+                                                 update-1
+                                                 laatija-schema/LaatijaUpdate)
+                                                found-laatija-1)
+                laatija-2-updated? (map/submap? (st/select-schema
+                                                 update-2
+                                                 laatija-schema/LaatijaUpdate)
+                                                found-laatija-2)]]
     (schema/validate kayttaja-schema/Kayttaja found-kayttaja-1)
     (schema/validate kayttaja-schema/Kayttaja found-kayttaja-2)
     (schema/validate laatija-schema/Laatija found-laatija-1)
     (schema/validate laatija-schema/Laatija found-laatija-2)
 
-    (t/is (map/submap?
-           (st/select-schema update-1 kayttaja-schema/KayttajaUpdate)
-           found-kayttaja-1))
-    (t/is (map/submap?
-           (st/select-schema update-1 laatija-schema/LaatijaUpdate)
-           found-laatija-1))
-    (t/is (map/submap?
-           (st/select-schema update-2 kayttaja-schema/KayttajaUpdate)
-           found-kayttaja-2))
-    (t/is (map/submap?
-           (st/select-schema update-2 laatija-schema/LaatijaUpdate)
-           found-laatija-2))))
+    (cond
+      (and (= whoami kayttaja-1)
+           (every? #(not (contains? update-1 %))
+                   service/ks-only-for-paakayttaja))
+      (do
+        (t/is (true? kayttaja-1-updated?))
+        (t/is (true? laatija-1-updated?))
+        (t/is (false? kayttaja-2-updated?))
+        (t/is (false? laatija-2-updated?)))
+
+      (and (= whoami kayttaja-2)
+           (every? #(not (contains? update-1 %))
+                   service/ks-only-for-paakayttaja))
+      (do
+        (t/is (false? kayttaja-1-updated?))
+        (t/is (false? laatija-1-updated?))
+        (t/is (true? kayttaja-2-updated?))
+        (t/is (true? laatija-2-updated?)))
+
+      (= whoami paakayttaja)
+      (do
+        (t/is (true? kayttaja-1-updated?))
+        (t/is (true? laatija-1-updated?))
+        (t/is (true? kayttaja-2-updated?))
+        (t/is (true? laatija-2-updated?)))
+
+      :else
+      (do
+        (t/is (false? kayttaja-1-updated?))
+        (t/is (false? laatija-1-updated?))
+        (t/is (false? kayttaja-2-updated?))
+        (t/is (false? laatija-2-updated?))))))
