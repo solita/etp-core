@@ -5,7 +5,9 @@
             [buddy.sign.jwt :as jwt]
             [clj-http.client :as http]
 
+            [solita.etp.api.response :as response]
             [solita.etp.service.kayttaja-laatija :as kayttaja-laatija-service]
+            [solita.etp.service.rooli :as rooli-service]
             ;; TODO json namespace should probably not be
             ;; under service namespace
             [solita.etp.service.json :as json]
@@ -57,8 +59,6 @@
       {:id id :data data :access access}
       (log/warn "Missing at least one of the required authentication headers."))))
 
-(def forbidden {:status 403 :body "Forbidden"})
-
 (defn req->verified-jwt-payloads [req]
   (try
     (do
@@ -89,7 +89,7 @@
   (fn [req]
     (if-let [jwt-payloads (req->verified-jwt-payloads req)]
       (handler (assoc req :jwt-payloads jwt-payloads))
-      forbidden)))
+      response/forbidden)))
 
 (defn wrap-kayttaja [handler]
   (fn [{:keys [db jwt-payloads] :as req}]
@@ -99,4 +99,17 @@
         (handler (assoc req :whoami whoami))
         (do
           (log/error "Unable to find käyttäjä using email in data JWT")
-          forbidden)))))
+          response/forbidden)))))
+
+(defn wrap-access [handler]
+  (fn [{:keys [request-method whoami] :as req}]
+    (let [access (-> req :reitit.core/match :data (get request-method) :access)]
+      (if (or (nil? access)
+              (access whoami))
+        (handler req)
+        (do
+          (log/warn "Current käyttäjä did not satisfy the access predicate for route:"
+                    {:method request-method
+                     :url (-> req :reitit.core/match :template)
+                     :whoami whoami})
+          response/forbidden)))))
