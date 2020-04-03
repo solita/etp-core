@@ -108,7 +108,7 @@
               (access whoami))
         (handler req)
         (do
-          (log/warn "Current käyttäjä did not satisfy the access preficate for route:"
+          (log/warn "Current käyttäjä did not satisfy the access predicate for route:"
                     {:method request-method
                      :url (-> req :reitit.core/match :template)
                      :whoami whoami})
