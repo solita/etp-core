@@ -2,6 +2,7 @@
   (:require [clojure.java.jdbc :as jdbc]
             [schema.coerce :as coerce]
             [schema-tools.core :as st]
+            [solita.etp.exception :as exception]
             [solita.etp.db :as db]
             [solita.etp.service.json :as json]
             [solita.etp.service.kayttaja :as kayttaja-service]
@@ -48,10 +49,8 @@
 (def ks-only-for-paakayttaja [:passivoitu :rooli :patevyystaso :toteamispaivamaara
                               :toteaja :laatimiskielto])
 
-;; TODO should throw exception if ks-only-for-paakayttaja is used when
-;; whoami is not paakayttaja
 (defn update-kayttaja-laatija! [db whoami id kayttaja-laatija]
-  (when (or (and (= id (:id whoami))
+  (if (or (and (= id (:id whoami))
                  (every? #(not (contains? kayttaja-laatija %))
                          ks-only-for-paakayttaja))
             (rooli-service/paakayttaja? whoami))
@@ -60,4 +59,5 @@
       (jdbc/with-db-transaction
         [db db]
         (kayttaja-service/update-kayttaja! db id kayttaja)
-        (laatija-service/update-laatija-with-kayttaja-id! db id laatija)))))
+        (laatija-service/update-laatija-with-kayttaja-id! db id laatija)))
+    (exception/throw-forbidden!)))
