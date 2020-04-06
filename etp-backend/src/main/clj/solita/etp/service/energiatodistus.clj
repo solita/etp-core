@@ -42,3 +42,13 @@
     (if (energiatodistus-luonnos? db id)
       (energiatodistus-db/delete-energiatodistus-when-luonnos! db {:id id})
       (throw (IllegalStateException. "Only \"luonnos\" is allowed to delete")))))
+
+;;
+;; Energiatodistuksen kielisyys
+;;
+
+(def kielisyys [{:id 0 :label-fi "Suomi" :label-sv "Finska"}
+             {:id 1 :label-fi "Ruotsi" :label-sv "Svenska"}
+             {:id 2 :label-fi "Kaksikielinen" :label-sv "Tvåspråkig"}])
+
+(defn find-kielisyys [] kielet)

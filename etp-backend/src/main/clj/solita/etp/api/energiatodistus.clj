@@ -1,5 +1,6 @@
 (ns solita.etp.api.energiatodistus
-  (:require [solita.etp.schema.energiatodistus :as energiatodistus-schema]
+  (:require [ring.util.response :as r]
+            [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]
@@ -33,4 +34,8 @@
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
                            (api-response/put-response
                              (energiatodistus-service/update-energiatodistus-when-luonnos! db id (:body parameters))
-                             (str "Energiatodistus " id " does not exists.")))}}]]]])
+                             (str "Energiatodistus " id " does not exists.")))}}]]]
+   ["/kielisyys"
+    {:get {:summary   "Hae energiatodistuksen kielisyysluokittelu"
+           :responses {200 {:body [common-schema/Luokittelu]}}
+           :handler   (fn [_] (r/response (energiatodistus-service/find-kielisyys)))}}]])
