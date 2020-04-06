@@ -29,9 +29,11 @@
   "Upserts käyttäjä and laatija WITHOUT transaction."
   (let [kayttaja (st/select-schema kayttaja-laatija kayttaja-schema/KayttajaAdd)
         laatija (st/select-schema kayttaja-laatija laatija-schema/LaatijaAdd)
-        existing-laatija (laatija-service/find-laatija-with-henkilotunnus db henkilotunnus)]
+        existing-laatija (laatija-service/find-laatija-with-henkilotunnus db henkilotunnus)
+        kayttaja-id (:kayttaja existing-laatija)]
     (if existing-laatija
       (do
+        (kayttaja-service/update-kayttaja! db kayttaja-id kayttaja)
         (laatija-service/update-laatija-with-kayttaja-id! db
                                                           (:kayttaja existing-laatija)
                                                           (merge existing-laatija laatija))
