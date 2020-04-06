@@ -15,11 +15,17 @@
 (def paakayttaja {:rooli 2})
 (def roolit [laatija patevyydentoteaja paakayttaja])
 
+(defn find-kayttaja [whoami id]
+  (try
+    (service/find-kayttaja ts/*db* whoami id)
+    (catch Exception e (if (not= (-> e ex-data :type) :forbidden)
+                         (throw e)))))
+
 (t/deftest add-and-find-test
   (doseq [kayttaja (repeatedly 100 #(g/generate kayttaja-schema/KayttajaAdd))
           :let [id (service/add-kayttaja! ts/*db* kayttaja)
                 whoami (rand-nth (conj roolit {:id id}))
-                found (service/find-kayttaja ts/*db* whoami id)]]
+                found (find-kayttaja whoami id)]]
     (if (= whoami laatija)
       (t/is (nil? found))
       (do
@@ -37,7 +43,7 @@
                                             id
                                             updated-kayttaja)
                 whoami (rand-nth (conj roolit {:id id}))
-                found (service/find-kayttaja ts/*db* whoami id)]]
+                found (find-kayttaja whoami id)]]
     (if (or (= whoami laatija)
             (and (= whoami patevyydentoteaja)
                  (rooli-service/laatija-maintainer? updated-kayttaja)))
