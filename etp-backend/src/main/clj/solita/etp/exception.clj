@@ -9,6 +9,19 @@
     {:status  409
      :body    error}))
 
+(defn throw-forbidden! []
+  (throw (ex-info "Forbidden" {:type :forbidden})))
+
+(defn forbidden-handler [exception request]
+  (let [error (ex-data exception)]
+    (println (keys request))
+    (log/info (str "Service "
+                   (:uri request)
+                   " forbidden for access-token "
+                   (get-in request [:headers "x-amzn-oidc-accesstoken"])))
+    {:status  403
+     :body "Forbidden"}))
+
 (defn default-handler
   "Default safe handler for any exception."
   [^Throwable e request]
@@ -22,5 +35,5 @@
   (exception/create-exception-middleware
     (assoc exception/default-handlers
       ::exception/default default-handler
-      :unique-violation unique-exception-handler)))
-
+      :unique-violation unique-exception-handler
+      :forbidden forbidden-handler)))
