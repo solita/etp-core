@@ -40,7 +40,9 @@
               :handler    (fn [{{{:keys [id yritys-id]} :path} :parameters :keys [db whoami]}]
                             (api-response/response-with-exceptions
                              #(laatija-service/attach-laatija-yritys db whoami id yritys-id)
-                             [{:constraint :laatija-yritys-yritys-id-fkey
+                             [{:constraint :laatija-yritys-laatija-id-fkey
+                               :response 404}
+                              {:constraint :laatija-yritys-yritys-id-fkey
                                :response 404}]))}
         :delete {:summary    "Poista laatija yrityksestä"
                  :parameters {:path {:id common-schema/Key
