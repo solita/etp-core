@@ -91,7 +91,7 @@
       (handler (assoc req :jwt-payloads jwt-payloads))
       response/forbidden)))
 
-(defn wrap-kayttaja [handler]
+(defn wrap-whoami [handler]
   (fn [{:keys [db jwt-payloads] :as req}]
     (let [email (-> req :jwt-payloads :data :email)
           whoami (kayttaja-laatija-service/find-whoami db email)]
