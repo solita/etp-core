@@ -3,6 +3,7 @@
             [clojure.java.jdbc :as jdbc]
             [schema.coerce :as coerce]
             [solita.common.map :as map]
+            [solita.etp.exception :as exception]
             [solita.etp.db :as db]
             [solita.etp.service.json :as json]
             [solita.etp.service.rooli :as rooli-service]
@@ -21,9 +22,10 @@
         (map coerce-laatija)
         first))
   ([db whoami kayttaja-id]
-   (when (or (= kayttaja-id (:id whoami))
+   (if (or (= kayttaja-id (:id whoami))
              (rooli-service/laatija-maintainer? whoami))
-     (find-laatija-with-kayttaja-id db kayttaja-id))))
+     (find-laatija-with-kayttaja-id db kayttaja-id)
+     (exception/throw-forbidden!))))
 
 (defn find-laatija-with-henkilotunnus [db henkilotunnus]
   (->> {:henkilotunnus henkilotunnus}
@@ -49,21 +51,26 @@
                 ["kayttaja = ?" kayttaja-id]))
 
 (defn find-laatija-yritykset [db whoami id]
-  (when (or (= id (:laatija whoami))
+  (if (or (= id (:laatija whoami))
             (rooli-service/laatija-maintainer? whoami))
-    (map :yritys-id (laatija-db/select-laatija-yritykset db {:id id}))))
+    (map :yritys-id (laatija-db/select-laatija-yritykset db {:id id}))
+    (exception/throw-forbidden!)))
 
 (defn attach-laatija-yritys [db whoami laatija-id yritys-id]
-  (when (= laatija-id (:laatija whoami))
-    (laatija-db/insert-laatija-yritys!
-     db
-     (map/bindings->map laatija-id yritys-id))))
+  (if (= laatija-id (:laatija whoami))
+    (do
+      (laatija-db/insert-laatija-yritys!
+       db
+       (map/bindings->map laatija-id yritys-id))
+      nil)
+    (exception/throw-forbidden!)))
 
 (defn detach-laatija-yritys [db whoami laatija-id yritys-id]
-  (when (= laatija-id (:laatija whoami))
+  (if (= laatija-id (:laatija whoami))
     (laatija-db/delete-laatija-yritys!
      db
-     (map/bindings->map laatija-id yritys-id))))
+     (map/bindings->map laatija-id yritys-id))
+    (exception/throw-forbidden!)))
 
 ;;
 ;; Pätevyydet

@@ -1,6 +1,7 @@
 (ns solita.etp.service.kayttaja
   (:require [clojure.java.jdbc :as jdbc]
             [schema.coerce :as coerce]
+            [solita.etp.exception :as exception]
             [solita.etp.db :as db]
             [solita.etp.service.json :as json]
             [solita.etp.service.rooli :as rooli-service]
@@ -19,12 +20,13 @@
         (map coerce-kayttaja)
         first))
   ([db whoami id]
-   (let [kayttaja (find-kayttaja db id)]
-     (when (or (= id (:id whoami))
-               (rooli-service/paakayttaja? whoami)
-               (and (rooli-service/patevyydentoteaja? whoami)
-                    (rooli-service/laatija? kayttaja)))
-       kayttaja))))
+   (when-let [kayttaja (find-kayttaja db id)]
+     (if (or (= id (:id whoami))
+             (rooli-service/paakayttaja? whoami)
+             (and (rooli-service/patevyydentoteaja? whoami)
+                  (rooli-service/laatija? kayttaja)))
+       kayttaja
+       (exception/throw-forbidden!)))))
 
 (defn update-login! [db id cognitoid]
   (kayttaja-db/update-login! db {:id id :cognitoid cognitoid}))

@@ -39,11 +39,11 @@
                            404 common-schema/ConstraintError}
               :handler    (fn [{{{:keys [id yritys-id]} :path} :parameters :keys [db whoami]}]
                             (api-response/response-with-exceptions
-                             #(do
-                                (laatija-service/attach-laatija-yritys db whoami id yritys-id)
-                                nil)
-                             {:constraint :laatija-yritys-yritys-id-fkey
-                              :response 404}))}
+                             #(laatija-service/attach-laatija-yritys db whoami id yritys-id)
+                             [{:constraint :laatija-yritys-laatija-id-fkey
+                               :response 404}
+                              {:constraint :laatija-yritys-yritys-id-fkey
+                               :response 404}]))}
         :delete {:summary    "Poista laatija yrityksestä"
                  :parameters {:path {:id common-schema/Key
                                      :yritys-id common-schema/Key}}

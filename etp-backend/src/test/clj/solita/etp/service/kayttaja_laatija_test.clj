@@ -119,6 +119,12 @@
     ;; The second laatija has not changed at all
     (t/is (= found-original-laatija-2 found-updated-laatija-2))))
 
+(defn update-kayttaja-laatija! [whoami id kayttaja-laatija]
+  (try
+    (service/update-kayttaja-laatija! ts/*db* whoami id kayttaja-laatija)
+    (catch Exception e (if (not= (-> e ex-data :type) :forbidden)
+                         (throw e)))))
+
 (t/deftest update-kayttaja-laatija!-test
   (doseq [[add-1 update-1 add-2 update-2]
           (partition 4 (interleave (generate-KayttajaLaatijaAdds 100)
@@ -129,14 +135,8 @@
                 kayttaja-1 {:id id-1}
                 kayttaja-2 {:id id-2}
                 whoami (rand-nth (concat [kayttaja-1 kayttaja-2] roolit))
-                _ (service/update-kayttaja-laatija! ts/*db*
-                                                    whoami
-                                                    id-1
-                                                    update-1)
-                _ (service/update-kayttaja-laatija! ts/*db*
-                                                    whoami
-                                                    id-2
-                                                    update-2)
+                _ (update-kayttaja-laatija! whoami id-1 update-1)
+                _ (update-kayttaja-laatija! whoami id-2 update-2)
                 found-kayttaja-1 (kayttaja-service/find-kayttaja ts/*db* id-1)
                 found-kayttaja-2 (kayttaja-service/find-kayttaja ts/*db* id-2)
                 found-laatija-1 (laatija-service/find-laatija-with-kayttaja-id
