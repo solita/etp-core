@@ -10,6 +10,7 @@
                     :sukunimi      schema/Str
                     :email         schema/Str
                     :rooli         common-schema/Key
+                    :cognitoid     schema/Str
                     :henkilotunnus (schema/maybe common-schema/Henkilotunnus)
                     :laatija       (schema/maybe common-schema/Key)}))
 
