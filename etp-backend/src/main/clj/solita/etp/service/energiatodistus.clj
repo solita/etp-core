@@ -51,7 +51,7 @@
                 {:id 1 :label-fi "Ruotsi" :label-sv "Svenska"}
                 {:id 2 :label-fi "Kaksikielinen" :label-sv "Tvåspråkig"}])
 
-(defn find-kielisyys [] kielet)
+(defn find-kielisyys [] kielisyys)
 
 ;;
 ;; Energiatodistuksen laatimisvaihe
