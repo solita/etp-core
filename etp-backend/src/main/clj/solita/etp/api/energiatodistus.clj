@@ -38,4 +38,9 @@
    ["/kielisyys"
     {:get {:summary   "Hae energiatodistuksen kielisyysluokittelu"
            :responses {200 {:body [common-schema/Luokittelu]}}
-           :handler   (fn [_] (r/response (energiatodistus-service/find-kielisyys)))}}]])
+           :handler   (fn [_] (r/response (energiatodistus-service/find-kielisyys)))}}]
+
+   ["/laatimisvaiheet"
+    {:get {:summary   "Hae energiatodistuksen laatimisvaiheluokittelu"
+           :responses {200 {:body [common-schema/Luokittelu]}}
+           :handler   (fn [_] (r/response (energiatodistus-service/find-laatimisvaiheet)))}}]])
