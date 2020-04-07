@@ -65,7 +65,9 @@
 
 (t/deftest upsert-existing-test
   (let [[original-1 original-2] (generate-KayttajaLaatijaAdds 2)
-        original-1 (assoc original-1 :patevyystaso 0 :toteaja "FISE")
+
+        ;; Add schema is used when upserting käyttäjät with laatijat
+        [update-1] (generate-KayttajaLaatijaAdds 1)
         _ (service/upsert-kayttaja-laatijat! ts/*db* [original-1 original-2])
         found-original-laatija-1 (laatija-service/find-laatija-with-henkilotunnus
                                   ts/*db*
@@ -79,11 +81,7 @@
         found-original-kayttaja-2 (kayttaja-service/find-kayttaja
                                    ts/*db*
                                    (:kayttaja found-original-laatija-2))
-        updated-1 (assoc original-1
-                         :etunimi "Not updated"
-                         :patevyystaso 1
-                         :toteaja "KIINKO")
-        _ (service/upsert-kayttaja-laatijat! ts/*db* [original-2 updated-1])
+        _ (service/upsert-kayttaja-laatijat! ts/*db* [original-2 update-1])
         found-updated-laatija-1 (laatija-service/find-laatija-with-henkilotunnus
                                   ts/*db*
                                   (:henkilotunnus original-1))
@@ -105,18 +103,18 @@
     (schema/validate kayttaja-schema/Kayttaja found-updated-kayttaja-1)
     (schema/validate kayttaja-schema/Kayttaja found-updated-kayttaja-2)
 
-    ;; Name (or the rest of the käyttäjä) is not be updated!
-    (t/is (= found-original-kayttaja-1 found-updated-kayttaja-1))
-    (t/is (= found-original-kayttaja-2 found-updated-kayttaja-2))
-
-    ;; Laatija has been updated
+    ;; The first käyttäjä and laatija has been updated
+    (t/is (not= found-original-kayttaja-1 found-updated-kayttaja-1))
     (t/is (not= found-original-laatija-1 found-updated-laatija-1))
-    (t/is (zero? (:patevyystaso found-original-laatija-1)))
-    (t/is (= (:patevyystaso found-updated-laatija-1) 1))
-    (t/is (= (:toteaja found-original-laatija-1) "FISE"))
-    (t/is (= (:toteaja found-updated-laatija-1) "KIINKO"))
+    (t/is (-> update-1
+              (st/select-keys kayttaja-schema/KayttajaAdd)
+              (map/submap? found-updated-kayttaja-1)))
+    (t/is (-> update-1
+              (st/select-keys laatija-schema/LaatijaAdd)
+              (map/submap? found-updated-laatija-1)))
 
-    ;; The second laatija has not changed at all
+    ;; The second käyttäjä and laatija has not changed at all
+    (t/is (= found-original-kayttaja-2 found-updated-kayttaja-2))
     (t/is (= found-original-laatija-2 found-updated-laatija-2))))
 
 (defn update-kayttaja-laatija! [whoami id kayttaja-laatija]
