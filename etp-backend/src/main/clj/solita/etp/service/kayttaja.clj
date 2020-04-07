@@ -34,5 +34,14 @@
 (defn add-kayttaja! [db kayttaja]
   (-> (jdbc/insert! db :kayttaja kayttaja) first :id))
 
+(defn allow-rooli-update? [existing-rooli new-rooli]
+  (or (nil? new-rooli)
+      (= existing-rooli new-rooli)
+      (and (not= existing-rooli 0)
+           (not= new-rooli 0))))
+
 (defn update-kayttaja! [db id kayttaja]
-  (jdbc/update! db :kayttaja kayttaja ["id = ?" id]))
+  (if-let [existing-kayttaja (find-kayttaja db id)]
+    (if (allow-rooli-update? (:rooli existing-kayttaja) (:rooli kayttaja))
+      (jdbc/update! db :kayttaja kayttaja ["id = ?" id])
+      (exception/throw-forbidden!))))

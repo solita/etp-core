@@ -35,22 +35,48 @@
 (defn assoc-idx-email [idx kayttaja]
   (assoc kayttaja :email (str "kayttaja" idx "@example.com")))
 
+(t/deftest allow-rooli-update?-test
+  (t/is (true? (service/allow-rooli-update? 0 nil)))
+  (t/is (false? (service/allow-rooli-update? 0 1)))
+  (t/is (false? (service/allow-rooli-update? 0 2)))
+  (t/is (false? (service/allow-rooli-update? 1 0)))
+  (t/is (true? (service/allow-rooli-update? 1 1)))
+  (t/is (true? (service/allow-rooli-update? 1 2)))
+  (t/is (false? (service/allow-rooli-update? 2 0)))
+  (t/is (true? (service/allow-rooli-update? 2 1)))
+  (t/is (true? (service/allow-rooli-update? 2 2))))
+
+(defn update-kayttaja! [id kayttaja]
+  (try
+    (service/update-kayttaja! ts/*db* id kayttaja)
+    (catch Exception e (if (not= (-> e ex-data :type) :forbidden)
+                         (throw e)))))
+
 (t/deftest add-update-and-find-test
   (doseq [kayttaja (repeatedly 100 #(g/generate kayttaja-schema/KayttajaAdd))
           :let [id (service/add-kayttaja! ts/*db* kayttaja)
                 updated-kayttaja (g/generate kayttaja-schema/KayttajaUpdate)
-                _ (service/update-kayttaja! ts/*db*
-                                            id
-                                            updated-kayttaja)
+                _ (update-kayttaja! id updated-kayttaja)
+                new-rooli (:rooli updated-kayttaja)
                 whoami (rand-nth (conj roolit {:id id}))
                 found (find-kayttaja whoami id)]]
-    (if (or (= whoami laatija)
-            (and (= whoami patevyydentoteaja)
-                 (rooli-service/laatija-maintainer? updated-kayttaja)))
+    (cond
+      ;; If whoami had no permission to find the käyttäjä
+      (or (= whoami laatija)
+          (and (= whoami patevyydentoteaja)
+               (rooli-service/laatija-maintainer? found)))
       (t/is (nil? found))
-      (do
-        (schema/validate kayttaja-schema/Kayttaja found)
-        (t/is (map/submap? updated-kayttaja found))))))
+
+      ;; If changing the rooli was attempted
+      (and (-> new-rooli nil? not)
+           (-> new-rooli zero? not))
+      (do (schema/validate kayttaja-schema/Kayttaja found)
+          (t/is (map/submap? kayttaja found)))
+
+      ;; Otherwise the update was a success
+      :else
+      (do (schema/validate kayttaja-schema/Kayttaja found)
+          (t/is (map/submap? updated-kayttaja found))))))
 
 (t/deftest update-login!-test
   (doseq [kayttaja (repeatedly 100 #(g/generate kayttaja-schema/KayttajaAdd))
