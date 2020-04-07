@@ -53,8 +53,8 @@
 
 (defn update-kayttaja-laatija! [db whoami id kayttaja-laatija]
   (if (or (and (= id (:id whoami))
-                 (every? #(not (contains? kayttaja-laatija %))
-                         ks-only-for-paakayttaja))
+               (every? #(not (contains? kayttaja-laatija %))
+                       ks-only-for-paakayttaja))
             (rooli-service/paakayttaja? whoami))
     (let [kayttaja (st/select-schema kayttaja-laatija kayttaja-schema/KayttajaUpdate)
           laatija (st/select-schema kayttaja-laatija laatija-schema/LaatijaUpdate)]
