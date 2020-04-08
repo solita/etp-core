@@ -94,7 +94,7 @@
 (defn wrap-whoami [handler]
   (fn [{:keys [db jwt-payloads] :as req}]
     (let [cognitoid (-> jwt-payloads :data :sub)
-          email (-> req :jwt-payloads :data :email)
+          email (-> jwt-payloads :data :email)
           whoami (kayttaja-laatija-service/find-whoami db email cognitoid)]
       (if whoami
         (->> (assoc whoami :cognitoid cognitoid :email email)
