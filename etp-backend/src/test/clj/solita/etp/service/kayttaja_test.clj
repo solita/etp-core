@@ -78,15 +78,20 @@
       (do (schema/validate kayttaja-schema/Kayttaja found)
           (t/is (map/submap? updated-kayttaja found))))))
 
-(t/deftest update-login!-test
+(t/deftest update-kayttaja-with-whoami!-test
   (doseq [kayttaja (repeatedly 100 #(g/generate kayttaja-schema/KayttajaAdd))
           :let [id (service/add-kayttaja! ts/*db* kayttaja)
-                found-before-login (service/find-kayttaja ts/*db* paakayttaja id)
+                found-before (service/find-kayttaja ts/*db* paakayttaja id)
+                new-email (str "new-" (:email found-before))
                 cognitoid (str "cognitoid-" (rand-int 1000000))
-                _ (service/update-login! ts/*db* id cognitoid)
-                found-after-login (service/find-kayttaja ts/*db* paakayttaja id)]]
-    (schema/validate kayttaja-schema/Kayttaja found-after-login)
-    (t/is (-> found-before-login :login nil?))
-    (t/is (-> found-after-login :login nil? not))
-    (t/is (-> found-before-login :cognitoid nil?))
-    (t/is (= cognitoid (:cognitoid found-after-login)))))
+                _ (service/update-kayttaja-with-whoami! ts/*db*
+                                                        {:id id
+                                                         :email new-email
+                                                         :cognitoid cognitoid})
+                found-after (service/find-kayttaja ts/*db* paakayttaja id)]]
+    (schema/validate kayttaja-schema/Kayttaja found-after)
+    (t/is (-> found-before :login nil?))
+    (t/is (-> found-after :login nil? not))
+    (t/is (-> found-after :email (= new-email)))
+    (t/is (-> found-before :cognitoid nil?))
+    (t/is (= cognitoid (:cognitoid found-after)))))

@@ -28,9 +28,6 @@
        kayttaja
        (exception/throw-forbidden!)))))
 
-(defn update-login! [db id cognitoid]
-  (kayttaja-db/update-login! db {:id id :cognitoid cognitoid}))
-
 (defn add-kayttaja! [db kayttaja]
   (-> (jdbc/insert! db :kayttaja kayttaja) first :id))
 
@@ -45,3 +42,6 @@
     (if (allow-rooli-update? (:rooli existing-kayttaja) (:rooli kayttaja))
       (jdbc/update! db :kayttaja kayttaja ["id = ?" id])
       (exception/throw-forbidden!))))
+
+(defn update-kayttaja-with-whoami! [db whoami]
+  (kayttaja-db/update-kayttaja-with-whoami! db whoami))

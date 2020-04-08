@@ -93,10 +93,13 @@
 
 (defn wrap-whoami [handler]
   (fn [{:keys [db jwt-payloads] :as req}]
-    (let [email (-> req :jwt-payloads :data :email)
-          whoami (kayttaja-laatija-service/find-whoami db email)]
+    (let [cognitoid (:id jwt-payloads)
+          email (-> req :jwt-payloads :data :email)
+          whoami (kayttaja-laatija-service/find-whoami db email cognitoid)]
       (if whoami
-        (handler (assoc req :whoami whoami))
+        (->> (assoc whoami :cognitoid cognitoid :email email)
+             (assoc req :whoami)
+             handler)
         (do
           (log/error "Unable to find käyttäjä using email in data JWT")
           response/forbidden)))))

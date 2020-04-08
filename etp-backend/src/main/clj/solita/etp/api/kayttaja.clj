@@ -17,10 +17,7 @@
     {:get {:summary "Kirjautuneen käyttäjän tiedot"
            :responses {200 {:body kayttaja-laatija-schema/Whoami}}
            :handler (fn [{:keys [whoami jwt-payloads db]}]
-                      (kayttaja-service/update-login!
-                       db
-                       (:id whoami)
-                       (-> jwt-payloads :data :sub))
+                      (kayttaja-service/update-kayttaja-with-whoami! db whoami)
                       (r/response whoami))}}]
    ["/kayttajat"
     ["/:id"

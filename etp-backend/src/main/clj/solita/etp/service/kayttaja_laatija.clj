@@ -19,8 +19,8 @@
 (def coerce-whoami (coerce/coercer kayttaja-laatija-schema/Whoami
                                    json/json-coercions))
 
-(defn find-whoami [db email]
-  (->> {:email email}
+(defn find-whoami [db email cognitoid]
+  (->> {:email email :cognitoid cognitoid}
        (kayttaja-laatija-db/select-whoami db)
        (map coerce-whoami)
        first))
