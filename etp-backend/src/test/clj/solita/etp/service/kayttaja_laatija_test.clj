@@ -42,7 +42,9 @@
   (generate-kayttaja-laatija n kayttaja-laatija-schema/KayttajaLaatijaAdd))
 
 (defn generate-KayttajaLaatijaUpdates [n]
-  (generate-kayttaja-laatija n kayttaja-laatija-schema/KayttajaLaatijaUpdate))
+  (->> kayttaja-laatija-schema/KayttajaLaatijaUpdate
+       (generate-kayttaja-laatija n)
+       (map #(assoc % :rooli 0))))
 
 (t/deftest upsert-test
   (doseq [kayttaja-laatija (generate-KayttajaLaatijaAdds 100)

@@ -14,7 +14,6 @@
 
 (defn forbidden-handler [exception request]
   (let [error (ex-data exception)]
-    (println (keys request))
     (log/info (str "Service "
                    (:uri request)
                    " forbidden for access-token "
