@@ -51,8 +51,8 @@
    :kayttotarkoitus          Kayttotarkoitus})
 
 (defn Rakenneusvaippa [mininclusive maxinclusive]
-  {:rva common-schema/FloatPos
-   :rvu (common-schema/FloatBase mininclusive maxinclusive)})
+  {:ala common-schema/FloatPos
+   :U (common-schema/FloatBase mininclusive maxinclusive)})
 
 (def LahtotiedotRakennusvaippa
   {:ilmanvuotoluku common-schema/Float50
@@ -64,9 +64,9 @@
    :kylmasillat-UA common-schema/FloatPos})
 
 (def LahtotiedotIkkuna
-  {:ikkA common-schema/FloatPos
-   :ikkU (common-schema/FloatBase 0.4 6.5)
-   :ikkG (common-schema/FloatBase 0.1 1.0)})
+  {:ala common-schema/FloatPos
+   :U (common-schema/FloatBase 0.4 6.5)
+   :g-ks (common-schema/FloatBase 0.1 1.0)})
 
 (def LahtotiedotIkkunat
   {:pohjoinen LahtotiedotIkkuna
@@ -179,10 +179,10 @@
                                                                       :yksikko        common-schema/String12,
                                                                       :muunnoskerroin common-schema/FloatPos,
                                                                       :maara-vuodessa common-schema/FloatPos}]},
-   :to-sahko-vuosikulutus-yhteensa          common-schema/FloatPos,
-   :to-kaukolampo-vuosikulutus-yhteensa     common-schema/FloatPos,
-   :to-polttoaineet-vuosikulutus-yhteensa   common-schema/FloatPos,
-   :to-kaukojaahdytys-vuosikulutus-yhteensa common-schema/FloatPos})
+   :sahko-vuosikulutus-yhteensa          common-schema/FloatPos,
+   :kaukolampo-vuosikulutus-yhteensa     common-schema/FloatPos,
+   :polttoaineet-vuosikulutus-yhteensa   common-schema/FloatPos,
+   :kaukojaahdytys-vuosikulutus-yhteensa common-schema/FloatPos})
 
 (def Huomio
   {:teksti-fi  common-schema/String1000
