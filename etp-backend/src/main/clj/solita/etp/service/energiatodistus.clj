@@ -62,3 +62,13 @@
                       {:id 2 :label-fi "Olemassa oleva rakennus" :label-sv "Befintlig byggnad"}])
 
 (defn find-laatimisvaiheet [] laatimisvaiheet)
+
+;;
+;; Energiatodistuksen käyttötarkoitusluokittelu
+;;
+
+(defn find-kayttotarkoitukset [db versio]
+  (energiatodistus-db/select-kayttotarkoitusluokat-by-versio db {:versio versio}))
+
+(defn find-alakayttotarkoitukset [db versio]
+  (energiatodistus-db/select-alakayttotarkoitusluokat-by-versio db {:versio versio}))
