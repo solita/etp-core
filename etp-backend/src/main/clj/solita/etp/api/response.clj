@@ -34,3 +34,11 @@
   (r/created (str path "/") {:id id}))
 
 (def forbidden {:status 403 :body "Forbidden"})
+
+(defn pdf-response [body filename not-found]
+  (if (nil? body)
+    (r/not-found not-found)
+    {:status 200
+     :headers {"Content-Type" "application/pdf"
+               "Content-Disposition:" (str "inline; filename=\"" filename"\"")}
+     :body body}))
