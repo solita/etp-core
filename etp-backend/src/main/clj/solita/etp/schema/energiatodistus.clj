@@ -222,3 +222,8 @@
 (def Energiatodistus2018
   "Energiatodistus schema contains basic information about persistent energiatodistus"
   (merge common-schema/Id EnergiatodistusTila EnergiatodistusSave2018))
+
+(def Alakayttotarkoitusluokka
+  (assoc common-schema/Luokittelu
+    :kayttotarkoitusluokka-id common-schema/Key
+    :id schema/Str))
