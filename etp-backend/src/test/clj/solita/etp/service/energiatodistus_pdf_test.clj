@@ -1,5 +1,6 @@
 (ns solita.etp.service.energiatodistus-pdf-test
-  (:require [clojure.java.io :as io]
+  (:require [clojure.string :as str]
+            [clojure.java.io :as io]
             [clojure.test :as t]
             [schema-generators.generators :as g]
             [solita.common.xlsx :as xlsx]
@@ -13,10 +14,16 @@
 
 (t/deftest fill-xlsx-template-test
   (let [file-path (service/fill-xlsx-template energiatodistus)
-        _ (println file-path)
         loaded-xlsx (xlsx/load-xlsx file-path)
         sheet-0 (xlsx/get-sheet loaded-xlsx 0)]
+    (t/is (str/ends-with? file-path ".xlsx"))
     (t/is (-> file-path io/as-file .exists true?))
     (t/is (= (-> energiatodistus :perustiedot :nimi)
              (xlsx/get-cell-value-at sheet-0 "K7")))
+    (io/delete-file file-path)))
+
+(t/deftest xlsx->pdf-test
+  (let [file-path (service/xlsx->pdf service/xlsx-template-path)]
+    (t/is (str/ends-with? file-path ".pdf"))
+    (t/is (-> file-path io/as-file .exists true?))
     (io/delete-file file-path)))
