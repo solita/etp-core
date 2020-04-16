@@ -27,7 +27,6 @@
 
 ;; Uses current Libreoffice export settings. Make sure they are set
 ;; for PDFA-2B
-
 (defn xlsx->pdf [file-path]
   (let [file (io/file file-path)
         filename (.getName file)
@@ -46,7 +45,8 @@
 
 (defn generate [energiatodistus]
   (let [xlsx-file-path (fill-xlsx-template energiatodistus)
-        pdf-file-path (xlsx->pdf xlsx-file-path)])
-
-  ;; TODO write pdf instead of using dummy
-  (-> "dummy.pdf" io/resource io/input-stream))
+        pdf-file-path (xlsx->pdf xlsx-file-path)
+        is (io/input-stream pdf-file-path)]
+    (io/delete-file xlsx-file-path)
+    (io/delete-file pdf-file-path)
+    is))
