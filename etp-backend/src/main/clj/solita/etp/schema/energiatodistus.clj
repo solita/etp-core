@@ -150,9 +150,9 @@
                                    :vuosikulutus common-schema/FloatPos}]
    :tekniset-jarjestelmat        {:tilojen-lammitys                     SahkoLampo,
                                   :tuloilman-lammitys                   SahkoLampo,
-                                  :kayttoveden-valmistus                common-schema/FloatPos
+                                  :kayttoveden-valmistus                SahkoLampo
                                   :iv-sahko                             common-schema/FloatPos
-                                  :jaahdytys                            common-schema/FloatPos
+                                  :jaahdytys (assoc SahkoLampo :kaukojaahdytys common-schema/FloatPos)
                                   :kuluttajalaitteet-ja-valaistus-sahko common-schema/FloatPos},
    :nettotarve                   {:tilojen-lammitys-vuosikulutus      common-schema/FloatPos
                                   :ilmanvaihdon-lammitys-vuosikulutus common-schema/FloatPos
