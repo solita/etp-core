@@ -13,17 +13,19 @@
                       energiatodistus-test/energiatodistus-generators))
 
 (t/deftest fill-xlsx-template-test
-  (let [file-path (service/fill-xlsx-template energiatodistus)
-        loaded-xlsx (xlsx/load-xlsx file-path)
+  (let [path (service/fill-xlsx-template energiatodistus)
+        file (-> path io/input-stream)
+        loaded-xlsx (xlsx/load-xlsx file)
         sheet-0 (xlsx/get-sheet loaded-xlsx 0)]
-    (t/is (str/ends-with? file-path ".xlsx"))
-    (t/is (-> file-path io/as-file .exists true?))
+    (t/is (str/ends-with? path ".xlsx"))
+    (t/is (-> path io/as-file .exists true?))
     (t/is (= (-> energiatodistus :perustiedot :nimi)
              (xlsx/get-cell-value-at sheet-0 "K7")))
-    (io/delete-file file-path)))
+    (io/delete-file path)))
 
 (t/deftest xlsx->pdf-test
-  (let [file-path (service/xlsx->pdf service/xlsx-template-path)]
+  (let [file-path (service/xlsx->pdf (str "src/main/resources/"
+                                          service/xlsx-template-path))]
     (t/is (str/ends-with? file-path ".pdf"))
     (t/is (-> file-path io/as-file .exists true?))
     (io/delete-file file-path)))
