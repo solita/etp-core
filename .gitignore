@@ -5,6 +5,7 @@
 
 # target-folders and other build related files
 etp-backend/target
+etp-backend/tmp
 etp-db/target
 
 # clojure

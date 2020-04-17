@@ -2,6 +2,7 @@
   (:require [solita.etp.db :as db]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.json :as json]
+            [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf]
             [schema.coerce :as coerce]
             [clojure.java.jdbc :as jdbc]))
 
@@ -13,6 +14,11 @@
 
 (defn find-energiatodistus [db id]
   (first (map (comp coerce-energiatodistus json/merge-data) (energiatodistus-db/select-energiatodistus db {:id id}))))
+
+;; TODO this should load signed PDF if it exists and only generate if necessary
+(defn find-energiatodistus-pdf [db id]
+  (when-let [energiatodistus (find-energiatodistus db id)]
+    (energiatodistus-pdf/generate energiatodistus)))
 
 (defn find-all-energiatodistukset [db]
   (map (comp coerce-energiatodistus json/merge-data) (energiatodistus-db/select-all-energiatodistukset db)))
