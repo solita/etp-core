@@ -9,6 +9,31 @@
 (def sheet-count 8)
 (def tmp-dir "tmp/")
 
+(def mappings {0 {"K7" [:perustiedot :nimi]
+                  "K8" [:perustiedot :katuosoite-fi]
+
+                  ;; TODO needs luokittelu for postitoimipaikka
+                  "K9" #(str (-> % :perustiedot :postinumero) " " "Helsinki")
+                  "K12" [:perustiedot :rakennustunnus]
+                  "K13" [:perustiedot :valmistumisvuosi]
+
+                  ;; TODO find alakayttotarkoitukset from db
+                  "K14" [:perustiedot :kayttotarkoitus]
+                  "K16" [:id]
+
+                  ;; TODO checkboxes D19-D21
+                  ;; TODO format date
+                  "M21" [:perustiedot :havainnointikaynti]
+                  ;; TODO M36 and M37 E-luku
+                  ;; TODO laatija B42
+
+                  "J42" [:perustiedot :yritys :nimi]
+
+                  ;; TODO real todistuksen laatimispäivä with correct formatting
+                  "B50" (fn [_] (str (java.time.LocalDate/now)))
+                  ;; TODO voimassaolopäivä K50
+                  }})
+
 (defn fill-xlsx-template [energiatodistus]
   (with-open [is (-> xlsx-template-path io/resource io/input-stream)]
     (let [loaded-xlsx (xlsx/load-xlsx is)
@@ -17,11 +42,13 @@
                     .toString
                     (format "energiatodistus-%s.xlsx")
                     (str tmp-dir))]
-      (xlsx/set-cell-value-at (nth sheets 0)
-                              "K7"
-                              (-> energiatodistus :perustiedot :nimi))
-      (xlsx/set-cell-value-at (nth sheets 0) "K8" "Esimerkkikatu 1 A 1")
-      (xlsx/set-cell-value-at (nth sheets 0) "K9" "33100 Tampere")
+      (doseq [[sheet sheet-mappings] mappings]
+        (doseq [[cell cursor-or-f] sheet-mappings]
+          (xlsx/set-cell-value-at (nth sheets sheet)
+                                  cell
+                                  (if (vector? cursor-or-f)
+                                    (str (get-in energiatodistus cursor-or-f))
+                                    (cursor-or-f energiatodistus)))))
       (io/make-parents path)
       (xlsx/save-xlsx loaded-xlsx path)
       path)))
