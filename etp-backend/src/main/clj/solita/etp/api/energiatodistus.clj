@@ -53,4 +53,18 @@
    ["/laatimisvaiheet"
     {:get {:summary   "Hae energiatodistuksen laatimisvaiheluokittelu"
            :responses {200 {:body [common-schema/Luokittelu]}}
-           :handler   (fn [_] (r/response (energiatodistus-service/find-laatimisvaiheet)))}}]])
+           :handler   (fn [_] (r/response (energiatodistus-service/find-laatimisvaiheet)))}}]
+
+   ["/kayttotarkoitusluokat/:versio"
+    {:get {:summary   "Hae energiatodistuksen käyttötarkoitusluokat"
+           :parameters {:path {:versio common-schema/Key}}
+           :responses {200 {:body [common-schema/Luokittelu]}}
+           :handler   (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
+                        (r/response (energiatodistus-service/find-kayttotarkoitukset db versio)))}}]
+
+   ["/alakayttotarkoitusluokat/:versio"
+    {:get {:summary   "Hae energiatodistuksen käyttötarkoitusluokat"
+           :parameters {:path {:versio common-schema/Key}}
+           :responses {200 {:body [energiatodistus-schema/Alakayttotarkoitusluokka]}}
+           :handler   (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
+                        (r/response (energiatodistus-service/find-alakayttotarkoitukset db versio)))}}]])
