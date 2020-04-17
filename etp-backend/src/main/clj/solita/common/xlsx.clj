@@ -5,8 +5,8 @@
            (org.apache.poi.ss.util CellAddress)
            (org.apache.poi.xssf.usermodel XSSFWorkbook)))
 
-(defn load-xlsx [path]
-  (-> path io/file (WorkbookFactory/create)))
+(defn load-xlsx [^java.io.InputStream is]
+  (WorkbookFactory/create is))
 
 (defn save-xlsx [xlsx path]
   (with-open [os (io/output-stream path)]
