@@ -29,8 +29,9 @@
 (defn energiatodistus-luonnos? [db id]
   (= "luonnos" (:tila (find-energiatodistus db id))))
 
-(defn add-energiatodistus! [db energiatodistus]
-  (:id (energiatodistus-db/insert-energiatodistus<! db (json/data-db-row energiatodistus))))
+(defn add-energiatodistus! [db whoami energiatodistus]
+  (:id (energiatodistus-db/insert-energiatodistus<!
+         db (assoc (json/data-db-row energiatodistus) :laatija-id (:laatija whoami)))))
 
 (defn update-energiatodistus-when-luonnos! [db id energiatodistus]
   (jdbc/with-db-transaction

@@ -1,5 +1,6 @@
 -- name: insert-energiatodistus<!
-insert into energiatodistus (data) values (:data :: JSONB) returning id
+insert into energiatodistus (laatija_id, data)
+values (:laatija-id, :data :: JSONB) returning id
 
 -- name: update-energiatodistus-when-luonnos!
 update energiatodistus set data = :data :: JSONB where tila = 'luonnos' and id = :id

@@ -12,9 +12,9 @@
      {:post {:summary    "Lisää luonnostilaisen energiatodistuksen"
              :parameters {:body energiatodistus-schema/EnergiatodistusSave2018}
              :responses  {201 {:body common-schema/Id}}
-             :handler    (fn [{:keys [db parameters uri]}]
+             :handler    (fn [{:keys [db whoami parameters uri]}]
                            (api-response/created uri
-                              (energiatodistus-service/add-energiatodistus! db (:body parameters))))}}]
+                              (energiatodistus-service/add-energiatodistus! db whoami (:body parameters))))}}]
     ["/:id"
      [""
       {:get {:summary    "Hae energiatodistus"
