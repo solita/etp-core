@@ -138,8 +138,8 @@
   {:kaytettavat-energiamuodot
      {:fossiilinen-polttoaine common-schema/FloatPos
       :sahko common-schema/FloatPos
-      :kaukojäähdytys common-schema/FloatPos
-      :kaukolämpö common-schema/FloatPos
+      :kaukojaahdytys common-schema/FloatPos
+      :kaukolampo common-schema/FloatPos
       :uusiutuva-polttoaine common-schema/FloatPos},
 
    :uusiutuvat-omavaraisenergiat
