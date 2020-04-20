@@ -13,6 +13,22 @@
   (when (and x y)
     (str (* x y))))
 
+(defn safe-nth [coll idx]
+  (when (> (count coll) idx)
+    (nth coll idx)))
+
+(defn kaytettavat-energiamuodot [energiatodistus]
+  (let [{:keys [kaukolampo sahko fossiilinen-polttoaine
+                kaukojaahdytys uusiutuva-polttoaine]}
+        (-> energiatodistus :tulokset :kaytettavat-energiamuodot)]
+    (->> [["Kaukolämpö" kaukolampo]
+          ["Sähkö" sahko]
+          ["Fossiilinen polttoaine" fossiilinen-polttoaine]
+          ["Kaukojäähdytys" kaukojaahdytys]
+          ["Uusiutuva polttoaine" uusiutuva-polttoaine]]
+         (remove #(-> % second nil?))
+         (into []))))
+
 (def mappings {0 {"K7" [:perustiedot :nimi]
                   "K8" [:perustiedot :katuosoite-fi]
 
@@ -158,6 +174,60 @@
                   "E65" [:lahtotiedot :sis-kuorma 2 :henkilot]
                   "F65" [:lahtotiedot :sis-kuorma 2 :kuluttajalaitteet]
                   "G66" [:lahtotiedot :sis-kuorma 2 :valaistus]}
+               3 {
+                  ;; TODO rakennuksen käyttötarkoitusluokka
+
+                  "D7" [:perustiedot :valmistumisvuosi]
+                  "D8" [:lahtotiedot :lammitetty-nettoala]
+
+                  ;; TODO e-luku
+
+                  "C17" #(-> % kaytettavat-energiamuodot (safe-nth 0) first)
+                  "D17" #(-> % kaytettavat-energiamuodot (safe-nth 0) second str)
+                  "C18" #(-> % kaytettavat-energiamuodot (safe-nth 1) first)
+                  "D18" #(-> % kaytettavat-energiamuodot (safe-nth 1) second str)
+                  "C19" #(-> % kaytettavat-energiamuodot (safe-nth 2) first)
+                  "D19" #(-> % kaytettavat-energiamuodot (safe-nth 2) second str)
+                  "C20" #(-> % kaytettavat-energiamuodot (safe-nth 3) first)
+                  "D20" #(-> % kaytettavat-energiamuodot (safe-nth 3) second str)
+                  "C21" #(-> % kaytettavat-energiamuodot (safe-nth 4) first)
+                  "D21" #(-> % kaytettavat-energiamuodot (safe-nth 4) second str)
+
+                  ;; TODO energiamuodon kerroin ja energiamuodon
+                  ;; kertoimella painotettu energiankulutus
+
+                  "E28" [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko]
+                  "E29" [:tulokset :uusiutuvat-omavaraisenergiat :aurinkolampo]
+                  "E30" [:tulokset :uusiutuvat-omavaraisenergiat :tuulisahko]
+                  "E31" [:tulokset :uusiutuvat-omavaraisenergiat :lampopumppu]
+                  "E32" [:tulokset :uusiutuvat-omavaraisenergiat :muusahko]
+                  "E33" [:tulokset :uusiutuvat-omavaraisenergiat :muulampo]
+
+                  "E41" [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :sahko]
+                  "F41" [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :lampo]
+                  "E42" [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :sahko]
+                  "F42" [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :lampo]
+                  "E43" [:tulokset :tekniset-jarjestelmat :kayttoveden-valmistus :sahko]
+                  "F43" [:tulokset :tekniset-jarjestelmat :kayttoveden-valmistus :lampo]
+                  "E44" [:tulokset :tekniset-jarjestelmat :iv-sahko]
+                  "E45" [:tulokset :tekniset-jarjestelmat :jaahdytys :sahko]
+                  "F45" [:tulokset :tekniset-jarjestelmat :jaahdytys :lampo]
+                  "G45" [:tulokset :tekniset-jarjestelmat :jaahdytys :kaukojaahdytys]
+                  "E46" [:tulokset :tekniset-jarjestelmat :kuluttajalaitteet-ja-valaistus-sahko]
+
+                  "E54" [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus]
+                  "E55" [:tulokset :nettotarve :ilmanvaihdon-lammitys-vuosikulutus]
+                  "E56" [:tulokset :nettotarve :kayttoveden-valmistus-vuosikulutus]
+                  "E57" [:tulokset :nettotarve :jaahdytys-vuosikulutus]
+
+                  "E66" [:tulokset :lampokuormat :aurinko]
+                  "E67" [:tulokset :lampokuormat :ihmiset]
+                  "E68" [:tulokset :lampokuormat :kuluttajalaitteet]
+                  "E69" [:tulokset :lampokuormat :valaistus]
+                  "E70" [:tulokset :lampokuormat :kvesi]
+
+                  "E74" [:tulokset :laskentatyokalu]}
+
                })
 
 (defn fill-xlsx-template [energiatodistus]
