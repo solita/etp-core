@@ -135,19 +135,21 @@
    :lampo common-schema/FloatPos})
 
 (def Tulokset
-  {:kaytettavat-energiamuodot    [{:vakio                (schema/enum "fossiilinen polttoaine"
-                                                                      "sähkö"
-                                                                      "kaukojäähdytys"
-                                                                      "kaukolämpö"
-                                                                      "uusiutuva polttoaine"),
-                                   :laskettu-ostoenergia schema/Num}],
-   :uusiutuvat-omavaraisenergiat [{:nimi-vakio   (schema/enum "aurinkosahko"
-                                                              "tuulisahko"
-                                                              "aurinkolampo"
-                                                              "muulampo"
-                                                              "muusahko"
-                                                              "lampopumppu"),
-                                   :vuosikulutus common-schema/FloatPos}]
+  {:kaytettavat-energiamuodot
+     {:fossiilinen-polttoaine common-schema/FloatPos
+      :sahko common-schema/FloatPos
+      :kaukojaahdytys common-schema/FloatPos
+      :kaukolampo common-schema/FloatPos
+      :uusiutuva-polttoaine common-schema/FloatPos},
+
+   :uusiutuvat-omavaraisenergiat
+     {:aurinkosahko common-schema/FloatPos
+      :tuulisahko common-schema/FloatPos
+      :aurinkolampo common-schema/FloatPos
+      :muulampo common-schema/FloatPos
+      :muusahko common-schema/FloatPos
+      :lampopumppu common-schema/FloatPos},
+
    :tekniset-jarjestelmat        {:tilojen-lammitys                     SahkoLampo,
                                   :tuloilman-lammitys                   SahkoLampo,
                                   :kayttoveden-valmistus                SahkoLampo
