@@ -29,20 +29,25 @@
   (let [laatija {:laatija (add-laatija!)}]
     (service/add-energiatodistus! ts/*db* laatija energiatodistus)))
 
+(defn find-energiatodistus [id]
+  (let [et (service/find-energiatodistus ts/*db* id)]
+    (t/is (not (nil? (:laatija-id et))))
+    (dissoc et :laatija-id)))
+
 (t/deftest add-and-find-energiatodistus-test
   (doseq [energiatodistus (repeatedly 100 #(g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))
           :let [id (add-energiatodistus! energiatodistus)]]
-    (t/is (= (assoc energiatodistus :id id :tila "luonnos") (service/find-energiatodistus ts/*db* id))))
+    (t/is (= (assoc energiatodistus :id id :tila "luonnos") (find-energiatodistus id))))
   (t/is (= 100 (count (service/find-all-luonnos-energiatodistukset ts/*db*))))
   (t/is (= 100 (count (service/find-all-energiatodistukset ts/*db*)))))
 
 (t/deftest create-energiatodistus-and-set-valmis-test
   (let [id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))]
-    (t/is (= "luonnos" (:tila (service/find-energiatodistus ts/*db* id))))
+    (t/is (= "luonnos" (:tila (find-energiatodistus id))))
     (t/is (= 1 (count (service/find-all-luonnos-energiatodistukset ts/*db*))))
     (t/is (= 1 (count (service/find-all-energiatodistukset ts/*db*))))
     (service/update-energiatodistus-as-valmis! ts/*db* id)
-    (t/is (= "valmis" (:tila (service/find-energiatodistus ts/*db* id))))
+    (t/is (= "valmis" (:tila (find-energiatodistus id))))
     (t/is (= 0 (count (service/find-all-luonnos-energiatodistukset ts/*db*))))
     (t/is (= 1 (count (service/find-all-energiatodistukset ts/*db*))))
     (t/is (thrown? IllegalStateException (service/delete-energiatodistus-when-luonnos! ts/*db* id)))))
@@ -50,9 +55,9 @@
 (t/deftest update-energiatodistus-test
   (let [id                     (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))
         update-energiatodistus (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators)]
-    (t/is (= "luonnos" (:tila (service/find-energiatodistus ts/*db* id))))
+    (t/is (= "luonnos" (:tila (find-energiatodistus id))))
     (service/update-energiatodistus-when-luonnos! ts/*db* id update-energiatodistus)
-    (t/is (= (assoc update-energiatodistus :id id :tila "luonnos") (service/find-energiatodistus ts/*db* id)))
+    (t/is (= (assoc update-energiatodistus :id id :tila "luonnos") (find-energiatodistus id)))
     (service/update-energiatodistus-as-valmis! ts/*db* id)
     (t/is (thrown? IllegalStateException (service/update-energiatodistus-when-luonnos! ts/*db* id update-energiatodistus)))))
 

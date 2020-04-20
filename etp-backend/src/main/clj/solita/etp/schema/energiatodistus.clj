@@ -223,7 +223,10 @@
 
 (def Energiatodistus2018
   "Energiatodistus schema contains basic information about persistent energiatodistus"
-  (merge common-schema/Id EnergiatodistusTila EnergiatodistusSave2018))
+  (assoc
+    (merge common-schema/Id EnergiatodistusSave2018)
+    :tila (schema/enum "luonnos" "valmis")
+    :laatija-id common-schema/Key))
 
 (def Alakayttotarkoitusluokka
   (assoc common-schema/Luokittelu
