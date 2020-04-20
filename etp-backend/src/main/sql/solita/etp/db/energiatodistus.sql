@@ -12,13 +12,13 @@ update energiatodistus set tila = 'valmis' where id = :id
 delete from energiatodistus where tila = 'luonnos' and id = :id
 
 -- name: select-energiatodistus
-select id, tila, data from energiatodistus where id = :id
+select id, tila, laatija_id "laatija-id", data from energiatodistus where id = :id
 
 -- name: select-all-energiatodistukset
-select id, tila, data from energiatodistus
+select id, tila, laatija_id "laatija-id", data from energiatodistus
 
 -- name: select-all-luonnos-energiatodistukset
-select id, tila, data from energiatodistus where tila = 'luonnos'
+select id, tila, laatija_id "laatija-id", data from energiatodistus where tila = 'luonnos'
 
 -- name: select-kayttotarkoitusluokat-by-versio
 select id, label_fi "label-fi", label_sv "label-sv", deleted
