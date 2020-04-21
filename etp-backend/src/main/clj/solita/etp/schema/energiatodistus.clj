@@ -226,7 +226,7 @@
   (assoc
     (merge common-schema/Id EnergiatodistusSave2018)
     :tila (schema/enum "luonnos" "valmis")
-    :laatija-id common-schema/Key))
+    :laatija-fullname schema/Str))
 
 (def Alakayttotarkoitusluokka
   (assoc common-schema/Luokittelu
