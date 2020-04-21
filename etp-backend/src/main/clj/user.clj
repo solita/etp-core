@@ -6,6 +6,9 @@
    (require 'solita.etp.system)
    ((resolve 'solita.etp.system/config))))
 
+(defn db []
+  (-> integrant.repl.state/system :solita.etp/db))
+
 (defn run-tests []
   (require 'eftest.runner)
   (-> ((resolve 'eftest.runner/find-tests) "src/test")
