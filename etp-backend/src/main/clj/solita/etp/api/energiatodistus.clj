@@ -3,6 +3,7 @@
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [schema.core :as schema]
+            [solita.etp.security :as security]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.api.response :as api-response]))
 
@@ -15,8 +16,8 @@
                   uri
                   (energiatodistus-service/add-energiatodistus! db whoami (:body parameters))))})
 
-(def basic-routes
-  [["/energiatodistukset/2018"
+(def external-routes
+  [["/energiatodistukset/2018" {:middleware [[security/wrap-whoami-from-basic-auth]]}
     [""
      {:post energiatodistus-2018-post}]]])
 

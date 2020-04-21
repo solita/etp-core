@@ -1,13 +1,10 @@
-(ns solita.etp.jwt-security
+(ns solita.etp.jwt
   (:require [clojure.tools.logging :as log]
             [buddy.core.keys :as keys]
             [buddy.sign.jwe :as jwe]
             [buddy.sign.jwt :as jwt]
             [clj-http.client :as http]
 
-            [solita.etp.api.response :as response]
-            [solita.etp.service.kayttaja-laatija :as kayttaja-laatija-service]
-            [solita.etp.service.rooli :as rooli-service]
             ;; TODO json namespace should probably not be
             ;; under service namespace
             [solita.etp.service.json :as json]
@@ -80,39 +77,3 @@
            :access access-payload})))
     (catch Exception e (log/error e (str "Exception when verifying JWTs: "
                                          (.getMessage e))))))
-
-;;
-;; Middleware
-;;
-
-(defn wrap-jwt-payloads [handler]
-  (fn [req]
-    (if-let [jwt-payloads (req->verified-jwt-payloads req)]
-      (handler (assoc req :jwt-payloads jwt-payloads))
-      response/forbidden)))
-
-(defn wrap-whoami [handler]
-  (fn [{:keys [db jwt-payloads] :as req}]
-    (let [cognitoid (-> jwt-payloads :data :sub)
-          email (-> jwt-payloads :data :email)
-          whoami (kayttaja-laatija-service/find-whoami db email cognitoid)]
-      (if whoami
-        (->> (assoc whoami :cognitoid cognitoid :email email)
-             (assoc req :whoami)
-             handler)
-        (do
-          (log/error "Unable to find käyttäjä using email in data JWT")
-          response/forbidden)))))
-
-(defn wrap-access [handler]
-  (fn [{:keys [request-method whoami] :as req}]
-    (let [access (-> req :reitit.core/match :data (get request-method) :access)]
-      (if (or (nil? access)
-              (access whoami))
-        (handler req)
-        (do
-          (log/warn "Current käyttäjä did not satisfy the access predicate for route:"
-                    {:method request-method
-                     :url (-> req :reitit.core/match :template)
-                     :whoami whoami})
-          response/forbidden)))))
