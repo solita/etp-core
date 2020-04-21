@@ -65,6 +65,7 @@
 
                   ;; TODO Tämän rakennuksen energiatehokkuusluokka
 
+                  ;; TODO is this correct?
                   "C38" [:huomiot :suositukset-fi]}
                2 {
                   ;; TODO rakennuksen käyttötarkoitusluokka
@@ -227,8 +228,137 @@
                   "E70" [:tulokset :lampokuormat :kvesi]
 
                   "E74" [:tulokset :laskentatyokalu]}
+               4 {"C7" #(format "Lämmitetty nettoala %s m²"
+                                (-> % :lahtotiedot :lammitetty-nettoala))
 
-               })
+                  "H12" [:toteutunut-ostoenergiankulutus :ostettu-energia
+                         :kaukolampo-vuosikulutus]
+                  "H14" [:toteutunut-ostoenergiankulutus :ostettu-energia
+                         :kokonaissahko-vuosikulutus]
+                  "H16" [:toteutunut-ostoenergiankulutus :ostettu-energia
+                         :kiinteistosahko-vuosikulutus]
+                  "H17" [:toteutunut-ostoenergiankulutus :ostettu-energia
+                         :kayttajasahko-vuosikulutus]
+                  "H19" [:toteutunut-ostoenergiankulutus :ostettu-energia
+                         :kaukojaahdytys-vuosikulutus]
+
+                  "E23" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
+                         :kevyt-polttooljy]
+                  "E24" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
+                         :pilkkeet-havu-sekapuu]
+                  "E25" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
+                         :pilkkeet-koivu]
+                  "E26" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
+                         :puupelletit]
+                  "C27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
+                         :vapaa 0 :nimi]
+                  "E27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
+                         :vapaa 0 :maara-vuodessa]
+                  "F27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
+                         :vapaa 0 :yksikko]
+                  "G27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
+                         :vapaa 0 :muunnoskerroin]
+                  "C28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
+                         :vapaa 1 :nimi]
+                  "E28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
+                         :vapaa 1 :maara-vuodessa]
+                  "F28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
+                         :vapaa 1 :yksikko]
+                  "G28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
+                         :vapaa 1 :muunnoskerroin]
+
+                  "H38" [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa]
+                  "H40" [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa]
+                  "H42" [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa]
+                  "H44" [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa]}
+               5 {
+                  ;; TODO is this correct?
+                  "B5" [:huomiot :ymparys :teksti-fi]
+                  "C12" [:huomiot :ymparys :toimenpide 0 :nimi-fi]
+                  "C13" [:huomiot :ymparys :toimenpide 1 :nimi-fi]
+                  "C14" [:huomiot :ymparys :toimenpide 2 :nimi-fi]
+                  "C17" [:huomiot :ymparys :toimenpide 0 :lampo]
+                  "D17" [:huomiot :ymparys :toimenpide 0 :sahko]
+                  "E17" [:huomiot :ymparys :toimenpide 0 :jaahdytys]
+                  "F17" [:huomiot :ymparys :toimenpide 0 :eluvun-muutos]
+                  "C18" [:huomiot :ymparys :toimenpide 1 :lampo]
+                  "D18" [:huomiot :ymparys :toimenpide 1 :sahko]
+                  "E18" [:huomiot :ymparys :toimenpide 1 :jaahdytys]
+                  "F18" [:huomiot :ymparys :toimenpide 1 :eluvun-muutos]
+                  "C19" [:huomiot :ymparys :toimenpide 2 :lampo]
+                  "D19" [:huomiot :ymparys :toimenpide 2 :sahko]
+                  "E19" [:huomiot :ymparys :toimenpide 2 :jaahdytys]
+                  "F19" [:huomiot :ymparys :toimenpide 2 :eluvun-muutos]
+
+                  "B21" [:huomiot :alapohja-ylapohja :teksti-fi]
+                  "C28" [:huomiot :alapohja-ylapohja :toimenpide 0 :nimi-fi]
+                  "C29" [:huomiot :alapohja-ylapohja :toimenpide 1 :nimi-fi]
+                  "C30" [:huomiot :alapohja-ylapohja :toimenpide 2 :nimi-fi]
+                  "C33" [:huomiot :alapohja-ylapohja :toimenpide 0 :lampo]
+                  "D33" [:huomiot :alapohja-ylapohja :toimenpide 0 :sahko]
+                  "E33" [:huomiot :alapohja-ylapohja :toimenpide 0 :jaahdytys]
+                  "F33" [:huomiot :alapohja-ylapohja :toimenpide 0 :eluvun-muutos]
+                  "C34" [:huomiot :alapohja-ylapohja :toimenpide 1 :lampo]
+                  "D34" [:huomiot :alapohja-ylapohja :toimenpide 1 :sahko]
+                  "E34" [:huomiot :alapohja-ylapohja :toimenpide 1 :jaahdytys]
+                  "F34" [:huomiot :alapohja-ylapohja :toimenpide 1 :eluvun-muutos]
+                  "C35" [:huomiot :alapohja-ylapohja :toimenpide 2 :lampo]
+                  "D35" [:huomiot :alapohja-ylapohja :toimenpide 2 :sahko]
+                  "E35" [:huomiot :alapohja-ylapohja :toimenpide 2 :jaahdytys]
+                  "F35" [:huomiot :alapohja-ylapohja :toimenpide 2 :eluvun-muutos]
+
+                  "B37" [:huomiot :lammitys :teksti-fi]
+                  "C44" [:huomiot :lammitys :toimenpide 0 :nimi-fi]
+                  "C45" [:huomiot :lammitys :toimenpide 1 :nimi-fi]
+                  "C46" [:huomiot :lammitys :toimenpide 2 :nimi-fi]
+                  "C49" [:huomiot :lammitys :toimenpide 0 :lampo]
+                  "D49" [:huomiot :lammitys :toimenpide 0 :sahko]
+                  "E49" [:huomiot :lammitys :toimenpide 0 :jaahdytys]
+                  "F49" [:huomiot :lammitys :toimenpide 0 :eluvun-muutos]
+                  "C50" [:huomiot :lammitys :toimenpide 1 :lampo]
+                  "D50" [:huomiot :lammitys :toimenpide 1 :sahko]
+                  "E50" [:huomiot :lammitys :toimenpide 1 :jaahdytys]
+                  "F50" [:huomiot :lammitys :toimenpide 1 :eluvun-muutos]
+                  "C51" [:huomiot :lammitys :toimenpide 2 :lampo]
+                  "D51" [:huomiot :lammitys :toimenpide 2 :sahko]
+                  "E51" [:huomiot :lammitys :toimenpide 2 :jaahdytys]
+                  "F51" [:huomiot :lammitys :toimenpide 2 :eluvun-muutos]}
+               6 {"B3" [:huomiot :iv-ilmastointi :teksti-fi]
+                  "C11" [:huomiot :iv-ilmastointi :toimenpide 0 :nimi-fi]
+                  "C12" [:huomiot :iv-ilmastointi :toimenpide 1 :nimi-fi]
+                  "C13" [:huomiot :iv-ilmastointi :toimenpide 2 :nimi-fi]
+                  "C16" [:huomiot :iv-ilmastointi :toimenpide 0 :lampo]
+                  "D16" [:huomiot :iv-ilmastointi :toimenpide 0 :sahko]
+                  "E16" [:huomiot :iv-ilmastointi :toimenpide 0 :jaahdytys]
+                  "F16" [:huomiot :iv-ilmastointi :toimenpide 0 :eluvun-muutos]
+                  "C17" [:huomiot :iv-ilmastointi :toimenpide 1 :lampo]
+                  "D17" [:huomiot :iv-ilmastointi :toimenpide 1 :sahko]
+                  "E17" [:huomiot :iv-ilmastointi :toimenpide 1 :jaahdytys]
+                  "F17" [:huomiot :iv-ilmastointi :toimenpide 1 :eluvun-muutos]
+                  "C18" [:huomiot :iv-ilmastointi :toimenpide 2 :lampo]
+                  "D18" [:huomiot :iv-ilmastointi :toimenpide 2 :sahko]
+                  "E18" [:huomiot :iv-ilmastointi :toimenpide 2 :jaahdytys]
+                  "F18" [:huomiot :iv-ilmastointi :toimenpide 2 :eluvun-muutos]
+
+                  "B20" [:huomiot :valaistus-muut :teksti-fi]
+                  "C28" [:huomiot :valaistus-muut :toimenpide 0 :nimi-fi]
+                  "C29" [:huomiot :valaistus-muut :toimenpide 1 :nimi-fi]
+                  "C30" [:huomiot :valaistus-muut :toimenpide 2 :nimi-fi]
+                  "C33" [:huomiot :valaistus-muut :toimenpide 0 :lampo]
+                  "D33" [:huomiot :valaistus-muut :toimenpide 0 :sahko]
+                  "E33" [:huomiot :valaistus-muut :toimenpide 0 :jaahdytys]
+                  "F33" [:huomiot :valaistus-muut :toimenpide 0 :eluvun-muutos]
+                  "C34" [:huomiot :valaistus-muut :toimenpide 1 :lampo]
+                  "D34" [:huomiot :valaistus-muut :toimenpide 1 :sahko]
+                  "E34" [:huomiot :valaistus-muut :toimenpide 1 :jaahdytys]
+                  "F34" [:huomiot :valaistus-muut :toimenpide 1 :eluvun-muutos]
+                  "C35" [:huomiot :valaistus-muut :toimenpide 2 :lampo]
+                  "D35" [:huomiot :valaistus-muut :toimenpide 2 :sahko]
+                  "E35" [:huomiot :valaistus-muut :toimenpide 2 :jaahdytys]
+                  "F35" [:huomiot :valaistus-muut :toimenpide 2 :eluvun-muutos]
+
+                  "B37" [:huomiot :suositukset-fi]}
+               7 {"B3" [:lisamerkintoja-fi]}})
 
 (defn fill-xlsx-template [energiatodistus]
   (with-open [is (-> xlsx-template-path io/resource io/input-stream)]
