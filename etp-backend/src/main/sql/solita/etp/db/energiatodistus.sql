@@ -12,13 +12,30 @@ update energiatodistus set tila = 'valmis' where id = :id
 delete from energiatodistus where tila = 'luonnos' and id = :id
 
 -- name: select-energiatodistus
-select id, tila, laatija_id "laatija-id", data from energiatodistus where id = :id
+select energiatodistus.id, energiatodistus.tila,
+       fullname(kayttaja.*) "laatija-fullname",
+       energiatodistus.data
+from energiatodistus
+  inner join laatija on laatija.id = energiatodistus.laatija_id
+  inner join kayttaja on kayttaja.id = laatija.kayttaja
+where energiatodistus.id = :id
 
 -- name: select-all-energiatodistukset
-select id, tila, laatija_id "laatija-id", data from energiatodistus
+select energiatodistus.id, energiatodistus.tila,
+  fullname(kayttaja.*) "laatija-fullname",
+  energiatodistus.data
+from energiatodistus
+  inner join laatija on laatija.id = energiatodistus.laatija_id
+  inner join kayttaja on kayttaja.id = laatija.kayttaja
 
 -- name: select-all-luonnos-energiatodistukset
-select id, tila, laatija_id "laatija-id", data from energiatodistus where tila = 'luonnos'
+select energiatodistus.id, energiatodistus.tila,
+  fullname(kayttaja.*) "laatija-fullname",
+  energiatodistus.data
+from energiatodistus
+  inner join laatija on laatija.id = energiatodistus.laatija_id
+  inner join kayttaja on kayttaja.id = laatija.kayttaja
+where tila = 'luonnos'
 
 -- name: select-kayttotarkoitusluokat-by-versio
 select id, label_fi "label-fi", label_sv "label-sv", deleted
