@@ -19,11 +19,14 @@
 (def coerce-whoami (coerce/coercer kayttaja-laatija-schema/Whoami
                                    json/json-coercions))
 
-(defn find-whoami [db email cognitoid]
-  (->> {:email email :cognitoid cognitoid}
-       (kayttaja-laatija-db/select-whoami db)
-       (map coerce-whoami)
-       first))
+(defn find-whoami
+  ([db email]
+   (find-whoami db email nil))
+  ([db email cognitoid]
+   (->> {:email email :cognitoid cognitoid}
+        (kayttaja-laatija-db/select-whoami db)
+        (map coerce-whoami)
+        first)))
 
 (defn- upsert-kayttaja-laatija! [db {:keys [henkilotunnus] :as kayttaja-laatija}]
   "Upserts käyttäjä and laatija WITHOUT transaction."
