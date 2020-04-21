@@ -6,15 +6,24 @@
             [solita.etp.schema.common :as common-schema]
             [solita.etp.api.response :as api-response]))
 
-(def routes
+(def energiatodistus-2018-post
+  {:summary    "Lisää luonnostilaisen energiatodistuksen"
+   :parameters {:body energiatodistus-schema/EnergiatodistusSave2018}
+   :responses  {201 {:body common-schema/Id}}
+   :handler    (fn [{:keys [db whoami parameters uri]}]
+                 (api-response/created
+                  uri
+                  (energiatodistus-service/add-energiatodistus! db whoami (:body parameters))))})
+
+(def basic-routes
   [["/energiatodistukset/2018"
     [""
-     {:post {:summary    "Lisää luonnostilaisen energiatodistuksen"
-             :parameters {:body energiatodistus-schema/EnergiatodistusSave2018}
-             :responses  {201 {:body common-schema/Id}}
-             :handler    (fn [{:keys [db whoami parameters uri]}]
-                           (api-response/created uri
-                              (energiatodistus-service/add-energiatodistus! db whoami (:body parameters))))}}]
+     {:post energiatodistus-2018-post}]]])
+
+(def private-routes
+  [["/energiatodistukset/2018"
+    [""
+     {:post energiatodistus-2018-post}]
     ["/:id"
      [""
       {:get {:summary    "Hae energiatodistus"

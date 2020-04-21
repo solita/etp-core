@@ -64,7 +64,9 @@
             (tag "Yritys API" yritys-api/routes)
             (tag "Laatijat API" laatija-api/routes)
             (tag "Geo API" geo-api/routes)
-            (tag "Energiatodistus API" energiatodistus-api/routes))]])
+            (tag "Energiatodistus API" energiatodistus-api/private-routes))]
+   ["/basic"
+    (concat (tag "Energiatodistus API" energiatodistus-api/basic-routes))]])
 
 (def route-opts
   {;; Uncomment line below to see diffs of requests in middleware chain
