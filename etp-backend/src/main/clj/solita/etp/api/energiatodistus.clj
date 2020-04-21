@@ -17,7 +17,8 @@
                   (energiatodistus-service/add-energiatodistus! db whoami (:body parameters))))})
 
 (def external-routes
-  [["/energiatodistukset/2018" {:middleware [[security/wrap-whoami-from-basic-auth]]}
+  [["/energiatodistukset/2018" {:middleware [[security/wrap-whoami-from-basic-auth]
+                                             [security/wrap-access]]}
     [""
      {:post energiatodistus-2018-post}]]])
 
