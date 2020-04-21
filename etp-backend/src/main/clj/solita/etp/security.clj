@@ -1,6 +1,7 @@
 (ns solita.etp.security
   (:require [clojure.tools.logging :as log]
             [solita.etp.jwt :as jwt]
+            [solita.etp.basic-auth :as basic-auth]
             [solita.etp.api.response :as response]
             [solita.etp.service.kayttaja-laatija :as kayttaja-laatija-service]
             [solita.etp.service.rooli :as rooli-service]))
@@ -25,8 +26,14 @@
           response/forbidden)))))
 
 (defn wrap-whoami-from-basic-auth [handler]
-  (fn [req]
-    (handler req)))
+  (fn [{:keys [db] :as req}]
+    (let [{:keys [id password]} (basic-auth/req->id-and-password req)
+          whoami (kayttaja-laatija-service/find-whoami db id)]
+      (if whoami
+        (handler (assoc req :whoami whoami))
+        (do
+          (log/error "Unable to find käyttäjä with Basic Auth")
+          response/forbidden)))))
 
 (defn wrap-access [handler]
   (fn [{:keys [request-method whoami] :as req}]
