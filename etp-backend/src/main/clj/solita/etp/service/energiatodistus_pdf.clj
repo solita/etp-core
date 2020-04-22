@@ -66,7 +66,7 @@
                   ;; TODO Tämän rakennuksen energiatehokkuusluokka
 
                   ;; TODO is this correct?
-                  "C38" [:huomiot :suositukset-fi]}
+                  "C38" [:perustiedot :keskeiset-suositukset-fi]}
                2 {
                   ;; TODO rakennuksen käyttötarkoitusluokka
 
