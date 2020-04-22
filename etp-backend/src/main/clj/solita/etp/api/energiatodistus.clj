@@ -44,8 +44,8 @@
                           404 {:body schema/Str}}
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
                            (api-response/put-response
-                             (energiatodistus-service/update-energiatodistus-when-luonnos! db id (:body parameters))
-                             (str "Energiatodistus " id " does not exists.")))}}]
+                             (energiatodistus-service/update-energiatodistus-luonnos! db id (:body parameters))
+                             (str "Energiatodistus luonnos " id " does not exists.")))}}]
      ["/pdf"
       {:get {:summary    "Lataa energiatodistus PDF-tiedostona"
              :parameters {:path {:id common-schema/Key}}

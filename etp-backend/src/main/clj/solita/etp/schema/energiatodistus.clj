@@ -225,7 +225,6 @@
   "Energiatodistus schema contains basic information about persistent energiatodistus"
   (assoc
     (merge common-schema/Id EnergiatodistusSave2018)
-    :tila (schema/enum "luonnos" "valmis")
     :laatija-fullname schema/Str))
 
 (def Alakayttotarkoitusluokka
