@@ -1,9 +1,9 @@
-(ns solita.etp.jwt-security-test
+(ns solita.etp.jwt-test
   (:require [clojure.test :as t]
             [clojure.java.io :as io]
             [buddy.core.keys :as keys]
             [solita.etp.service.json :as json]
-            [solita.etp.jwt-security :as jwt-security]))
+            [solita.etp.jwt :as jwt]))
 
 ;; It would be possible to just create a jwt for tests with buddy. However,
 ;; would that actually test anything really? For this reason the token in
@@ -52,35 +52,33 @@ zI6qYxXKEuxvD4MQFVc90/nB+nNLVQjDCfY91p/Ty0VjPIenVMV99QIDAQAB
 (def jwks (-> ".well-known/jwks.json" io/resource slurp json/read-value))
 
 (t/deftest public-key-from-jwks-test
-  (t/is (nil? (jwt-security/public-key-from-jwks jwks "nonexisting-kid")))
+  (t/is (nil? (jwt/public-key-from-jwks jwks "nonexisting-kid")))
   (t/is (= (-> jwks
-               (jwt-security/public-key-from-jwks "test-kid")
+               (jwt/public-key-from-jwks "test-kid")
                .getPublicExponent)
            65537)))
 
 (t/deftest verified-jwt-payload-test
-  (t/is (nil? (jwt-security/verified-jwt-payload nil public-key)))
-  (t/is (nil? (jwt-security/verified-jwt-payload ok-jwt nil)))
+  (t/is (nil? (jwt/verified-jwt-payload nil public-key)))
+  (t/is (nil? (jwt/verified-jwt-payload ok-jwt nil)))
   (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
                           #"Token is expired \(1583020800\)"
-                          (jwt-security/verified-jwt-payload expired-jwt
-                                                             public-key)))
+                          (jwt/verified-jwt-payload expired-jwt public-key)))
   (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
                           #"Message seems corrupt or manipulated"
-                          (jwt-security/verified-jwt-payload ok-jwt
-                                                             wrong-public-key)))
-  (t/is (= (jwt-security/verified-jwt-payload ok-jwt public-key)
+                          (jwt/verified-jwt-payload ok-jwt wrong-public-key)))
+  (t/is (= (jwt/verified-jwt-payload ok-jwt public-key)
            ok-jwt-payload)))
 
 (t/deftest alb-headers-test
-  (t/is (nil? (jwt-security/alb-headers
+  (t/is (nil? (jwt/alb-headers
                {:headers {"x-amzn-oidc-identity" "123"}})))
-  (t/is (nil? (jwt-security/alb-headers
+  (t/is (nil? (jwt/alb-headers
                {:headers {"x-amzn-oidc-accesstoken" "abc"}})))
-  (t/is (nil? (jwt-security/alb-headers
+  (t/is (nil? (jwt/alb-headers
                {:headers {"x-amzn-oidc-identity" "123"
                           "x-amzn-oidc-accesstoken" "abc"}})))
-  (t/is (= (jwt-security/alb-headers
+  (t/is (= (jwt/alb-headers
             {:headers {"x-amzn-oidc-identity" "123"
                        "x-amzn-oidc-data" "xyz"
                        "x-amzn-oidc-accesstoken" "abc"}})
