@@ -23,7 +23,14 @@
      {:post energiatodistus-2018-post}]]])
 
 (def private-routes
-  [["/energiatodistukset/2018"
+  [["/energiatodistukset"
+    {:get {:summary    "Hae laatijan energiatodistukset"
+           :parameters {:query {:laatija-id common-schema/Key}}
+           :responses  {200 {:body [energiatodistus-schema/Energiatodistus2018]}}
+           :handler    (fn [{{{:keys [laatija-id]} :query} :parameters :keys [db]}]
+                         (r/response
+                           (energiatodistus-service/find-energiatodistukset-by-laatija db laatija-id)))}}]
+   ["/energiatodistukset/2018"
     [""
      {:post energiatodistus-2018-post}]
     ["/:id"
