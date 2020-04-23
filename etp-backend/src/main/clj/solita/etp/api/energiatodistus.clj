@@ -1,5 +1,6 @@
 (ns solita.etp.api.energiatodistus
   (:require [ring.util.response :as r]
+            [reitit.ring.schema :as reitit-schema]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [schema.core :as schema]
@@ -44,7 +45,13 @@
                            (api-response/pdf-response
                             (energiatodistus-service/find-energiatodistus-pdf db id)
                             (str "energiatodistus2018-" id ".pdf")
-                            (str "Energiatodistus " id " does not exists.")))}}]]]
+                            (str "Energiatodistus " id " does not exists.")))}}]
+     ["/liitteet"
+      {:post {:summary "Pohja liitteiden lisäämiseksi energitodistukselle. Ei tee toistaiseksi mitään."
+              :parameters {:multipart {:file reitit-schema/TempFilePart}}
+              :responses {200 {:body nil}}
+              :handler (fn [{{{:keys [file]} :multipart} :parameters}]
+                         (println file))}}]]]
    ["/kielisyys"
     {:get {:summary   "Hae energiatodistuksen kielisyysluokittelu"
            :responses {200 {:body [common-schema/Luokittelu]}}
