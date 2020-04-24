@@ -49,4 +49,3 @@
 (t/deftest create-energiatodistus-and-delete-test
   (let [id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))]
     (service/delete-energiatodistus-luonnos! ts/*db* id)))
-
