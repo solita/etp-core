@@ -56,7 +56,16 @@
                            (api-response/pdf-response
                             (energiatodistus-pdf-service/find-energiatodistus-pdf db id)
                             (str "energiatodistus2018-" id ".pdf")
-                            (str "Energiatodistus " id " does not exists.")))}}]]]
+                            (str "Energiatodistus " id " does not exists.")))}}]
+     ["/digest"
+      {:get {:summary    "PDF-tiedoston digest allekirjoitusta varten"
+             :parameters {:path {:id common-schema/Key}}
+             :responses  {200 {:body nil}
+                          404 {:body schema/Str}}
+              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
+                            (api-response/get-response
+                             (energiatodistus-pdf-service/find-energiatodistus-digest db id)
+                             (str "Energiatodistus " id " does not exists.")))}}]]]
    ["/kielisyys"
     {:get {:summary   "Hae energiatodistuksen kielisyysluokittelu"
            :responses {200 {:body [common-schema/Luokittelu]}}

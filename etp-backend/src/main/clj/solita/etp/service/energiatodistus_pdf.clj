@@ -3,6 +3,7 @@
             [clojure.java.io :as io]
             [clojure.java.shell :as shell]
             [clojure.tools.logging :as log]
+            [puumerkki.pdf :as puumerkki]
             [solita.common.xlsx :as xlsx]
             [solita.etp.service.energiatodistus :as energiatodistus-service]))
 
@@ -413,3 +414,12 @@
           is (io/input-stream pdf-path)]
       (io/delete-file pdf-path)
       is)))
+
+(defn find-energiatodistus-digest [db id]
+  (when-let [{:keys [laatija-fullname] :as energiatodistus}
+             (energiatodistus-service/find-energiatodistus db id)]
+    (let [pdf-path (generate energiatodistus)
+          signable-pdf-path (puumerkki/add-signature-space pdf-path laatija-fullname)
+          ;; TODO signable-pdf should be stored here
+          signable-pdf-data (puumerkki/read-file signable-pdf-path)]
+      (puumerkki/compute-base64-pkcs signable-pdf-data))))
