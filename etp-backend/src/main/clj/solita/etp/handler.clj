@@ -19,7 +19,7 @@
             [solita.etp.api.laatija :as laatija-api]
             [solita.etp.api.geo :as geo-api]
             [solita.etp.api.energiatodistus :as energiatodistus-api]
-            [solita.etp.jwt-security :as jwt-security]
+            [solita.etp.security :as security]
             [solita.etp.exception :as exception]
             [solita.common.map :as map]))
 
@@ -57,14 +57,16 @@
 (def routes
   ["/api"
    system-routes
-   ["/private" {:middleware [[jwt-security/wrap-jwt-payloads]
-                             [jwt-security/wrap-whoami]
-                             [jwt-security/wrap-access]]}
+   ["/private" {:middleware [[security/wrap-jwt-payloads]
+                             [security/wrap-whoami-from-jwt-payloads]
+                             [security/wrap-access]]}
     (concat (tag "Käyttäjä API" kayttaja-api/routes)
             (tag "Yritys API" yritys-api/routes)
             (tag "Laatijat API" laatija-api/routes)
             (tag "Geo API" geo-api/routes)
-            (tag "Energiatodistus API" energiatodistus-api/routes))]])
+            (tag "Energiatodistus API" energiatodistus-api/private-routes))]
+   ["/external"
+    (concat (tag "Energiatodistus API" energiatodistus-api/external-routes))]])
 
 (def route-opts
   {;; Uncomment line below to see diffs of requests in middleware chain

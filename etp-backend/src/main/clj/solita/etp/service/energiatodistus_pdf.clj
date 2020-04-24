@@ -3,7 +3,9 @@
             [clojure.java.io :as io]
             [clojure.java.shell :as shell]
             [clojure.tools.logging :as log]
-            [solita.common.xlsx :as xlsx]))
+            [puumerkki.pdf :as puumerkki]
+            [solita.common.xlsx :as xlsx]
+            [solita.etp.service.energiatodistus :as energiatodistus-service]))
 
 (def xlsx-template-path "energiatodistus-template.xlsx")
 (def sheet-count 8)
@@ -66,7 +68,7 @@
                   ;; TODO Tämän rakennuksen energiatehokkuusluokka
 
                   ;; TODO is this correct?
-                  "C38" [:huomiot :suositukset-fi]}
+                  "C38" [:perustiedot :keskeiset-suositukset-fi]}
                2 {
                   ;; TODO rakennuksen käyttötarkoitusluokka
 
@@ -401,8 +403,23 @@
 
 (defn generate [energiatodistus]
   (let [xlsx-path (fill-xlsx-template energiatodistus)
-        pdf-path (xlsx->pdf xlsx-path)
-        is (io/input-stream pdf-path)]
+        pdf-path (xlsx->pdf xlsx-path)]
     (io/delete-file xlsx-path)
-    (io/delete-file pdf-path)
-    is))
+    pdf-path))
+
+;; TODO this should load signed PDF if it exists and only generate if necessary
+(defn find-energiatodistus-pdf [db id]
+  (when-let [energiatodistus (energiatodistus-service/find-energiatodistus db id)]
+    (let [pdf-path (generate energiatodistus)
+          is (io/input-stream pdf-path)]
+      (io/delete-file pdf-path)
+      is)))
+
+(defn find-energiatodistus-digest [db id]
+  (when-let [{:keys [laatija-fullname] :as energiatodistus}
+             (energiatodistus-service/find-energiatodistus db id)]
+    (let [pdf-path (generate energiatodistus)
+          signable-pdf-path (puumerkki/add-signature-space pdf-path laatija-fullname)
+          ;; TODO signable-pdf should be stored here
+          signable-pdf-data (puumerkki/read-file signable-pdf-path)]
+      (puumerkki/compute-base64-pkcs signable-pdf-data))))

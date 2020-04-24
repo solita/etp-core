@@ -111,13 +111,9 @@
    :takka             MaaraTuotto
    :ilmanlampopumppu  MaaraTuotto})
 
-(def SisKuorma
-  {:selite-fi         common-schema/String35
-   :selite-sv         common-schema/String35
-   :kayttoaste        (common-schema/FloatBase 0.1 1.0)
-   :henkilot          (common-schema/FloatBase 1.0 14.0)
-   :kuluttajalaitteet (common-schema/FloatBase 0.0 12.0)
-   :valaistus         (common-schema/FloatBase 0.0 19.0)})
+(defn SisKuorma [mininclusive maxinclusive]
+  {:kayttoaste        (common-schema/FloatBase 0.1 1.0)
+   :lampokuorma       (common-schema/FloatBase mininclusive maxinclusive)})
 
 (def Lahtotiedot
   {:lammitetty-nettoala  common-schema/FloatPos
@@ -128,7 +124,11 @@
    :jaahdytysjarjestelma {:jaahdytyskauden-painotettu-kylmakerroin (common-schema/FloatBase 1.0 10.0)}
    :lkvn-kaytto          {:kulutus-per-nelio common-schema/FloatPos
                           :vuosikulutus      common-schema/FloatPos}
-   :sis-kuorma           [SisKuorma]})
+   :sis-kuorma {
+     :henkilot          (SisKuorma 1.0 14.0)
+     :kuluttajalaitteet (SisKuorma 0.0 12.0)
+     :valaistus         (SisKuorma 0.0 19.0)}
+    })
 
 (def SahkoLampo
   {:sahko common-schema/FloatPos
@@ -225,7 +225,6 @@
   "Energiatodistus schema contains basic information about persistent energiatodistus"
   (assoc
     (merge common-schema/Id EnergiatodistusSave2018)
-    :tila (schema/enum "luonnos" "valmis")
     :laatija-fullname schema/Str))
 
 (def Alakayttotarkoitusluokka

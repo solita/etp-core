@@ -2,7 +2,6 @@
   (:require [solita.etp.db :as db]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.json :as json]
-            [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf]
             [schema.coerce :as coerce]
             [clojure.java.jdbc :as jdbc]))
 
@@ -15,40 +14,20 @@
 (defn find-energiatodistus [db id]
   (first (map (comp coerce-energiatodistus json/merge-data) (energiatodistus-db/select-energiatodistus db {:id id}))))
 
-;; TODO this should load signed PDF if it exists and only generate if necessary
-(defn find-energiatodistus-pdf [db id]
-  (when-let [energiatodistus (find-energiatodistus db id)]
-    (energiatodistus-pdf/generate energiatodistus)))
-
-(defn find-all-energiatodistukset [db]
-  (map (comp coerce-energiatodistus json/merge-data) (energiatodistus-db/select-all-energiatodistukset db)))
-
-(defn find-all-luonnos-energiatodistukset [db]
-  (map (comp coerce-energiatodistus json/merge-data) (energiatodistus-db/select-all-luonnos-energiatodistukset db)))
-
-(defn energiatodistus-luonnos? [db id]
-  (= "luonnos" (:tila (find-energiatodistus db id))))
+(defn find-energiatodistukset-by-laatija [db laatija-id]
+  (map (comp coerce-energiatodistus json/merge-data)
+       (energiatodistus-db/select-energiatodistukset-by-laatija db {:laatija-id laatija-id})))
 
 (defn add-energiatodistus! [db whoami energiatodistus]
   (:id (energiatodistus-db/insert-energiatodistus<!
          db (assoc (json/data-db-row energiatodistus) :laatija-id (:laatija whoami)))))
 
-(defn update-energiatodistus-when-luonnos! [db id energiatodistus]
-  (jdbc/with-db-transaction
-    [db db]
-    (if (energiatodistus-luonnos? db id)
-      (energiatodistus-db/update-energiatodistus-when-luonnos! db {:id id :data (json/write-value-as-string energiatodistus)})
-      (throw (IllegalStateException. "Only \"luonnos\" is allowed to update")))))
+(defn update-energiatodistus-luonnos! [db id energiatodistus]
+  (energiatodistus-db/update-energiatodistus-luonnos!
+    db {:id id :data (json/write-value-as-string energiatodistus)}))
 
-(defn update-energiatodistus-as-valmis! [db id]
-  (energiatodistus-db/update-energiatodistus-as-valmis! db {:id id}))
-
-(defn delete-energiatodistus-when-luonnos! [db id]
-  (jdbc/with-db-transaction
-    [db db]
-    (if (energiatodistus-luonnos? db id)
-      (energiatodistus-db/delete-energiatodistus-when-luonnos! db {:id id})
-      (throw (IllegalStateException. "Only \"luonnos\" is allowed to delete")))))
+(defn delete-energiatodistus-luonnos! [db id]
+  (energiatodistus-db/delete-energiatodistus-luonnos! db {:id id}))
 
 ;;
 ;; Energiatodistuksen kielisyys
