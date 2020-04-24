@@ -3,7 +3,8 @@
             [clojure.java.io :as io]
             [clojure.java.shell :as shell]
             [clojure.tools.logging :as log]
-            [solita.common.xlsx :as xlsx]))
+            [solita.common.xlsx :as xlsx]
+            [solita.etp.service.energiatodistus :as energiatodistus-service]))
 
 (def xlsx-template-path "energiatodistus-template.xlsx")
 (def sheet-count 8)
@@ -401,8 +402,14 @@
 
 (defn generate [energiatodistus]
   (let [xlsx-path (fill-xlsx-template energiatodistus)
-        pdf-path (xlsx->pdf xlsx-path)
-        is (io/input-stream pdf-path)]
+        pdf-path (xlsx->pdf xlsx-path)]
     (io/delete-file xlsx-path)
-    (io/delete-file pdf-path)
-    is))
+    pdf-path))
+
+;; TODO this should load signed PDF if it exists and only generate if necessary
+(defn find-energiatodistus-pdf [db id]
+  (when-let [energiatodistus (energiatodistus-service/find-energiatodistus db id)]
+    (let [pdf-path (generate energiatodistus)
+          is (io/input-stream pdf-path)]
+      (io/delete-file pdf-path)
+      is)))
