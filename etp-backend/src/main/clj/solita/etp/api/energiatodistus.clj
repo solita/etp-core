@@ -14,7 +14,8 @@
    :handler    (fn [{:keys [db whoami parameters uri]}]
                  (api-response/created
                   uri
-                  (energiatodistus-service/add-energiatodistus! db whoami (:body parameters))))})
+                  (energiatodistus-service/add-energiatodistus!
+                    db whoami 2018 (:body parameters))))})
 
 (def external-routes
   [["/energiatodistukset/2018" {:middleware [[security/wrap-whoami-from-basic-auth]
@@ -25,8 +26,8 @@
 (def private-routes
   [["/energiatodistukset"
     {:get {:summary    "Hae laatijan energiatodistukset"
-           :responses  {200 {:body [energiatodistus-schema/Energiatodistus2018]}}
-           :handler    (fn [{{{:keys [laatija-id]} :query} :parameters :keys [db whoami]}]
+           :responses  {200 {:body [energiatodistus-schema/Energiatodistus]}}
+           :handler    (fn [{:keys [db whoami]}]
                          (r/response (energiatodistus-service/find-energiatodistukset-by-laatija
                                        db (:laatija whoami))))}}]
    ["/energiatodistukset/2018"
