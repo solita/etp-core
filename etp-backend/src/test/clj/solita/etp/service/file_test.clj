@@ -27,20 +27,18 @@
     (t/is (= (-> file-info :path io/file service/file->byte-array type str)
              "class [B"))))
 
-(t/deftest add-file-and-find-test
-  (service/add-file-from-bytes ts/*db*
-                               (:id file-info-1)
-                               (:filename file-info-1)
-                               (:bytes file-info-1))
-  (service/add-file-from-file ts/*db*
-                              (:id file-info-2)
-                              (-> file-info-2 :path io/file))
-  (service/add-file-from-input-stream ts/*db*
-                                      (:id file-info-3)
-                                      (:filename file-info-3)
-                                      (-> file-info-3
-                                          :path
-                                          io/input-stream))
+(t/deftest upsert-file-and-find-test
+  (service/upsert-file-from-bytes ts/*db*
+                                  (:id file-info-1)
+                                  (:filename file-info-1)
+                                  (:bytes file-info-1))
+  (service/upsert-file-from-file ts/*db*
+                                 (:id file-info-2)
+                                 (-> file-info-2 :path io/file))
+  (service/upsert-file-from-input-stream ts/*db*
+                                         (:id file-info-3)
+                                         (:filename file-info-3)
+                                         (-> file-info-3 :path io/input-stream))
   (doseq [file-info [file-info-1 file-info-2 file-info-3]
           :let [{:keys [filename content]} (service/find-file ts/*db*
                                                               (:id file-info))]]
@@ -49,3 +47,19 @@
     (t/is (= (into [] (:bytes file-info))
              (into [] (.readAllBytes content)))))
   (t/is (nil? (service/find-file ts/*db* "nonexisting"))))
+
+(t/deftest rewrite-test
+  (let [id (:id file-info-1)]
+    (service/upsert-file-from-bytes ts/*db*
+                                 id
+                                 (:filename file-info-1)
+                                 (:bytes file-info-1))
+    (service/upsert-file-from-input-stream ts/*db*
+                                        id
+                                        (:filename file-info-2)
+                                        (-> file-info-2 :path io/input-stream))
+    (let [{:keys [filename content]} (service/find-file ts/*db* id)]
+      (t/is (= (:filename file-info-2) filename))
+      (t/is (true? (instance? java.io.InputStream content)))
+      (t/is (= (into [] (:bytes file-info-2))
+               (into [] (.readAllBytes content)))))))
