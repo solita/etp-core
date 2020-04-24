@@ -6,33 +6,42 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(def file-infos
-  [{:id "id-1"
-    :filename "user.clj"
-    :path "src/main/clj/user.clj"
-    :bytes (-> "src/main/clj/user.clj" io/input-stream .readAllBytes)}
-   {:id "id-2"
-    :filename "deps.edn"
-    :path "deps.edn"
-    :bytes (-> "deps.edn" io/input-stream .readAllBytes)}])
+(def file-info-1 {:id "id-1"
+                  :filename "some-text.txt"
+                  :bytes (byte-array (map byte "Some text"))})
+
+(def file-info-2 {:id "id-2"
+                  :filename "user.clj"
+                  :path "src/main/clj/user.clj"
+                  :bytes (-> "src/main/clj/user.clj"
+                             io/input-stream
+                             .readAllBytes)})
+
+(def file-info-3 {:id "id-3"
+                  :filename "deps.edn"
+                  :path "deps.edn"
+                  :bytes (-> "deps.edn" io/input-stream .readAllBytes)})
 
 (t/deftest file->byte-array-test
-  (doseq [file-info file-infos]
+  (doseq [file-info [file-info-2 file-info-3]]
     (t/is (= (-> file-info :path io/file service/file->byte-array type str)
              "class [B"))))
 
 (t/deftest add-file-and-find-test
+  (service/add-file-from-bytes ts/*db*
+                               (:id file-info-1)
+                               (:filename file-info-1)
+                               (:bytes file-info-1))
   (service/add-file-from-file ts/*db*
-                              (-> file-infos first :id)
-                              (-> file-infos first :path io/file))
+                              (:id file-info-2)
+                              (-> file-info-2 :path io/file))
   (service/add-file-from-input-stream ts/*db*
-                                      (-> file-infos second :id)
-                                      (-> file-infos second :filename)
-                                      (-> file-infos
-                                          second
+                                      (:id file-info-3)
+                                      (:filename file-info-3)
+                                      (-> file-info-3
                                           :path
                                           io/input-stream))
-  (doseq [file-info file-infos
+  (doseq [file-info [file-info-1 file-info-2 file-info-3]
           :let [{:keys [filename content]} (service/find-file ts/*db*
                                                               (:id file-info))]]
     (t/is (= (:filename file-info) filename))
