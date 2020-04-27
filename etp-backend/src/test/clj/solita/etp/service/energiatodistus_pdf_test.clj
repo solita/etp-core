@@ -29,3 +29,7 @@
     (t/is (str/ends-with? file-path ".pdf"))
     (t/is (-> file-path io/as-file .exists true?))
     (io/delete-file file-path)))
+
+(t/deftest pdf-file-id-test
+  (t/is (nil? (service/pdf-file-id nil)))
+  (t/is (= (service/pdf-file-id 12345) "energiatodistus-12345")))
