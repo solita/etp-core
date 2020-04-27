@@ -27,7 +27,7 @@
 
 (defn add-energiatodistus! [energiatodistus]
   (let [laatija {:laatija (add-laatija!)}]
-    (service/add-energiatodistus! ts/*db* laatija energiatodistus)))
+    (service/add-energiatodistus! ts/*db* laatija 2018 energiatodistus)))
 
 (defn find-energiatodistus [id]
   (let [et (service/find-energiatodistus ts/*db* id)]
@@ -37,14 +37,14 @@
 (t/deftest add-and-find-energiatodistus-test
   (doseq [energiatodistus (repeatedly 100 #(g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))
           :let [id (add-energiatodistus! energiatodistus)]]
-    (t/is (= (assoc energiatodistus :id id) (find-energiatodistus id)))))
+    (t/is (= (assoc energiatodistus :id id :versio 2018) (find-energiatodistus id)))))
 
 (t/deftest update-energiatodistus-test
   (let [id                     (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))
         update-energiatodistus (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators)]
 
     (service/update-energiatodistus-luonnos! ts/*db* id update-energiatodistus)
-    (t/is (= (assoc update-energiatodistus :id id) (find-energiatodistus id)))))
+    (t/is (= (assoc update-energiatodistus :id id :versio 2018) (find-energiatodistus id)))))
 
 (t/deftest create-energiatodistus-and-delete-test
   (let [id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))]

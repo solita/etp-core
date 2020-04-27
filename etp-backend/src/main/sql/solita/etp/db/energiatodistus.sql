@@ -1,6 +1,6 @@
 -- name: insert-energiatodistus<!
-insert into energiatodistus (laatija_id, data)
-values (:laatija-id, :data :: JSONB) returning id
+insert into energiatodistus (versio, laatija_id, data)
+values (:versio, :laatija-id, :data :: JSONB) returning id
 
 -- name: update-energiatodistus-luonnos!
 update energiatodistus set data = :data :: JSONB
@@ -11,7 +11,7 @@ delete from energiatodistus
 where allekirjoitusaika is null and id = :id
 
 -- name: select-energiatodistus
-select energiatodistus.id,
+select energiatodistus.id, energiatodistus.versio,
        fullname(kayttaja.*) "laatija-fullname",
        energiatodistus.data
 from energiatodistus
@@ -20,7 +20,7 @@ from energiatodistus
 where energiatodistus.id = :id
 
 -- name: select-energiatodistukset-by-laatija
-select energiatodistus.id,
+select energiatodistus.id, energiatodistus.versio,
   fullname(kayttaja.*) "laatija-fullname",
   energiatodistus.data
 from energiatodistus

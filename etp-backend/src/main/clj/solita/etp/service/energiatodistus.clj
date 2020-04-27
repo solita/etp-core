@@ -9,18 +9,21 @@
 (db/require-queries 'energiatodistus)
 
 ; *** Conversions from database data types ***
-(def coerce-energiatodistus (coerce/coercer energiatodistus-schema/Energiatodistus2018 json/json-coercions))
+(def coerce-energiatodistus (coerce/coercer energiatodistus-schema/Energiatodistus json/json-coercions))
 
 (defn find-energiatodistus [db id]
-  (first (map (comp coerce-energiatodistus json/merge-data) (energiatodistus-db/select-energiatodistus db {:id id}))))
+  (first (map (comp coerce-energiatodistus json/merge-data)
+              (energiatodistus-db/select-energiatodistus db {:id id}))))
 
 (defn find-energiatodistukset-by-laatija [db laatija-id]
   (map (comp coerce-energiatodistus json/merge-data)
        (energiatodistus-db/select-energiatodistukset-by-laatija db {:laatija-id laatija-id})))
 
-(defn add-energiatodistus! [db whoami energiatodistus]
+(defn add-energiatodistus! [db whoami versio energiatodistus]
   (:id (energiatodistus-db/insert-energiatodistus<!
-         db (assoc (json/data-db-row energiatodistus) :laatija-id (:laatija whoami)))))
+         db (assoc (json/data-db-row energiatodistus)
+              :versio versio
+              :laatija-id (:laatija whoami)))))
 
 (defn update-energiatodistus-luonnos! [db id energiatodistus]
   (energiatodistus-db/update-energiatodistus-luonnos!

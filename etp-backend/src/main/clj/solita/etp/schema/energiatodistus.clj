@@ -225,7 +225,17 @@
   "Energiatodistus schema contains basic information about persistent energiatodistus"
   (assoc
     (merge common-schema/Id EnergiatodistusSave2018)
-    :laatija-fullname schema/Str))
+    :laatija-fullname schema/Str
+    :versio (schema/eq 2018)))
+
+(def Energiatodistus2013 {:versio (schema/eq 2013)})
+
+(defn versio? [versio et] (-> et :versio (= versio)))
+
+(def Energiatodistus
+  (schema/conditional
+    (partial versio? 2018) Energiatodistus2018
+    (partial versio? 2013) Energiatodistus2013))
 
 (def Alakayttotarkoitusluokka
   (assoc common-schema/Luokittelu
