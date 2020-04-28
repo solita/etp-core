@@ -95,9 +95,6 @@
                                (= result :signed)
                                (r/response "Ok")
 
-                               (= result :already-signed)
-                               (api-response/conflict "Signature already exists")
-
                                (nil? result)
                                (r/not-found (str "Energiatodistus " id " does not exists.")))))}}]]]
    ["/kielisyys"
