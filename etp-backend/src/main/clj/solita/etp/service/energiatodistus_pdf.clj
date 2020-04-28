@@ -437,7 +437,7 @@
                                            signable-pdf-data)
       (io/delete-file pdf-path)
       (io/delete-file signable-pdf-path)
-      digest)))
+      {:digest digest})))
 
 ;; TODO should load energiatodistus and check if it has been already signed
 ;; or if it is in signable state
