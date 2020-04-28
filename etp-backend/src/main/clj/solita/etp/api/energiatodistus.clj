@@ -81,25 +81,25 @@
                              (energiatodistus-pdf-service/find-energiatodistus-digest db id)
                              (str "Energiatodistus " id " does not exists.")))}}]
      ["/signature"
-      {:post {:summary    "Allekirjoita energiatodistuksen PDF"
-              :parameters {:path {:id common-schema/Key}
-                           :body energiatodistus-schema/Signature}
-              :responses  {200 {:body nil}
-                           404 {:body schema/Str}}
-              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
-                            (let [result (energiatodistus-pdf-service/sign-energiatodistus-pdf
-                                          db
-                                          id
-                                          (:body parameters))]
-                              (cond
-                                (= result :signed)
-                                (r/response "Ok")
+      {:put {:summary    "Allekirjoita energiatodistuksen PDF"
+             :parameters {:path {:id common-schema/Key}
+                          :body energiatodistus-schema/Signature}
+             :responses  {200 {:body nil}
+                          404 {:body schema/Str}}
+             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
+                           (let [result (energiatodistus-pdf-service/sign-energiatodistus-pdf
+                                         db
+                                         id
+                                         (:body parameters))]
+                             (cond
+                               (= result :signed)
+                               (r/response "Ok")
 
-                                (= result :already-signed)
-                                (api-response/conflict "Signature already exists")
+                               (= result :already-signed)
+                               (api-response/conflict "Signature already exists")
 
-                                (nil? result)
-                                (r/not-found (str "Energiatodistus " id " does not exists.")))))}}]]]
+                               (nil? result)
+                               (r/not-found (str "Energiatodistus " id " does not exists.")))))}}]]]
    ["/kielisyys"
     {:get {:summary   "Hae energiatodistuksen kielisyysluokittelu"
            :responses {200 {:body [common-schema/Luokittelu]}}
