@@ -76,7 +76,9 @@
    :etela     LahtotiedotIkkuna
    :lounas    LahtotiedotIkkuna
    :lansi     LahtotiedotIkkuna
-   :luode     LahtotiedotIkkuna})
+   :luode     LahtotiedotIkkuna
+   :valokupu  LahtotiedotIkkuna
+   :katto     LahtotiedotIkkuna})
 
 (def PoistoTuloSfp
   {:poisto common-schema/FloatPos
