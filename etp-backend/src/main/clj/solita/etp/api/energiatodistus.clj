@@ -79,7 +79,24 @@
               :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
                             (api-response/get-response
                              (energiatodistus-pdf-service/find-energiatodistus-digest db id)
-                             (str "Energiatodistus " id " does not exists.")))}}]]]
+                             (str "Energiatodistus " id " does not exists.")))}}]
+     ["/signature"
+      {:put {:summary    "Allekirjoita energiatodistuksen PDF"
+             :parameters {:path {:id common-schema/Key}
+                          :body energiatodistus-schema/Signature}
+             :responses  {200 {:body nil}
+                          404 {:body schema/Str}}
+             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
+                           (let [result (energiatodistus-pdf-service/sign-energiatodistus-pdf
+                                         db
+                                         id
+                                         (:body parameters))]
+                             (cond
+                               (= result :signed)
+                               (r/response "Ok")
+
+                               (nil? result)
+                               (r/not-found (str "Energiatodistus " id " does not exists.")))))}}]]]
    ["/kielisyys"
     {:get {:summary   "Hae energiatodistuksen kielisyysluokittelu"
            :responses {200 {:body [common-schema/Luokittelu]}}

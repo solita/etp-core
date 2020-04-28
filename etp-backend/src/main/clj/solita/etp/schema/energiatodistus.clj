@@ -241,3 +241,5 @@
   (assoc common-schema/Luokittelu
     :kayttotarkoitusluokka-id common-schema/Key
     :id schema/Str))
+
+(def Signature {:signature schema/Str :chain [schema/Str]})

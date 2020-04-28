@@ -33,6 +33,9 @@
 (defn created [path id]
   (r/created (str path "/") {:id id}))
 
+(defn conflict [body]
+  {:status 409 :body body})
+
 (def forbidden {:status 403 :body "Forbidden"})
 
 (defn pdf-response [body filename not-found]

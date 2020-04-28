@@ -5,7 +5,8 @@
             [clojure.tools.logging :as log]
             [puumerkki.pdf :as puumerkki]
             [solita.common.xlsx :as xlsx]
-            [solita.etp.service.energiatodistus :as energiatodistus-service]))
+            [solita.etp.service.energiatodistus :as energiatodistus-service]
+            [solita.etp.service.file :as file-service]))
 
 (def xlsx-template-path "energiatodistus-template.xlsx")
 (def sheet-count 8)
@@ -407,9 +408,14 @@
     (io/delete-file xlsx-path)
     pdf-path))
 
+(defn pdf-file-id [id]
+  (when id (str "energiatodistus-" id)))
+
 ;; TODO this should load signed PDF if it exists and only generate if necessary
 (defn find-energiatodistus-pdf [db id]
-  (when-let [energiatodistus (energiatodistus-service/find-energiatodistus db id)]
+  (when-let [energiatodistus (energiatodistus-service/find-energiatodistus
+                              db
+                              id)]
     (let [pdf-path (generate energiatodistus)
           is (io/input-stream pdf-path)]
       (io/delete-file pdf-path)
@@ -419,7 +425,30 @@
   (when-let [{:keys [laatija-fullname] :as energiatodistus}
              (energiatodistus-service/find-energiatodistus db id)]
     (let [pdf-path (generate energiatodistus)
-          signable-pdf-path (puumerkki/add-signature-space pdf-path laatija-fullname)
-          ;; TODO signable-pdf should be stored here
-          signable-pdf-data (puumerkki/read-file signable-pdf-path)]
-      (puumerkki/compute-base64-pkcs signable-pdf-data))))
+          signable-pdf-path (puumerkki/add-signature-space
+                             pdf-path
+                             laatija-fullname)
+          signable-pdf-data (puumerkki/read-file signable-pdf-path)
+          digest (puumerkki/compute-base64-pkcs signable-pdf-data)
+          file-id (pdf-file-id id)]
+      (file-service/upsert-file-from-bytes db
+                                           file-id
+                                           (str file-id ".pdf")
+                                           signable-pdf-data)
+      (io/delete-file pdf-path)
+      (io/delete-file signable-pdf-path)
+      {:digest digest})))
+
+;; TODO should load energiatodistus and check if it has been already signed
+;; or if it is in signable state
+(defn sign-energiatodistus-pdf [db id signature-and-chain]
+  (let [file-id (pdf-file-id id)]
+    (when-let [{:keys [filename content] :as file-info}
+               (file-service/find-file db file-id)]
+      (let [content-bytes (.readAllBytes content)
+            pkcs7 (puumerkki/make-pkcs7 signature-and-chain content-bytes)]
+        (->> (puumerkki/write-signature! content-bytes pkcs7)
+             (file-service/upsert-file-from-bytes db
+                                                  file-id
+                                                  (str file-id ".pdf")))
+        :signed))))
