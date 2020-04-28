@@ -438,3 +438,17 @@
       (io/delete-file pdf-path)
       (io/delete-file signable-pdf-path)
       digest)))
+
+;; TODO should load energiatodistus and check if it has been already signed
+;; or if it is in signable state
+(defn sign-energiatodistus-pdf [db id signature-and-chain]
+  (let [file-id (pdf-file-id id)]
+    (when-let [{:keys [filename content] :as file-info}
+               (file-service/find-file db file-id)]
+      (let [content-bytes (.readAllBytes content)
+            pkcs7 (puumerkki/make-pkcs7 signature-and-chain content-bytes)]
+        (->> (puumerkki/write-signature! content-bytes pkcs7)
+             (file-service/upsert-file-from-bytes db
+                                                  file-id
+                                                  (str file-id ".pdf")))
+        :signed))))
