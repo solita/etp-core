@@ -59,28 +59,21 @@
     (service/delete-energiatodistus-luonnos! ts/*db* id)))
 
 (t/deftest start-energiatodistus-signing!-test
-  (let [id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))
-        found-before-update (find-energiatodistus id)
-        start-signing-result-1 (service/start-energiatodistus-signing! ts/*db* id)
-        found-after-update (find-energiatodistus id)
-        start-signing-result-2 (service/start-energiatodistus-signing! ts/*db* id)]
-    (t/is (-> found-before-update :allekirjoituksessaaika nil?))
-    (t/is (= start-signing-result-1 :ok))
-    (t/is (-> found-after-update :allekirjoituksessaaika nil? not))
-    (t/is (= start-signing-result-2 :already-in-signing))))
+  (let [id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))]
+    (t/is (-> (find-energiatodistus id) :allekirjoituksessaaika nil?))
+    (t/is (= (service/start-energiatodistus-signing! ts/*db* id) :ok))
+    (t/is (-> (find-energiatodistus id) :allekirjoituksessaaika nil? not))
+    (t/is (= (service/start-energiatodistus-signing! ts/*db* id) :already-in-signing))))
 
 (t/deftest stop-energiatodistus-signing!-test
-  (let [id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))
-        found-before-update-1 (find-energiatodistus id)
-        stop-signing-result-1 (service/stop-energiatodistus-signing! ts/*db* id)
-        _ (service/start-energiatodistus-signing! ts/*db* id)
-        found-before-update-2 (find-energiatodistus id)
-        stop-signing-result-2 (service/stop-energiatodistus-signing! ts/*db* id)
-        found-after-update (find-energiatodistus id)
-        stop-signing-result-3 (service/stop-energiatodistus-signing! ts/*db* id)]
-    (t/is (-> found-before-update-1 :allekirjoitusaika nil?))
-    (t/is (= stop-signing-result-1 :not-in-signing))
-    (t/is (-> found-before-update-2 :allekirjoitusaika nil?))
-    (t/is (= stop-signing-result-2 :ok))
-    (t/is (-> found-after-update :allekirjoitusaika nil? not))
-    (t/is (= stop-signing-result-3 :already-signed))))
+  (let [id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))]
+    (t/is (-> (find-energiatodistus id) :allekirjoitusaika nil?))
+    (t/is (=  (service/stop-energiatodistus-signing! ts/*db* id)
+              :not-in-signing))
+    (t/is (-> (find-energiatodistus id) :allekirjoitusaika nil?))
+    (service/start-energiatodistus-signing! ts/*db* id)
+    (t/is (= (service/stop-energiatodistus-signing! ts/*db* id)
+             :ok))
+    (t/is (-> (find-energiatodistus id) :allekirjoitusaika nil? not))
+    (t/is (=  (service/stop-energiatodistus-signing! ts/*db* id)
+              :already-signed))))
