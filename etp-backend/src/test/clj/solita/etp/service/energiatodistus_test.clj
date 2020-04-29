@@ -57,3 +57,14 @@
 (t/deftest create-energiatodistus-and-delete-test
   (let [id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))]
     (service/delete-energiatodistus-luonnos! ts/*db* id)))
+
+(t/deftest start-energiatodistus-signing!-test
+  (let [id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))
+        found-before-update (find-energiatodistus id)
+        start-signing-result-1 (service/start-energiatodistus-signing! ts/*db* id)
+        found-after-update (find-energiatodistus id)
+        start-signing-result-2 (service/start-energiatodistus-signing! ts/*db* id)]
+    (t/is (-> found-before-update :allekirjoituksessaaika nil?))
+    (t/is (= start-signing-result-1 :ok))
+    (t/is (-> found-after-update :allekirjoituksessaaika nil? not))
+    (t/is (= start-signing-result-2 :already-in-signing))))

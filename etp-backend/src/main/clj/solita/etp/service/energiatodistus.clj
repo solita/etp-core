@@ -32,6 +32,20 @@
 (defn delete-energiatodistus-luonnos! [db id]
   (energiatodistus-db/delete-energiatodistus-luonnos! db {:id id}))
 
+(defn start-energiatodistus-signing! [db id]
+  (when-let [energiatodistus (find-energiatodistus db id)]
+    (cond
+      (-> energiatodistus :allekirjoitusaika nil? not)
+      :already-signed
+
+      (-> energiatodistus :allekirjoituksessaaika nil? not)
+      :already-in-signing
+
+      :else
+      (do
+        (energiatodistus-db/update-energiatodistus-allekirjoituksessaaika! db {:id id})
+        :ok))))
+
 ;;
 ;; Energiatodistuksen kielisyys
 ;;

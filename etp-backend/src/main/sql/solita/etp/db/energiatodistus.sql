@@ -39,3 +39,8 @@ order by ordinal asc
 select id, kayttotarkoitusluokka_id "kayttotarkoitusluokka-id", label_fi "label-fi", label_sv "label-sv", deleted
 from alakayttotarkoitusluokka where versio = :versio
 order by ordinal asc
+
+-- name: update-energiatodistus-allekirjoituksessaaika!
+update energiatodistus set allekirjoituksessaaika = now()
+where allekirjoituksessaaika is null and allekirjoitusaika is null
+and id = :id
