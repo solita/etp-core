@@ -54,7 +54,7 @@
       :already-signed
 
       (-> allekirjoituksessaaika nil?)
-      :signing-not-started
+      :not-in-signing
 
       :else
       (do

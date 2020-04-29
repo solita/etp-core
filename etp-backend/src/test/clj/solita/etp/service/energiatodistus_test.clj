@@ -79,7 +79,7 @@
         found-after-update (find-energiatodistus id)
         stop-signing-result-3 (service/stop-energiatodistus-signing! ts/*db* id)]
     (t/is (-> found-before-update-1 :allekirjoitusaika nil?))
-    (t/is (= stop-signing-result-1 :signing-not-started))
+    (t/is (= stop-signing-result-1 :not-in-signing))
     (t/is (-> found-before-update-2 :allekirjoitusaika nil?))
     (t/is (= stop-signing-result-2 :ok))
     (t/is (-> found-after-update :allekirjoitusaika nil? not))

@@ -457,13 +457,16 @@
              (energiatodistus-service/find-energiatodistus db id)]
     (do-when-signing
      energiatodistus
-     #(let [file-id (pdf-file-id id)
-            {:keys [filename content] :as file-info} (file-service/find-file
-                                                      db
-                                                      file-id)
-            content-bytes (.readAllBytes content)
-            pkcs7 (puumerkki/make-pkcs7 signature-and-chain content-bytes)]
-        (->> (puumerkki/write-signature! content-bytes pkcs7)
-             (file-service/upsert-file-from-bytes db
-                                                  file-id
-                                                  (str file-id ".pdf")))))))
+     #(try (let [file-id (pdf-file-id id)
+                 {:keys [filename content] :as file-info}
+                 (file-service/find-file db file-id)
+                 content-bytes (.readAllBytes content)
+                 pkcs7 (puumerkki/make-pkcs7 signature-and-chain content-bytes)
+                 filename (str file-id ".pdf")]
+             (do
+               (->> (puumerkki/write-signature! content-bytes pkcs7)
+                    (file-service/upsert-file-from-bytes db
+                                                         file-id
+                                                         filename))
+               filename))
+           (catch java.lang.ArrayIndexOutOfBoundsException e :pdf-exists)))))

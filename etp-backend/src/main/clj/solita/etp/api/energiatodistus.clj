@@ -71,32 +71,47 @@
               :responses {200 {:body nil}}
               :handler (fn [{{{:keys [file]} :multipart} :parameters}]
                          (println file))}}]
-     ["/digest"
-      {:get {:summary    "PDF-tiedoston digest allekirjoitusta varten"
-             :parameters {:path {:id common-schema/Key}}
-             :responses  {200 {:body nil}
-                          404 {:body schema/Str}}
-              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
-                            (api-response/get-response
-                             (energiatodistus-pdf-service/find-energiatodistus-digest db id)
-                             (str "Energiatodistus " id " does not exists.")))}}]
      ["/signature"
-      {:put {:summary    "Allekirjoita energiatodistuksen PDF"
-             :parameters {:path {:id common-schema/Key}
-                          :body energiatodistus-schema/Signature}
-             :responses  {200 {:body nil}
-                          404 {:body schema/Str}}
-             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
-                           (let [result (energiatodistus-pdf-service/sign-energiatodistus-pdf
-                                         db
-                                         id
-                                         (:body parameters))]
-                             (cond
-                               (= result :signed)
-                               (r/response "Ok")
-
-                               (nil? result)
-                               (r/not-found (str "Energiatodistus " id " does not exists.")))))}}]]]
+      ["/start"
+       {:post {:summary    "Siirrä energiatodistus allekirjoitus-tilaan"
+               :parameters {:path {:id common-schema/Key}}
+               :responses  {200 {:body nil}
+                            404 {:body schema/Str}}
+               :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                             (api-response/signature-response
+                              (energiatodistus-service/start-energiatodistus-signing! db id)
+                              (str "Energiatodistus " id)))}}]
+      ["/digest"
+       {:get {:summary    "Hae PDF-tiedoston digest allekirjoitusta varten"
+              :parameters {:path {:id common-schema/Key}}
+              :responses  {200 {:body nil}
+                           404 {:body schema/Str}}
+              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                            (api-response/signature-response
+                             (energiatodistus-pdf-service/find-energiatodistus-digest db id)
+                             (str "Energiatodistus " id)))}}]
+      ["/pdf"
+       {:put {:summary    "Luo allekirjoitettu PDF"
+              :parameters {:path {:id common-schema/Key}
+                           :body energiatodistus-schema/Signature}
+              :responses  {200 {:body nil}
+                           404 {:body schema/Str}}
+              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
+                            (api-response/signature-response
+                             (energiatodistus-pdf-service/sign-energiatodistus-pdf
+                              db
+                              id
+                              (:body parameters))
+                             (str "Energiatodistus " id)))}}]
+      ["/stop"
+       {:post {:summary    "Siirrä energiatodistus allekirjoitettu-tilaan"
+               :parameters {:path {:id common-schema/Key}}
+               :responses  {200 {:body nil}
+                            404 {:body schema/Str}}
+               :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                             (api-response/signature-response
+                              (energiatodistus-service/stop-energiatodistus-signing! db id)
+                              (str "Energiatodistus " id)))}}]]]]
    ["/kielisyys"
     {:get {:summary   "Hae energiatodistuksen kielisyysluokittelu"
            :responses {200 {:body [common-schema/Luokittelu]}}
