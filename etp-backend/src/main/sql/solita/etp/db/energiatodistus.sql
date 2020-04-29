@@ -12,6 +12,8 @@ where allekirjoitusaika is null and id = :id
 
 -- name: select-energiatodistus
 select energiatodistus.id, energiatodistus.versio,
+       energiatodistus.allekirjoituksessaaika,
+       energiatodistus.allekirjoitusaika,
        fullname(kayttaja.*) "laatija-fullname",
        energiatodistus.data
 from energiatodistus

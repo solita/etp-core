@@ -34,17 +34,25 @@
     (t/is (not (nil? (:laatija-fullname et))))
     (dissoc et :laatija-fullname)))
 
+(defn merge-energiatodistus-defaults [energiatodistus id]
+  (merge energiatodistus
+         {:id id
+          :versio 2018
+          :allekirjoituksessaaika nil
+          :allekirjoitusaika nil}))
+
 (t/deftest add-and-find-energiatodistus-test
   (doseq [energiatodistus (repeatedly 100 #(g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))
           :let [id (add-energiatodistus! energiatodistus)]]
-    (t/is (= (assoc energiatodistus :id id :versio 2018) (find-energiatodistus id)))))
+    (t/is (= (merge-energiatodistus-defaults energiatodistus id) (find-energiatodistus id)))))
 
 (t/deftest update-energiatodistus-test
   (let [id                     (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))
         update-energiatodistus (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators)]
 
     (service/update-energiatodistus-luonnos! ts/*db* id update-energiatodistus)
-    (t/is (= (assoc update-energiatodistus :id id :versio 2018) (find-energiatodistus id)))))
+    (t/is (= (merge-energiatodistus-defaults update-energiatodistus id)
+             (find-energiatodistus id)))))
 
 (t/deftest create-energiatodistus-and-delete-test
   (let [id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))]
