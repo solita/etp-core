@@ -5,6 +5,9 @@
            (org.apache.poi.ss.util CellAddress)
            (org.apache.poi.xssf.usermodel XSSFWorkbook)))
 
+(defn create-xlsx []
+  (WorkbookFactory/create (boolean true)))
+
 (defn load-xlsx [^java.io.InputStream is]
   (WorkbookFactory/create is))
 
