@@ -33,12 +33,13 @@
   (energiatodistus-db/delete-energiatodistus-luonnos! db {:id id}))
 
 (defn start-energiatodistus-signing! [db id]
-  (when-let [energiatodistus (find-energiatodistus db id)]
+  (when-let [{:keys [allekirjoituksessaaika allekirjoitusaika]}
+             (find-energiatodistus db id)]
     (cond
-      (-> energiatodistus :allekirjoitusaika nil? not)
+      (-> allekirjoitusaika nil? not)
       :already-signed
 
-      (-> energiatodistus :allekirjoituksessaaika nil? not)
+      (-> allekirjoituksessaaika nil? not)
       :already-in-signing
 
       :else
@@ -47,12 +48,12 @@
         :ok))))
 
 (defn stop-energiatodistus-signing! [db id]
-  (when-let [energiatodistus (find-energiatodistus db id)]
+  (when-let [{:keys [allekirjoituksessaaika allekirjoitusaika]} (find-energiatodistus db id)]
     (cond
-      (-> energiatodistus :allekirjoitusaika nil? not)
+      (-> allekirjoitusaika nil? not)
       :already-signed
 
-      (-> energiatodistus :allekirjoituksessaaika nil?)
+      (-> allekirjoituksessaaika nil?)
       :signing-not-started
 
       :else
