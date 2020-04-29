@@ -54,7 +54,15 @@
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
                            (api-response/put-response
                              (energiatodistus-service/update-energiatodistus-luonnos! db id (:body parameters))
-                             (str "Energiatodistus luonnos " id " does not exists.")))}}]
+                             (str "Energiatodistus luonnos " id " does not exists.")))}
+       :delete {:summary "Poista luonnostilainen energiatodistus"
+                :parameters {:path {:id common-schema/Key}}
+                :responses  {200 {:body nil}
+                             404 {:body schema/Str}}
+                :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                              (api-response/put-response
+                                (energiatodistus-service/delete-energiatodistus-luonnos! db id)
+                                (str "Energiatodistus luonnos " id " does not exists.")))}}]
      ["/pdf"
       {:get {:summary    "Lataa energiatodistus PDF-tiedostona"
              :parameters {:path {:id common-schema/Key}}
