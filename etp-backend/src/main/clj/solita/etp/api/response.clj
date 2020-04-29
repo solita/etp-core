@@ -35,13 +35,22 @@
 
 (def forbidden {:status 403 :body "Forbidden"})
 
-(defn pdf-response [body filename not-found]
+(defn file-response [body content-type filename not-found]
   (if (nil? body)
     (r/not-found not-found)
     {:status 200
-     :headers {"Content-Type" "application/pdf"
+     :headers {"Content-Type" content-type
                "Content-Disposition:" (str "inline; filename=\"" filename"\"")}
      :body body}))
+
+(defn pdf-response [body filename not-found]
+  (file-response body filename "application/pdf" not-found))
+
+(defn xlsx-response [body filename not-found]
+  (file-response body
+                 filename
+                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                 not-found))
 
 (defn conflict [body]
   {:status 409

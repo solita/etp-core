@@ -4,6 +4,7 @@
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf-service]
+            [solita.etp.service.energiatodistus-xlsx :as energiatodistus-xlsx-service]
             [schema.core :as schema]
             [solita.etp.security :as security]
             [solita.etp.schema.common :as common-schema]
@@ -60,10 +61,20 @@
              :parameters {:path {:id common-schema/Key}}
              :responses  {200 {:body nil}
                           404 {:body schema/Str}}
-             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
+             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                            (api-response/pdf-response
                             (energiatodistus-pdf-service/find-energiatodistus-pdf db id)
                             (str "energiatodistus2018-" id ".pdf")
+                            (str "Energiatodistus " id " does not exists.")))}}]
+     ["/xlsx"
+      {:get {:summary    "Lataa energiatodistuksen tiedot XLSX-tiedostona"
+             :parameters {:path {:id common-schema/Key}}
+             :responses  {200 {:body nil}
+                          404 {:body schema/Str}}
+             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                           (api-response/xlsx-response
+                            (energiatodistus-xlsx-service/find-energiatodistus-xlsx db id)
+                            (str "energiatodistus2018-" id ".xlsx")
                             (str "Energiatodistus " id " does not exists.")))}}]
      ["/liitteet"
       {:post {:summary "Pohja liitteiden lisäämiseksi energitodistukselle. Ei tee toistaiseksi mitään."
