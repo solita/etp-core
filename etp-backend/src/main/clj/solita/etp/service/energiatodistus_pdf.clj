@@ -411,15 +411,25 @@
 (defn pdf-file-id [id]
   (when id (str "energiatodistus-" id)))
 
-;; TODO this should load signed PDF if it exists and only generate if necessary
+(defn find-existing-pdf [db id]
+  (->> id
+       pdf-file-id
+       (file-service/find-file db)
+       :content
+       io/input-stream))
+
+(defn generate-pdf-as-input-stream [energiatodistus]
+  (let [pdf-path (generate energiatodistus)
+        is (io/input-stream pdf-path)]
+    (io/delete-file pdf-path)
+    is))
+
 (defn find-energiatodistus-pdf [db id]
-  (when-let [energiatodistus (energiatodistus-service/find-energiatodistus
-                              db
-                              id)]
-    (let [pdf-path (generate energiatodistus)
-          is (io/input-stream pdf-path)]
-      (io/delete-file pdf-path)
-      is)))
+  (when-let [{:keys [allekirjoitusaika] :as energiatodistus}
+             (energiatodistus-service/find-energiatodistus db id)]
+    (if allekirjoitusaika
+      (find-existing-pdf db id)
+      (generate-pdf-as-input-stream energiatodistus))))
 
 (defn do-when-signing [{:keys [allekirjoituksessaaika allekirjoitusaika]} f]
   (cond
