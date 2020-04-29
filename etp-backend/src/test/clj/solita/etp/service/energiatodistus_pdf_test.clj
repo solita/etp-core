@@ -30,6 +30,11 @@
     (t/is (-> file-path io/as-file .exists true?))
     (io/delete-file file-path)))
 
+(t/deftest generate-test
+  (let [file-path (service/generate energiatodistus)]
+    (t/is (-> file-path io/as-file .exists))
+    (io/delete-file file-path)))
+
 (t/deftest pdf-file-id-test
   (t/is (nil? (service/pdf-file-id nil)))
   (t/is (= (service/pdf-file-id 12345) "energiatodistus-12345")))
