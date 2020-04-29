@@ -68,3 +68,19 @@
     (t/is (= start-signing-result-1 :ok))
     (t/is (-> found-after-update :allekirjoituksessaaika nil? not))
     (t/is (= start-signing-result-2 :already-in-signing))))
+
+(t/deftest stop-energiatodistus-signing!-test
+  (let [id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))
+        found-before-update-1 (find-energiatodistus id)
+        stop-signing-result-1 (service/stop-energiatodistus-signing! ts/*db* id)
+        _ (service/start-energiatodistus-signing! ts/*db* id)
+        found-before-update-2 (find-energiatodistus id)
+        stop-signing-result-2 (service/stop-energiatodistus-signing! ts/*db* id)
+        found-after-update (find-energiatodistus id)
+        stop-signing-result-3 (service/stop-energiatodistus-signing! ts/*db* id)]
+    (t/is (-> found-before-update-1 :allekirjoitusaika nil?))
+    (t/is (= stop-signing-result-1 :signing-not-started))
+    (t/is (-> found-before-update-2 :allekirjoitusaika nil?))
+    (t/is (= stop-signing-result-2 :ok))
+    (t/is (-> found-after-update :allekirjoitusaika nil? not))
+    (t/is (= stop-signing-result-3 :already-signed))))

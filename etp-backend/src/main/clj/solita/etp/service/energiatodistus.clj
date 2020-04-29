@@ -46,6 +46,20 @@
         (energiatodistus-db/update-energiatodistus-allekirjoituksessaaika! db {:id id})
         :ok))))
 
+(defn stop-energiatodistus-signing! [db id]
+  (when-let [energiatodistus (find-energiatodistus db id)]
+    (cond
+      (-> energiatodistus :allekirjoitusaika nil? not)
+      :already-signed
+
+      (-> energiatodistus :allekirjoituksessaaika nil?)
+      :signing-not-started
+
+      :else
+      (do
+        (energiatodistus-db/update-energiatodistus-allekirjoitusaika! db {:id id})
+        :ok))))
+
 ;;
 ;; Energiatodistuksen kielisyys
 ;;

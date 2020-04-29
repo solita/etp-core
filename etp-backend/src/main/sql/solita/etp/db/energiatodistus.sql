@@ -44,3 +44,8 @@ order by ordinal asc
 update energiatodistus set allekirjoituksessaaika = now()
 where allekirjoituksessaaika is null and allekirjoitusaika is null
 and id = :id
+
+-- name: update-energiatodistus-allekirjoitusaika!
+update energiatodistus set allekirjoitusaika = now()
+where allekirjoituksessaaika is not null and allekirjoitusaika is null
+and id = :id
