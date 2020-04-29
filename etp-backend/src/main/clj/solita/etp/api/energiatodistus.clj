@@ -72,7 +72,7 @@
               :handler (fn [{{{:keys [file]} :multipart} :parameters}]
                          (println file))}}]
      ["/signature"
-      ["/start"
+      ["/begin"
        {:post {:summary    "Siirrä energiatodistus allekirjoitus-tilaan"
                :parameters {:path {:id common-schema/Key}}
                :responses  {200 {:body nil}
@@ -103,7 +103,7 @@
                               id
                               (:body parameters))
                              (str "Energiatodistus " id)))}}]
-      ["/stop"
+      ["/end"
        {:post {:summary    "Siirrä energiatodistus allekirjoitettu-tilaan"
                :parameters {:path {:id common-schema/Key}}
                :responses  {200 {:body nil}
