@@ -422,22 +422,31 @@
       is)))
 
 (defn find-energiatodistus-digest [db id]
-  (when-let [{:keys [laatija-fullname] :as energiatodistus}
+  (when-let [{:keys [allekirjoituksessaaika allekirjoitusaika laatija-fullname]
+              :as energiatodistus}
              (energiatodistus-service/find-energiatodistus db id)]
-    (let [pdf-path (generate energiatodistus)
-          signable-pdf-path (puumerkki/add-signature-space
-                             pdf-path
-                             laatija-fullname)
-          signable-pdf-data (puumerkki/read-file signable-pdf-path)
-          digest (puumerkki/compute-base64-pkcs signable-pdf-data)
-          file-id (pdf-file-id id)]
-      (file-service/upsert-file-from-bytes db
-                                           file-id
-                                           (str file-id ".pdf")
-                                           signable-pdf-data)
-      (io/delete-file pdf-path)
-      (io/delete-file signable-pdf-path)
-      {:digest digest})))
+    (cond
+      (-> allekirjoituksessaaika nil?)
+      :not-in-signing
+
+      (-> allekirjoitusaika nil? not)
+      :already-signed
+
+      :else
+      (let [pdf-path (generate energiatodistus)
+            signable-pdf-path (puumerkki/add-signature-space
+                               pdf-path
+                               laatija-fullname)
+            signable-pdf-data (puumerkki/read-file signable-pdf-path)
+            digest (puumerkki/compute-base64-pkcs signable-pdf-data)
+            file-id (pdf-file-id id)]
+        (file-service/upsert-file-from-bytes db
+                                             file-id
+                                             (str file-id ".pdf")
+                                             signable-pdf-data)
+        (io/delete-file pdf-path)
+        (io/delete-file signable-pdf-path)
+        {:digest digest}))))
 
 ;; TODO should load energiatodistus and check if it has been already signed
 ;; or if it is in signable state
