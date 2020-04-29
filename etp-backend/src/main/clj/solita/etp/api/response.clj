@@ -33,9 +33,6 @@
 (defn created [path id]
   (r/created (str path "/") {:id id}))
 
-(defn conflict [body]
-  {:status 409 :body body})
-
 (def forbidden {:status 403 :body "Forbidden"})
 
 (defn pdf-response [body filename not-found]
@@ -45,3 +42,30 @@
      :headers {"Content-Type" "application/pdf"
                "Content-Disposition:" (str "inline; filename=\"" filename"\"")}
      :body body}))
+
+(defn conflict [body]
+  {:status 409
+   :body body})
+
+(defn signature-response [result entity-name]
+  (cond
+    (= result :already-signed)
+    (conflict (str entity-name " already signed"))
+
+    (= result :already-in-signing)
+    (conflict (str entity-name " is already in signing process"))
+
+    (= result :not-in-signing)
+    (conflict (str "Signing process for " entity-name " has not been started"))
+
+    (= result :pdf-exists)
+    (conflict (str "Signed PDF exists for " entity-name ". Get digest to sign again."))
+
+    (nil? result)
+    (r/not-found (str entity-name " does not exist"))
+
+    (= result :ok)
+    (r/response "Ok")
+
+    :else
+    (r/response result)))

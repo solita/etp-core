@@ -225,10 +225,11 @@
 
 (def Energiatodistus2018
   "Energiatodistus schema contains basic information about persistent energiatodistus"
-  (assoc
-    (merge common-schema/Id EnergiatodistusSave2018)
-    :laatija-fullname schema/Str
-    :versio (schema/eq 2018)))
+  (assoc (merge common-schema/Id EnergiatodistusSave2018)
+         :allekirjoituksessaaika (schema/maybe common-schema/Instant)
+         :allekirjoitusaika (schema/maybe common-schema/Instant)
+         :laatija-fullname schema/Str
+         :versio (schema/eq 2018)))
 
 (def Energiatodistus2013 {:versio (schema/eq 2013)})
 
