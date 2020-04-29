@@ -43,6 +43,20 @@
   (t/is (nil? (service/pdf-file-id nil)))
   (t/is (= (service/pdf-file-id 12345) "energiatodistus-12345")))
 
+(t/deftest do-when-signing-test
+  (let [f (constantly true)]
+    (t/is (= (service/do-when-signing {:allekirjoituksessaaika nil
+                                       :allekirjoitusaika nil}
+                                      f)
+             :not-in-signing))
+    (t/is (true? (service/do-when-signing {:allekirjoituksessaaika true
+                                           :allekirjoitusaika nil}
+                                          f)))
+    (t/is (= (service/do-when-signing {:allekirjoituksessaaika true
+                                       :allekirjoitusaika true}
+                                      f)
+             :already-signed))))
+
 (t/deftest find-energiatodistus-digest-test
   (let [id (energiatodistus-test/add-energiatodistus! energiatodistus)]
     (t/is (= (service/find-energiatodistus-digest ts/*db* id)
@@ -52,4 +66,17 @@
                      :digest))
     (energiatodistus-service/stop-energiatodistus-signing! ts/*db* id)
     (t/is (= (service/find-energiatodistus-digest ts/*db* id)
+             :already-signed))))
+
+(t/deftest sign-energiatodistus-test
+  (let [id (energiatodistus-test/add-energiatodistus! energiatodistus)]
+    (t/is (= (service/sign-energiatodistus-pdf ts/*db* id nil)
+             :not-in-signing))
+    (energiatodistus-service/start-energiatodistus-signing! ts/*db* id)
+
+    ;; Is it possible to somehow create a valid signature and chain for testing
+    ;; the success case?
+
+    (energiatodistus-service/stop-energiatodistus-signing! ts/*db* id)
+    (t/is (= (service/sign-energiatodistus-pdf ts/*db* id nil)
              :already-signed))))

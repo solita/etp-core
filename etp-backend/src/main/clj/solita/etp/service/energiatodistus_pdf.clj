@@ -421,19 +421,23 @@
       (io/delete-file pdf-path)
       is)))
 
+(defn do-when-signing [{:keys [allekirjoituksessaaika allekirjoitusaika]} f]
+  (cond
+    (nil? allekirjoituksessaaika)
+    :not-in-signing
+
+    (-> allekirjoitusaika nil? not)
+    :already-signed
+
+    :else
+    (f)))
+
 (defn find-energiatodistus-digest [db id]
-  (when-let [{:keys [allekirjoituksessaaika allekirjoitusaika laatija-fullname]
-              :as energiatodistus}
+  (when-let [{:keys [laatija-fullname] :as energiatodistus}
              (energiatodistus-service/find-energiatodistus db id)]
-    (cond
-      (-> allekirjoituksessaaika nil?)
-      :not-in-signing
-
-      (-> allekirjoitusaika nil? not)
-      :already-signed
-
-      :else
-      (let [pdf-path (generate energiatodistus)
+    (do-when-signing
+     energiatodistus
+     #(let [pdf-path (generate energiatodistus)
             signable-pdf-path (puumerkki/add-signature-space
                                pdf-path
                                laatija-fullname)
@@ -448,16 +452,18 @@
         (io/delete-file signable-pdf-path)
         {:digest digest}))))
 
-;; TODO should load energiatodistus and check if it has been already signed
-;; or if it is in signable state
 (defn sign-energiatodistus-pdf [db id signature-and-chain]
-  (let [file-id (pdf-file-id id)]
-    (when-let [{:keys [filename content] :as file-info}
-               (file-service/find-file db file-id)]
-      (let [content-bytes (.readAllBytes content)
+  (when-let [energiatodistus
+             (energiatodistus-service/find-energiatodistus db id)]
+    (do-when-signing
+     energiatodistus
+     #(let [file-id (pdf-file-id id)
+            {:keys [filename content] :as file-info} (file-service/find-file
+                                                      db
+                                                      file-id)
+            content-bytes (.readAllBytes content)
             pkcs7 (puumerkki/make-pkcs7 signature-and-chain content-bytes)]
         (->> (puumerkki/write-signature! content-bytes pkcs7)
              (file-service/upsert-file-from-bytes db
                                                   file-id
-                                                  (str file-id ".pdf")))
-        :signed))))
+                                                  (str file-id ".pdf")))))))
