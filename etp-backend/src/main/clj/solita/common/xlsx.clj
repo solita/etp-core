@@ -5,15 +5,12 @@
            (org.apache.poi.ss.util CellAddress)
            (org.apache.poi.xssf.usermodel XSSFWorkbook)))
 
-(defn create-xlsx []
-  (WorkbookFactory/create (boolean true)))
+;;
+;; Reading
+;;
 
 (defn load-xlsx [^java.io.InputStream is]
   (WorkbookFactory/create is))
-
-(defn save-xlsx [xlsx path]
-  (with-open [os (io/output-stream path)]
-    (.write xlsx os)))
 
 (defn get-sheet [xlsx idx]
   (.getSheetAt xlsx idx))
@@ -47,3 +44,28 @@
     (-> (get-row sheet row-idx)
         (get-cell col-idx)
         (get-cell-value))))
+
+;;
+;; Writing
+;;
+
+(defn create-xlsx []
+  (WorkbookFactory/create (boolean true)))
+
+(defn save-xlsx [xlsx path]
+  (with-open [os (io/output-stream path)]
+    (.write xlsx os)))
+
+(defn create-sheet [xlsx label]
+  (.createSheet xlsx label))
+
+(defn create-row [sheet idx]
+  (.createRow sheet idx))
+
+(defn create-cell [row idx]
+  (.createCell row idx))
+
+(defn create-cell-with-value [row idx s]
+  (let [cell (create-cell row idx)]
+    (set-cell-value cell s)
+    cell))
