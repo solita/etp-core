@@ -69,3 +69,11 @@
   (let [cell (create-cell row idx)]
     (set-cell-value cell s)
     cell))
+
+(defn create-bold-font [xlsx]
+  (doto (.createFont xlsx)
+    (.setBold true)))
+
+(defn create-style [xlsx font]
+  (doto (.createCellStyle xlsx)
+    (.setFont font)))

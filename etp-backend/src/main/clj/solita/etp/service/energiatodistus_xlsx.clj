@@ -7,8 +7,9 @@
 
 (def mappings [])
 
-(defn fill-headers [sheet]
+(defn fill-headers [sheet style]
   (let [row (xlsx/create-row sheet 0)]
+    (.setRowStyle row style)
     (xlsx/create-cell-with-value row 0 "ABC")
     (xlsx/create-cell-with-value row 1 "Testing")))
 
@@ -21,7 +22,9 @@
                     (str tmp-dir))
           xlsx (xlsx/create-xlsx)
           sheet (xlsx/create-sheet xlsx "Energiatodistus")
-          _ (fill-headers sheet)
+          bold-font (xlsx/create-bold-font xlsx)
+          bold-style (xlsx/create-style xlsx bold-font)
+          _ (fill-headers sheet bold-style)
           _ (io/make-parents path)
           _ (xlsx/save-xlsx xlsx path)
           is (io/input-stream path)]
