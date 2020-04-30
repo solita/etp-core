@@ -29,6 +29,7 @@
         (assoc :createdby_id (:id whoami))
         (assoc :energiatodistus_id energiatodistus-id)
         (insert-liite! db)
+        first
         :id
         file-key
         (insert-file! db (:tempfile liite)))))
