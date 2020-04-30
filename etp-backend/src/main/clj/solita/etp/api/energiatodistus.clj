@@ -76,7 +76,7 @@
                             (str "energiatodistus2018-" id ".pdf")
                             (str "Energiatodistus " id " does not exists.")))}}]
      ["/liitteet/files"
-      {:post {:summary "Pohja liitteiden lisäämiseksi energitodistukselle. Ei tee toistaiseksi mitään."
+      {:post {:summary "Energiatodistuksen liitteiden lisäys tiedostoista."
               :parameters {:path {:id common-schema/Key}
                            :multipart {:files (schema/conditional
                                                 vector? [reitit-schema/TempFilePart]
