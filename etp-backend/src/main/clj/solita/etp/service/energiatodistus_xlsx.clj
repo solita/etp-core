@@ -467,16 +467,21 @@
    ["Lisätietoja energiatehokkuudesta (fi)"]
    ["Lisätietoja energiatehokkuudesta (sv)"]])
 
+(def indexed-mappings (map-indexed vector mappings))
+
 (defn fill-headers [sheet style]
   (let [row (xlsx/create-row sheet 0)]
     (.setRowStyle row style)
-    (doseq [[idx [label]] (map-indexed vector mappings)]
+    (doseq [[idx [label]] indexed-mappings]
       (xlsx/create-cell-with-value row idx label))))
 
 (defn fill-row-with-energiatodistus [sheet idx energiatodistus]
   (let [row (xlsx/create-row sheet idx)]
-    (xlsx/create-cell-with-value row 0 "Some data 1")
-    (xlsx/create-cell-with-value row 1 "Some data 2")))
+    (doseq [[idx [_ cursor-or-f]] indexed-mappings
+            :when cursor-or-f]
+      (xlsx/create-cell-with-value row idx (if (vector? cursor-or-f)
+                                             (str (get-in energiatodistus cursor-or-f))
+                                             (cursor-or-f energiatodistus))))))
 
 (defn find-energiatodistus-xlsx [db id]
   (when-let [energiatodistus
@@ -488,12 +493,11 @@
           xlsx (xlsx/create-xlsx)
           sheet (xlsx/create-sheet xlsx "Energiatodistus")
           bold-font (xlsx/create-bold-font xlsx)
-          bold-style (xlsx/create-style xlsx bold-font)
-          _ (fill-headers sheet bold-style)
-          _ (fill-row-with-energiatodistus sheet 1 nil)
-          _ (fill-row-with-energiatodistus sheet 2 nil)
-          _ (io/make-parents path)
-          _ (xlsx/save-xlsx xlsx path)
-          is (io/input-stream path)]
-      (io/delete-file path)
-      is)))
+          bold-style (xlsx/create-style xlsx bold-font)]
+      (fill-headers sheet bold-style)
+      (fill-row-with-energiatodistus sheet 1 energiatodistus)
+      (io/make-parents path)
+      (xlsx/save-xlsx xlsx path)
+      (let [is (io/input-stream path)]
+        (io/delete-file path)
+        is))))
