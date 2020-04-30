@@ -481,7 +481,7 @@
     "Vaatii speksausta tai selvitystä"
 
     (vector? cursor-or-f)
-    (str (get-in energiatodistus cursor-or-f))
+    (get-in energiatodistus cursor-or-f)
 
     :else
     (cursor-or-f energiatodistus)))
