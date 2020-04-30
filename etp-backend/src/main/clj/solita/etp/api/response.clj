@@ -17,31 +17,45 @@
         matched-error (select-keys error (keys matcher))]
     (= matcher matched-error)))
 
-(defn response-with-exceptions [service-fn error-descriptions]
-  (try
-    (do
-      (r/response (service-fn)))
-    (catch ExceptionInfo e
-      (let [error (ex-data e)
-            description (first (filter (partial matches-description? error)
-                                       error-descriptions))]
-        (if (nil? description) (throw e)
-          {:status  (:response description)
-           :headers {}
-           :body    error})))))
+(defn response-with-exceptions
+  ([service-fn error-descriptions] (response-with-exceptions 200 service-fn error-descriptions))
+  ([status service-fn error-descriptions]
+    (try
+      {:status  status
+       :headers {}
+       :body    (service-fn)}
+      (catch ExceptionInfo e
+        (let [error (ex-data e)
+              description (first (filter (partial matches-description? error)
+                                         error-descriptions))]
+          (if (nil? description) (throw e)
+            {:status  (:response description)
+             :headers {}
+             :body    error}))))))
 
 (defn created [path id]
-  (r/created (str path "/") {:id id}))
+  (r/created (str path "/" id) {:id id}))
 
 (def forbidden {:status 403 :body "Forbidden"})
 
-(defn pdf-response [body filename not-found]
+(defn file-response [body filename content-type inline? not-found]
   (if (nil? body)
     (r/not-found not-found)
     {:status 200
-     :headers {"Content-Type" "application/pdf"
-               "Content-Disposition:" (str "inline; filename=\"" filename"\"")}
+     :headers {"Content-Type" content-type
+               "Content-Disposition:" (str (if inline? "inline" "attachment")
+                                              (str "; filename=\"" filename "\""))}
      :body body}))
+
+(defn pdf-response [body filename not-found]
+  (file-response body filename "application/pdf" true not-found))
+
+(defn xlsx-response [body filename not-found]
+  (file-response body
+                 filename
+                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                 false
+                 not-found))
 
 (defn conflict [body]
   {:status 409

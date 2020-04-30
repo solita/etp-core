@@ -5,12 +5,12 @@
            (org.apache.poi.ss.util CellAddress)
            (org.apache.poi.xssf.usermodel XSSFWorkbook)))
 
+;;
+;; Reading
+;;
+
 (defn load-xlsx [^java.io.InputStream is]
   (WorkbookFactory/create is))
-
-(defn save-xlsx [xlsx path]
-  (with-open [os (io/output-stream path)]
-    (.write xlsx os)))
 
 (defn get-sheet [xlsx idx]
   (.getSheetAt xlsx idx))
@@ -30,8 +30,10 @@
   (let [v (.getStringCellValue cell)]
     (if (str/blank? v) nil v)))
 
-(defn set-cell-value [cell s]
- (.setCellValue cell s))
+(defn set-cell-value [cell v]
+  (cond
+    (number? v) (.setCellValue cell (double v))
+    :else (.setCellValue cell (str v))))
 
 (defn set-cell-value-at [sheet address v]
   (let [{:keys [row-idx col-idx]} (row-and-column-idx address)]
@@ -44,3 +46,36 @@
     (-> (get-row sheet row-idx)
         (get-cell col-idx)
         (get-cell-value))))
+
+;;
+;; Writing
+;;
+
+(defn create-xlsx []
+  (WorkbookFactory/create (boolean true)))
+
+(defn save-xlsx [xlsx path]
+  (with-open [os (io/output-stream path)]
+    (.write xlsx os)))
+
+(defn create-sheet [xlsx label]
+  (.createSheet xlsx label))
+
+(defn create-row [sheet idx]
+  (.createRow sheet idx))
+
+(defn create-cell [row idx]
+  (.createCell row idx))
+
+(defn create-cell-with-value [row idx v]
+  (let [cell (create-cell row idx)]
+    (set-cell-value cell v)
+    cell))
+
+(defn create-bold-font [xlsx]
+  (doto (.createFont xlsx)
+    (.setBold true)))
+
+(defn create-style [xlsx font]
+  (doto (.createCellStyle xlsx)
+    (.setFont font)))
