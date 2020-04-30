@@ -17,21 +17,24 @@
         matched-error (select-keys error (keys matcher))]
     (= matcher matched-error)))
 
-(defn response-with-exceptions [service-fn error-descriptions]
-  (try
-    (do
-      (r/response (service-fn)))
-    (catch ExceptionInfo e
-      (let [error (ex-data e)
-            description (first (filter (partial matches-description? error)
-                                       error-descriptions))]
-        (if (nil? description) (throw e)
-          {:status  (:response description)
-           :headers {}
-           :body    error})))))
+(defn response-with-exceptions
+  ([service-fn error-descriptions] (response-with-exceptions 200 service-fn error-descriptions))
+  ([status service-fn error-descriptions]
+    (try
+      {:status  status
+       :headers {}
+       :body    (service-fn)}
+      (catch ExceptionInfo e
+        (let [error (ex-data e)
+              description (first (filter (partial matches-description? error)
+                                         error-descriptions))]
+          (if (nil? description) (throw e)
+            {:status  (:response description)
+             :headers {}
+             :body    error}))))))
 
 (defn created [path id]
-  (r/created (str path "/") {:id id}))
+  (r/created (str path "/" id) {:id id}))
 
 (def forbidden {:status 403 :body "Forbidden"})
 
