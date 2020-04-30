@@ -3,6 +3,8 @@
             [reitit.ring.schema :as reitit-schema]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
+            [solita.etp.schema.liite :as liite-schema]
+            [solita.etp.service.liite :as liite-service]
             [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf-service]
             [solita.etp.service.energiatodistus-xlsx :as energiatodistus-xlsx-service]
             [schema.core :as schema]
@@ -85,12 +87,26 @@
                             (energiatodistus-pdf-service/find-energiatodistus-pdf db id)
                             (str "energiatodistus2018-" id ".pdf")
                             (str "Energiatodistus " id " does not exists.")))}}]
+     ["/liitteet/files"
+      {:post {:summary "Energiatodistuksen liitteiden lisäys tiedostoista."
+              :parameters {:path {:id common-schema/Key}
+                           :multipart {:files (schema/conditional
+                                                vector? [reitit-schema/TempFilePart]
+                                                :else reitit-schema/TempFilePart)}}
+              :responses {201 {:body nil}
+                          404 common-schema/ConstraintError}
+              :handler (fn [{{{:keys [id]} :path {:keys [files]} :multipart} :parameters
+                             :keys [db whoami]}]
+                         (api-response/response-with-exceptions 201
+                            #(liite-service/add-liitteet-from-files
+                               db whoami id (if (vector? files) files [files]))
+                            [{:constraint :liite-energiatodistus-id-fkey :response 404}]))}}]
      ["/liitteet"
-      {:post {:summary "Pohja liitteiden lisäämiseksi energitodistukselle. Ei tee toistaiseksi mitään."
-              :parameters {:multipart {:file reitit-schema/TempFilePart}}
-              :responses {200 {:body nil}}
-              :handler (fn [{{{:keys [file]} :multipart} :parameters}]
-                         (println file))}}]
+      {:get {:summary "Hae energiatodistuksen liitteet."
+             :parameters {:path {:id common-schema/Key}}
+             :responses {200 {:body [liite-schema/Liite]}}
+             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                        (r/response (liite-service/find-energiatodistus-liitteet db id)))}}]
      ["/signature"
       ["/start"
        {:post {:summary    "Siirrä energiatodistus allekirjoitus-tilaan"
