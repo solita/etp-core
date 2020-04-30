@@ -4,6 +4,7 @@
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf-service]
+            [solita.etp.service.energiatodistus-xlsx :as energiatodistus-xlsx-service]
             [schema.core :as schema]
             [solita.etp.security :as security]
             [solita.etp.schema.common :as common-schema]
@@ -31,10 +32,21 @@
            :responses  {200 {:body [energiatodistus-schema/Energiatodistus]}}
            :handler    (fn [{:keys [db whoami]}]
                          (r/response (energiatodistus-service/find-energiatodistukset-by-laatija
-                                       db (:laatija whoami))))}}]
+                                      db (:laatija whoami))))}}]
    ["/energiatodistukset/2018"
     [""
      {:post energiatodistus-2018-post}]
+    ["/export/energiatodistukset.xlsx"
+     {:get {:summary    "Lataa laatijan energiatodistuksien tiedot XLSX-tiedostona"
+            :responses  {200 {:body nil}
+                         404 {:body schema/Str}}
+            :handler    (fn [{:keys [db whoami]}]
+                          (api-response/xlsx-response
+                           (energiatodistus-xlsx-service/find-laatija-energiatodistukset-xlsx
+                            db
+                            (:laatija whoami))
+                           (str "energiatodistukset.xlsx")
+                           (str "Not found.")))}}]
     ["/:id"
      [""
       {:get {:summary    "Hae energiatodistus"
@@ -68,7 +80,7 @@
              :parameters {:path {:id common-schema/Key}}
              :responses  {200 {:body nil}
                           404 {:body schema/Str}}
-             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
+             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                            (api-response/pdf-response
                             (energiatodistus-pdf-service/find-energiatodistus-pdf db id)
                             (str "energiatodistus2018-" id ".pdf")
