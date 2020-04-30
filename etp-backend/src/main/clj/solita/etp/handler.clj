@@ -19,6 +19,7 @@
             [solita.etp.api.laatija :as laatija-api]
             [solita.etp.api.geo :as geo-api]
             [solita.etp.api.energiatodistus :as energiatodistus-api]
+            [solita.etp.config :as config]
             [solita.etp.security :as security]
             [solita.etp.exception :as exception]
             [solita.common.map :as map]))
@@ -46,6 +47,13 @@
            :handler (fn [{:keys [parameters]}]
                       {:status 302
                        :headers {"Location" (-> parameters :query :redirect)}})}}]
+   ["/logout"
+    {:get {:summary "Callback used to redirect user to cognito logout"
+           :tags    #{"System"}
+           :handler (fn [_]
+                      {:status  302
+                       :headers {"Set-Cookie" "AWSELBAuthSessionCookie-0=; Path=/; Max-Age-1; HttpOnly; Secure;"
+                                 "Location"   config/cognito-logout-url}})}}]
    ;; TODO Temporary endpoint for seeing headers added by load balancer
    ["/headers"
     {:get {:summary "Endpoint for seeing request headers"
