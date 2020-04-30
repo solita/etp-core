@@ -23,8 +23,10 @@ where energiatodistus.id = :id
 
 -- name: select-energiatodistukset-by-laatija
 select energiatodistus.id, energiatodistus.versio,
-  fullname(kayttaja.*) "laatija-fullname",
-  energiatodistus.data
+       energiatodistus.allekirjoituksessaaika,
+       energiatodistus.allekirjoitusaika,
+       fullname(kayttaja.*) "laatija-fullname",
+       energiatodistus.data
 from energiatodistus
   inner join laatija on laatija.id = energiatodistus.laatija_id
   inner join kayttaja on kayttaja.id = laatija.kayttaja

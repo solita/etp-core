@@ -483,9 +483,11 @@
                                              (str (get-in energiatodistus cursor-or-f))
                                              (cursor-or-f energiatodistus))))))
 
-(defn find-energiatodistus-xlsx [db id]
-  (when-let [energiatodistus
-             (energiatodistus-service/find-energiatodistus db id)]
+(defn find-laatija-energiatodistukset-xlsx [db laatija-id]
+  (when-let [energiatodistukset
+             (energiatodistus-service/find-energiatodistukset-by-laatija
+              db
+              laatija-id)]
     (let [path (->> (java.util.UUID/randomUUID)
                     .toString
                     (format "energiatodistus-%s.xlsx")
@@ -495,7 +497,8 @@
           bold-font (xlsx/create-bold-font xlsx)
           bold-style (xlsx/create-style xlsx bold-font)]
       (fill-headers sheet bold-style)
-      (fill-row-with-energiatodistus sheet 1 energiatodistus)
+      (doseq [[idx energiatodistus] (map-indexed vector energiatodistukset)]
+        (fill-row-with-energiatodistus sheet (inc idx) energiatodistus))
       (io/make-parents path)
       (xlsx/save-xlsx xlsx path)
       (let [is (io/input-stream path)]
