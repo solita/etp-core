@@ -475,13 +475,24 @@
     (doseq [[idx [label]] indexed-mappings]
       (xlsx/create-cell-with-value row idx label))))
 
+(defn v-from-energiatodistus [energiatodistus cursor-or-f]
+  (cond
+    (nil? cursor-or-f)
+    "Vaatii speksausta tai selvitystä"
+
+    (vector? cursor-or-f)
+    (str (get-in energiatodistus cursor-or-f))
+
+    :else
+    (cursor-or-f energiatodistus)))
+
 (defn fill-row-with-energiatodistus [sheet idx energiatodistus]
   (let [row (xlsx/create-row sheet idx)]
-    (doseq [[idx [_ cursor-or-f]] indexed-mappings
-            :when cursor-or-f]
-      (xlsx/create-cell-with-value row idx (if (vector? cursor-or-f)
-                                             (str (get-in energiatodistus cursor-or-f))
-                                             (cursor-or-f energiatodistus))))))
+    (doseq [[idx [_ cursor-or-f]] indexed-mappings]
+      (xlsx/create-cell-with-value
+       row
+       idx
+       (v-from-energiatodistus energiatodistus cursor-or-f)))))
 
 (defn find-laatija-energiatodistukset-xlsx [db laatija-id]
   (when-let [energiatodistukset
