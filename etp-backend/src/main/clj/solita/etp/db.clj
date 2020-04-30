@@ -64,6 +64,11 @@
          (jeesql/defqueries (str "solita/etp/db/" name ".sql") options)))
      (alias (symbol (str name "-db")) db-namespace))))
 
+(defn snake-case [kebab-case]
+  (str/replace kebab-case \- \_))
+
+(def default-opts {:entities snake-case})
+
 ;;
 ;; Protocol extensions
 ;;

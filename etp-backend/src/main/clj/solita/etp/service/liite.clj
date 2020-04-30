@@ -14,7 +14,7 @@
 (def coerce-liite (coerce/coercer liite-schema/Liite json/json-coercions))
 
 (defn- insert-liite! [liite db]
-  (db/with-db-exception-translation jdbc/insert! [db :liite liite]))
+  (db/with-db-exception-translation jdbc/insert! [db :liite liite db/default-opts]))
 
 (defn- file-key [liite-id]
   (str "energiatodistus/liite/" liite-id))
@@ -26,8 +26,8 @@
   (jdbc/with-db-transaction [db db]
     (-> liite
         (dissoc :tempfile :size)
-        (assoc :createdby_id (:id whoami))
-        (assoc :energiatodistus_id energiatodistus-id)
+        (assoc :createdby-id (:id whoami))
+        (assoc :energiatodistus-id energiatodistus-id)
         (insert-liite! db)
         first
         :id
