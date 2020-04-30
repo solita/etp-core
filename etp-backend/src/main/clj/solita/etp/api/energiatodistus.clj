@@ -101,6 +101,18 @@
                             #(liite-service/add-liitteet-from-files
                                db whoami id (if (vector? files) files [files]))
                             [{:constraint :liite-energiatodistus-id-fkey :response 404}]))}}]
+     ["/liitteet/link"
+      {:post {:summary "Liite linkin lisäys energiatodistukseen."
+              :parameters {:path {:id common-schema/Key}
+                           :body liite-schema/LiiteLinkAdd}
+              :responses {201 {:body nil}
+                          404 common-schema/ConstraintError}
+              :handler (fn [{{{:keys [id]} :path :keys [body]} :parameters
+                             :keys [db whoami]}]
+                         (api-response/response-with-exceptions 201
+                            #(liite-service/add-liite-from-link! db whoami id body)
+                            [{:constraint :liite-energiatodistus-id-fkey :response 404}]))}}]
+
      ["/liitteet"
       {:get {:summary "Hae energiatodistuksen liitteet."
              :parameters {:path {:id common-schema/Key}}

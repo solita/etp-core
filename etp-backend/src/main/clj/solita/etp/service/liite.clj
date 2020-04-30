@@ -41,6 +41,14 @@
         (set/rename-keys file {:content-type :contenttype
                                :filename :nimi})))))
 
+(defn add-liite-from-link! [db whoami energiatodistus-id liite]
+  (jdbc/with-db-transaction [db db]
+    (-> liite
+        (assoc :createdby-id (:id whoami))
+        (assoc :energiatodistus-id energiatodistus-id)
+        (assoc :contenttype "text/uri-list")
+        (insert-liite! db))))
+
 (defn find-energiatodistus-liitteet [db energiatodistus-id]
   (map coerce-liite
        (liite-db/select-liite-by-energiatodistus-id
