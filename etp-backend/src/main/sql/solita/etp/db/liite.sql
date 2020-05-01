@@ -8,4 +8,4 @@ select liite.id, liite.createtime, fullname(kayttaja.*) "author-fullname",
   liite.nimi, liite.contenttype, liite.url
 from liite inner join kayttaja on kayttaja.id = liite.createdby_id
 where energiatodistus_id = :energiatodistus-id
-
+order by liite.createtime desc
