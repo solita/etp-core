@@ -10,7 +10,8 @@
             [schema.core :as schema]
             [solita.etp.security :as security]
             [solita.etp.schema.common :as common-schema]
-            [solita.etp.api.response :as api-response]))
+            [solita.etp.api.response :as api-response])
+  (:import (java.io InputStream)))
 
 (def energiatodistus-2018-post
   {:summary    "Lisää luonnostilaisen energiatodistuksen"
@@ -114,11 +115,23 @@
                             [{:constraint :liite-energiatodistus-id-fkey :response 404}]))}}]
 
      ["/liitteet"
-      {:get {:summary "Hae energiatodistuksen liitteet."
-             :parameters {:path {:id common-schema/Key}}
-             :responses {200 {:body [liite-schema/Liite]}}
-             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
-                        (r/response (liite-service/find-energiatodistus-liitteet db id)))}}]
+      [""
+       {:get {:summary "Hae energiatodistuksen liitteet."
+              :parameters {:path {:id common-schema/Key}}
+              :responses {200 {:body [liite-schema/Liite]}}
+              :handler (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                         (r/response (liite-service/find-energiatodistus-liitteet db id)))}}]
+      ["/:liite-id/content"
+       {:get {:summary "Hae energiatodistuksen yhden liitteen sisältö."
+              :parameters {:path {:id common-schema/Key
+                                  :liite-id common-schema/Key}}
+              :responses {200 {:body InputStream}
+                          404 {:body schema/Str}}
+              :handler (fn [{{{:keys [id liite-id]} :path} :parameters :keys [db]}]
+                         (let [liite (liite-service/find-energiatodistus-liite-content db liite-id)]
+                           (api-response/file-response
+                             (:content liite) "test" "test" false
+                             (str "Energiatodistuksen " id " liite " liite-id " does not exists."))))}}]]
      ["/signature"
       ["/start"
        {:post {:summary    "Siirrä energiatodistus allekirjoitus-tilaan"

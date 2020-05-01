@@ -53,3 +53,6 @@
   (map coerce-liite
        (liite-db/select-liite-by-energiatodistus-id
          db {:energiatodistus-id energiatodistus-id})))
+
+(defn find-energiatodistus-liite-content [db liite-id]
+  (file-service/find-file db (file-key liite-id)))
