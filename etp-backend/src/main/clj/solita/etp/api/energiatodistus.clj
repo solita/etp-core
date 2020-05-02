@@ -131,7 +131,7 @@
               :handler (fn [{{{:keys [id liite-id]} :path} :parameters :keys [db]}]
                          (let [liite (liite-service/find-energiatodistus-liite-content db liite-id)]
                            (api-response/file-response
-                             (:content liite) "test" "test" false
+                             (:content liite) (:nimi liite) (:contenttype liite) false
                              (str "Energiatodistuksen " id " liite " liite-id " does not exists."))))}}]]
      ["/signature"
       ["/start"

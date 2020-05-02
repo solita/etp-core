@@ -55,4 +55,6 @@
          db {:energiatodistus-id energiatodistus-id})))
 
 (defn find-energiatodistus-liite-content [db liite-id]
-  (file-service/find-file db (file-key liite-id)))
+  (merge
+    (file-service/find-file db (file-key liite-id))
+    (first (liite-db/select-liite db {:id liite-id}))))
