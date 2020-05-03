@@ -11,7 +11,8 @@
 (def routes
   ["/liitteet"
    ["/files"
-    {:post {:summary "Energiatodistuksen liitteiden lisäys tiedostoista."
+    {:conflicting true
+     :post {:summary "Energiatodistuksen liitteiden lisäys tiedostoista."
             :parameters {:path {:id common-schema/Key}
                          :multipart {:files (schema/conditional
                                               vector? [reitit-schema/TempFilePart]
@@ -26,7 +27,8 @@
                          [{:constraint :liite-energiatodistus-id-fkey :response 404}]))}}]
 
    ["/link"
-    {:post {:summary "Liite linkin lisäys energiatodistukseen."
+    {:conflicting true
+     :post {:summary "Liite linkin lisäys energiatodistukseen."
             :parameters {:path {:id common-schema/Key}
                          :body liite-schema/LiiteLinkAdd}
             :responses {201 {:body nil}
@@ -44,11 +46,23 @@
            :handler (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                       (r/response (liite-service/find-energiatodistus-liitteet db id)))}}]
 
+   ["/:liite-id"
+    {:conflicting true
+     :delete {:summary "Poista liite energiatodistuksesta."
+              :parameters {:path {:id common-schema/Key
+                                  :liite-id common-schema/Key}}
+              :responses {200 {:body nil}
+                          404 {:body schema/Str}}
+              :handler (fn [{{{:keys [id liite-id]} :path} :parameters :keys [db]}]
+                          (api-response/put-response
+                              (liite-service/delete-liite db liite-id)
+                              (str "Energiatodistuksen " id " liite " liite-id " does not exists.")))}}]
+
    ["/:liite-id/content"
     {:get {:summary "Hae energiatodistuksen yhden liitteen sisältö."
            :parameters {:path {:id common-schema/Key
                                :liite-id common-schema/Key}}
-           :responses {200 {:body InputStream}
+           :responses {200 {:body nil}
                        404 {:body schema/Str}}
            :handler (fn [{{{:keys [id liite-id]} :path} :parameters :keys [db]}]
                       (let [liite (liite-service/find-energiatodistus-liite-content db liite-id)]

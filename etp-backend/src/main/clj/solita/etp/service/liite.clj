@@ -58,3 +58,6 @@
   (merge
     (file-service/find-file db (file-key liite-id))
     (first (liite-db/select-liite db {:id liite-id}))))
+
+(defn delete-liite [db liite-id]
+  (liite-db/delete-liite! db {:id liite-id}))

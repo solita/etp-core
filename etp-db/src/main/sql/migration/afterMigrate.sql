@@ -9,4 +9,4 @@ grant insert, update, delete on table energiatodistus to etp_app;
 grant insert, update on table yritys to etp_app;
 grant insert, update, delete on table laatija_yritys to etp_app;
 grant insert, update, delete on table file to etp_app;
-grant insert, update on table liite to etp_app;
+grant insert, update, delete on table liite to etp_app;
