@@ -44,6 +44,7 @@
      {:get {:summary    "Lataa laatijan energiatodistuksien tiedot XLSX-tiedostona"
             :responses  {200 {:body nil}
                          404 {:body schema/Str}}
+            :access     rooli-service/laatija?
             :handler    (fn [{:keys [db whoami]}]
                           (api-response/xlsx-response
                            (energiatodistus-xlsx-service/find-laatija-energiatodistukset-xlsx
