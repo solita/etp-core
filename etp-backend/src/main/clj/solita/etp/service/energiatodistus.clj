@@ -35,9 +35,13 @@
               :versio versio
               :laatija-id (:laatija whoami)))))
 
-(defn update-energiatodistus-luonnos! [db id energiatodistus]
-  (energiatodistus-db/update-energiatodistus-luonnos!
-    db {:id id :data (json/write-value-as-string energiatodistus)}))
+(defn update-energiatodistus-luonnos! [db whoami id energiatodistus]
+  (let [{:keys [laatija-id]} (find-energiatodistus db id)]
+    (if (= laatija-id (:laatija whoami))
+      (energiatodistus-db/update-energiatodistus-luonnos!
+       db
+       {:id id :data (json/write-value-as-string energiatodistus)})
+      (exception/throw-forbidden!))))
 
 (defn delete-energiatodistus-luonnos! [db id]
   (energiatodistus-db/delete-energiatodistus-luonnos! db {:id id}))
