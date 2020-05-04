@@ -33,6 +33,7 @@
   [["/energiatodistukset"
     {:get {:summary    "Hae laatijan energiatodistukset"
            :responses  {200 {:body [energiatodistus-schema/Energiatodistus]}}
+           :access     rooli-service/laatija?
            :handler    (fn [{:keys [db whoami]}]
                          (r/response (energiatodistus-service/find-energiatodistukset-by-laatija
                                       db (:laatija whoami))))}}]
