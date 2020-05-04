@@ -92,9 +92,9 @@
              :parameters {:path {:id common-schema/Key}}
              :responses  {200 {:body nil}
                           404 {:body schema/Str}}
-             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                            (api-response/pdf-response
-                            (energiatodistus-pdf-service/find-energiatodistus-pdf db id)
+                            (energiatodistus-pdf-service/find-energiatodistus-pdf db whoami id)
                             (str "energiatodistus2018-" id ".pdf")
                             (str "Energiatodistus " id " does not exists.")))}}]
      liite-api/routes
