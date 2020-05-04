@@ -43,8 +43,11 @@
        {:id id :data (json/write-value-as-string energiatodistus)})
       (exception/throw-forbidden!))))
 
-(defn delete-energiatodistus-luonnos! [db id]
-  (energiatodistus-db/delete-energiatodistus-luonnos! db {:id id}))
+(defn delete-energiatodistus-luonnos! [db whoami id]
+  (let [{:keys [laatija-id]} (find-energiatodistus db id)]
+    (if (= laatija-id (:laatija whoami))
+      (energiatodistus-db/delete-energiatodistus-luonnos! db {:id id})
+      (exception/throw-forbidden!))))
 
 (defn start-energiatodistus-signing! [db id]
   (when-let [{:keys [allekirjoituksessaaika allekirjoitusaika]}

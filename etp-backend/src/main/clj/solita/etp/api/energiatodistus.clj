@@ -80,10 +80,13 @@
                 :parameters {:path {:id common-schema/Key}}
                 :responses  {200 {:body nil}
                              404 {:body schema/Str}}
-                :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                               (api-response/put-response
-                                (energiatodistus-service/delete-energiatodistus-luonnos! db id)
-                                (str "Energiatodistus luonnos " id " does not exists.")))}}]
+                               (energiatodistus-service/delete-energiatodistus-luonnos!
+                                db
+                                whoami
+                                id)
+                               (str "Energiatodistus luonnos " id " does not exists.")))}}]
      ["/pdf"
       {:get {:summary    "Lataa energiatodistus PDF-tiedostona"
              :parameters {:path {:id common-schema/Key}}
