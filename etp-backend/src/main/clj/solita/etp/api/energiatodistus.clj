@@ -1,20 +1,22 @@
 (ns solita.etp.api.energiatodistus
   (:require [ring.util.response :as r]
             [reitit.ring.schema :as reitit-schema]
+            [schema.core :as schema]
+            [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
-            [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.api.energiatodistus-liite :as liite-api]
+            [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf-service]
             [solita.etp.service.energiatodistus-xlsx :as energiatodistus-xlsx-service]
-            [schema.core :as schema]
+            [solita.etp.service.rooli :as rooli-service]
             [solita.etp.security :as security]
-            [solita.etp.schema.common :as common-schema]
             [solita.etp.api.response :as api-response]))
 
 (def energiatodistus-2018-post
   {:summary    "Lisää luonnostilaisen energiatodistuksen"
    :parameters {:body energiatodistus-schema/EnergiatodistusSave2018}
    :responses  {201 {:body common-schema/Id}}
+   :access     rooli-service/laatija?
    :handler    (fn [{:keys [db whoami parameters uri]}]
                  (api-response/created
                   uri
