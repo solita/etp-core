@@ -58,9 +58,9 @@
              :parameters {:path {:id common-schema/Key}}
              :responses  {200 {:body energiatodistus-schema/Energiatodistus2018}
                           404 {:body schema/Str}}
-             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                            (api-response/get-response
-                             (energiatodistus-service/find-energiatodistus db id)
+                             (energiatodistus-service/find-energiatodistus db whoami id)
                              (str "Energiatodistus " id " does not exists.")))}
 
        :put {:summary    "Päivitä energiatodistus"

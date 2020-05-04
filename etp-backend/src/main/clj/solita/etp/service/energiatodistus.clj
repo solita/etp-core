@@ -1,7 +1,9 @@
 (ns solita.etp.service.energiatodistus
   (:require [solita.etp.db :as db]
+            [solita.etp.exception :as exception]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.json :as json]
+            [solita.etp.service.rooli :as rooli-service]
             [schema.coerce :as coerce]
             [clojure.java.jdbc :as jdbc]))
 
@@ -11,9 +13,17 @@
 ; *** Conversions from database data types ***
 (def coerce-energiatodistus (coerce/coercer energiatodistus-schema/Energiatodistus json/json-coercions))
 
-(defn find-energiatodistus [db id]
-  (first (map (comp coerce-energiatodistus json/merge-data)
-              (energiatodistus-db/select-energiatodistus db {:id id}))))
+(defn find-energiatodistus
+  ([db id]
+   (first (map (comp coerce-energiatodistus json/merge-data)
+               (energiatodistus-db/select-energiatodistus db {:id id}))))
+  ([db whoami id]
+   (let [energiatodistus (find-energiatodistus db id)]
+     (if (or (rooli-service/paakayttaja? whoami)
+             (and (rooli-service/laatija? whoami)
+                  (= (:laatija-id energiatodistus) (:laatija whoami))))
+       energiatodistus
+       (exception/throw-forbidden!)))))
 
 (defn find-energiatodistukset-by-laatija [db laatija-id]
   (map (comp coerce-energiatodistus json/merge-data)
