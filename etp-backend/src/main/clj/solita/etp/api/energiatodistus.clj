@@ -1,20 +1,22 @@
 (ns solita.etp.api.energiatodistus
   (:require [ring.util.response :as r]
             [reitit.ring.schema :as reitit-schema]
+            [schema.core :as schema]
+            [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
-            [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.api.energiatodistus-liite :as liite-api]
+            [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf-service]
             [solita.etp.service.energiatodistus-xlsx :as energiatodistus-xlsx-service]
-            [schema.core :as schema]
+            [solita.etp.service.rooli :as rooli-service]
             [solita.etp.security :as security]
-            [solita.etp.schema.common :as common-schema]
             [solita.etp.api.response :as api-response]))
 
 (def energiatodistus-2018-post
   {:summary    "Lisää luonnostilaisen energiatodistuksen"
    :parameters {:body energiatodistus-schema/EnergiatodistusSave2018}
    :responses  {201 {:body common-schema/Id}}
+   :access     rooli-service/laatija?
    :handler    (fn [{:keys [db whoami parameters uri]}]
                  (api-response/created
                   uri
@@ -31,6 +33,7 @@
   [["/energiatodistukset"
     {:get {:summary    "Hae laatijan energiatodistukset"
            :responses  {200 {:body [energiatodistus-schema/Energiatodistus]}}
+           :access     rooli-service/laatija?
            :handler    (fn [{:keys [db whoami]}]
                          (r/response (energiatodistus-service/find-energiatodistukset-by-laatija
                                       db (:laatija whoami))))}}]
@@ -41,6 +44,7 @@
      {:get {:summary    "Lataa laatijan energiatodistuksien tiedot XLSX-tiedostona"
             :responses  {200 {:body nil}
                          404 {:body schema/Str}}
+            :access     rooli-service/laatija?
             :handler    (fn [{:keys [db whoami]}]
                           (api-response/xlsx-response
                            (energiatodistus-xlsx-service/find-laatija-energiatodistukset-xlsx
@@ -54,9 +58,9 @@
              :parameters {:path {:id common-schema/Key}}
              :responses  {200 {:body energiatodistus-schema/Energiatodistus2018}
                           404 {:body schema/Str}}
-             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                            (api-response/get-response
-                             (energiatodistus-service/find-energiatodistus db id)
+                             (energiatodistus-service/find-energiatodistus db whoami id)
                              (str "Energiatodistus " id " does not exists.")))}
 
        :put {:summary    "Päivitä energiatodistus"
@@ -64,26 +68,33 @@
                           :body energiatodistus-schema/EnergiatodistusSave2018}
              :responses  {200 {:body nil}
                           404 {:body schema/Str}}
-             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
+             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami parameters]}]
                            (api-response/put-response
-                             (energiatodistus-service/update-energiatodistus-luonnos! db id (:body parameters))
+                            (energiatodistus-service/update-energiatodistus-luonnos!
+                             db
+                             whoami
+                             id
+                             (:body parameters))
                              (str "Energiatodistus luonnos " id " does not exists.")))}
        :delete {:summary "Poista luonnostilainen energiatodistus"
                 :parameters {:path {:id common-schema/Key}}
                 :responses  {200 {:body nil}
                              404 {:body schema/Str}}
-                :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                               (api-response/put-response
-                                (energiatodistus-service/delete-energiatodistus-luonnos! db id)
-                                (str "Energiatodistus luonnos " id " does not exists.")))}}]
+                               (energiatodistus-service/delete-energiatodistus-luonnos!
+                                db
+                                whoami
+                                id)
+                               (str "Energiatodistus luonnos " id " does not exists.")))}}]
      ["/pdf"
       {:get {:summary    "Lataa energiatodistus PDF-tiedostona"
              :parameters {:path {:id common-schema/Key}}
              :responses  {200 {:body nil}
                           404 {:body schema/Str}}
-             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                            (api-response/pdf-response
-                            (energiatodistus-pdf-service/find-energiatodistus-pdf db id)
+                            (energiatodistus-pdf-service/find-energiatodistus-pdf db whoami id)
                             (str "energiatodistus2018-" id ".pdf")
                             (str "Energiatodistus " id " does not exists.")))}}]
      liite-api/routes

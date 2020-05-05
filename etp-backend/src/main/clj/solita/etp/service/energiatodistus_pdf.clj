@@ -6,6 +6,7 @@
             [puumerkki.pdf :as puumerkki]
             [solita.common.xlsx :as xlsx]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
+            [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.file :as file-service]))
 
 (def xlsx-template-path "energiatodistus-template.xlsx")
@@ -424,9 +425,9 @@
     (io/delete-file pdf-path)
     is))
 
-(defn find-energiatodistus-pdf [db id]
+(defn find-energiatodistus-pdf [db whoami id]
   (when-let [{:keys [allekirjoitusaika] :as energiatodistus}
-             (energiatodistus-service/find-energiatodistus db id)]
+             (energiatodistus-service/find-energiatodistus db whoami id)]
     (if allekirjoitusaika
       (find-existing-pdf db id)
       (generate-pdf-as-input-stream energiatodistus))))

@@ -228,6 +228,7 @@
   (assoc (merge common-schema/Id EnergiatodistusSave2018)
          :allekirjoituksessaaika (schema/maybe common-schema/Instant)
          :allekirjoitusaika (schema/maybe common-schema/Instant)
+         :laatija-id common-schema/Key
          :laatija-fullname schema/Str
          :versio (schema/eq 2018)))
 
