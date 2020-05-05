@@ -32,11 +32,12 @@
 (def private-routes
   [["/energiatodistukset"
     {:get {:summary    "Hae laatijan energiatodistukset"
+           :parameters {:query {(schema/optional-key :tila) schema/Int}}
            :responses  {200 {:body [energiatodistus-schema/Energiatodistus]}}
            :access     rooli-service/laatija?
-           :handler    (fn [{:keys [db whoami]}]
+           :handler    (fn [{{{:keys [tila]} :query} :parameters :keys [db whoami]}]
                          (r/response (energiatodistus-service/find-energiatodistukset-by-laatija
-                                      db (:laatija whoami))))}}]
+                                      db (:laatija whoami) tila)))}}]
    ["/energiatodistukset/2018"
     [""
      {:post energiatodistus-2018-post}]
