@@ -25,9 +25,10 @@
        energiatodistus
        (exception/throw-forbidden!)))))
 
-(defn find-energiatodistukset-by-laatija [db laatija-id]
+(defn find-energiatodistukset-by-laatija [db laatija-id tila-id]
   (map (comp coerce-energiatodistus json/merge-data)
-       (energiatodistus-db/select-energiatodistukset-by-laatija db {:laatija-id laatija-id})))
+       (energiatodistus-db/select-energiatodistukset-by-laatija
+         db {:laatija-id laatija-id :tila-id tila-id})))
 
 (defn add-energiatodistus! [db whoami versio energiatodistus]
   (:id (energiatodistus-db/insert-energiatodistus<!
