@@ -49,6 +49,19 @@
       (t/is (= (complete-energiatodistus energiatodistus id laatija-id)
                (find-energiatodistus id))))))
 
+(t/deftest permissions-test
+  (let [patevyydentoteaja {:rooli 1}
+        paakayttaja {:rooli 2}
+        laatija-id (add-laatija!)
+        energiatodistus (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators)
+        id (add-energiatodistus! energiatodistus laatija-id)]
+    (t/is (= (complete-energiatodistus energiatodistus id laatija-id)
+             (-> (service/find-energiatodistus ts/*db* paakayttaja id)
+                 (dissoc :laatija-fullname))))
+    (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
+                            #"Forbidden"
+                            (service/find-energiatodistus ts/*db* patevyydentoteaja id)))))
+
 (t/deftest update-energiatodistus-test
   (let [laatija-id (add-laatija!)
         id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators) laatija-id)
