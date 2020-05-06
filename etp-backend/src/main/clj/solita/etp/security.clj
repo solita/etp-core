@@ -32,7 +32,8 @@
       (if whoami
         (handler (assoc req :whoami whoami))
         (do
-          (log/error "Unable to find käyttäjä with Basic Auth")
+          (log/error "Unable to find käyttäjä with Basic Auth"
+                     {:id id})
           response/forbidden)))))
 
 (defn wrap-access [handler]
