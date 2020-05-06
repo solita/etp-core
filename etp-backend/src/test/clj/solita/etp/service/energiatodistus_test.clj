@@ -25,48 +25,67 @@
       (get 0)
       :laatija))
 
-(defn add-energiatodistus! [energiatodistus]
-  (let [laatija {:laatija (add-laatija!)}]
-    (service/add-energiatodistus! ts/*db* laatija 2018 energiatodistus)))
+(defn add-energiatodistus! [energiatodistus laatija-id]
+  (service/add-energiatodistus! ts/*db* {:laatija laatija-id} 2018 energiatodistus))
 
 (defn find-energiatodistus [id]
   (let [et (service/find-energiatodistus ts/*db* id)]
     (t/is (not (nil? (:laatija-fullname et))))
     (dissoc et :laatija-fullname)))
 
-(defn merge-energiatodistus-defaults [energiatodistus id]
+(defn complete-energiatodistus [energiatodistus id laatija-id]
   (merge energiatodistus
          {:id id
+          :laatija-id laatija-id
           :versio 2018
           :allekirjoituksessaaika nil
           :allekirjoitusaika nil}))
 
 (t/deftest add-and-find-energiatodistus-test
-  (doseq [energiatodistus (repeatedly 100 #(g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))
-          :let [id (add-energiatodistus! energiatodistus)]]
-    (t/is (= (merge-energiatodistus-defaults energiatodistus id) (find-energiatodistus id)))))
+  (let [laatija-id (add-laatija!)]
+    (doseq [energiatodistus (repeatedly 100 #(g/generate schema/EnergiatodistusSave2018
+                                                         energiatodistus-generators))
+            :let [id (add-energiatodistus! energiatodistus laatija-id)]]
+      (t/is (= (complete-energiatodistus energiatodistus id laatija-id)
+               (find-energiatodistus id))))))
+
+(t/deftest permissions-test
+  (let [patevyydentoteaja {:rooli 1}
+        paakayttaja {:rooli 2}
+        laatija-id (add-laatija!)
+        energiatodistus (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators)
+        id (add-energiatodistus! energiatodistus laatija-id)]
+    (t/is (= (complete-energiatodistus energiatodistus id laatija-id)
+             (-> (service/find-energiatodistus ts/*db* paakayttaja id)
+                 (dissoc :laatija-fullname))))
+    (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
+                            #"Forbidden"
+                            (service/find-energiatodistus ts/*db* patevyydentoteaja id)))))
 
 (t/deftest update-energiatodistus-test
-  (let [id                     (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))
+  (let [laatija-id (add-laatija!)
+        id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators) laatija-id)
         update-energiatodistus (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators)]
-
-    (service/update-energiatodistus-luonnos! ts/*db* id update-energiatodistus)
-    (t/is (= (merge-energiatodistus-defaults update-energiatodistus id)
+    (service/update-energiatodistus-luonnos! ts/*db* {:laatija laatija-id} id update-energiatodistus)
+    (t/is (= (complete-energiatodistus update-energiatodistus id laatija-id)
              (find-energiatodistus id)))))
 
 (t/deftest create-energiatodistus-and-delete-test
-  (let [id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))]
-    (service/delete-energiatodistus-luonnos! ts/*db* id)))
+  (let [laatija-id (add-laatija!)
+        id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators) laatija-id)]
+    (service/delete-energiatodistus-luonnos! ts/*db* {:laatija laatija-id} id)))
 
 (t/deftest start-energiatodistus-signing!-test
-  (let [id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))]
+  (let [laatija-id (add-laatija!)
+        id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators) laatija-id)]
     (t/is (-> (find-energiatodistus id) :allekirjoituksessaaika nil?))
     (t/is (= (service/start-energiatodistus-signing! ts/*db* id) :ok))
     (t/is (-> (find-energiatodistus id) :allekirjoituksessaaika nil? not))
     (t/is (= (service/start-energiatodistus-signing! ts/*db* id) :already-in-signing))))
 
 (t/deftest stop-energiatodistus-signing!-test
-  (let [id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators))]
+  (let [laatija-id (add-laatija!)
+        id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators) laatija-id)]
     (t/is (-> (find-energiatodistus id) :allekirjoitusaika nil?))
     (t/is (=  (service/stop-energiatodistus-signing! ts/*db* id)
               :not-in-signing))

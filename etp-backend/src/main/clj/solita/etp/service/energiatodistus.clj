@@ -1,7 +1,9 @@
 (ns solita.etp.service.energiatodistus
   (:require [solita.etp.db :as db]
+            [solita.etp.exception :as exception]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.json :as json]
+            [solita.etp.service.rooli :as rooli-service]
             [schema.coerce :as coerce]
             [clojure.java.jdbc :as jdbc]))
 
@@ -11,13 +13,22 @@
 ; *** Conversions from database data types ***
 (def coerce-energiatodistus (coerce/coercer energiatodistus-schema/Energiatodistus json/json-coercions))
 
-(defn find-energiatodistus [db id]
-  (first (map (comp coerce-energiatodistus json/merge-data)
-              (energiatodistus-db/select-energiatodistus db {:id id}))))
+(defn find-energiatodistus
+  ([db id]
+   (first (map (comp coerce-energiatodistus json/merge-data)
+               (energiatodistus-db/select-energiatodistus db {:id id}))))
+  ([db whoami id]
+   (let [energiatodistus (find-energiatodistus db id)]
+     (if (or (rooli-service/paakayttaja? whoami)
+             (and (rooli-service/laatija? whoami)
+                  (= (:laatija-id energiatodistus) (:laatija whoami))))
+       energiatodistus
+       (exception/throw-forbidden!)))))
 
-(defn find-energiatodistukset-by-laatija [db laatija-id]
+(defn find-energiatodistukset-by-laatija [db laatija-id tila-id]
   (map (comp coerce-energiatodistus json/merge-data)
-       (energiatodistus-db/select-energiatodistukset-by-laatija db {:laatija-id laatija-id})))
+       (energiatodistus-db/select-energiatodistukset-by-laatija
+         db {:laatija-id laatija-id :tila-id tila-id})))
 
 (defn add-energiatodistus! [db whoami versio energiatodistus]
   (:id (energiatodistus-db/insert-energiatodistus<!
@@ -25,12 +36,19 @@
               :versio versio
               :laatija-id (:laatija whoami)))))
 
-(defn update-energiatodistus-luonnos! [db id energiatodistus]
-  (energiatodistus-db/update-energiatodistus-luonnos!
-    db {:id id :data (json/write-value-as-string energiatodistus)}))
+(defn update-energiatodistus-luonnos! [db whoami id energiatodistus]
+  (let [{:keys [laatija-id]} (find-energiatodistus db id)]
+    (if (= laatija-id (:laatija whoami))
+      (energiatodistus-db/update-energiatodistus-luonnos!
+       db
+       {:id id :data (json/write-value-as-string energiatodistus)})
+      (exception/throw-forbidden!))))
 
-(defn delete-energiatodistus-luonnos! [db id]
-  (energiatodistus-db/delete-energiatodistus-luonnos! db {:id id}))
+(defn delete-energiatodistus-luonnos! [db whoami id]
+  (let [{:keys [laatija-id]} (find-energiatodistus db id)]
+    (if (= laatija-id (:laatija whoami))
+      (energiatodistus-db/delete-energiatodistus-luonnos! db {:id id})
+      (exception/throw-forbidden!))))
 
 (defn start-energiatodistus-signing! [db id]
   (when-let [{:keys [allekirjoituksessaaika allekirjoitusaika]}
