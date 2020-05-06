@@ -108,3 +108,47 @@
 
 (defn find-alakayttotarkoitukset [db versio]
   (energiatodistus-db/select-alakayttotarkoitusluokat-by-versio db {:versio versio}))
+
+;;
+;; Energiatodistuksen "denormalisointi" ja laskennalliset kentät
+;;
+
+(defn combine-keys [m f cursor-new cursor-1 cursor-2]
+  (assoc-in m cursor-new (* (get-in m cursor-1) (get-in m cursor-2))))
+
+(defn assoc-*nettoala [energiatodistus cursor]
+  (let [new-k (-> cursor last name (str "*nettoala") keyword)
+        new-cursor (-> cursor pop (conj new-k))]
+    (combine-keys energiatodistus
+                  *
+                  new-cursor cursor
+                  [:lahtotiedot :lammitetty-nettoala])))
+
+(defn complete-energiatodistus [energiatodistus]
+  (let [{:keys [tulokset]} energiatodistus]
+    (-> energiatodistus
+        (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin] 0.5)
+        (assoc-in [:tulokset :kaytettavat-energiamuodot :sahko-kerroin] 1.2)
+        (assoc-in [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin] 0.5)
+        (assoc-in [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin] 1)
+        (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin] 0.28)
+        (assoc-*nettoala [:tulokset :kaytettavat-energiamuodot :kaukolampo])
+        (assoc-*nettoala [:tulokset :kaytettavat-energiamuodot :sahko])
+        (assoc-*nettoala [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine])
+        (assoc-*nettoala [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine])
+        (assoc-*nettoala [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys])
+        (combine-keys * [:tulokset :kaytettavat-energiamuodot :kaukolampo*nettoala*kerroin]
+                      [:tulokset :kaytettavat-energiamuodot :kaukolampo*nettoala]
+                      [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin])
+        (combine-keys * [:tulokset :kaytettavat-energiamuodot :sahko*nettoala*kerroin]
+                      [:tulokset :kaytettavat-energiamuodot :sahko*nettoala]
+                      [:tulokset :kaytettavat-energiamuodot :sahko-kerroin])
+        (combine-keys * [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine*nettoala*kerroin]
+                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine*nettoala]
+                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin])
+        (combine-keys * [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine*nettoala*kerroin]
+                      [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine*nettoala]
+                      [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin])
+        (combine-keys * [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys*nettoala*kerroin]
+                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys*nettoala]
+                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]))))
