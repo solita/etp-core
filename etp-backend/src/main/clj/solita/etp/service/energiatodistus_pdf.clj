@@ -41,8 +41,7 @@
                   "K12" [:perustiedot :rakennustunnus]
                   "K13" [:perustiedot :valmistumisvuosi]
 
-                  ;; TODO find alakayttotarkoitukset from db
-                  "K14" [:perustiedot :kayttotarkoitus]
+                  "K14" [:perustiedot :alakayttotarkoitus-fi]
                   "K16" [:id]
 
                   ;; TODO checkboxes D19-D21
