@@ -89,32 +89,32 @@
 
                   "C38" [:perustiedot :keskeiset-suositukset-fi]}
                2 {"E4" [:perustiedot :alakayttotarkoitus-fi]
-
-                  ;; TODO Rakennusvaippa; osuus lämpöhäviöstä
                   "D5" [:perustiedot :valmistusmisvuosi]
                   "F5" [:lahtotiedot :lammitetty-nettoala]
                   "D7" [:lahtotiedot :rakennusvaippa :ilmanvaihtoluku]
+
                   "D10" [:lahtotiedot :rakennusvaippa :ulkoseinat :ala]
                   "E10" [:lahtotiedot :rakennusvaippa :ulkoseinat :U]
-                  "F10" #(safe-str-* (-> % :lahtotiedot :rakennusvaippa :ulkoseinat :ala)
-                                     (-> % :lahtotiedot :rakennusvaippa :ulkoseinat :U))
+                  "F10" [:lahtotiedot :rakennusvaippa :ulkoseinat :UA]
+                  "G10" [:lahtotiedot :rakennusvaippa :ulkoseinat :osuus-lampohaviosta]
                   "D11" [:lahtotiedot :rakennusvaippa :ylapohja :ala]
                   "E11" [:lahtotiedot :rakennusvaippa :ylapohja :U]
-                  "F11" #(safe-str-* (-> % :lahtotiedot :rakennusvaippa :ylapohja :ala)
-                                     (-> % :lahtotiedot :rakennusvaippa :ylapohja :U))
+                  "F11" [:lahtotiedot :rakennusvaippa :ylapohja :UA]
+                  "G11" [:lahtotiedot :rakennusvaippa :ylapohja :osuus-lampohaviosta]
                   "D12" [:lahtotiedot :rakennusvaippa :alapohja :ala]
                   "E12" [:lahtotiedot :rakennusvaippa :alapohja :U]
-                  "F12" #(safe-str-* (-> % :lahtotiedot :rakennusvaippa :alapohja :ala)
-                                     (-> % :lahtotiedot :rakennusvaippa :alapohja :U))
+                  "F12" [:lahtotiedot :rakennusvaippa :alapohja :UA]
+                  "G12" [:lahtotiedot :rakennusvaippa :alapohja :osuus-lampohaviosta]
                   "D13" [:lahtotiedot :rakennusvaippa :ikkunat :ala]
                   "E13" [:lahtotiedot :rakennusvaippa :ikkunat :U]
-                  "F13" #(safe-str-* (-> % :lahtotiedot :rakennusvaippa :ikkunat :ala)
-                                     (-> % :lahtotiedot :rakennusvaippa :ikkunat :U))
+                  "F13" [:lahtotiedot :rakennusvaippa :ikkunat :UA]
+                  "G13" [:lahtotiedot :rakennusvaippa :ikkunat :osuus-lampohaviosta]
                   "D14" [:lahtotiedot :rakennusvaippa :ulkoovet :ala]
                   "E14" [:lahtotiedot :rakennusvaippa :ulkoovet :U]
-                  "F14" #(safe-str-* (-> % :lahtotiedot :rakennusvaippa :ulkoovet :ala)
-                                     (-> % :lahtotiedot :rakennusvaippa :ulkoovet :U))
+                  "F14" [:lahtotiedot :rakennusvaippa :ulkoovet :UA]
+                  "G14" [:lahtotiedot :rakennusvaippa :ulkoovet :osuus-lampohaviosta]
                   "F15" [:lahtotiedot :rakennusvaippa :kylmasillat-UA]
+                  "G15" [:lahtotiedot :rakennusvaippa :kylmasillat-osuus-lampohaviosta]
 
                   "D19" [:lahtotiedot :ikkunat :pohjoinen :ala]
                   "E19" [:lahtotiedot :ikkunat :pohjoinen :U]
@@ -142,22 +142,14 @@
                   "F26" [:lahtotiedot :ikkunat :luode :g-ks]
 
                   "D28" [:lahtotiedot :ilmanvaihto :kuvaus-fi]
-
-                  "D33" #(str (-> % :lahtotiedot :ilmanvaihto :paaiv :tulo)
-                              " / "
-                              (-> % :lahtotiedot :ilmanvaihto :paaiv :poisto))
+                  "D33" [:lahtotiedot :ilmanvaihto :paaiv :tulo-poisto]
                   "E33" [:lahtotiedot :ilmanvaihto :paaiv :sfp]
                   "F33" [:lahtotiedot :ilmanvaihto :paaiv :lampotilasuhde]
                   "G33" [:lahtotiedot :ilmanvaihto :paaiv :jaatymisenesto]
-                  "D34" #(str (-> % :lahtotiedot :ilmanvaihto :erillispoistot :tulo)
-                              " / "
-                              (-> % :lahtotiedot :ilmanvaihto :erillispoistot :poisto))
+                  "D34" [:lahtotiedot :ilmanvaihto :erillispoistot :tulo-poisto]
                   "E34" [:lahtotiedot :ilmanvaihto :erillispoistot :sfp]
-                  "D35" #(str (-> % :lahtotiedot :ilmanvaihto :ivjarjestelma :tulo)
-                              " / "
-                              (-> % :lahtotiedot :ilmanvaihto :ivjarjestelma :poisto))
+                  "D35" [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo-poisto]
                   "E35" [:lahtotiedot :ilmanvaihto :ivjarjestelma :sfp]
-
                   "E36" [:lahtotiedot :ilmanvaihto :lto-vuosihyotysuhde]
 
                   "D38" [:lahtotiedot :lammitys :kuvaus-fi]

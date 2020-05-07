@@ -116,15 +116,16 @@
 (defn *-ceil [& args]
   (->> args (apply *) Math/ceil))
 
-(defn combine-keys [m f cursor-new cursor-1 cursor-2]
-  (assoc-in m cursor-new (* (get-in m cursor-1) (get-in m cursor-2))))
+(defn combine-keys [m f cursor-new & cursors]
+  (assoc-in m cursor-new (apply f (map #(get-in m %) cursors))))
 
 (defn assoc-div-nettoala [energiatodistus cursor]
   (let [new-k (-> cursor last name (str "-nettoala") keyword)
         new-cursor (-> cursor pop (conj new-k))]
     (combine-keys energiatodistus
                   /
-                  new-cursor cursor
+                  new-cursor
+                  cursor
                   [:lahtotiedot :lammitetty-nettoala])))
 
 (defn find-complete-energiatodistus* [energiatodistus alakayttotarkoitukset]
@@ -164,7 +165,72 @@
          (combine-keys *-ceil
                        [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kerroin]
                        [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala]
-                       [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]))))
+                       [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin])
+         (combine-keys *
+                       [:lahtotiedot :rakennusvaippa :ulkoseinat :UA]
+                       [:lahtotiedot :rakennusvaippa :ulkoseinat :ala]
+                       [:lahtotiedot :rakennusvaippa :ulkoseinat :U])
+         (combine-keys *
+                       [:lahtotiedot :rakennusvaippa :ylapohja :UA]
+                       [:lahtotiedot :rakennusvaippa :ylapohja :ala]
+                       [:lahtotiedot :rakennusvaippa :ylapohja :U])
+         (combine-keys *
+                       [:lahtotiedot :rakennusvaippa :alapohja :UA]
+                       [:lahtotiedot :rakennusvaippa :alapohja :ala]
+                       [:lahtotiedot :rakennusvaippa :alapohja :U])
+         (combine-keys *
+                       [:lahtotiedot :rakennusvaippa :ikkunat :UA]
+                       [:lahtotiedot :rakennusvaippa :ikkunat :ala]
+                       [:lahtotiedot :rakennusvaippa :ikkunat :U])
+         (combine-keys *
+                       [:lahtotiedot :rakennusvaippa :ulkoovet :UA]
+                       [:lahtotiedot :rakennusvaippa :ulkoovet :ala]
+                       [:lahtotiedot :rakennusvaippa :ulkoovet :U])
+         (combine-keys +
+                       [:lahtotiedot :rakennusvaippa :UA-summa]
+                       [:lahtotiedot :rakennusvaippa :ulkoseinat :UA]
+                       [:lahtotiedot :rakennusvaippa :ylapohja :UA]
+                       [:lahtotiedot :rakennusvaippa :alapohja :UA]
+                       [:lahtotiedot :rakennusvaippa :ikkunat :UA]
+                       [:lahtotiedot :rakennusvaippa :ulkoovet :UA]
+                       [:lahtotiedot :rakennusvaippa :kylmasillat-UA])
+         (combine-keys /
+                       [:lahtotiedot :rakennusvaippa :ulkoseinat :osuus-lampohaviosta]
+                       [:lahtotiedot :rakennusvaippa :ulkoseinat :UA]
+                       [:lahtotiedot :rakennusvaippa :UA-summa])
+         (combine-keys /
+                       [:lahtotiedot :rakennusvaippa :ylapohja :osuus-lampohaviosta]
+                       [:lahtotiedot :rakennusvaippa :ylapohja :UA]
+                       [:lahtotiedot :rakennusvaippa :UA-summa])
+         (combine-keys /
+                       [:lahtotiedot :rakennusvaippa :alapohja :osuus-lampohaviosta]
+                       [:lahtotiedot :rakennusvaippa :alapohja :UA]
+                       [:lahtotiedot :rakennusvaippa :UA-summa])
+         (combine-keys /
+                       [:lahtotiedot :rakennusvaippa :ikkunat :osuus-lampohaviosta]
+                       [:lahtotiedot :rakennusvaippa :ikkunat :UA]
+                       [:lahtotiedot :rakennusvaippa :UA-summa])
+         (combine-keys /
+                       [:lahtotiedot :rakennusvaippa :ulkoovet :osuus-lampohaviosta]
+                       [:lahtotiedot :rakennusvaippa :ulkoovet :UA]
+                       [:lahtotiedot :rakennusvaippa :UA-summa])
+         (combine-keys /
+                       [:lahtotiedot :rakennusvaippa :kylmasillat-osuus-lampohaviosta]
+                       [:lahtotiedot :rakennusvaippa :kylmasillat-UA]
+                       [:lahtotiedot :rakennusvaippa :UA-summa])
+         (combine-keys #(str %1 " / " %2 )
+                       [:lahtotiedot :ilmanvaihto :paaiv :tulo-poisto]
+                       [:lahtotiedot :ilmanvaihto :paaiv :tulo]
+                       [:lahtotiedot :ilmanvaihto :paaiv :poisto])
+         (combine-keys #(str %1 " / " %2 )
+                       [:lahtotiedot :ilmanvaihto :erillispoistot :tulo-poisto]
+                       [:lahtotiedot :ilmanvaihto :erillispoistot :tulo]
+                       [:lahtotiedot :ilmanvaihto :erillispoistot :poisto])
+         (combine-keys #(str %1 " / " %2 )
+                       [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo-poisto]
+                       [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo]
+                       [:lahtotiedot :ilmanvaihto :ivjarjestelma :poisto])
+         )))
 
 (defn find-complete-energiatodistus
   ([db id]
