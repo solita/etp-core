@@ -7,9 +7,12 @@
             [solita.common.xlsx :as xlsx]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.rooli :as rooli-service]
-            [solita.etp.service.file :as file-service]))
+            [solita.etp.service.file :as file-service])
+  (:import (org.apache.pdfbox.tools OverlayPDF)
+           (org.apache.pdfbox.multipdf Overlay$Position)))
 
 (def xlsx-template-path "energiatodistus-template.xlsx")
+(def watermark-path-fi "watermark-fi.pdf")
 (def sheet-count 8)
 (def tmp-dir "tmp/")
 
@@ -403,11 +406,19 @@
       (do (log/error "XLSX to PDF conversion failed" sh-result)
         (throw (ex-info "XLSX to PDF conversion failed" sh-result))))))
 
-(defn generate [energiatodistus]
+(defn add-watermark [pdf-path]
+  (let [settings ["-position" (.toString Overlay$Position/FOREGROUND)]
+        watermark-path (-> watermark-path-fi io/resource .getPath)]
+    (OverlayPDF/main (into-array String (flatten [pdf-path settings watermark-path pdf-path])))
+    pdf-path))
+
+(defn generate [energiatodistus & [{:keys [add-watermark?]}]]
   (let [xlsx-path (fill-xlsx-template energiatodistus)
         pdf-path (xlsx->pdf xlsx-path)]
     (io/delete-file xlsx-path)
-    pdf-path))
+    (if add-watermark?
+      (add-watermark pdf-path)
+      pdf-path)))
 
 (defn pdf-file-id [id]
   (when id (str "energiatodistus-" id)))
@@ -420,7 +431,7 @@
        io/input-stream))
 
 (defn generate-pdf-as-input-stream [energiatodistus]
-  (let [pdf-path (generate energiatodistus)
+  (let [pdf-path (generate energiatodistus {:add-watermark? true})
         is (io/input-stream pdf-path)]
     (io/delete-file pdf-path)
     is))
