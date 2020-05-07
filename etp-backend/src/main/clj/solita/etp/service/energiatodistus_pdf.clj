@@ -88,10 +88,8 @@
 
                   ;; TODO Tämän rakennuksen energiatehokkuusluokka
 
-                  ;; TODO is this correct?
                   "C38" [:perustiedot :keskeiset-suositukset-fi]}
-               2 {
-                  ;; TODO rakennuksen käyttötarkoitusluokka
+               2 {"E4" [:perustiedot :alakayttotarkoitus-fi]
 
                   ;; TODO Rakennusvaippa; osuus lämpöhäviöstä
                   "D5" [:perustiedot :valmistusmisvuosi]
@@ -447,11 +445,12 @@
 (defn find-energiatodistus-pdf [db whoami id]
   (when-let [{:keys [allekirjoitusaika] :as energiatodistus}
              (energiatodistus-service/find-energiatodistus db whoami id)]
-    (if allekirjoitusaika
-      (find-existing-pdf db id)
-      (-> energiatodistus
-          energiatodistus-service/complete-energiatodistus
-          generate-pdf-as-input-stream))))
+    (let [alakayttotarkoitukset (energiatodistus-service/find-alakayttotarkoitukset db 2018)]
+      (if allekirjoitusaika
+        (find-existing-pdf db id)
+        (-> energiatodistus
+            (energiatodistus-service/complete-energiatodistus alakayttotarkoitukset)
+            generate-pdf-as-input-stream)))))
 
 (defn do-when-signing [{:keys [allekirjoituksessaaika allekirjoitusaika]} f]
   (cond

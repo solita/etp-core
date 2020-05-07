@@ -127,9 +127,14 @@
                   new-cursor cursor
                   [:lahtotiedot :lammitetty-nettoala])))
 
-(defn complete-energiatodistus [energiatodistus]
-  (let [{:keys [tulokset]} energiatodistus]
+(defn complete-energiatodistus [energiatodistus alakayttotarkoitukset]
+  (let [kayttotarkoitus-id (get-in energiatodistus [:perustiedot :kayttotarkoitus])
+        alakayttotarkoitus (->> alakayttotarkoitukset
+                                (filter #(= (:id %) kayttotarkoitus-id))
+                                first)]
     (-> energiatodistus
+        (assoc-in [:perustiedot :alakayttotarkoitus-fi] (:label-fi alakayttotarkoitus))
+        (assoc-in [:perustiedot :alakayttotarkoitus-sv] (:label-sv alakayttotarkoitus))
         (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin] 0.5)
         (assoc-in [:tulokset :kaytettavat-energiamuodot :sahko-kerroin] 1.2)
         (assoc-in [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin] 0.5)
