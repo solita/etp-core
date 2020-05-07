@@ -99,7 +99,6 @@
                             (str "energiatodistus2018-" id ".pdf")
                             (str "Energiatodistus " id " does not exists.")))}}]
      liite-api/routes
-
      ["/signature"
       ["/start"
        {:post {:summary    "Siirrä energiatodistus allekirjoitus-tilaan"

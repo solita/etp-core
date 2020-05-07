@@ -34,8 +34,8 @@
     (t/is (-> file-path io/as-file .exists true?))
     (io/delete-file file-path)))
 
-(t/deftest generate-test
-  (let [file-path (service/generate energiatodistus)]
+(t/deftest generate-pdf-as-file-test
+  (let [file-path (service/generate-pdf-as-file energiatodistus)]
     (t/is (-> file-path io/as-file .exists))
     (io/delete-file file-path)))
 

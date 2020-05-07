@@ -127,41 +127,49 @@
                   new-cursor cursor
                   [:lahtotiedot :lammitetty-nettoala])))
 
-(defn complete-energiatodistus [energiatodistus alakayttotarkoitukset]
+(defn find-complete-energiatodistus* [energiatodistus alakayttotarkoitukset]
   (let [kayttotarkoitus-id (get-in energiatodistus [:perustiedot :kayttotarkoitus])
-        alakayttotarkoitus (->> alakayttotarkoitukset
-                                (filter #(= (:id %) kayttotarkoitus-id))
-                                first)]
-    (-> energiatodistus
-        (assoc-in [:perustiedot :alakayttotarkoitus-fi] (:label-fi alakayttotarkoitus))
-        (assoc-in [:perustiedot :alakayttotarkoitus-sv] (:label-sv alakayttotarkoitus))
-        (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin] 0.5)
-        (assoc-in [:tulokset :kaytettavat-energiamuodot :sahko-kerroin] 1.2)
-        (assoc-in [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin] 0.5)
-        (assoc-in [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin] 1)
-        (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin] 0.28)
-        (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukolampo])
-        (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :sahko])
-        (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine])
-        (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine])
-        (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys])
-        (combine-keys *-ceil
-                      [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kerroin]
-                      [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala]
-                      [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin])
-        (combine-keys *-ceil
-                      [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kerroin]
-                      [:tulokset :kaytettavat-energiamuodot :sahko-nettoala]
-                      [:tulokset :kaytettavat-energiamuodot :sahko-kerroin])
-        (combine-keys *-ceil
-                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kerroin]
-                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala]
-                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin])
-        (combine-keys *-ceil
-                      [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kerroin]
-                      [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala]
-                      [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin])
-        (combine-keys *-ceil
-                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kerroin]
-                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala]
-                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]))))
+         alakayttotarkoitus (->> alakayttotarkoitukset
+                                 (filter #(= (:id %) kayttotarkoitus-id))
+                                 first)]
+     (-> energiatodistus
+         (assoc-in [:perustiedot :alakayttotarkoitus-fi] (:label-fi alakayttotarkoitus))
+         (assoc-in [:perustiedot :alakayttotarkoitus-sv] (:label-sv alakayttotarkoitus))
+         (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin] 0.5)
+         (assoc-in [:tulokset :kaytettavat-energiamuodot :sahko-kerroin] 1.2)
+         (assoc-in [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin] 0.5)
+         (assoc-in [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin] 1)
+         (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin] 0.28)
+         (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukolampo])
+         (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :sahko])
+         (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine])
+         (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine])
+         (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys])
+         (combine-keys *-ceil
+                       [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kerroin]
+                       [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala]
+                       [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin])
+         (combine-keys *-ceil
+                       [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kerroin]
+                       [:tulokset :kaytettavat-energiamuodot :sahko-nettoala]
+                       [:tulokset :kaytettavat-energiamuodot :sahko-kerroin])
+         (combine-keys *-ceil
+                       [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kerroin]
+                       [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala]
+                       [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin])
+         (combine-keys *-ceil
+                       [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kerroin]
+                       [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala]
+                       [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin])
+         (combine-keys *-ceil
+                       [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kerroin]
+                       [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala]
+                       [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]))))
+
+(defn find-complete-energiatodistus
+  ([db id]
+   (find-complete-energiatodistus* (find-energiatodistus db id)
+                                   (find-alakayttotarkoitukset db 2018)))
+  ([db whoami id]
+   (find-complete-energiatodistus* (find-energiatodistus db whoami id)
+                                   (find-alakayttotarkoitukset db 2018))))
