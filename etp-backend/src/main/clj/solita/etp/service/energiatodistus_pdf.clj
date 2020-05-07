@@ -60,25 +60,25 @@
                   "F6" [:lahtotiedot :lammitys :kuvaus-fi]
                   "F7" [:lahtotiedot :ilmanvaihto :kuvaus-fi]
                   "F14" [:tulokset :kaytettavat-energiamuodot :kaukolampo]
-                  "G14" [:tulokset :kaytettavat-energiamuodot :kaukolampo*nettoala]
+                  "G14" [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala]
                   "H14" [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]
-                  "I14" [:tulokset :kaytettavat-energiamuodot :kaukolampo*nettoala*kerroin]
+                  "I14" [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kerroin]
                   "F15" [:tulokset :kaytettavat-energiamuodot :sahko]
-                  "G15" [:tulokset :kaytettavat-energiamuodot :sahko*nettoala]
+                  "G15" [:tulokset :kaytettavat-energiamuodot :sahko-nettoala]
                   "H15" [:tulokset :kaytettavat-energiamuodot :sahko-kerroin]
-                  "I15" [:tulokset :kaytettavat-energiamuodot :sahko*nettoala*kerroin]
+                  "I15" [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kerroin]
                   "F16" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine]
-                  "G16" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine*nettoala]
+                  "G16" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala]
                   "H16" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin]
-                  "I16" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine*nettoala*kerroin]
+                  "I16" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kerroin]
                   "F17" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine]
-                  "G17" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine*nettoala]
+                  "G17" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala]
                   "H17" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]
-                  "I17" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine*nettoala*kerroin]
+                  "I17" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kerroin]
                   "F18" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys]
-                  "G18" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys*nettoala]
+                  "G18" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala]
                   "H18" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]
-                  "I18" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys*nettoala*kerroin]
+                  "I18" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kerroin]
 
                   ;; TODO Energiatehokkuuden vertailuluku
 
@@ -396,7 +396,7 @@
           (xlsx/set-cell-value-at (nth sheets sheet)
                                   cell
                                   (if (vector? cursor-or-f)
-                                    (str (get-in energiatodistus cursor-or-f))
+                                    (get-in energiatodistus cursor-or-f)
                                     (cursor-or-f energiatodistus)))))
       (io/make-parents path)
       (xlsx/save-xlsx loaded-xlsx path)
