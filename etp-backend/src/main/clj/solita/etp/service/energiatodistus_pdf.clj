@@ -13,13 +13,20 @@
 (def sheet-count 8)
 (def tmp-dir "tmp/")
 
-(defn safe-str-* [x y]
-  (when (and x y)
-    (str (* x y))))
-
 (defn safe-nth [coll idx]
   (when (> (count coll) idx)
     (nth coll idx)))
+
+(defn sis-kuorma [energiatodistus]
+  (->> energiatodistus
+       :lahtotiedot
+       :sis-kuorma
+       (reduce-kv (fn [acc k {:keys [kayttoaste lampokuorma]}]
+                    (update acc kayttoaste #(merge % {k lampokuorma})))
+                  {})
+       (into (sorted-map))
+       seq
+       (into [])))
 
 (defn kaytettavat-energiamuodot [energiatodistus]
   (let [{:keys [kaukolampo sahko fossiilinen-polttoaine
@@ -172,21 +179,18 @@
 
                   ;; TODO lämmin käyttövesi ominaiskulutus, lämmitysenergian nettotarve
 
-                  "C63" [:lahtotiedot :sis-kuorma 0 :selite-fi]
-                  "D63" [:lahtotiedot :sis-kuorma 0 :kayttoaste]
-                  "E63" [:lahtotiedot :sis-kuorma 0 :henkilot]
-                  "F63" [:lahtotiedot :sis-kuorma 0 :kuluttajalaitteet]
-                  "G63" [:lahtotiedot :sis-kuorma 0 :valaistus]
-                  "C64" [:lahtotiedot :sis-kuorma 1 :selite-fi]
-                  "D64" [:lahtotiedot :sis-kuorma 1 :kayttoaste]
-                  "E64" [:lahtotiedot :sis-kuorma 1 :henkilot]
-                  "F64" [:lahtotiedot :sis-kuorma 1 :kuluttajalaitteet]
-                  "G64" [:lahtotiedot :sis-kuorma 1 :valaistus]
-                  "C65" [:lahtotiedot :sis-kuorma 2 :selite-fi]
-                  "D65" [:lahtotiedot :sis-kuorma 2 :kayttoaste]
-                  "E65" [:lahtotiedot :sis-kuorma 2 :henkilot]
-                  "F65" [:lahtotiedot :sis-kuorma 2 :kuluttajalaitteet]
-                  "G66" [:lahtotiedot :sis-kuorma 2 :valaistus]}
+                  "D63" #(-> % sis-kuorma (get 0) first)
+                  "E63" #(-> % sis-kuorma (get 0) second :henkilot)
+                  "F63" #(-> % sis-kuorma (get 0) second :kuluttajalaitteet)
+                  "G63" #(-> % sis-kuorma (get 0) second :valaistus)
+                  "D64" #(-> % sis-kuorma (get 1) first)
+                  "E64" #(-> % sis-kuorma (get 1) second :henkilot)
+                  "F64" #(-> % sis-kuorma (get 1) second :kuluttajalaitteet)
+                  "G64" #(-> % sis-kuorma (get 1) second :valaistus)
+                  "D65" #(-> % sis-kuorma (get 2) first)
+                  "E65" #(-> % sis-kuorma (get 2) second :henkilot)
+                  "F65" #(-> % sis-kuorma (get 2) second :kuluttajalaitteet)
+                  "G65" #(-> % sis-kuorma (get 2) second :valaistus)}
                3 {
                   ;; TODO rakennuksen käyttötarkoitusluokka
 

@@ -16,6 +16,16 @@
                       schema/EnergiatodistusSave2018
                       energiatodistus-test/energiatodistus-generators))
 
+(def sis-kuorma-data {:henkilot {:kayttoaste 0.2 :lampokuorma 1}
+                      :kuluttajalaitteet {:kayttoaste 0.3 :lampokuorma 1}
+                      :valaistus {:kayttoaste 0.3 :lampokuorma 2}})
+
+(t/deftest sis-kuorma-test
+  (let [sis-kuorma (service/sis-kuorma {:lahtotiedot {:sis-kuorma
+                                                      sis-kuorma-data}})]
+    (t/is (= sis-kuorma [[0.2 {:henkilot 1}]
+                         [0.3 {:kuluttajalaitteet 1 :valaistus 2}]]))))
+
 (t/deftest fill-xlsx-template-test
   (let [path (service/fill-xlsx-template energiatodistus)
         file (-> path io/input-stream)
