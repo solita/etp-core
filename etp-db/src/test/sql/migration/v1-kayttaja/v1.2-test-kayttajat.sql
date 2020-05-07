@@ -6,4 +6,5 @@ INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli) VALUES
 ('Ulla', 'Laatija', 'ulla.laatija@example.com', '0451234567', 0),
 ('Kirsi', 'Laatija', 'kirsi.laatija@example.com', '0451234567', 0),
 ('Ari', 'Laatija', 'ari.laatija@example.com', '0451234567', 0),
+('Risto', 'Laatija', 'risto.laatija@example.com', '0451234567', 0),
 ('Aleksi', 'Laatija', 'aleksi.laatija@example.com', '0451234567', 0);
