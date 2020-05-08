@@ -53,8 +53,7 @@
                   "M21" [:perustiedot :havainnointikaynti]
 
                   ;; TODO M36 and M37 E-luku
-                  ;; TODO laatija B42
-
+                  "B42" [:laatija-fullname]
                   "J42" [:perustiedot :yritys :nimi]
 
                   "B50" (fn [_] (str (java.time.LocalDate/now)))
