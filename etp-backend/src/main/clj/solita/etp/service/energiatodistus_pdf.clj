@@ -68,23 +68,23 @@
                   "F14" [:tulokset :kaytettavat-energiamuodot :kaukolampo]
                   "G14" [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala]
                   "H14" [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]
-                  "I14" [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kerroin]
+                  "I14" [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella]
                   "F15" [:tulokset :kaytettavat-energiamuodot :sahko]
                   "G15" [:tulokset :kaytettavat-energiamuodot :sahko-nettoala]
                   "H15" [:tulokset :kaytettavat-energiamuodot :sahko-kerroin]
-                  "I15" [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kerroin]
+                  "I15" [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kertoimella]
                   "F16" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine]
                   "G16" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala]
                   "H16" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin]
-                  "I16" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kerroin]
+                  "I16" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella]
                   "F17" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine]
                   "G17" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala]
                   "H17" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]
-                  "I17" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kerroin]
+                  "I17" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella]
                   "F18" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys]
                   "G18" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala]
                   "H18" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]
-                  "I18" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kerroin]
+                  "I18" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]
 
                   ;; TODO Energiatehokkuuden vertailuluku
 
@@ -191,34 +191,45 @@
                   "E65" #(-> % sis-kuorma (get 2) second :henkilot)
                   "F65" #(-> % sis-kuorma (get 2) second :kuluttajalaitteet)
                   "G65" #(-> % sis-kuorma (get 2) second :valaistus)}
-               3 {
-                  ;; TODO rakennuksen käyttötarkoitusluokka
-
+               3 {"D4" [:perustiedot :alakayttotarkoitus-fi]
                   "D7" [:perustiedot :valmistumisvuosi]
                   "D8" [:lahtotiedot :lammitetty-nettoala]
 
                   ;; TODO e-luku
 
-                  "C17" #(-> % kaytettavat-energiamuodot (safe-nth 0) first)
-                  "D17" #(-> % kaytettavat-energiamuodot (safe-nth 0) second str)
-                  "C18" #(-> % kaytettavat-energiamuodot (safe-nth 1) first)
-                  "D18" #(-> % kaytettavat-energiamuodot (safe-nth 1) second str)
-                  "C19" #(-> % kaytettavat-energiamuodot (safe-nth 2) first)
-                  "D19" #(-> % kaytettavat-energiamuodot (safe-nth 2) second str)
-                  "C20" #(-> % kaytettavat-energiamuodot (safe-nth 3) first)
-                  "D20" #(-> % kaytettavat-energiamuodot (safe-nth 3) second str)
-                  "C21" #(-> % kaytettavat-energiamuodot (safe-nth 4) first)
-                  "D21" #(-> % kaytettavat-energiamuodot (safe-nth 4) second str)
-
-                  ;; TODO energiamuodon kerroin ja energiamuodon
-                  ;; kertoimella painotettu energiankulutus
+                  "D17" [:tulokset :kaytettavat-energiamuodot :kaukolampo]
+                  "E17" [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]
+                  "F17" [:tulokset :kaytettavat-energiamuodot :kaukolampo-kertoimella]
+                  "G17" [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella]
+                  "D18" [:tulokset :kaytettavat-energiamuodot :sahko]
+                  "E18" [:tulokset :kaytettavat-energiamuodot :sahko-kerroin]
+                  "F18" [:tulokset :kaytettavat-energiamuodot :sahko-kertoimella]
+                  "G18" [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kertoimella]
+                  "D19" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine]
+                  "E19" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]
+                  "F19" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kertoimella]
+                  "G19" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella]
+                  "D20" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys]
+                  "E20" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]
+                  "F20" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kertoimella]
+                  "G20" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]
+                  "D22" [:tulokset :kaytettavat-energiamuodot :summa-ilman-uusiutuvia]
+                  "E22" [:tulokset :kaytettavat-energiamuodot :kerroin-summa-ilman-uusiutuvia]
+                  "F22" [:tulokset :kaytettavat-energiamuodot :kertoimella-summa-ilman-uusiutuvia]
+                  "G22" [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-ilman-uusiutuvia]
 
                   "E28" [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko]
+                  "F28" [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko-nettoala]
                   "E29" [:tulokset :uusiutuvat-omavaraisenergiat :aurinkolampo]
+                  "F29" [:tulokset :uusiutuvat-omavaraisenergiat :aurinkolampo-nettoala]
                   "E30" [:tulokset :uusiutuvat-omavaraisenergiat :tuulisahko]
+                  "F30" [:tulokset :uusiutuvat-omavaraisenergiat :tuulisahko-nettoala]
                   "E31" [:tulokset :uusiutuvat-omavaraisenergiat :lampopumppu]
+                  "F31" [:tulokset :uusiutuvat-omavaraisenergiat :lampopumppu-nettoala]
                   "E32" [:tulokset :uusiutuvat-omavaraisenergiat :muusahko]
+                  "F32" [:tulokset :uusiutuvat-omavaraisenergiat :muusahko-nettoala]
                   "E33" [:tulokset :uusiutuvat-omavaraisenergiat :muulampo]
+                  "F33" [:tulokset :uusiutuvat-omavaraisenergiat :muulampo-nettoala]
 
                   "E41" [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :sahko]
                   "F41" [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :lampo]
@@ -233,15 +244,24 @@
                   "E46" [:tulokset :tekniset-jarjestelmat :kuluttajalaitteet-ja-valaistus-sahko]
 
                   "E54" [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus]
+                  "F54" [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus-nettoala]
                   "E55" [:tulokset :nettotarve :ilmanvaihdon-lammitys-vuosikulutus]
+                  "F55" [:tulokset :nettotarve :ilmanvaihdon-lammitys-vuosikulutus-nettoala]
                   "E56" [:tulokset :nettotarve :kayttoveden-valmistus-vuosikulutus]
+                  "F56" [:tulokset :nettotarve :kayttoveden-valmistus-vuosikulutus-nettoala]
                   "E57" [:tulokset :nettotarve :jaahdytys-vuosikulutus]
+                  "F57" [:tulokset :nettotarve :jaahdytys-vuosikulutus-nettoala]
 
                   "E66" [:tulokset :lampokuormat :aurinko]
+                  "F66" [:tulokset :lampokuormat :aurinko-nettoala]
                   "E67" [:tulokset :lampokuormat :ihmiset]
+                  "F67" [:tulokset :lampokuormat :ihmiset-nettoala]
                   "E68" [:tulokset :lampokuormat :kuluttajalaitteet]
+                  "F68" [:tulokset :lampokuormat :kuluttajalaitteet-nettoala]
                   "E69" [:tulokset :lampokuormat :valaistus]
+                  "F69" [:tulokset :lampokuormat :valaistus-nettoala]
                   "E70" [:tulokset :lampokuormat :kvesi]
+                  "F70" [:tulokset :lampokuormat :kvesi-nettoala]
 
                   "E74" [:tulokset :laskentatyokalu]}
                4 {"C7" #(format "Lämmitetty nettoala %s m²"
