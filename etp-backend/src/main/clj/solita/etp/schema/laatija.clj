@@ -1,7 +1,8 @@
 (ns solita.etp.schema.laatija
   (:require [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]
-            [solita.etp.schema.geo :as geo-schema]))
+            [solita.etp.schema.geo :as geo-schema]
+            [schema-tools.core :as st]))
 
 (def Patevyystaso common-schema/Luokittelu)
 
@@ -20,13 +21,16 @@
                         :toteamispaivamaara common-schema/Date
                         :toteaja            PatevyydenToteaja}))
 
+(def LaatijaAdminUpdate
+  {:patevyystaso       common-schema/Key
+   :toteamispaivamaara common-schema/Date
+   :toteaja            PatevyydenToteaja
+   :laatimiskielto     schema/Bool})
+
 (def LaatijaUpdate
   (merge geo-schema/Postiosoite
+         (st/optional-keys LaatijaAdminUpdate)
          {:henkilotunnus                            common-schema/Henkilotunnus
-          (schema/optional-key :patevyystaso)       common-schema/Key
-          (schema/optional-key :toteamispaivamaara) common-schema/Date
-          (schema/optional-key :toteaja)            PatevyydenToteaja
-          (schema/optional-key :laatimiskielto)     schema/Bool
           :toimintaalue                             (schema/maybe common-schema/Key)
           :muuttoimintaalueet                       MuutToimintaalueet
           :julkinenpuhelin                          schema/Bool
@@ -35,5 +39,22 @@
 
 (def Laatija
   "Schema representing the persistent laatija"
-  (merge LaatijaUpdate {:kayttaja common-schema/Key}
+  (merge LaatijaUpdate
+         {:kayttaja common-schema/Key}
          common-schema/Id))
+
+(def KayttajaAdd {:etunimi       schema/Str
+                  :sukunimi      schema/Str
+                  :email         schema/Str
+                  :puhelin       schema/Str})
+
+(def KayttajaUpdate (dissoc KayttajaAdd :email))
+
+(def KayttajaLaatijaAdd (merge LaatijaAdd
+                               KayttajaAdd))
+
+
+
+(def KayttajaLaatijaUpdate (merge LaatijaUpdate
+                                  KayttajaUpdate))
+

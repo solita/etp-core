@@ -5,13 +5,27 @@
             [solita.etp.db :as db]
             [solita.etp.service.json :as json]
             [solita.etp.service.rooli :as rooli-service]
-            [solita.etp.schema.kayttaja :as kayttaja-schema]))
+            [solita.etp.schema.kayttaja :as kayttaja-schema]
+            [solita.etp.schema.common :as common-schema]))
 
 ;; *** Require sql functions ***
 (db/require-queries 'kayttaja)
 
 ;; *** Conversions from database data types ***
 (def coerce-kayttaja (coerce/coercer kayttaja-schema/Kayttaja json/json-coercions))
+
+;; *** Conversions from database data types ***
+(def coerce-whoami (coerce/coercer kayttaja-schema/Whoami
+                                   json/json-coercions))
+
+(defn find-whoami
+  ([db email]
+   (find-whoami db email nil))
+  ([db email cognitoid]
+   (->> {:email email :cognitoid cognitoid}
+        (kayttaja-db/select-whoami db)
+        (map coerce-whoami)
+        first)))
 
 (defn find-kayttaja
   ([db id]
@@ -37,11 +51,13 @@
       (and (not= existing-rooli 0)
            (not= new-rooli 0))))
 
-(defn update-kayttaja! [db id kayttaja]
-  (if-let [existing-kayttaja (find-kayttaja db id)]
-    (if (allow-rooli-update? (:rooli existing-kayttaja) (:rooli kayttaja))
-      (jdbc/update! db :kayttaja kayttaja ["id = ?" id])
-      (exception/throw-forbidden!))))
+(defn update-kayttaja! [db id whoami kayttaja]
+  (if (or (and (= id (:id whoami))
+               (common-schema/not-contains-keys
+                 kayttaja kayttaja-schema/KayttajaAdminUpdate))
+        (rooli-service/paakayttaja? whoami))
+    (jdbc/update! db :kayttaja kayttaja ["rooli <> 0 and id = ?" id])
+    (exception/throw-forbidden!)))
 
 (defn update-kayttaja-with-whoami! [db whoami]
   (kayttaja-db/update-kayttaja-with-whoami! db whoami))
