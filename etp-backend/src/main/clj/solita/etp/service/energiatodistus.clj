@@ -133,7 +133,7 @@
 
 (defn find-complete-energiatodistus* [energiatodistus alakayttotarkoitukset]
   (let [kayttotarkoitus-id (get-in energiatodistus [:perustiedot :kayttotarkoitus])
-         alakayttotarkoitus (->> alakayttotarkoitukset
+        alakayttotarkoitus (->> alakayttotarkoitukset
                                  (filter #(= (:id %) kayttotarkoitus-id))
                                  first)]
      (-> energiatodistus
@@ -287,16 +287,63 @@
          (assoc-div-nettoala [:tulokset :nettotarve :ilmanvaihdon-lammitys-vuosikulutus])
          (assoc-div-nettoala [:tulokset :nettotarve :kayttoveden-valmistus-vuosikulutus])
          (assoc-div-nettoala [:tulokset :nettotarve :jaahdytys-vuosikulutus])
-
          (assoc-div-nettoala [:tulokset :lampokuormat :aurinko])
          (assoc-div-nettoala [:tulokset :lampokuormat :ihmiset])
          (assoc-div-nettoala [:tulokset :lampokuormat :kuluttajalaitteet])
          (assoc-div-nettoala [:tulokset :lampokuormat :valaistus])
          (assoc-div-nettoala [:tulokset :lampokuormat :kvesi])
-
-
-
-         )))
+         (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukolampo-vuosikulutus])
+         (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :kokonaissahko-vuosikulutus])
+         (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :kiinteistosahko-vuosikulutus])
+         (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :kayttajasahko-vuosikulutus])
+         (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukojaahdytys-vuosikulutus])
+         (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kerroin] 10)
+         (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kerroin] 1300)
+         (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kerroin] 1700)
+         (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kerroin] 4.7)
+         (combine-keys *-ceil
+                       [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh]
+                       [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy]
+                       [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kerroin])
+         (combine-keys *-ceil
+                       [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kwh]
+                       [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu]
+                       [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kerroin])
+         (combine-keys *-ceil
+                       [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kwh]
+                       [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu]
+                       [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kerroin])
+         (combine-keys *-ceil
+                       [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh]
+                       [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit]
+                       [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kerroin])
+         (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh])
+         (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kwh])
+         (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kwh])
+         (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh])
+         (update-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa]
+                    (fn [vapaat]
+                      (let [nettoala (-> energiatodistus :lahtotiedot :lammitetty-nettoala)]
+                        (mapv (fn [{:keys [maara-vuodessa muunnoskerroin] :as vapaa}]
+                                (let [kwh (* maara-vuodessa muunnoskerroin)]
+                                  (assoc vapaa :kwh kwh :kwh-nettoala (div-ceil kwh nettoala))))
+                              vapaat))))
+         (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa])
+         (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa])
+         (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa])
+         (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa])
+         (combine-keys +
+                       [:toteutunut-ostoenergiankulutus :summa]
+                       [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa]
+                       [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa]
+                       [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa]
+                       [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa])
+         (combine-keys +
+                       [:toteutunut-ostoenergiankulutus :summa-nettoala]
+                       [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa-nettoala]
+                       [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa-nettoala]
+                       [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa-nettoala]
+                       [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala]))))
 
 (defn find-complete-energiatodistus
   ([db id]

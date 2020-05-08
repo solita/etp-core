@@ -56,7 +56,7 @@
                   "M21" [:perustiedot :havainnointikaynti]
 
                   ;; TODO M36 and M37 E-luku
-                  ;; TODO laatija B42
+                  "B42" [:laatija-fullname]
 
                   "J42" [:perustiedot :yritys :nimi]
 
@@ -267,49 +267,54 @@
                4 {"C7" #(format "Lämmitetty nettoala %s m²"
                                 (-> % :lahtotiedot :lammitetty-nettoala))
 
-                  "H12" [:toteutunut-ostoenergiankulutus :ostettu-energia
-                         :kaukolampo-vuosikulutus]
-                  "H14" [:toteutunut-ostoenergiankulutus :ostettu-energia
-                         :kokonaissahko-vuosikulutus]
-                  "H16" [:toteutunut-ostoenergiankulutus :ostettu-energia
-                         :kiinteistosahko-vuosikulutus]
-                  "H17" [:toteutunut-ostoenergiankulutus :ostettu-energia
-                         :kayttajasahko-vuosikulutus]
-                  "H19" [:toteutunut-ostoenergiankulutus :ostettu-energia
-                         :kaukojaahdytys-vuosikulutus]
+                  "H12" [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukolampo-vuosikulutus]
+                  "I12" [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukolampo-vuosikulutus-nettoala]
+                  "H14" [:toteutunut-ostoenergiankulutus :ostettu-energia :kokonaissahko-vuosikulutus]
+                  "I14" [:toteutunut-ostoenergiankulutus :ostettu-energia :kokonaissahko-vuosikulutus-nettoala]
+                  "H16" [:toteutunut-ostoenergiankulutus :ostettu-energia :kiinteistosahko-vuosikulutus]
+                  "I16" [:toteutunut-ostoenergiankulutus :ostettu-energia :kiinteistosahko-vuosikulutus-nettoala]
+                  "H17" [:toteutunut-ostoenergiankulutus :ostettu-energia :kayttajasahko-vuosikulutus]
+                  "I17" [:toteutunut-ostoenergiankulutus :ostettu-energia :kayttajasahko-vuosikulutus-nettoala]
+                  "H19" [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukojaahdytys-vuosikulutus]
+                  "I19" [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukojaahdytys-vuosikulutus-nettoala]
 
-                  "E23" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
-                         :kevyt-polttooljy]
-                  "E24" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
-                         :pilkkeet-havu-sekapuu]
-                  "E25" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
-                         :pilkkeet-koivu]
-                  "E26" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
-                         :puupelletit]
-                  "C27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
-                         :vapaa 0 :nimi]
-                  "E27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
-                         :vapaa 0 :maara-vuodessa]
-                  "F27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
-                         :vapaa 0 :yksikko]
-                  "G27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
-                         :vapaa 0 :muunnoskerroin]
-                  "C28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
-                         :vapaa 1 :nimi]
-                  "E28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
-                         :vapaa 1 :maara-vuodessa]
-                  "F28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
-                         :vapaa 1 :yksikko]
-                  "G28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet
-                         :vapaa 1 :muunnoskerroin]
+                  "E23" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy]
+                  "H23" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh]
+                  "I23" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh-nettoala]
+                  "E24" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu]
+                  "H24" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kwh]
+                  "I24" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kwh-nettoala]
+                  "E25" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu]
+                  "H25" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kwh]
+                  "I25" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kwh-nettoala]
+                  "E26" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit]
+                  "H26" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh]
+                  "I26" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh-nettoala]
+
+                  "C27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :nimi]
+                  "E27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :maara-vuodessa]
+                  "F27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :yksikko]
+                  "G27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :muunnoskerroin]
+                  "H27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :kwh]
+                  "I27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :kwh-nettoala]
+                  "C28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :nimi]
+                  "E28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :maara-vuodessa]
+                  "F28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :yksikko]
+                  "G28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :muunnoskerroin]
+                  "H28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :kwh]
+                  "I28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :kwh-nettoala]
 
                   "H38" [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa]
+                  "I38" [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa-nettoala]
                   "H40" [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa]
+                  "I40" [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa-nettoala]
                   "H42" [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa]
-                  "H44" [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa]}
-               5 {
-                  ;; TODO is this correct?
-                  "B5" [:huomiot :ymparys :teksti-fi]
+                  "I42" [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa-nettoala]
+                  "H44" [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa]
+                  "I44" [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala]
+                  "H46" [:toteutunut-ostoenergiankulutus :summa]
+                  "I46" [:toteutunut-ostoenergiankulutus :summa-nettoala]}
+               5 {"B5" [:huomiot :ymparys :teksti-fi]
                   "C12" [:huomiot :ymparys :toimenpide 0 :nimi-fi]
                   "C13" [:huomiot :ymparys :toimenpide 1 :nimi-fi]
                   "C14" [:huomiot :ymparys :toimenpide 2 :nimi-fi]
