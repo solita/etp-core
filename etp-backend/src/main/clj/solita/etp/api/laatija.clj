@@ -22,7 +22,7 @@
                                "Käyttäjien / laatijoiden lisääminen tai päivittäminen epäonnistui")))}}]
     ["/:id"
      [""
-      :put {:summary "Päivitä laatijan ja laatijaan liittyvän käyttäjän tiedot"
+      {:put {:summary "Päivitä laatijan ja laatijaan liittyvän käyttäjän tiedot"
             :parameters {:path {:id common-schema/Key}
                          :body laatija-schema/KayttajaLaatijaUpdate}
             :responses {200 {:body nil}
@@ -32,7 +32,7 @@
                        (api-response/put-response
                          (kayttaja-laatija-service/update-kayttaja-laatija!
                            db whoami id (:body parameters))
-                         (str "Laatija " id " does not exists.")))}]
+                         (str "Laatija " id " does not exists.")))}}]
      ["/yritykset"
       [""
        {:get {:summary    "Hae laatijan yritykset"
