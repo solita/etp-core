@@ -51,7 +51,7 @@
       (and (not= existing-rooli 0)
            (not= new-rooli 0))))
 
-(defn update-kayttaja! [db id whoami kayttaja]
+(defn update-kayttaja! [db whoami id kayttaja]
   (if (or (and (= id (:id whoami))
                (common-schema/not-contains-keys
                  kayttaja kayttaja-schema/KayttajaAdminUpdate))
