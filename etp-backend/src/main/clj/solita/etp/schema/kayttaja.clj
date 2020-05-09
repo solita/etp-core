@@ -12,6 +12,12 @@
     :henkilotunnus (schema/maybe common-schema/Henkilotunnus)
     :laatija       (schema/maybe common-schema/Key)}))
 
+(def KayttajaAdd {:etunimi       schema/Str
+                  :sukunimi      schema/Str
+                  :email         schema/Str
+                  :puhelin       schema/Str
+                  :rooli        (schema/enum 1 2)})
+
 (def KayttajaAdminUpdate
   {:passivoitu schema/Bool
    :rooli      (schema/enum 1 2)})

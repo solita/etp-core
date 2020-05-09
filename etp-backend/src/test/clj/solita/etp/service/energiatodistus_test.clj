@@ -22,8 +22,7 @@
 (defn add-laatija! []
   (-> (laatija-service/upsert-kayttaja-laatijat! ts/*db*
         (laatija-service-test/generate-KayttajaLaatijaAdds 1))
-      (get 0)
-      :laatija))
+      first))
 
 (defn add-energiatodistus! [energiatodistus laatija-id]
   (service/add-energiatodistus! ts/*db* {:laatija laatija-id} 2018 energiatodistus))
