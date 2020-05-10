@@ -58,7 +58,8 @@
              :already-signed))))
 
 (t/deftest find-energiatodistus-digest-test
-  (let [id (energiatodistus-test/add-energiatodistus! energiatodistus)]
+  (let [id (energiatodistus-test/add-energiatodistus!
+             energiatodistus (energiatodistus-test/add-laatija!))]
     (t/is (= (service/find-energiatodistus-digest ts/*db* id)
              :not-in-signing))
     (energiatodistus-service/start-energiatodistus-signing! ts/*db* id)
@@ -69,7 +70,8 @@
              :already-signed))))
 
 (t/deftest sign-energiatodistus-test
-  (let [id (energiatodistus-test/add-energiatodistus! energiatodistus)]
+  (let [id (energiatodistus-test/add-energiatodistus!
+             energiatodistus (energiatodistus-test/add-laatija!))]
     (t/is (= (service/sign-energiatodistus-pdf ts/*db* id nil)
              :not-in-signing))
     (energiatodistus-service/start-energiatodistus-signing! ts/*db* id)
