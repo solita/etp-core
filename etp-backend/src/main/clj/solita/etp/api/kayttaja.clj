@@ -20,7 +20,7 @@
    ["/kayttajat"
     ["/:id"
      [""
-      {:get {:summary "Hae käyttäjän tiedot"
+      {:get {:summary "Hae minkä tahansa käyttäjän käyttäjätiedot"
              :parameters {:path {:id common-schema/Key}}
              :responses {200 {:body kayttaja-schema/Kayttaja}
                          404 {:body schema/Str}}
@@ -29,7 +29,8 @@
                             (api-response/get-response
                              (str "Käyttäjä " id " does not exist."))))}
 
-       :put {:summary "Päivitä käyttäjän tiedot"
+       :put {:summary (str "Päivitä käyttäjän (paitsi laatija) tiedot."
+                           "Laatijan tietojen päivittämiseen on eri palvelu.")
              :parameters {:path {:id common-schema/Key}
                           :body kayttaja-schema/KayttajaUpdate}
              :responses {200 {:body nil}
@@ -39,9 +40,9 @@
                         (api-response/put-response
                          (kayttaja-service/update-kayttaja!
                           db whoami id (:body parameters))
-                         (str "Käyttäjä " id " does not exists.")))}}]
+                         (str "Käyttäjä " id " does not exists or käyttäjä is laatija.")))}}]
      ["/laatija"
-      {:get {:summary "Hae käyttäjään liittyvät laatijatiedot"
+      {:get {:summary "Hae käyttäjään liittyvät laatijatiedot."
              :parameters {:path {:id common-schema/Key}}
              :responses {200 {:body laatija-schema/Laatija}
                          404 {:body schema/Str}}
