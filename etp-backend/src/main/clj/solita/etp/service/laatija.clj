@@ -15,16 +15,16 @@
 ;; *** Conversions from database data types ***
 (def coerce-laatija (coerce/coercer laatija-schema/Laatija json/json-coercions))
 
-(defn find-laatija-with-kayttaja-id
-  ([db kayttaja-id]
-   (->> {:kayttaja kayttaja-id}
-        (laatija-db/select-laatija-with-kayttaja db)
+(defn find-laatija-by-id
+  ([db id]
+   (->> {:id id}
+        (laatija-db/select-laatija-by-id db)
         (map coerce-laatija)
         first))
-  ([db whoami kayttaja-id]
-   (if (or (= kayttaja-id (:id whoami))
+  ([db whoami id]
+   (if (or (= id (:id whoami))
              (rooli-service/laatija-maintainer? whoami))
-     (find-laatija-with-kayttaja-id db kayttaja-id)
+     (find-laatija-by-id db id)
      (exception/throw-forbidden!))))
 
 (defn find-laatija-with-henkilotunnus [db henkilotunnus]
@@ -44,11 +44,11 @@
        first
        :id))
 
-(defn update-laatija-with-kayttaja-id! [db kayttaja-id laatija]
+(defn update-laatija-by-id! [db id laatija]
   (jdbc/update! db
                 :laatija
                 (set/rename-keys laatija db-keymap)
-                ["kayttaja = ?" kayttaja-id]))
+                ["id = ?" id]))
 
 (defn find-laatija-yritykset [db whoami id]
   (if (or (= id (:laatija whoami))

@@ -4,7 +4,6 @@
             [solita.etp.api.response :as api-response]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.laatija :as laatija-schema]
-            [solita.etp.schema.kayttaja-laatija :as kayttaja-laatija-schema]
             [solita.etp.service.laatija :as laatija-service]
             [solita.etp.service.kayttaja-laatija :as kayttaja-laatija-service]
             [solita.etp.service.rooli :as rooli-service]))
@@ -13,16 +12,27 @@
   [["/laatijat"
     [""
      {:put {:summary    "Lisää laatijat laatijarekisteriin (luo myös käyttäjä)"
-            :parameters {:body [kayttaja-laatija-schema/KayttajaLaatijaAdd]}
-            :responses  {200 {:body [kayttaja-laatija-schema/KayttajaLaatijaAddResponse]}}
+            :parameters {:body [laatija-schema/KayttajaLaatijaAdd]}
+            :responses  {200 {:body [common-schema/Key]}}
             :access     rooli-service/patevyydentoteaja?
-            :handler    (fn [{:keys [db parameters uri]}]
+            :handler    (fn [{:keys [db parameters]}]
                           (-> (kayttaja-laatija-service/upsert-kayttaja-laatijat!
-                               db
-                               (:body parameters))
+                                db (:body parameters))
                               (api-response/get-response
                                "Käyttäjien / laatijoiden lisääminen tai päivittäminen epäonnistui")))}}]
     ["/:id"
+     [""
+      {:put {:summary "Päivitä laatijan ja laatijaan liittyvän käyttäjän tiedot"
+            :parameters {:path {:id common-schema/Key}
+                         :body laatija-schema/KayttajaLaatijaUpdate}
+            :responses {200 {:body nil}
+                        404 {:body schema/Str}}
+            :handler (fn [{{{:keys [id]} :path} :parameters
+                           :keys [db whoami parameters]}]
+                       (api-response/put-response
+                         (kayttaja-laatija-service/update-kayttaja-laatija!
+                           db whoami id (:body parameters))
+                         (str "Laatija " id " does not exists.")))}}]
      ["/yritykset"
       [""
        {:get {:summary    "Hae laatijan yritykset"
