@@ -1,5 +1,5 @@
---name: select-laatija-with-kayttaja
-SELECT id, kayttaja, henkilotunnus, patevyystaso, toteamispaivamaara, toteaja, laatimiskielto, toimintaalue, muut_toimintaalueet as muuttoimintaalueet, julkinen_puhelin as julkinenpuhelin, julkinen_email as julkinenemail, julkinen_osoite as julkinenosoite, jakeluosoite, postinumero, postitoimipaikka, maa FROM laatija WHERE kayttaja = :kayttaja
+--name: select-laatija-by-id
+SELECT id, kayttaja, henkilotunnus, patevyystaso, toteamispaivamaara, toteaja, laatimiskielto, toimintaalue, muut_toimintaalueet as muuttoimintaalueet, julkinen_puhelin as julkinenpuhelin, julkinen_email as julkinenemail, julkinen_osoite as julkinenosoite, jakeluosoite, postinumero, postitoimipaikka, maa FROM laatija WHERE id = :id
 
 --name: select-laatija-with-henkilotunnus
 SELECT id, kayttaja, henkilotunnus, patevyystaso, toteamispaivamaara, toteaja, laatimiskielto, toimintaalue, muut_toimintaalueet as muuttoimintaalueet, julkinen_puhelin as julkinenpuhelin, julkinen_email as julkinenemail, julkinen_osoite as julkinenosoite, jakeluosoite, postinumero, postitoimipaikka, maa FROM laatija WHERE henkilotunnus = :henkilotunnus

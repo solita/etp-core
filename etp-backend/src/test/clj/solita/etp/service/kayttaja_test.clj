@@ -6,7 +6,9 @@
             [solita.etp.test-system :as ts]
             [solita.etp.service.kayttaja :as service]
             [solita.etp.service.rooli :as rooli-service]
-            [solita.etp.schema.kayttaja :as kayttaja-schema]))
+            [solita.etp.schema.kayttaja :as kayttaja-schema]
+            [solita.etp.schema.laatija :as laatija-schema]
+            [solita.etp.schema.common :as common-schema]))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -22,7 +24,7 @@
                          (throw e)))))
 
 (t/deftest add-and-find-test
-  (doseq [kayttaja (repeatedly 100 #(g/generate kayttaja-schema/KayttajaAdd))
+  (doseq [kayttaja (repeatedly 100 #(g/generate laatija-schema/KayttajaAdd))
           :let [id (service/add-kayttaja! ts/*db* kayttaja)
                 whoami (rand-nth (conj roolit {:id id}))
                 found (find-kayttaja whoami id)]]
@@ -35,20 +37,9 @@
 (defn assoc-idx-email [idx kayttaja]
   (assoc kayttaja :email (str "kayttaja" idx "@example.com")))
 
-(t/deftest allow-rooli-update?-test
-  (t/is (true? (service/allow-rooli-update? 0 nil)))
-  (t/is (false? (service/allow-rooli-update? 0 1)))
-  (t/is (false? (service/allow-rooli-update? 0 2)))
-  (t/is (false? (service/allow-rooli-update? 1 0)))
-  (t/is (true? (service/allow-rooli-update? 1 1)))
-  (t/is (true? (service/allow-rooli-update? 1 2)))
-  (t/is (false? (service/allow-rooli-update? 2 0)))
-  (t/is (true? (service/allow-rooli-update? 2 1)))
-  (t/is (true? (service/allow-rooli-update? 2 2))))
-
-(defn update-kayttaja! [id kayttaja]
+(defn update-kayttaja! [whoami id kayttaja]
   (try
-    (service/update-kayttaja! ts/*db* id kayttaja)
+    (service/update-kayttaja! ts/*db* whoami id kayttaja)
     (catch Exception e (if (not= (-> e ex-data :type) :forbidden)
                          (throw e)))))
 
@@ -56,20 +47,24 @@
   (doseq [kayttaja (repeatedly 100 #(g/generate kayttaja-schema/KayttajaAdd))
           :let [id (service/add-kayttaja! ts/*db* kayttaja)
                 updated-kayttaja (g/generate kayttaja-schema/KayttajaUpdate)
-                _ (update-kayttaja! id updated-kayttaja)
-                new-rooli (:rooli updated-kayttaja)
                 whoami (rand-nth (conj roolit {:id id}))
+                _ (update-kayttaja! whoami id updated-kayttaja)
+                new-rooli (:rooli updated-kayttaja)
                 found (find-kayttaja whoami id)]]
     (cond
-      ;; If whoami had no permission to find the käyttäjä
-      (or (= whoami laatija)
-          (and (= whoami patevyydentoteaja)
-               (rooli-service/laatija-maintainer? found)))
+      ;; If whoami has no permission to find the käyttäjä
+      (not (or (= (:id whoami) id)
+               (= whoami paakayttaja)
+               (and (= whoami patevyydentoteaja)
+                    (rooli-service/laatija? found))))
       (t/is (nil? found))
 
-      ;; If changing the rooli was attempted
-      (and (-> new-rooli nil? not)
-           (-> new-rooli zero? not))
+      ;; If whoami has no permission to update the käyttäjä
+      (not (or (and (= (:id whoami) id)
+                    (common-schema/not-contains-keys
+                      updated-kayttaja
+                      kayttaja-schema/KayttajaAdminUpdate))
+               (= whoami paakayttaja)))
       (do (schema/validate kayttaja-schema/Kayttaja found)
           (t/is (map/submap? kayttaja found)))
 
@@ -79,7 +74,7 @@
           (t/is (map/submap? updated-kayttaja found))))))
 
 (t/deftest update-kayttaja-with-whoami!-test
-  (doseq [kayttaja (repeatedly 100 #(g/generate kayttaja-schema/KayttajaAdd))
+  (doseq [kayttaja (repeatedly 100 #(g/generate laatija-schema/KayttajaAdd))
           :let [id (service/add-kayttaja! ts/*db* kayttaja)
                 found-before (service/find-kayttaja ts/*db* paakayttaja id)
                 new-email (str "new-" (:email found-before))
