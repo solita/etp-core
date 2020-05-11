@@ -45,12 +45,6 @@
 (defn add-kayttaja! [db kayttaja]
   (-> (jdbc/insert! db :kayttaja kayttaja) first :id))
 
-(defn allow-rooli-update? [existing-rooli new-rooli]
-  (or (nil? new-rooli)
-      (= existing-rooli new-rooli)
-      (and (not= existing-rooli 0)
-           (not= new-rooli 0))))
-
 (defn update-kayttaja! [db whoami id kayttaja]
   (if (or (and (= id (:id whoami))
                (common-schema/not-contains-keys

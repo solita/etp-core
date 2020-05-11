@@ -37,17 +37,6 @@
 (defn assoc-idx-email [idx kayttaja]
   (assoc kayttaja :email (str "kayttaja" idx "@example.com")))
 
-(t/deftest allow-rooli-update?-test
-  (t/is (true? (service/allow-rooli-update? 0 nil)))
-  (t/is (false? (service/allow-rooli-update? 0 1)))
-  (t/is (false? (service/allow-rooli-update? 0 2)))
-  (t/is (false? (service/allow-rooli-update? 1 0)))
-  (t/is (true? (service/allow-rooli-update? 1 1)))
-  (t/is (true? (service/allow-rooli-update? 1 2)))
-  (t/is (false? (service/allow-rooli-update? 2 0)))
-  (t/is (true? (service/allow-rooli-update? 2 1)))
-  (t/is (true? (service/allow-rooli-update? 2 2))))
-
 (defn update-kayttaja! [whoami id kayttaja]
   (try
     (service/update-kayttaja! ts/*db* whoami id kayttaja)
