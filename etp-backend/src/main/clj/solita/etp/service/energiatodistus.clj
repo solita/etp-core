@@ -120,7 +120,10 @@
   (->> args (apply /) Math/ceil))
 
 (defn combine-keys [m f cursor-new & cursors]
-  (assoc-in m cursor-new (apply f (map #(get-in m %) cursors))))
+  (let [vals (map #(get-in m %) cursors)]
+    (if (not-any? nil? vals)
+      (assoc-in m cursor-new (apply f vals))
+      m)))
 
 (defn assoc-div-nettoala [energiatodistus cursor]
   (let [new-k (-> cursor last name (str "-nettoala") keyword)
@@ -136,25 +139,25 @@
         alakayttotarkoitus (->> alakayttotarkoitukset
                                  (filter #(= (:id %) kayttotarkoitus-id))
                                  first)]
-     (-> energiatodistus
-         (assoc-in [:perustiedot :alakayttotarkoitus-fi] (:label-fi alakayttotarkoitus))
-         (assoc-in [:perustiedot :alakayttotarkoitus-sv] (:label-sv alakayttotarkoitus))
-         (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin] 0.5)
-         (assoc-in [:tulokset :kaytettavat-energiamuodot :sahko-kerroin] 1.2)
-         (assoc-in [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin] 0.5)
-         (assoc-in [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin] 1)
-         (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin] 0.28)
-         (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukolampo])
-         (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :sahko])
-         (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine])
-         (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine])
-         (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys])
-         (combine-keys *-ceil
-                       [:tulokset :kaytettavat-energiamuodot :kaukolampo-kertoimella]
-                       [:tulokset :kaytettavat-energiamuodot :kaukolampo]
-                       [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin])
-         (combine-keys *-ceil
-                       [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella]
+    (-> energiatodistus
+        (assoc-in [:perustiedot :alakayttotarkoitus-fi] (:label-fi alakayttotarkoitus))
+        (assoc-in [:perustiedot :alakayttotarkoitus-sv] (:label-sv alakayttotarkoitus))
+        (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin] 0.5)
+        (assoc-in [:tulokset :kaytettavat-energiamuodot :sahko-kerroin] 1.2)
+        (assoc-in [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin] 0.5)
+        (assoc-in [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin] 1)
+        (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin] 0.28)
+        (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukolampo])
+        (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :sahko])
+        (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine])
+        (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine])
+        (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys])
+        (combine-keys *-ceil
+                      [:tulokset :kaytettavat-energiamuodot :kaukolampo-kertoimella]
+                      [:tulokset :kaytettavat-energiamuodot :kaukolampo]
+                      [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin])
+        (combine-keys *-ceil
+                      [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella]
                        [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala]
                        [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin])
          (combine-keys *-ceil
@@ -323,11 +326,14 @@
          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh])
          (update-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa]
                     (fn [vapaat]
-                      (let [nettoala (-> energiatodistus :lahtotiedot :lammitetty-nettoala)]
+                      (if-let [nettoala (-> energiatodistus :lahtotiedot :lammitetty-nettoala)]
                         (mapv (fn [{:keys [maara-vuodessa muunnoskerroin] :as vapaa}]
-                                (let [kwh (* maara-vuodessa muunnoskerroin)]
-                                  (assoc vapaa :kwh kwh :kwh-nettoala (div-ceil kwh nettoala))))
-                              vapaat))))
+                                (if (and maara-vuodessa muunnoskerroin)
+                                  (let [kwh (* maara-vuodessa muunnoskerroin)]
+                                    (assoc vapaa :kwh kwh :kwh-nettoala (div-ceil kwh nettoala)))
+                                  vapaa))
+                              vapaat)
+                        vapaat)))
          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa])
          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa])
          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa])
