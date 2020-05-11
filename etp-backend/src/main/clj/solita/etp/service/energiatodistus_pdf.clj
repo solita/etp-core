@@ -16,10 +16,6 @@
 (def sheet-count 8)
 (def tmp-dir "tmp/")
 
-(defn safe-nth [coll idx]
-  (when (> (count coll) idx)
-    (nth coll idx)))
-
 (defn sis-kuorma [energiatodistus]
   (->> energiatodistus
        :lahtotiedot
@@ -30,18 +26,6 @@
        (into (sorted-map))
        seq
        (into [])))
-
-(defn kaytettavat-energiamuodot [energiatodistus]
-  (let [{:keys [kaukolampo sahko fossiilinen-polttoaine
-                kaukojaahdytys uusiutuva-polttoaine]}
-        (-> energiatodistus :tulokset :kaytettavat-energiamuodot)]
-    (->> [["Kaukolämpö" kaukolampo]
-          ["Sähkö" sahko]
-          ["Fossiilinen polttoaine" fossiilinen-polttoaine]
-          ["Kaukojäähdytys" kaukojaahdytys]
-          ["Uusiutuva polttoaine" uusiutuva-polttoaine]]
-         (remove #(-> % second nil?))
-         (into []))))
 
 (def mappings {0 {"K7" [:perustiedot :nimi]
                   "K8" [:perustiedot :katuosoite-fi]
