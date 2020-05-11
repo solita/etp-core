@@ -448,7 +448,7 @@
     (OverlayPDF/main (into-array String (flatten [pdf-path settings watermark-path pdf-path])))
     pdf-path))
 
-(defn generate-pdf-as-file [complete-energiatodistus {:keys [add-watermark?]}]
+(defn generate-pdf-as-file [complete-energiatodistus & [{:keys [add-watermark?]}]]
   (let [xlsx-path (fill-xlsx-template complete-energiatodistus)
         pdf-path (xlsx->pdf xlsx-path)]
     (io/delete-file xlsx-path)
