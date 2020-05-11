@@ -18,10 +18,6 @@
 (def sheet-count 8)
 (def tmp-dir "tmp/")
 
-(defn safe-nth [coll idx]
-  (when (> (count coll) idx)
-    (nth coll idx)))
-
 (defn sis-kuorma [energiatodistus]
   (->> energiatodistus
        :lahtotiedot
@@ -32,18 +28,6 @@
        (into (sorted-map))
        seq
        (into [])))
-
-(defn kaytettavat-energiamuodot [energiatodistus]
-  (let [{:keys [kaukolampo sahko fossiilinen-polttoaine
-                kaukojaahdytys uusiutuva-polttoaine]}
-        (-> energiatodistus :tulokset :kaytettavat-energiamuodot)]
-    (->> [["Kaukolämpö" kaukolampo]
-          ["Sähkö" sahko]
-          ["Fossiilinen polttoaine" fossiilinen-polttoaine]
-          ["Kaukojäähdytys" kaukojaahdytys]
-          ["Uusiutuva polttoaine" uusiutuva-polttoaine]]
-         (remove #(-> % second nil?))
-         (into []))))
 
 (def mappings {0 {"K7" [:perustiedot :nimi]
                   "K8" [:perustiedot :katuosoite-fi]
@@ -454,13 +438,19 @@
     (.save result pdf-path)
     pdf-path))
 
-(defn generate-pdf-as-file [complete-energiatodistus & [{:keys [add-watermark?]}]]
+(defn generate-pdf-as-file [complete-energiatodistus draft?]
   (let [xlsx-path (fill-xlsx-template complete-energiatodistus)
         pdf-path (xlsx->pdf xlsx-path)]
     (io/delete-file xlsx-path)
-    (if add-watermark?
+    (if draft?
       (add-watermark pdf-path)
       pdf-path)))
+
+(defn generate-pdf-as-input-stream [energiatodistus draft?]
+  (let [pdf-path (generate-pdf-as-file energiatodistus draft?)
+        is (io/input-stream pdf-path)]
+    (io/delete-file pdf-path)
+    is))
 
 (defn pdf-file-id [id]
   (when id (str "energiatodistus-" id)))
@@ -472,18 +462,12 @@
        :content
        io/input-stream))
 
-(defn generate-pdf-as-input-stream [complete-energiatodistus]
-  (let [pdf-path (generate-pdf-as-file complete-energiatodistus {:add-watermark? true})
-        is (io/input-stream pdf-path)]
-    (io/delete-file pdf-path)
-    is))
-
 (defn find-energiatodistus-pdf [db whoami id]
   (when-let [{:keys [allekirjoitusaika] :as complete-energiatodistus}
              (energiatodistus-service/find-complete-energiatodistus db whoami id)]
     (if allekirjoitusaika
       (find-existing-pdf db id)
-      (generate-pdf-as-input-stream complete-energiatodistus))))
+      (generate-pdf-as-input-stream complete-energiatodistus true))))
 
 (defn do-when-signing [{:keys [allekirjoituksessaaika allekirjoitusaika]} f]
   (cond
@@ -501,7 +485,7 @@
              (energiatodistus-service/find-complete-energiatodistus db id)]
     (do-when-signing
      complete-energiatodistus
-     #(let [pdf-path (generate-pdf-as-file complete-energiatodistus)
+     #(let [pdf-path (generate-pdf-as-file complete-energiatodistus false)
             signable-pdf-path (puumerkki/add-signature-space
                                pdf-path
                                laatija-fullname)
