@@ -7,9 +7,12 @@
             [solita.common.xlsx :as xlsx]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.rooli :as rooli-service]
-            [solita.etp.service.file :as file-service]))
+            [solita.etp.service.file :as file-service])
+  (:import (org.apache.pdfbox.tools OverlayPDF)
+           (org.apache.pdfbox.multipdf Overlay$Position)))
 
 (def xlsx-template-path "energiatodistus-template.xlsx")
+(def watermark-path-fi "watermark-fi.pdf")
 (def sheet-count 8)
 (def tmp-dir "tmp/")
 
@@ -57,7 +60,6 @@
 
                   ;; TODO M36 and M37 E-luku
                   "B42" [:laatija-fullname]
-
                   "J42" [:perustiedot :yritys :nimi]
 
                   "B50" (fn [_] (str (java.time.LocalDate/now)))
@@ -440,11 +442,19 @@
       (do (log/error "XLSX to PDF conversion failed" sh-result)
         (throw (ex-info "XLSX to PDF conversion failed" sh-result))))))
 
-(defn generate-pdf-as-file [complete-energiatodistus]
+(defn add-watermark [pdf-path]
+  (let [settings ["-position" (.toString Overlay$Position/FOREGROUND)]
+        watermark-path (-> watermark-path-fi io/resource .getPath)]
+    (OverlayPDF/main (into-array String (flatten [pdf-path settings watermark-path pdf-path])))
+    pdf-path))
+
+(defn generate-pdf-as-file [complete-energiatodistus {:keys [add-watermark?]}]
   (let [xlsx-path (fill-xlsx-template complete-energiatodistus)
         pdf-path (xlsx->pdf xlsx-path)]
     (io/delete-file xlsx-path)
-    pdf-path))
+    (if add-watermark?
+      (add-watermark pdf-path)
+      pdf-path)))
 
 (defn generate-pdf-as-input-stream [complete-energiatodistus]
   (let [pdf-path (generate-pdf-as-file complete-energiatodistus)
@@ -461,6 +471,12 @@
        (file-service/find-file db)
        :content
        io/input-stream))
+
+(defn generate-pdf-as-input-stream [energiatodistus]
+  (let [pdf-path (generate-pdf-as-file energiatodistus {:add-watermark? true})
+        is (io/input-stream pdf-path)]
+    (io/delete-file pdf-path)
+    is))
 
 (defn find-energiatodistus-pdf [db whoami id]
   (when-let [{:keys [allekirjoitusaika] :as complete-energiatodistus}

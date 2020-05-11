@@ -72,8 +72,12 @@
                                config/trusted-jwt-iss
                                access-kid)
             access-payload (verified-jwt-payload access access-public-key)]
-        (when (= id (:sub data-payload) (:sub access-payload))
+        (if (= id (:sub data-payload) (:sub access-payload))
           {:data data-payload
-           :access access-payload})))
+           :access access-payload}
+          (log/warn "Identity header and data and access token subs did not match."
+                    {:id id
+                     :access access-payload
+                     :data data-payload}))))
     (catch Exception e (log/error e (str "Exception when verifying JWTs: "
                                          (.getMessage e))))))
