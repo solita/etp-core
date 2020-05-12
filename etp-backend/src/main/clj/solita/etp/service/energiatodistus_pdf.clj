@@ -50,7 +50,18 @@
         "K14" [:perustiedot :alakayttotarkoitus-fi]
         "K16" [:id]
 
-        ;; TODO checkboxes D19-D21
+        "D19" (fn [energiatodistus]
+                (if (= (-> energiatodistus :perustiedot :laatimisvaihe) 0)
+                  "☒ Uudelle rakennukselle rakennuslupaa haettaessa"
+                  "☐ Uudelle rakennukselle rakennuslupaa haettaessa"))
+        "D20" (fn [energiatodistus]
+                (if (= (-> energiatodistus :perustiedot :laatimisvaihe) 1)
+                  "☒ Uudelle rakennukselle käyttöönottovaiheessa"
+                  "☐ Uudelle rakennukselle käyttöönottovaiheessa"))
+        "D21" (fn [energiatodistus]
+                (if (= (-> energiatodistus :perustiedot :laatimisvaihe) 2)
+                  "☒ Olemassa olevalle rakennukselle, havainnointikäynnin päivämäärä:"
+                  "☐ Olemassa olevalle rakennukselle, havainnointikäynnin päivämäärä:"))
 
         "M21" (fn [energiatodistus]
                 (->> energiatodistus :perustiedot :havainnointikaynti (.format date-formatter)))
