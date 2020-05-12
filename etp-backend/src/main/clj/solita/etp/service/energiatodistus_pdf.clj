@@ -64,7 +64,7 @@
                   "☐ Olemassa olevalle rakennukselle, havainnointikäynnin päivämäärä:"))
 
         "M21" (fn [energiatodistus]
-                (->> energiatodistus :perustiedot :havainnointikaynti (.format date-formatter)))
+                (some->> energiatodistus :perustiedot :havainnointikaynti (.format date-formatter)))
 
         ;; TODO M36 and M37 E-luku
 
