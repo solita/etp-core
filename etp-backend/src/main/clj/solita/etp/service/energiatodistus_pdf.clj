@@ -8,8 +8,10 @@
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.file :as file-service])
-  (:import (org.apache.pdfbox.tools OverlayPDF)
-           (org.apache.pdfbox.multipdf Overlay$Position)))
+  (:import (org.apache.pdfbox.multipdf Overlay)
+           (org.apache.pdfbox.multipdf Overlay$Position)
+           (org.apache.pdfbox.pdmodel PDDocument)
+           (java.util HashMap)))
 
 (def xlsx-template-path "energiatodistus-template.xlsx")
 (def watermark-path-fi "watermark-fi.pdf")
@@ -426,10 +428,14 @@
       (do (log/error "XLSX to PDF conversion failed" sh-result)
         (throw (ex-info "XLSX to PDF conversion failed" sh-result))))))
 
-(defn add-watermark [pdf-path]
-  (let [settings ["-position" (.toString Overlay$Position/FOREGROUND)]
-        watermark-path (-> watermark-path-fi io/resource .getPath)]
-    (OverlayPDF/main (into-array String (flatten [pdf-path settings watermark-path pdf-path])))
+(defn- add-watermark [pdf-path]
+  (with-open [watermark (PDDocument/load (-> watermark-path-fi io/resource io/input-stream))
+              overlay   (doto (Overlay.)
+                          (.setInputFile pdf-path)
+                          (.setDefaultOverlayPDF watermark)
+                          (.setOverlayPosition Overlay$Position/FOREGROUND))
+              result    (.overlay overlay (HashMap.))]
+    (.save result pdf-path)
     pdf-path))
 
 (defn generate-pdf-as-file [complete-energiatodistus draft?]
