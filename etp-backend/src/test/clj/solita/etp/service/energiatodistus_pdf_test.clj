@@ -16,6 +16,16 @@
                       schema/EnergiatodistusSave2018
                       energiatodistus-test/energiatodistus-generators))
 
+(def sis-kuorma-data {:henkilot {:kayttoaste 0.2 :lampokuorma 1}
+                      :kuluttajalaitteet {:kayttoaste 0.3 :lampokuorma 1}
+                      :valaistus {:kayttoaste 0.3 :lampokuorma 2}})
+
+(t/deftest sis-kuorma-test
+  (let [sis-kuorma (service/sis-kuorma {:lahtotiedot {:sis-kuorma
+                                                      sis-kuorma-data}})]
+    (t/is (= sis-kuorma [[0.2 {:henkilot 1}]
+                         [0.3 {:kuluttajalaitteet 1 :valaistus 2}]]))))
+
 (t/deftest fill-xlsx-template-test
   (let [path (service/fill-xlsx-template energiatodistus)
         file (-> path io/input-stream)
@@ -34,8 +44,8 @@
     (t/is (-> file-path io/as-file .exists true?))
     (io/delete-file file-path)))
 
-(t/deftest generate-test
-  (let [file-path (service/generate energiatodistus)]
+(t/deftest generate-pdf-as-file-test
+  (let [file-path (service/generate-pdf-as-file energiatodistus)]
     (t/is (-> file-path io/as-file .exists))
     (io/delete-file file-path)))
 
@@ -58,7 +68,8 @@
              :already-signed))))
 
 (t/deftest find-energiatodistus-digest-test
-  (let [id (energiatodistus-test/add-energiatodistus! energiatodistus)]
+  (let [id (energiatodistus-test/add-energiatodistus!
+             energiatodistus (energiatodistus-test/add-laatija!))]
     (t/is (= (service/find-energiatodistus-digest ts/*db* id)
              :not-in-signing))
     (energiatodistus-service/start-energiatodistus-signing! ts/*db* id)
@@ -69,7 +80,8 @@
              :already-signed))))
 
 (t/deftest sign-energiatodistus-test
-  (let [id (energiatodistus-test/add-energiatodistus! energiatodistus)]
+  (let [id (energiatodistus-test/add-energiatodistus!
+             energiatodistus (energiatodistus-test/add-laatija!))]
     (t/is (= (service/sign-energiatodistus-pdf ts/*db* id nil)
              :not-in-signing))
     (energiatodistus-service/start-energiatodistus-signing! ts/*db* id)

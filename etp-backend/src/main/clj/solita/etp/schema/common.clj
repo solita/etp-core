@@ -2,6 +2,9 @@
   (:require [clojure.string :as str]
             [schema.core :as schema]))
 
+(defn not-contains-keys [object schema]
+  (every? #(not (contains? object %)) (keys schema)))
+
 (def Key schema/Int)
 (def Id {:id Key})
 

@@ -11,8 +11,7 @@
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.geo :as geo-schema]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
-            [solita.etp.schema.laatija :as laatija-schema]
-            [solita.etp.schema.kayttaja-laatija :as kayttaja-laatija-schema]))
+            [solita.etp.schema.laatija :as laatija-schema]))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -39,10 +38,10 @@
        (unique-henkilotunnus-range n)))
 
 (defn generate-KayttajaLaatijaAdds [n]
-  (generate-kayttaja-laatija n kayttaja-laatija-schema/KayttajaLaatijaAdd))
+  (generate-kayttaja-laatija n laatija-schema/KayttajaLaatijaAdd))
 
 (defn generate-KayttajaLaatijaUpdates [n]
-  (->> kayttaja-laatija-schema/KayttajaLaatijaUpdate
+  (->> laatija-schema/KayttajaLaatijaUpdate
        (generate-kayttaja-laatija n)
        (map #(assoc % :rooli 0))))
 
@@ -51,15 +50,15 @@
           :let [upsert-results (service/upsert-kayttaja-laatijat!
                                 ts/*db*
                                 [kayttaja-laatija])
-                id (-> upsert-results first :kayttaja)
+                id (-> upsert-results first)
                 found-kayttaja (kayttaja-service/find-kayttaja ts/*db* id)
-                found-laatija (laatija-service/find-laatija-with-kayttaja-id
+                found-laatija (laatija-service/find-laatija-by-id
                                ts/*db*
                                id)]]
     (schema/validate kayttaja-schema/Kayttaja found-kayttaja)
     (schema/validate laatija-schema/Laatija found-laatija)
     (t/is (map/submap? (st/select-schema kayttaja-laatija
-                                         kayttaja-schema/KayttajaAdd)
+                                         laatija-schema/KayttajaAdd)
                        found-kayttaja))
     (t/is (map/submap? (st/select-schema kayttaja-laatija
                                          laatija-schema/LaatijaAdd)
@@ -109,7 +108,7 @@
     (t/is (not= found-original-kayttaja-1 found-updated-kayttaja-1))
     (t/is (not= found-original-laatija-1 found-updated-laatija-1))
     (t/is (-> update-1
-              (st/select-keys kayttaja-schema/KayttajaAdd)
+              (st/select-keys laatija-schema/KayttajaAdd)
               (map/submap? found-updated-kayttaja-1)))
     (t/is (-> update-1
               (st/select-keys laatija-schema/LaatijaAdd)
@@ -130,8 +129,7 @@
           (partition 4 (interleave (generate-KayttajaLaatijaAdds 100)
                                    (generate-KayttajaLaatijaUpdates 100)))
           :let [[id-1 id-2] (->> [add-1 add-2]
-                                 (service/upsert-kayttaja-laatijat! ts/*db*)
-                                 (map :kayttaja))
+                                 (service/upsert-kayttaja-laatijat! ts/*db*))
                 kayttaja-1 {:id id-1}
                 kayttaja-2 {:id id-2}
                 whoami (rand-nth (concat [kayttaja-1 kayttaja-2] roolit))
@@ -139,21 +137,21 @@
                 _ (update-kayttaja-laatija! whoami id-2 update-2)
                 found-kayttaja-1 (kayttaja-service/find-kayttaja ts/*db* id-1)
                 found-kayttaja-2 (kayttaja-service/find-kayttaja ts/*db* id-2)
-                found-laatija-1 (laatija-service/find-laatija-with-kayttaja-id
+                found-laatija-1 (laatija-service/find-laatija-by-id
                                  ts/*db*
                                  id-1)
-                found-laatija-2 (laatija-service/find-laatija-with-kayttaja-id
+                found-laatija-2 (laatija-service/find-laatija-by-id
                                  ts/*db*
                                  id-2)
                 kayttaja-1-updated? (map/submap?
                                      (st/select-schema
                                       update-1
-                                      kayttaja-schema/KayttajaUpdate)
+                                      laatija-schema/KayttajaUpdate)
                                      found-kayttaja-1)
                 kayttaja-2-updated? (map/submap?
                                      (st/select-schema
                                       update-2
-                                      kayttaja-schema/KayttajaUpdate)
+                                      laatija-schema/KayttajaUpdate)
                                      found-kayttaja-2)
                 laatija-1-updated? (map/submap? (st/select-schema
                                                  update-1
@@ -171,7 +169,7 @@
     (cond
       (and (= whoami kayttaja-1)
            (every? #(not (contains? update-1 %))
-                   service/ks-only-for-paakayttaja))
+                   (keys laatija-schema/LaatijaAdminUpdate)))
       (do
         (t/is (true? kayttaja-1-updated?))
         (t/is (true? laatija-1-updated?))
@@ -179,8 +177,8 @@
         (t/is (false? laatija-2-updated?)))
 
       (and (= whoami kayttaja-2)
-           (every? #(not (contains? update-1 %))
-                   service/ks-only-for-paakayttaja))
+           (every? #(not (contains? update-2 %))
+                   (keys laatija-schema/LaatijaAdminUpdate)))
       (do
         (t/is (false? kayttaja-1-updated?))
         (t/is (false? laatija-1-updated?))

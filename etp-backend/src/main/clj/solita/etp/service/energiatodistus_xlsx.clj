@@ -498,7 +498,8 @@
   (when-let [energiatodistukset
              (energiatodistus-service/find-energiatodistukset-by-laatija
               db
-              laatija-id)]
+              laatija-id
+              nil)]
     (let [path (->> (java.util.UUID/randomUUID)
                     .toString
                     (format "energiatodistus-%s.xlsx")
