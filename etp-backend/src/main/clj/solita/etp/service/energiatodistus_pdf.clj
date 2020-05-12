@@ -51,9 +51,9 @@
         "K16" [:id]
 
         ;; TODO checkboxes D19-D21
-        ;; TODO format date
 
-        "M21" [:perustiedot :havainnointikaynti]
+        "M21" (fn [energiatodistus]
+                (->> energiatodistus :perustiedot :havainnointikaynti (.format date-formatter)))
 
         ;; TODO M36 and M37 E-luku
 
