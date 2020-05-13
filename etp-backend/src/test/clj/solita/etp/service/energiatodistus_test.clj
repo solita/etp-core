@@ -13,6 +13,7 @@
 
 (def energiatodistus-generators
   {schema.core/Num          (g/always 1.0)
+   common-schema/Year       (g/always 2021)
    schema/Rakennustunnus    (g/always "1234567890")
    schema/YritysPostinumero (g/always "00100")
    common-schema/Date       (g/always (java.time.LocalDate/now))
