@@ -111,8 +111,3 @@ Other environments
 Both projects contain script ```build-docker-container.sh``` which can be
 used to build the uberjars and related docker containers. The build containers
 can be executed by running ```docker run [etp-db or etp-backend]```.
-
-### TODO
-
- * TODO How to run unit- and integration tests?
- * TODO How to run e2e-tests?
