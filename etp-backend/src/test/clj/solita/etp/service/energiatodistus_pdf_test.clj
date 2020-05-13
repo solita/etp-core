@@ -27,7 +27,7 @@
                          [0.3 {:kuluttajalaitteet 1 :valaistus 2}]]))))
 
 (t/deftest fill-xlsx-template-test
-  (let [path (service/fill-xlsx-template energiatodistus)
+  (let [path (service/fill-xlsx-template energiatodistus false)
         file (-> path io/input-stream)
         loaded-xlsx (xlsx/load-xlsx file)
         sheet-0 (xlsx/get-sheet loaded-xlsx 0)]
@@ -45,7 +45,7 @@
     (io/delete-file file-path)))
 
 (t/deftest generate-pdf-as-file-test
-  (let [file-path (service/generate-pdf-as-file energiatodistus)]
+  (let [file-path (service/generate-pdf-as-file energiatodistus true)]
     (t/is (-> file-path io/as-file .exists))
     (io/delete-file file-path)))
 
