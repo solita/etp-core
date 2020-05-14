@@ -25,7 +25,8 @@
 
 (def external-routes
   [["/energiatodistukset/2018" {:middleware [[security/wrap-whoami-from-basic-auth]
-                                             [security/wrap-access]]}
+                                             [security/wrap-access]
+                                             [security/wrap-db-application-name]]}
     [""
      {:post energiatodistus-2018-post}]]])
 

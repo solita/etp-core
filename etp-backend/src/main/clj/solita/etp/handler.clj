@@ -67,7 +67,8 @@
    system-routes
    ["/private" {:middleware [[security/wrap-jwt-payloads]
                              [security/wrap-whoami-from-jwt-payloads]
-                             [security/wrap-access]]}
+                             [security/wrap-access]
+                             [security/wrap-db-application-name]]}
     (concat (tag "Käyttäjä API" kayttaja-api/routes)
             (tag "Yritys API" yritys-api/routes)
             (tag "Laatijat API" laatija-api/routes)
