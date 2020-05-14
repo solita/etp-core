@@ -16,8 +16,8 @@ create or replace view et_tilat as
 create or replace function energiatodistus_tila_audit() returns trigger as
 $$
 begin
-  insert into energiatodistustila_event( energiatodistus_id, tila_id )
-  values (new.energiatodistus_id, new.tila_id);
+  insert into energiatodistus_tila_history( energiatodistus_id, tila_id )
+  values (new.id, new.tila_id);
   return new;
 end;
 $$
