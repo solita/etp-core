@@ -46,7 +46,7 @@
 
 (defn delete-energiatodistus-luonnos! [db whoami id]
   (let [{:keys [laatija-id]} (find-energiatodistus db id)]
-    (if (= laatija-id (:laatija whoami))
+    (if (= laatija-id (:id whoami))
       (energiatodistus-db/delete-energiatodistus-luonnos! db {:id id})
       (exception/throw-forbidden!))))
 
