@@ -1,5 +1,6 @@
 (ns solita.etp.security
   (:require [clojure.tools.logging :as log]
+            [solita.common.jdbc :as common-jdbc]
             [solita.etp.jwt :as jwt]
             [solita.etp.basic-auth :as basic-auth]
             [solita.etp.api.response :as response]
@@ -48,3 +49,11 @@
                      :url (-> req :reitit.core/match :template)
                      :whoami whoami})
           response/forbidden)))))
+
+(defn wrap-db-application-name [handler]
+  (fn [{:keys [whoami] :as req}]
+    (let [application-name (str (:id whoami) "@core.etp")]
+    (common-jdbc/with-application-name-support
+      #(handler (assoc-in
+                  req [:db :application-name]
+                  application-name))))))

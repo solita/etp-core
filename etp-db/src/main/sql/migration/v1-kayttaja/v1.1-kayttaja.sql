@@ -10,3 +10,9 @@ create table kayttaja (
   ensitallennus boolean DEFAULT FALSE,
   cognito_id text
 );
+
+create or replace function current_kayttaja_id() returns int as $$
+begin
+  return split_part(current_setting('application_name'), '@', 1) :: int;
+end;
+$$ language plpgsql immutable;
