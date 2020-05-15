@@ -71,10 +71,10 @@
     (t/is (= (complete-energiatodistus update-energiatodistus id laatija-id)
              (find-energiatodistus id)))))
 
-#_(t/deftest create-energiatodistus-and-delete-test
+(t/deftest create-energiatodistus-and-delete-test
   (let [laatija-id (add-laatija!)
         id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators) laatija-id)]
-    (service/delete-energiatodistus-luonnos! ts/*db* {:laatija laatija-id} id)))
+    (service/delete-energiatodistus-luonnos! ts/*db* {:id laatija-id} id)))
 
 (t/deftest start-energiatodistus-signing!-test
   (let [laatija-id (add-laatija!)
