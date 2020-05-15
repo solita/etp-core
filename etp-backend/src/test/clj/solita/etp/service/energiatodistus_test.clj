@@ -7,7 +7,8 @@
             [solita.etp.service.kayttaja-laatija-test :as laatija-service-test]
             [solita.etp.schema.energiatodistus :as schema]
             [solita.etp.schema.common :as common-schema]
-            [solita.etp.schema.geo :as geo-schema]))
+            [solita.etp.schema.geo :as geo-schema])
+  (:import [java.time Instant]))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -18,7 +19,9 @@
    schema/YritysPostinumero (g/always "00100")
    common-schema/Date       (g/always (java.time.LocalDate/now))
    common-schema/Integer100 (g/always 50)
-   geo-schema/Postinumero   (g/always "00100")})
+   geo-schema/Postinumero   (g/always "00100")
+   common-schema/Instant    (g/always (Instant/now))
+   (schema.core/eq 2018)    (g/always 2018)})
 
 (defn add-laatija! []
   (-> (laatija-service/upsert-kayttaja-laatijat! ts/*db*

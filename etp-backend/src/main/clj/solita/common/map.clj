@@ -8,3 +8,19 @@
 
 (defmacro bindings->map [& bindings]
   (into {} (map (fn [s] [(keyword (name s)) s]) bindings)))
+
+(defn paths
+  ([coll]
+   (paths coll []))
+  ([coll path]
+   (reduce
+    (fn [acc [k v]]
+      (let [v (if (sequential? v)
+                (into {} (map-indexed vector v))
+                v)
+            current-path (conj path k)]
+        (if (map? v)
+          (concat acc (paths v current-path))
+          (conj acc current-path))))
+    []
+    coll)))

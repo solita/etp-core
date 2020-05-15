@@ -79,3 +79,6 @@
 (defn create-style [xlsx font]
   (doto (.createCellStyle xlsx)
     (.setFont font)))
+
+(defn set-column-width [sheet idx width]
+  (.setColumnWidth sheet idx width))
