@@ -30,11 +30,16 @@
        (map str/capitalize)
        (str/join " / ")))
 
+(defn col-width [label]
+  (max 2000 (* (count label) 250)))
+
 (defn fill-headers [sheet style paths]
   (let [row (xlsx/create-row sheet 0)]
     (.setRowStyle row style)
-    (doseq [[idx path] (map-indexed vector paths)]
-      (xlsx/create-cell-with-value row idx (path->str path)))))
+    (doseq [[idx path] (map-indexed vector paths)
+            :let [label (path->str path)]]
+      (xlsx/create-cell-with-value row idx label)
+      (xlsx/set-column-width sheet idx (col-width label)))))
 
 (defn fill-row-with-energiatodistus [sheet idx energiatodistus paths]
   (let [row (xlsx/create-row sheet idx)]
