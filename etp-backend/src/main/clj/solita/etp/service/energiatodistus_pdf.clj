@@ -2,7 +2,6 @@
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
             [clojure.java.shell :as shell]
-            [clojure.tools.logging :as log]
             [puumerkki.pdf :as puumerkki]
             [solita.common.xlsx :as xlsx]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
@@ -442,6 +441,7 @@
   (let [file (io/file path)
         filename (.getName file)
         dir (.getParent file)
+        result-pdf (str/replace path #".xlsx$" ".pdf")
         {:keys [exit err] :as sh-result} (shell/sh "libreoffice"
                                                    "--headless"
                                                    "--convert-to"
@@ -449,10 +449,13 @@
                                                    filename
                                                    :dir
                                                    dir)]
-    (if (and (zero? exit) (str/blank? err))
-      (str/replace path #".xlsx$" ".pdf")
-      (do (log/error "XLSX to PDF conversion failed" sh-result)
-        (throw (ex-info "XLSX to PDF conversion failed" sh-result))))))
+    (if (and (zero? exit) (str/blank? err) (.exists (io/as-file result-pdf)))
+      result-pdf
+      (throw (ex-info "XLSX to PDF conversion failed"
+                (assoc sh-result
+                  :type :xlsx-pdf-conversion-failure
+                  :xlsx filename
+                  :pdf-result? (.exists (io/as-file result-pdf))))))))
 
 (defn- add-watermark [pdf-path]
   (with-open [watermark (PDDocument/load (-> watermark-path-fi io/resource io/input-stream))
