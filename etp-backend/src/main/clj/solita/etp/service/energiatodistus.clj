@@ -13,20 +13,24 @@
 ; *** Conversions from database data types ***
 (def coerce-energiatodistus (coerce/coercer energiatodistus-schema/Energiatodistus json/json-coercions))
 
+(def tilat [:draft :in-signing :signed :discarded :replaced :deleted])
+
+(defn tila-key [tila-id] (nth tilat tila-id))
+
 (defn find-energiatodistus
   ([db id]
-   (first (map (comp coerce-energiatodistus json/merge-data)
+   (first (map (comp coerce-energiatodistus json/merge-data db/kebab-case-keys)
                (energiatodistus-db/select-energiatodistus db {:id id}))))
   ([db whoami id]
    (let [energiatodistus (find-energiatodistus db id)]
      (if (or (rooli-service/paakayttaja? whoami)
              (and (rooli-service/laatija? whoami)
-                  (= (:laatija-id energiatodistus) (:laatija whoami))))
+                  (= (:laatija-id energiatodistus) (:id whoami))))
        energiatodistus
        (exception/throw-forbidden!)))))
 
 (defn find-energiatodistukset-by-laatija [db laatija-id tila-id]
-  (map (comp coerce-energiatodistus json/merge-data)
+  (map (comp coerce-energiatodistus json/merge-data db/kebab-case-keys)
        (energiatodistus-db/select-energiatodistukset-by-laatija
          db {:laatija-id laatija-id :tila-id tila-id})))
 
@@ -34,50 +38,47 @@
   (:id (energiatodistus-db/insert-energiatodistus<!
          db (assoc (json/data-db-row energiatodistus)
               :versio versio
-              :laatija-id (:laatija whoami)))))
+              :laatija-id (:id whoami)))))
+
+(defn assert-laatija! [whoami energiatodistus]
+  (when-not (= (:laatija-id energiatodistus) (:id whoami))
+    (exception/throw-forbidden!
+      (str "User " (:id whoami) " is not the laatija of et-" (:id energiatodistus)))))
 
 (defn update-energiatodistus-luonnos! [db whoami id energiatodistus]
-  (let [{:keys [laatija-id]} (find-energiatodistus db id)]
-    (if (= laatija-id (:laatija whoami))
-      (energiatodistus-db/update-energiatodistus-luonnos!
-       db
-       {:id id :data (json/write-value-as-string energiatodistus)})
-      (exception/throw-forbidden!))))
+  (assert-laatija! whoami (find-energiatodistus db id))
+  (energiatodistus-db/update-energiatodistus-luonnos! db
+     {:id id :data (json/write-value-as-string energiatodistus)}))
 
 (defn delete-energiatodistus-luonnos! [db whoami id]
-  (let [{:keys [laatija-id]} (find-energiatodistus db id)]
-    (if (= laatija-id (:id whoami))
-      (energiatodistus-db/delete-energiatodistus-luonnos! db {:id id})
-      (exception/throw-forbidden!))))
+  (assert-laatija! whoami (find-energiatodistus db id))
+  (energiatodistus-db/delete-energiatodistus-luonnos! db {:id id}))
 
-(defn start-energiatodistus-signing! [db id]
-  (when-let [{:keys [allekirjoituksessaaika allekirjoitusaika]}
-             (find-energiatodistus db id)]
-    (cond
-      (-> allekirjoitusaika nil? not)
-      :already-signed
+;;
+;; Signing process
+;;
 
-      (-> allekirjoituksessaaika nil? not)
-      :already-in-signing
+(defn start-energiatodistus-signing! [db whoami id]
+  (let [result (energiatodistus-db/update-energiatodistus-allekirjoituksessa!
+                 db {:id id :laatija-id (:id whoami)})]
+    (if (= result 1) :ok
+      (when-let [{:keys [tila-id] :as et} (find-energiatodistus db id)]
+        (assert-laatija! whoami et)
+        (case (tila-key tila-id)
+          :in-signing :already-in-signing
+          :deleted nil
+          :already-signed)))))
 
-      :else
-      (do
-        (energiatodistus-db/update-energiatodistus-allekirjoituksessaaika! db {:id id})
-        :ok))))
-
-(defn stop-energiatodistus-signing! [db id]
-  (when-let [{:keys [allekirjoituksessaaika allekirjoitusaika]} (find-energiatodistus db id)]
-    (cond
-      (-> allekirjoitusaika nil? not)
-      :already-signed
-
-      (-> allekirjoituksessaaika nil?)
-      :not-in-signing
-
-      :else
-      (do
-        (energiatodistus-db/update-energiatodistus-allekirjoitusaika! db {:id id})
-        :ok))))
+(defn end-energiatodistus-signing! [db whoami id]
+  (let [result (energiatodistus-db/update-energiatodistus-allekirjoitettu!
+                 db {:id id :laatija-id (:id whoami)})]
+    (if (= result 1) :ok
+      (when-let [{:keys [tila-id] :as et} (find-energiatodistus db id)]
+        (assert-laatija! whoami et)
+        (case (tila-key tila-id)
+         :draft :not-in-signing
+         :deleted nil
+         :already-signed)))))
 
 ;;
 ;; Energiatodistuksen kielisyys

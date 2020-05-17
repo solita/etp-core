@@ -9,15 +9,17 @@
     {:status  409
      :body    error}))
 
-(defn throw-forbidden! []
-  (throw (ex-info "Forbidden" {:type :forbidden})))
+(defn throw-forbidden!
+  ([] (throw (ex-info "Forbidden" {:type :forbidden})))
+  ([reason] (throw (ex-info "Forbidden" {:type :forbidden :reason reason}))))
 
 (defn forbidden-handler [exception request]
   (let [error (ex-data exception)]
     (log/info (str "Service "
                    (:uri request)
                    " forbidden for access-token "
-                   (get-in request [:headers "x-amzn-oidc-accesstoken"])))
+                   (get-in request [:headers "x-amzn-oidc-accesstoken"])
+                   (or (:reason error) "")))
     {:status  403
      :body "Forbidden"}))
 

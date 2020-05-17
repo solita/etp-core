@@ -4,7 +4,8 @@ values (:versio, :laatija-id, :data :: JSONB) returning id
 
 -- name: update-energiatodistus-luonnos!
 update energiatodistus set data = :data :: JSONB
-where allekirjoitusaika is null and id = :id
+from et_tilat
+where tila_id = et_tilat.luonnos and id = :id
 
 -- name: delete-energiatodistus-luonnos!
 update energiatodistus set tila_id = et_tilat.poistettu
@@ -13,9 +14,10 @@ where tila_id = et_tilat.luonnos and id = :id
 
 -- name: select-energiatodistus
 select energiatodistus.id, energiatodistus.versio,
+       energiatodistus.tila_id,
        energiatodistus.allekirjoituksessaaika,
        energiatodistus.allekirjoitusaika,
-       energiatodistus.laatija_id "laatija-id",
+       energiatodistus.laatija_id,
        fullname(kayttaja.*) "laatija-fullname",
        energiatodistus.data
 from energiatodistus
@@ -25,9 +27,10 @@ where energiatodistus.id = :id
 
 -- name: select-energiatodistukset-by-laatija
 select energiatodistus.id, energiatodistus.versio,
+       energiatodistus.tila_id,
        energiatodistus.allekirjoituksessaaika,
        energiatodistus.allekirjoitusaika,
-       energiatodistus.laatija_id "laatija-id",
+       energiatodistus.laatija_id,
        fullname(kayttaja.*) "laatija-fullname",
        energiatodistus.data
 from et_tilat, energiatodistus
@@ -48,12 +51,17 @@ select id, kayttotarkoitusluokka_id "kayttotarkoitusluokka-id", label_fi "label-
 from alakayttotarkoitusluokka where versio = :versio
 order by ordinal asc
 
--- name: update-energiatodistus-allekirjoituksessaaika!
-update energiatodistus set allekirjoituksessaaika = now()
-where allekirjoituksessaaika is null and allekirjoitusaika is null
-and id = :id
+-- name: update-energiatodistus-allekirjoituksessa!
+update energiatodistus set
+  tila_id = et_tilat.allekirjoituksessa,
+  allekirjoituksessaaika = now()
+from et_tilat
+where tila_id = et_tilat.luonnos and laatija_id = :laatija-id and id = :id
 
--- name: update-energiatodistus-allekirjoitusaika!
-update energiatodistus set allekirjoitusaika = now()
-where allekirjoituksessaaika is not null and allekirjoitusaika is null
-and id = :id
+-- name: update-energiatodistus-allekirjoitettu!
+update energiatodistus set
+  tila_id = et_tilat.allekirjoitettu,
+  allekirjoitusaika = now()
+from et_tilat
+where tila_id = et_tilat.allekirjoituksessa and laatija_id = :laatija-id and id = :id
+
