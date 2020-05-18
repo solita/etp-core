@@ -43,7 +43,6 @@
           :laatija-id laatija-id
           :versio 2018
           :tila-id 0
-          :allekirjoituksessaaika nil
           :allekirjoitusaika nil}))
 
 (t/deftest add-and-find-energiatodistus-test
@@ -80,26 +79,28 @@
         id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators) laatija-id)]
     (service/delete-energiatodistus-luonnos! ts/*db* {:id laatija-id} id)))
 
+(defn energiatodistus-tila [id] (-> id find-energiatodistus :tila-id service/tila-key))
+
 (t/deftest start-energiatodistus-signing!-test
   (let [laatija-id (add-laatija!)
         whoami {:id laatija-id}
         id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators) laatija-id)]
-    (t/is (-> (find-energiatodistus id) :allekirjoituksessaaika nil?))
+    (t/is (= (energiatodistus-tila id) :draft))
     (t/is (= (service/start-energiatodistus-signing! ts/*db* whoami id) :ok))
-    (t/is (-> (find-energiatodistus id) :allekirjoituksessaaika nil? not))
+    (t/is (= (energiatodistus-tila id) :in-signing))
     (t/is (= (service/start-energiatodistus-signing! ts/*db* whoami id) :already-in-signing))))
 
 (t/deftest stop-energiatodistus-signing!-test
   (let [laatija-id (add-laatija!)
         whoami {:id laatija-id}
         id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators) laatija-id)]
-    (t/is (-> (find-energiatodistus id) :allekirjoitusaika nil?))
+    (t/is (= (energiatodistus-tila id) :draft))
     (t/is (=  (service/end-energiatodistus-signing! ts/*db* whoami id)
               :not-in-signing))
-    (t/is (-> (find-energiatodistus id) :allekirjoitusaika nil?))
+    (t/is (= (energiatodistus-tila id) :draft))
     (service/start-energiatodistus-signing! ts/*db* whoami id)
     (t/is (= (service/end-energiatodistus-signing! ts/*db* whoami id)
              :ok))
-    (t/is (-> (find-energiatodistus id) :allekirjoitusaika nil? not))
+    (t/is (= (energiatodistus-tila id) :signed))
     (t/is (=  (service/end-energiatodistus-signing! ts/*db* whoami id)
               :already-signed))))

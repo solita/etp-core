@@ -15,7 +15,6 @@ where tila_id = et_tilat.luonnos and id = :id
 -- name: select-energiatodistus
 select energiatodistus.id, energiatodistus.versio,
        energiatodistus.tila_id,
-       energiatodistus.allekirjoituksessaaika,
        energiatodistus.allekirjoitusaika,
        energiatodistus.laatija_id,
        fullname(kayttaja.*) "laatija-fullname",
@@ -28,7 +27,6 @@ where energiatodistus.id = :id
 -- name: select-energiatodistukset-by-laatija
 select energiatodistus.id, energiatodistus.versio,
        energiatodistus.tila_id,
-       energiatodistus.allekirjoituksessaaika,
        energiatodistus.allekirjoitusaika,
        energiatodistus.laatija_id,
        fullname(kayttaja.*) "laatija-fullname",
@@ -52,9 +50,7 @@ from alakayttotarkoitusluokka where versio = :versio
 order by ordinal asc
 
 -- name: update-energiatodistus-allekirjoituksessa!
-update energiatodistus set
-  tila_id = et_tilat.allekirjoituksessa,
-  allekirjoituksessaaika = now()
+update energiatodistus set tila_id = et_tilat.allekirjoituksessa
 from et_tilat
 where tila_id = et_tilat.luonnos and laatija_id = :laatija-id and id = :id
 

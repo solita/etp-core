@@ -498,16 +498,12 @@
       (find-existing-pdf db id)
       (generate-pdf-as-input-stream complete-energiatodistus true))))
 
-(defn do-when-signing [{:keys [allekirjoituksessaaika allekirjoitusaika]} f]
-  (cond
-    (nil? allekirjoituksessaaika)
-    :not-in-signing
-
-    (-> allekirjoitusaika nil? not)
-    :already-signed
-
-    :else
-    (f)))
+(defn do-when-signing [{:keys [tila-id]} f]
+  (case (energiatodistus-service/tila-key tila-id)
+    :in-signing (f)
+    :draft :not-in-signing
+    :deleted :not-in-signing
+    :already-signed))
 
 (defn find-energiatodistus-digest [db id]
   (when-let [{:keys [laatija-fullname] :as complete-energiatodistus}
