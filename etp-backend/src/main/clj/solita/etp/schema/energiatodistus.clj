@@ -223,7 +223,6 @@
 (def Energiatodistus2018
   "Energiatodistus schema contains basic information about persistent energiatodistus"
   (assoc (merge common-schema/Id EnergiatodistusSave2018)
-         :allekirjoituksessaaika (schema/maybe common-schema/Instant)
          :allekirjoitusaika (schema/maybe common-schema/Instant)
          :laatija-id common-schema/Key
          :tila-id common-schema/Key
