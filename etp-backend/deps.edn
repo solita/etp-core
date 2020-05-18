@@ -30,7 +30,7 @@
         org.apache.poi/poi {:mvn/version "4.1.2"}
         org.apache.poi/poi-ooxml {:mvn/version "4.1.2"}
         org.apache.pdfbox/pdfbox {:mvn/version "2.0.19"}
-        puumerkki {:mvn/version "0.9"}}
+        puumerkki {:mvn/version "0.9.1"}}
  :aliases {:test {:extra-paths ["src/test/clj"
                                 "src/test/resources"]
                   :extra-deps {eftest {:mvn/version "0.5.9"}
