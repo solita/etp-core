@@ -35,7 +35,7 @@
        seq
        (into [])))
 
-(defn mappings [draft?]
+(defn mappings []
   (let [now (Instant/now)
         today (LocalDate/now)]
     {0 {"K7" [:perustiedot :nimi]
@@ -69,9 +69,6 @@
 
         "B42" [:laatija-fullname]
         "J42" [:perustiedot :yritys :nimi]
-
-        "B45" (when-not draft? [:laatija-fullname])
-        "B46" (fn [_] (when-not draft? (.format time-formatter now)))
 
         "B50" (fn [_] (.format date-formatter today))
         "K50" (fn [_] (.format date-formatter (.plusYears today 10)))}
@@ -421,7 +418,7 @@
                     .toString
                     (format "energiatodistus-%s.xlsx")
                     (str tmp-dir))]
-      (doseq [[sheet sheet-mappings] (mappings draft?)]
+      (doseq [[sheet sheet-mappings] (mappings)]
         (doseq [[cell cursor-or-f] sheet-mappings
                 :when cursor-or-f]
           (xlsx/set-cell-value-at (nth sheets sheet)
@@ -515,9 +512,14 @@
     (do-when-signing
      complete-energiatodistus
      #(let [pdf-path (generate-pdf-as-file complete-energiatodistus false)
-            signable-pdf-path (puumerkki/add-signature-space
+            signable-pdf-path (str/replace pdf-path #".pdf" "-signable.pdf")
+            signable-pdf-path (puumerkki/add-watermarked-signature-space
                                pdf-path
-                               laatija-fullname)
+                               signable-pdf-path
+                               laatija-fullname
+                               "example.jpeg"
+                               75
+                               666)
             signable-pdf-data (puumerkki/read-file signable-pdf-path)
             digest (puumerkki/compute-base64-pkcs signable-pdf-data)
             file-id (pdf-file-id id)]
