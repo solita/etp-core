@@ -18,7 +18,7 @@
   (t/is (empty? (service/other-paths nil)))
   (t/is (empty? (service/other-paths [])))
   (t/is (= (service/other-paths (map #(assoc % :new-key 1) energiatodistukset))
-           #{[:new-key]})))
+           #{[:new-key] [:tila-id]})))
 
 (t/deftest paths-for-k-test
   (let [perustiedot-paths (service/paths-for-k energiatodistukset :perustiedot)]

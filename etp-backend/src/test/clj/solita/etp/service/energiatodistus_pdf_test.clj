@@ -68,27 +68,29 @@
              :already-signed))))
 
 (t/deftest find-energiatodistus-digest-test
-  (let [id (energiatodistus-test/add-energiatodistus!
-             energiatodistus (energiatodistus-test/add-laatija!))]
+  (let [laatija-id (energiatodistus-test/add-laatija!)
+        id (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id)
+        whoami {:id laatija-id}]
     (t/is (= (service/find-energiatodistus-digest ts/*db* id)
              :not-in-signing))
-    (energiatodistus-service/start-energiatodistus-signing! ts/*db* id)
+    (energiatodistus-service/start-energiatodistus-signing! ts/*db* whoami id)
     (t/is (contains? (service/find-energiatodistus-digest ts/*db* id)
                      :digest))
-    (energiatodistus-service/stop-energiatodistus-signing! ts/*db* id)
+    (energiatodistus-service/end-energiatodistus-signing! ts/*db* whoami id)
     (t/is (= (service/find-energiatodistus-digest ts/*db* id)
              :already-signed))))
 
 (t/deftest sign-energiatodistus-test
-  (let [id (energiatodistus-test/add-energiatodistus!
-             energiatodistus (energiatodistus-test/add-laatija!))]
+  (let [laatija-id (energiatodistus-test/add-laatija!)
+        id (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id)
+        whoami {:id laatija-id}]
     (t/is (= (service/sign-energiatodistus-pdf ts/*db* id nil)
              :not-in-signing))
-    (energiatodistus-service/start-energiatodistus-signing! ts/*db* id)
+    (energiatodistus-service/start-energiatodistus-signing! ts/*db* whoami id)
 
     ;; Is it possible to somehow create a valid signature and chain for testing
     ;; the success case?
 
-    (energiatodistus-service/stop-energiatodistus-signing! ts/*db* id)
+    (energiatodistus-service/end-energiatodistus-signing! ts/*db* whoami id)
     (t/is (= (service/sign-energiatodistus-pdf ts/*db* id nil)
              :already-signed))))
