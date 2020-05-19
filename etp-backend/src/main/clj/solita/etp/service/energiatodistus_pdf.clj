@@ -12,7 +12,10 @@
            (org.apache.pdfbox.multipdf Overlay)
            (org.apache.pdfbox.multipdf Overlay$Position)
            (org.apache.pdfbox.pdmodel PDDocument)
-           (java.util HashMap)))
+           (java.util HashMap)
+           (java.awt Font Color)
+           (java.awt.image BufferedImage)
+           (javax.imageio ImageIO)))
 
 (def xlsx-template-path "energiatodistus-template.xlsx")
 (def watermark-path-fi "watermark-fi.pdf")
@@ -506,6 +509,18 @@
     :else
     (f)))
 
+(defn signature-as-png [path laatija-fullname]
+  (let [now (Instant/now)
+        width (max 125 (* (count laatija-fullname) 6))
+        img (BufferedImage. width 30 BufferedImage/TYPE_INT_ARGB)
+        g (.getGraphics img)]
+    (.setFont g (Font. Font/SANS_SERIF Font/TRUETYPE_FONT 10))
+    (.setColor g Color/BLACK)
+    (.drawString g laatija-fullname 2 10)
+    (.drawString g (.format time-formatter now) 2 25)
+    (.dispose g)
+    (ImageIO/write img "PNG" (io/file path))))
+
 (defn find-energiatodistus-digest [db id]
   (when-let [{:keys [laatija-fullname] :as complete-energiatodistus}
              (energiatodistus-service/find-complete-energiatodistus db id)]
@@ -513,11 +528,13 @@
      complete-energiatodistus
      #(let [pdf-path (generate-pdf-as-file complete-energiatodistus false)
             signable-pdf-path (str/replace pdf-path #".pdf" "-signable.pdf")
+            signature-png-path (str/replace pdf-path #".pdf" "-signature.png")
+            _ (signature-as-png signature-png-path laatija-fullname)
             signable-pdf-path (puumerkki/add-watermarked-signature-space
                                pdf-path
                                signable-pdf-path
                                laatija-fullname
-                               "example.jpeg"
+                               signature-png-path
                                75
                                666)
             signable-pdf-data (puumerkki/read-file signable-pdf-path)
@@ -529,6 +546,7 @@
                                              signable-pdf-data)
         (io/delete-file pdf-path)
         (io/delete-file signable-pdf-path)
+        (io/delete-file signature-png-path)
         {:digest digest}))))
 
 (defn sign-energiatodistus-pdf [db id signature-and-chain]
