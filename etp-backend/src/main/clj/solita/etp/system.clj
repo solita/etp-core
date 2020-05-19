@@ -9,3 +9,6 @@
 
 (defn start! []
   (ig/init (config)))
+
+(defn halt! [system]
+  (ig/halt! system))
