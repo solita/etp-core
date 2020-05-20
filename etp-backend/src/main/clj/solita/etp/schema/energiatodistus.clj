@@ -220,15 +220,12 @@
      :lisamerkintoja-fi              common-schema/String6300
      :lisamerkintoja-sv              common-schema/String6300}))
 
-(def EnergiatodistusTila
-  {:tila (schema/enum "luonnos" "valmis")})
-
 (def Energiatodistus2018
   "Energiatodistus schema contains basic information about persistent energiatodistus"
   (assoc (merge common-schema/Id EnergiatodistusSave2018)
-         :allekirjoituksessaaika (schema/maybe common-schema/Instant)
          :allekirjoitusaika (schema/maybe common-schema/Instant)
          :laatija-id common-schema/Key
+         :tila-id common-schema/Key
          :laatija-fullname schema/Str
          :versio (schema/eq 2018)))
 

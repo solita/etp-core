@@ -6,8 +6,9 @@
    (require 'solita.etp.system)
    ((resolve 'solita.etp.system/config))))
 
-(defn db []
-  (-> integrant.repl.state/system :solita.etp/db))
+(defn db
+  ([] (-> integrant.repl.state/system :solita.etp/db))
+  ([kayttaja-id] (assoc (db) :application-name (str kayttaja-id "@core.etp.test"))))
 
 (defn run-tests []
   (require 'eftest.runner)

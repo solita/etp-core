@@ -9,26 +9,31 @@
     {:status  409
      :body    error}))
 
-(defn throw-forbidden! []
-  (throw (ex-info "Forbidden" {:type :forbidden})))
+(defn throw-forbidden!
+  ([] (throw (ex-info "Forbidden" {:type :forbidden})))
+  ([reason] (throw (ex-info "Forbidden" {:type :forbidden :reason reason}))))
 
 (defn forbidden-handler [exception request]
   (let [error (ex-data exception)]
     (log/info (str "Service "
                    (:uri request)
                    " forbidden for access-token "
-                   (get-in request [:headers "x-amzn-oidc-accesstoken"])))
+                   (get-in request [:headers "x-amzn-oidc-accesstoken"])
+                   (or (:reason error) "")))
     {:status  403
      :body "Forbidden"}))
+
+(defn class-name [object] (.getName (class object)))
 
 (defn default-handler
   "Default safe handler for any exception."
   [^Throwable e request]
   (do
-    (log/error e (str "Exception in service: " (:uri request)))
+    (log/error e (str "Exception in service: " (:uri request))
+               (or (ex-data e) ""))
     {:status 500
-     :body {:type "exception"
-            :class (.getName (.getClass e))}}))
+     :body {:type (or (:type (ex-data e)) (class-name e))
+            :message "Internal system error - see logs for details."}}))
 
 (def exception-middleware
   (exception/create-exception-middleware

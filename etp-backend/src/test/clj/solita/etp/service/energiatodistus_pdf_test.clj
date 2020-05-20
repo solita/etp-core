@@ -55,40 +55,37 @@
 
 (t/deftest do-when-signing-test
   (let [f (constantly true)]
-    (t/is (= (service/do-when-signing {:allekirjoituksessaaika nil
-                                       :allekirjoitusaika nil}
-                                      f)
+    (t/is (= (service/do-when-signing {:tila-id 0 } f)
              :not-in-signing))
-    (t/is (true? (service/do-when-signing {:allekirjoituksessaaika true
-                                           :allekirjoitusaika nil}
-                                          f)))
-    (t/is (= (service/do-when-signing {:allekirjoituksessaaika true
-                                       :allekirjoitusaika true}
-                                      f)
+    (t/is (true? (service/do-when-signing {:tila-id 1} f)))
+
+    (t/is (= (service/do-when-signing {:tila-id 2} f)
              :already-signed))))
 
 (t/deftest find-energiatodistus-digest-test
-  (let [id (energiatodistus-test/add-energiatodistus!
-             energiatodistus (energiatodistus-test/add-laatija!))]
+  (let [laatija-id (energiatodistus-test/add-laatija!)
+        id (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id)
+        whoami {:id laatija-id}]
     (t/is (= (service/find-energiatodistus-digest ts/*db* id)
              :not-in-signing))
-    (energiatodistus-service/start-energiatodistus-signing! ts/*db* id)
+    (energiatodistus-service/start-energiatodistus-signing! ts/*db* whoami id)
     (t/is (contains? (service/find-energiatodistus-digest ts/*db* id)
                      :digest))
-    (energiatodistus-service/stop-energiatodistus-signing! ts/*db* id)
+    (energiatodistus-service/end-energiatodistus-signing! ts/*db* whoami id)
     (t/is (= (service/find-energiatodistus-digest ts/*db* id)
              :already-signed))))
 
 (t/deftest sign-energiatodistus-test
-  (let [id (energiatodistus-test/add-energiatodistus!
-             energiatodistus (energiatodistus-test/add-laatija!))]
+  (let [laatija-id (energiatodistus-test/add-laatija!)
+        id (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id)
+        whoami {:id laatija-id}]
     (t/is (= (service/sign-energiatodistus-pdf ts/*db* id nil)
              :not-in-signing))
-    (energiatodistus-service/start-energiatodistus-signing! ts/*db* id)
+    (energiatodistus-service/start-energiatodistus-signing! ts/*db* whoami id)
 
     ;; Is it possible to somehow create a valid signature and chain for testing
     ;; the success case?
 
-    (energiatodistus-service/stop-energiatodistus-signing! ts/*db* id)
+    (energiatodistus-service/end-energiatodistus-signing! ts/*db* whoami id)
     (t/is (= (service/sign-energiatodistus-pdf ts/*db* id nil)
              :already-signed))))

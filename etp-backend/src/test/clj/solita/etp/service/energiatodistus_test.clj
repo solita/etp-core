@@ -7,7 +7,8 @@
             [solita.etp.service.kayttaja-laatija-test :as laatija-service-test]
             [solita.etp.schema.energiatodistus :as schema]
             [solita.etp.schema.common :as common-schema]
-            [solita.etp.schema.geo :as geo-schema]))
+            [solita.etp.schema.geo :as geo-schema])
+  (:import [java.time Instant]))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -18,7 +19,9 @@
    schema/YritysPostinumero (g/always "00100")
    common-schema/Date       (g/always (java.time.LocalDate/now))
    common-schema/Integer100 (g/always 50)
-   geo-schema/Postinumero   (g/always "00100")})
+   geo-schema/Postinumero   (g/always "00100")
+   common-schema/Instant    (g/always (Instant/now))
+   (schema.core/eq 2018)    (g/always 2018)})
 
 (defn add-laatija! []
   (-> (laatija-service/upsert-kayttaja-laatijat! ts/*db*
@@ -26,7 +29,8 @@
       first))
 
 (defn add-energiatodistus! [energiatodistus laatija-id]
-  (service/add-energiatodistus! ts/*db* {:laatija laatija-id} 2018 energiatodistus))
+  (service/add-energiatodistus!
+    (ts/db-user laatija-id) {:id laatija-id} 2018 energiatodistus))
 
 (defn find-energiatodistus [id]
   (let [et (service/find-energiatodistus ts/*db* id)]
@@ -38,7 +42,7 @@
          {:id id
           :laatija-id laatija-id
           :versio 2018
-          :allekirjoituksessaaika nil
+          :tila-id 0
           :allekirjoitusaika nil}))
 
 (t/deftest add-and-find-energiatodistus-test
@@ -66,33 +70,37 @@
   (let [laatija-id (add-laatija!)
         id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators) laatija-id)
         update-energiatodistus (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators)]
-    (service/update-energiatodistus-luonnos! ts/*db* {:laatija laatija-id} id update-energiatodistus)
+    (service/update-energiatodistus-luonnos! ts/*db* {:id laatija-id} id update-energiatodistus)
     (t/is (= (complete-energiatodistus update-energiatodistus id laatija-id)
              (find-energiatodistus id)))))
 
 (t/deftest create-energiatodistus-and-delete-test
   (let [laatija-id (add-laatija!)
         id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators) laatija-id)]
-    (service/delete-energiatodistus-luonnos! ts/*db* {:laatija laatija-id} id)))
+    (service/delete-energiatodistus-luonnos! ts/*db* {:id laatija-id} id)))
+
+(defn energiatodistus-tila [id] (-> id find-energiatodistus :tila-id service/tila-key))
 
 (t/deftest start-energiatodistus-signing!-test
   (let [laatija-id (add-laatija!)
+        whoami {:id laatija-id}
         id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators) laatija-id)]
-    (t/is (-> (find-energiatodistus id) :allekirjoituksessaaika nil?))
-    (t/is (= (service/start-energiatodistus-signing! ts/*db* id) :ok))
-    (t/is (-> (find-energiatodistus id) :allekirjoituksessaaika nil? not))
-    (t/is (= (service/start-energiatodistus-signing! ts/*db* id) :already-in-signing))))
+    (t/is (= (energiatodistus-tila id) :draft))
+    (t/is (= (service/start-energiatodistus-signing! ts/*db* whoami id) :ok))
+    (t/is (= (energiatodistus-tila id) :in-signing))
+    (t/is (= (service/start-energiatodistus-signing! ts/*db* whoami id) :already-in-signing))))
 
 (t/deftest stop-energiatodistus-signing!-test
   (let [laatija-id (add-laatija!)
+        whoami {:id laatija-id}
         id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators) laatija-id)]
-    (t/is (-> (find-energiatodistus id) :allekirjoitusaika nil?))
-    (t/is (=  (service/stop-energiatodistus-signing! ts/*db* id)
+    (t/is (= (energiatodistus-tila id) :draft))
+    (t/is (=  (service/end-energiatodistus-signing! ts/*db* whoami id)
               :not-in-signing))
-    (t/is (-> (find-energiatodistus id) :allekirjoitusaika nil?))
-    (service/start-energiatodistus-signing! ts/*db* id)
-    (t/is (= (service/stop-energiatodistus-signing! ts/*db* id)
+    (t/is (= (energiatodistus-tila id) :draft))
+    (service/start-energiatodistus-signing! ts/*db* whoami id)
+    (t/is (= (service/end-energiatodistus-signing! ts/*db* whoami id)
              :ok))
-    (t/is (-> (find-energiatodistus id) :allekirjoitusaika nil? not))
-    (t/is (=  (service/stop-energiatodistus-signing! ts/*db* id)
+    (t/is (= (energiatodistus-tila id) :signed))
+    (t/is (=  (service/end-energiatodistus-signing! ts/*db* whoami id)
               :already-signed))))

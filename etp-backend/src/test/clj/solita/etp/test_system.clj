@@ -1,6 +1,7 @@
 (ns solita.etp.test-system
   (:require [integrant.core :as ig]
             [clojure.java.jdbc :as jdbc]
+            [solita.common.jdbc :as common-jdbc]
             [solita.etp.config :as config]
             [solita.etp.db]))
 
@@ -37,7 +38,10 @@
         _ (create-db! management-db db-name)
         test-system (ig/init (config-for-tests db-name))]
     (with-bindings {#'*db* (:solita.etp/db test-system)}
-      (f))
+      (common-jdbc/with-application-name-support f))
     (ig/halt! test-system)
     (drop-db! management-db db-name)
     (ig/halt! management-system)))
+
+(defn db-user [kayttaja-id]
+  (assoc *db* :application-name (str kayttaja-id "@core.etp.test")))

@@ -4,7 +4,8 @@
             [hikari-cp.core :as hikari]
             [jeesql.core :as jeesql]
             [jeesql.generate :as jeesql-generate]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [solita.common.map :as map])
   (:import (org.postgresql.util PSQLException ServerErrorMessage)))
 
 (defmethod ig/init-key :solita.etp/db
@@ -67,7 +68,13 @@
 (defn snake-case [kebab-case]
   (str/replace kebab-case \- \_))
 
+(defn kebab-case [snake-case]
+  (str/replace snake-case \_ \-))
+
 (def default-opts {:entities snake-case})
+
+(defn kebab-case-keys [object]
+  (map/map-keys (comp keyword kebab-case name) object))
 
 ;;
 ;; Protocol extensions
