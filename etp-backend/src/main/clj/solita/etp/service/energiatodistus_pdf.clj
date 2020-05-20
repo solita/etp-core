@@ -12,7 +12,10 @@
            (org.apache.pdfbox.multipdf Overlay)
            (org.apache.pdfbox.multipdf Overlay$Position)
            (org.apache.pdfbox.pdmodel PDDocument)
-           (java.util HashMap)))
+           (java.util HashMap)
+           (java.awt Font Color)
+           (java.awt.image BufferedImage)
+           (javax.imageio ImageIO)))
 
 (def xlsx-template-path "energiatodistus-template.xlsx")
 (def watermark-path-fi "watermark-fi.pdf")
@@ -35,7 +38,7 @@
        seq
        (into [])))
 
-(defn mappings [draft?]
+(defn mappings []
   (let [now (Instant/now)
         today (LocalDate/now)]
     {0 {"K7" [:perustiedot :nimi]
@@ -69,9 +72,6 @@
 
         "B42" [:laatija-fullname]
         "J42" [:perustiedot :yritys :nimi]
-
-        "B45" (when-not draft? [:laatija-fullname])
-        "B46" (fn [_] (when-not draft? (.format time-formatter now)))
 
         "B50" (fn [_] (.format date-formatter today))
         "K50" (fn [_] (.format date-formatter (.plusYears today 10)))}
@@ -421,7 +421,7 @@
                     .toString
                     (format "energiatodistus-%s.xlsx")
                     (str tmp-dir))]
-      (doseq [[sheet sheet-mappings] (mappings draft?)]
+      (doseq [[sheet sheet-mappings] (mappings)]
         (doseq [[cell cursor-or-f] sheet-mappings
                 :when cursor-or-f]
           (xlsx/set-cell-value-at (nth sheets sheet)
@@ -505,15 +505,35 @@
     :deleted :not-in-signing
     :already-signed))
 
+(defn signature-as-png [path laatija-fullname]
+  (let [now (Instant/now)
+        width (max 125 (* (count laatija-fullname) 6))
+        img (BufferedImage. width 30 BufferedImage/TYPE_INT_ARGB)
+        g (.getGraphics img)]
+    (doto (.getGraphics img)
+      (.setFont (Font. Font/SANS_SERIF Font/TRUETYPE_FONT 10))
+      (.setColor Color/BLACK)
+      (.drawString laatija-fullname 2 10)
+      (.drawString (.format time-formatter now) 2 25)
+      (.dispose))
+    (ImageIO/write img "PNG" (io/file path))))
+
 (defn find-energiatodistus-digest [db id]
   (when-let [{:keys [laatija-fullname] :as complete-energiatodistus}
              (energiatodistus-service/find-complete-energiatodistus db id)]
     (do-when-signing
      complete-energiatodistus
      #(let [pdf-path (generate-pdf-as-file complete-energiatodistus false)
-            signable-pdf-path (puumerkki/add-signature-space
+            signable-pdf-path (str/replace pdf-path #".pdf" "-signable.pdf")
+            signature-png-path (str/replace pdf-path #".pdf" "-signature.png")
+            _ (signature-as-png signature-png-path laatija-fullname)
+            signable-pdf-path (puumerkki/add-watermarked-signature-space
                                pdf-path
-                               laatija-fullname)
+                               signable-pdf-path
+                               laatija-fullname
+                               signature-png-path
+                               75
+                               666)
             signable-pdf-data (puumerkki/read-file signable-pdf-path)
             digest (puumerkki/compute-base64-pkcs signable-pdf-data)
             file-id (pdf-file-id id)]
@@ -523,6 +543,7 @@
                                              signable-pdf-data)
         (io/delete-file pdf-path)
         (io/delete-file signable-pdf-path)
+        (io/delete-file signature-png-path)
         {:digest digest}))))
 
 (defn sign-energiatodistus-pdf [db id signature-and-chain]
