@@ -514,11 +514,12 @@
         width (max 125 (* (count laatija-fullname) 6))
         img (BufferedImage. width 30 BufferedImage/TYPE_INT_ARGB)
         g (.getGraphics img)]
-    (.setFont g (Font. Font/SANS_SERIF Font/TRUETYPE_FONT 10))
-    (.setColor g Color/BLACK)
-    (.drawString g laatija-fullname 2 10)
-    (.drawString g (.format time-formatter now) 2 25)
-    (.dispose g)
+    (doto (.getGraphics img)
+      (.setFont (Font. Font/SANS_SERIF Font/TRUETYPE_FONT 10))
+      (.setColor Color/BLACK)
+      (.drawString laatija-fullname 2 10)
+      (.drawString (.format time-formatter now) 2 25)
+      (.dispose))
     (ImageIO/write img "PNG" (io/file path))))
 
 (defn find-energiatodistus-digest [db id]
