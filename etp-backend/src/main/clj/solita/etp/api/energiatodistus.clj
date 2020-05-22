@@ -20,54 +20,57 @@
                                              [security/wrap-db-application-name]]}
     ["" (crud-api/post 2018 energiatodistus-schema/EnergiatodistusSave2018)]]])
 
+(defn pdf-route [version]
+  ["/pdf"
+   {:get {:summary    "Lataa energiatodistus PDF-tiedostona"
+          :parameters {:path {:id common-schema/Key}}
+          :responses  {200 {:body nil}
+                       404 {:body schema/Str}}
+          :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+                        (api-response/pdf-response
+                          (energiatodistus-pdf-service/find-energiatodistus-pdf db whoami id)
+                          (str "energiatodistus-" version "-" id ".pdf")
+                          (str "Energiatodistus " id " does not exists.")))}}])
+
 (def private-routes
   [["/energiatodistukset"
-    {:get {:summary    "Hae laatijan energiatodistukset"
-           :parameters {:query {(schema/optional-key :tila) schema/Int}}
-           :responses  {200 {:body [energiatodistus-schema/Energiatodistus]}}
-           :access     rooli-service/laatija?
-           :handler    (fn [{{{:keys [tila]} :query} :parameters :keys [db whoami]}]
-                         (r/response (energiatodistus-service/find-energiatodistukset-by-laatija
-                                      db (:laatija whoami) tila)))}}]
-   ["/energiatodistukset/2013"
-    ["" (crud-api/post 2013 energiatodistus-schema/EnergiatodistusSave2013)]
-    ["/:id"
-     (crud-api/gpd-routes energiatodistus-schema/Energiatodistus2013
-                          energiatodistus-schema/EnergiatodistusSave2013)
-     liite-api/routes
-     signing-api/routes]]
-
-   ["/energiatodistukset/2018"
-    ["" (crud-api/post 2018 energiatodistus-schema/EnergiatodistusSave2018)]
-
-    ["/export/energiatodistukset.xlsx"
-     {:get {:summary    "Lataa laatijan energiatodistuksien tiedot XLSX-tiedostona"
-            :responses  {200 {:body nil}
-                         404 {:body schema/Str}}
+    [""
+     {:get {:summary    "Hae laatijan energiatodistukset"
+            :parameters {:query {(schema/optional-key :tila) schema/Int}}
+            :responses  {200 {:body [energiatodistus-schema/Energiatodistus]}}
             :access     rooli-service/laatija?
-            :handler    (fn [{:keys [db whoami]}]
-                          (api-response/xlsx-response
+            :handler    (fn [{{{:keys [tila]} :query} :parameters :keys [db whoami]}]
+                          (r/response (energiatodistus-service/find-energiatodistukset-by-laatija
+                                        db (:laatija whoami) tila)))}}]
+    ["/xlsx/energiatodistukset.xlsx"
+     {:get {:summary   "Lataa laatijan energiatodistuksien tiedot XLSX-tiedostona"
+            :responses {200 {:body nil}
+                        404 {:body schema/Str}}
+            :access    rooli-service/laatija?
+            :handler   (fn [{:keys [db whoami]}]
+                         (api-response/xlsx-response
                            (energiatodistus-xlsx-service/find-laatija-energiatodistukset-xlsx
-                            db
-                            (:laatija whoami))
-                           (str "energiatodistukset.xlsx")
-                           (str "Not found.")))}}]
+                             db (:id whoami))
+                           "energiatodistukset.xlsx"
+                           "Not found."))}}]
+    ["/2013"
+     ["" (crud-api/post 2013 energiatodistus-schema/EnergiatodistusSave2013)]
+     ["/:id"
+      (crud-api/gpd-routes energiatodistus-schema/Energiatodistus2013
+                           energiatodistus-schema/EnergiatodistusSave2013)
+      (pdf-route 2013)
+      liite-api/routes
+      signing-api/routes]]
 
-    ["/:id"
-     (crud-api/gpd-routes energiatodistus-schema/Energiatodistus2018
-                          energiatodistus-schema/EnergiatodistusSave2018)
-     ["/pdf"
-      {:get {:summary    "Lataa energiatodistus PDF-tiedostona"
-             :parameters {:path {:id common-schema/Key}}
-             :responses  {200 {:body nil}
-                          404 {:body schema/Str}}
-             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
-                           (api-response/pdf-response
-                            (energiatodistus-pdf-service/find-energiatodistus-pdf db whoami id)
-                            (str "energiatodistus2018-" id ".pdf")
-                            (str "Energiatodistus " id " does not exists.")))}}]
-     liite-api/routes
-     signing-api/routes]]
+    ["/2018"
+     ["" (crud-api/post 2018 energiatodistus-schema/EnergiatodistusSave2018)]
+     ["/:id"
+      (crud-api/gpd-routes energiatodistus-schema/Energiatodistus2018
+                           energiatodistus-schema/EnergiatodistusSave2018)
+
+      (pdf-route 2018)
+      liite-api/routes
+      signing-api/routes]]]
 
    ["/kielisyys"
     {:get {:summary   "Hae energiatodistuksen kielisyysluokittelu"
@@ -80,15 +83,15 @@
            :handler   (fn [_] (r/response (energiatodistus-service/find-laatimisvaiheet)))}}]
 
    ["/kayttotarkoitusluokat/:versio"
-    {:get {:summary   "Hae energiatodistuksen käyttötarkoitusluokat"
+    {:get {:summary    "Hae energiatodistuksen käyttötarkoitusluokat"
            :parameters {:path {:versio common-schema/Key}}
-           :responses {200 {:body [common-schema/Luokittelu]}}
-           :handler   (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
-                        (r/response (energiatodistus-service/find-kayttotarkoitukset db versio)))}}]
+           :responses  {200 {:body [common-schema/Luokittelu]}}
+           :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
+                         (r/response (energiatodistus-service/find-kayttotarkoitukset db versio)))}}]
 
    ["/alakayttotarkoitusluokat/:versio"
-    {:get {:summary   "Hae energiatodistuksen käyttötarkoitusluokat"
+    {:get {:summary    "Hae energiatodistuksen käyttötarkoitusluokat"
            :parameters {:path {:versio common-schema/Key}}
-           :responses {200 {:body [energiatodistus-schema/Alakayttotarkoitusluokka]}}
-           :handler   (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
-                        (r/response (energiatodistus-service/find-alakayttotarkoitukset db versio)))}}]])
+           :responses  {200 {:body [energiatodistus-schema/Alakayttotarkoitusluokka]}}
+           :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
+                         (r/response (energiatodistus-service/find-alakayttotarkoitukset db versio)))}}]])
