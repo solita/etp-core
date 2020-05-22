@@ -220,16 +220,25 @@
      :lisamerkintoja-fi              common-schema/String6300
      :lisamerkintoja-sv              common-schema/String6300}))
 
-(def Energiatodistus2018
-  "Energiatodistus schema contains basic information about persistent energiatodistus"
-  (assoc (merge common-schema/Id EnergiatodistusSave2018)
-         :allekirjoitusaika (schema/maybe common-schema/Instant)
-         :laatija-id common-schema/Key
-         :tila-id common-schema/Key
-         :laatija-fullname schema/Str
-         :versio (schema/eq 2018)))
+(def EnergiatodistusSave2013
+  "TODO: create 2013 save schema" EnergiatodistusSave2018)
 
-(def Energiatodistus2013 {:versio (schema/eq 2013)})
+(defn energiatodistus-versio [versio save-schema]
+  "Energiatodistus schema contains basic information about persistent energiatodistus"
+  (merge common-schema/Id save-schema
+    {:versio (schema/eq versio)
+     :tila-id common-schema/Key
+     :laatija-id common-schema/Key
+     :laatija-fullname schema/Str
+     :allekirjoitusaika (schema/maybe common-schema/Instant)}))
+
+(def Energiatodistus2018
+  "Energiatodistus 2018"
+  (energiatodistus-versio 2018 EnergiatodistusSave2018))
+
+(def Energiatodistus2013
+  "Energiatodistus 2013"
+  (energiatodistus-versio 2013 EnergiatodistusSave2013))
 
 (defn versio? [versio et] (-> et :versio (= versio)))
 
