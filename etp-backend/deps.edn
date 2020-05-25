@@ -31,11 +31,11 @@
         org.apache.poi/poi-ooxml {:mvn/version "4.1.2"}
         org.apache.pdfbox/pdfbox {:mvn/version "2.0.19"}
         puumerkki {:mvn/version "0.9.1"}}
- :aliases {:test {:extra-paths ["src/test/clj"
-                                "src/test/resources"]
-                  :extra-deps {eftest {:mvn/version "0.5.9"}
-                               prismatic/schema-generators {:mvn/version "0.1.3"}}
-                  :jvm-opts ["-Djava.awt.headless=true"]
-                  :main-opts ["-e" "(run-tests)"]}
+ :aliases {:dev {:extra-paths ["src/test/clj"
+                               "src/test/resources"]
+                 :extra-deps {eftest {:mvn/version "0.5.9"}
+                              prismatic/schema-generators {:mvn/version "0.1.3"}}
+                 :jvm-opts ["-Djava.awt.headless=true"]}
+           :test {:main-opts ["-e" "(run-tests-and-exit!)"]}
            :uberjar {:extra-deps {uberdeps {:mvn/version "0.1.8"}}
                      :main-opts ["-m" "uberdeps.uberjar"]}}}
