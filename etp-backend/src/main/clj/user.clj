@@ -14,3 +14,7 @@
   (require 'eftest.runner)
   (-> ((resolve 'eftest.runner/find-tests) "src/test")
       ((resolve 'eftest.runner/run-tests))))
+
+(defn run-tests-and-exit! []
+  (let [{:keys [fail error]} (run-tests)]
+    (System/exit (if (and (zero? fail) (zero? error)) 0 1))))

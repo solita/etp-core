@@ -69,7 +69,7 @@ command:
 Tests can be run with
 
     cd etp-backend
-    clojure -A:test
+    clojure -A:dev -A:test
 
 About database usage
 --------------------
