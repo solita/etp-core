@@ -1,4 +1,5 @@
-(ns solita.etp.schema.laatija
+(ns ^{:doc (str "Schemas specific only for laatijat.")}
+  solita.etp.schema.laatija
   (:require [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.geo :as geo-schema]
@@ -15,19 +16,26 @@
 
 (def PatevyydenToteaja (schema/enum "FISE" "KIINKO"))
 
-(def LaatijaAdd (merge geo-schema/Postiosoite
-                       {:henkilotunnus      common-schema/Henkilotunnus
-                        :patevyystaso       common-schema/Key
-                        :toteamispaivamaara common-schema/Date
-                        :toteaja            PatevyydenToteaja}))
+(def LaatijaAdd
+  (str "Only for internal use in laatija services. "
+       "Represents laatija information which is stored in laatija-table.")
+  (merge geo-schema/Postiosoite
+     {:henkilotunnus      common-schema/Henkilotunnus
+      :patevyystaso       common-schema/Key
+      :toteamispaivamaara common-schema/Date
+      :toteaja            PatevyydenToteaja}))
 
 (def LaatijaAdminUpdate
+  (str "Only for internal use in laatija services. "
+       "Represents laatija information which can be updated by admins.")
   {:patevyystaso       common-schema/Key
    :toteamispaivamaara common-schema/Date
    :toteaja            PatevyydenToteaja
    :laatimiskielto     schema/Bool})
 
 (def LaatijaUpdate
+  (str "Only for internal use in laatija services. "
+       "Represents laatija information which is stored in laatija-table.")
   (merge geo-schema/Postiosoite
          (st/optional-keys LaatijaAdminUpdate)
          {:henkilotunnus                            common-schema/Henkilotunnus
@@ -38,23 +46,32 @@
           :julkinenosoite                           schema/Bool}))
 
 (def Laatija
-  "Schema representing the persistent laatija"
+  (str "Schema representing the persistent laatija."
+  "This defines only the laatija specific kayttaja information.")
   (merge LaatijaUpdate
          {:kayttaja common-schema/Key}
          common-schema/Id))
 
-(def KayttajaAdd {:etunimi       schema/Str
-                  :sukunimi      schema/Str
-                  :email         schema/Str
-                  :puhelin       schema/Str})
+(def KayttajaAdd
+  (str "Only for internal use in laatija services. "
+       "Represents laatija information which is stored in kayttaja-table.")
+  {:etunimi  schema/Str
+   :sukunimi schema/Str
+   :email    schema/Str
+   :puhelin  schema/Str})
 
-(def KayttajaUpdate (dissoc KayttajaAdd :email))
+(def KayttajaUpdate
+  (str "Only for internal use in laatija services. "
+       "Represents laatija information which is stored in kayttaja-table.")
+  (dissoc KayttajaAdd :email))
 
-(def KayttajaLaatijaAdd (merge LaatijaAdd
-                               KayttajaAdd))
+(def KayttajaLaatijaAdd
+  "A schema for upserting new or existing laatija."
+  (merge LaatijaAdd
+         KayttajaAdd))
 
-
-
-(def KayttajaLaatijaUpdate (merge LaatijaUpdate
-                                  KayttajaUpdate))
+(def KayttajaLaatijaUpdate
+  "A schema for updating an existing laatija."
+  (merge LaatijaUpdate
+         KayttajaUpdate))
 
