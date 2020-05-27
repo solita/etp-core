@@ -1,5 +1,6 @@
-(ns ^{:doc (str "Schemas for all users (kayttaja) or schemas for other users than laatija."
-                "Schemas specific only for laatija are in laatija namespace.")}
+(ns ^{:doc
+      "Schemas for all users (kayttaja) or schemas for other users than laatija.
+       Schemas specific only for laatija are in laatija namespace."}
   solita.etp.schema.kayttaja
   (:require [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]
@@ -14,7 +15,8 @@
    :rooli    (schema/enum 1 2)})
 
 (def KayttajaAdminUpdate
-  "Only administrators can update this information. Not intended for laatija-users."
+  "Only administrators can update this information.
+   Not intended for laatija-users."
   {:passivoitu schema/Bool
    :rooli      (schema/enum 1 2)})
 
