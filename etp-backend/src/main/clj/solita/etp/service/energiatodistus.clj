@@ -317,6 +317,30 @@
         (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :muulampo])
         (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :muusahko])
         (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :lampopumppu])
+
+        (combine-keys +
+                      0
+                      [:tulokset :tekniset-jarjestelmat :sahko-summa]
+                      [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :sahko]
+                      [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :sahko]
+                      [:tulokset :tekniset-jarjestelmat :kayttoveden-valmistus :sahko]
+                      [:tulokset :tekniset-jarjestelmat :iv-sahko]
+                      [:tulokset :tekniset-jarjestelmat :jaahdytys :sahko]
+                      [:tulokset :tekniset-jarjestelmat :kuluttajalaitteet-ja-valaistus-sahko])
+        (combine-keys +
+                      0
+                      [:tulokset :tekniset-jarjestelmat :lampo-summa]
+                      [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :lampo]
+                      [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :lampo]
+                      [:tulokset :tekniset-jarjestelmat :kayttoveden-valmistus :lampo]
+                      [:tulokset :tekniset-jarjestelmat :jaahdytys :lampo])
+
+        (combine-keys +
+                      0
+                      [:tulokset :tekniset-jarjestelmat :kaukojaahdytys-summa]
+                      [:tulokset :tekniset-jarjestelmat :jaahdytys :kaukojaahdytys])
+
+
         (assoc-div-nettoala [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus])
         (assoc-div-nettoala [:tulokset :nettotarve :ilmanvaihdon-lammitys-vuosikulutus])
         (assoc-div-nettoala [:tulokset :nettotarve :kayttoveden-valmistus-vuosikulutus])

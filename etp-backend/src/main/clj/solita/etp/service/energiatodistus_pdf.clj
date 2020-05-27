@@ -256,6 +256,10 @@
         "G45" [:tulokset :tekniset-jarjestelmat :jaahdytys :kaukojaahdytys]
         "E46" [:tulokset :tekniset-jarjestelmat :kuluttajalaitteet-ja-valaistus-sahko]
 
+        "E47" [:tulokset :tekniset-jarjestelmat :sahko-summa]
+        "F47" [:tulokset :tekniset-jarjestelmat :lampo-summa]
+        "G47" [:tulokset :tekniset-jarjestelmat :kaukojaahdytys-summa]
+
         "E54" [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus]
         "F54" [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus-nettoala]
         "E55" [:tulokset :nettotarve :ilmanvaihdon-lammitys-vuosikulutus]
