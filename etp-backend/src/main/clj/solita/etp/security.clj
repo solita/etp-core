@@ -15,11 +15,18 @@
 
 (defn wrap-whoami-from-jwt-payloads [handler]
   (fn [{:keys [db jwt-payloads] :as req}]
-    (let [cognitoid (-> jwt-payloads :data :sub)
-          email (-> jwt-payloads :data :email)
-          whoami (whoami-service/find-whoami db email cognitoid)]
+    (let [{:keys [data]} jwt-payloads
+          email (:email data)
+          cognitoid (:sub data)
+          whoami (whoami-service/find-whoami
+                  db
+                  {:email email
+                   :cognitoid cognitoid
+                   :henkilotunnus (:custom:FI_nationalIN data)})]
       (if whoami
-        (->> (assoc whoami :cognitoid cognitoid :email email)
+        (->> (cond-> whoami
+               email (assoc :email email)
+               cognitoid (assoc :cognitoid cognitoid))
              (assoc req :whoami)
              handler)
         (do
@@ -29,7 +36,7 @@
 (defn wrap-whoami-from-basic-auth [handler]
   (fn [{:keys [db] :as req}]
     (let [{:keys [id password]} (basic-auth/req->id-and-password req)
-          whoami (whoami-service/find-whoami db id)]
+          whoami (whoami-service/find-whoami db {:email id})]
       (if whoami
         (handler (assoc req :whoami whoami))
         (do
