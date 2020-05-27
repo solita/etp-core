@@ -3,15 +3,6 @@
             [solita.etp.schema.common :as common-schema]
             [schema-tools.core :as st]))
 
-(def Whoami (merge common-schema/Id
-   {:etunimi       schema/Str
-    :sukunimi      schema/Str
-    :email         schema/Str
-    :rooli         common-schema/Key
-    :cognitoid     (schema/maybe schema/Str)
-    :henkilotunnus (schema/maybe common-schema/Henkilotunnus)
-    :laatija       (schema/maybe common-schema/Key)}))
-
 (def KayttajaAdd {:etunimi       schema/Str
                   :sukunimi      schema/Str
                   :email         schema/Str
