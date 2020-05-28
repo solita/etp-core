@@ -30,17 +30,6 @@
   (let [v (.getStringCellValue cell)]
     (if (str/blank? v) nil v)))
 
-(defn set-cell-value [cell v]
-  (cond
-    (number? v) (.setCellValue cell (double v))
-    :else (.setCellValue cell (str v))))
-
-(defn set-cell-value-at [sheet address v]
-  (let [{:keys [row-idx col-idx]} (row-and-column-idx address)]
-    (-> (get-row sheet row-idx)
-        (get-cell col-idx)
-        (set-cell-value v))))
-
 (defn get-cell-value-at [sheet address]
   (let [{:keys [row-idx col-idx]} (row-and-column-idx address)]
     (-> (get-row sheet row-idx)
@@ -66,6 +55,17 @@
 
 (defn create-cell [row idx]
   (.createCell row idx))
+
+(defn set-cell-value [cell v]
+  (cond
+    (number? v) (.setCellValue cell (double v))
+    :else (.setCellValue cell (str v))))
+
+(defn set-cell-value-at [sheet address v]
+  (let [{:keys [row-idx col-idx]} (row-and-column-idx address)]
+    (-> (get-row sheet row-idx)
+        (get-cell col-idx)
+        (set-cell-value v))))
 
 (defn create-cell-with-value [row idx v]
   (let [cell (create-cell row idx)]
