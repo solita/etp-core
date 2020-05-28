@@ -56,10 +56,14 @@
 (defn create-cell [row idx]
   (.createCell row idx))
 
-(defn set-cell-value [cell v]
+(defn cell-value [v]
   (cond
-    (number? v) (.setCellValue cell (double v))
-    :else (.setCellValue cell (str v))))
+    (instance? java.time.LocalDate v) v
+    (number? v) (double v)
+    :else (str v)))
+
+(defn set-cell-value [cell v]
+  (->> v cell-value (.setCellValue cell)))
 
 (defn set-cell-value-at [sheet address v]
   (let [{:keys [row-idx col-idx]} (row-and-column-idx address)]
@@ -76,9 +80,16 @@
   (doto (.createFont xlsx)
     (.setBold true)))
 
-(defn create-style [xlsx font]
+(defn create-style-with-font [xlsx font]
   (doto (.createCellStyle xlsx)
     (.setFont font)))
+
+(defn create-style-with-format [xlsx format]
+  (doto (.createCellStyle xlsx)
+    (.setDataFormat (-> xlsx
+                        .getCreationHelper
+                        .createDataFormat
+                        (.getFormat format)))))
 
 (defn set-column-width [sheet idx width]
   (.setColumnWidth sheet idx width))

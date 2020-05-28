@@ -41,13 +41,13 @@
       (xlsx/create-cell-with-value row idx label)
       (xlsx/set-column-width sheet idx (col-width label)))))
 
-(defn fill-row-with-energiatodistus [sheet idx energiatodistus paths]
+(defn fill-row-with-energiatodistus [sheet idx energiatodistus paths date-style]
   (let [row (xlsx/create-row sheet idx)]
-    (doseq [[idx path] (map-indexed vector paths)]
-      (xlsx/create-cell-with-value
-       row
-       idx
-       (get-in energiatodistus path)))))
+    (doseq [[idx path] (map-indexed vector paths)
+            :let [v (get-in energiatodistus path)
+                  cell (xlsx/create-cell-with-value row idx v)]]
+      (if (instance? java.time.LocalDate v)
+        (.setCellStyle cell date-style)))))
 
 (defn find-laatija-energiatodistukset-xlsx [db laatija-id]
   (when-let [energiatodistukset
@@ -64,10 +64,11 @@
           xlsx (xlsx/create-xlsx)
           sheet (xlsx/create-sheet xlsx "Energiatodistukset")
           bold-font (xlsx/create-bold-font xlsx)
-          bold-style (xlsx/create-style xlsx bold-font)]
+          bold-style (xlsx/create-style-with-font xlsx bold-font)
+          date-style (xlsx/create-style-with-format xlsx "d.mm.yyyy")]
       (fill-headers sheet bold-style paths)
       (doseq [[idx energiatodistus] (map-indexed vector energiatodistukset)]
-        (fill-row-with-energiatodistus sheet (inc idx) energiatodistus paths))
+        (fill-row-with-energiatodistus sheet (inc idx) energiatodistus paths date-style))
       (io/make-parents file-path)
       (xlsx/save-xlsx xlsx file-path)
       (let [is (io/input-stream file-path)]
