@@ -193,10 +193,10 @@
    :teksti-sv  common-schema/String1000,
    :toimenpide [{:nimi-fi       common-schema/String100
                  :nimi-sv       common-schema/String100
-                 :lampo         common-schema/FloatPos,
-                 :sahko         common-schema/FloatPos,
-                 :jaahdytys     common-schema/FloatPos,
-                 :eluvun-muutos common-schema/FloatPos}]})
+                 :lampo         schema/Num
+                 :sahko         schema/Num
+                 :jaahdytys     schema/Num
+                 :eluvun-muutos schema/Num}]})
 
 (def Huomiot
   {:suositukset-fi    common-schema/String1500
