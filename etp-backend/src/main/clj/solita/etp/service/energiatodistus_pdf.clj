@@ -190,7 +190,8 @@
 
         "D55" [:lahtotiedot :jaahdytysjarjestelma :jaahdytyskauden-painotettu-kylmakerroin]
 
-        ;; TODO lämmin käyttövesi ominaiskulutus, lämmitysenergian nettotarve
+        "D59" [:lahtotiedot :lkvn-kaytto :kulutus-per-nelio]
+        "E59" [:lahtotiedot :lkvn-kaytto :vuosikulutus]
 
         "D63" #(-> % sis-kuorma (get 0) first)
         "E63" #(-> % sis-kuorma (get 0) second :henkilot)
