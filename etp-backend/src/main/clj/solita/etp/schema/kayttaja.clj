@@ -1,19 +1,27 @@
-(ns solita.etp.schema.kayttaja
+(ns ^{:doc
+      "Schemas for all users (kayttaja) or schemas for other users than laatija.
+       Schemas specific only for laatija are in laatija namespace."}
+  solita.etp.schema.kayttaja
   (:require [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]
             [schema-tools.core :as st]))
 
-(def KayttajaAdd {:etunimi       schema/Str
-                  :sukunimi      schema/Str
-                  :email         schema/Str
-                  :puhelin       schema/Str
-                  :rooli        (schema/enum 1 2)})
+(def KayttajaAdd
+  "Schema to add all other users (kayttaja) except laatija."
+  {:etunimi  schema/Str
+   :sukunimi schema/Str
+   :email    schema/Str
+   :puhelin  schema/Str
+   :rooli    (schema/enum 1 2)})
 
 (def KayttajaAdminUpdate
+  "Only administrators can update this information.
+   Not intended for laatija-users."
   {:passivoitu schema/Bool
    :rooli      (schema/enum 1 2)})
 
 (def KayttajaUpdate
+  "Schema to update all other users (kayttaja) except laatija."
   (merge
     (st/optional-keys KayttajaAdminUpdate)
     {:etunimi       schema/Str
@@ -21,7 +29,7 @@
      :puhelin       schema/Str}))
 
 (def Kayttaja
-  "Schema representing the persistent kayttaja"
+  "Schema representing any persistent kayttaja (any role)"
   (merge common-schema/Id
      {:login         (schema/maybe common-schema/Instant)
       :cognitoid     (schema/maybe schema/Str)
