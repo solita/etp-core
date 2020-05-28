@@ -206,32 +206,36 @@
                       [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin])
         (combine-keys +
                       0
-                      [:tulokset :kaytettavat-energiamuodot :summa-ilman-uusiutuvia]
+                      [:tulokset :kaytettavat-energiamuodot :summa]
                       [:tulokset :kaytettavat-energiamuodot :kaukolampo]
                       [:tulokset :kaytettavat-energiamuodot :sahko]
                       [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine]
-                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys])
+                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys]
+                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine])
         (combine-keys +
                       0
-                      [:tulokset :kaytettavat-energiamuodot :kerroin-summa-ilman-uusiutuvia]
+                      [:tulokset :kaytettavat-energiamuodot :kerroin-summa]
                       [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]
                       [:tulokset :kaytettavat-energiamuodot :sahko-kerroin]
                       [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]
-                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin])
+                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]
+                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin])
         (combine-keys +
                       0
-                      [:tulokset :kaytettavat-energiamuodot :kertoimella-summa-ilman-uusiutuvia]
+                      [:tulokset :kaytettavat-energiamuodot :kertoimella-summa]
                       [:tulokset :kaytettavat-energiamuodot :kaukolampo-kertoimella]
                       [:tulokset :kaytettavat-energiamuodot :sahko-kertoimella]
                       [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kertoimella])
+                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kertoimella]
+                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella])
         (combine-keys +
                       0
-                      [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-ilman-uusiutuvia]
-                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]
+                      [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella]
+                      [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella]
                       [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kertoimella]
                       [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella])
+                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]
+                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella])
         (combine-keys *
                       nil
                       [:lahtotiedot :rakennusvaippa :ulkoseinat :UA]
@@ -317,6 +321,30 @@
         (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :muulampo])
         (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :muusahko])
         (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :lampopumppu])
+
+        (combine-keys +
+                      0
+                      [:tulokset :tekniset-jarjestelmat :sahko-summa]
+                      [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :sahko]
+                      [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :sahko]
+                      [:tulokset :tekniset-jarjestelmat :kayttoveden-valmistus :sahko]
+                      [:tulokset :tekniset-jarjestelmat :iv-sahko]
+                      [:tulokset :tekniset-jarjestelmat :jaahdytys :sahko]
+                      [:tulokset :tekniset-jarjestelmat :kuluttajalaitteet-ja-valaistus-sahko])
+        (combine-keys +
+                      0
+                      [:tulokset :tekniset-jarjestelmat :lampo-summa]
+                      [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :lampo]
+                      [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :lampo]
+                      [:tulokset :tekniset-jarjestelmat :kayttoveden-valmistus :lampo]
+                      [:tulokset :tekniset-jarjestelmat :jaahdytys :lampo])
+
+        (combine-keys +
+                      0
+                      [:tulokset :tekniset-jarjestelmat :kaukojaahdytys-summa]
+                      [:tulokset :tekniset-jarjestelmat :jaahdytys :kaukojaahdytys])
+
+
         (assoc-div-nettoala [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus])
         (assoc-div-nettoala [:tulokset :nettotarve :ilmanvaihdon-lammitys-vuosikulutus])
         (assoc-div-nettoala [:tulokset :nettotarve :kayttoveden-valmistus-vuosikulutus])

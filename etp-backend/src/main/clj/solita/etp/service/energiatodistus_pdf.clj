@@ -190,7 +190,8 @@
 
         "D55" [:lahtotiedot :jaahdytysjarjestelma :jaahdytyskauden-painotettu-kylmakerroin]
 
-        ;; TODO lämmin käyttövesi ominaiskulutus, lämmitysenergian nettotarve
+        "D59" [:lahtotiedot :lkvn-kaytto :kulutus-per-nelio]
+        "E59" [:lahtotiedot :lkvn-kaytto :vuosikulutus]
 
         "D63" #(-> % sis-kuorma (get 0) first)
         "E63" #(-> % sis-kuorma (get 0) second :henkilot)
@@ -222,14 +223,19 @@
         "E19" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]
         "F19" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kertoimella]
         "G19" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella]
+
         "D20" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys]
         "E20" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]
         "F20" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kertoimella]
         "G20" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]
-        "D22" [:tulokset :kaytettavat-energiamuodot :summa-ilman-uusiutuvia]
-        "E22" [:tulokset :kaytettavat-energiamuodot :kerroin-summa-ilman-uusiutuvia]
-        "F22" [:tulokset :kaytettavat-energiamuodot :kertoimella-summa-ilman-uusiutuvia]
-        "G22" [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-ilman-uusiutuvia]
+        "D21" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine]
+        "E21" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin]
+        "F21" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella]
+        "G21" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella]
+        "D22" [:tulokset :kaytettavat-energiamuodot :summa]
+        "E22" [:tulokset :kaytettavat-energiamuodot :kerroin-summa]
+        "F22" [:tulokset :kaytettavat-energiamuodot :kertoimella-summa]
+        "G22" [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella]
 
         "E28" [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko]
         "F28" [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko-nettoala]
@@ -255,6 +261,10 @@
         "F45" [:tulokset :tekniset-jarjestelmat :jaahdytys :lampo]
         "G45" [:tulokset :tekniset-jarjestelmat :jaahdytys :kaukojaahdytys]
         "E46" [:tulokset :tekniset-jarjestelmat :kuluttajalaitteet-ja-valaistus-sahko]
+
+        "E47" [:tulokset :tekniset-jarjestelmat :sahko-summa]
+        "F47" [:tulokset :tekniset-jarjestelmat :lampo-summa]
+        "G47" [:tulokset :tekniset-jarjestelmat :kaukojaahdytys-summa]
 
         "E54" [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus]
         "F54" [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus-nettoala]
