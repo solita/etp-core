@@ -423,3 +423,11 @@
   ([db whoami id]
    (find-complete-energiatodistus* (find-energiatodistus db whoami id)
                                    (find-alakayttotarkoitukset db 2018))))
+
+(defn find-complete-energiatodistukset-by-laatija [db laatija-id tila-id]
+  (let [energiatodistukset (find-energiatodistukset-by-laatija db
+                                                               laatija-id
+                                                               tila-id)
+        alakayttotarkoitukset (find-alakayttotarkoitukset db 2018)]
+    (->> (find-energiatodistukset-by-laatija db laatija-id tila-id)
+         (map #(find-complete-energiatodistus* % alakayttotarkoitukset)))))

@@ -51,7 +51,7 @@
 
 (defn find-laatija-energiatodistukset-xlsx [db laatija-id]
   (when-let [energiatodistukset
-             (energiatodistus-service/find-energiatodistukset-by-laatija
+             (energiatodistus-service/find-complete-energiatodistukset-by-laatija
               db
               laatija-id
               nil)]
