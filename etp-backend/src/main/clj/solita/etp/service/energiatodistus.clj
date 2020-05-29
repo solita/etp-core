@@ -137,11 +137,22 @@
                   [:lahtotiedot :lammitetty-nettoala])))
 
 (defn find-complete-energiatodistus* [energiatodistus alakayttotarkoitukset]
-  (let [kayttotarkoitus-id (get-in energiatodistus [:perustiedot :kayttotarkoitus])
+  (let [perustiedot (:perustiedot energiatodistus)
+        kieli-id (:kieli perustiedot)
+        kielisyys (->> (find-kielisyys) (filter #(= (:id %) kieli-id)) first)
+        laatimisvaihe-id (:laatimisvaihe perustiedot)
+        laatimisvaihe (->> (find-laatimisvaiheet)
+                           (filter #(= (:id %) laatimisvaihe-id))
+                           first)
+        kayttotarkoitus-id (:kayttotarkoitus perustiedot)
         alakayttotarkoitus (->> alakayttotarkoitukset
                                 (filter #(= (:id %) kayttotarkoitus-id))
                                 first)]
     (-> energiatodistus
+        (assoc-in [:perustiedot :kieli-fi] (:label-fi kielisyys))
+        (assoc-in [:perustiedot :kieli-sv] (:label-sv kielisyys))
+        (assoc-in [:perustiedot :laatimisvaihe-fi] (:label-fi laatimisvaihe))
+        (assoc-in [:perustiedot :laatimisvaihe-sv] (:label-sv laatimisvaihe))
         (assoc-in [:perustiedot :alakayttotarkoitus-fi] (:label-fi alakayttotarkoitus))
         (assoc-in [:perustiedot :alakayttotarkoitus-sv] (:label-sv alakayttotarkoitus))
         (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin] 0.5)
