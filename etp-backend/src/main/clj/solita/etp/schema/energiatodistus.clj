@@ -220,8 +220,14 @@
      :lisamerkintoja-fi              common-schema/String6300
      :lisamerkintoja-sv              common-schema/String6300}))
 
+(defn- dissoc-not-in-2013 [schema2018]
+  (-> schema2018
+    (update :perustiedot #(dissoc % :laatimisvaihe))))
+
 (def EnergiatodistusSave2013
-  "TODO: create 2013 save schema" EnergiatodistusSave2018)
+  "TODO: create 2013 save schema"
+  (-> (dissoc-not-in-2013 EnergiatodistusSave2018)
+    (assoc-in [:perustiedot :uudisrakennus] schema/Bool)))
 
 (defn energiatodistus-versio [versio save-schema]
   "Energiatodistus schema contains basic information about persistent energiatodistus"
