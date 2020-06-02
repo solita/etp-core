@@ -233,7 +233,8 @@
   "TODO: create 2013 save schema"
   (-> (dissoc-not-in-2013 EnergiatodistusSave2018)
       (assoc-in [:perustiedot :uudisrakennus] schema/Bool)
-      (assoc-in [:tulokset :kaytettavat-energiamuodot :muu] [UserDefinedEnergiamuoto])))
+      (assoc-in [:tulokset :kaytettavat-energiamuodot :muu]
+                [(optional-properties UserDefinedEnergiamuoto)])))
 
 (defn energiatodistus-versio [versio save-schema]
   "Energiatodistus schema contains basic information about persistent energiatodistus"
