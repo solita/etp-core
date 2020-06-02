@@ -224,10 +224,16 @@
   (-> schema2018
     (update :perustiedot #(dissoc % :laatimisvaihe))))
 
+(def UserDefinedEnergiamuoto
+  {:nimi common-schema/String200
+   :muotokerroin common-schema/FloatPos
+   :ostoenergia common-schema/FloatPos})
+
 (def EnergiatodistusSave2013
   "TODO: create 2013 save schema"
   (-> (dissoc-not-in-2013 EnergiatodistusSave2018)
-    (assoc-in [:perustiedot :uudisrakennus] schema/Bool)))
+      (assoc-in [:perustiedot :uudisrakennus] schema/Bool)
+      (assoc-in [:tulokset :kaytettavat-energiamuodot :muu] [UserDefinedEnergiamuoto])))
 
 (defn energiatodistus-versio [versio save-schema]
   "Energiatodistus schema contains basic information about persistent energiatodistus"
