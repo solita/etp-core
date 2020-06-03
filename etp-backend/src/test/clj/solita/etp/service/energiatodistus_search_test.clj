@@ -40,13 +40,13 @@
 (def katuosoite-fi-query ["ilike"
                           [:perustiedot :katuosoite-fi]
                           "%Hämeenkatu"])
-(def katuosoite-fi-sql "data->'perustiedot'->'katuosoite-fi' ilike ?")
+(def katuosoite-fi-sql "data->'perustiedot'->>'katuosoite-fi' ilike ?")
 (def ikkuna-ala-query ["<" [:lahtotiedot :ikkunat :pohjoinen :ala] 150])
-(def ikkuna-ala-sql "data->'lahtotiedot'->'ikkunat'->'pohjoinen'->'ala' < ?")
+(def ikkuna-ala-sql "data->'lahtotiedot'->'ikkunat'->'pohjoinen'->>'ala' < ?")
 (def eluvun-muutos-query ["="
                           [:huomiot :lammitys :toimenpide 0 :eluvun-muutos]
                           100])
-(def eluvun-muutos-sql "data->'huomiot'->'lammitys'->'toimenpide'->0->'eluvun-muutos' = ?")
+(def eluvun-muutos-sql "data->'huomiot'->'lammitys'->'toimenpide'->0->>'eluvun-muutos' = ?")
 
 (t/deftest k->sql-test
   (t/is (= (service/k->sql :perustiedot) "'perustiedot'"))

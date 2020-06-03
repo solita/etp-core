@@ -11,10 +11,8 @@
     (str k)))
 
 (defn path->sql [path]
-  (->> path
-       (map k->sql)
-       (str/join "->")
-       (str "data->")))
+  (let [path (map k->sql path)]
+    (str "data->" (str/join "->" (butlast path)) "->>" (last path))))
 
 (defn query-part->sql [[op path]]
   (str (path->sql path) " " op " ?"))
