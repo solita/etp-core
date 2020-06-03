@@ -39,7 +39,7 @@
 
 (def katuosoite-fi-query ["ilike"
                           [:perustiedot :katuosoite-fi]
-                          "%Hämeenkatu"])
+                          "%Hämeenkatu%"])
 (def katuosoite-fi-sql "data->'perustiedot'->>'katuosoite-fi' ilike ?")
 (def ikkuna-ala-query ["<" [:lahtotiedot :ikkunat :pohjoinen :ala] 150])
 (def ikkuna-ala-sql "data->'lahtotiedot'->'ikkunat'->'pohjoinen'->>'ala' < ?")
