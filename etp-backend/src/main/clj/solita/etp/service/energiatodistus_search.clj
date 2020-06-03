@@ -14,8 +14,15 @@
   (let [path (map k->sql path)]
     (str "data->" (str/join "->" (butlast path)) "->>" (last path))))
 
-(defn query-part->sql [[op path]]
-  (str (path->sql path) " " op " ?"))
+(defn query-part->sql [[op path v]]
+  (let [cast (when (number? v) "::numeric")]
+    (str (when cast "(")
+         (path->sql path)
+         (when cast ")")
+         cast
+         " "
+         op
+         " ?")))
 
 (defn or-query->sql-and-params [or-query]
   {:sql (str/join " OR " (map query-part->sql or-query))

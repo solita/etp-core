@@ -42,11 +42,11 @@
                           "%Hämeenkatu%"])
 (def katuosoite-fi-sql "data->'perustiedot'->>'katuosoite-fi' ilike ?")
 (def ikkuna-ala-query ["<" [:lahtotiedot :ikkunat :pohjoinen :ala] 150])
-(def ikkuna-ala-sql "data->'lahtotiedot'->'ikkunat'->'pohjoinen'->>'ala' < ?")
+(def ikkuna-ala-sql "(data->'lahtotiedot'->'ikkunat'->'pohjoinen'->>'ala')::numeric < ?")
 (def eluvun-muutos-query ["="
                           [:huomiot :lammitys :toimenpide 0 :eluvun-muutos]
                           100])
-(def eluvun-muutos-sql "data->'huomiot'->'lammitys'->'toimenpide'->0->>'eluvun-muutos' = ?")
+(def eluvun-muutos-sql "(data->'huomiot'->'lammitys'->'toimenpide'->0->>'eluvun-muutos')::numeric = ?")
 
 (t/deftest k->sql-test
   (t/is (= (service/k->sql :perustiedot) "'perustiedot'"))
@@ -54,7 +54,7 @@
 
 (t/deftest path->sql-test
   (t/is (= (service/path->sql [:huomiot :lammitys :toimenpide 0 :eluvun-muutos])
-           (str/replace eluvun-muutos-sql #" = \?" ""))))
+           "data->'huomiot'->'lammitys'->'toimenpide'->0->>'eluvun-muutos'")))
 
 (t/deftest query-part->sql-test
   (t/is (= (service/query-part->sql katuosoite-fi-query) katuosoite-fi-sql))
@@ -64,7 +64,7 @@
 (t/deftest or-query->sql-and-params-test
   (t/is (= (service/or-query->sql-and-params [katuosoite-fi-query])
            {:sql katuosoite-fi-sql
-            :params ["%Hämeenkatu"]}))
+            :params ["%Hämeenkatu%"]}))
   (t/is (= (service/or-query->sql-and-params [ikkuna-ala-query
                                               eluvun-muutos-query])
            {:sql (str ikkuna-ala-sql " OR " eluvun-muutos-sql)
@@ -73,7 +73,7 @@
 (t/deftest and-query->sql-and-params-test
   (t/is (= (service/and-query->sql-and-params [[katuosoite-fi-query]])
            {:sql (format "(%s)" katuosoite-fi-sql)
-            :params ["%Hämeenkatu"]}))
+            :params ["%Hämeenkatu%"]}))
   (t/is (= (service/and-query->sql-and-params [[ikkuna-ala-query]
                                                [eluvun-muutos-query]])
            {:sql (format "(%s) AND (%s)" ikkuna-ala-sql eluvun-muutos-sql)
@@ -88,4 +88,4 @@
                     katuosoite-fi-sql
                     ikkuna-ala-sql
                     eluvun-muutos-sql)
-            "%Hämeenkatu" 150 100])))
+            "%Hämeenkatu%" 150 100])))
