@@ -1,9 +1,12 @@
 (ns solita.etp.service.energiatodistus-search-test
   (:require [clojure.test :as t]
             [clojure.string :as str]
+            [clojure.java.jdbc :as jdbc]
+            [clojure.tools.logging :as log]
             [schema-generators.generators :as g]
             [solita.etp.test-system :as ts]
             [solita.etp.schema.energiatodistus :as schema]
+            [solita.etp.service.json :as json]
             [solita.etp.service.energiatodistus-search :as service]
             [solita.etp.service.energiatodistus-test :as energiatodistus-test]))
 
@@ -13,9 +16,16 @@
   (repeatedly n #(g/generate schema/EnergiatodistusSave2018
                              energiatodistus-test/energiatodistus-generators)))
 
-(defn add-energiatodistukset! [energiatodistukset laatija-id]
-  (doall (map #(energiatodistus-test/add-energiatodistus! % laatija-id)
-              energiatodistukset)))
+(defn add-energiatodistukset-in-batch! [energiatodistukset laatija-id]
+  (doseq [batch (->> energiatodistukset
+                     (map #(vector 2018 laatija-id (json/write-value-as-string %)))
+                     (partition-all 1000))]
+    (jdbc/execute!
+     (ts/db-user laatija-id)
+     (concat
+      ["INSERT INTO energiatodistus (versio, laatija_id, data) VALUES (?, ?, ? :: JSONB) returning id"]
+      batch)
+     {:multi? true})))
 
 (defn update-energiatodistus [energiatodistus katuosoite-fi pohjoinen-ikkuna-ala
                               lammitys-eluvun-muutos]
@@ -24,18 +34,24 @@
       (assoc-in [:lahtotiedot :ikkunat :pohjoinen :ala] pohjoinen-ikkuna-ala)
       (assoc-in [:huomiot :lammitys :toimenpide 0 :eluvun-muutos] lammitys-eluvun-muutos)))
 
+(defn get-table-size [table-name]
+  (-> ts/*db*
+      (jdbc/query ["SELECT pg_size_pretty(pg_total_relation_size(?))"
+                   table-name])
+      first
+      :pg_size_pretty))
+
 (def not-to-be-found-energiatodistukset
-  (->> 1
+  (->> 10
        generate-energiatodistukset
-       (map #(update-energiatodistus % "Itsenäisyydenkatu 1 A 2" 200 200))))
+       (map #(update-energiatodistus % "Itsenäisyydenkatu 1 A 2" 200 200))
+       cycle))
 
 (def to-be-found-energiatodistukset
-  (->> 1
+  (->> 100
        generate-energiatodistukset
-       (map #(update-energiatodistus % "Hämeenkatu 1 A 2" 100 100))))
-
-(def energiatodistukset (concat not-to-be-found-energiatodistukset
-                                to-be-found-energiatodistukset))
+       (map #(update-energiatodistus % "Hämeenkatu 1 A 2" 100 100))
+       cycle))
 
 (def katuosoite-fi-query ["ilike"
                           [:perustiedot :katuosoite-fi]
@@ -89,3 +105,43 @@
                     ikkuna-ala-sql
                     eluvun-muutos-sql)
             "%Hämeenkatu%" 150 100])))
+
+(t/deftest search-test
+  (let [laatija-id (energiatodistus-test/add-laatija!)
+        energiatodistukset (concat (take 10000 not-to-be-found-energiatodistukset)
+                                   (take 100 to-be-found-energiatodistukset))
+        _ (add-energiatodistukset! energiatodistukset laatija-id)
+        results (service/search ts/*db* [[katuosoite-fi-query]
+                                         [ikkuna-ala-query]
+                                         [eluvun-muutos-query]])]
+    (t/is (= (count results) 100))))
+
+;; Commented because this is a low test
+#_(t/deftest performance-test
+  (let [laatija-id (energiatodistus-test/add-laatija!)
+        energiatodistukset (concat (take 1000000 not-to-be-found-energiatodistukset)
+                                   (take 100 to-be-found-energiatodistukset))
+        _ (log/info "Size of table in the beginning" (get-table-size "energiatodistus"))
+        _ (log/info "Energiatodistukset has been generated")
+        _ (add-energiatodistukset! energiatodistukset laatija-id)
+        _ (log/info "Energiatodistukset has been inserted to db")
+        _ (log/info "Size of table after inserting: " (get-table-size "energiatodistus"))
+        before-search-1 (System/currentTimeMillis)
+        results-1 (service/search ts/*db* [[katuosoite-fi-query]
+                                           [ikkuna-ala-query]
+                                           [eluvun-muutos-query]])
+        after-search-1 (System/currentTimeMillis)
+        result-count-1 (count results-1)
+        _ (log/info "1. search completed. The count of results was " result-count-1)
+        _ (log/info "1. search took " (- after-search-1 before-search-1) " ms")
+
+        before-search-2 (System/currentTimeMillis)
+        results-2 (service/search ts/*db* [[katuosoite-fi-query]
+                                           [ikkuna-ala-query]
+                                           [eluvun-muutos-query]])
+        after-search-2 (System/currentTimeMillis)
+        result-count-2 (count results-2)
+        _ (log/info "2. search completed. The count of results was " result-count-2)
+        _ (log/info "2. search took " (- after-search-2 before-search-2) "ms")]
+    (t/is (= (count results-1) 100))
+    (t/is (= (count results-2) 100))))
