@@ -53,15 +53,11 @@
        (map #(update-energiatodistus % "Hämeenkatu 1 A 2" 100 100))
        cycle))
 
-(def katuosoite-fi-query ["ilike"
-                          [:perustiedot :katuosoite-fi]
-                          "%Hämeenkatu%"])
+(def katuosoite-fi-where ["ilike" [:perustiedot :katuosoite-fi] "%Hämeenkatu%"])
 (def katuosoite-fi-sql "data->'perustiedot'->>'katuosoite-fi' ilike ?")
-(def ikkuna-ala-query ["<" [:lahtotiedot :ikkunat :pohjoinen :ala] 150])
+(def ikkuna-ala-where ["<" [:lahtotiedot :ikkunat :pohjoinen :ala] 150])
 (def ikkuna-ala-sql "(data->'lahtotiedot'->'ikkunat'->'pohjoinen'->>'ala')::numeric < ?")
-(def eluvun-muutos-query ["="
-                          [:huomiot :lammitys :toimenpide 0 :eluvun-muutos]
-                          100])
+(def eluvun-muutos-where ["=" [:huomiot :lammitys :toimenpide 0 :eluvun-muutos] 100])
 (def eluvun-muutos-sql "(data->'huomiot'->'lammitys'->'toimenpide'->0->>'eluvun-muutos')::numeric = ?")
 
 (t/deftest k->sql-test
@@ -96,24 +92,35 @@
             :params [150 100]})))
 
 (t/deftest query->sql-test
-  (t/is (nil? (service/query->sql [])))
-  (t/is (= (service/query->sql [[katuosoite-fi-query]
-                                [ikkuna-ala-query eluvun-muutos-query]])
+  (t/is (nil? (service/query->sql {})))
+  (t/is (nil? (service/query->sql {:limit 100})))
+  (t/is (= (service/query->sql {:where [[katuosoite-fi-query]
+                                        [ikkuna-ala-query eluvun-muutos-query]]})
            [(format "%s(%s) AND (%s OR %s)"
                     service/base-query
                     katuosoite-fi-sql
                     ikkuna-ala-sql
                     eluvun-muutos-sql)
-            "%Hämeenkatu%" 150 100])))
+            "%Hämeenkatu%" 150 100]))
+  (t/is (= (service/query->sql {:where [[katuosoite-fi-query]]
+                                :sort [:perustiedot :katuosoite-fi]
+                                :order "DESC"
+                                :limit 100
+                                :offset 100})
+           [(format "%s(%s) ORDER BY data->'perustiedot'->>'katuosoite-fi' DESC LIMIT 100 OFFSET 100"
+                    service/base-query
+                    katuosoite-fi-sql)
+            "%Hämeenkatu%"])))
 
 (t/deftest search-test
   (let [laatija-id (energiatodistus-test/add-laatija!)
         energiatodistukset (concat (take 10000 not-to-be-found-energiatodistukset)
                                    (take 100 to-be-found-energiatodistukset))
         _ (add-energiatodistukset! energiatodistukset laatija-id)
-        results (service/search ts/*db* [[katuosoite-fi-query]
-                                         [ikkuna-ala-query]
-                                         [eluvun-muutos-query]])]
+        results (service/search ts/*db* {:where [[katuosoite-fi-query]
+                                                 [ikkuna-ala-query]
+                                                 [eluvun-muutos-query]]
+                                         :sort [:perustiedot :katuosoite-fi]})]
     (t/is (= (count results) 100))))
 
 ;; Commented because this is a slow test
@@ -126,19 +133,18 @@
         _ (add-energiatodistukset! energiatodistukset laatija-id)
         _ (log/info "Energiatodistukset has been inserted to db")
         _ (log/info "Size of table after inserting: " (get-table-size "energiatodistus"))
+        query {:where [[katuosoite-fi-query]
+                       [ikkuna-ala-query]
+                       [eluvun-muutos-query]]}
         before-search-1 (System/currentTimeMillis)
-        results-1 (service/search ts/*db* [[katuosoite-fi-query]
-                                           [ikkuna-ala-query]
-                                           [eluvun-muutos-query]])
+        results-1 (service/search ts/*db* query)
         after-search-1 (System/currentTimeMillis)
         result-count-1 (count results-1)
         _ (log/info "1. search completed. The count of results was " result-count-1)
         _ (log/info "1. search took " (- after-search-1 before-search-1) " ms")
 
         before-search-2 (System/currentTimeMillis)
-        results-2 (service/search ts/*db* [[katuosoite-fi-query]
-                                           [ikkuna-ala-query]
-                                           [eluvun-muutos-query]])
+        results-2 (service/search ts/*db* query)
         after-search-2 (System/currentTimeMillis)
         result-count-2 (count results-2)
         _ (log/info "2. search completed. The count of results was " result-count-2)
@@ -158,8 +164,8 @@
                                  data->'perustiedot'->'added')")
 (def delete-field-sql "UPDATE energiatodistus SET data = data #- '{perustiedot, renamed}'")
 
-(def added-query [[["=" [:perustiedot :added] 100]]])
-(def renamed-query [[["=" [:perustiedot :renamed] 100]]])
+(def added-query {:where [[["=" [:perustiedot :added] 100]]]})
+(def renamed-query {:where [[["=" [:perustiedot :renamed] 100]]]})
 
 (t/deftest json-migration-test
   (let [laatija-id (energiatodistus-test/add-laatija!)

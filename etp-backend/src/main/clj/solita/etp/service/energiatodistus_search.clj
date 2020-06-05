@@ -35,11 +35,16 @@
                (str/join " AND "))
      :params (apply concat (map :params or-query-sqls-and-params))}))
 
-(defn query->sql [query]
-  (if (empty? query)
+(defn query->sql [{:keys [where sort order limit offset] :or {order ""}}]
+  (if (empty? where)
     nil
-    (let [{:keys [sql params]} (and-query->sql-and-params query)]
-      (concat [(str base-query sql)] params))))
+    (let [{:keys [sql params]} (and-query->sql-and-params where)]
+      (concat [(str base-query
+                    sql
+                    (when sort (format " ORDER BY %s %s" (path->sql sort) order))
+                    (when limit (str " LIMIT " limit))
+                    (when offset (str " OFFSET " offset)))]
+              params))))
 
 (defn search [db query]
-  (jdbc/query db (query->sql query)))
+  (jdbc/query db (query->sql query) nil))
