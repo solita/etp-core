@@ -70,40 +70,40 @@
            "data->'huomiot'->'lammitys'->'toimenpide'->0->>'eluvun-muutos'")))
 
 (t/deftest query-part->sql-test
-  (t/is (= (service/query-part->sql katuosoite-fi-query) katuosoite-fi-sql))
-  (t/is (= (service/query-part->sql ikkuna-ala-query) ikkuna-ala-sql))
-  (t/is (= (service/query-part->sql eluvun-muutos-query) eluvun-muutos-sql)))
+  (t/is (= (service/query-part->sql katuosoite-fi-where) katuosoite-fi-sql))
+  (t/is (= (service/query-part->sql ikkuna-ala-where) ikkuna-ala-sql))
+  (t/is (= (service/query-part->sql eluvun-muutos-where) eluvun-muutos-sql)))
 
 (t/deftest or-query->sql-and-params-test
-  (t/is (= (service/or-query->sql-and-params [katuosoite-fi-query])
+  (t/is (= (service/or-query->sql-and-params [katuosoite-fi-where])
            {:sql katuosoite-fi-sql
             :params ["%Hämeenkatu%"]}))
-  (t/is (= (service/or-query->sql-and-params [ikkuna-ala-query
-                                              eluvun-muutos-query])
+  (t/is (= (service/or-query->sql-and-params [ikkuna-ala-where
+                                              eluvun-muutos-where])
            {:sql (str ikkuna-ala-sql " OR " eluvun-muutos-sql)
             :params [150 100]})))
 
 (t/deftest and-query->sql-and-params-test
-  (t/is (= (service/and-query->sql-and-params [[katuosoite-fi-query]])
+  (t/is (= (service/and-query->sql-and-params [[katuosoite-fi-where]])
            {:sql (format "(%s)" katuosoite-fi-sql)
             :params ["%Hämeenkatu%"]}))
-  (t/is (= (service/and-query->sql-and-params [[ikkuna-ala-query]
-                                               [eluvun-muutos-query]])
+  (t/is (= (service/and-query->sql-and-params [[ikkuna-ala-where]
+                                               [eluvun-muutos-where]])
            {:sql (format "(%s) AND (%s)" ikkuna-ala-sql eluvun-muutos-sql)
             :params [150 100]})))
 
 (t/deftest query->sql-test
   (t/is (nil? (service/query->sql {})))
   (t/is (nil? (service/query->sql {:limit 100})))
-  (t/is (= (service/query->sql {:where [[katuosoite-fi-query]
-                                        [ikkuna-ala-query eluvun-muutos-query]]})
+  (t/is (= (service/query->sql {:where [[katuosoite-fi-where]
+                                        [ikkuna-ala-where eluvun-muutos-where]]})
            [(format "%s(%s) AND (%s OR %s)"
                     service/base-query
                     katuosoite-fi-sql
                     ikkuna-ala-sql
                     eluvun-muutos-sql)
             "%Hämeenkatu%" 150 100]))
-  (t/is (= (service/query->sql {:where [[katuosoite-fi-query]]
+  (t/is (= (service/query->sql {:where [[katuosoite-fi-where]]
                                 :sort [:perustiedot :katuosoite-fi]
                                 :order "DESC"
                                 :limit 100
@@ -118,16 +118,16 @@
         energiatodistukset (concat (take 10000 not-to-be-found-energiatodistukset)
                                    (take 100 to-be-found-energiatodistukset))
         _ (add-energiatodistukset! energiatodistukset laatija-id)
-        results (service/search ts/*db* {:where [[katuosoite-fi-query]
-                                                 [ikkuna-ala-query]
-                                                 [eluvun-muutos-query]]
+        results (service/search ts/*db* {:where [[katuosoite-fi-where]
+                                                 [ikkuna-ala-where]
+                                                 [eluvun-muutos-where]]
                                          :sort [:perustiedot :katuosoite-fi]})]
     (t/is (= (count results) 100))))
 
 ;; Commented because this is a slow test
 #_(t/deftest performance-test
   (let [laatija-id (energiatodistus-test/add-laatija!)
-        energiatodistukset (concat (take 100000 not-to-be-found-energiatodistukset)
+        energiatodistukset (concat (take 1000000 not-to-be-found-energiatodistukset)
                                    (take 1000 to-be-found-energiatodistukset))
         _ (log/info "Size of table in the beginning" (get-table-size "energiatodistus"))
         _ (log/info "Energiatodistukset has been generated")
