@@ -116,7 +116,7 @@
                                          [eluvun-muutos-query]])]
     (t/is (= (count results) 100))))
 
-;; Commented because this is a low test
+;; Commented because this is a slow test
 #_(t/deftest performance-test
   (let [laatija-id (energiatodistus-test/add-laatija!)
         energiatodistukset (concat (take 1000000 not-to-be-found-energiatodistukset)
