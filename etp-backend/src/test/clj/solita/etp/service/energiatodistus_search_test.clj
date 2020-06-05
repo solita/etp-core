@@ -150,31 +150,30 @@
 ;; Concepts for how fields could be renamed, deleted or added
 ;;
 
-(defn migration-path [path]
-  (format "{%s}" (->> path
-                      (map #(if (keyword? %) (name %) %))
-                      (str/join ", "))))
-
 (def add-field-sql "UPDATE energiatodistus SET data =
                     jsonb_set(data, '{perustiedot, added}', 100::text::jsonb)")
 (def rename-field-sql "UPDATE energiatodistus SET data =
                        jsonb_set(data #- '{perustiedot, added}',
                                  '{perustiedot, renamed}',
                                  data->'perustiedot'->'added')")
-
+(def delete-field-sql "UPDATE energiatodistus SET data = data #- '{perustiedot, renamed}'")
 
 (def added-query [[["=" [:perustiedot :added] 100]]])
 (def renamed-query [[["=" [:perustiedot :renamed] 100]]])
 
 (t/deftest json-migration-test
   (let [laatija-id (energiatodistus-test/add-laatija!)
-        energiatodistukset (take 100 not-to-be-found-energiatodistukset)
+        n 1000
+        energiatodistukset (take n not-to-be-found-energiatodistukset)
         _ (add-energiatodistukset! energiatodistukset laatija-id)
         _ (jdbc/execute! ts/*db* [add-field-sql])
         added-results-1 (service/search ts/*db* added-query)
         _ (jdbc/execute! ts/*db* [rename-field-sql])
         added-results-2 (service/search ts/*db* added-query)
-        renamed-results (service/search ts/*db* renamed-query)]
-    (t/is (= (count added-results-1) 100))
+        renamed-results-1 (service/search ts/*db* renamed-query)
+        _ (jdbc/execute! ts/*db* [delete-field-sql])
+        renamed-results-2 (service/search ts/*db* renamed-query)]
+    (t/is (= (count added-results-1) n))
     (t/is (= (count added-results-2) 0))
-    (t/is (= (count renamed-results) 100))))
+    (t/is (= (count renamed-results-1) n))
+    (t/is (= (count renamed-results-2) 0))))
