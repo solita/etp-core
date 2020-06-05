@@ -27,12 +27,13 @@
       batch)
      {:multi? true})))
 
-(defn update-energiatodistus [energiatodistus katuosoite-fi pohjoinen-ikkuna-ala
-                              lammitys-eluvun-muutos]
+(defn update-energiatodistus [energiatodistus valmistumisvuosi katuosoite-fi
+                              pohjoinen-ikkuna-ala lammitys-eluvun-muutos]
   (-> energiatodistus
       (assoc-in [:perustiedot :katuosoite-fi] katuosoite-fi)
       (assoc-in [:lahtotiedot :ikkunat :pohjoinen :ala] pohjoinen-ikkuna-ala)
-      (assoc-in [:huomiot :lammitys :toimenpide 0 :eluvun-muutos] lammitys-eluvun-muutos)))
+      (assoc-in [:huomiot :lammitys :toimenpide 0 :eluvun-muutos] lammitys-eluvun-muutos)
+      (assoc-in [:perustiedot :valmistumisvuosi] valmistumisvuosi)))
 
 (defn get-table-size [table-name]
   (-> ts/*db*
@@ -44,13 +45,13 @@
 (def not-to-be-found-energiatodistukset
   (->> 10
        generate-energiatodistukset
-       (map #(update-energiatodistus % "Itsenäisyydenkatu 1 A 2" 200 200))
+       (map #(update-energiatodistus % (+ 2010 (rand-int 10)) "Itsenäisyydenkatu 1 A 2" 200 200))
        cycle))
 
 (def to-be-found-energiatodistukset
   (->> 100
        generate-energiatodistukset
-       (map #(update-energiatodistus % "Hämeenkatu 1 A 2" 100 100))
+       (map #(update-energiatodistus % 2021 "Hämeenkatu 1 A 2" 100 100))
        cycle))
 
 (def katuosoite-fi-where ["ilike" [:perustiedot :katuosoite-fi] "%Hämeenkatu%"])
@@ -126,23 +127,22 @@
 ;; Commented because this is a slow test
 #_(t/deftest performance-test
   (let [laatija-id (energiatodistus-test/add-laatija!)
-        energiatodistukset (concat (take 1000000 not-to-be-found-energiatodistukset)
-                                   (take 100 to-be-found-energiatodistukset))
+        energiatodistukset (concat (take 100000 not-to-be-found-energiatodistukset)
+                                   (take 1000 to-be-found-energiatodistukset))
         _ (log/info "Size of table in the beginning" (get-table-size "energiatodistus"))
         _ (log/info "Energiatodistukset has been generated")
         _ (add-energiatodistukset! energiatodistukset laatija-id)
         _ (log/info "Energiatodistukset has been inserted to db")
         _ (log/info "Size of table after inserting: " (get-table-size "energiatodistus"))
-        query {:where [[katuosoite-fi-query]
-                       [ikkuna-ala-query]
-                       [eluvun-muutos-query]]}
+        query {:where [[["=" [:perustiedot :valmistumisvuosi] 2021]]]
+               :sort [:perustiedot :katuosoite-fi]
+               :limit 100}
         before-search-1 (System/currentTimeMillis)
         results-1 (service/search ts/*db* query)
         after-search-1 (System/currentTimeMillis)
         result-count-1 (count results-1)
         _ (log/info "1. search completed. The count of results was " result-count-1)
         _ (log/info "1. search took " (- after-search-1 before-search-1) " ms")
-
         before-search-2 (System/currentTimeMillis)
         results-2 (service/search ts/*db* query)
         after-search-2 (System/currentTimeMillis)
