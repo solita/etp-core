@@ -16,7 +16,7 @@
   (repeatedly n #(g/generate schema/EnergiatodistusSave2018
                              energiatodistus-test/energiatodistus-generators)))
 
-(defn add-energiatodistukset-in-batch! [energiatodistukset laatija-id]
+(defn add-energiatodistukset! [energiatodistukset laatija-id]
   (doseq [batch (->> energiatodistukset
                      (map #(vector 2018 laatija-id (json/write-value-as-string %)))
                      (partition-all 1000))]
@@ -145,3 +145,27 @@
         _ (log/info "2. search took " (- after-search-2 before-search-2) "ms")]
     (t/is (= (count results-1) 100))
     (t/is (= (count results-2) 100))))
+
+;;
+;; Concepts for how fields could be renamed, deleted or added
+;;
+
+(defn migration-path [path]
+  (format "{%s}" (->> path
+                      (map #(if (keyword? %) (name %) %))
+                      (str/join ", "))))
+
+(defn add-field [path v]
+  (jdbc/execute!
+   ts/*db*
+   ["UPDATE energiatodistus SET data = jsonb_set(data, ?::text[], ?::text::jsonb)"
+    (migration-path path)
+    v]))
+
+(t/deftest json-migration-test
+  (let [laatija-id (energiatodistus-test/add-laatija!)
+        energiatodistukset (take 100 not-to-be-found-energiatodistukset)
+        _ (add-energiatodistukset! energiatodistukset laatija-id)
+        _ (add-field [:perustiedot :added] 100)
+        add-results (service/search ts/*db* [[["=" [:perustiedot :added] 100]]])]
+    (t/is (= (count add-results) 100))))
