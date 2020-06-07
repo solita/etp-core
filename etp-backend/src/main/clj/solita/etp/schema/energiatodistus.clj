@@ -229,7 +229,7 @@
    :muotokerroin common-schema/FloatPos
    :ostoenergia common-schema/FloatPos})
 
-(def UserDefinedUusiutuvaEnergia
+(def UserDefinedEnergia
   {:nimi-fi common-schema/String50
    :nimi-sv common-schema/String50
    :vuosikulutus common-schema/FloatPos})
@@ -241,7 +241,9 @@
       (assoc-in [:tulokset :kaytettavat-energiamuodot :muu]
                 [(optional-properties UserDefinedEnergiamuoto)])
       (assoc-in [:tulokset :uusiutuvat-omavaraisenergiat]
-                [(optional-properties UserDefinedUusiutuvaEnergia)])))
+                [(optional-properties UserDefinedEnergia)])
+      (assoc-in [:toteutunut-ostoenergiankulutus :ostettu-energia :muu]
+                [(optional-properties UserDefinedEnergia)])))
 
 (defn energiatodistus-versio [versio save-schema]
   "Energiatodistus schema contains basic information about persistent energiatodistus"
