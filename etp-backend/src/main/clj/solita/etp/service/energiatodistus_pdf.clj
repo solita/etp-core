@@ -68,7 +68,8 @@
         "M21" (fn [energiatodistus]
                 (some->> energiatodistus :perustiedot :havainnointikaynti (.format date-formatter)))
 
-        ;; TODO M36 and M37 E-luku
+        ;; TODO M37 E-luvun vaatimus
+        "M36" [:tulokset :e-luku]
 
         "B42" [:laatija-fullname]
         "J42" [:perustiedot :yritys :nimi]
@@ -99,7 +100,7 @@
         "H18" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]
         "I18" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]
 
-        ;; TODO Energiatehokkuuden vertailuluku
+        "I20" [:tulokset :e-luku]
 
         ;; TODO Käytetty E-luvun luokittelu asteikko
 
@@ -208,8 +209,7 @@
      3 {"D4" [:perustiedot :alakayttotarkoitus-fi]
         "D7" [:perustiedot :valmistumisvuosi]
         "D8" [:lahtotiedot :lammitetty-nettoala]
-
-        ;; TODO e-luku
+        "D9" [:tulokset :e-luku]
 
         "D17" [:tulokset :kaytettavat-energiamuodot :kaukolampo]
         "E17" [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]
@@ -235,7 +235,7 @@
         "D22" [:tulokset :kaytettavat-energiamuodot :summa]
         "E22" [:tulokset :kaytettavat-energiamuodot :kerroin-summa]
         "F22" [:tulokset :kaytettavat-energiamuodot :kertoimella-summa]
-        "G22" [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella]
+        "G22" [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]
 
         "E28" [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko]
         "F28" [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko-nettoala]

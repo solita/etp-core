@@ -111,7 +111,7 @@
   (energiatodistus-db/select-alakayttotarkoitusluokat-by-versio db {:versio versio}))
 
 ;;
-;; Energiatodistuksen "denormalisointi" ja laskennalliset kentät
+;; Energiatodistuksen "denormalisointi" and "laskennalliset kentät""
 ;;
 
 (defn *-ceil [& args]
@@ -120,21 +120,25 @@
 (defn div-ceil [& args]
   (->> args (apply /) Math/ceil))
 
-(defn combine-keys [m f nil-replacement cursor-new & cursors]
-  (let [vals (map #(or (get-in m %) nil-replacement) cursors)]
+(defn combine-keys [m f nil-replacement path-new & paths]
+  (let [vals (map #(or (get-in m %) nil-replacement) paths)]
     (if (not-any? nil? vals)
-      (assoc-in m cursor-new (apply f vals))
+      (assoc-in m path-new (apply f vals))
       m)))
 
-(defn assoc-div-nettoala [energiatodistus cursor]
-  (let [new-k (-> cursor last name (str "-nettoala") keyword)
-        new-cursor (-> cursor pop (conj new-k))]
+(defn assoc-div-nettoala [energiatodistus path]
+  (let [new-k (-> path last name (str "-nettoala") keyword)
+        new-path (-> path pop (conj new-k))]
     (combine-keys energiatodistus
                   div-ceil
                   nil
-                  new-cursor
-                  cursor
+                  new-path
+                  path
                   [:lahtotiedot :lammitetty-nettoala])))
+
+(defn copy-field [energiatodistus from-path to-path]
+  (let [v (get-in energiatodistus from-path)]
+    (assoc-in energiatodistus to-path v)))
 
 (defn find-complete-energiatodistus* [energiatodistus alakayttotarkoitukset]
   (let [perustiedot (:perustiedot energiatodistus)
@@ -241,12 +245,14 @@
                       [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella])
         (combine-keys +
                       0
-                      [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella]
+                      [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]
                       [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella]
                       [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kertoimella]
                       [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella]
                       [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]
                       [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella])
+        (copy-field [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]
+                    [:tulokset :e-luku])
         (combine-keys *
                       nil
                       [:lahtotiedot :rakennusvaippa :ulkoseinat :UA]
