@@ -225,16 +225,25 @@
     (update :perustiedot #(dissoc % :laatimisvaihe))))
 
 (def UserDefinedEnergiamuoto
-  {:nimi common-schema/String200
+  {:nimi common-schema/String50
    :muotokerroin common-schema/FloatPos
    :ostoenergia common-schema/FloatPos})
+
+(def UserDefinedEnergia
+  {:nimi-fi common-schema/String50
+   :nimi-sv common-schema/String50
+   :vuosikulutus common-schema/FloatPos})
 
 (def EnergiatodistusSave2013
   "TODO: create 2013 save schema"
   (-> (dissoc-not-in-2013 EnergiatodistusSave2018)
       (assoc-in [:perustiedot :uudisrakennus] schema/Bool)
       (assoc-in [:tulokset :kaytettavat-energiamuodot :muu]
-                [(optional-properties UserDefinedEnergiamuoto)])))
+                [(optional-properties UserDefinedEnergiamuoto)])
+      (assoc-in [:tulokset :uusiutuvat-omavaraisenergiat]
+                [(optional-properties UserDefinedEnergia)])
+      (assoc-in [:toteutunut-ostoenergiankulutus :ostettu-energia :muu]
+                [(optional-properties UserDefinedEnergia)])))
 
 (defn energiatodistus-versio [versio save-schema]
   "Energiatodistus schema contains basic information about persistent energiatodistus"
