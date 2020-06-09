@@ -20,8 +20,7 @@ select energiatodistus.id, energiatodistus.versio,
        fullname(kayttaja.*) "laatija-fullname",
        energiatodistus.data
 from energiatodistus
-  inner join laatija on laatija.id = energiatodistus.laatija_id
-  inner join kayttaja on kayttaja.id = laatija.kayttaja
+  inner join kayttaja on kayttaja.id = energiatodistus.laatija_id
 where energiatodistus.id = :id
 
 -- name: select-energiatodistukset-by-laatija
@@ -60,4 +59,3 @@ update energiatodistus set
   allekirjoitusaika = now()
 from et_tilat
 where tila_id = et_tilat.allekirjoituksessa and laatija_id = :laatija-id and id = :id
-
