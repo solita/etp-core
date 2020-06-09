@@ -134,9 +134,9 @@
         _ (add-energiatodistukset! energiatodistukset laatija-id)
         _ (log/info "Energiatodistukset has been inserted to db")
         _ (log/info "Size of table after inserting: " (get-table-size "energiatodistus"))
-        query {:where [[["=" [:perustiedot :valmistumisvuosi] 2021]]]
-               :sort [:perustiedot :katuosoite-fi]
+        query {:where [[[">" [:perustiedot :valmistumisvuosi] 2020]]]
                :limit 100}
+        _ (log/info "Query was: " (service/query->sql query))
         before-search-1 (System/currentTimeMillis)
         results-1 (service/search ts/*db* query)
         after-search-1 (System/currentTimeMillis)
