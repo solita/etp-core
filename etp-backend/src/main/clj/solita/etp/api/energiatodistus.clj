@@ -53,6 +53,26 @@
                              db (:id whoami))
                            "energiatodistukset.xlsx"
                            "Not found."))}}]
+    ["/all"
+     ["/:id"
+     {:get {:summary   "Hae mikä tahansa yksittäinen energiatodistus tunnisteella (id)"
+            :parameters {:path {:id common-schema/Key}}
+            :responses  {200 {:body energiatodistus-schema/Energiatodistus}
+                         404 {:body schema/Str}}
+            :access     rooli-service/laatija?
+            :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+                          (api-response/get-response
+                            (energiatodistus-service/find-energiatodistus db id)
+                            (str "Energiatodistus " id " does not exists.")))}}]]
+    ["/signed"
+     {:get {:summary    "Hae allekirjoitettuja energiatodistuksia"
+            :parameters {:query {:id schema/Int}}
+            :responses  {200 {:body [common-schema/Key]}}
+            :access     rooli-service/laatija?
+            :handler    (fn [{{{:keys [id]} :query} :parameters :keys [db]}]
+                          (r/response
+                            (energiatodistus-service/find-signed-energiatodistukset-like-id
+                              db id)))}}]
     ["/2013"
      ["" (crud-api/post 2013 energiatodistus-schema/EnergiatodistusSave2013)]
      ["/:id"

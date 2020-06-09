@@ -34,6 +34,9 @@
        (energiatodistus-db/select-energiatodistukset-by-laatija
          db {:laatija-id laatija-id :tila-id tila-id})))
 
+(defn find-signed-energiatodistukset-like-id [db id]
+  (map :id (energiatodistus-db/select-signed-energiatodistukset-like-id db {:id id})))
+
 (defn add-energiatodistus! [db whoami versio energiatodistus]
   (:id (energiatodistus-db/insert-energiatodistus<!
          db (assoc (json/data-db-row energiatodistus)
