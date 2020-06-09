@@ -23,11 +23,10 @@
     (if existing-laatija
       (do
         (update-kayttaja db id kayttaja)
-        (laatija-service/update-laatija-by-id!
-          db id (dissoc laatija :henkilotunnus))
+        (laatija-service/update-laatija-by-id! db id (dissoc laatija :henkilotunnus))
         id)
       (let [id (add-kayttaja db kayttaja)]
-        (laatija-service/add-laatija! db (assoc laatija :id id :kayttaja id))))))
+        (laatija-service/add-laatija! db (assoc laatija :id id))))))
 
 (defn upsert-kayttaja-laatijat! [db kayttaja-laatijat]
   (jdbc/with-db-transaction
