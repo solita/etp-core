@@ -3,7 +3,6 @@ INSERT INTO country (id, alpha3, numeric, name, label_fi, label_sv) VALUES ('FI'
 
 create table laatija (
   id int primary key references kayttaja (id) not null,
-  kayttaja int references kayttaja (id) not null, -- TODO: remove this field
   henkilotunnus text NOT NULL,
   patevyystaso int NOT NULL,
   toteamispaivamaara date NOT NULL,
