@@ -51,13 +51,13 @@
                 ["id = ?" id]))
 
 (defn find-laatija-yritykset [db whoami id]
-  (if (or (= id (:laatija whoami))
-            (rooli-service/laatija-maintainer? whoami))
+  (if (or (= id (:id whoami))
+          (rooli-service/laatija-maintainer? whoami))
     (map :yritys-id (laatija-db/select-laatija-yritykset db {:id id}))
     (exception/throw-forbidden!)))
 
 (defn attach-laatija-yritys [db whoami laatija-id yritys-id]
-  (if (= laatija-id (:laatija whoami))
+  (if (= laatija-id (:id whoami))
     (do
       (laatija-db/insert-laatija-yritys!
        db
@@ -66,7 +66,7 @@
     (exception/throw-forbidden!)))
 
 (defn detach-laatija-yritys [db whoami laatija-id yritys-id]
-  (if (= laatija-id (:laatija whoami))
+  (if (= laatija-id (:id whoami))
     (laatija-db/delete-laatija-yritys!
      db
      (map/bindings->map laatija-id yritys-id))
