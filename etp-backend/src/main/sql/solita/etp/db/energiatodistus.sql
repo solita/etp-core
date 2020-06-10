@@ -43,6 +43,7 @@ select energiatodistus.id
 from energiatodistus, et_tilat
 where energiatodistus.tila_id = et_tilat.allekirjoitettu and
       energiatodistus.id::text like :id::text || '%'
+limit 100
 
 -- name: select-kayttotarkoitusluokat-by-versio
 select id, label_fi "label-fi", label_sv "label-sv", deleted
