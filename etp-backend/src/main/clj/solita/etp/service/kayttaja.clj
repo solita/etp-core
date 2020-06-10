@@ -35,7 +35,8 @@
 (defn update-kayttaja! [db whoami id kayttaja]
   (if (or (and (= id (:id whoami))
                (common-schema/not-contains-keys
-                 kayttaja kayttaja-schema/KayttajaAdminUpdate))
-        (rooli-service/paakayttaja? whoami))
+                kayttaja
+                kayttaja-schema/KayttajaAdminUpdate))
+          (rooli-service/paakayttaja? whoami))
     (jdbc/update! db :kayttaja kayttaja ["rooli <> 0 and id = ?" id])
     (exception/throw-forbidden!)))

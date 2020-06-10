@@ -49,7 +49,6 @@
   "Schema representing the persistent laatija.
   This defines only the laatija specific kayttaja information."
   (merge LaatijaUpdate
-         {:kayttaja common-schema/Key}
          common-schema/Id))
 
 (def KayttajaAdd

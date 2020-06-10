@@ -36,7 +36,6 @@
       :rooli         (schema/enum 0 1 2)
       :ensitallennus schema/Bool
       :passivoitu    schema/Bool
-
       :etunimi       schema/Str
       :sukunimi      schema/Str
       :puhelin       schema/Str

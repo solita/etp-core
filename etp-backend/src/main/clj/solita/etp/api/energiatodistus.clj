@@ -41,7 +41,9 @@
             :access     rooli-service/laatija?
             :handler    (fn [{{{:keys [tila]} :query} :parameters :keys [db whoami]}]
                           (r/response (energiatodistus-service/find-energiatodistukset-by-laatija
-                                        db (:laatija whoami) tila)))}}]
+                                       db
+                                       (:id whoami)
+                                       tila)))}}]
     ["/xlsx/energiatodistukset.xlsx"
      {:get {:summary   "Lataa laatijan energiatodistuksien tiedot XLSX-tiedostona"
             :responses {200 {:body nil}
