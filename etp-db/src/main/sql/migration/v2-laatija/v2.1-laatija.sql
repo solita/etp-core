@@ -16,5 +16,6 @@ create table laatija (
   jakeluosoite text NOT NULL,
   postinumero text NOT NULL,
   postitoimipaikka text NOT NULL,
+  wwwosoite text,
   maa char(2) REFERENCES country (id) NOT NULL DEFAULT 'FI'
 );
