@@ -20,10 +20,10 @@
   "Only for internal use in laatija services.
    Represents laatija information which is stored in laatija-table."
   (merge geo-schema/Postiosoite
-     {:henkilotunnus      common-schema/Henkilotunnus
-      :patevyystaso       common-schema/Key
-      :toteamispaivamaara common-schema/Date
-      :toteaja            PatevyydenToteaja}))
+         {:henkilotunnus      common-schema/Henkilotunnus
+          :patevyystaso       common-schema/Key
+          :toteamispaivamaara common-schema/Date
+          :toteaja            PatevyydenToteaja}))
 
 (def LaatijaAdminUpdate
   "Only for internal use in laatija services.
@@ -43,7 +43,8 @@
           :muuttoimintaalueet                       MuutToimintaalueet
           :julkinenpuhelin                          schema/Bool
           :julkinenemail                            schema/Bool
-          :julkinenosoite                           schema/Bool}))
+          :julkinenosoite                           schema/Bool
+          :wwwosoite                                (schema/maybe schema/Str)}))
 
 (def Laatija
   "Schema representing the persistent laatija.

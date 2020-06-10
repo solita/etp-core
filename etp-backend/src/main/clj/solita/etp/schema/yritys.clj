@@ -9,7 +9,6 @@
     geo-schema/Postiosoite
     :ytunnus   common-schema/Ytunnus
     :nimi      schema/Str
-    :wwwosoite (schema/maybe schema/Str)
     :verkkolaskuosoite (schema/maybe schema/Str)))
 
 
