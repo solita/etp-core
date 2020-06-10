@@ -38,6 +38,12 @@ where energiatodistus.laatija_id = :laatija-id and
       (:tila-id::integer = 0 and energiatodistus.allekirjoitusaika is null) or
       (:tila-id::integer = 1 and energiatodistus.allekirjoitusaika is not null))
 
+-- name: select-signed-energiatodistukset-like-id
+select energiatodistus.id
+from energiatodistus, et_tilat
+where energiatodistus.tila_id = et_tilat.allekirjoitettu and
+      energiatodistus.id::text like :id::text || '%'
+
 -- name: select-kayttotarkoitusluokat-by-versio
 select id, label_fi "label-fi", label_sv "label-sv", deleted
 from kayttotarkoitusluokka where versio = :versio
