@@ -11,7 +11,10 @@
 (def coerce-whoami (coerce/coercer whoami-schema/Whoami json/json-coercions))
 
 (defn find-whoami [db opts]
-  (->> opts
+  (->> (merge {:email nil
+               :cognitoid nil
+               :henkilotunnus nil}
+              opts)
        (whoami-db/select-whoami db)
        (map coerce-whoami)
        first))
