@@ -24,3 +24,4 @@
 
   (t/is (some? (schema/check common/Ytunnus "a060155-7")))
   (t/is (some? (schema/check common/Ytunnus "aaaaaaa-b"))))
+

@@ -1,7 +1,7 @@
 (ns solita.etp.api.energiatodistus
   (:require [ring.util.response :as r]
-            [reitit.ring.schema :as reitit-schema]
             [schema.core :as schema]
+            [solita.common.schema :as xschema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.api.energiatodistus-crud :as crud-api]
@@ -18,7 +18,11 @@
   [["/energiatodistukset/2018" {:middleware [[security/wrap-whoami-from-basic-auth]
                                              [security/wrap-access]
                                              [security/wrap-db-application-name]]}
-    ["" (crud-api/post 2018 energiatodistus-schema/EnergiatodistusSave2018)]]])
+    ["" (crud-api/post 2018
+          (xschema/optional-key-for-maybe
+            energiatodistus-schema/EnergiatodistusSave2018)
+          (xschema/missing-maybe-values-coercer
+            energiatodistus-schema/EnergiatodistusSave2018))]]])
 
 (defn pdf-route [version]
   ["/pdf"

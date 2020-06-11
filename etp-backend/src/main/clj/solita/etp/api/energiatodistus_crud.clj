@@ -5,7 +5,8 @@
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.energiatodistus :as energiatodistus-service]))
 
-(defn post [version save-schema]
+(defn post
+  ([version save-schema coerce]
   {:post
     {:summary    "Lisää luonnostilaisen energiatodistuksen"
      :parameters {:body save-schema}
@@ -14,7 +15,8 @@
      :handler    (fn [{:keys [db whoami parameters uri]}]
                    (api-response/created uri
                      (energiatodistus-service/add-energiatodistus!
-                       db whoami version (:body parameters))))}})
+                       db whoami version (coerce (:body parameters)))))}})
+  ([version save-schema] (post version save-schema identity)))
 
 (defn gpd-routes [get-schema save-schema]
   [""
