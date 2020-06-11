@@ -7,7 +7,7 @@
 (defn optional-properties [schema]
   (m/map-values
     #(cond
-       (instance? schema.core.Maybe %) %
+       (common-schema/maybe? %) %
        (instance? schema.core.Constrained %) (schema/maybe %)
        (instance? schema.core.EnumSchema %) (schema/maybe %)
        (class? %) (schema/maybe %)

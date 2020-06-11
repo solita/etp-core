@@ -1,9 +1,36 @@
 (ns solita.etp.schema.common
   (:require [clojure.string :as str]
-            [schema.core :as schema]))
+            [schema.core :as schema]
+            [clojure.walk :as walk]
+            [schema-tools.core :as schema-tools]
+            [schema-tools.swagger.core :as schema-tools-swagger])
+  (:import (schema.core Maybe)))
 
 (defn not-contains-keys [object schema]
   (every? #(not (contains? object %)) (keys schema)))
+
+(defn maybe? [schema]
+  (instance? Maybe schema))
+
+(defn optional-key-for-maybe [schema]
+  (let [convert
+        (fn [[key value :as entry]]
+          (if (and (keyword? key) (maybe? value))
+            [(schema/optional-key key) value]
+            entry))]
+    (walk/postwalk
+      #(if (map-entry? %) (convert %) %)
+      schema)))
+
+(defn default-value-for-maybe [schema]
+  (let [convert
+        (fn [[key value :as entry]]
+          (if (and (keyword? key) (maybe? value))
+            [key (schema-tools/default value nil)]
+            entry))]
+    (walk/postwalk
+      #(if (map-entry? %) (convert %) %)
+      schema)))
 
 (def Key schema/Int)
 (def Id {:id Key})
