@@ -3,14 +3,16 @@
             [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]
             [solita.common.schema :as xschema]
-            [solita.etp.schema.geo :as geo-schema]))
+            [solita.etp.schema.geo :as geo-schema])
+  (:import (schema.core Predicate EnumSchema Constrained)))
 
 (defn optional-properties [schema]
   (m/map-values
     #(cond
        (xschema/maybe? %) %
-       (instance? schema.core.Constrained %) (schema/maybe %)
-       (instance? schema.core.EnumSchema %) (schema/maybe %)
+       (instance? Constrained %) (schema/maybe %)
+       (instance? EnumSchema %) (schema/maybe %)
+       (instance? Predicate %) (schema/maybe %)
        (class? %) (schema/maybe %)
        (map? %) (optional-properties %)
        (vector? %) (mapv optional-properties %)
