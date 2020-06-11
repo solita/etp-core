@@ -213,7 +213,8 @@
 (def EnergiatodistusSave2018
   "This schema is used in add-energiatodistus and update-energiatodistus services"
   (optional-properties
-    {:perustiedot                    Perustiedot
+    {:korvattu-energiatodistus-id    common-schema/Key
+     :perustiedot                    Perustiedot
      :lahtotiedot                    Lahtotiedot
      :tulokset                       Tulokset
      :toteutunut-ostoenergiankulutus ToteutunutOstoenergiankulutus
