@@ -2,12 +2,13 @@
   (:require [solita.common.map :as m]
             [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]
+            [solita.common.schema :as xschema]
             [solita.etp.schema.geo :as geo-schema]))
 
 (defn optional-properties [schema]
   (m/map-values
     #(cond
-       (common-schema/maybe? %) %
+       (xschema/maybe? %) %
        (instance? schema.core.Constrained %) (schema/maybe %)
        (instance? schema.core.EnumSchema %) (schema/maybe %)
        (class? %) (schema/maybe %)

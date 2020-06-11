@@ -1,7 +1,7 @@
 (ns solita.etp.api.energiatodistus
   (:require [ring.util.response :as r]
             [schema.core :as schema]
-            [solita.common.coerce :as common-coerce]
+            [solita.common.schema :as xschema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.api.energiatodistus-crud :as crud-api]
@@ -12,22 +12,16 @@
             [solita.etp.service.energiatodistus-xlsx :as energiatodistus-xlsx-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.security :as security]
-            [solita.etp.api.response :as api-response]
-            [schema-tools.coerce :as schema-tools-coerce]))
-
-(defn missing-maybe-values-coercer [schema]
-  (schema-tools-coerce/coercer
-    (common-schema/default-value-for-maybe schema)
-    schema-tools-coerce/default-key-matcher))
+            [solita.etp.api.response :as api-response]))
 
 (def external-routes
   [["/energiatodistukset/2018" {:middleware [[security/wrap-whoami-from-basic-auth]
                                              [security/wrap-access]
                                              [security/wrap-db-application-name]]}
     ["" (crud-api/post 2018
-          (common-schema/optional-key-for-maybe
+          (xschema/optional-key-for-maybe
             energiatodistus-schema/EnergiatodistusSave2018)
-          (missing-maybe-values-coercer
+          (xschema/missing-maybe-values-coercer
             energiatodistus-schema/EnergiatodistusSave2018))]]])
 
 (defn pdf-route [version]
