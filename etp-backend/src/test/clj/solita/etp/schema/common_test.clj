@@ -1,8 +1,7 @@
 (ns solita.etp.schema.common-test
   (:require [clojure.test :as t]
             [schema.core :as schema]
-            [solita.etp.schema.common :as common]
-            [schema-tools.core :as schema-tools]))
+            [solita.etp.schema.common :as common]))
 
 (t/deftest valid-henkilotunnus?-test
   (t/is (some? (schema/check common/Henkilotunnus "131052B308T")))
