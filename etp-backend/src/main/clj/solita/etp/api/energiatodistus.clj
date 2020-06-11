@@ -10,6 +10,7 @@
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf-service]
             [solita.etp.service.energiatodistus-xlsx :as energiatodistus-xlsx-service]
+            [solita.etp.service.e-luokka :as e-luokka-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.security :as security]
             [solita.etp.api.response :as api-response]))
@@ -116,4 +117,19 @@
            :parameters {:path {:versio common-schema/Key}}
            :responses  {200 {:body [energiatodistus-schema/Alakayttotarkoitusluokka]}}
            :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
-                         (r/response (energiatodistus-service/find-alakayttotarkoitukset db versio)))}}]])
+                         (r/response (energiatodistus-service/find-alakayttotarkoitukset db versio)))}}]
+   ["/e-luokka/:versio/:alakayttotarkoitusluokka/:nettoala/:e-luku"
+    {:get {:summary    "Laske energiatodistukselle energiatehokkuusluokka"
+           :parameters {:path {:versio common-schema/Key
+                               :alakayttotarkoitusluokka schema/Str
+                               :nettoala common-schema/FloatPos
+                               :e-luku common-schema/FloatPos}}
+           :responses  {200 {:body {:e-luokka schema/Str}}}
+           :handler    (fn [{{{:keys [versio alakayttotarkoitusluokka nettoala e-luku]} :path}
+                            :parameters :keys [db]}]
+                         (r/response (e-luokka-service/find-e-luokka
+                                      db
+                                      versio
+                                      alakayttotarkoitusluokka
+                                      nettoala
+                                      e-luku)))}}]])
