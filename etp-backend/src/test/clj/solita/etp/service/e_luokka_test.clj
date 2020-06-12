@@ -3,10 +3,6 @@
             [solita.etp.test-system :as ts]
             [solita.etp.service.e-luokka :as service]))
 
-(t/deftest limit-test
-  (t/is (= 125 (service/limit 150 215 0.6)))
-  (t/is (= 124 (service/limit 150.5 215 0.6))))
-
 (t/deftest e-luokka-from-e-luku-and-nettoala-test
   (t/is (= "C" (service/e-luokka-from-e-luku-and-nettoala
                 100
@@ -26,6 +22,15 @@
 (t/deftest pienet-asuinrakennukset-150-600-2018-test
   (t/is (= "F" (service/pienet-asuinrakennukset-150-600-2018 411 600)))
   (t/is (= "G" (service/pienet-asuinrakennukset-150-600-2018 412 600))))
+
+(t/deftest pienet-asuinrakennukset-600-2018-test
+  (t/is (= "A" (service/pienet-asuinrakennukset-600-2018 70 800)))
+  (t/is (= "B" (service/pienet-asuinrakennukset-600-2018 106 800)))
+  (t/is (= "C" (service/pienet-asuinrakennukset-600-2018 130 800)))
+  (t/is (= "D" (service/pienet-asuinrakennukset-600-2018 210 800)))
+  (t/is (= "E" (service/pienet-asuinrakennukset-600-2018 340 800)))
+  (t/is (= "F" (service/pienet-asuinrakennukset-600-2018 410 800)))
+  (t/is (= "G" (service/pienet-asuinrakennukset-600-2018 1000 800))))
 
 (t/deftest find-e-luokka-test
   (t/is (= {:e-luokka "A"} (service/find-e-luokka ts/*db* 2018 "ABC" 100 120))))

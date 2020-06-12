@@ -1,11 +1,15 @@
 (ns solita.etp.service.e-luokka)
 
-(defn limit [nettoala x kerroin]
-  (->> nettoala (* kerroin) (- x) int))
-
 (defn e-luokka-from-e-luku-and-nettoala [e-luku nettoala limits default-luokka]
-  (or (some (fn [[x kerroin e-luokka]]
-              (if (<= e-luku (limit nettoala x kerroin))
+  (or (some (fn [[limit kerroin e-luokka]]
+              (if (<= e-luku (->> nettoala (* kerroin) (- limit) int))
+                e-luokka))
+            limits)
+      default-luokka))
+
+(defn e-luokka-from-e-luku [e-luku limits default-luokka]
+  (or (some (fn [[limit e-luokka]]
+              (if (<= e-luku limit)
                 e-luokka))
             limits)
       default-luokka))
@@ -24,6 +28,12 @@
    nettoala
    [[83 0.02 "A"] [131 0.04 "B"] [173 0.07 "C"] [253 0.07 "D"] [383 0.07 "E"]
     [453 0.07 "F"]]
+   "G"))
+
+(defn pienet-asuinrakennukset-600-2018 [e-luku _]
+  (e-luokka-from-e-luku
+   e-luku
+   [[70 "A"] [106 "B"] [130 "C"] [210 "D"] [340 "E"] [410 "F"]]
    "G"))
 
 (defn find-e-luokka [db versio alakayttotarkoitusluokka nettoala e-luku]
