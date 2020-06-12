@@ -19,9 +19,13 @@
                 [[100 2 "A"]]
                 "B"))))
 
-(t/deftest pienet-asuinrakennukset-50-150-2018
+(t/deftest pienet-asuinrakennukset-50-150-2018-test
   (t/is (= "B" (service/pienet-asuinrakennukset-50-150-2018 125 150)))
   (t/is (= "C" (service/pienet-asuinrakennukset-50-150-2018 126 150))))
+
+(t/deftest pienet-asuinrakennukset-150-600-2018-test
+  (t/is (= "F" (service/pienet-asuinrakennukset-150-600-2018 411 600)))
+  (t/is (= "G" (service/pienet-asuinrakennukset-150-600-2018 412 600))))
 
 (t/deftest find-e-luokka-test
   (t/is (= {:e-luokka "A"} (service/find-e-luokka ts/*db* 2018 "ABC" 100 120))))

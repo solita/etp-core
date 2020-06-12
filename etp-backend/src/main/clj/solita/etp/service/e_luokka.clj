@@ -18,5 +18,13 @@
     [532 0.6 "F"]]
    "G"))
 
+(defn pienet-asuinrakennukset-150-600-2018 [e-luku nettoala]
+  (e-luokka-from-e-luku-and-nettoala
+   e-luku
+   nettoala
+   [[83 0.02 "A"] [131 0.04 "B"] [173 0.07 "C"] [253 0.07 "D"] [383 0.07 "E"]
+    [453 0.07 "F"]]
+   "G"))
+
 (defn find-e-luokka [db versio alakayttotarkoitusluokka nettoala e-luku]
   {:e-luokka "A"})
