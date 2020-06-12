@@ -4,16 +4,21 @@
             [solita.etp.service.e-luokka :as service]))
 
 (t/deftest e-luokka-from-e-luku-and-nettoala-test
-  (t/is (= "C" (service/e-luokka-from-e-luku-and-nettoala
-                100
-                100
-                [[100 2 "A"] [200 2 "B"] [300 2 "C"] [400 2 "D"]]
-                "E")))
-  (t/is (= "B" (service/e-luokka-from-e-luku-and-nettoala
-                100
-                100
-                [[100 2 "A"]]
-                "B"))))
+  (let [limits [[100 2 "A"] [200 2 "B"] [300 2 "C"] [400 2 "D"]]]
+    (t/is (= "C" (service/e-luokka-from-e-luku-and-nettoala 100
+                                                            100
+                                                            limits
+                                                            "G")))
+    (t/is (= "G" (service/e-luokka-from-e-luku-and-nettoala 10000
+                                                            100
+                                                            limits
+                                                            "G")))))
+
+(t/deftest e-luokka-from-e-luku-test
+  (let [limits [[100 "A"] [200 "B"] [300 "C"]]]
+    (t/is (= "A" (service/e-luokka-from-e-luku 100 limits "D")))
+    (t/is (= "C" (service/e-luokka-from-e-luku 300 limits "D")))
+    (t/is (= "D" (service/e-luokka-from-e-luku 301 limits "D")))))
 
 (t/deftest pienet-asuinrakennukset-50-150-2018-test
   (t/is (= "B" (service/pienet-asuinrakennukset-50-150-2018 125 150)))
