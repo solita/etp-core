@@ -109,8 +109,8 @@
         ;; TODO Tämän rakennuksen energiatehokkuusluokka
 
         "C38" [:perustiedot :keskeiset-suositukset-fi]}
-     2 {"E4" [:perustiedot :alakayttotarkoitus-fi]
-        "D5" [:perustiedot :valmistusmisvuosi]
+     2 {"D4" [:perustiedot :alakayttotarkoitus-fi]
+        "D5" [:perustiedot :valmistumisvuosi]
         "F5" [:lahtotiedot :lammitetty-nettoala]
         "D7" [:lahtotiedot :rakennusvaippa :ilmanvuotoluku]
 
