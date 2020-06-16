@@ -112,7 +112,7 @@
      2 {"E4" [:perustiedot :alakayttotarkoitus-fi]
         "D5" [:perustiedot :valmistusmisvuosi]
         "F5" [:lahtotiedot :lammitetty-nettoala]
-        "D7" [:lahtotiedot :rakennusvaippa :ilmanvaihtoluku]
+        "D7" [:lahtotiedot :rakennusvaippa :ilmanvuotoluku]
 
         "D10" [:lahtotiedot :rakennusvaippa :ulkoseinat :ala]
         "E10" [:lahtotiedot :rakennusvaippa :ulkoseinat :U]
