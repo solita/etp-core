@@ -233,7 +233,6 @@
         "F21" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella]
         "G21" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella]
         "D22" [:tulokset :kaytettavat-energiamuodot :summa]
-        "E22" [:tulokset :kaytettavat-energiamuodot :kerroin-summa]
         "F22" [:tulokset :kaytettavat-energiamuodot :kertoimella-summa]
         "G22" [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]
 

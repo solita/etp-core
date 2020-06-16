@@ -232,14 +232,6 @@
                       [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine])
         (combine-keys +
                       0
-                      [:tulokset :kaytettavat-energiamuodot :kerroin-summa]
-                      [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]
-                      [:tulokset :kaytettavat-energiamuodot :sahko-kerroin]
-                      [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]
-                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]
-                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin])
-        (combine-keys +
-                      0
                       [:tulokset :kaytettavat-energiamuodot :kertoimella-summa]
                       [:tulokset :kaytettavat-energiamuodot :kaukolampo-kertoimella]
                       [:tulokset :kaytettavat-energiamuodot :sahko-kertoimella]
