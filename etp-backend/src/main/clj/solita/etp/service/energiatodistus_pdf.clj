@@ -76,7 +76,7 @@
 
         "B50" (fn [_] (.format date-formatter today))
         "K50" (fn [_] (.format date-formatter (.plusYears today 10)))}
-     1 {"F5" [:lahtotiedot :lammitetty-nettoala]
+     1 {"F5" #(format "%s m²" (-> % :lahtotiedot :lammitetty-nettoala))
         "F6" [:lahtotiedot :lammitys :kuvaus-fi]
         "F7" [:lahtotiedot :ilmanvaihto :kuvaus-fi]
         "F14" [:tulokset :kaytettavat-energiamuodot :kaukolampo]
