@@ -62,14 +62,23 @@
       (str/replace #"\-ua$" "-UA")
       keyword))
 
+(def db-row->energiatodistus
+  (comp coerce-energiatodistus
+        (partial pg-composite/parse-composite-type-literals db-composite-types)
+        #(set/rename-keys % (set/map-invert db-abbreviations))
+        (partial flat/flat->tree #"\$")
+        (partial map/map-keys convert-db-key-case)
+        db/kebab-case-keys))
+
+(def energiatodistus->db-row
+  (comp
+    (partial flat/tree->flat "$")
+    #(set/rename-keys % db-abbreviations)
+    (partial pg-composite/write-composite-type-literals db-composite-types)))
+
 (defn find-energiatodistus
   ([db id]
-   (first (map (comp coerce-energiatodistus
-                     (partial pg-composite/parse-composite-type-literals db-composite-types)
-                     #(set/rename-keys % (set/map-invert db-abbreviations))
-                     (partial flat/flat->tree #"\$")
-                     (partial map/map-keys convert-db-key-case)
-                     db/kebab-case-keys)
+   (first (map db-row->energiatodistus
                (energiatodistus-db/select-energiatodistus db {:id id}))))
   ([db whoami id]
    (let [energiatodistus (find-energiatodistus db id)]
@@ -80,7 +89,7 @@
        (exception/throw-forbidden!)))))
 
 (defn find-energiatodistukset-by-laatija [db laatija-id tila-id]
-  (map (comp coerce-energiatodistus json/merge-data db/kebab-case-keys)
+  (map db-row->energiatodistus
        (energiatodistus-db/select-energiatodistukset-by-laatija
          db {:laatija-id laatija-id :tila-id tila-id})))
 
@@ -89,12 +98,10 @@
 
 (defn add-energiatodistus! [db whoami versio energiatodistus]
   (-> (jdbc/insert! db :energiatodistus
-        (as-> energiatodistus $
-          (pg-composite/write-composite-type-literals db-composite-types $)
-          (assoc $ :versio versio
-                   :laatija-id (:id whoami))
-          (set/rename-keys $ db-abbreviations)
-          (flat/tree->flat "$" $)) db/default-opts)
+        (-> energiatodistus
+          (assoc :versio versio
+                 :laatija-id (:id whoami))
+          energiatodistus->db-row) db/default-opts)
     first
     :id))
 
@@ -105,8 +112,9 @@
 
 (defn update-energiatodistus-luonnos! [db whoami id energiatodistus]
   (assert-laatija! whoami (find-energiatodistus db id))
-  (energiatodistus-db/update-energiatodistus-luonnos! db
-     {:id id :data (json/write-value-as-string energiatodistus)}))
+  (jdbc/update! db :energiatodistus
+                (energiatodistus->db-row energiatodistus)
+                ["id = ? and tila_id = 0" id] db/default-opts))
 
 (defn delete-energiatodistus-luonnos! [db whoami id]
   (assert-laatija! whoami (find-energiatodistus db id))
