@@ -8,7 +8,7 @@
 (def tmp-dir "tmp/")
 
 (def col-order [:id :versio :laatija-id :laatija-fullname
-                :allekirjoitusaika :perustiedot
+                :allekirjoitusaika :korvattu-energiatodistus-id :perustiedot
                 :lahtotiedot :tulokset :toteutunut-ostoenergiankulutus :huomiot
                 :lisamerkintoja-fi :lisamerkintoja-sv])
 
