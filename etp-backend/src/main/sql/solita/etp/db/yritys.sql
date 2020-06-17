@@ -1,11 +1,17 @@
 -- name: insert-yritys<!
-insert into yritys (ytunnus, data) values (:ytunnus, :data :: JSONB) returning id
+INSERT INTO yritys (ytunnus, nimi, verkkolaskuosoite, jakeluosoite, postinumero, postitoimipaikka, maa)
+VALUES (:ytunnus, :nimi, :verkkolaskuosoite, :jakeluosoite, :postinumero, :postitoimipaikka, :maa)
+RETURNING id
 
 -- name: update-yritys!
-update yritys set data = :data :: JSONB where id = :id
+UPDATE yritys SET nimi = :nimi, verkkolaskuosoite = :verkkolaskuosoite, jakeluosoite = :jakeluosoite, postinumero = :postinumero, postitoimipaikka = :postitoimipaikka, maa = :maa
+WHERE id = :id
 
 -- name: select-yritys
-select id, ytunnus, data from yritys where id = :id
+SELECT id, ytunnus, nimi, verkkolaskuosoite, jakeluosoite, postinumero, postitoimipaikka, maa
+FROM yritys
+WHERE id = :id
 
 -- name: select-all-yritykset
-select id, ytunnus, data from yritys
+SELECT id, ytunnus, nimi, verkkolaskuosoite, jakeluosoite, postinumero, postitoimipaikka, maa
+FROM yritys
