@@ -13,7 +13,7 @@
 (t/use-fixtures :each ts/fixture)
 
 (def energiatodistus-generators
-  {schema.core/Num          (g/always 1.0)
+  {schema.core/Num          (g/always 1.0M)
    common-schema/Year       (g/always 2021)
    schema/Rakennustunnus    (g/always "1234567890")
    schema/YritysPostinumero (g/always "00100")
@@ -45,10 +45,14 @@
           :tila-id 0
           :allekirjoitusaika nil}))
 
+(defn generate-energiatodistus []
+  (-> (g/generate schema/EnergiatodistusSave2018
+                  energiatodistus-generators)
+      (assoc :korvattu-energiatodistus-id nil)))
+
 (t/deftest add-and-find-energiatodistus-test
   (let [laatija-id (add-laatija!)]
-    (doseq [energiatodistus (repeatedly 100 #(g/generate schema/EnergiatodistusSave2018
-                                                         energiatodistus-generators))
+    (doseq [energiatodistus (repeatedly 100 generate-energiatodistus)
             :let [id (add-energiatodistus! energiatodistus laatija-id)]]
       (t/is (= (complete-energiatodistus energiatodistus id laatija-id)
                (find-energiatodistus id))))))

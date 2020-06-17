@@ -4,22 +4,72 @@
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.json :as json]
             [solita.etp.service.rooli :as rooli-service]
+            [solita.postgresql.composite :as pg-composite]
+            [solita.common.schema :as xschema]
             [schema.coerce :as coerce]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [clojure.set :as set]
+            [flathead.flatten :as flat]
+            [clojure.string :as str]
+            [schema.core :as schema]
+            [solita.common.map :as map]))
 
 ; *** Require sql functions ***
 (db/require-queries 'energiatodistus)
 
 ; *** Conversions from database data types ***
-(def coerce-energiatodistus (coerce/coercer energiatodistus-schema/Energiatodistus json/json-coercions))
+(def coerce-energiatodistus (coerce/coercer energiatodistus-schema/Energiatodistus
+                                            (assoc json/json-coercions
+                                              schema/Num xschema/parse-big-decimal)))
 
 (def tilat [:draft :in-signing :signed :discarded :replaced :deleted])
 
 (defn tila-key [tila-id] (nth tilat tila-id))
 
+(def db-abbreviations
+  {:perustiedot :pt
+   :lahtotiedot :lt
+   :tulokset :t
+   :toteutunut-ostoenergiankulutus :to
+   :huomiot                        :h})
+
+(def db-toimenpide-type
+  [:nimi-fi
+   :nimi-sv
+   :lampo
+   :sahko
+   :jaahdytys
+   :eluvun-muutos])
+
+(def db-composite-types
+  {:toteutunut-ostoenergiankulutus
+    {:ostetut-polttoaineet
+     {:vapaa [:nimi
+              :yksikko
+              :muunnoskerroin
+              :maara-vuodessa]}}
+   :huomiot
+    {:iv-ilmastointi { :toimenpide db-toimenpide-type }
+     :valaistus-muut { :toimenpide db-toimenpide-type }
+     :lammitys { :toimenpide db-toimenpide-type }
+     :ymparys { :toimenpide db-toimenpide-type }
+     :alapohja-ylapohja{ :toimenpide db-toimenpide-type }}})
+
+(defn convert-db-key-case [key]
+  (-> key
+      name
+      (str/replace #"\$u$" "\\$U")
+      (str/replace #"\-ua$" "-UA")
+      keyword))
+
 (defn find-energiatodistus
   ([db id]
-   (first (map (comp coerce-energiatodistus json/merge-data db/kebab-case-keys)
+   (first (map (comp coerce-energiatodistus
+                     (partial pg-composite/parse-composite-type-literals db-composite-types)
+                     #(set/rename-keys % (set/map-invert db-abbreviations))
+                     (partial flat/flat->tree #"\$")
+                     (partial map/map-keys convert-db-key-case)
+                     db/kebab-case-keys)
                (energiatodistus-db/select-energiatodistus db {:id id}))))
   ([db whoami id]
    (let [energiatodistus (find-energiatodistus db id)]
@@ -38,10 +88,15 @@
   (map :id (energiatodistus-db/select-signed-energiatodistukset-like-id db {:id id})))
 
 (defn add-energiatodistus! [db whoami versio energiatodistus]
-  (:id (energiatodistus-db/insert-energiatodistus<!
-         db (assoc (json/data-db-row energiatodistus)
-              :versio versio
-              :laatija-id (:id whoami)))))
+  (-> (jdbc/insert! db :energiatodistus
+        (as-> energiatodistus $
+          (pg-composite/write-composite-type-literals db-composite-types $)
+          (assoc $ :versio versio
+                   :laatija-id (:id whoami))
+          (set/rename-keys $ db-abbreviations)
+          (flat/tree->flat "$" $)) db/default-opts)
+    first
+    :id))
 
 (defn assert-laatija! [whoami energiatodistus]
   (when-not (= (:laatija-id energiatodistus) (:id whoami))
