@@ -1,5 +1,6 @@
 (ns user
-  (:require [integrant.repl :refer [clear go halt prep init reset reset-all]]))
+  (:require [integrant.repl :refer [clear go halt prep init reset reset-all]]
+            [clojure.test :as t]))
 
 (integrant.repl/set-prep!
  (fn []
