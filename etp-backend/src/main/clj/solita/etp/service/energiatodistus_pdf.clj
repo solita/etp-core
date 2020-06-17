@@ -76,7 +76,7 @@
 
         "B50" (fn [_] (.format date-formatter today))
         "K50" (fn [_] (.format date-formatter (.plusYears today 10)))}
-     1 {"F5" [:lahtotiedot :lammitetty-nettoala]
+     1 {"F5" #(format "%s m²" (-> % :lahtotiedot :lammitetty-nettoala))
         "F6" [:lahtotiedot :lammitys :kuvaus-fi]
         "F7" [:lahtotiedot :ilmanvaihto :kuvaus-fi]
         "F14" [:tulokset :kaytettavat-energiamuodot :kaukolampo]
@@ -109,10 +109,10 @@
         ;; TODO Tämän rakennuksen energiatehokkuusluokka
 
         "C38" [:perustiedot :keskeiset-suositukset-fi]}
-     2 {"E4" [:perustiedot :alakayttotarkoitus-fi]
-        "D5" [:perustiedot :valmistusmisvuosi]
+     2 {"D4" [:perustiedot :alakayttotarkoitus-fi]
+        "D5" [:perustiedot :valmistumisvuosi]
         "F5" [:lahtotiedot :lammitetty-nettoala]
-        "D7" [:lahtotiedot :rakennusvaippa :ilmanvaihtoluku]
+        "D7" [:lahtotiedot :rakennusvaippa :ilmanvuotoluku]
 
         "D10" [:lahtotiedot :rakennusvaippa :ulkoseinat :ala]
         "E10" [:lahtotiedot :rakennusvaippa :ulkoseinat :U]
@@ -233,7 +233,6 @@
         "F21" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella]
         "G21" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella]
         "D22" [:tulokset :kaytettavat-energiamuodot :summa]
-        "E22" [:tulokset :kaytettavat-energiamuodot :kerroin-summa]
         "F22" [:tulokset :kaytettavat-energiamuodot :kertoimella-summa]
         "G22" [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]
 
