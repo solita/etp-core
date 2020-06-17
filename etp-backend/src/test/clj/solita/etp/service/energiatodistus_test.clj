@@ -7,7 +7,8 @@
             [solita.etp.service.kayttaja-laatija-test :as laatija-service-test]
             [solita.etp.schema.energiatodistus :as schema]
             [solita.etp.schema.common :as common-schema]
-            [solita.etp.schema.geo :as geo-schema])
+            [solita.etp.schema.geo :as geo-schema]
+            [solita.common.jdbc :as common-jdbc])
   (:import [java.time Instant]))
 
 (t/use-fixtures :each ts/fixture)
@@ -23,14 +24,18 @@
    common-schema/Instant    (g/always (Instant/now))
    (schema.core/eq 2018)    (g/always 2018)})
 
-(defn add-laatija! []
-  (-> (laatija-service/upsert-kayttaja-laatijat! ts/*db*
-        (laatija-service-test/generate-KayttajaLaatijaAdds 1))
-      first))
+(defn add-laatija!
+  ([] (add-laatija! ts/*db*))
+  ([db]
+    (-> (laatija-service/upsert-kayttaja-laatijat!
+          db (laatija-service-test/generate-KayttajaLaatijaAdds 1))
+        first)))
 
-(defn add-energiatodistus! [energiatodistus laatija-id]
-  (service/add-energiatodistus!
-    (ts/db-user laatija-id) {:id laatija-id} 2018 energiatodistus))
+(defn add-energiatodistus!
+  ([energiatodistus laatija-id]
+   (add-energiatodistus! (ts/db-user laatija-id) energiatodistus laatija-id))
+  ([db energiatodistus laatija-id]
+    (service/add-energiatodistus! db {:id laatija-id} 2018 energiatodistus)))
 
 (defn find-energiatodistus [id]
   (let [et (service/find-energiatodistus ts/*db* id)]
@@ -50,6 +55,13 @@
                   energiatodistus-generators)
       (assoc :korvattu-energiatodistus-id nil)))
 
+(defn generate-energiatodistukset-to-db [db amount]
+  (common-jdbc/with-application-name-support
+    #(let [laatija-id (add-laatija! db)
+           user-db (ts/db-user db laatija-id)]
+      (doseq [energiatodistus (repeat amount (generate-energiatodistus))]
+        (add-energiatodistus! user-db energiatodistus laatija-id)))))
+
 (t/deftest add-and-find-energiatodistus-test
   (let [laatija-id (add-laatija!)]
     (doseq [energiatodistus (repeatedly 100 generate-energiatodistus)
@@ -61,7 +73,7 @@
   (let [patevyydentoteaja {:rooli 1}
         paakayttaja {:rooli 2}
         laatija-id (add-laatija!)
-        energiatodistus (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators)
+        energiatodistus (generate-energiatodistus)
         id (add-energiatodistus! energiatodistus laatija-id)]
     (t/is (= (complete-energiatodistus energiatodistus id laatija-id)
              (-> (service/find-energiatodistus ts/*db* paakayttaja id)
@@ -72,15 +84,15 @@
 
 (t/deftest update-energiatodistus-test
   (let [laatija-id (add-laatija!)
-        id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators) laatija-id)
-        update-energiatodistus (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators)]
+        id (add-energiatodistus! (generate-energiatodistus) laatija-id)
+        update-energiatodistus (generate-energiatodistus)]
     (service/update-energiatodistus-luonnos! ts/*db* {:id laatija-id} id update-energiatodistus)
     (t/is (= (complete-energiatodistus update-energiatodistus id laatija-id)
              (find-energiatodistus id)))))
 
 (t/deftest create-energiatodistus-and-delete-test
   (let [laatija-id (add-laatija!)
-        id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators) laatija-id)]
+        id (add-energiatodistus! (generate-energiatodistus) laatija-id)]
     (service/delete-energiatodistus-luonnos! ts/*db* {:id laatija-id} id)))
 
 (defn energiatodistus-tila [id] (-> id find-energiatodistus :tila-id service/tila-key))
@@ -88,7 +100,7 @@
 (t/deftest start-energiatodistus-signing!-test
   (let [laatija-id (add-laatija!)
         whoami {:id laatija-id}
-        id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators) laatija-id)]
+        id (add-energiatodistus! (generate-energiatodistus) laatija-id)]
     (t/is (= (energiatodistus-tila id) :draft))
     (t/is (= (service/start-energiatodistus-signing! ts/*db* whoami id) :ok))
     (t/is (= (energiatodistus-tila id) :in-signing))
@@ -97,7 +109,7 @@
 (t/deftest stop-energiatodistus-signing!-test
   (let [laatija-id (add-laatija!)
         whoami {:id laatija-id}
-        id (add-energiatodistus! (g/generate schema/EnergiatodistusSave2018 energiatodistus-generators) laatija-id)]
+        id (add-energiatodistus! (generate-energiatodistus) laatija-id)]
     (t/is (= (energiatodistus-tila id) :draft))
     (t/is (=  (service/end-energiatodistus-signing! ts/*db* whoami id)
               :not-in-signing))

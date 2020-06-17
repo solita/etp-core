@@ -43,5 +43,7 @@
     (drop-db! management-db db-name)
     (ig/halt! management-system)))
 
-(defn db-user [kayttaja-id]
-  (assoc *db* :application-name (str kayttaja-id "@core.etp.test")))
+(defn db-user
+  ([kayttaja-id] (db-user *db* kayttaja-id))
+  ([db kayttaja-id]
+    (assoc db :application-name (str kayttaja-id "@core.etp.test"))))
