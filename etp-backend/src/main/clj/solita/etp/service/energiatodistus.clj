@@ -113,6 +113,14 @@
 (defn find-alakayttotarkoitukset [db versio]
   (energiatodistus-db/select-alakayttotarkoitusluokat-by-versio db {:versio versio}))
 
+(defn find-kayttotarkoitus-id-by-alakayttotarkoitus-id [db versio id]
+  (-> db
+      (energiatodistus-db/select-kayttotarkoitusluokka-id-by-versio-and-alakayttotarkoitusluokka-id
+       {:versio versio
+        :id id})
+      first
+      :id))
+
 ;;
 ;; Energiatodistuksen "denormalisointi" and "laskennalliset kentät""
 ;;

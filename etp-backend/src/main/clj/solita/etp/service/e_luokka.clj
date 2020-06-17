@@ -1,4 +1,6 @@
-(ns solita.etp.service.e-luokka)
+(ns solita.etp.service.e-luokka
+  (:require [clojure.core.match :as match]
+            [solita.etp.service.energiatodistus :as energiatodistus-service]))
 
 (defn e-luokka-from-e-luku-and-nettoala [e-luku nettoala limits default-luokka]
   (or (some (fn [[limit kerroin e-luokka]]
@@ -104,5 +106,59 @@
    [[90 "A"] [130 "B"] [170 "C"] [190 "D"] [240 "E"] [280 "F"]]
    "G"))
 
-(defn find-e-luokka [db versio alakayttotarkoitusluokka nettoala e-luku]
-  {:e-luokka "A"})
+(defn e-luokka-f [versio kayttotarkoitus-id alakayttotarkoitus-id nettoala]
+  (match/match [versio kayttotarkoitus-id alakayttotarkoitus-id nettoala]
+               [2013 1 _ (_ :guard #(<= % 120))] pienet-asuinrakennukset-120-2013
+               [2013 1 _ (_ :guard #(<= % 150))] pienet-asuinrakennukset-120-150-2013
+               [2013 1 _ (_ :guard #(<= % 600))] pienet-asuinrakennukset-150-600-2013-2018
+               [2013 1 _ (_ :guard #(> % 600))] pienet-asuinrakennukset-600-2013-2018
+
+               ;; For 2018, rivitalot is part of käyttötarkoitusluokka 1 for some reason
+               ;; and for 2013 it is a separate käyttötarkoitusluokka
+               [2013 2 _ _] rivitalot-2013-2018
+               [2018 1 "RT" _] rivitalot-2013-2018
+               [2018 1 "AK2" _] rivitalot-2013-2018
+
+               ;; Even though the table is for building between 50-150 squares,
+               ;; this table is used for even smaller buildings
+               [2018 1 _ (_ :guard #(<= % 150))] pienet-asuinrakennukset-50-150-2018
+               [2018 1 _ (_ :guard #(<= % 600))] pienet-asuinrakennukset-150-600-2013-2018
+               [2018 1 _ (_ :guard #(> % 600))] pienet-asuinrakennukset-600-2013-2018
+
+               ;; Luckily the rest of the tables are pretty much the same for 2013
+               ;; and 2018
+
+               [2013 3 _ _] asuinkerrostalot-2013-2018
+               [2018 2 _ _] asuinkerrostalot-2013-2018
+
+               [2013 4 _ _] toimistorakennukset-2013-2018
+               [2018 3 _ _] toimistorakennukset-2013-2018
+
+               [2013 5 _ _] liikerakennukset-2013-2018
+               [2018 4 _ _] liikerakennukset-2013-2018
+
+               [2013 6 _ _] majoitusliikerakennukset-2013-2018
+               [2018 5 _ _] majoitusliikerakennukset-2013-2018
+
+               [2013 7 _ _] opetusrakennukset-2013-2018
+               [2018 6 _ _] opetusrakennukset-2013-2018
+
+               [2013 8 _ _] liikuntahallit-2013-2018
+               [2018 7 _ _] liikuntahallit-2013-2018
+
+               [2013 9 _ _] sairaalat-2013-2018
+               [2018 8 _ _] sairaalat-2013-2018
+
+               ;; TODO 2013 10 and 11?
+
+               [2018 9 _ _] muut-2018
+
+               :else (constantly "?")))
+
+(defn find-e-luokka [db versio alakayttotarkoitus-id nettoala e-luku]
+  (let [kayttotarkoitus-id (energiatodistus-service/find-kayttotarkoitus-id-by-alakayttotarkoitus-id
+                            db
+                            versio
+                            alakayttotarkoitus-id)
+        f (e-luokka-f versio kayttotarkoitus-id alakayttotarkoitus-id nettoala)]
+    {:e-luokka (f e-luku nettoala)}))
