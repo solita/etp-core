@@ -10,12 +10,12 @@ create table laatija (
   laatimiskielto boolean NOT NULL DEFAULT false,
   toimintaalue int,
   muut_toimintaalueet int[] NOT NULL DEFAULT '{}',
+  wwwosoite text,
   julkinen_puhelin boolean NOT NULL DEFAULT false,
   julkinen_email boolean NOT NULL DEFAULT false,
   julkinen_osoite boolean NOT NULL DEFAULT false,
   jakeluosoite text NOT NULL,
   postinumero text NOT NULL,
   postitoimipaikka text NOT NULL,
-  wwwosoite text,
   maa char(2) REFERENCES country (id) NOT NULL DEFAULT 'FI'
 );
