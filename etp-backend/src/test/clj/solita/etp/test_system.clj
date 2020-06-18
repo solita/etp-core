@@ -14,7 +14,8 @@
               :current-schema "public"}))
 
 (defn config-for-tests [db-name]
-  (config/db {:database-name db-name}))
+  (config/db {:database-name db-name
+              :re-write-batched-inserts true}))
 
 (def db-name-counter (atom 0))
 

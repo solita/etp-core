@@ -8,7 +8,8 @@
             [solita.etp.schema.energiatodistus :as schema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.geo :as geo-schema]
-            [solita.common.jdbc :as common-jdbc])
+            [clojure.java.jdbc :as jdbc]
+            [solita.etp.db :as db])
   (:import [java.time Instant]))
 
 (t/use-fixtures :each ts/fixture)
@@ -55,12 +56,23 @@
                   energiatodistus-generators)
       (assoc :korvattu-energiatodistus-id nil)))
 
-(defn generate-energiatodistukset-to-db [db amount]
-  (common-jdbc/with-application-name-support
-    #(let [laatija-id (add-laatija! db)
-           user-db (ts/db-user db laatija-id)]
-      (doseq [energiatodistus (repeat amount (generate-energiatodistus))]
-        (add-energiatodistus! user-db energiatodistus laatija-id)))))
+(defn add-energiatodistukset! [db laatija-id versio energiatodistukset]
+  (let [db-rows (map #(-> % (assoc :versio versio :laatija-id laatija-id)
+                          service/energiatodistus->db-row)
+                     energiatodistukset)]
+    (jdbc/insert-multi!
+      db :energiatodistus
+      (keys (first db-rows))
+      (map vals db-rows)
+      db/default-opts)))
+
+#_(t/deftest add-energiatodistukset-for-performance-testing
+  (let [laatija-id (add-laatija!)
+        energiatodistukset (vec (apply pcalls (repeat 5000 generate-energiatodistus)))
+        db (ts/db-user laatija-id)]
+    (time
+      (doseq [batch (partition 1000 energiatodistukset)]
+        (time (add-energiatodistukset! db laatija-id 2018 batch))))))
 
 (t/deftest add-and-find-energiatodistus-test
   (let [laatija-id (add-laatija!)]
