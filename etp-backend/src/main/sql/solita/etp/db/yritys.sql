@@ -15,3 +15,6 @@ WHERE id = :id
 -- name: select-all-yritykset
 SELECT id, ytunnus, nimi, verkkolaskuosoite, jakeluosoite, postinumero, postitoimipaikka, maa
 FROM yritys
+
+-- name: select-all-verkkolaskuoperaattorit
+SELECT id, valittajatunnus, nimi FROM verkkolaskuoperaattori;
