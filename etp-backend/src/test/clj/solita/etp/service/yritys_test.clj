@@ -16,7 +16,9 @@
        (map #(str % "-" (common-schema/ytunnus-checksum %)))))
 
 (t/deftest add-and-find-yritys-test
-  (doseq [yritys (map #(c/complete {:ytunnus % :maa "FI"} yritys-schema/YritysSave)
+  (doseq [yritys (map #(c/complete {:ytunnus %
+                                    :verkkolaskuoperaattori (rand-int 10)
+                                    :maa "FI"} yritys-schema/YritysSave)
                       (unique-ytunnus-range 100))
           :let [id (service/add-yritys! ts/*db* yritys)]]
     (t/is (= (assoc yritys :id id) (service/find-yritys ts/*db* id)))))
