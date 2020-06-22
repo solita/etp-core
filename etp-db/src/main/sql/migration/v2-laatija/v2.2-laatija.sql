@@ -14,7 +14,9 @@ create table laatija (
   julkinen_puhelin boolean NOT NULL DEFAULT false,
   julkinen_email boolean NOT NULL DEFAULT false,
   julkinen_osoite boolean NOT NULL DEFAULT false,
+  laskutuskieli int DEFAULT 0,
   jakeluosoite text NOT NULL,
+  vastaanottajan_tarkenne text,
   postinumero text NOT NULL,
   postitoimipaikka text NOT NULL,
   maa char(2) REFERENCES country (id) NOT NULL DEFAULT 'FI'
