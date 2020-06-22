@@ -36,7 +36,8 @@
 (def db-keymap {:muuttoimintaalueet :muut_toimintaalueet
                 :julkinenpuhelin :julkinen_puhelin
                 :julkinenemail :julkinen_email
-                :julkinenosoite :julkinen_osoite})
+                :julkinenosoite :julkinen_osoite
+                :vastaanottajan-tarkenne :vastaanottajan_tarkenne})
 
 (defn add-laatija! [db laatija]
   (->> (set/rename-keys laatija db-keymap)
