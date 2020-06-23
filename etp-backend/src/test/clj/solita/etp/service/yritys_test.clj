@@ -31,6 +31,12 @@
              {:type       :unique-violation
               :constraint :yritys-ytunnus-key}))))
 
+(t/deftest find-all-laskutuskielet-test
+  (let [laskutuskielet (service/find-all-laskutuskielet ts/*db*)]
+    (t/is (= 3 (count laskutuskielet)))
+    (t/is (schema/validate [common-schema/Luokittelu]
+                           laskutuskielet))))
+
 (t/deftest find-all-verkkolaskuoperaattorit-test
   (let [verkkolaskuoperaattorit (service/find-all-verkkolaskuoperaattorit ts/*db*)]
     (t/is (= 32 (count verkkolaskuoperaattorit)))
