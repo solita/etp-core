@@ -1,7 +1,8 @@
 (ns solita.postgresql.composite
   (:require [clojure.data.csv :as csv]
             [flathead.deep :as deep]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [clojure.walk :as walk])
   (:import (org.postgresql.util PGobject)))
 
 (defn- backslash-escape [txt character]
@@ -37,24 +38,33 @@
     csv/read-csv
     #(subs % 1 (dec (count %)))))
 
+(defn- create-transformations [composite-type-schema fn]
+  (walk/postwalk #(if (and ((complement map-entry?) %) (vector? %))
+                    (partial fn %) %)
+                 composite-type-schema))
+
 (defn parse-composite-type-literals [composite-type-schema db-object]
-  (deep/deep-merge-with
-    (fn [[keys value]]
-      (let [read #((composite-literal-parser keys) (.getValue %))]
-        (cond
-          (instance? PGobject value) (read value)
-          (seqable? value) (map read value)
-          :else (throw (IllegalArgumentException.
-                         (str "Unsupported postgresql object value: " value))))))
-    composite-type-schema db-object))
+  (deep/evolve
+    (create-transformations
+      composite-type-schema
+      (fn [keys value]
+        (let [read #((composite-literal-parser keys) (.getValue %))]
+          (cond
+            (instance? PGobject value) (read value)
+            (seqable? value) (map read value)
+            :else (throw (IllegalArgumentException.
+                           (str "Unsupported postgresql object value: " value)))))))
+    db-object))
 
 (defn write-composite-type-literals [composite-type-schema db-object]
-  (deep/deep-merge-with
-    (fn [[keys value]]
-      (let [write (composite-literal-writer keys)]
-        (cond
-          (map? value) (write value)
-          (seqable? value) (mapv write value)
-          :else (throw (IllegalArgumentException.
-                         (str "Unsupported composite type value: " value))))))
-    composite-type-schema db-object))
+  (deep/evolve
+    (create-transformations
+      composite-type-schema
+      (fn [keys value]
+        (let [write (composite-literal-writer keys)]
+          (cond
+            (map? value) (write value)
+            (seqable? value) (mapv write value)
+            :else (throw (IllegalArgumentException.
+                           (str "Unsupported composite type value: " value)))))))
+    db-object))

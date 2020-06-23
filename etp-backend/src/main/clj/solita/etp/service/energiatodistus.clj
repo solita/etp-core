@@ -12,15 +12,19 @@
             [flathead.flatten :as flat]
             [clojure.string :as str]
             [schema.core :as schema]
-            [solita.common.map :as map]))
+            [solita.common.map :as map]
+            [solita.common.logic :as logic]
+            [schema-tools.coerce :as stc]))
 
 ; *** Require sql functions ***
 (db/require-queries 'energiatodistus)
 
 ; *** Conversions from database data types ***
 (def coerce-energiatodistus (coerce/coercer energiatodistus-schema/Energiatodistus
-                                            (assoc json/json-coercions
-                                              schema/Num xschema/parse-big-decimal)))
+                                            (stc/or-matcher
+                                              stc/map-filter-matcher
+                                              (assoc json/json-coercions
+                                                schema/Num xschema/parse-big-decimal))))
 
 (def tilat [:draft :in-signing :signed :discarded :replaced :deleted])
 
@@ -41,19 +45,35 @@
    :jaahdytys
    :eluvun-muutos])
 
+(def db-userdefined_energiamuoto-type
+  [:nimi
+   :muotokerroin
+   :ostoenergia])
+
+(def db-userdefined_energia-type
+  [:nimi-fi
+   :nimi-sv
+   :vuosikulutus])
+
+(def db-ostettu-polttoaine-type
+  [:nimi
+   :yksikko
+   :muunnoskerroin
+   :maara-vuodessa])
+
 (def db-composite-types
-  {:toteutunut-ostoenergiankulutus
-    {:ostetut-polttoaineet
-     {:vapaa [:nimi
-              :yksikko
-              :muunnoskerroin
-              :maara-vuodessa]}}
+  {:tulokset
+    {:kaytettavat_energiamuodot {:muu db-userdefined_energiamuoto-type}
+     :uusiutuvat_omavaraisenergiat {:muu db-userdefined_energia-type}}
+   :toteutunut-ostoenergiankulutus
+    {:ostettu-energia {:muu db-userdefined_energia-type}
+     :ostetut-polttoaineet {:vapaa db-ostettu-polttoaine-type}}
    :huomiot
     {:iv-ilmastointi { :toimenpide db-toimenpide-type }
      :valaistus-muut { :toimenpide db-toimenpide-type }
      :lammitys { :toimenpide db-toimenpide-type }
      :ymparys { :toimenpide db-toimenpide-type }
-     :alapohja-ylapohja{ :toimenpide db-toimenpide-type }}})
+     :alapohja-ylapohja { :toimenpide db-toimenpide-type }}})
 
 (defn convert-db-key-case [key]
   (-> key
@@ -64,6 +84,9 @@
 
 (def db-row->energiatodistus
   (comp coerce-energiatodistus
+        (logic/when*
+          #(= (:version %) 2013)
+          #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] :muu))
         (partial pg-composite/parse-composite-type-literals db-composite-types)
         #(set/rename-keys % (set/map-invert db-abbreviations))
         (partial flat/flat->tree #"\$")
