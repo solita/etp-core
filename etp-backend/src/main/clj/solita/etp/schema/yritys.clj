@@ -16,3 +16,6 @@
   "Yritys schema contains basic information about persistent yritys"
   (merge common-schema/Id YritysSave))
 
+(def Verkkolaskuoperaattori
+  (merge common-schema/Id {:valittajatunnus schema/Str
+                           :nimi            schema/Str}))
