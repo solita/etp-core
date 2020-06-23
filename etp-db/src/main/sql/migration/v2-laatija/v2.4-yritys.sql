@@ -4,7 +4,7 @@ create table yritys (
   nimi text NOT NULL,
   verkkolaskuoperaattori int REFERENCES verkkolaskuoperaattori (id),
   verkkolaskuosoite text,
-  laskutuskieli int DEFAULT 0,
+  laskutuskieli int REFERENCES laskutuskieli (id) DEFAULT 0,
   jakeluosoite text NOT NULL,
   vastaanottajan_tarkenne text,
   postinumero text NOT NULL,
