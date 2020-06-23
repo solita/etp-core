@@ -18,5 +18,8 @@
 (defn find-all-yritykset [db]
   (yritys-db/select-all-yritykset db))
 
+(defn find-all-laskutuskielet [db]
+  (yritys-db/select-all-laskutuskielet db))
+
 (defn find-all-verkkolaskuoperaattorit [db]
   (yritys-db/select-all-verkkolaskuoperaattorit db))

@@ -16,5 +16,8 @@ WHERE id = :id
 SELECT id, ytunnus, nimi, verkkolaskuosoite, jakeluosoite, postinumero, postitoimipaikka, maa
 FROM yritys
 
+--name: select-all-laskutuskielet
+SELECT id, label_fi as "label-fi", label_sv as "label-sv", deleted FROM laskutuskieli;
+
 -- name: select-all-verkkolaskuoperaattorit
 SELECT id, valittajatunnus, nimi FROM verkkolaskuoperaattori;
