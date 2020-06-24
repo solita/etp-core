@@ -15,6 +15,9 @@
 ;; *** Conversions from database data types ***
 (def coerce-laatija (coerce/coercer laatija-schema/Laatija json/json-coercions))
 
+(defn find-all-laatijat [db]
+  (->> (laatija-db/select-laatijat db)))
+
 (defn find-laatija-by-id
   ([db id]
    (->> {:id id}

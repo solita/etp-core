@@ -11,7 +11,12 @@
 (def routes
   [["/laatijat"
     [""
-     {:put {:summary    "Lisää laatijat laatijarekisteriin (luo myös käyttäjä)"
+     {:get {:summary    "Hae laatijat"
+            :responses  {200 {:body [laatija-schema/LaatijaFind]}}
+            :handler    (fn [{:keys [db]}]
+                          (-> (laatija-service/find-all-laatijat db)
+                              (api-response/get-response nil)))}
+      :put {:summary    "Lisää laatijat laatijarekisteriin (luo myös käyttäjä)"
             :parameters {:body [laatija-schema/KayttajaLaatijaAdd]}
             :responses  {200 {:body [common-schema/Key]}}
             :access     rooli-service/patevyydentoteaja?
