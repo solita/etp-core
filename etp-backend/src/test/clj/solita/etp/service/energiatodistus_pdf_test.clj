@@ -12,9 +12,7 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(def energiatodistus (g/generate
-                      schema/EnergiatodistusSave2018
-                      energiatodistus-test/energiatodistus-generators))
+(def energiatodistus (energiatodistus-test/generate-energiatodistus))
 
 (def sis-kuorma-data {:henkilot {:kayttoaste 0.2 :lampokuorma 1}
                       :kuluttajalaitteet {:kayttoaste 0.3 :lampokuorma 1}
