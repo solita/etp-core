@@ -1,5 +1,6 @@
 (ns solita.common.schema
   (:require [schema.core :as schema]
+            [schema.coerce :as coerce]
             [schema-tools.core :as schema-tools]
             [clojure.walk :as walk]
             [schema-tools.coerce :as schema-tools-coerce])
@@ -32,3 +33,6 @@
   (schema-tools-coerce/coercer
     (default-value-for-maybe schema)
     schema-tools-coerce/default-key-matcher))
+
+(def parse-big-decimal
+  (coerce/safe #(if (string? %) (BigDecimal. ^String %) %)))

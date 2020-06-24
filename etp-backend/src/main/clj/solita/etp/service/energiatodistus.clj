@@ -4,22 +4,107 @@
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.json :as json]
             [solita.etp.service.rooli :as rooli-service]
+            [solita.postgresql.composite :as pg-composite]
+            [solita.common.schema :as xschema]
             [schema.coerce :as coerce]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [clojure.set :as set]
+            [flathead.flatten :as flat]
+            [clojure.string :as str]
+            [schema.core :as schema]
+            [solita.common.map :as map]
+            [solita.common.logic :as logic]
+            [schema-tools.coerce :as stc]))
 
 ; *** Require sql functions ***
 (db/require-queries 'energiatodistus)
 
 ; *** Conversions from database data types ***
-(def coerce-energiatodistus (coerce/coercer energiatodistus-schema/Energiatodistus json/json-coercions))
+(def coerce-energiatodistus (coerce/coercer energiatodistus-schema/Energiatodistus
+                                            (stc/or-matcher
+                                              stc/map-filter-matcher
+                                              (assoc json/json-coercions
+                                                schema/Num xschema/parse-big-decimal))))
 
 (def tilat [:draft :in-signing :signed :discarded :replaced :deleted])
 
 (defn tila-key [tila-id] (nth tilat tila-id))
 
+(def db-abbreviations
+  {:perustiedot :pt
+   :lahtotiedot :lt
+   :tulokset :t
+   :toteutunut-ostoenergiankulutus :to
+   :huomiot                        :h})
+
+(def db-toimenpide-type
+  [:nimi-fi
+   :nimi-sv
+   :lampo
+   :sahko
+   :jaahdytys
+   :eluvun-muutos])
+
+(def db-userdefined_energiamuoto-type
+  [:nimi
+   :muotokerroin
+   :ostoenergia])
+
+(def db-userdefined_energia-type
+  [:nimi-fi
+   :nimi-sv
+   :vuosikulutus])
+
+(def db-ostettu-polttoaine-type
+  [:nimi
+   :yksikko
+   :muunnoskerroin
+   :maara-vuodessa])
+
+(def db-composite-types
+  {:tulokset
+    {:kaytettavat-energiamuodot {:muu db-userdefined_energiamuoto-type}
+     :uusiutuvat-omavaraisenergiat {:muu db-userdefined_energia-type}}
+   :toteutunut-ostoenergiankulutus
+    {:ostettu-energia {:muu db-userdefined_energia-type}
+     :ostetut-polttoaineet {:vapaa db-ostettu-polttoaine-type}}
+   :huomiot
+    {:iv-ilmastointi { :toimenpide db-toimenpide-type }
+     :valaistus-muut { :toimenpide db-toimenpide-type }
+     :lammitys { :toimenpide db-toimenpide-type }
+     :ymparys { :toimenpide db-toimenpide-type }
+     :alapohja-ylapohja { :toimenpide db-toimenpide-type }}})
+
+(defn convert-db-key-case [key]
+  (-> key
+      name
+      (str/replace #"\$u$" "\\$U")
+      (str/replace #"\-ua$" "-UA")
+      keyword))
+
+(def db-row->energiatodistus
+  (comp coerce-energiatodistus
+        (logic/when*
+          #(= (:versio %) 2013)
+          #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] :muu))
+        (partial pg-composite/parse-composite-type-literals db-composite-types)
+        #(set/rename-keys % (set/map-invert db-abbreviations))
+        (partial flat/flat->tree #"\$")
+        (partial map/map-keys convert-db-key-case)
+        db/kebab-case-keys))
+
+(def energiatodistus->db-row
+  (comp
+    (partial flat/tree->flat "$")
+    #(set/rename-keys % db-abbreviations)
+    (partial pg-composite/write-composite-type-literals db-composite-types)
+    (logic/when*
+      #(= (:versio %) 2013)
+      #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] (partial assoc {} :muu)))))
+
 (defn find-energiatodistus
   ([db id]
-   (first (map (comp coerce-energiatodistus json/merge-data db/kebab-case-keys)
+   (first (map db-row->energiatodistus
                (energiatodistus-db/select-energiatodistus db {:id id}))))
   ([db whoami id]
    (let [energiatodistus (find-energiatodistus db id)]
@@ -30,7 +115,7 @@
        (exception/throw-forbidden!)))))
 
 (defn find-energiatodistukset-by-laatija [db laatija-id tila-id]
-  (map (comp coerce-energiatodistus json/merge-data db/kebab-case-keys)
+  (map db-row->energiatodistus
        (energiatodistus-db/select-energiatodistukset-by-laatija
          db {:laatija-id laatija-id :tila-id tila-id})))
 
@@ -38,10 +123,13 @@
   (map :id (energiatodistus-db/select-signed-energiatodistukset-like-id db {:id id})))
 
 (defn add-energiatodistus! [db whoami versio energiatodistus]
-  (:id (energiatodistus-db/insert-energiatodistus<!
-         db (assoc (json/data-db-row energiatodistus)
-              :versio versio
-              :laatija-id (:id whoami)))))
+  (-> (jdbc/insert! db :energiatodistus
+        (-> energiatodistus
+          (assoc :versio versio
+                 :laatija-id (:id whoami))
+          energiatodistus->db-row) db/default-opts)
+    first
+    :id))
 
 (defn assert-laatija! [whoami energiatodistus]
   (when-not (= (:laatija-id energiatodistus) (:id whoami))
@@ -50,8 +138,9 @@
 
 (defn update-energiatodistus-luonnos! [db whoami id energiatodistus]
   (assert-laatija! whoami (find-energiatodistus db id))
-  (energiatodistus-db/update-energiatodistus-luonnos! db
-     {:id id :data (json/write-value-as-string energiatodistus)}))
+  (jdbc/update! db :energiatodistus
+                (energiatodistus->db-row energiatodistus)
+                ["id = ? and tila_id = 0" id] db/default-opts))
 
 (defn delete-energiatodistus-luonnos! [db whoami id]
   (assert-laatija! whoami (find-energiatodistus db id))
@@ -152,289 +241,290 @@
     (assoc-in energiatodistus to-path v)))
 
 (defn find-complete-energiatodistus* [energiatodistus alakayttotarkoitukset]
-  (let [perustiedot (:perustiedot energiatodistus)
-        kieli-id (:kieli perustiedot)
-        kielisyys (->> (find-kielisyys) (filter #(= (:id %) kieli-id)) first)
-        laatimisvaihe-id (:laatimisvaihe perustiedot)
-        laatimisvaihe (->> (find-laatimisvaiheet)
-                           (filter #(= (:id %) laatimisvaihe-id))
-                           first)
-        kayttotarkoitus-id (:kayttotarkoitus perustiedot)
-        alakayttotarkoitus (->> alakayttotarkoitukset
-                                (filter #(= (:id %) kayttotarkoitus-id))
-                                first)]
-    (-> energiatodistus
-        (assoc-in [:perustiedot :kieli-fi] (:label-fi kielisyys))
-        (assoc-in [:perustiedot :kieli-sv] (:label-sv kielisyys))
-        (assoc-in [:perustiedot :laatimisvaihe-fi] (:label-fi laatimisvaihe))
-        (assoc-in [:perustiedot :laatimisvaihe-sv] (:label-sv laatimisvaihe))
-        (assoc-in [:perustiedot :alakayttotarkoitus-fi] (:label-fi alakayttotarkoitus))
-        (assoc-in [:perustiedot :alakayttotarkoitus-sv] (:label-sv alakayttotarkoitus))
-        (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin] 0.5)
-        (assoc-in [:tulokset :kaytettavat-energiamuodot :sahko-kerroin] 1.2)
-        (assoc-in [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin] 0.5)
-        (assoc-in [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin] 1)
-        (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin] 0.28)
-        (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukolampo])
-        (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :sahko])
-        (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine])
-        (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine])
-        (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys])
-        (combine-keys *-ceil
-                      nil
-                      [:tulokset :kaytettavat-energiamuodot :kaukolampo-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :kaukolampo]
-                      [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin])
-        (combine-keys *-ceil
-                      nil
-                      [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala]
-                      [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin])
-        (combine-keys *-ceil
-                      nil
-                      [:tulokset :kaytettavat-energiamuodot :sahko-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :sahko]
-                      [:tulokset :kaytettavat-energiamuodot :sahko-kerroin])
-        (combine-keys *-ceil
-                      nil
-                      [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :sahko-nettoala]
-                      [:tulokset :kaytettavat-energiamuodot :sahko-kerroin])
-        (combine-keys *-ceil
-                      nil
-                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine]
-                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin])
-        (combine-keys *-ceil
-                      nil
-                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala]
-                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin])
-        (combine-keys *-ceil
-                      nil
-                      [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine]
-                      [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin])
-        (combine-keys *-ceil
-                      nil
-                      [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala]
-                      [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin])
-        (combine-keys *-ceil
-                      nil
-                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys]
-                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin])
-        (combine-keys *-ceil
-                      nil
-                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala]
-                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin])
-        (combine-keys +
-                      0
-                      [:tulokset :kaytettavat-energiamuodot :summa]
-                      [:tulokset :kaytettavat-energiamuodot :kaukolampo]
-                      [:tulokset :kaytettavat-energiamuodot :sahko]
-                      [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine]
-                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys]
-                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine])
-        (combine-keys +
-                      0
-                      [:tulokset :kaytettavat-energiamuodot :kertoimella-summa]
-                      [:tulokset :kaytettavat-energiamuodot :kaukolampo-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :sahko-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella])
-        (combine-keys +
-                      0
-                      [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]
-                      [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]
-                      [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella])
-        (copy-field [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]
-                    [:tulokset :e-luku])
-        (combine-keys *
-                      nil
-                      [:lahtotiedot :rakennusvaippa :ulkoseinat :UA]
-                      [:lahtotiedot :rakennusvaippa :ulkoseinat :ala]
-                      [:lahtotiedot :rakennusvaippa :ulkoseinat :U])
-        (combine-keys *
-                      nil
-                      [:lahtotiedot :rakennusvaippa :ylapohja :UA]
-                      [:lahtotiedot :rakennusvaippa :ylapohja :ala]
-                      [:lahtotiedot :rakennusvaippa :ylapohja :U])
-        (combine-keys *
-                      nil
-                      [:lahtotiedot :rakennusvaippa :alapohja :UA]
-                      [:lahtotiedot :rakennusvaippa :alapohja :ala]
-                      [:lahtotiedot :rakennusvaippa :alapohja :U])
-        (combine-keys *
-                      nil
-                      [:lahtotiedot :rakennusvaippa :ikkunat :UA]
-                      [:lahtotiedot :rakennusvaippa :ikkunat :ala]
-                      [:lahtotiedot :rakennusvaippa :ikkunat :U])
-        (combine-keys *
-                      nil
-                      [:lahtotiedot :rakennusvaippa :ulkoovet :UA]
-                      [:lahtotiedot :rakennusvaippa :ulkoovet :ala]
-                      [:lahtotiedot :rakennusvaippa :ulkoovet :U])
-        (combine-keys +
-                      0
-                      [:lahtotiedot :rakennusvaippa :UA-summa]
-                      [:lahtotiedot :rakennusvaippa :ulkoseinat :UA]
-                      [:lahtotiedot :rakennusvaippa :ylapohja :UA]
-                      [:lahtotiedot :rakennusvaippa :alapohja :UA]
-                      [:lahtotiedot :rakennusvaippa :ikkunat :UA]
-                      [:lahtotiedot :rakennusvaippa :ulkoovet :UA]
-                      [:lahtotiedot :rakennusvaippa :kylmasillat-UA])
-        (combine-keys /
-                      nil
-                      [:lahtotiedot :rakennusvaippa :ulkoseinat :osuus-lampohaviosta]
-                      [:lahtotiedot :rakennusvaippa :ulkoseinat :UA]
-                      [:lahtotiedot :rakennusvaippa :UA-summa])
-        (combine-keys /
-                      nil
-                      [:lahtotiedot :rakennusvaippa :ylapohja :osuus-lampohaviosta]
-                      [:lahtotiedot :rakennusvaippa :ylapohja :UA]
-                      [:lahtotiedot :rakennusvaippa :UA-summa])
-        (combine-keys /
-                      nil
-                      [:lahtotiedot :rakennusvaippa :alapohja :osuus-lampohaviosta]
-                      [:lahtotiedot :rakennusvaippa :alapohja :UA]
-                      [:lahtotiedot :rakennusvaippa :UA-summa])
-        (combine-keys /
-                      nil
-                      [:lahtotiedot :rakennusvaippa :ikkunat :osuus-lampohaviosta]
-                      [:lahtotiedot :rakennusvaippa :ikkunat :UA]
-                      [:lahtotiedot :rakennusvaippa :UA-summa])
-        (combine-keys /
-                      nil
-                      [:lahtotiedot :rakennusvaippa :ulkoovet :osuus-lampohaviosta]
-                      [:lahtotiedot :rakennusvaippa :ulkoovet :UA]
-                      [:lahtotiedot :rakennusvaippa :UA-summa])
-        (combine-keys /
-                      nil
-                      [:lahtotiedot :rakennusvaippa :kylmasillat-osuus-lampohaviosta]
-                      [:lahtotiedot :rakennusvaippa :kylmasillat-UA]
-                      [:lahtotiedot :rakennusvaippa :UA-summa])
-        (combine-keys #(str %1 " / " %2)
-                      nil
-                      [:lahtotiedot :ilmanvaihto :paaiv :tulo-poisto]
-                      [:lahtotiedot :ilmanvaihto :paaiv :tulo]
-                      [:lahtotiedot :ilmanvaihto :paaiv :poisto])
-        (combine-keys #(str %1 " / " %2)
-                      nil
-                      [:lahtotiedot :ilmanvaihto :erillispoistot :tulo-poisto]
-                      [:lahtotiedot :ilmanvaihto :erillispoistot :tulo]
-                      [:lahtotiedot :ilmanvaihto :erillispoistot :poisto])
-        (combine-keys #(str %1 " / " %2)
-                      nil
-                      [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo-poisto]
-                      [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo]
-                      [:lahtotiedot :ilmanvaihto :ivjarjestelma :poisto])
-        (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko])
-        (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :tuulisahko])
-        (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :aurinkolampo])
-        (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :muulampo])
-        (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :muusahko])
-        (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :lampopumppu])
+  (with-precision 20
+    (let [perustiedot (:perustiedot energiatodistus)
+          kieli-id (:kieli perustiedot)
+          kielisyys (->> (find-kielisyys) (filter #(= (:id %) kieli-id)) first)
+          laatimisvaihe-id (:laatimisvaihe perustiedot)
+          laatimisvaihe (->> (find-laatimisvaiheet)
+                             (filter #(= (:id %) laatimisvaihe-id))
+                             first)
+          kayttotarkoitus-id (:kayttotarkoitus perustiedot)
+          alakayttotarkoitus (->> alakayttotarkoitukset
+                                  (filter #(= (:id %) kayttotarkoitus-id))
+                                  first)]
+      (-> energiatodistus
+          (assoc-in [:perustiedot :kieli-fi] (:label-fi kielisyys))
+          (assoc-in [:perustiedot :kieli-sv] (:label-sv kielisyys))
+          (assoc-in [:perustiedot :laatimisvaihe-fi] (:label-fi laatimisvaihe))
+          (assoc-in [:perustiedot :laatimisvaihe-sv] (:label-sv laatimisvaihe))
+          (assoc-in [:perustiedot :alakayttotarkoitus-fi] (:label-fi alakayttotarkoitus))
+          (assoc-in [:perustiedot :alakayttotarkoitus-sv] (:label-sv alakayttotarkoitus))
+          (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin] 0.5)
+          (assoc-in [:tulokset :kaytettavat-energiamuodot :sahko-kerroin] 1.2)
+          (assoc-in [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin] 0.5)
+          (assoc-in [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin] 1)
+          (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin] 0.28)
+          (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukolampo])
+          (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :sahko])
+          (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine])
+          (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine])
+          (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys])
+          (combine-keys *-ceil
+                        nil
+                        [:tulokset :kaytettavat-energiamuodot :kaukolampo-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :kaukolampo]
+                        [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin])
+          (combine-keys *-ceil
+                        nil
+                        [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala]
+                        [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin])
+          (combine-keys *-ceil
+                        nil
+                        [:tulokset :kaytettavat-energiamuodot :sahko-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :sahko]
+                        [:tulokset :kaytettavat-energiamuodot :sahko-kerroin])
+          (combine-keys *-ceil
+                        nil
+                        [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :sahko-nettoala]
+                        [:tulokset :kaytettavat-energiamuodot :sahko-kerroin])
+          (combine-keys *-ceil
+                        nil
+                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine]
+                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin])
+          (combine-keys *-ceil
+                        nil
+                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala]
+                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin])
+          (combine-keys *-ceil
+                        nil
+                        [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine]
+                        [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin])
+          (combine-keys *-ceil
+                        nil
+                        [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala]
+                        [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin])
+          (combine-keys *-ceil
+                        nil
+                        [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys]
+                        [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin])
+          (combine-keys *-ceil
+                        nil
+                        [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala]
+                        [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin])
+          (combine-keys +
+                        0
+                        [:tulokset :kaytettavat-energiamuodot :summa]
+                        [:tulokset :kaytettavat-energiamuodot :kaukolampo]
+                        [:tulokset :kaytettavat-energiamuodot :sahko]
+                        [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine]
+                        [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys]
+                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine])
+          (combine-keys +
+                        0
+                        [:tulokset :kaytettavat-energiamuodot :kertoimella-summa]
+                        [:tulokset :kaytettavat-energiamuodot :kaukolampo-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :sahko-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella])
+          (combine-keys +
+                        0
+                        [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]
+                        [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella])
+          (copy-field [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]
+                      [:tulokset :e-luku])
+          (combine-keys *
+                        nil
+                        [:lahtotiedot :rakennusvaippa :ulkoseinat :UA]
+                        [:lahtotiedot :rakennusvaippa :ulkoseinat :ala]
+                        [:lahtotiedot :rakennusvaippa :ulkoseinat :U])
+          (combine-keys *
+                        nil
+                        [:lahtotiedot :rakennusvaippa :ylapohja :UA]
+                        [:lahtotiedot :rakennusvaippa :ylapohja :ala]
+                        [:lahtotiedot :rakennusvaippa :ylapohja :U])
+          (combine-keys *
+                        nil
+                        [:lahtotiedot :rakennusvaippa :alapohja :UA]
+                        [:lahtotiedot :rakennusvaippa :alapohja :ala]
+                        [:lahtotiedot :rakennusvaippa :alapohja :U])
+          (combine-keys *
+                        nil
+                        [:lahtotiedot :rakennusvaippa :ikkunat :UA]
+                        [:lahtotiedot :rakennusvaippa :ikkunat :ala]
+                        [:lahtotiedot :rakennusvaippa :ikkunat :U])
+          (combine-keys *
+                        nil
+                        [:lahtotiedot :rakennusvaippa :ulkoovet :UA]
+                        [:lahtotiedot :rakennusvaippa :ulkoovet :ala]
+                        [:lahtotiedot :rakennusvaippa :ulkoovet :U])
+          (combine-keys +
+                        0
+                        [:lahtotiedot :rakennusvaippa :UA-summa]
+                        [:lahtotiedot :rakennusvaippa :ulkoseinat :UA]
+                        [:lahtotiedot :rakennusvaippa :ylapohja :UA]
+                        [:lahtotiedot :rakennusvaippa :alapohja :UA]
+                        [:lahtotiedot :rakennusvaippa :ikkunat :UA]
+                        [:lahtotiedot :rakennusvaippa :ulkoovet :UA]
+                        [:lahtotiedot :rakennusvaippa :kylmasillat-UA])
+          (combine-keys /
+                        nil
+                        [:lahtotiedot :rakennusvaippa :ulkoseinat :osuus-lampohaviosta]
+                        [:lahtotiedot :rakennusvaippa :ulkoseinat :UA]
+                        [:lahtotiedot :rakennusvaippa :UA-summa])
+          (combine-keys /
+                        nil
+                        [:lahtotiedot :rakennusvaippa :ylapohja :osuus-lampohaviosta]
+                        [:lahtotiedot :rakennusvaippa :ylapohja :UA]
+                        [:lahtotiedot :rakennusvaippa :UA-summa])
+          (combine-keys /
+                        nil
+                        [:lahtotiedot :rakennusvaippa :alapohja :osuus-lampohaviosta]
+                        [:lahtotiedot :rakennusvaippa :alapohja :UA]
+                        [:lahtotiedot :rakennusvaippa :UA-summa])
+          (combine-keys /
+                        nil
+                        [:lahtotiedot :rakennusvaippa :ikkunat :osuus-lampohaviosta]
+                        [:lahtotiedot :rakennusvaippa :ikkunat :UA]
+                        [:lahtotiedot :rakennusvaippa :UA-summa])
+          (combine-keys /
+                        nil
+                        [:lahtotiedot :rakennusvaippa :ulkoovet :osuus-lampohaviosta]
+                        [:lahtotiedot :rakennusvaippa :ulkoovet :UA]
+                        [:lahtotiedot :rakennusvaippa :UA-summa])
+          (combine-keys /
+                        nil
+                        [:lahtotiedot :rakennusvaippa :kylmasillat-osuus-lampohaviosta]
+                        [:lahtotiedot :rakennusvaippa :kylmasillat-UA]
+                        [:lahtotiedot :rakennusvaippa :UA-summa])
+          (combine-keys #(str %1 " / " %2)
+                        nil
+                        [:lahtotiedot :ilmanvaihto :paaiv :tulo-poisto]
+                        [:lahtotiedot :ilmanvaihto :paaiv :tulo]
+                        [:lahtotiedot :ilmanvaihto :paaiv :poisto])
+          (combine-keys #(str %1 " / " %2)
+                        nil
+                        [:lahtotiedot :ilmanvaihto :erillispoistot :tulo-poisto]
+                        [:lahtotiedot :ilmanvaihto :erillispoistot :tulo]
+                        [:lahtotiedot :ilmanvaihto :erillispoistot :poisto])
+          (combine-keys #(str %1 " / " %2)
+                        nil
+                        [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo-poisto]
+                        [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo]
+                        [:lahtotiedot :ilmanvaihto :ivjarjestelma :poisto])
+          (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko])
+          (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :tuulisahko])
+          (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :aurinkolampo])
+          (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :muulampo])
+          (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :muusahko])
+          (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :lampopumppu])
 
-        (combine-keys +
-                      0
-                      [:tulokset :tekniset-jarjestelmat :sahko-summa]
-                      [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :sahko]
-                      [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :sahko]
-                      [:tulokset :tekniset-jarjestelmat :kayttoveden-valmistus :sahko]
-                      [:tulokset :tekniset-jarjestelmat :iv-sahko]
-                      [:tulokset :tekniset-jarjestelmat :jaahdytys :sahko]
-                      [:tulokset :tekniset-jarjestelmat :kuluttajalaitteet-ja-valaistus-sahko])
-        (combine-keys +
-                      0
-                      [:tulokset :tekniset-jarjestelmat :lampo-summa]
-                      [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :lampo]
-                      [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :lampo]
-                      [:tulokset :tekniset-jarjestelmat :kayttoveden-valmistus :lampo]
-                      [:tulokset :tekniset-jarjestelmat :jaahdytys :lampo])
+          (combine-keys +
+                        0
+                        [:tulokset :tekniset-jarjestelmat :sahko-summa]
+                        [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :sahko]
+                        [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :sahko]
+                        [:tulokset :tekniset-jarjestelmat :kayttoveden-valmistus :sahko]
+                        [:tulokset :tekniset-jarjestelmat :iv-sahko]
+                        [:tulokset :tekniset-jarjestelmat :jaahdytys :sahko]
+                        [:tulokset :tekniset-jarjestelmat :kuluttajalaitteet-ja-valaistus-sahko])
+          (combine-keys +
+                        0
+                        [:tulokset :tekniset-jarjestelmat :lampo-summa]
+                        [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :lampo]
+                        [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :lampo]
+                        [:tulokset :tekniset-jarjestelmat :kayttoveden-valmistus :lampo]
+                        [:tulokset :tekniset-jarjestelmat :jaahdytys :lampo])
 
-        (combine-keys +
-                      0
-                      [:tulokset :tekniset-jarjestelmat :kaukojaahdytys-summa]
-                      [:tulokset :tekniset-jarjestelmat :jaahdytys :kaukojaahdytys])
+          (combine-keys +
+                        0
+                        [:tulokset :tekniset-jarjestelmat :kaukojaahdytys-summa]
+                        [:tulokset :tekniset-jarjestelmat :jaahdytys :kaukojaahdytys])
 
 
-        (assoc-div-nettoala [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus])
-        (assoc-div-nettoala [:tulokset :nettotarve :ilmanvaihdon-lammitys-vuosikulutus])
-        (assoc-div-nettoala [:tulokset :nettotarve :kayttoveden-valmistus-vuosikulutus])
-        (assoc-div-nettoala [:tulokset :nettotarve :jaahdytys-vuosikulutus])
-        (assoc-div-nettoala [:tulokset :lampokuormat :aurinko])
-        (assoc-div-nettoala [:tulokset :lampokuormat :ihmiset])
-        (assoc-div-nettoala [:tulokset :lampokuormat :kuluttajalaitteet])
-        (assoc-div-nettoala [:tulokset :lampokuormat :valaistus])
-        (assoc-div-nettoala [:tulokset :lampokuormat :kvesi])
-        (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukolampo-vuosikulutus])
-        (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :kokonaissahko-vuosikulutus])
-        (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :kiinteistosahko-vuosikulutus])
-        (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :kayttajasahko-vuosikulutus])
-        (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukojaahdytys-vuosikulutus])
-        (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kerroin] 10)
-        (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kerroin] 1300)
-        (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kerroin] 1700)
-        (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kerroin] 4.7)
-        (combine-keys *-ceil
-                      nil
-                      [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh]
-                      [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy]
-                      [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kerroin])
-        (combine-keys *-ceil
-                      nil
-                      [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kwh]
-                      [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu]
-                      [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kerroin])
-        (combine-keys *-ceil
-                      nil
-                      [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kwh]
-                      [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu]
-                      [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kerroin])
-        (combine-keys *-ceil
-                      nil
-                      [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh]
-                      [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit]
-                      [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kerroin])
-        (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh])
-        (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kwh])
-        (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kwh])
-        (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh])
-        (update-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa]
-                   (fn [vapaat]
-                     (if-let [nettoala (-> energiatodistus :lahtotiedot :lammitetty-nettoala)]
-                       (mapv (fn [{:keys [maara-vuodessa muunnoskerroin] :as vapaa}]
-                               (if (and maara-vuodessa muunnoskerroin)
-                                 (let [kwh (* maara-vuodessa muunnoskerroin)]
-                                   (assoc vapaa :kwh kwh :kwh-nettoala (div-ceil kwh nettoala)))
-                                 vapaa))
-                             vapaat)
-                       vapaat)))
-        (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa])
-        (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa])
-        (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa])
-        (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa])
-        (combine-keys +
-                      0
-                      [:toteutunut-ostoenergiankulutus :summa]
-                      [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa]
-                      [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa]
-                      [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa]
-                      [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa])
-        (combine-keys +
-                      0
-                      [:toteutunut-ostoenergiankulutus :summa-nettoala]
-                      [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa-nettoala]
-                      [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa-nettoala]
-                      [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa-nettoala]
-                      [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala]))))
+          (assoc-div-nettoala [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus])
+          (assoc-div-nettoala [:tulokset :nettotarve :ilmanvaihdon-lammitys-vuosikulutus])
+          (assoc-div-nettoala [:tulokset :nettotarve :kayttoveden-valmistus-vuosikulutus])
+          (assoc-div-nettoala [:tulokset :nettotarve :jaahdytys-vuosikulutus])
+          (assoc-div-nettoala [:tulokset :lampokuormat :aurinko])
+          (assoc-div-nettoala [:tulokset :lampokuormat :ihmiset])
+          (assoc-div-nettoala [:tulokset :lampokuormat :kuluttajalaitteet])
+          (assoc-div-nettoala [:tulokset :lampokuormat :valaistus])
+          (assoc-div-nettoala [:tulokset :lampokuormat :kvesi])
+          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukolampo-vuosikulutus])
+          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :kokonaissahko-vuosikulutus])
+          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :kiinteistosahko-vuosikulutus])
+          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :kayttajasahko-vuosikulutus])
+          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukojaahdytys-vuosikulutus])
+          (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kerroin] 10)
+          (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kerroin] 1300)
+          (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kerroin] 1700)
+          (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kerroin] 4.7)
+          (combine-keys *-ceil
+                        nil
+                        [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh]
+                        [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy]
+                        [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kerroin])
+          (combine-keys *-ceil
+                        nil
+                        [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kwh]
+                        [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu]
+                        [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kerroin])
+          (combine-keys *-ceil
+                        nil
+                        [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kwh]
+                        [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu]
+                        [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kerroin])
+          (combine-keys *-ceil
+                        nil
+                        [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh]
+                        [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit]
+                        [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kerroin])
+          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh])
+          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kwh])
+          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kwh])
+          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh])
+          (update-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa]
+                     (fn [vapaat]
+                       (if-let [nettoala (-> energiatodistus :lahtotiedot :lammitetty-nettoala)]
+                         (mapv (fn [{:keys [maara-vuodessa muunnoskerroin] :as vapaa}]
+                                 (if (and maara-vuodessa muunnoskerroin)
+                                   (let [kwh (* maara-vuodessa muunnoskerroin)]
+                                     (assoc vapaa :kwh kwh :kwh-nettoala (div-ceil kwh nettoala)))
+                                   vapaa))
+                               vapaat)
+                         vapaat)))
+          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa])
+          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa])
+          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa])
+          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa])
+          (combine-keys +
+                        0
+                        [:toteutunut-ostoenergiankulutus :summa]
+                        [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa]
+                        [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa]
+                        [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa]
+                        [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa])
+          (combine-keys +
+                        0
+                        [:toteutunut-ostoenergiankulutus :summa-nettoala]
+                        [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa-nettoala]
+                        [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa-nettoala]
+                        [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa-nettoala]
+                        [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala])))))
 
 (defn find-complete-energiatodistus
   ([db id]

@@ -1,5 +1,6 @@
 (ns user
-  (:require [integrant.repl :refer [clear go halt prep init reset reset-all]]))
+  (:require [integrant.repl :refer [clear go halt prep init reset reset-all]]
+            [clojure.test :as t]))
 
 (integrant.repl/set-prep!
  (fn []
@@ -9,6 +10,9 @@
 (defn db
   ([] (-> integrant.repl.state/system :solita.etp/db))
   ([kayttaja-id] (assoc (db) :application-name (str kayttaja-id "@core.etp.test"))))
+
+(defn run-test [var-name]
+  (t/test-vars [var-name]))
 
 (defn run-tests []
   (require 'eftest.runner)

@@ -13,23 +13,15 @@ from et_tilat
 where tila_id = et_tilat.luonnos and id = :id
 
 -- name: select-energiatodistus
-select energiatodistus.id, energiatodistus.versio,
-       energiatodistus.tila_id,
-       energiatodistus.allekirjoitusaika,
-       energiatodistus.laatija_id,
-       fullname(kayttaja.*) "laatija-fullname",
-       energiatodistus.data
+select energiatodistus.*,
+       fullname(kayttaja.*) "laatija-fullname"
 from energiatodistus
   inner join kayttaja on kayttaja.id = energiatodistus.laatija_id
 where energiatodistus.id = :id
 
 -- name: select-energiatodistukset-by-laatija
-select energiatodistus.id, energiatodistus.versio,
-       energiatodistus.tila_id,
-       energiatodistus.allekirjoitusaika,
-       energiatodistus.laatija_id,
-       fullname(kayttaja.*) "laatija-fullname",
-       energiatodistus.data
+select energiatodistus.*,
+       fullname(kayttaja.*) "laatija-fullname"
 from et_tilat, energiatodistus
   inner join kayttaja on kayttaja.id = energiatodistus.laatija_id
 where energiatodistus.laatija_id = :laatija-id and

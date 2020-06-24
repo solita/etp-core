@@ -213,7 +213,9 @@
    :alapohja-ylapohja Huomio})
 
 (def EnergiatodistusSave2018
-  "This schema is used in add-energiatodistus and update-energiatodistus services"
+  "This schema is used in
+  add-energiatodistus and update-energiatodistus
+  services for 2018 version"
   (optional-properties
     {:korvattu-energiatodistus-id    common-schema/Key
      :perustiedot                    Perustiedot
@@ -224,9 +226,12 @@
      :lisamerkintoja-fi              common-schema/String6300
      :lisamerkintoja-sv              common-schema/String6300}))
 
-(defn- dissoc-not-in-2013 [schema2018]
+(defn- dissoc-path [map path]
+  (update-in map (butlast path) #(dissoc % (last path))))
+
+(defn dissoc-not-in-2013 [schema2018]
   (-> schema2018
-    (update :perustiedot #(dissoc % :laatimisvaihe))))
+      (dissoc-path [:perustiedot :laatimisvaihe])))
 
 (def UserDefinedEnergiamuoto
   {:nimi common-schema/String50
@@ -239,7 +244,9 @@
    :vuosikulutus common-schema/FloatPos})
 
 (def EnergiatodistusSave2013
-  "TODO: create 2013 save schema"
+  "This schema is used in
+  add-energiatodistus and update-energiatodistus
+  services for 2013 version"
   (-> (dissoc-not-in-2013 EnergiatodistusSave2018)
       (assoc-in [:perustiedot :uudisrakennus] schema/Bool)
       (assoc-in [:tulokset :kaytettavat-energiamuodot :muu]
