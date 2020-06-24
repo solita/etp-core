@@ -9,16 +9,13 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(def energiatodistukset (repeatedly 100
-                                    #(g/generate
-                                      schema/Energiatodistus2018
-                                      energiatodistus-test/energiatodistus-generators)))
+(def energiatodistukset (repeatedly 100 energiatodistus-test/generate-energiatodistus))
 
 (t/deftest other-paths-test
   (t/is (empty? (service/other-paths nil)))
   (t/is (empty? (service/other-paths [])))
   (t/is (= (service/other-paths (map #(assoc % :new-key 1) energiatodistukset))
-           #{[:new-key] [:tila-id]})))
+           #{[:new-key]})))
 
 (t/deftest paths-for-k-test
   (let [perustiedot-paths (service/paths-for-k energiatodistukset :perustiedot)]
