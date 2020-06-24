@@ -9,7 +9,7 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(def energiatodistukset (repeatedly 100 energiatodistus-test/generate-energiatodistus))
+(def energiatodistukset (repeatedly 100 energiatodistus-test/generate-energiatodistus-2018))
 
 (t/deftest other-paths-test
   (t/is (empty? (service/other-paths nil)))

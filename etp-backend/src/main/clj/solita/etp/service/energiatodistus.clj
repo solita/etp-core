@@ -63,8 +63,8 @@
 
 (def db-composite-types
   {:tulokset
-    {:kaytettavat_energiamuodot {:muu db-userdefined_energiamuoto-type}
-     :uusiutuvat_omavaraisenergiat {:muu db-userdefined_energia-type}}
+    {:kaytettavat-energiamuodot {:muu db-userdefined_energiamuoto-type}
+     :uusiutuvat-omavaraisenergiat {:muu db-userdefined_energia-type}}
    :toteutunut-ostoenergiankulutus
     {:ostettu-energia {:muu db-userdefined_energia-type}
      :ostetut-polttoaineet {:vapaa db-ostettu-polttoaine-type}}
@@ -85,7 +85,7 @@
 (def db-row->energiatodistus
   (comp coerce-energiatodistus
         (logic/when*
-          #(= (:version %) 2013)
+          #(= (:versio %) 2013)
           #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] :muu))
         (partial pg-composite/parse-composite-type-literals db-composite-types)
         #(set/rename-keys % (set/map-invert db-abbreviations))
@@ -97,7 +97,10 @@
   (comp
     (partial flat/tree->flat "$")
     #(set/rename-keys % db-abbreviations)
-    (partial pg-composite/write-composite-type-literals db-composite-types)))
+    (partial pg-composite/write-composite-type-literals db-composite-types)
+    (logic/when*
+      #(= (:versio %) 2013)
+      #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] (partial assoc {} :muu)))))
 
 (defn find-energiatodistus
   ([db id]
