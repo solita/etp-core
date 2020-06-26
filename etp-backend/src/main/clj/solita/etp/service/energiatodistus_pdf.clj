@@ -45,28 +45,28 @@
         "K8" {:path [:perustiedot :katuosoite-fi]}
 
         ;; TODO needs luokittelu for postitoimipaikka
-        "K9" #(str (-> % :perustiedot :postinumero) " " "Helsinki")
+        "K9" {:f #(str (-> % :perustiedot :postinumero) " " "Helsinki")}
         "K12" {:path [:perustiedot :rakennustunnus]}
         "K13" {:path [:perustiedot :valmistumisvuosi]}
 
         "K14" {:path [:perustiedot :alakayttotarkoitus-fi]}
         "K16" {:path [:id]}
 
-        "D19" (fn [energiatodistus]
-                (if (= (-> energiatodistus :perustiedot :laatimisvaihe) 0)
-                  "☒ Uudelle rakennukselle rakennuslupaa haettaessa"
-                  "☐ Uudelle rakennukselle rakennuslupaa haettaessa"))
-        "D20" (fn [energiatodistus]
-                (if (= (-> energiatodistus :perustiedot :laatimisvaihe) 1)
-                  "☒ Uudelle rakennukselle käyttöönottovaiheessa"
-                  "☐ Uudelle rakennukselle käyttöönottovaiheessa"))
-        "D21" (fn [energiatodistus]
-                (if (= (-> energiatodistus :perustiedot :laatimisvaihe) 2)
-                  "☒ Olemassa olevalle rakennukselle, havainnointikäynnin päivämäärä:"
-                  "☐ Olemassa olevalle rakennukselle, havainnointikäynnin päivämäärä:"))
+        "D19" {:f (fn [energiatodistus]
+                    (if (= (-> energiatodistus :perustiedot :laatimisvaihe) 0)
+                      "☒ Uudelle rakennukselle rakennuslupaa haettaessa"
+                      "☐ Uudelle rakennukselle rakennuslupaa haettaessa"))}
+        "D20" {:f (fn [energiatodistus]
+                    (if (= (-> energiatodistus :perustiedot :laatimisvaihe) 1)
+                      "☒ Uudelle rakennukselle käyttöönottovaiheessa"
+                      "☐ Uudelle rakennukselle käyttöönottovaiheessa"))}
+        "D21" {:f (fn [energiatodistus]
+                    (if (= (-> energiatodistus :perustiedot :laatimisvaihe) 2)
+                      "☒ Olemassa olevalle rakennukselle, havainnointikäynnin päivämäärä:"
+                      "☐ Olemassa olevalle rakennukselle, havainnointikäynnin päivämäärä:"))}
 
-        "M21" (fn [energiatodistus]
-                (some->> energiatodistus :perustiedot :havainnointikaynti (.format date-formatter)))
+        "M21" {:f (fn [energiatodistus]
+                    (some->> energiatodistus :perustiedot :havainnointikaynti (.format date-formatter)))}
 
         ;; TODO M37 E-luvun vaatimus
         "M36" {:path [:tulokset :e-luku]}
@@ -74,9 +74,9 @@
         "B42" {:path [:laatija-fullname]}
         "J42" {:path [:perustiedot :yritys :nimi]}
 
-        "B50" (fn [_] (.format date-formatter today))
-        "K50" (fn [_] (.format date-formatter (.plusYears today 10)))}
-     1 {"F5" #(format "%s m²" (-> % :lahtotiedot :lammitetty-nettoala))
+        "B50" {:f (fn [_] (.format date-formatter today))}
+        "K50" {:f (fn [_] (.format date-formatter (.plusYears today 10)))}}
+     1 {"F5" {:f #(format "%s m²" (-> % :lahtotiedot :lammitetty-nettoala))}
         "F6" {:path [:lahtotiedot :lammitys :kuvaus-fi]}
         "F7" {:path [:lahtotiedot :ilmanvaihto :kuvaus-fi]}
         "F14" {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo]}
@@ -194,18 +194,18 @@
         "D59" {:path [:lahtotiedot :lkvn-kaytto :kulutus-per-nelio]}
         "E59" {:path [:lahtotiedot :lkvn-kaytto :vuosikulutus]}
 
-        "D63" #(-> % sis-kuorma (get 0) first)
-        "E63" #(-> % sis-kuorma (get 0) second :henkilot)
-        "F63" #(-> % sis-kuorma (get 0) second :kuluttajalaitteet)
-        "G63" #(-> % sis-kuorma (get 0) second :valaistus)
-        "D64" #(-> % sis-kuorma (get 1) first)
-        "E64" #(-> % sis-kuorma (get 1) second :henkilot)
-        "F64" #(-> % sis-kuorma (get 1) second :kuluttajalaitteet)
-        "G64" #(-> % sis-kuorma (get 1) second :valaistus)
-        "D65" #(-> % sis-kuorma (get 2) first)
-        "E65" #(-> % sis-kuorma (get 2) second :henkilot)
-        "F65" #(-> % sis-kuorma (get 2) second :kuluttajalaitteet)
-        "G65" #(-> % sis-kuorma (get 2) second :valaistus)}
+        "D63" {:f #(-> % sis-kuorma (get 0) first)}
+        "E63" {:f #(-> % sis-kuorma (get 0) second :henkilot)}
+        "F63" {:f #(-> % sis-kuorma (get 0) second :kuluttajalaitteet)}
+        "G63" {:f #(-> % sis-kuorma (get 0) second :valaistus)}
+        "D64" {:f #(-> % sis-kuorma (get 1) first)}
+        "E64" {:f #(-> % sis-kuorma (get 1) second :henkilot)}
+        "F64" {:f #(-> % sis-kuorma (get 1) second :kuluttajalaitteet)}
+        "G64" {:f #(-> % sis-kuorma (get 1) second :valaistus)}
+        "D65" {:f #(-> % sis-kuorma (get 2) first)}
+        "E65" {:f #(-> % sis-kuorma (get 2) second :henkilot)}
+        "F65" {:f #(-> % sis-kuorma (get 2) second :kuluttajalaitteet)}
+        "G65" {:f #(-> % sis-kuorma (get 2) second :valaistus)}}
      3 {"D4" {:path [:perustiedot :alakayttotarkoitus-fi]}
         "D7" {:path [:perustiedot :valmistumisvuosi]}
         "D8" {:path [:lahtotiedot :lammitetty-nettoala]}
@@ -286,7 +286,7 @@
         "F70" {:path [:tulokset :lampokuormat :kvesi-nettoala]}
 
         "E74" {:path [:tulokset :laskentatyokalu]}}
-     4 {"C7" #(format "Lämmitetty nettoala %s m²" (-> % :lahtotiedot :lammitetty-nettoala))
+     4 {"C7" {:f #(format "Lämmitetty nettoala %s m²" (-> % :lahtotiedot :lammitetty-nettoala))}
 
         "H12" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukolampo-vuosikulutus]}
         "I12" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukolampo-vuosikulutus-nettoala]}
@@ -431,13 +431,12 @@
                     (format "energiatodistus-%s.xlsx")
                     (str tmp-dir))]
       (doseq [[sheet sheet-mappings] (mappings)]
-        (doseq [[cell map-or-f] sheet-mappings
-                :when map-or-f]
+        (doseq [[cell {:keys [path f]}] sheet-mappings]
           (xlsx/set-cell-value-at (nth sheets sheet)
                                   cell
-                                  (if (map? map-or-f)
-                                    (get-in complete-energiatodistus (:path map-or-f))
-                                    (map-or-f complete-energiatodistus)))))
+                                  (if f
+                                    (f complete-energiatodistus)
+                                    (get-in complete-energiatodistus path)))))
       (io/make-parents path)
       (xlsx/save-xlsx loaded-xlsx path)
       path)))
