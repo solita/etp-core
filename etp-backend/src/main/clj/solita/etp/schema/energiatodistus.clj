@@ -19,10 +19,6 @@
        (coll? %) (map optional-properties %))
     schema))
 
-(def Kayttotarkoitus
-  (schema/enum "T" "TG" "UH" "TE" "MYR" "TT" "RT" "MU" "KK" "AK3" "YAT" "TOKK" "JH" "PK" "PT" "MR" "S" "PTK" "SR"
-               "H" "KAT" "E" "AR" "KREP" "KIR" "LR" "MRVR" "V" "HL" "N" "A" "MH" "OR" "LH" "MLR" "AK2"))
-
 (def Rakennustunnus
   (schema/constrained schema/Str #(= (count %) 10)))
 
@@ -44,14 +40,14 @@
    :postinumero              geo-schema/Postinumero
    :keskeiset-suositukset-fi common-schema/String2500
    :keskeiset-suositukset-sv common-schema/String2500
-   :laatimisvaihe            (schema/enum 0 1 2)
+   :laatimisvaihe            common-schema/Key
    :kiinteistotunnus         common-schema/String50
    :yritys                   Yritys
    :tilaaja                  common-schema/String200
    :rakennusosa              common-schema/String100
-   :kieli                    (schema/enum 0 1 2)
+   :kieli                    common-schema/Key
    :nimi                     common-schema/String50
-   :kayttotarkoitus          Kayttotarkoitus})
+   :kayttotarkoitus          schema/Str})
 
 (defn Rakenneusvaippa [mininclusive maxinclusive]
   {:ala common-schema/FloatPos
@@ -141,54 +137,65 @@
 
 (def Tulokset
   {:kaytettavat-energiamuodot
-     {:fossiilinen-polttoaine common-schema/FloatPos
-      :sahko common-schema/FloatPos
-      :kaukojaahdytys common-schema/FloatPos
-      :kaukolampo common-schema/FloatPos
-      :uusiutuva-polttoaine common-schema/FloatPos},
+   {:fossiilinen-polttoaine common-schema/FloatPos
+    :sahko                  common-schema/FloatPos
+    :kaukojaahdytys         common-schema/FloatPos
+    :kaukolampo             common-schema/FloatPos
+    :uusiutuva-polttoaine   common-schema/FloatPos},
 
    :uusiutuvat-omavaraisenergiat
-     {:aurinkosahko common-schema/FloatPos
-      :tuulisahko common-schema/FloatPos
-      :aurinkolampo common-schema/FloatPos
-      :muulampo common-schema/FloatPos
-      :muusahko common-schema/FloatPos
-      :lampopumppu common-schema/FloatPos},
+   {:aurinkosahko common-schema/FloatPos
+    :tuulisahko   common-schema/FloatPos
+    :aurinkolampo common-schema/FloatPos
+    :muulampo     common-schema/FloatPos
+    :muusahko     common-schema/FloatPos
+    :lampopumppu  common-schema/FloatPos},
 
-   :tekniset-jarjestelmat        {:tilojen-lammitys                     SahkoLampo,
-                                  :tuloilman-lammitys                   SahkoLampo,
-                                  :kayttoveden-valmistus                SahkoLampo
-                                  :iv-sahko                             common-schema/FloatPos
-                                  :jaahdytys (assoc SahkoLampo :kaukojaahdytys common-schema/FloatPos)
-                                  :kuluttajalaitteet-ja-valaistus-sahko common-schema/FloatPos},
-   :nettotarve                   {:tilojen-lammitys-vuosikulutus      common-schema/FloatPos
-                                  :ilmanvaihdon-lammitys-vuosikulutus common-schema/FloatPos
-                                  :kayttoveden-valmistus-vuosikulutus common-schema/FloatPos
-                                  :jaahdytys-vuosikulutus             common-schema/FloatPos},
-   :lampokuormat                 {:aurinko           common-schema/FloatPos
-                                  :ihmiset           common-schema/FloatPos
-                                  :kuluttajalaitteet common-schema/FloatPos
-                                  :valaistus         common-schema/FloatPos,
-                                  :kvesi             common-schema/FloatPos},
-   :laskentatyokalu              common-schema/String60})
+   :tekniset-jarjestelmat
+   {:tilojen-lammitys                     SahkoLampo,
+    :tuloilman-lammitys                   SahkoLampo,
+    :kayttoveden-valmistus                SahkoLampo
+    :iv-sahko                             common-schema/FloatPos
+    :jaahdytys                            (assoc SahkoLampo :kaukojaahdytys common-schema/FloatPos)
+    :kuluttajalaitteet-ja-valaistus-sahko common-schema/FloatPos},
+
+   :nettotarve
+   {:tilojen-lammitys-vuosikulutus      common-schema/FloatPos
+    :ilmanvaihdon-lammitys-vuosikulutus common-schema/FloatPos
+    :kayttoveden-valmistus-vuosikulutus common-schema/FloatPos
+    :jaahdytys-vuosikulutus             common-schema/FloatPos},
+
+   :lampokuormat
+   {:aurinko           common-schema/FloatPos
+    :ihmiset           common-schema/FloatPos
+    :kuluttajalaitteet common-schema/FloatPos
+    :valaistus         common-schema/FloatPos,
+    :kvesi             common-schema/FloatPos},
+
+   :laskentatyokalu common-schema/String60})
 
 (def ToteutunutOstoenergiankulutus
-  {:ostettu-energia                         {:kaukolampo-vuosikulutus      common-schema/FloatPos,
-                                             :kokonaissahko-vuosikulutus   common-schema/FloatPos,
-                                             :kiinteistosahko-vuosikulutus common-schema/FloatPos,
-                                             :kayttajasahko-vuosikulutus   common-schema/FloatPos,
-                                             :kaukojaahdytys-vuosikulutus  common-schema/FloatPos},
-   :ostetut-polttoaineet                    {:kevyt-polttooljy      common-schema/FloatPos,
-                                             :pilkkeet-havu-sekapuu common-schema/FloatPos,
-                                             :pilkkeet-koivu        common-schema/FloatPos,
-                                             :puupelletit           common-schema/FloatPos,
-                                             :vapaa                 [{:nimi           common-schema/String30,
-                                                                      :yksikko        common-schema/String12,
-                                                                      :muunnoskerroin common-schema/FloatPos,
-                                                                      :maara-vuodessa common-schema/FloatPos}]},
-   :sahko-vuosikulutus-yhteensa          common-schema/FloatPos,
-   :kaukolampo-vuosikulutus-yhteensa     common-schema/FloatPos,
-   :polttoaineet-vuosikulutus-yhteensa   common-schema/FloatPos,
+  {:ostettu-energia
+   {:kaukolampo-vuosikulutus      common-schema/FloatPos,
+    :kokonaissahko-vuosikulutus   common-schema/FloatPos,
+    :kiinteistosahko-vuosikulutus common-schema/FloatPos,
+    :kayttajasahko-vuosikulutus   common-schema/FloatPos,
+    :kaukojaahdytys-vuosikulutus  common-schema/FloatPos},
+
+   :ostetut-polttoaineet
+   {:kevyt-polttooljy      common-schema/FloatPos,
+    :pilkkeet-havu-sekapuu common-schema/FloatPos,
+    :pilkkeet-koivu        common-schema/FloatPos,
+    :puupelletit           common-schema/FloatPos,
+    :vapaa
+      [{:nimi           common-schema/String30,
+        :yksikko        common-schema/String12,
+        :muunnoskerroin common-schema/FloatPos,
+        :maara-vuodessa common-schema/FloatPos}]},
+
+   :sahko-vuosikulutus-yhteensa common-schema/FloatPos,
+   :kaukolampo-vuosikulutus-yhteensa common-schema/FloatPos,
+   :polttoaineet-vuosikulutus-yhteensa common-schema/FloatPos,
    :kaukojaahdytys-vuosikulutus-yhteensa common-schema/FloatPos})
 
 (def Huomio

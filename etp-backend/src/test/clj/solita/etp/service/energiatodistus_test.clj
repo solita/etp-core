@@ -56,12 +56,16 @@
 (defn generate-energiatodistus-2018 []
   (-> (g/generate schema/EnergiatodistusSave2018
                   energiatodistus-generators)
-      (assoc :korvattu-energiatodistus-id nil)))
+      ;; fix fk references in generated content
+      (assoc :korvattu-energiatodistus-id nil)
+      (assoc-in [:perustiedot :kayttotarkoitus] "YAT")))
 
 (defn generate-energiatodistus-2013 []
   (-> (g/generate schema/EnergiatodistusSave2013
                   energiatodistus-generators)
-      (assoc :korvattu-energiatodistus-id nil)))
+      ;; fix fk references in generated content
+      (assoc :korvattu-energiatodistus-id nil)
+      (assoc-in [:perustiedot :kayttotarkoitus] "YAT")))
 
 (defn test-add-and-find-energiatodistus [versio generation]
   (let [laatija-id (add-laatija!)]
