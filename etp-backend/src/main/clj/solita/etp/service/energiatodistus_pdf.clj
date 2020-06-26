@@ -9,6 +9,9 @@
             [solita.etp.service.file :as file-service])
   (:import (java.time Instant LocalDate ZoneId)
            (java.time.format DateTimeFormatter)
+           (java.util Locale)
+           (java.text DecimalFormatSymbols DecimalFormat)
+           (java.math RoundingMode)
            (org.apache.pdfbox.multipdf Overlay)
            (org.apache.pdfbox.multipdf Overlay$Position)
            (org.apache.pdfbox.pdmodel PDDocument)
@@ -26,6 +29,9 @@
 (def timezone (ZoneId/of "Europe/Helsinki"))
 (def time-formatter (.withZone (DateTimeFormatter/ofPattern "dd.MM.yyyy HH:mm:ss")
                                timezone))
+
+(def locale (Locale. "fi" "FI"))
+(def format-symbols (DecimalFormatSymbols. locale))
 
 (defn sis-kuorma [energiatodistus]
   (->> energiatodistus
@@ -421,6 +427,14 @@
 
         "B37" {:path [:huomiot :suositukset-fi]}}
      7 {"B3" {:path [:lisamerkintoja-fi]}}}))
+
+(defn format-number [x dp percent?]
+  (let [format (if percent? "#.# %" "#.#")
+        number-format (doto (java.text.DecimalFormat. format  format-symbols)
+                        (.setMinimumFractionDigits dp)
+                        (.setMaximumFractionDigits dp)
+                        (.setRoundingMode RoundingMode/HALF_UP))]
+    (.format number-format (bigdec x))))
 
 (defn fill-xlsx-template [complete-energiatodistus draft?]
   (with-open [is (-> xlsx-template-path io/resource io/input-stream)]
