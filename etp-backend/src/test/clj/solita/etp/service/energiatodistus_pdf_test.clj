@@ -24,6 +24,12 @@
     (t/is (= sis-kuorma [[0.2 {:henkilot 1}]
                          [0.3 {:kuluttajalaitteet 1 :valaistus 2}]]))))
 
+(t/deftest format-number-test
+  (t/is (= "12,346" (service/format-number 12.34567 3 false)))
+  (t/is (= "0,84" (service/format-number 0.8449 2 false)))
+  (t/is (= "100 %" (service/format-number 1 0 true)))
+  (t/is (= "12,346 %" (service/format-number 0.1234567 3 true))))
+
 (t/deftest fill-xlsx-template-test
   (let [path (service/fill-xlsx-template energiatodistus false)
         file (-> path io/input-stream)
