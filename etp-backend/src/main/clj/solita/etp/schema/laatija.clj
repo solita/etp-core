@@ -45,7 +45,8 @@
           :julkinenpuhelin                          schema/Bool
           :julkinenemail                            schema/Bool
           :julkinenosoite                           schema/Bool
-          :wwwosoite                                (schema/maybe schema/Str)}))
+          :wwwosoite                                (schema/maybe schema/Str)
+          :laskutuskieli                            (schema/enum 0 1 2)}))
 
 (def Laatija
   "Schema representing the persistent laatija.
