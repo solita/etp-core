@@ -12,7 +12,17 @@
      inner join kayttaja on kayttaja.id = energiatodistus.laatija_id
    where ")
 
-(defn field->sql [field] (str "energiatodistus." field))
+(defn abbreviation [identifier]
+  (or (some-> identifier keyword energiatodistus-service/db-abbreviations name)
+      identifier))
+
+(defn field->sql [field]
+  (str "energiatodistus."
+       (as-> field $
+             (str/split $ #"\.")
+             (update $ 0 abbreviation)
+             (map db/snake-case $)
+             (str/join "$" $))))
 
 (defn infix-notation [operator field value]
   [(str (field->sql field) operator "?") value])
