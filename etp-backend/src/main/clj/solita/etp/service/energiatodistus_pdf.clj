@@ -304,55 +304,60 @@
         "F70" {:path [:tulokset :lampokuormat :kvesi-nettoala] :dp 0}
 
         "E74" {:path [:tulokset :laskentatyokalu]}}
-     4 {"C7" {:f #(format "Lämmitetty nettoala %s m²" (-> % :lahtotiedot :lammitetty-nettoala))}
+     4 {"C7" {:f #(str "Lämmitetty nettoala "
+                       (-> %
+                           :lahtotiedot
+                           :lammitetty-nettoala
+                           (format-number nil false))
+                       " m²")}
 
-        "H12" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukolampo-vuosikulutus]}
-        "I12" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukolampo-vuosikulutus-nettoala]}
-        "H14" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kokonaissahko-vuosikulutus]}
-        "I14" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kokonaissahko-vuosikulutus-nettoala]}
-        "H16" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kiinteistosahko-vuosikulutus]}
-        "I16" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kiinteistosahko-vuosikulutus-nettoala]}
-        "H17" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kayttajasahko-vuosikulutus]}
-        "I17" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kayttajasahko-vuosikulutus-nettoala]}
-        "H19" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukojaahdytys-vuosikulutus]}
-        "I19" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukojaahdytys-vuosikulutus-nettoala]}
+        "H12" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukolampo-vuosikulutus] :dp 0}
+        "I12" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukolampo-vuosikulutus-nettoala] :dp 0}
+        "H14" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kokonaissahko-vuosikulutus] :dp 0}
+        "I14" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kokonaissahko-vuosikulutus-nettoala] :dp 0}
+        "H16" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kiinteistosahko-vuosikulutus] :dp 0}
+        "I16" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kiinteistosahko-vuosikulutus-nettoala] :dp 0}
+        "H17" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kayttajasahko-vuosikulutus] :dp 0}
+        "I17" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kayttajasahko-vuosikulutus-nettoala] :dp 0}
+        "H19" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukojaahdytys-vuosikulutus] :dp 0}
+        "I19" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukojaahdytys-vuosikulutus-nettoala] :dp 0}
 
-        "E23" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy]}
-        "H23" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh]}
-        "I23" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh-nettoala]}
-        "E24" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu]}
-        "H24" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kwh]}
-        "I24" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kwh-nettoala]}
-        "E25" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu]}
-        "H25" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kwh]}
-        "I25" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kwh-nettoala]}
-        "E26" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit]}
-        "H26" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh]}
-        "I26" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh-nettoala]}
+        "E23" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy] :dp 0}
+        "H23" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh] :dp 0}
+        "I23" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh-nettoala] :dp 0}
+        "E24" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu] :dp 0}
+        "H24" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kwh] :dp 0}
+        "I24" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kwh-nettoala] :dp 0}
+        "E25" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu] :dp 0}
+        "H25" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kwh] :dp 0}
+        "I25" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kwh-nettoala] :dp 0}
+        "E26" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit] :dp 0}
+        "H26" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh] :dp 0}
+        "I26" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh-nettoala] :dp 0}
 
         "C27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :nimi]}
-        "E27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :maara-vuodessa]}
+        "E27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :maara-vuodessa] :dp 0}
         "F27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :yksikko]}
         "G27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :muunnoskerroin]}
-        "H27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :kwh]}
-        "I27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :kwh-nettoala]}
+        "H27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :kwh] :dp 0}
+        "I27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :kwh-nettoala] :dp 0}
         "C28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :nimi]}
-        "E28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :maara-vuodessa]}
+        "E28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :maara-vuodessa] :dp 0}
         "F28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :yksikko]}
         "G28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :muunnoskerroin]}
-        "H28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :kwh]}
-        "I28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :kwh-nettoala]}
+        "H28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :kwh] :dp 0}
+        "I28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :kwh-nettoala] :dp 0}
 
-        "H38" {:path [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa]}
-        "I38" {:path [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa-nettoala]}
-        "H40" {:path [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa]}
-        "I40" {:path [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa-nettoala]}
-        "H42" {:path [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa]}
-        "I42" {:path [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa-nettoala]}
-        "H44" {:path [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa]}
-        "I44" {:path [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala]}
-        "H46" {:path [:toteutunut-ostoenergiankulutus :summa]}
-        "I46" {:path [:toteutunut-ostoenergiankulutus :summa-nettoala]}}
+        "H38" {:path [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa] :dp 0}
+        "I38" {:path [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa-nettoala] :dp 0}
+        "H40" {:path [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa] :dp 0}
+        "I40" {:path [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa-nettoala] :dp 0}
+        "H42" {:path [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa] :dp 0}
+        "I42" {:path [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa-nettoala] :dp 0}
+        "H44" {:path [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa] :dp 0}
+        "I44" {:path [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala] :dp 0}
+        "H46" {:path [:toteutunut-ostoenergiankulutus :summa] :dp 0}
+        "I46" {:path [:toteutunut-ostoenergiankulutus :summa-nettoala] :dp 0}}
      5 {"B5" {:path [:huomiot :ymparys :teksti-fi]}
         "C12" {:path [:huomiot :ymparys :toimenpide 0 :nimi-fi]}
         "C13" {:path [:huomiot :ymparys :toimenpide 1 :nimi-fi]}
