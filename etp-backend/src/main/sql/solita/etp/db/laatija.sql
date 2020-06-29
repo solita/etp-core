@@ -8,6 +8,7 @@ SELECT k.id,
        l.toimintaalue,
        l.postinumero,
        l.laatimiskielto,
+       l.henkilotunnus,
        array(select yritys_id from laatija_yritys where laatija_id = l.id) as yritys,
        current_date between l.toteamispaivamaara and l.toteamispaivamaara + interval '7 year' as voimassa
 FROM laatija l
