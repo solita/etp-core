@@ -230,79 +230,78 @@
         "D8" {:path [:lahtotiedot :lammitetty-nettoala]}
         "D9" {:path [:tulokset :e-luku]}
 
-        "D17" {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo]}
+        "D17" {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo] :dp 0}
         "E17" {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]}
-        "F17" {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-kertoimella]}
-        "G17" {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella]}
-        "D18" {:path [:tulokset :kaytettavat-energiamuodot :sahko]}
+        "F17" {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-kertoimella] :dp 0}
+        "G17" {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella] :dp 0}
+        "D18" {:path [:tulokset :kaytettavat-energiamuodot :sahko] :dp 0}
         "E18" {:path [:tulokset :kaytettavat-energiamuodot :sahko-kerroin]}
-        "F18" {:path [:tulokset :kaytettavat-energiamuodot :sahko-kertoimella]}
-        "G18" {:path [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kertoimella]}
-        "D19" {:path [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine]}
+        "F18" {:path [:tulokset :kaytettavat-energiamuodot :sahko-kertoimella] :dp 0}
+        "G18" {:path [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kertoimella] :dp 0}
+        "D19" {:path [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine] :dp 0}
         "E19" {:path [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]}
-        "F19" {:path [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kertoimella]}
-        "G19" {:path [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella]}
-
-        "D20" {:path [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys]}
+        "F19" {:path [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kertoimella] :dp 0}
+        "G19" {:path [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella] :dp 0}
+        "D20" {:path [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys :dp 0]}
         "E20" {:path [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]}
-        "F20" {:path [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kertoimella]}
-        "G20" {:path [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]}
-        "D21" {:path [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine]}
+        "F20" {:path [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kertoimella] :dp 0}
+        "G20" {:path [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella] :dp 0}
+        "D21" {:path [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine] :dp 0}
         "E21" {:path [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin]}
-        "F21" {:path [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella]}
-        "G21" {:path [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella]}
-        "D22" {:path [:tulokset :kaytettavat-energiamuodot :summa]}
-        "F22" {:path [:tulokset :kaytettavat-energiamuodot :kertoimella-summa]}
-        "G22" {:path [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]}
+        "F21" {:path [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella] :dp 0}
+        "G21" {:path [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella] :dp 0}
+        "D22" {:path [:tulokset :kaytettavat-energiamuodot :summa] :dp 0}
+        "F22" {:path [:tulokset :kaytettavat-energiamuodot :kertoimella-summa] :dp 0}
+        "G22" {:path [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa] :dp 0}
 
-        "E28" {:path [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko]}
-        "F28" {:path [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko-nettoala]}
-        "E29" {:path [:tulokset :uusiutuvat-omavaraisenergiat :aurinkolampo]}
-        "F29" {:path [:tulokset :uusiutuvat-omavaraisenergiat :aurinkolampo-nettoala]}
-        "E30" {:path [:tulokset :uusiutuvat-omavaraisenergiat :tuulisahko]}
-        "F30" {:path [:tulokset :uusiutuvat-omavaraisenergiat :tuulisahko-nettoala]}
-        "E31" {:path [:tulokset :uusiutuvat-omavaraisenergiat :lampopumppu]}
-        "F31" {:path [:tulokset :uusiutuvat-omavaraisenergiat :lampopumppu-nettoala]}
-        "E32" {:path [:tulokset :uusiutuvat-omavaraisenergiat :muusahko]}
-        "F32" {:path [:tulokset :uusiutuvat-omavaraisenergiat :muusahko-nettoala]}
-        "E33" {:path [:tulokset :uusiutuvat-omavaraisenergiat :muulampo]}
-        "F33" {:path [:tulokset :uusiutuvat-omavaraisenergiat :muulampo-nettoala]}
+        "E28" {:path [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko] :dp 0}
+        "F28" {:path [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko-nettoala] :dp 0}
+        "E29" {:path [:tulokset :uusiutuvat-omavaraisenergiat :aurinkolampo] :dp 0}
+        "F29" {:path [:tulokset :uusiutuvat-omavaraisenergiat :aurinkolampo-nettoala] :dp 0}
+        "E30" {:path [:tulokset :uusiutuvat-omavaraisenergiat :tuulisahko] :dp 0}
+        "F30" {:path [:tulokset :uusiutuvat-omavaraisenergiat :tuulisahko-nettoala] :dp 0}
+        "E31" {:path [:tulokset :uusiutuvat-omavaraisenergiat :lampopumppu] :dp 0}
+        "F31" {:path [:tulokset :uusiutuvat-omavaraisenergiat :lampopumppu-nettoala] :dp 0}
+        "E32" {:path [:tulokset :uusiutuvat-omavaraisenergiat :muusahko] :dp 0}
+        "F32" {:path [:tulokset :uusiutuvat-omavaraisenergiat :muusahko-nettoala] :dp 0}
+        "E33" {:path [:tulokset :uusiutuvat-omavaraisenergiat :muulampo] :dp 0}
+        "F33" {:path [:tulokset :uusiutuvat-omavaraisenergiat :muulampo-nettoala] :dp 0}
 
-        "E41" {:path [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :sahko]}
-        "F41" {:path [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :lampo]}
-        "E42" {:path [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :sahko]}
-        "F42" {:path [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :lampo]}
-        "E43" {:path [:tulokset :tekniset-jarjestelmat :kayttoveden-valmistus :sahko]}
-        "F43" {:path [:tulokset :tekniset-jarjestelmat :kayttoveden-valmistus :lampo]}
-        "E44" {:path [:tulokset :tekniset-jarjestelmat :iv-sahko]}
-        "E45" {:path [:tulokset :tekniset-jarjestelmat :jaahdytys :sahko]}
-        "F45" {:path [:tulokset :tekniset-jarjestelmat :jaahdytys :lampo]}
-        "G45" {:path [:tulokset :tekniset-jarjestelmat :jaahdytys :kaukojaahdytys]}
-        "E46" {:path [:tulokset :tekniset-jarjestelmat :kuluttajalaitteet-ja-valaistus-sahko]}
+        "E41" {:path [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :sahko] :dp 1}
+        "F41" {:path [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :lampo] :dp 1}
+        "E42" {:path [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :sahko] :dp 1}
+        "F42" {:path [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :lampo] :dp 1}
+        "E43" {:path [:tulokset :tekniset-jarjestelmat :kayttoveden-valmistus :sahko] :dp 1}
+        "F43" {:path [:tulokset :tekniset-jarjestelmat :kayttoveden-valmistus :lampo] :dp 1}
+        "E44" {:path [:tulokset :tekniset-jarjestelmat :iv-sahko] :dp 1}
+        "E45" {:path [:tulokset :tekniset-jarjestelmat :jaahdytys :sahko] :dp 1}
+        "F45" {:path [:tulokset :tekniset-jarjestelmat :jaahdytys :lampo] :dp 1}
+        "G45" {:path [:tulokset :tekniset-jarjestelmat :jaahdytys :kaukojaahdytys] :dp 1}
+        "E46" {:path [:tulokset :tekniset-jarjestelmat :kuluttajalaitteet-ja-valaistus-sahko] :dp 1}
 
-        "E47" {:path [:tulokset :tekniset-jarjestelmat :sahko-summa]}
-        "F47" {:path [:tulokset :tekniset-jarjestelmat :lampo-summa]}
-        "G47" {:path [:tulokset :tekniset-jarjestelmat :kaukojaahdytys-summa]}
+        "E47" {:path [:tulokset :tekniset-jarjestelmat :sahko-summa] :dp 1}
+        "F47" {:path [:tulokset :tekniset-jarjestelmat :lampo-summa] :dp 1}
+        "G47" {:path [:tulokset :tekniset-jarjestelmat :kaukojaahdytys-summa] :dp 1}
 
-        "E54" {:path [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus]}
-        "F54" {:path [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus-nettoala]}
-        "E55" {:path [:tulokset :nettotarve :ilmanvaihdon-lammitys-vuosikulutus]}
-        "F55" {:path [:tulokset :nettotarve :ilmanvaihdon-lammitys-vuosikulutus-nettoala]}
-        "E56" {:path [:tulokset :nettotarve :kayttoveden-valmistus-vuosikulutus]}
-        "F56" {:path [:tulokset :nettotarve :kayttoveden-valmistus-vuosikulutus-nettoala]}
-        "E57" {:path [:tulokset :nettotarve :jaahdytys-vuosikulutus]}
-        "F57" {:path [:tulokset :nettotarve :jaahdytys-vuosikulutus-nettoala]}
+        "E54" {:path [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus] :dp 0}
+        "F54" {:path [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus-nettoala] :dp 0}
+        "E55" {:path [:tulokset :nettotarve :ilmanvaihdon-lammitys-vuosikulutus] :dp 0}
+        "F55" {:path [:tulokset :nettotarve :ilmanvaihdon-lammitys-vuosikulutus-nettoala] :dp 0}
+        "E56" {:path [:tulokset :nettotarve :kayttoveden-valmistus-vuosikulutus] :dp 0}
+        "F56" {:path [:tulokset :nettotarve :kayttoveden-valmistus-vuosikulutus-nettoala] :dp 0}
+        "E57" {:path [:tulokset :nettotarve :jaahdytys-vuosikulutus] :dp 0}
+        "F57" {:path [:tulokset :nettotarve :jaahdytys-vuosikulutus-nettoala] :dp 0}
 
-        "E66" {:path [:tulokset :lampokuormat :aurinko]}
-        "F66" {:path [:tulokset :lampokuormat :aurinko-nettoala]}
-        "E67" {:path [:tulokset :lampokuormat :ihmiset]}
-        "F67" {:path [:tulokset :lampokuormat :ihmiset-nettoala]}
-        "E68" {:path [:tulokset :lampokuormat :kuluttajalaitteet]}
-        "F68" {:path [:tulokset :lampokuormat :kuluttajalaitteet-nettoala]}
-        "E69" {:path [:tulokset :lampokuormat :valaistus]}
-        "F69" {:path [:tulokset :lampokuormat :valaistus-nettoala]}
-        "E70" {:path [:tulokset :lampokuormat :kvesi]}
-        "F70" {:path [:tulokset :lampokuormat :kvesi-nettoala]}
+        "E66" {:path [:tulokset :lampokuormat :aurinko] :dp 0}
+        "F66" {:path [:tulokset :lampokuormat :aurinko-nettoala] :dp 0}
+        "E67" {:path [:tulokset :lampokuormat :ihmiset] :dp 0}
+        "F67" {:path [:tulokset :lampokuormat :ihmiset-nettoala] :dp 0}
+        "E68" {:path [:tulokset :lampokuormat :kuluttajalaitteet] :dp 0}
+        "F68" {:path [:tulokset :lampokuormat :kuluttajalaitteet-nettoala] :dp 0}
+        "E69" {:path [:tulokset :lampokuormat :valaistus] :dp 0}
+        "F69" {:path [:tulokset :lampokuormat :valaistus-nettoala] :dp 0}
+        "E70" {:path [:tulokset :lampokuormat :kvesi] :dp 0}
+        "F70" {:path [:tulokset :lampokuormat :kvesi-nettoala] :dp 0}
 
         "E74" {:path [:tulokset :laskentatyokalu]}}
      4 {"C7" {:f #(format "Lämmitetty nettoala %s m²" (-> % :lahtotiedot :lammitetty-nettoala))}
