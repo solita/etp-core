@@ -362,85 +362,85 @@
         "C12" {:path [:huomiot :ymparys :toimenpide 0 :nimi-fi]}
         "C13" {:path [:huomiot :ymparys :toimenpide 1 :nimi-fi]}
         "C14" {:path [:huomiot :ymparys :toimenpide 2 :nimi-fi]}
-        "C17" {:path [:huomiot :ymparys :toimenpide 0 :lampo]}
-        "D17" {:path [:huomiot :ymparys :toimenpide 0 :sahko]}
-        "E17" {:path [:huomiot :ymparys :toimenpide 0 :jaahdytys]}
-        "F17" {:path [:huomiot :ymparys :toimenpide 0 :eluvun-muutos]}
-        "C18" {:path [:huomiot :ymparys :toimenpide 1 :lampo]}
-        "D18" {:path [:huomiot :ymparys :toimenpide 1 :sahko]}
-        "E18" {:path [:huomiot :ymparys :toimenpide 1 :jaahdytys]}
-        "F18" {:path [:huomiot :ymparys :toimenpide 1 :eluvun-muutos]}
-        "C19" {:path [:huomiot :ymparys :toimenpide 2 :lampo]}
-        "D19" {:path [:huomiot :ymparys :toimenpide 2 :sahko]}
-        "E19" {:path [:huomiot :ymparys :toimenpide 2 :jaahdytys]}
-        "F19" {:path [:huomiot :ymparys :toimenpide 2 :eluvun-muutos]}
+        "C17" {:path [:huomiot :ymparys :toimenpide 0 :lampo] :dp 0}
+        "D17" {:path [:huomiot :ymparys :toimenpide 0 :sahko] :dp 0}
+        "E17" {:path [:huomiot :ymparys :toimenpide 0 :jaahdytys] :dp 0}
+        "F17" {:path [:huomiot :ymparys :toimenpide 0 :eluvun-muutos] :dp 0}
+        "C18" {:path [:huomiot :ymparys :toimenpide 1 :lampo] :dp 0}
+        "D18" {:path [:huomiot :ymparys :toimenpide 1 :sahko] :dp 0}
+        "E18" {:path [:huomiot :ymparys :toimenpide 1 :jaahdytys] :dp 0}
+        "F18" {:path [:huomiot :ymparys :toimenpide 1 :eluvun-muutos] :dp 0}
+        "C19" {:path [:huomiot :ymparys :toimenpide 2 :lampo] :dp 0}
+        "D19" {:path [:huomiot :ymparys :toimenpide 2 :sahko] :dp 0}
+        "E19" {:path [:huomiot :ymparys :toimenpide 2 :jaahdytys] :dp 0}
+        "F19" {:path [:huomiot :ymparys :toimenpide 2 :eluvun-muutos] :dp 0}
 
         "B21" {:path [:huomiot :alapohja-ylapohja :teksti-fi]}
         "C28" {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :nimi-fi]}
         "C29" {:path [:huomiot :alapohja-ylapohja :toimenpide 1 :nimi-fi]}
         "C30" {:path [:huomiot :alapohja-ylapohja :toimenpide 2 :nimi-fi]}
-        "C33" {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :lampo]}
-        "D33" {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :sahko]}
-        "E33" {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :jaahdytys]}
-        "F33" {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :eluvun-muutos]}
-        "C34" {:path [:huomiot :alapohja-ylapohja :toimenpide 1 :lampo]}
-        "D34" {:path [:huomiot :alapohja-ylapohja :toimenpide 1 :sahko]}
-        "E34" {:path [:huomiot :alapohja-ylapohja :toimenpide 1 :jaahdytys]}
-        "F34" {:path [:huomiot :alapohja-ylapohja :toimenpide 1 :eluvun-muutos]}
-        "C35" {:path [:huomiot :alapohja-ylapohja :toimenpide 2 :lampo]}
-        "D35" {:path [:huomiot :alapohja-ylapohja :toimenpide 2 :sahko]}
-        "E35" {:path [:huomiot :alapohja-ylapohja :toimenpide 2 :jaahdytys]}
-        "F35" {:path [:huomiot :alapohja-ylapohja :toimenpide 2 :eluvun-muutos]}
+        "C33" {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :lampo] :dp 0}
+        "D33" {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :sahko] :dp 0}
+        "E33" {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :jaahdytys] :dp 0}
+        "F33" {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :eluvun-muutos] :dp 0}
+        "C34" {:path [:huomiot :alapohja-ylapohja :toimenpide 1 :lampo] :dp 0}
+        "D34" {:path [:huomiot :alapohja-ylapohja :toimenpide 1 :sahko] :dp 0}
+        "E34" {:path [:huomiot :alapohja-ylapohja :toimenpide 1 :jaahdytys] :dp 0}
+        "F34" {:path [:huomiot :alapohja-ylapohja :toimenpide 1 :eluvun-muutos] :dp 0}
+        "C35" {:path [:huomiot :alapohja-ylapohja :toimenpide 2 :lampo] :dp 0}
+        "D35" {:path [:huomiot :alapohja-ylapohja :toimenpide 2 :sahko] :dp 0}
+        "E35" {:path [:huomiot :alapohja-ylapohja :toimenpide 2 :jaahdytys] :dp 0}
+        "F35" {:path [:huomiot :alapohja-ylapohja :toimenpide 2 :eluvun-muutos] :dp 0}
 
         "B37" {:path [:huomiot :lammitys :teksti-fi]}
         "C44" {:path [:huomiot :lammitys :toimenpide 0 :nimi-fi]}
         "C45" {:path [:huomiot :lammitys :toimenpide 1 :nimi-fi]}
         "C46" {:path [:huomiot :lammitys :toimenpide 2 :nimi-fi]}
-        "C49" {:path [:huomiot :lammitys :toimenpide 0 :lampo]}
-        "D49" {:path [:huomiot :lammitys :toimenpide 0 :sahko]}
-        "E49" {:path [:huomiot :lammitys :toimenpide 0 :jaahdytys]}
-        "F49" {:path [:huomiot :lammitys :toimenpide 0 :eluvun-muutos]}
-        "C50" {:path [:huomiot :lammitys :toimenpide 1 :lampo]}
-        "D50" {:path [:huomiot :lammitys :toimenpide 1 :sahko]}
-        "E50" {:path [:huomiot :lammitys :toimenpide 1 :jaahdytys]}
-        "F50" {:path [:huomiot :lammitys :toimenpide 1 :eluvun-muutos]}
-        "C51" {:path [:huomiot :lammitys :toimenpide 2 :lampo]}
-        "D51" {:path [:huomiot :lammitys :toimenpide 2 :sahko]}
-        "E51" {:path [:huomiot :lammitys :toimenpide 2 :jaahdytys]}
-        "F51" {:path [:huomiot :lammitys :toimenpide 2 :eluvun-muutos]}}
+        "C49" {:path [:huomiot :lammitys :toimenpide 0 :lampo] :dp 0}
+        "D49" {:path [:huomiot :lammitys :toimenpide 0 :sahko] :dp 0}
+        "E49" {:path [:huomiot :lammitys :toimenpide 0 :jaahdytys] :dp 0}
+        "F49" {:path [:huomiot :lammitys :toimenpide 0 :eluvun-muutos] :dp 0}
+        "C50" {:path [:huomiot :lammitys :toimenpide 1 :lampo] :dp 0}
+        "D50" {:path [:huomiot :lammitys :toimenpide 1 :sahko] :dp 0}
+        "E50" {:path [:huomiot :lammitys :toimenpide 1 :jaahdytys] :dp 0}
+        "F50" {:path [:huomiot :lammitys :toimenpide 1 :eluvun-muutos] :dp 0}
+        "C51" {:path [:huomiot :lammitys :toimenpide 2 :lampo] :dp 0}
+        "D51" {:path [:huomiot :lammitys :toimenpide 2 :sahko] :dp 0}
+        "E51" {:path [:huomiot :lammitys :toimenpide 2 :jaahdytys] :dp 0}
+        "F51" {:path [:huomiot :lammitys :toimenpide 2 :eluvun-muutos] :dp 0}}
      6 {"B3" {:path [:huomiot :iv-ilmastointi :teksti-fi]}
         "C11" {:path [:huomiot :iv-ilmastointi :toimenpide 0 :nimi-fi]}
         "C12" {:path [:huomiot :iv-ilmastointi :toimenpide 1 :nimi-fi]}
         "C13" {:path [:huomiot :iv-ilmastointi :toimenpide 2 :nimi-fi]}
-        "C16" {:path [:huomiot :iv-ilmastointi :toimenpide 0 :lampo]}
-        "D16" {:path [:huomiot :iv-ilmastointi :toimenpide 0 :sahko]}
-        "E16" {:path [:huomiot :iv-ilmastointi :toimenpide 0 :jaahdytys]}
-        "F16" {:path [:huomiot :iv-ilmastointi :toimenpide 0 :eluvun-muutos]}
-        "C17" {:path [:huomiot :iv-ilmastointi :toimenpide 1 :lampo]}
-        "D17" {:path [:huomiot :iv-ilmastointi :toimenpide 1 :sahko]}
-        "E17" {:path [:huomiot :iv-ilmastointi :toimenpide 1 :jaahdytys]}
-        "F17" {:path [:huomiot :iv-ilmastointi :toimenpide 1 :eluvun-muutos]}
-        "C18" {:path [:huomiot :iv-ilmastointi :toimenpide 2 :lampo]}
-        "D18" {:path [:huomiot :iv-ilmastointi :toimenpide 2 :sahko]}
-        "E18" {:path [:huomiot :iv-ilmastointi :toimenpide 2 :jaahdytys]}
-        "F18" {:path [:huomiot :iv-ilmastointi :toimenpide 2 :eluvun-muutos]}
+        "C16" {:path [:huomiot :iv-ilmastointi :toimenpide 0 :lampo] :dp 0}
+        "D16" {:path [:huomiot :iv-ilmastointi :toimenpide 0 :sahko] :dp 0}
+        "E16" {:path [:huomiot :iv-ilmastointi :toimenpide 0 :jaahdytys] :dp 0}
+        "F16" {:path [:huomiot :iv-ilmastointi :toimenpide 0 :eluvun-muutos] :dp 0}
+        "C17" {:path [:huomiot :iv-ilmastointi :toimenpide 1 :lampo] :dp 0}
+        "D17" {:path [:huomiot :iv-ilmastointi :toimenpide 1 :sahko] :dp 0}
+        "E17" {:path [:huomiot :iv-ilmastointi :toimenpide 1 :jaahdytys] :dp 0}
+        "F17" {:path [:huomiot :iv-ilmastointi :toimenpide 1 :eluvun-muutos] :dp 0}
+        "C18" {:path [:huomiot :iv-ilmastointi :toimenpide 2 :lampo] :dp 0}
+        "D18" {:path [:huomiot :iv-ilmastointi :toimenpide 2 :sahko] :dp 0}
+        "E18" {:path [:huomiot :iv-ilmastointi :toimenpide 2 :jaahdytys] :dp 0}
+        "F18" {:path [:huomiot :iv-ilmastointi :toimenpide 2 :eluvun-muutos] :dp 0}
 
         "B20" {:path [:huomiot :valaistus-muut :teksti-fi]}
         "C28" {:path [:huomiot :valaistus-muut :toimenpide 0 :nimi-fi]}
         "C29" {:path [:huomiot :valaistus-muut :toimenpide 1 :nimi-fi]}
         "C30" {:path [:huomiot :valaistus-muut :toimenpide 2 :nimi-fi]}
-        "C33" {:path [:huomiot :valaistus-muut :toimenpide 0 :lampo]}
-        "D33" {:path [:huomiot :valaistus-muut :toimenpide 0 :sahko]}
-        "E33" {:path [:huomiot :valaistus-muut :toimenpide 0 :jaahdytys]}
-        "F33" {:path [:huomiot :valaistus-muut :toimenpide 0 :eluvun-muutos]}
-        "C34" {:path [:huomiot :valaistus-muut :toimenpide 1 :lampo]}
-        "D34" {:path [:huomiot :valaistus-muut :toimenpide 1 :sahko]}
-        "E34" {:path [:huomiot :valaistus-muut :toimenpide 1 :jaahdytys]}
-        "F34" {:path [:huomiot :valaistus-muut :toimenpide 1 :eluvun-muutos]}
-        "C35" {:path [:huomiot :valaistus-muut :toimenpide 2 :lampo]}
-        "D35" {:path [:huomiot :valaistus-muut :toimenpide 2 :sahko]}
-        "E35" {:path [:huomiot :valaistus-muut :toimenpide 2 :jaahdytys]}
-        "F35" {:path [:huomiot :valaistus-muut :toimenpide 2 :eluvun-muutos]}
+        "C33" {:path [:huomiot :valaistus-muut :toimenpide 0 :lampo] :dp 0}
+        "D33" {:path [:huomiot :valaistus-muut :toimenpide 0 :sahko] :dp 0}
+        "E33" {:path [:huomiot :valaistus-muut :toimenpide 0 :jaahdytys] :dp 0}
+        "F33" {:path [:huomiot :valaistus-muut :toimenpide 0 :eluvun-muutos] :dp 0}
+        "C34" {:path [:huomiot :valaistus-muut :toimenpide 1 :lampo] :dp 0}
+        "D34" {:path [:huomiot :valaistus-muut :toimenpide 1 :sahko] :dp 0}
+        "E34" {:path [:huomiot :valaistus-muut :toimenpide 1 :jaahdytys] :dp 0}
+        "F34" {:path [:huomiot :valaistus-muut :toimenpide 1 :eluvun-muutos] :dp 0}
+        "C35" {:path [:huomiot :valaistus-muut :toimenpide 2 :lampo] :dp 0}
+        "D35" {:path [:huomiot :valaistus-muut :toimenpide 2 :sahko] :dp 0}
+        "E35" {:path [:huomiot :valaistus-muut :toimenpide 2 :jaahdytys] :dp 0}
+        "F35" {:path [:huomiot :valaistus-muut :toimenpide 2 :eluvun-muutos] :dp 0}
 
         "B37" {:path [:huomiot :suositukset-fi]}}
      7 {"B3" {:path [:lisamerkintoja-fi]}}}))
