@@ -33,6 +33,14 @@
 (def locale (Locale. "fi" "FI"))
 (def format-symbols (DecimalFormatSymbols. locale))
 
+(defn format-number [x dp percent?]
+  (let [format (if percent? "#.# %" "#.#")
+        number-format (doto (java.text.DecimalFormat. format  format-symbols)
+                        (.setMinimumFractionDigits (if dp dp 0))
+                        (.setMaximumFractionDigits (if dp dp Integer/MAX_VALUE))
+                        (.setRoundingMode RoundingMode/HALF_UP))]
+    (.format number-format (bigdec x))))
+
 (defn sis-kuorma [energiatodistus]
   (->> energiatodistus
        :lahtotiedot
@@ -82,7 +90,11 @@
 
         "B50" {:f (fn [_] (.format date-formatter today))}
         "K50" {:f (fn [_] (.format date-formatter (.plusYears today 10)))}}
-     1 {"F5" {:f #(format "%s m²" (-> % :lahtotiedot :lammitetty-nettoala))}
+     1 {"F5" {:f #(-> %
+                      :lahtotiedot
+                      :lammitetty-nettoala
+                      (format-number nil false)
+                      (str " m²"))}
         "F6" {:path [:lahtotiedot :lammitys :kuvaus-fi]}
         "F7" {:path [:lahtotiedot :ilmanvaihto :kuvaus-fi]}
         "F14" {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo]}
@@ -427,14 +439,6 @@
 
         "B37" {:path [:huomiot :suositukset-fi]}}
      7 {"B3" {:path [:lisamerkintoja-fi]}}}))
-
-(defn format-number [x dp percent?]
-  (let [format (if percent? "#.# %" "#.#")
-        number-format (doto (java.text.DecimalFormat. format  format-symbols)
-                        (.setMinimumFractionDigits dp)
-                        (.setMaximumFractionDigits dp)
-                        (.setRoundingMode RoundingMode/HALF_UP))]
-    (.format number-format (bigdec x))))
 
 (defn fill-xlsx-template [complete-energiatodistus draft?]
   (with-open [is (-> xlsx-template-path io/resource io/input-stream)]
