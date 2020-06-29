@@ -79,8 +79,9 @@
          KayttajaUpdate))
 
 (def LaatijaFind
-  "A schema for find all existing laatija and its related yritys"
+  "A schema for find all existing laatija"
   (st/merge
-    (st/select-keys  Laatija [:patevyystaso :toteamispaivamaara :toimintaalue :postinumero :laatimiskielto])
+    (st/select-keys Laatija [:patevyystaso :toteamispaivamaara :toimintaalue :postinumero :laatimiskielto])
     (st/select-keys kayttaja-schema/Kayttaja [:id :etunimi :sukunimi :puhelin])
-    {:yritys [common-schema/Key]}))
+    {:yritys [common-schema/Key]
+     :voimassa schema/Bool}))
