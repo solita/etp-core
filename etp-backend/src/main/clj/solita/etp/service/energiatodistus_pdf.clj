@@ -34,12 +34,13 @@
 (def format-symbols (DecimalFormatSymbols. locale))
 
 (defn format-number [x dp percent?]
-  (let [format (if percent? "#.# %" "#.#")
-        number-format (doto (java.text.DecimalFormat. format  format-symbols)
-                        (.setMinimumFractionDigits (if dp dp 0))
-                        (.setMaximumFractionDigits (if dp dp Integer/MAX_VALUE))
-                        (.setRoundingMode RoundingMode/HALF_UP))]
-    (.format number-format (bigdec x))))
+  (when x
+    (let [format (if percent? "#.# %" "#.#")
+          number-format (doto (java.text.DecimalFormat. format  format-symbols)
+                          (.setMinimumFractionDigits (if dp dp 0))
+                          (.setMaximumFractionDigits (if dp dp Integer/MAX_VALUE))
+                          (.setRoundingMode RoundingMode/HALF_UP))]
+      (.format number-format (bigdec x)))))
 
 (defn sis-kuorma [energiatodistus]
   (->> energiatodistus
@@ -132,98 +133,98 @@
         "F5" {:path [:lahtotiedot :lammitetty-nettoala]}
         "D7" {:path [:lahtotiedot :rakennusvaippa :ilmanvuotoluku]}
 
-        "D10" {:path [:lahtotiedot :rakennusvaippa :ulkoseinat :ala]}
-        "E10" {:path [:lahtotiedot :rakennusvaippa :ulkoseinat :U]}
-        "F10" {:path [:lahtotiedot :rakennusvaippa :ulkoseinat :UA]}
-        "G10" {:path [:lahtotiedot :rakennusvaippa :ulkoseinat :osuus-lampohaviosta]}
-        "D11" {:path [:lahtotiedot :rakennusvaippa :ylapohja :ala]}
-        "E11" {:path [:lahtotiedot :rakennusvaippa :ylapohja :U]}
-        "F11" {:path [:lahtotiedot :rakennusvaippa :ylapohja :UA]}
-        "G11" {:path [:lahtotiedot :rakennusvaippa :ylapohja :osuus-lampohaviosta]}
-        "D12" {:path [:lahtotiedot :rakennusvaippa :alapohja :ala]}
-        "E12" {:path [:lahtotiedot :rakennusvaippa :alapohja :U]}
-        "F12" {:path [:lahtotiedot :rakennusvaippa :alapohja :UA]}
-        "G12" {:path [:lahtotiedot :rakennusvaippa :alapohja :osuus-lampohaviosta]}
-        "D13" {:path [:lahtotiedot :rakennusvaippa :ikkunat :ala]}
-        "E13" {:path [:lahtotiedot :rakennusvaippa :ikkunat :U]}
-        "F13" {:path [:lahtotiedot :rakennusvaippa :ikkunat :UA]}
-        "G13" {:path [:lahtotiedot :rakennusvaippa :ikkunat :osuus-lampohaviosta]}
-        "D14" {:path [:lahtotiedot :rakennusvaippa :ulkoovet :ala]}
-        "E14" {:path [:lahtotiedot :rakennusvaippa :ulkoovet :U]}
-        "F14" {:path [:lahtotiedot :rakennusvaippa :ulkoovet :UA]}
-        "G14" {:path [:lahtotiedot :rakennusvaippa :ulkoovet :osuus-lampohaviosta]}
-        "F15" {:path [:lahtotiedot :rakennusvaippa :kylmasillat-UA]}
-        "G15" {:path [:lahtotiedot :rakennusvaippa :kylmasillat-osuus-lampohaviosta]}
+        "D10" {:path [:lahtotiedot :rakennusvaippa :ulkoseinat :ala] :dp 1}
+        "E10" {:path [:lahtotiedot :rakennusvaippa :ulkoseinat :U] :dp 2}
+        "F10" {:path [:lahtotiedot :rakennusvaippa :ulkoseinat :UA] :dp 1}
+        "G10" {:path [:lahtotiedot :rakennusvaippa :ulkoseinat :osuus-lampohaviosta] :dp 0 :percent? true}
+        "D11" {:path [:lahtotiedot :rakennusvaippa :ylapohja :ala] :dp 1}
+        "E11" {:path [:lahtotiedot :rakennusvaippa :ylapohja :U] :dp 2}
+        "F11" {:path [:lahtotiedot :rakennusvaippa :ylapohja :UA] :dp 1}
+        "G11" {:path [:lahtotiedot :rakennusvaippa :ylapohja :osuus-lampohaviosta] :dp 0 :percent? true}
+        "D12" {:path [:lahtotiedot :rakennusvaippa :alapohja :ala] :dp 1}
+        "E12" {:path [:lahtotiedot :rakennusvaippa :alapohja :U] :dp 2}
+        "F12" {:path [:lahtotiedot :rakennusvaippa :alapohja :UA] :dp 1}
+        "G12" {:path [:lahtotiedot :rakennusvaippa :alapohja :osuus-lampohaviosta] :dp 0 :percent? true}
+        "D13" {:path [:lahtotiedot :rakennusvaippa :ikkunat :ala] :dp 1}
+        "E13" {:path [:lahtotiedot :rakennusvaippa :ikkunat :U] :dp 2}
+        "F13" {:path [:lahtotiedot :rakennusvaippa :ikkunat :UA] :dp 1}
+        "G13" {:path [:lahtotiedot :rakennusvaippa :ikkunat :osuus-lampohaviosta] :dp 0 :percent? true}
+        "D14" {:path [:lahtotiedot :rakennusvaippa :ulkoovet :ala] :dp 1}
+        "E14" {:path [:lahtotiedot :rakennusvaippa :ulkoovet :U] :dp 2}
+        "F14" {:path [:lahtotiedot :rakennusvaippa :ulkoovet :UA] :dp 1}
+        "G14" {:path [:lahtotiedot :rakennusvaippa :ulkoovet :osuus-lampohaviosta] :dp 0 :percent? true}
+        "F15" {:path [:lahtotiedot :rakennusvaippa :kylmasillat-UA] :dp 1}
+        "G15" {:path [:lahtotiedot :rakennusvaippa :kylmasillat-osuus-lampohaviosta] :dp 0 :percent? true}
 
-        "D19" {:path [:lahtotiedot :ikkunat :pohjoinen :ala]}
-        "E19" {:path [:lahtotiedot :ikkunat :pohjoinen :U]}
-        "F19" {:path [:lahtotiedot :ikkunat :pohjoinen :g-ks]}
-        "D20" {:path [:lahtotiedot :ikkunat :koillinen :ala]}
-        "E20" {:path [:lahtotiedot :ikkunat :koillinen :U]}
-        "F20" {:path [:lahtotiedot :ikkunat :koillinen :g-ks]}
-        "D21" {:path [:lahtotiedot :ikkunat :ita :ala]}
-        "E21" {:path [:lahtotiedot :ikkunat :ita :U]}
-        "F21" {:path [:lahtotiedot :ikkunat :ita :g-ks]}
-        "D22" {:path [:lahtotiedot :ikkunat :kaakko :ala]}
-        "E22" {:path [:lahtotiedot :ikkunat :kaakko :U]}
-        "F22" {:path [:lahtotiedot :ikkunat :kaakko :g-ks]}
-        "D23" {:path [:lahtotiedot :ikkunat :etela :ala]}
-        "E23" {:path [:lahtotiedot :ikkunat :etela :U]}
-        "F23" {:path [:lahtotiedot :ikkunat :etela :g-ks]}
-        "D24" {:path [:lahtotiedot :ikkunat :lounas :ala]}
-        "E24" {:path [:lahtotiedot :ikkunat :lounas :U]}
-        "F24" {:path [:lahtotiedot :ikkunat :lounas :g-ks]}
-        "D25" {:path [:lahtotiedot :ikkunat :lansi :ala]}
-        "E25" {:path [:lahtotiedot :ikkunat :lansi :U]}
-        "F25" {:path [:lahtotiedot :ikkunat :lansi :g-ks]}
-        "D26" {:path [:lahtotiedot :ikkunat :luode :ala]}
-        "E26" {:path [:lahtotiedot :ikkunat :luode :U]}
-        "F26" {:path [:lahtotiedot :ikkunat :luode :g-ks]}
+        "D19" {:path [:lahtotiedot :ikkunat :pohjoinen :ala] :dp 1}
+        "E19" {:path [:lahtotiedot :ikkunat :pohjoinen :U] :dp 2}
+        "F19" {:path [:lahtotiedot :ikkunat :pohjoinen :g-ks] :dp 2}
+        "D20" {:path [:lahtotiedot :ikkunat :koillinen :ala] :dp 1}
+        "E20" {:path [:lahtotiedot :ikkunat :koillinen :U] :dp 2}
+        "F20" {:path [:lahtotiedot :ikkunat :koillinen :g-ks] :dp 2}
+        "D21" {:path [:lahtotiedot :ikkunat :ita :ala] :dp 1}
+        "E21" {:path [:lahtotiedot :ikkunat :ita :U] :dp 2}
+        "F21" {:path [:lahtotiedot :ikkunat :ita :g-ks] :dp 2}
+        "D22" {:path [:lahtotiedot :ikkunat :kaakko :ala] :dp 1}
+        "E22" {:path [:lahtotiedot :ikkunat :kaakko :U] :dp 2}
+        "F22" {:path [:lahtotiedot :ikkunat :kaakko :g-ks] :dp 2}
+        "D23" {:path [:lahtotiedot :ikkunat :etela :ala] :dp 1}
+        "E23" {:path [:lahtotiedot :ikkunat :etela :U] :dp 2}
+        "F23" {:path [:lahtotiedot :ikkunat :etela :g-ks] :dp 2}
+        "D24" {:path [:lahtotiedot :ikkunat :lounas :ala] :dp 1}
+        "E24" {:path [:lahtotiedot :ikkunat :lounas :U] :dp 2}
+        "F24" {:path [:lahtotiedot :ikkunat :lounas :g-ks] :dp 2}
+        "D25" {:path [:lahtotiedot :ikkunat :lansi :ala] :dp 1}
+        "E25" {:path [:lahtotiedot :ikkunat :lansi :U] :dp 2}
+        "F25" {:path [:lahtotiedot :ikkunat :lansi :g-ks] :dp 2}
+        "D26" {:path [:lahtotiedot :ikkunat :luode :ala] :dp 1}
+        "E26" {:path [:lahtotiedot :ikkunat :luode :U] :dp 2}
+        "F26" {:path [:lahtotiedot :ikkunat :luode :g-ks] :dp 2}
 
         "D28" {:path [:lahtotiedot :ilmanvaihto :kuvaus-fi]}
         "D33" {:path [:lahtotiedot :ilmanvaihto :paaiv :tulo-poisto]}
-        "E33" {:path [:lahtotiedot :ilmanvaihto :paaiv :sfp]}
-        "F33" {:path [:lahtotiedot :ilmanvaihto :paaiv :lampotilasuhde]}
-        "G33" {:path [:lahtotiedot :ilmanvaihto :paaiv :jaatymisenesto]}
+        "E33" {:path [:lahtotiedot :ilmanvaihto :paaiv :sfp] :dp 2}
+        "F33" {:path [:lahtotiedot :ilmanvaihto :paaiv :lampotilasuhde] :dp 0 :percent? true}
+        "G33" {:path [:lahtotiedot :ilmanvaihto :paaiv :jaatymisenesto] :dp 2}
         "D34" {:path [:lahtotiedot :ilmanvaihto :erillispoistot :tulo-poisto]}
-        "E34" {:path [:lahtotiedot :ilmanvaihto :erillispoistot :sfp]}
+        "E34" {:path [:lahtotiedot :ilmanvaihto :erillispoistot :sfp] :dp 2}
         "D35" {:path [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo-poisto]}
-        "E35" {:path [:lahtotiedot :ilmanvaihto :ivjarjestelma :sfp]}
-        "E36" {:path [:lahtotiedot :ilmanvaihto :lto-vuosihyotysuhde]}
+        "E35" {:path [:lahtotiedot :ilmanvaihto :ivjarjestelma :sfp] :dp 2}
+        "E36" {:path [:lahtotiedot :ilmanvaihto :lto-vuosihyotysuhde] :dp 0 :percent? true}
 
         "D38" {:path [:lahtotiedot :lammitys :kuvaus-fi]}
 
-        "D43" {:path [:lahtotiedot :lammitys :tilat-ja-iv :tuoton-hyotysuhde]}
-        "E43" {:path [:lahtotiedot :lammitys :tilat-ja-iv :jaon-hyotysuhde]}
-        "F43" {:path [:lahtotiedot :lammitys :tilat-ja-iv :lampokerroin]}
-        "G43" {:path [:lahtotiedot :lammitys :tilat-ja-iv :apulaitteet]}
-        "D44" {:path [:lahtotiedot :lammitys :lammin-kayttovesi :tuoton-hyotysuhde]}
-        "E44" {:path [:lahtotiedot :lammitys :lammin-kayttovesi :jaon-hyotysuhde]}
-        "F44" {:path [:lahtotiedot :lammitys :lammin-kayttovesi :lampokerroin]}
-        "G44" {:path [:lahtotiedot :lammitys :lammin-kayttovesi :apulaitteet]}
+        "D43" {:path [:lahtotiedot :lammitys :tilat-ja-iv :tuoton-hyotysuhde] :dp 0 :percent? true}
+        "E43" {:path [:lahtotiedot :lammitys :tilat-ja-iv :jaon-hyotysuhde] :dp 0 :percent? true}
+        "F43" {:path [:lahtotiedot :lammitys :tilat-ja-iv :lampokerroin] :dp 1}
+        "G43" {:path [:lahtotiedot :lammitys :tilat-ja-iv :apulaitteet] :dp 1}
+        "D44" {:path [:lahtotiedot :lammitys :lammin-kayttovesi :tuoton-hyotysuhde] :dp 0 :percent? true}
+        "E44" {:path [:lahtotiedot :lammitys :lammin-kayttovesi :jaon-hyotysuhde] :dp 0 :percent? true}
+        "F44" {:path [:lahtotiedot :lammitys :lammin-kayttovesi :lampokerroin] :dp 1}
+        "G44" {:path [:lahtotiedot :lammitys :lammin-kayttovesi :apulaitteet] :dp 1}
 
         "D50" {:path [:lahtotiedot :lammitys :takka :maara]}
-        "E50" {:path [:lahtotiedot :lammitys :takka :tuotto]}
+        "E50" {:path [:lahtotiedot :lammitys :takka :tuotto] :dp 0}
         "D51" {:path [:lahtotiedot :lammitys :ilmanlampopumppu :maara]}
-        "E51" {:path [:lahtotiedot :lammitys :ilmanlampopumppu :tuotto]}
+        "E51" {:path [:lahtotiedot :lammitys :ilmanlampopumppu :tuotto] :dp 0}
 
-        "D55" {:path [:lahtotiedot :jaahdytysjarjestelma :jaahdytyskauden-painotettu-kylmakerroin]}
+        "D55" {:path [:lahtotiedot :jaahdytysjarjestelma :jaahdytyskauden-painotettu-kylmakerroin] :dp 2}
 
-        "D59" {:path [:lahtotiedot :lkvn-kaytto :kulutus-per-nelio]}
-        "E59" {:path [:lahtotiedot :lkvn-kaytto :vuosikulutus]}
+        "D59" {:path [:lahtotiedot :lkvn-kaytto :kulutus-per-nelio] :dp 0}
+        "E59" {:path [:lahtotiedot :lkvn-kaytto :vuosikulutus] :dp 0}
 
-        "D63" {:f #(-> % sis-kuorma (get 0) first)}
-        "E63" {:f #(-> % sis-kuorma (get 0) second :henkilot)}
-        "F63" {:f #(-> % sis-kuorma (get 0) second :kuluttajalaitteet)}
-        "G63" {:f #(-> % sis-kuorma (get 0) second :valaistus)}
-        "D64" {:f #(-> % sis-kuorma (get 1) first)}
-        "E64" {:f #(-> % sis-kuorma (get 1) second :henkilot)}
-        "F64" {:f #(-> % sis-kuorma (get 1) second :kuluttajalaitteet)}
-        "G64" {:f #(-> % sis-kuorma (get 1) second :valaistus)}
-        "D65" {:f #(-> % sis-kuorma (get 2) first)}
-        "E65" {:f #(-> % sis-kuorma (get 2) second :henkilot)}
-        "F65" {:f #(-> % sis-kuorma (get 2) second :kuluttajalaitteet)}
-        "G65" {:f #(-> % sis-kuorma (get 2) second :valaistus)}}
+        "D63" {:f #(-> % sis-kuorma (get 0) first (format-number 0 true))}
+        "E63" {:f #(-> % sis-kuorma (get 0) second :henkilot (format-number 1 false))}
+        "F63" {:f #(-> % sis-kuorma (get 0) second :kuluttajalaitteet (format-number 1 false))}
+        "G63" {:f #(-> % sis-kuorma (get 0) second :valaistus (format-number 1 false))}
+        "D64" {:f #(-> % sis-kuorma (get 1) first (format-number 0 true))}
+        "E64" {:f #(-> % sis-kuorma (get 1) second :henkilot (format-number 1 false))}
+        "F64" {:f #(-> % sis-kuorma (get 1) second :kuluttajalaitteet (format-number 1 false))}
+        "G64" {:f #(-> % sis-kuorma (get 1) second :valaistus (format-number 1 false))}
+        "D65" {:f #(-> % sis-kuorma (get 2) first (format-number 0 true))}
+        "E65" {:f #(-> % sis-kuorma (get 2) second :henkilot (format-number 1 false))}
+        "F65" {:f #(-> % sis-kuorma (get 2) second :kuluttajalaitteet (format-number 1 false))}
+        "G65" {:f #(-> % sis-kuorma (get 2) second :valaistus (format-number 1 false))}}
      3 {"D4" {:path [:perustiedot :alakayttotarkoitus-fi]}
         "D7" {:path [:perustiedot :valmistumisvuosi]}
         "D8" {:path [:lahtotiedot :lammitetty-nettoala]}
