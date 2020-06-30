@@ -9,8 +9,7 @@
   "select energiatodistus.*,
           fullname(kayttaja.*) laatija_fullname
    from energiatodistus
-     inner join kayttaja on kayttaja.id = energiatodistus.laatija_id
-   where ")
+     inner join kayttaja on kayttaja.id = energiatodistus.laatija_id")
 
 (defn abbreviation [identifier]
   (or (some-> identifier keyword energiatodistus-service/db-abbreviations name)
@@ -49,19 +48,21 @@
 
 (defn where->sql [where]
   (expression-seq->sql
-    "and"
-    #(expression-seq->sql "or" predicate-expression->sql %)
+    "or"
+    #(expression-seq->sql "and" predicate-expression->sql %)
     where))
+
+(def blank? (some-fn nil? empty?))
 
 (defn query->sql [{:keys [where sort order limit offset] :or {order "asc"}}]
   (schema/validate [[[(schema/one schema/Str "predicate") schema/Any]]] where)
 
   (let [[where-sql & params] (where->sql where)]
     (cons (str base-query
-               where-sql
-               (when sort   (str \newline "order by " sort " " order))
-               (when limit  (str \newline "limit " limit))
-               (when offset (str \newline "offset " offset)))
+               (when-not (blank? where-sql) (str \newline "where " where-sql))
+               (when-not (blank? sort)      (str \newline "order by " (field->sql sort) " " order))
+               (when-not (blank? limit)     (str \newline "limit " limit))
+               (when-not (blank? offset)    (str \newline "offset " offset)))
           params)))
 
 (defn search [db query]

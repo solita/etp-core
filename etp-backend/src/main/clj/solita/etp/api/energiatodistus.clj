@@ -8,12 +8,14 @@
             [solita.etp.api.energiatodistus-liite :as liite-api]
             [solita.etp.api.energiatodistus-signing :as signing-api]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
+            [solita.etp.service.energiatodistus-search :as energiatodistus-search-service]
             [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf-service]
             [solita.etp.service.energiatodistus-xlsx :as energiatodistus-xlsx-service]
             [solita.etp.service.e-luokka :as e-luokka-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.security :as security]
-            [solita.etp.api.response :as api-response]))
+            [solita.etp.api.response :as api-response]
+            [solita.etp.service.json :as json]))
 
 (def external-routes
   [["/energiatodistukset/2018" {:middleware [[security/wrap-whoami-from-basic-auth]
@@ -40,15 +42,22 @@
 (def private-routes
   [["/energiatodistukset"
     [""
-     {:get {:summary    "Hae laatijan energiatodistukset"
-            :parameters {:query {(schema/optional-key :tila) schema/Int}}
+     {:get {:summary    "Hae energiatodistuksia"
+            :parameters {:query {(schema/optional-key :tila)   schema/Int
+                                 (schema/optional-key :sort)   schema/Str
+                                 (schema/optional-key :order)  schema/Str
+                                 (schema/optional-key :limit)  schema/Int
+                                 (schema/optional-key :offset) schema/Int
+                                 (schema/optional-key :where)  schema/Str}}
             :responses  {200 {:body [energiatodistus-schema/Energiatodistus]}}
             :access     rooli-service/laatija?
-            :handler    (fn [{{{:keys [tila]} :query} :parameters :keys [db whoami]}]
-                          (r/response (energiatodistus-service/find-energiatodistukset-by-laatija
-                                       db
-                                       (:id whoami)
-                                       tila)))}}]
+            :handler    (fn [{{{:keys [where sort order limit offset]} :query} :parameters
+                              :keys [db whoami]}]
+                          (r/response (energiatodistus-search-service/search
+                                        db
+                                        {:where (json/read-value where)
+                                         :sort  sort :order order
+                                         :limit limit :offset offset})))}}]
     ["/xlsx/energiatodistukset.xlsx"
      {:get {:summary   "Lataa laatijan energiatodistuksien tiedot XLSX-tiedostona"
             :responses {200 {:body nil}
