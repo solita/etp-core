@@ -214,12 +214,6 @@
 ;; Energiatodistuksen "denormalisointi" and "laskennalliset kentät""
 ;;
 
-(defn *-ceil [& args]
-  (->> args (apply *) Math/ceil))
-
-(defn div-ceil [& args]
-  (->> args (apply /) Math/ceil))
-
 (defn combine-keys [m f nil-replacement path-new & paths]
   (let [vals (map #(or (get-in m %) nil-replacement) paths)]
     (if (not-any? nil? vals)
@@ -230,7 +224,7 @@
   (let [new-k (-> path last name (str "-nettoala") keyword)
         new-path (-> path pop (conj new-k))]
     (combine-keys energiatodistus
-                  div-ceil
+                  /
                   nil
                   new-path
                   path
@@ -270,52 +264,52 @@
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine])
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine])
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys])
-          (combine-keys *-ceil
+          (combine-keys *
                         nil
                         [:tulokset :kaytettavat-energiamuodot :kaukolampo-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :kaukolampo]
                         [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin])
-          (combine-keys *-ceil
+          (combine-keys *
                         nil
                         [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala]
                         [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin])
-          (combine-keys *-ceil
+          (combine-keys *
                         nil
                         [:tulokset :kaytettavat-energiamuodot :sahko-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :sahko]
                         [:tulokset :kaytettavat-energiamuodot :sahko-kerroin])
-          (combine-keys *-ceil
+          (combine-keys *
                         nil
                         [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :sahko-nettoala]
                         [:tulokset :kaytettavat-energiamuodot :sahko-kerroin])
-          (combine-keys *-ceil
+          (combine-keys *
                         nil
                         [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine]
                         [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin])
-          (combine-keys *-ceil
+          (combine-keys *
                         nil
                         [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala]
                         [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin])
-          (combine-keys *-ceil
+          (combine-keys *
                         nil
                         [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine]
                         [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin])
-          (combine-keys *-ceil
+          (combine-keys *
                         nil
                         [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala]
                         [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin])
-          (combine-keys *-ceil
+          (combine-keys *
                         nil
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys]
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin])
-          (combine-keys *-ceil
+          (combine-keys *
                         nil
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala]
@@ -336,7 +330,7 @@
                         [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella])
-          (combine-keys +
+          (combine-keys (comp #(Math/ceil %) +)
                         0
                         [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]
                         [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella]
@@ -473,22 +467,22 @@
           (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kerroin] 1300)
           (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kerroin] 1700)
           (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kerroin] 4.7)
-          (combine-keys *-ceil
+          (combine-keys *
                         nil
                         [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh]
                         [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy]
                         [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kerroin])
-          (combine-keys *-ceil
+          (combine-keys *
                         nil
                         [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kwh]
                         [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu]
                         [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kerroin])
-          (combine-keys *-ceil
+          (combine-keys *
                         nil
                         [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kwh]
                         [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu]
                         [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kerroin])
-          (combine-keys *-ceil
+          (combine-keys *
                         nil
                         [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh]
                         [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit]
@@ -503,7 +497,7 @@
                          (mapv (fn [{:keys [maara-vuodessa muunnoskerroin] :as vapaa}]
                                  (if (and maara-vuodessa muunnoskerroin)
                                    (let [kwh (* maara-vuodessa muunnoskerroin)]
-                                     (assoc vapaa :kwh kwh :kwh-nettoala (div-ceil kwh nettoala)))
+                                     (assoc vapaa :kwh kwh :kwh-nettoala (/ kwh nettoala)))
                                    vapaa))
                                vapaat)
                          vapaat)))
