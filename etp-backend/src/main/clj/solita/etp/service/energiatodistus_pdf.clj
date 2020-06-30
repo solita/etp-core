@@ -94,7 +94,7 @@
      1 {"F5" {:f #(-> %
                       :lahtotiedot
                       :lammitetty-nettoala
-                      (format-number nil false)
+                      (format-number 1 false)
                       (str " m²"))}
         "F6" {:path [:lahtotiedot :lammitys :kuvaus-fi]}
         "F7" {:path [:lahtotiedot :ilmanvaihto :kuvaus-fi]}
@@ -130,7 +130,7 @@
         "C38" {:path [:perustiedot :keskeiset-suositukset-fi]}}
      2 {"D4" {:path [:perustiedot :alakayttotarkoitus-fi]}
         "D5" {:path [:perustiedot :valmistumisvuosi]}
-        "F5" {:path [:lahtotiedot :lammitetty-nettoala]}
+        "F5" {:path [:lahtotiedot :lammitetty-nettoala] :dp 1}
         "D7" {:path [:lahtotiedot :rakennusvaippa :ilmanvuotoluku] :dp 1}
 
         "D10" {:path [:lahtotiedot :rakennusvaippa :ulkoseinat :ala] :dp 1}
@@ -227,7 +227,7 @@
         "G65" {:f #(-> % sis-kuorma (get 2) second :valaistus (format-number 1 false))}}
      3 {"D4" {:path [:perustiedot :alakayttotarkoitus-fi]}
         "D7" {:path [:perustiedot :valmistumisvuosi]}
-        "D8" {:path [:lahtotiedot :lammitetty-nettoala]}
+        "D8" {:path [:lahtotiedot :lammitetty-nettoala] :dp 1}
         "D9" {:path [:tulokset :e-luku]}
 
         "D17" {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo] :dp 0}
@@ -308,7 +308,7 @@
                        (-> %
                            :lahtotiedot
                            :lammitetty-nettoala
-                           (format-number nil false))
+                           (format-number 1 false))
                        " m²")}
 
         "H12" {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukolampo-vuosikulutus] :dp 0}
