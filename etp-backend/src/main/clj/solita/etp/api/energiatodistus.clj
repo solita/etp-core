@@ -43,7 +43,7 @@
   [["/energiatodistukset"
     [""
      {:get {:summary    "Hae energiatodistuksia"
-            :parameters {:query {(schema/optional-key :tila)   schema/Int
+            :parameters {:query {(schema/optional-key :tila)   schema/Int ;; deprecated
                                  (schema/optional-key :sort)   schema/Str
                                  (schema/optional-key :order)  schema/Str
                                  (schema/optional-key :limit)  schema/Int
