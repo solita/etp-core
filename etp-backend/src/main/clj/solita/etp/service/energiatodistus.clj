@@ -330,7 +330,7 @@
                         [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella])
-          (combine-keys +
+          (combine-keys (comp #(Math/ceil %) +)
                         0
                         [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]
                         [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella]
