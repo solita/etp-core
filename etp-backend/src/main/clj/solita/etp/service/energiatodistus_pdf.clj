@@ -101,7 +101,7 @@
         "F14" {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo] :dp 0}
         "G14" {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala] :dp 0}
         "H14" {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]}
-        "I14" {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella :dp 0]}
+        "I14" {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella] :dp 0}
         "F15" {:path [:tulokset :kaytettavat-energiamuodot :sahko] :dp 0}
         "G15" {:path [:tulokset :kaytettavat-energiamuodot :sahko-nettoala] :dp 0}
         "H15" {:path [:tulokset :kaytettavat-energiamuodot :sahko-kerroin]}
