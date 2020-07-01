@@ -4,6 +4,7 @@
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.json :as json]
             [solita.etp.service.rooli :as rooli-service]
+            [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
             [solita.postgresql.composite :as pg-composite]
             [solita.common.schema :as xschema]
             [schema.coerce :as coerce]
@@ -195,20 +196,6 @@
 ;;
 ;; Energiatodistuksen käyttötarkoitusluokittelu
 ;;
-
-(defn find-kayttotarkoitukset [db versio]
-  (energiatodistus-db/select-kayttotarkoitusluokat-by-versio db {:versio versio}))
-
-(defn find-alakayttotarkoitukset [db versio]
-  (energiatodistus-db/select-alakayttotarkoitusluokat-by-versio db {:versio versio}))
-
-(defn find-kayttotarkoitus-id-by-alakayttotarkoitus-id [db versio id]
-  (-> db
-      (energiatodistus-db/select-kayttotarkoitusluokka-id-by-versio-and-alakayttotarkoitusluokka-id
-       {:versio versio
-        :id id})
-      first
-      :id))
 
 ;;
 ;; Energiatodistuksen "denormalisointi" and "laskennalliset kentät""
@@ -522,16 +509,20 @@
 
 (defn find-complete-energiatodistus
   ([db id]
-   (find-complete-energiatodistus* (find-energiatodistus db id)
-                                   (find-alakayttotarkoitukset db 2018)))
+   (find-complete-energiatodistus*
+    (find-energiatodistus db id)
+    (kayttotarkoitus-service/find-alakayttotarkoitukset
+     db
+     2018)))
   ([db whoami id]
-   (find-complete-energiatodistus* (find-energiatodistus db whoami id)
-                                   (find-alakayttotarkoitukset db 2018))))
+   (find-complete-energiatodistus*
+    (find-energiatodistus db whoami id)
+    (kayttotarkoitus-service/find-alakayttotarkoitukset db 2018))))
 
 (defn find-complete-energiatodistukset-by-laatija [db laatija-id tila-id]
   (let [energiatodistukset (find-energiatodistukset-by-laatija db
                                                                laatija-id
                                                                tila-id)
-        alakayttotarkoitukset (find-alakayttotarkoitukset db 2018)]
+        alakayttotarkoitukset (kayttotarkoitus-service/find-alakayttotarkoitukset db 2018)]
     (->> (find-energiatodistukset-by-laatija db laatija-id tila-id)
          (map #(find-complete-energiatodistus* % alakayttotarkoitukset)))))

@@ -287,9 +287,4 @@
     (partial versio? 2018) Energiatodistus2018
     (partial versio? 2013) Energiatodistus2013))
 
-(def Alakayttotarkoitusluokka
-  (assoc common-schema/Luokittelu
-    :kayttotarkoitusluokka-id common-schema/Key
-    :id schema/Str))
-
 (def Signature {:signature schema/Str :chain [schema/Str]})

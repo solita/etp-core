@@ -1,6 +1,6 @@
 (ns solita.etp.service.e-luokka
   (:require [clojure.core.match :as match]
-            [solita.etp.service.energiatodistus :as energiatodistus-service]))
+            [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]))
 
 (defn limits-without-kertoimet [limits-with-kertoimet nettoala]
   (let [default-luokka (last limits-with-kertoimet)
@@ -121,7 +121,7 @@
         default-luokka)))
 
 (defn find-e-luokka-and-limits [db versio alakayttotarkoitus-id nettoala e-luku]
-  (let [kayttotarkoitus-id (energiatodistus-service/find-kayttotarkoitus-id-by-alakayttotarkoitus-id
+  (let [kayttotarkoitus-id (kayttotarkoitus-service/find-kayttotarkoitus-id-by-alakayttotarkoitus-id
                             db
                             versio
                             alakayttotarkoitus-id)
