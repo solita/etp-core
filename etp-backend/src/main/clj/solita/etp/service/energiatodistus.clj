@@ -230,9 +230,11 @@
           laatimisvaihe (->> (find-laatimisvaiheet)
                              (filter #(= (:id %) laatimisvaihe-id))
                              first)
-          kayttotarkoitus-id (:kayttotarkoitus perustiedot)
+
+          ;; Käyttötarkoitus is actually alakäyttötarkoitus in database
+          alakayttotarkoitus-id (:kayttotarkoitus perustiedot)
           alakayttotarkoitus (->> alakayttotarkoitukset
-                                  (filter #(= (:id %) kayttotarkoitus-id))
+                                  (filter #(= (:id %) alakayttotarkoitus-id))
                                   first)]
       (-> energiatodistus
           (assoc-in [:perustiedot :kieli-fi] (:label-fi kielisyys))

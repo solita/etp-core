@@ -47,6 +47,8 @@
    :rakennusosa              common-schema/String100
    :kieli                    common-schema/Key
    :nimi                     common-schema/String50
+
+   ;; This in in fact alakäyttötarkoitus in database
    :kayttotarkoitus          schema/Str})
 
 (defn Rakenneusvaippa [mininclusive maxinclusive]
