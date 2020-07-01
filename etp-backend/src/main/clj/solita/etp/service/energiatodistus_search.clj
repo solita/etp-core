@@ -24,7 +24,7 @@
              (str/join "$" $))))
 
 (defn infix-notation [operator field value]
-  [(str (field->sql field) operator "?") value])
+  [(str (field->sql field) " " operator " ?") value])
 
 (defn between-expression [_ field value1 value2]
   [(str field " between ? and ?") value1 value2])
@@ -54,15 +54,16 @@
 
 (def blank? (some-fn nil? empty?))
 
-(defn query->sql [{:keys [where sort order limit offset] :or {order "asc"}}]
+(defn query->sql [{:keys [where sort order limit offset]}]
   (schema/validate [[[(schema/one schema/Str "predicate") schema/Any]]] where)
 
   (let [[where-sql & params] (where->sql where)]
     (cons (str base-query
                (when-not (blank? where-sql) (str \newline "where " where-sql))
-               (when-not (blank? sort)      (str \newline "order by " (field->sql sort) " " order))
-               (when-not (blank? limit)     (str \newline "limit " limit))
-               (when-not (blank? offset)    (str \newline "offset " offset)))
+               (when-not (blank? sort)
+                 (str \newline "order by " (field->sql sort) " " (or order "asc")))
+               (str \newline "limit " (or limit 100))
+               (when-not (nil? offset) (str \newline "offset " offset)))
           params)))
 
 (defn search [db query]
