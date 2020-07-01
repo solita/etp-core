@@ -3,6 +3,7 @@
   (:require [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.geo :as geo-schema]
+            [solita.etp.schema.kayttaja :as kayttaja-schema]
             [schema-tools.core :as st]))
 
 (def Patevyystaso common-schema/Luokittelu)
@@ -78,3 +79,10 @@
   (merge LaatijaUpdate
          KayttajaUpdate))
 
+(def LaatijaFind
+  "A schema for find all existing laatija"
+  (st/merge
+    (st/select-keys Laatija [:patevyystaso :toteamispaivamaara :toimintaalue :postinumero :laatimiskielto :henkilotunnus])
+    (st/select-keys kayttaja-schema/Kayttaja [:id :etunimi :sukunimi :puhelin])
+    {:yritys [common-schema/Key]
+     :voimassa schema/Bool}))
