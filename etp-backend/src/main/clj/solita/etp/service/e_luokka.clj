@@ -1,67 +1,66 @@
 (ns solita.etp.service.e-luokka
   (:require [clojure.core.match :as match]
-            [solita.etp.service.energiatodistus :as energiatodistus-service]))
+            [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]))
 
-(defn limits-without-kertoimet [limits-with-kertoimet nettoala]
-  (let [default-luokka (last limits-with-kertoimet)
-        limits-with-kertoimet (butlast limits-with-kertoimet)]
-    (conj (mapv (fn [[limit kerroin e-luokka]]
-                  [(->> nettoala (* kerroin) (- limit) int) e-luokka])
-                limits-with-kertoimet)
-          default-luokka)))
+(def default-luokka "G")
+
+(defn rajat-without-kertoimet [rajat-with-kertoimet nettoala]
+  (mapv (fn [[limit kerroin e-luokka]]
+          [(->> nettoala (* kerroin) (- limit) int) e-luokka])
+        rajat-with-kertoimet))
 
 (defn pienet-asuinrakennukset-120-2013 [_]
-  [[94 "A"] [164 "B"] [204 "C"] [284 "D"] [414 "E"] [484 "F"] "G"])
+  [[94 "A"] [164 "B"] [204 "C"] [284 "D"] [414 "E"] [484 "F"]])
 
 (defn pienet-asuinrakennukset-120-150-2013 [nettoala]
-  (limits-without-kertoimet
+  (rajat-without-kertoimet
    [[150 0.47 "A"] [320 1.3 "B"] [372 1.4 "C"] [452 1.4 "D"] [582 1.4 "E"]
-    [652 1.4 "F"] "G"]
+    [652 1.4 "F"]]
    nettoala))
 
 (defn pienet-asuinrakennukset-150-600-2013-2018 [nettoala]
-  (limits-without-kertoimet
+  (rajat-without-kertoimet
    [[83 0.02 "A"] [131 0.04 "B"] [173 0.07 "C"] [253 0.07 "D"] [383 0.07 "E"]
-    [453 0.07 "F"] "G"]
+    [453 0.07 "F"]]
    nettoala))
 
 (defn pienet-asuinrakennukset-600-2013-2018 [_]
-  [[70 "A"] [106 "B"] [130 "C"] [210 "D"] [340 "E"] [410 "F"] "G"])
+  [[70 "A"] [106 "B"] [130 "C"] [210 "D"] [340 "E"] [410 "F"]])
 
 (defn pienet-asuinrakennukset-50-150-2018 [nettoala]
-  (limits-without-kertoimet
+  (rajat-without-kertoimet
    [[110 0.2 "A"] [215 0.6 "B"] [252 0.6 "C"] [332 0.6 "D"] [462 0.6 "E"]
-    [532 0.6 "F"] "G"]
+    [532 0.6 "F"]]
    nettoala))
 
 (defn rivitalot-2013-2018 [_]
-  [[80 "A"] [110 "B"] [150 "C"] [210 "D"] [340 "E"] [410 "F"] "G"])
+  [[80 "A"] [110 "B"] [150 "C"] [210 "D"] [340 "E"] [410 "F"]])
 
 (defn asuinkerrostalot-2013-2018 [_]
-  [[75 "A"] [100 "B"] [130 "C"] [160 "D"] [190 "E"] [240 "F"] "G"])
+  [[75 "A"] [100 "B"] [130 "C"] [160 "D"] [190 "E"] [240 "F"]])
 
 (defn toimistorakennukset-2013-2018 [_]
-  [[80 "A"] [120 "B"] [170 "C"] [200 "D"] [240 "E"] [300 "F"] "G"])
+  [[80 "A"] [120 "B"] [170 "C"] [200 "D"] [240 "E"] [300 "F"]])
 
 (defn liikerakennukset-2013-2018 [_]
-  [[90 "A"] [170 "B"] [240 "C"] [280 "D"] [340 "E"] [390 "F"] "G"])
+  [[90 "A"] [170 "B"] [240 "C"] [280 "D"] [340 "E"] [390 "F"]])
 
 (defn majoitusliikerakennukset-2013-2018 [_]
-  [[90 "A"] [170 "B"] [240 "C"] [280 "D"] [340 "E"] [450 "F"] "G"])
+  [[90 "A"] [170 "B"] [240 "C"] [280 "D"] [340 "E"] [450 "F"]])
 
 (defn opetusrakennukset-2013-2018 [_]
-  [[90 "A"] [130 "B"] [170 "C"] [230 "D"] [300 "E"] [360 "F"] "G"])
+  [[90 "A"] [130 "B"] [170 "C"] [230 "D"] [300 "E"] [360 "F"]])
 
 (defn liikuntahallit-2013-2018 [_]
-  [[90 "A"] [130 "B"] [170 "C"] [190 "D"] [240 "E"] [280 "F"] "G"])
+  [[90 "A"] [130 "B"] [170 "C"] [190 "D"] [240 "E"] [280 "F"]])
 
 (defn sairaalat-2013-2018 [_]
-  [[150 "A"] [350 "B"] [450 "C"] [550 "D"] [650 "E"] [800 "F"] "G"])
+  [[150 "A"] [350 "B"] [450 "C"] [550 "D"] [650 "E"] [800 "F"]])
 
 (defn muut-2018 [_]
-  [[90 "A"] [130 "B"] [170 "C"] [190 "D"] [240 "E"] [280 "F"] "G"])
+  [[90 "A"] [130 "B"] [170 "C"] [190 "D"] [240 "E"] [280 "F"]])
 
-(defn limits [versio kayttotarkoitus-id alakayttotarkoitus-id nettoala]
+(defn rajat-f [versio kayttotarkoitus-id alakayttotarkoitus-id nettoala]
   ((match/match [versio kayttotarkoitus-id alakayttotarkoitus-id nettoala]
                 [2013 1 _ (_ :guard #(<= % 120))] pienet-asuinrakennukset-120-2013
                 [2013 1 _ (_ :guard #(<= % 150))] pienet-asuinrakennukset-120-150-2013
@@ -108,23 +107,23 @@
 
                 [2018 9 _ _] muut-2018
 
-                :else (constantly "?"))
+                :else (constantly nil))
    nettoala))
 
-(defn e-luokka-from-limits [limits e-luku]
-  (let [default-luokka (last limits)
-        limits (butlast limits)]
-    (or (some (fn [[limit e-luokka]]
-                (if (<= e-luku limit)
-                  e-luokka))
-              limits)
-        default-luokka)))
+(defn e-luokka-from-rajat [rajat e-luku]
+  (or (some (fn [[raja e-luokka]]
+              (if (<= e-luku raja)
+                e-luokka))
+            rajat)
+      default-luokka))
 
-(defn find-e-luokka-and-limits [db versio alakayttotarkoitus-id nettoala e-luku]
-  (let [kayttotarkoitus-id (energiatodistus-service/find-kayttotarkoitus-id-by-alakayttotarkoitus-id
-                            db
-                            versio
-                            alakayttotarkoitus-id)
-        limits (limits versio kayttotarkoitus-id alakayttotarkoitus-id nettoala)]
-    {:limits limits
-     :e-luokka (e-luokka-from-limits limits e-luku)}))
+(defn find-e-luokka-info [db versio alakayttotarkoitus-id nettoala e-luku]
+  (let [kayttotarkoitus (kayttotarkoitus-service/find-kayttotarkoitus-by-alakayttotarkoitus-id
+                         db
+                         versio
+                         alakayttotarkoitus-id)
+        rajat (rajat-f versio (:id kayttotarkoitus) alakayttotarkoitus-id nettoala)]
+    (when kayttotarkoitus
+      {:rajat rajat
+       :luokittelu kayttotarkoitus
+       :e-luokka (e-luokka-from-rajat rajat e-luku)})))

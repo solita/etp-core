@@ -5,6 +5,7 @@
             [puumerkki.pdf :as puumerkki]
             [solita.common.xlsx :as xlsx]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
+            [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.file :as file-service])
   (:import (java.time Instant LocalDate ZoneId)
@@ -52,6 +53,14 @@
        (into (sorted-map))
        seq
        (into [])))
+
+(defn find-raja [energiatodistus e-luokka]
+  (->> energiatodistus
+       :tulokset
+       :e-luokka-info
+       :rajat
+       (filter #(contains? #{% (last %)} e-luokka))
+       ffirst))
 
 (defn mappings []
   (let [now (Instant/now)
@@ -121,11 +130,17 @@
 
         "I20" {:path [:tulokset :e-luku]}
 
-        ;; TODO Käytetty E-luvun luokittelu asteikko
+        "G23" {:path [:tulokset :e-luokka-info :luokittelu :label-fi]}
 
-        ;; TODO Luokkien rajat asteikolla
+        "G25" {:f #(format "... %s" (find-raja % "A"))}
+        "H25" {:f #(format "... %s" (find-raja % "B"))}
+        "I25" {:f #(format "... %s" (find-raja % "C"))}
+        "G26" {:f #(format "... %s" (find-raja % "D"))}
+        "H26" {:f #(format "... %s" (find-raja % "E"))}
+        "I26" {:f #(format "... %s" (find-raja % "F"))}
+        "G27" {:f #(format "%s ..." (inc (find-raja % "F")))}
 
-        ;; TODO Tämän rakennuksen energiatehokkuusluokka
+        "G29" {:path [:tulokset :e-luokka-info :e-luokka]}
 
         "C38" {:path [:perustiedot :keskeiset-suositukset-fi]}}
      2 {"D4" {:path [:perustiedot :alakayttotarkoitus-fi]}
@@ -527,7 +542,7 @@
 
 (defn find-energiatodistus-pdf [db whoami id]
   (when-let [{:keys [allekirjoitusaika] :as complete-energiatodistus}
-             (energiatodistus-service/find-complete-energiatodistus db whoami id)]
+             (complete-energiatodistus-service/find-complete-energiatodistus db whoami id)]
     (if allekirjoitusaika
       (find-existing-pdf db id)
       (generate-pdf-as-input-stream complete-energiatodistus true))))
@@ -554,7 +569,7 @@
 
 (defn find-energiatodistus-digest [db id]
   (when-let [{:keys [laatija-fullname] :as complete-energiatodistus}
-             (energiatodistus-service/find-complete-energiatodistus db id)]
+             (complete-energiatodistus-service/find-complete-energiatodistus db id)]
     (do-when-signing
      complete-energiatodistus
      #(let [pdf-path (generate-pdf-as-file complete-energiatodistus false)

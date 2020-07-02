@@ -4,6 +4,7 @@
             [solita.common.schema :as xschema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
+            [solita.etp.schema.kayttotarkoitus :as kayttotarkoitus-schema]
             [solita.etp.schema.e-luokka :as e-luokka-schema]
             [solita.etp.api.energiatodistus-crud :as crud-api]
             [solita.etp.api.energiatodistus-liite :as liite-api]
@@ -12,6 +13,7 @@
             [solita.etp.service.energiatodistus-search :as energiatodistus-search-service]
             [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf-service]
             [solita.etp.service.energiatodistus-xlsx :as energiatodistus-xlsx-service]
+            [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
             [solita.etp.service.e-luokka :as e-luokka-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.security :as security]
@@ -124,14 +126,14 @@
            :parameters {:path {:versio common-schema/Key}}
            :responses  {200 {:body [common-schema/Luokittelu]}}
            :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
-                         (r/response (energiatodistus-service/find-kayttotarkoitukset db versio)))}}]
+                         (r/response (kayttotarkoitus-service/find-kayttotarkoitukset db versio)))}}]
 
    ["/alakayttotarkoitusluokat/:versio"
     {:get {:summary    "Hae energiatodistuksen käyttötarkoitusluokat"
            :parameters {:path {:versio common-schema/Key}}
-           :responses  {200 {:body [energiatodistus-schema/Alakayttotarkoitusluokka]}}
+           :responses  {200 {:body [kayttotarkoitus-schema/Alakayttotarkoitusluokka]}}
            :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
-                         (r/response (energiatodistus-service/find-alakayttotarkoitukset db versio)))}}]
+                         (r/response (kayttotarkoitus-service/find-alakayttotarkoitukset db versio)))}}]
    ["/e-luokka/:versio/:alakayttotarkoitusluokka/:nettoala/:e-luku"
     {:get {:summary    "Laske energiatodistukselle energiatehokkuusluokka"
            :parameters {:path {:versio common-schema/Key
@@ -141,9 +143,10 @@
            :responses  {200 {:body e-luokka-schema/ELuokka}}
            :handler    (fn [{{{:keys [versio alakayttotarkoitusluokka nettoala e-luku]} :path}
                             :parameters :keys [db]}]
-                         (r/response (e-luokka-service/find-e-luokka-and-limits
-                                      db
-                                      versio
-                                      alakayttotarkoitusluokka
-                                      nettoala
-                                      e-luku)))}}]])
+                         (api-response/get-response
+                          (e-luokka-service/find-e-luokka-info db
+                                                               versio
+                                                               alakayttotarkoitusluokka
+                                                               nettoala
+                                                               e-luku)
+                          "Could not find luokittelu with given versio and alakayttotarkoitusluokka"))}}]])
