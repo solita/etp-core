@@ -4,6 +4,7 @@
             [solita.common.schema :as xschema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
+            [solita.etp.schema.e-luokka :as e-luokka-schema]
             [solita.etp.api.energiatodistus-crud :as crud-api]
             [solita.etp.api.energiatodistus-liite :as liite-api]
             [solita.etp.api.energiatodistus-signing :as signing-api]
@@ -137,10 +138,10 @@
                                :alakayttotarkoitusluokka schema/Str
                                :nettoala common-schema/FloatPos
                                :e-luku common-schema/FloatPos}}
-           :responses  {200 {:body {:e-luokka schema/Str}}}
+           :responses  {200 {:body e-luokka-schema/ELuokka}}
            :handler    (fn [{{{:keys [versio alakayttotarkoitusluokka nettoala e-luku]} :path}
                             :parameters :keys [db]}]
-                         (r/response (e-luokka-service/find-e-luokka
+                         (r/response (e-luokka-service/find-e-luokka-and-limits
                                       db
                                       versio
                                       alakayttotarkoitusluokka
