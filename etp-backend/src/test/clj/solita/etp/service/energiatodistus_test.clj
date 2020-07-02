@@ -131,3 +131,22 @@
     (t/is (= (energiatodistus-tila id) :signed))
     (t/is (=  (service/end-energiatodistus-signing! ts/*db* whoami id)
               :already-signed))))
+
+(t/deftest update-signed-energiatodistus!-test
+  (let [laatija-id               (add-laatija!)
+        whoami                   {:id laatija-id}
+        original-energiatodistus (generate-energiatodistus-2018)
+        id                       (add-energiatodistus! original-energiatodistus laatija-id)
+        update-energiatodistus   (assoc-in (generate-energiatodistus-2018) [:perustiedot :rakennustunnus] "4444444444")]
+    (t/is (= (energiatodistus-tila id) :draft))
+    (service/start-energiatodistus-signing! ts/*db* whoami id)
+    (t/is (= (service/end-energiatodistus-signing! ts/*db* whoami id)
+             :ok))
+    (t/is (= (energiatodistus-tila id) :signed))
+    (t/is (= 1 (service/update-energiatodistus-luonnos! ts/*db* {:id laatija-id} id update-energiatodistus)))
+    (let [energiatodistus (find-energiatodistus id)]
+      (t/is (= (-> (complete-energiatodistus original-energiatodistus id laatija-id)
+                   (assoc-in [:perustiedot :rakennustunnus] (-> update-energiatodistus :perustiedot :rakennustunnus))
+                   (assoc :tila-id 2
+                          :allekirjoitusaika (:allekirjoitusaika energiatodistus)))
+               energiatodistus)))))

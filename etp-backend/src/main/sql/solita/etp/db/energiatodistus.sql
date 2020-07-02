@@ -12,6 +12,11 @@ update energiatodistus set tila_id = et_tilat.poistettu
 from et_tilat
 where tila_id = et_tilat.luonnos and id = :id
 
+-- name: update-rakennustunnus-when-energiatodistus-signed!
+update energiatodistus
+set pt$rakennustunnus = :rakennustunnus
+where id = :id and tila_id = 2
+
 -- name: select-energiatodistus
 select energiatodistus.*,
        fullname(kayttaja.*) "laatija-fullname"

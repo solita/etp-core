@@ -137,10 +137,14 @@
       (str "User " (:id whoami) " is not the laatija of et-" (:id energiatodistus)))))
 
 (defn update-energiatodistus-luonnos! [db whoami id energiatodistus]
-  (assert-laatija! whoami (find-energiatodistus db id))
-  (jdbc/update! db :energiatodistus
-                (energiatodistus->db-row energiatodistus)
-                ["id = ? and tila_id = 0" id] db/default-opts))
+  (let [current-energiatodistus (find-energiatodistus db id)]
+    (assert-laatija! whoami current-energiatodistus)
+    (case (-> current-energiatodistus :tila-id tila-key)
+          :draft  (jdbc/update! db :energiatodistus
+                                (energiatodistus->db-row energiatodistus)
+                                ["id = ? and tila_id = 0" id] db/default-opts)
+          :signed (energiatodistus-db/update-rakennustunnus-when-energiatodistus-signed! db {:id id
+                                                                                             :rakennustunnus (-> energiatodistus :perustiedot :rakennustunnus)}))))
 
 (defn delete-energiatodistus-luonnos! [db whoami id]
   (assert-laatija! whoami (find-energiatodistus db id))
