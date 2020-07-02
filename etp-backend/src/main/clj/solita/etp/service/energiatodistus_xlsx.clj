@@ -3,7 +3,7 @@
             [clojure.java.io :as io]
             [solita.common.map :as solita-map]
             [solita.common.xlsx :as xlsx]
-            [solita.etp.service.energiatodistus :as energiatodistus-service]))
+            [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]))
 
 (def tmp-dir "tmp/")
 
@@ -51,7 +51,7 @@
 
 (defn find-laatija-energiatodistukset-xlsx [db laatija-id]
   (when-let [energiatodistukset
-             (energiatodistus-service/find-complete-energiatodistukset-by-laatija
+             (complete-energiatodistus-service/find-complete-energiatodistukset-by-laatija
               db
               laatija-id
               nil)]

@@ -5,6 +5,7 @@
             [puumerkki.pdf :as puumerkki]
             [solita.common.xlsx :as xlsx]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
+            [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.file :as file-service])
   (:import (java.time Instant LocalDate ZoneId)
@@ -527,7 +528,7 @@
 
 (defn find-energiatodistus-pdf [db whoami id]
   (when-let [{:keys [allekirjoitusaika] :as complete-energiatodistus}
-             (energiatodistus-service/find-complete-energiatodistus db whoami id)]
+             (complete-energiatodistus-service/find-complete-energiatodistus db whoami id)]
     (if allekirjoitusaika
       (find-existing-pdf db id)
       (generate-pdf-as-input-stream complete-energiatodistus true))))
@@ -554,7 +555,7 @@
 
 (defn find-energiatodistus-digest [db id]
   (when-let [{:keys [laatija-fullname] :as complete-energiatodistus}
-             (energiatodistus-service/find-complete-energiatodistus db id)]
+             (complete-energiatodistus-service/find-complete-energiatodistus db id)]
     (do-when-signing
      complete-energiatodistus
      #(let [pdf-path (generate-pdf-as-file complete-energiatodistus false)
