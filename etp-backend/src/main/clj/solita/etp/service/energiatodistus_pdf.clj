@@ -15,7 +15,10 @@
            (java.math RoundingMode)
            (org.apache.pdfbox.multipdf Overlay)
            (org.apache.pdfbox.multipdf Overlay$Position)
-           (org.apache.pdfbox.pdmodel PDDocument)
+           (org.apache.pdfbox.pdmodel PDDocument
+                                      PDPageContentStream
+                                      PDPageContentStream$AppendMode)
+           (org.apache.pdfbox.pdmodel.graphics.image PDImageXObject)
            (java.util HashMap)
            (java.awt Font Color)
            (java.awt.image BufferedImage)
@@ -506,6 +509,32 @@
                   :xlsx filename
                   :pdf-result? (.exists (io/as-file result-pdf))))))))
 
+
+(defn add-image [pdf-path image-path page ^Float x ^Float y
+                 ^Float width ^Float height]
+  (let [file (io/file pdf-path)
+        doc (PDDocument/load file)
+        page (.getPage doc page)
+        contents (PDPageContentStream. doc
+                                       page
+                                       PDPageContentStream$AppendMode/APPEND
+                                       true)
+        image (PDImageXObject/createFromFile image-path doc)]
+    (.drawImage contents ^PDImageXObject image x y width height)
+    (.close contents)
+    (.save doc pdf-path)))
+
+(def e-luokka-y-coords (zipmap ["A" "B" "C" "D" "E" "F" "G"] (iterate #(- % 21) 457)))
+
+(defn add-e-luokka-image [pdf-path e-luokka]
+  (add-image pdf-path
+             (format "src/main/resources/2018%s.png" (str/lower-case e-luokka))
+             0
+             392
+             (get e-luokka-y-coords e-luokka)
+             75
+             17.5))
+
 (defn- add-watermark [pdf-path]
   (with-open [watermark (PDDocument/load (-> watermark-path-fi io/resource io/input-stream))
               overlay   (doto (Overlay.)
@@ -520,6 +549,10 @@
   (let [xlsx-path (fill-xlsx-template complete-energiatodistus draft?)
         pdf-path (xlsx->pdf xlsx-path)]
     (io/delete-file xlsx-path)
+    (add-e-luokka-image pdf-path (-> complete-energiatodistus
+                                     :tulokset
+                                     :e-luokka-info
+                                     :e-luokka))
     (if draft?
       (add-watermark pdf-path)
       pdf-path)))
