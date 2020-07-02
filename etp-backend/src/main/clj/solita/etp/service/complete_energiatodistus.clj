@@ -1,6 +1,7 @@
 (ns solita.etp.service.complete-energiatodistus
   (:require [solita.etp.service.energiatodistus :as energiatodistus-service]
-            [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]))
+            [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
+            [solita.etp.service.e-luokka :as e-luokka-service]))
 
 (defn combine-keys [m f nil-replacement path-new & paths]
   (let [vals (map #(or (get-in m %) nil-replacement) paths)]
@@ -22,14 +23,14 @@
   (let [v (get-in m from-path)]
     (assoc-in m to-path v)))
 
-(defn find-complete-energiatodistus* [energiatodistus alakayttotarkoitukset]
+(defn find-complete-energiatodistus* [db energiatodistus kielisyydet
+                                      laatimisvaiheet alakayttotarkoitukset]
   (with-precision 20
     (let [perustiedot (:perustiedot energiatodistus)
           kieli-id (:kieli perustiedot)
-          kielisyys (->> (energiatodistus-service/find-kielisyys)
-                         (filter #(= (:id %) kieli-id)) first)
+          kielisyys (->> kielisyydet (filter #(= (:id %) kieli-id)) first)
           laatimisvaihe-id (:laatimisvaihe perustiedot)
-          laatimisvaihe (->> (energiatodistus-service/find-laatimisvaiheet)
+          laatimisvaihe (->> laatimisvaiheet
                              (filter #(= (:id %) laatimisvaihe-id))
                              first)
 
@@ -131,6 +132,16 @@
                         [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella])
           (copy-field [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]
                       [:tulokset :e-luku])
+          (combine-keys (fn [nettoala e-luku]
+                          (e-luokka-service/find-e-luokka-info db
+                                                               2018
+                                                               alakayttotarkoitus-id
+                                                               nettoala
+                                                               e-luku))
+                        nil
+                        [:tulokset :e-luokka-info]
+                        [:lahtotiedot :lammitetty-nettoala]
+                        [:tulokset :e-luku])
           (combine-keys *
                         nil
                         [:lahtotiedot :rakennusvaippa :ulkoseinat :UA]
@@ -311,21 +322,34 @@
                         [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa-nettoala]
                         [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala])))))
 
+(defn required-luokittelut [db]
+  {:kielisyydet (energiatodistus-service/find-kielisyys)
+   :laatimisvaiheet (energiatodistus-service/find-laatimisvaiheet)
+   :alakayttotarkoitukset (kayttotarkoitus-service/find-alakayttotarkoitukset db 2018)})
+
 (defn find-complete-energiatodistus
   ([db id]
-   (find-complete-energiatodistus*
-    (energiatodistus-service/find-energiatodistus db id)
-    (kayttotarkoitus-service/find-alakayttotarkoitukset
-     db
-     2018)))
+   (find-complete-energiatodistus db nil id))
   ([db whoami id]
-   (find-complete-energiatodistus*
-    (energiatodistus-service/find-energiatodistus db whoami id)
-    (kayttotarkoitus-service/find-alakayttotarkoitukset db 2018))))
+   (let [{:keys [kielisyydet laatimisvaiheet alakayttotarkoitukset]}
+         (required-luokittelut db)]
+     (find-complete-energiatodistus*
+      db
+      (if whoami
+        (energiatodistus-service/find-energiatodistus db whoami id)
+        (energiatodistus-service/find-energiatodistus db id))
+      kielisyydet
+      laatimisvaiheet
+      alakayttotarkoitukset))))
 
 (defn find-complete-energiatodistukset-by-laatija [db laatija-id tila-id]
-  (let [alakayttotarkoitukset (kayttotarkoitus-service/find-alakayttotarkoitukset db 2018)]
+  (let [{:keys [kielisyydet laatimisvaiheet alakayttotarkoitukset]}
+        (required-luokittelut db)]
     (->> (energiatodistus-service/find-energiatodistukset-by-laatija db
                                                                      laatija-id
                                                                      tila-id)
-         (map #(find-complete-energiatodistus* % alakayttotarkoitukset)))))
+         (map #(find-complete-energiatodistus* db
+                                               %
+                                               kielisyydet
+                                               laatimisvaiheet
+                                               alakayttotarkoitukset)))))

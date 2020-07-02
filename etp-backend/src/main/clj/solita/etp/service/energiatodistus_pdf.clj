@@ -54,6 +54,14 @@
        seq
        (into [])))
 
+(defn find-raja [energiatodistus e-luokka]
+  (->> energiatodistus
+       :tulokset
+       :e-luokka-info
+       :rajat
+       (filter #(contains? #{% (last %)} e-luokka))
+       ffirst))
+
 (defn mappings []
   (let [now (Instant/now)
         today (LocalDate/now)]
@@ -122,11 +130,17 @@
 
         "I20" {:path [:tulokset :e-luku]}
 
-        ;; TODO Käytetty E-luvun luokittelu asteikko
+        "G23" {:path [:tulokset :e-luokka-info :luokittelu :label-fi]}
 
-        ;; TODO Luokkien rajat asteikolla
+        "G25" {:f #(format "... %s" (find-raja % "A"))}
+        "H25" {:f #(format "... %s" (find-raja % "B"))}
+        "I25" {:f #(format "... %s" (find-raja % "C"))}
+        "G26" {:f #(format "... %s" (find-raja % "D"))}
+        "H26" {:f #(format "... %s" (find-raja % "E"))}
+        "I26" {:f #(format "... %s" (find-raja % "F"))}
+        "G27" {:f #(format "%s ..." (inc (find-raja % "F")))}
 
-        ;; TODO Tämän rakennuksen energiatehokkuusluokka
+        "G29" {:path [:tulokset :e-luokka-info :e-luokka]}
 
         "C38" {:path [:perustiedot :keskeiset-suositukset-fi]}}
      2 {"D4" {:path [:perustiedot :alakayttotarkoitus-fi]}
