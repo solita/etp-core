@@ -143,9 +143,10 @@
            :responses  {200 {:body e-luokka-schema/ELuokka}}
            :handler    (fn [{{{:keys [versio alakayttotarkoitusluokka nettoala e-luku]} :path}
                             :parameters :keys [db]}]
-                         (r/response (e-luokka-service/find-e-luokka-and-limits
-                                      db
-                                      versio
-                                      alakayttotarkoitusluokka
-                                      nettoala
-                                      e-luku)))}}]])
+                         (api-response/get-response
+                          (e-luokka-service/find-e-luokka-info db
+                                                               versio
+                                                               alakayttotarkoitusluokka
+                                                               nettoala
+                                                               e-luku)
+                          "Could not find luokittelu with given versio and alakayttotarkoitusluokka"))}}]])

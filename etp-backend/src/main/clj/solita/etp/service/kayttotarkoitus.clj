@@ -14,10 +14,9 @@
    db
    {:versio versio}))
 
-(defn find-kayttotarkoitus-id-by-alakayttotarkoitus-id [db versio id]
+(defn find-kayttotarkoitus-by-alakayttotarkoitus-id [db versio id]
   (-> db
-      (kayttotarkoitus-db/select-kayttotarkoitusluokka-id-by-versio-and-alakayttotarkoitusluokka-id
+      (kayttotarkoitus-db/select-kayttotarkoitusluokka-by-versio-and-alakayttotarkoitusluokka-id
        {:versio versio
         :id id})
-      first
-      :id))
+      first))
