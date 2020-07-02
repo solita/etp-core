@@ -108,7 +108,7 @@
 
                 [2018 9 _ _] muut-2018
 
-                :else (constantly "?"))
+                :else (constantly nil))
    nettoala))
 
 (defn e-luokka-from-limits [limits e-luku]
@@ -120,11 +120,13 @@
               limits)
         default-luokka)))
 
-(defn find-e-luokka-and-limits [db versio alakayttotarkoitus-id nettoala e-luku]
-  (let [kayttotarkoitus-id (kayttotarkoitus-service/find-kayttotarkoitus-id-by-alakayttotarkoitus-id
-                            db
-                            versio
-                            alakayttotarkoitus-id)
-        limits (limits versio kayttotarkoitus-id alakayttotarkoitus-id nettoala)]
-    {:limits limits
-     :e-luokka (e-luokka-from-limits limits e-luku)}))
+(defn find-e-luokka-info [db versio alakayttotarkoitus-id nettoala e-luku]
+  (let [kayttotarkoitus (kayttotarkoitus-service/find-kayttotarkoitus-by-alakayttotarkoitus-id
+                         db
+                         versio
+                         alakayttotarkoitus-id)
+        limits (limits versio (:id kayttotarkoitus) alakayttotarkoitus-id nettoala)]
+    (when (and kayttotarkoitus limits)
+      {:limits limits
+       :luokittelu kayttotarkoitus
+       :e-luokka (e-luokka-from-limits limits e-luku)})))
