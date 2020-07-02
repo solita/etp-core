@@ -135,13 +135,13 @@
 
         "G23" {:path [:tulokset :e-luokka-info :luokittelu :label-fi]}
 
-        "G25" {:f #(format "... %s" (find-raja % "A"))}
-        "H25" {:f #(format "... %s" (find-raja % "B"))}
-        "I25" {:f #(format "... %s" (find-raja % "C"))}
-        "G26" {:f #(format "... %s" (find-raja % "D"))}
-        "H26" {:f #(format "... %s" (find-raja % "E"))}
-        "I26" {:f #(format "... %s" (find-raja % "F"))}
-        "G27" {:f #(format "%s ..." (inc (find-raja % "F")))}
+        "G25" {:f #(some->> (find-raja % "A") (format "... %s"))}
+        "H25" {:f #(some->> (find-raja % "B") (format "... %s"))}
+        "I25" {:f #(some->> (find-raja % "C") (format "... %s"))}
+        "G26" {:f #(some->> (find-raja % "D") (format "... %s"))}
+        "H26" {:f #(some->> (find-raja % "E") (format "... %s"))}
+        "I26" {:f #(some->> (find-raja % "F") (format "... %s"))}
+        "G27" {:f #(some->> (find-raja % "F") inc (format "%s ..."))}
 
         "G29" {:path [:tulokset :e-luokka-info :e-luokka]}
 
@@ -527,13 +527,14 @@
 (def e-luokka-y-coords (zipmap ["A" "B" "C" "D" "E" "F" "G"] (iterate #(- % 21) 457)))
 
 (defn add-e-luokka-image [pdf-path e-luokka]
-  (add-image pdf-path
-             (format "src/main/resources/2018%s.png" (str/lower-case e-luokka))
-             0
-             392
-             (get e-luokka-y-coords e-luokka)
-             75
-             17.5))
+  (when e-luokka
+    (add-image pdf-path
+               (format "src/main/resources/2018%s.png" (str/lower-case e-luokka))
+               0
+               392
+               (get e-luokka-y-coords e-luokka)
+               75
+               17.5)))
 
 (defn- add-watermark [pdf-path]
   (with-open [watermark (PDDocument/load (-> watermark-path-fi io/resource io/input-stream))
