@@ -4,22 +4,22 @@
 
 (def default-luokka "G")
 
-(defn limits-without-kertoimet [limits-with-kertoimet nettoala]
+(defn rajat-without-kertoimet [rajat-with-kertoimet nettoala]
   (mapv (fn [[limit kerroin e-luokka]]
           [(->> nettoala (* kerroin) (- limit) int) e-luokka])
-        limits-with-kertoimet))
+        rajat-with-kertoimet))
 
 (defn pienet-asuinrakennukset-120-2013 [_]
   [[94 "A"] [164 "B"] [204 "C"] [284 "D"] [414 "E"] [484 "F"]])
 
 (defn pienet-asuinrakennukset-120-150-2013 [nettoala]
-  (limits-without-kertoimet
+  (rajat-without-kertoimet
    [[150 0.47 "A"] [320 1.3 "B"] [372 1.4 "C"] [452 1.4 "D"] [582 1.4 "E"]
     [652 1.4 "F"]]
    nettoala))
 
 (defn pienet-asuinrakennukset-150-600-2013-2018 [nettoala]
-  (limits-without-kertoimet
+  (rajat-without-kertoimet
    [[83 0.02 "A"] [131 0.04 "B"] [173 0.07 "C"] [253 0.07 "D"] [383 0.07 "E"]
     [453 0.07 "F"]]
    nettoala))
@@ -28,7 +28,7 @@
   [[70 "A"] [106 "B"] [130 "C"] [210 "D"] [340 "E"] [410 "F"]])
 
 (defn pienet-asuinrakennukset-50-150-2018 [nettoala]
-  (limits-without-kertoimet
+  (rajat-without-kertoimet
    [[110 0.2 "A"] [215 0.6 "B"] [252 0.6 "C"] [332 0.6 "D"] [462 0.6 "E"]
     [532 0.6 "F"]]
    nettoala))
@@ -60,7 +60,7 @@
 (defn muut-2018 [_]
   [[90 "A"] [130 "B"] [170 "C"] [190 "D"] [240 "E"] [280 "F"]])
 
-(defn limits [versio kayttotarkoitus-id alakayttotarkoitus-id nettoala]
+(defn rajat-f [versio kayttotarkoitus-id alakayttotarkoitus-id nettoala]
   ((match/match [versio kayttotarkoitus-id alakayttotarkoitus-id nettoala]
                 [2013 1 _ (_ :guard #(<= % 120))] pienet-asuinrakennukset-120-2013
                 [2013 1 _ (_ :guard #(<= % 150))] pienet-asuinrakennukset-120-150-2013
@@ -110,11 +110,11 @@
                 :else (constantly nil))
    nettoala))
 
-(defn e-luokka-from-limits [limits e-luku]
-  (or (some (fn [[limit e-luokka]]
-              (if (<= e-luku limit)
+(defn e-luokka-from-rajat [rajat e-luku]
+  (or (some (fn [[raja e-luokka]]
+              (if (<= e-luku raja)
                 e-luokka))
-            limits)
+            rajat)
       default-luokka))
 
 (defn find-e-luokka-info [db versio alakayttotarkoitus-id nettoala e-luku]
@@ -122,8 +122,8 @@
                          db
                          versio
                          alakayttotarkoitus-id)
-        limits (limits versio (:id kayttotarkoitus) alakayttotarkoitus-id nettoala)]
-    (when (and kayttotarkoitus limits)
-      {:limits limits
+        rajat (rajat-f versio (:id kayttotarkoitus) alakayttotarkoitus-id nettoala)]
+    (when kayttotarkoitus
+      {:rajat rajat
        :luokittelu kayttotarkoitus
-       :e-luokka (e-luokka-from-limits limits e-luku)})))
+       :e-luokka (e-luokka-from-rajat rajat e-luku)})))
