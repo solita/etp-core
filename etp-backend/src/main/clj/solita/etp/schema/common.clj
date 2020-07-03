@@ -69,14 +69,16 @@
     (catch NumberFormatException _ false)))
 
 (defn valid-henkilotunnus? [s]
-  (let [s (str/lower-case s)
-        date-part (subs s 0 6)
-        century-sign (nth s 6)
-        individual-number (subs s 7 10)
-        checksum (last s)]
-    (and (= 11 (count s))
-         (contains? #{\+ \- \a} century-sign)
-         (= checksum (henkilotunnus-checksum (str date-part individual-number))))))
+  (try
+    (let [s                 (str/lower-case s)
+          date-part         (subs s 0 6)
+          century-sign      (nth s 6)
+          individual-number (subs s 7 10)
+          checksum          (last s)]
+      (and (= 11 (count s))
+           (contains? #{\+ \- \a} century-sign)
+           (= checksum (henkilotunnus-checksum (str date-part individual-number)))))
+    (catch StringIndexOutOfBoundsException _ false)))
 
 (def Henkilotunnus (schema/constrained schema/Str valid-henkilotunnus?))
 

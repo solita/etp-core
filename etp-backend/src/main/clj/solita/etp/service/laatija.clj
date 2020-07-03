@@ -15,8 +15,12 @@
 ;; *** Conversions from database data types ***
 (def coerce-laatija (coerce/coercer laatija-schema/Laatija json/json-coercions))
 
-(defn find-all-laatijat [db]
-  (laatija-db/select-laatijat db))
+(defn find-all-laatijat [db whoami]
+  (->> (laatija-db/select-laatijat db)
+       (map (fn [laatija]
+              (cond (rooli-service/paakayttaja? whoami) laatija
+                    (rooli-service/patevyydentoteaja? whoami) (update laatija :henkilotunnus #(subs % 0 6))
+                    :else  (dissoc laatija :henkilotunnus))))))
 
 (defn find-laatija-by-id
   ([db id]
