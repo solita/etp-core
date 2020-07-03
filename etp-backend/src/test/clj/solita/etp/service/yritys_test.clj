@@ -15,21 +15,24 @@
        (filter #(not= (common-schema/ytunnus-checksum %) 10))
        (map #(str % "-" (common-schema/ytunnus-checksum %)))))
 
+(defn generate-yritykset [n]
+  (map #(c/complete {:ytunnus %
+                     :verkkolaskuoperaattori (rand-int 32)
+                     :maa "FI"} yritys-schema/YritysSave)
+       (unique-ytunnus-range n)))
+
 (t/deftest add-and-find-yritys-test
-  (doseq [yritys (map #(c/complete {:ytunnus %
-                                    :verkkolaskuoperaattori (rand-int 10)
-                                    :maa "FI"} yritys-schema/YritysSave)
-                      (unique-ytunnus-range 100))
+  (doseq [yritys (generate-yritykset 100)
           :let [id (service/add-yritys! ts/*db* yritys)]]
     (t/is (= (assoc yritys :id id) (service/find-yritys ts/*db* id)))))
 
 
 (t/deftest add-duplicate-ytunnus
   (let [ytunnus "0000001-9"
-        yritys1 (c/complete {:ytunnus ytunnus :maa "FI"} yritys-schema/YritysSave)
-        yritys2 (c/complete {:ytunnus ytunnus :maa "FI"} yritys-schema/YritysSave)]
-    (service/add-yritys! ts/*db* yritys1)
-    (t/is (= (ex-data (t/is (thrown? Exception (service/add-yritys! ts/*db* yritys2))))
+        [yritys-1 yritys-2] (->> (generate-yritykset 2)
+                                 (map #(assoc % :ytunnus ytunnus)))]
+    (service/add-yritys! ts/*db* yritys-1)
+    (t/is (= (ex-data (t/is (thrown? Exception (service/add-yritys! ts/*db* yritys-2))))
              {:type       :unique-violation
               :constraint :yritys-ytunnus-key}))))
 
