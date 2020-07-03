@@ -22,40 +22,51 @@
   {:raja-asteikko (raja-asteikko-without-kertoimet
                    [[83 0.02 "A"] [131 0.04 "B"] [173 0.07 "C"] [253 0.07 "D"]
                     [383 0.07 "E"] [453 0.07 "F"]]
-           nettoala)})
+                   nettoala)
+   :raja-uusi-2018 (Math/round (- 116 (* 0.04 nettoala)))})
 
 (defn pienet-asuinrakennukset-600-2013-2018 [_]
-  {:raja-asteikko [[70 "A"] [106 "B"] [130 "C"] [210 "D"] [340 "E"] [410 "F"]]})
+  {:raja-asteikko [[70 "A"] [106 "B"] [130 "C"] [210 "D"] [340 "E"] [410 "F"]]
+   :raja-uusi-2018 92})
 
 (defn pienet-asuinrakennukset-50-150-2018 [nettoala]
   {:raja-asteikko (raja-asteikko-without-kertoimet
-                   [[110 0.2 "A"] [215 0.6 "B"] [252 0.6 "C"] [332 0.6 "D"] [462 0.6 "E"]
-                    [532 0.6 "F"]]
-                   nettoala)})
+                   [[110 0.2 "A"] [215 0.6 "B"] [252 0.6 "C"] [332 0.6 "D"]
+                    [462 0.6 "E"] [532 0.6 "F"]]
+                   nettoala)
+   :raja-uusi-2018 (Math/round (- 200 (* 0.6 nettoala)))})
 
 (defn rivitalot-2013-2018 [_]
-  {:raja-asteikko [[80 "A"] [110 "B"] [150 "C"] [210 "D"] [340 "E"] [410 "F"]]})
+  {:raja-asteikko [[80 "A"] [110 "B"] [150 "C"] [210 "D"] [340 "E"] [410 "F"]]
+   :raja-uusi-2018 105})
 
 (defn asuinkerrostalot-2013-2018 [_]
-  {:raja-asteikko [[75 "A"] [100 "B"] [130 "C"] [160 "D"] [190 "E"] [240 "F"]]})
+  {:raja-asteikko [[75 "A"] [100 "B"] [130 "C"] [160 "D"] [190 "E"] [240 "F"]]
+   :raja-uusi-2018 90})
 
 (defn toimistorakennukset-2013-2018 [_]
-  {:raja-asteikko [[80 "A"] [120 "B"] [170 "C"] [200 "D"] [240 "E"] [300 "F"]]})
+  {:raja-asteikko [[80 "A"] [120 "B"] [170 "C"] [200 "D"] [240 "E"] [300 "F"]]
+   :raja-uusi-2018 100})
 
 (defn liikerakennukset-2013-2018 [_]
-  {:raja-asteikko [[90 "A"] [170 "B"] [240 "C"] [280 "D"] [340 "E"] [390 "F"]]})
+  {:raja-asteikko [[90 "A"] [170 "B"] [240 "C"] [280 "D"] [340 "E"] [390 "F"]]
+   :raja-uusi-2018 135})
 
 (defn majoitusliikerakennukset-2013-2018 [_]
-  {:raja-asteikko [[90 "A"] [170 "B"] [240 "C"] [280 "D"] [340 "E"] [450 "F"]]})
+  {:raja-asteikko [[90 "A"] [170 "B"] [240 "C"] [280 "D"] [340 "E"] [450 "F"]]
+   :raja-uusi-2018 160})
 
 (defn opetusrakennukset-2013-2018 [_]
-  {:raja-asteikko [[90 "A"] [130 "B"] [170 "C"] [230 "D"] [300 "E"] [360 "F"]]})
+  {:raja-asteikko [[90 "A"] [130 "B"] [170 "C"] [230 "D"] [300 "E"] [360 "F"]]
+   :raja-uusi-2018 100})
 
 (defn liikuntahallit-2013-2018 [_]
-  {:raja-asteikko [[90 "A"] [130 "B"] [170 "C"] [190 "D"] [240 "E"] [280 "F"]]})
+  {:raja-asteikko [[90 "A"] [130 "B"] [170 "C"] [190 "D"] [240 "E"] [280 "F"]]
+   :raja-uusi-2018 100})
 
 (defn sairaalat-2013-2018 [_]
-  {:raja-asteikko [[150 "A"] [350 "B"] [450 "C"] [550 "D"] [650 "E"] [800 "F"]]})
+  {:raja-asteikko [[150 "A"] [350 "B"] [450 "C"] [550 "D"] [650 "E"] [800 "F"]]
+   :raja-uusi-2018 320})
 
 (defn muut-2018 [_]
   {:raja-asteikko [[90 "A"] [130 "B"] [170 "C"] [190 "D"] [240 "E"] [280 "F"]]})
@@ -122,11 +133,13 @@
                          db
                          versio
                          alakayttotarkoitus-id)
-        {:keys [raja-asteikko]} (raja-asteikko-f versio
-                                         (:id kayttotarkoitus)
-                                         alakayttotarkoitus-id
-                                         nettoala)]
+        {:keys [raja-asteikko raja-uusi-2018]} (raja-asteikko-f versio
+                                                                (:id kayttotarkoitus)
+                                                                alakayttotarkoitus-id
+                                                                nettoala)]
     (when kayttotarkoitus
-      {:raja-asteikko raja-asteikko
-       :luokittelu kayttotarkoitus
-       :e-luokka (e-luokka-from-raja-asteikko raja-asteikko e-luku)})))
+      (merge {:raja-asteikko raja-asteikko
+              :luokittelu kayttotarkoitus
+              :e-luokka (e-luokka-from-raja-asteikko raja-asteikko e-luku)}
+             (when (and (= versio 2018) raja-uusi-2018)
+               {:raja-uusi-2018 raja-uusi-2018})))))

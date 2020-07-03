@@ -44,7 +44,8 @@
                          :label-fi "1. Pienet asuinrakennukset"
                          :label-sv "Små bostadsbyggnader"}
             :raja-asteikko [[90 "A"] [155 "B"] [192 "C"] [272 "D"] [402 "E"]
-                            [472 "F"]]}
+                            [472 "F"]]
+            :raja-uusi-2018 140}
            (find-e-luokka-info 2018 "KAT" 100 1)))
   (t/is (= {:e-luokka "B"
             :luokittelu {:id 1
@@ -65,14 +66,16 @@
                          :label-fi "1. Pienet asuinrakennukset"
                          :label-sv "Små bostadsbyggnader"}
             :raja-asteikko [[80 "A"] [110 "B"] [150 "C"] [210 "D"] [340 "E"]
-                            [410 "F"]]}
+                            [410 "F"]]
+            :raja-uusi-2018 105}
            (find-e-luokka-info 2018 "RT" 100 151)))
   (t/is (= {:e-luokka "D"
             :luokittelu {:id 2
                          :label-fi "2. Asuinkerrostalot"
                          :label-sv "Flervåningsbostadshus"}
             :raja-asteikko [[75 "A"] [100 "B"] [130 "C"] [160 "D"] [190 "E"]
-                            [240 "F"]]}
+                            [240 "F"]]
+            :raja-uusi-2018 90}
            (find-e-luokka-info 2018 "AK3" 100 151)))
   (t/is (= {:e-luokka "E"
             :luokittelu {:id 4
@@ -86,7 +89,8 @@
                          :label-fi "3. Toimistorakennukset"
                          :label-sv "Kontorsbyggnader"}
             :raja-asteikko [[80 "A"] [120 "B"] [170 "C"] [200 "D"] [240 "E"]
-                            [300 "F"]]}
+                            [300 "F"]]
+            :raja-uusi-2018 100}
            (find-e-luokka-info 2018 "TE" 100 240)))
   (t/is (= {:e-luokka "F"
             :luokittelu {:id 5
@@ -100,7 +104,8 @@
                          :label-fi "4. Liikerakennukset"
                          :label-sv "Affärsbyggnader"}
             :raja-asteikko [[90 "A"] [170 "B"] [240 "C"] [280 "D"] [340 "E"]
-                            [390 "F"]]}
+                            [390 "F"]]
+            :raja-uusi-2018 135}
            (find-e-luokka-info 2018 "MH" 100 380)))
   (t/is (= {:e-luokka "C"
             :luokittelu {:id 5
@@ -114,7 +119,8 @@
                          :label-fi "4. Liikerakennukset"
                          :label-sv "Affärsbyggnader"}
             :raja-asteikko [[90 "A"] [170 "B"] [240 "C"] [280 "D"] [340 "E"]
-                            [390 "F"]]}
+                            [390 "F"]]
+            :raja-uusi-2018 135}
            (find-e-luokka-info 2018 "N" 100 240)))
   (t/is (= {:e-luokka "D"
             :luokittelu {:id 7
@@ -128,7 +134,8 @@
                          :label-fi "6. Opetusrakennukset ja päiväkodit"
                          :label-sv "Undervisningsbyggnader och daghem"}
             :raja-asteikko [[90 "A"] [130 "B"] [170 "C"] [230 "D"] [300 "E"]
-                            [360 "F"]]}
+                            [360 "F"]]
+            :raja-uusi-2018 100}
            (find-e-luokka-info 2018 "OR" 100 230)))
   (t/is (= {:e-luokka "G"
             :luokittelu {:id 8
@@ -142,7 +149,8 @@
                          :label-fi "7. Liikuntahallit, lukuun ottamatta uimahalleja ja jäähalleja"
                          :label-sv "Idrottshallar, med undantag för simhallar och ishallar"}
             :raja-asteikko [[90 "A"] [130 "B"] [170 "C"] [190 "D"] [240 "E"]
-                            [280 "F"]]}
+                            [280 "F"]]
+            :raja-uusi-2018 100}
            (find-e-luokka-info 2018 "LH" 100 282)))
   (t/is (= {:e-luokka "E"
             :luokittelu {:id 9
@@ -156,7 +164,8 @@
                          :label-fi "8. Sairaalat"
                          :label-sv "Sjukhus"}
             :raja-asteikko [[150 "A"] [350 "B"] [450 "C"] [550 "D"] [650 "E"]
-                            [800 "F"]]}
+                            [800 "F"]]
+            :raja-uusi-2018 320}
            (find-e-luokka-info 2018 "S" 100 650)))
   (t/is (= {:e-luokka "B"
             :luokittelu {:id 9
