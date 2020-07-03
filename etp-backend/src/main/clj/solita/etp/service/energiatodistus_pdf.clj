@@ -509,6 +509,11 @@
                   :xlsx filename
                   :pdf-result? (.exists (io/as-file result-pdf))))))))
 
+(defn input-stream->bytes [is]
+  (with-open [is is
+              xout (java.io.ByteArrayOutputStream.)]
+    (io/copy is xout)
+    (.toByteArray xout)))
 
 (defn add-image [pdf-path image-path page ^Float x ^Float y
                  ^Float width ^Float height]
@@ -519,8 +524,8 @@
                                        page
                                        PDPageContentStream$AppendMode/APPEND
                                        true)
-        image-file (-> image-path io/resource io/file)
-        image (PDImageXObject/createFromFileByContent image-file doc)]
+        image-is (-> image-path io/resource io/input-stream input-stream->bytes)
+        image (PDImageXObject/createFromByteArray doc image-is image-path)]
     (.drawImage contents ^PDImageXObject image x y width height)
     (.close contents)
     (.save doc pdf-path)))
