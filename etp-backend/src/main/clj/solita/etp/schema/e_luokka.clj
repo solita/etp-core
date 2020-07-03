@@ -4,4 +4,5 @@
 
 (def ELuokka {:e-luokka schema/Str
               :luokittelu common-schema/Luokittelu
-              :limits [schema/Any]})
+              :raja-asteikko [[(schema/one schema/Int "raja") (schema/one schema/Str "luokka")]]
+              (schema/optional-key :raja-uusi-2018) schema/Int})
