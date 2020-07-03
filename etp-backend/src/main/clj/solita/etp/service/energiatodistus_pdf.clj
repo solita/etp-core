@@ -519,7 +519,8 @@
                                        page
                                        PDPageContentStream$AppendMode/APPEND
                                        true)
-        image (PDImageXObject/createFromFile image-path doc)]
+        image-file (-> image-path io/resource io/file)
+        image (PDImageXObject/createFromFileByContent image-file doc)]
     (.drawImage contents ^PDImageXObject image x y width height)
     (.close contents)
     (.save doc pdf-path)))
@@ -529,7 +530,7 @@
 (defn add-e-luokka-image [pdf-path e-luokka]
   (when e-luokka
     (add-image pdf-path
-               (format "src/main/resources/2018%s.png" (str/lower-case e-luokka))
+               (format "2018%s.png" (str/lower-case e-luokka))
                0
                392
                (get e-luokka-y-coords e-luokka)
