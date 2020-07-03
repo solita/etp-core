@@ -61,7 +61,7 @@
   (->> energiatodistus
        :tulokset
        :e-luokka-info
-       :rajat
+       :raja-asteikko
        (filter #(contains? #{% (last %)} e-luokka))
        ffirst))
 
