@@ -95,8 +95,8 @@
         "M21" {:f (fn [energiatodistus]
                     (some->> energiatodistus :perustiedot :havainnointikaynti (.format date-formatter)))}
 
-        ;; TODO M37 E-luvun vaatimus
         "M36" {:path [:tulokset :e-luku]}
+        "M37" {:path [:tulokset :e-luokka-info :raja-uusi-2018]}
 
         "B42" {:path [:laatija-fullname]}
         "J42" {:path [:perustiedot :yritys :nimi]}
