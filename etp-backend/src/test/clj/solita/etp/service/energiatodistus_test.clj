@@ -137,7 +137,7 @@
         whoami                   {:id laatija-id}
         original-energiatodistus (generate-energiatodistus-2018)
         id                       (add-energiatodistus! original-energiatodistus laatija-id)
-        update-energiatodistus   (assoc-in (generate-energiatodistus-2018) [:perustiedot :rakennustunnus] "4444444444")]
+        update-energiatodistus   (assoc-in (generate-energiatodistus-2018) [:perustiedot :rakennustunnus] "100012345A")]
     (t/is (= (energiatodistus-tila id) :draft))
     (service/start-energiatodistus-signing! ts/*db* whoami id)
     (t/is (= (service/end-energiatodistus-signing! ts/*db* whoami id)

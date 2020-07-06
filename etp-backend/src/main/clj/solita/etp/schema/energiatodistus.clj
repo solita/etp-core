@@ -20,7 +20,7 @@
     schema))
 
 (def Rakennustunnus
-  (schema/constrained schema/Str #(= (count %) 10)))
+  (schema/constrained schema/Str #(re-find #"^1\d{8}[a-zA-Z0-9]{1}$" %)))
 
 (def YritysPostinumero common-schema/String8)
 
