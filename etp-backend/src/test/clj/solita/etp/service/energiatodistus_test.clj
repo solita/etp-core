@@ -17,7 +17,7 @@
 (def energiatodistus-generators
   {schema.core/Num          (g/always 1.0M)
    common-schema/Year       (g/always 2021)
-   schema/Rakennustunnus    (g/always "1234567890")
+   schema/Rakennustunnus    (g/always "1035150826")
    schema/YritysPostinumero (g/always "00100")
    common-schema/Date       (g/always (java.time.LocalDate/now))
    common-schema/Integer100 (g/always 50)
@@ -137,7 +137,7 @@
         whoami                   {:id laatija-id}
         original-energiatodistus (generate-energiatodistus-2018)
         id                       (add-energiatodistus! original-energiatodistus laatija-id)
-        update-energiatodistus   (assoc-in (generate-energiatodistus-2018) [:perustiedot :rakennustunnus] "100012345A")]
+        update-energiatodistus   (assoc-in (generate-energiatodistus-2018) [:perustiedot :rakennustunnus] "103515074X")]
     (t/is (= (energiatodistus-tila id) :draft))
     (service/start-energiatodistus-signing! ts/*db* whoami id)
     (t/is (= (service/end-energiatodistus-signing! ts/*db* whoami id)
