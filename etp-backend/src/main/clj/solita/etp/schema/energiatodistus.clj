@@ -3,7 +3,8 @@
             [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]
             [solita.common.schema :as xschema]
-            [solita.etp.schema.geo :as geo-schema])
+            [solita.etp.schema.geo :as geo-schema]
+            [clojure.string :as str])
   (:import (schema.core Predicate EnumSchema Constrained)))
 
 (defn optional-properties [schema]
@@ -19,8 +20,17 @@
        (coll? %) (map optional-properties %))
     schema))
 
+(defn valid-rakennustunnus? [s]
+  (try
+    (let [s           (str/lower-case s)
+          number-part (subs s 0 9)
+          checksum    (last s)]
+      (and (= 10 (count s))
+           (= checksum (common-schema/henkilotunnus-checksum number-part))))
+    (catch StringIndexOutOfBoundsException _ false)))
+
 (def Rakennustunnus
-  (schema/constrained schema/Str #(= (count %) 10)))
+  (schema/constrained schema/Str valid-rakennustunnus?))
 
 (def YritysPostinumero common-schema/String8)
 
