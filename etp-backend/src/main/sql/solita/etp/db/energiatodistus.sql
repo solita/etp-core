@@ -19,18 +19,22 @@ where id = :id and tila_id = 2
 
 -- name: select-energiatodistus
 select energiatodistus.*,
-       fullname(kayttaja.*) "laatija-fullname"
+       fullname(kayttaja.*) "laatija-fullname",
+       korvaava_energiatodistus.id as korvaava_energiatodistus_id
 from energiatodistus
   inner join kayttaja on kayttaja.id = energiatodistus.laatija_id
+  left join energiatodistus korvaava_energiatodistus on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
 where energiatodistus.id = :id
 
 -- name: select-energiatodistukset-by-laatija
 select energiatodistus.*,
-       fullname(kayttaja.*) "laatija-fullname"
+       fullname(kayttaja.*) "laatija-fullname",
+       korvaava_energiatodistus.id as korvaava_energiatodistus_id
 from et_tilat, energiatodistus
   inner join kayttaja on kayttaja.id = energiatodistus.laatija_id
+  left join energiatodistus korvaava_energiatodistus on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
 where energiatodistus.laatija_id = :laatija-id and
-      tila_id <> et_tilat.poistettu and (
+      energiatodistus.tila_id <> et_tilat.poistettu and (
       (:tila-id::integer is null) or
       (:tila-id::integer = 0 and energiatodistus.allekirjoitusaika is null) or
       (:tila-id::integer = 1 and energiatodistus.allekirjoitusaika is not null))

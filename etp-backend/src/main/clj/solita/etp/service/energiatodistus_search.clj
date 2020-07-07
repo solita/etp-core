@@ -7,9 +7,11 @@
 
 (def base-query
   "select energiatodistus.*,
-          fullname(kayttaja.*) laatija_fullname
+          fullname(kayttaja.*) laatija_fullname,
+          korvaava_energiatodistus.id as korvaava_energiatodistus_id
    from energiatodistus
-     inner join kayttaja on kayttaja.id = energiatodistus.laatija_id")
+     inner join kayttaja on kayttaja.id = energiatodistus.laatija_id
+     left join energiatodistus korvaava_energiatodistus on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id")
 
 (defn abbreviation [identifier]
   (or (some-> identifier keyword energiatodistus-service/db-abbreviations name)

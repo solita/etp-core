@@ -237,6 +237,7 @@
   services for 2018 version"
   (optional-properties
     {:korvattu-energiatodistus-id    common-schema/Key
+     :korvaava-energiatodistus-id    common-schema/Key
      :perustiedot                    Perustiedot
      :lahtotiedot                    Lahtotiedot
      :tulokset                       Tulokset
