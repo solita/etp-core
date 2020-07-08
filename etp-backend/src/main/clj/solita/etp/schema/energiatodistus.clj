@@ -237,7 +237,6 @@
   services for 2018 version"
   (optional-properties
     {:korvattu-energiatodistus-id    common-schema/Key
-     :korvaava-energiatodistus-id    common-schema/Key
      :perustiedot                    Perustiedot
      :lahtotiedot                    Lahtotiedot
      :tulokset                       Tulokset
@@ -283,7 +282,8 @@
      :tila-id common-schema/Key
      :laatija-id common-schema/Key
      :laatija-fullname schema/Str
-     :allekirjoitusaika (schema/maybe common-schema/Instant)}))
+     :allekirjoitusaika (schema/maybe common-schema/Instant)
+     :korvaava-energiatodistus-id (schema/maybe common-schema/Key)}))
 
 (def Energiatodistus2018
   "Energiatodistus 2018"

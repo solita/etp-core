@@ -57,3 +57,9 @@ update energiatodistus set
   allekirjoitusaika = now()
 from et_tilat
 where tila_id = et_tilat.allekirjoituksessa and laatija_id = :laatija-id and id = :id
+
+-- name: update-energiatodistus-korvattu!
+update energiatodistus set
+  tila_id = et_tilat.korvattu
+from et_tilat
+where tila_id = et_tilat.allekirjoitettu and laatija_id = :laatija-id and id = :id

@@ -41,7 +41,7 @@
 (defn find-energiatodistus [id]
   (let [et (service/find-energiatodistus ts/*db* id)]
     (t/is (not (nil? (:laatija-fullname et))))
-    (dissoc et :laatija-fullname)))
+    (dissoc et :laatija-fullname :korvaava-energiatodistus-id)))
 
 (defn complete-energiatodistus
   ([energiatodistus id laatija-id] (complete-energiatodistus energiatodistus id laatija-id 2018))
@@ -88,7 +88,7 @@
         id (add-energiatodistus! energiatodistus laatija-id)]
     (t/is (= (complete-energiatodistus energiatodistus id laatija-id)
              (-> (service/find-energiatodistus ts/*db* paakayttaja id)
-                 (dissoc :laatija-fullname))))
+                 (dissoc :laatija-fullname :korvaava-energiatodistus-id))))
     (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
                             #"Forbidden"
                             (service/find-energiatodistus ts/*db* patevyydentoteaja id)))))
@@ -150,3 +150,24 @@
                    (assoc :tila-id 2
                           :allekirjoitusaika (:allekirjoitusaika energiatodistus)))
                energiatodistus)))))
+
+(t/deftest korvaa-energiatodistus!-test
+  (let [laatija-id (add-laatija!)
+        whoami {:id laatija-id}
+        energiatodistus (generate-energiatodistus-2018)
+        korvattava-energiatodistus-id (add-energiatodistus! energiatodistus laatija-id)]
+    (t/is (= (energiatodistus-tila korvattava-energiatodistus-id) :draft))
+    (service/start-energiatodistus-signing! ts/*db* whoami korvattava-energiatodistus-id)
+    (t/is (= (service/end-energiatodistus-signing! ts/*db* whoami korvattava-energiatodistus-id)
+             :ok))
+    (t/is (= (energiatodistus-tila korvattava-energiatodistus-id) :signed))
+
+    (let [korvaava-energiatodistus (assoc energiatodistus :korvattu-energiatodistus-id korvattava-energiatodistus-id)
+          korvaava-energiatodistus-id (add-energiatodistus! korvaava-energiatodistus laatija-id)]
+       (t/is (= (energiatodistus-tila korvaava-energiatodistus-id) :draft))
+       (service/start-energiatodistus-signing! ts/*db* whoami korvaava-energiatodistus-id)
+       (t/is (= (energiatodistus-tila korvattava-energiatodistus-id) :signed))
+       (t/is (= (service/end-energiatodistus-signing! ts/*db* whoami korvaava-energiatodistus-id)
+                :ok))
+       (t/is (= (energiatodistus-tila korvaava-energiatodistus-id) :signed))
+       (t/is (= (energiatodistus-tila korvattava-energiatodistus-id) :replaced)))))
