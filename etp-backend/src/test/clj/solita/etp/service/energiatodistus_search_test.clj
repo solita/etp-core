@@ -12,7 +12,8 @@
             :let [id (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id 2018)]]
       (t/is (= (energiatodistus-test/complete-energiatodistus energiatodistus id laatija-id 2018)
                (dissoc (first (energiatodistus-search-service/search ts/*db* {:where [[["=" "id" id]]]}))
-                       :laatija-fullname))))))
+                       :laatija-fullname
+                       :korvaava-energiatodistus-id))))))
 
 (t/deftest add-and-find-by-nimi-test
   (let [laatija-id (energiatodistus-test/add-laatija!)]
@@ -24,4 +25,5 @@
       (t/is (= (energiatodistus-test/complete-energiatodistus energiatodistus id laatija-id 2018)
                (dissoc (first (energiatodistus-search-service/search
                                 ts/*db* {:where [[["=" "perustiedot.nimi" "test"]]]}))
-                       :laatija-fullname))))))
+                       :laatija-fullname
+                       :korvaava-energiatodistus-id))))))

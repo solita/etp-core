@@ -166,16 +166,26 @@
           :deleted nil
           :already-signed)))))
 
-(defn end-energiatodistus-signing! [db whoami id]
-  (let [result (energiatodistus-db/update-energiatodistus-allekirjoitettu!
+(defn mark-energiatodistus-as-korvattu! [db whoami id]
+  (let [result (energiatodistus-db/update-energiatodistus-korvattu!
                  db {:id id :laatija-id (:id whoami)})]
-    (if (= result 1) :ok
-      (when-let [{:keys [tila-id] :as et} (find-energiatodistus db id)]
-        (assert-laatija! whoami et)
-        (case (tila-key tila-id)
-         :draft :not-in-signing
-         :deleted nil
-         :already-signed)))))
+    (when (= result 1)
+      :ok)))
+
+(defn end-energiatodistus-signing! [db whoami id]
+  (jdbc/with-db-transaction [db db]
+    (let [result (energiatodistus-db/update-energiatodistus-allekirjoitettu!
+                   db {:id id :laatija-id (:id whoami)})]
+      (if (= result 1)
+        (if-let [korvattu-energiatodistus-id (:korvattu-energiatodistus-id (find-energiatodistus db id))]
+          (mark-energiatodistus-as-korvattu! db whoami korvattu-energiatodistus-id)
+          :ok)
+        (when-let [{:keys [tila-id] :as et} (find-energiatodistus db id)]
+          (assert-laatija! whoami et)
+          (case (tila-key tila-id)
+            :draft :not-in-signing
+            :deleted nil
+            :already-signed))))))
 
 ;;
 ;; Energiatodistuksen kielisyys
