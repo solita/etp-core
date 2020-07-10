@@ -83,14 +83,14 @@
                           (api-response/get-response
                             (energiatodistus-service/find-energiatodistus db id)
                             (str "Energiatodistus " id " does not exists.")))}}]]
-    ["/signed"
-     {:get {:summary    "Hae allekirjoitettuja energiatodistuksia"
+    ["/replaceable"
+     {:get {:summary    "Hae korvattavia energiatodistuksia"
             :parameters {:query {:id schema/Int}}
             :responses  {200 {:body [common-schema/Key]}}
             :access     rooli-service/laatija?
             :handler    (fn [{{{:keys [id]} :query} :parameters :keys [db]}]
                           (r/response
-                            (energiatodistus-service/find-signed-energiatodistukset-like-id
+                            (energiatodistus-service/find-replaceable-energiatodistukset-like-id
                               db id)))}}]
     ["/2013"
      ["" (crud-api/post 2013 energiatodistus-schema/EnergiatodistusSave2013)]

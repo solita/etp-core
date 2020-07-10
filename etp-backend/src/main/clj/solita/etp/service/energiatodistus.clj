@@ -120,10 +120,19 @@
        (energiatodistus-db/select-energiatodistukset-by-laatija
          db {:laatija-id laatija-id :tila-id tila-id})))
 
-(defn find-signed-energiatodistukset-like-id [db id]
-  (map :id (energiatodistus-db/select-signed-energiatodistukset-like-id db {:id id})))
+(defn find-replaceable-energiatodistukset-like-id [db id]
+  (map :id (energiatodistus-db/select-replaceable-energiatodistukset-like-id db {:id id})))
+
+(defn assert-korvaavuus! [db energiatodistus]
+  (when-let [korvattu-energiatodistus-id (:korvattu-energiatodistus-id energiatodistus)]
+    (if-let [korvattava-energiatodistus (find-energiatodistus db korvattu-energiatodistus-id)]
+      (cond
+        (:korvaava-energiatodistus-id korvattava-energiatodistus) (throw (IllegalArgumentException. "Replaceable energiatodistus is already replaced"))
+        (not (contains? #{:signed :discarded} (-> korvattava-energiatodistus :tila-id tila-key))) (throw (IllegalArgumentException. "Replaceable energiatodistus is not in signed or discarded state")))
+      (throw (IllegalArgumentException. (str "Replaceable energiatodistus is not exists"))))))
 
 (defn add-energiatodistus! [db whoami versio energiatodistus]
+  (assert-korvaavuus! db energiatodistus)
   (-> (jdbc/insert! db :energiatodistus
         (-> energiatodistus
           (assoc :versio versio
@@ -140,10 +149,11 @@
 (defn update-energiatodistus-luonnos! [db whoami id energiatodistus]
   (let [current-energiatodistus (find-energiatodistus db id)]
     (assert-laatija! whoami current-energiatodistus)
+    (assert-korvaavuus! db energiatodistus)
     (case (-> current-energiatodistus :tila-id tila-key)
-          :draft  (jdbc/update! db :energiatodistus
-                                (energiatodistus->db-row energiatodistus)
-                                ["id = ? and tila_id = 0" id] db/default-opts)
+          :draft (first (jdbc/update! db :energiatodistus
+                                     (energiatodistus->db-row energiatodistus)
+                                     ["id = ? and tila_id = 0" id] db/default-opts))
           :signed (energiatodistus-db/update-rakennustunnus-when-energiatodistus-signed! db {:id id
                                                                                              :rakennustunnus (-> energiatodistus :perustiedot :rakennustunnus)}))))
 

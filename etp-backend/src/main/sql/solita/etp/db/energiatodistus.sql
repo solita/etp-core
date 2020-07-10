@@ -39,11 +39,12 @@ where energiatodistus.laatija_id = :laatija-id and
       (:tila-id::integer = 0 and energiatodistus.allekirjoitusaika is null) or
       (:tila-id::integer = 1 and energiatodistus.allekirjoitusaika is not null))
 
--- name: select-signed-energiatodistukset-like-id
+-- name: select-replaceable-energiatodistukset-like-id
 select energiatodistus.id
 from energiatodistus, et_tilat
-where energiatodistus.tila_id = et_tilat.allekirjoitettu and
-      energiatodistus.id::text like :id::text || '%'
+where energiatodistus.tila_id in (et_tilat.allekirjoitettu, et_tilat.hylatty) and
+      energiatodistus.id::text like :id::text || '%' and
+      not exists(select id from energiatodistus et where et.korvattu_energiatodistus_id = energiatodistus.id)
 limit 100
 
 -- name: update-energiatodistus-allekirjoituksessa!
