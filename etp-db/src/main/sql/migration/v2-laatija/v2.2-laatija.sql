@@ -17,6 +17,7 @@ create table laatija (
   julkinen_puhelin boolean NOT NULL DEFAULT false,
   julkinen_email boolean NOT NULL DEFAULT false,
   julkinen_osoite boolean NOT NULL DEFAULT false,
+  julkinen_wwwosoite boolean NOT NULL DEFAULT false,
   laskutuskieli int REFERENCES laskutuskieli (id) DEFAULT 0,
   jakeluosoite text NOT NULL,
   vastaanottajan_tarkenne text,
