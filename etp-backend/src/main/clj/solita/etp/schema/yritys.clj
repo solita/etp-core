@@ -10,7 +10,7 @@
     :ytunnus                common-schema/Ytunnus
     :nimi                   schema/Str
     :verkkolaskuoperaattori (schema/maybe common-schema/Key)
-    :verkkolaskuosoite      (schema/maybe schema/Str)
+    :verkkolaskuosoite      (schema/maybe common-schema/OVTtunnus)
     :laskutuskieli          (schema/enum 0 1 2)))
 
 (def Yritys

@@ -25,3 +25,15 @@
   (t/is (some? (schema/check common/Ytunnus "a060155-7")))
   (t/is (some? (schema/check common/Ytunnus "aaaaaaa-b"))))
 
+
+(t/deftest valid-ovt-tunnus?-test
+  (t/is (nil? (schema/check common/OVTtunnus "003712345671")))
+  (t/is (nil? (schema/check common/OVTtunnus "0037123456710")))
+  (t/is (nil? (schema/check common/OVTtunnus "00371234567101")))
+  (t/is (nil? (schema/check common/OVTtunnus "003712345671012")))
+  (t/is (nil? (schema/check common/OVTtunnus "0037123456710123")))
+
+  (t/is (some? (schema/check common/OVTtunnus "00371234567101234")))
+  (t/is (some? (schema/check common/OVTtunnus "000012345671")))
+  (t/is (some? (schema/check common/OVTtunnus nil)))
+  (t/is (some? (schema/check common/OVTtunnus ""))))
