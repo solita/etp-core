@@ -102,7 +102,7 @@
     :constraint schema/Keyword})
 
 (defn- valid-ovt-tunnus? [ovt]
-  (if (re-find #"^0037\d{8,12}$" ovt)
+  (if (re-find #"^0037\d{8,13}$" ovt)
     (let [ytunnus (str (subs ovt 4 11) "-" (subs ovt 11 12))]
       (valid-ytunnus? ytunnus))
     false))
