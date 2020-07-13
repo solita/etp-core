@@ -472,6 +472,7 @@
                     (format "energiatodistus-%s.xlsx")
                     (str tmp-dir))]
       (doseq [[sheet sheet-mappings] (mappings)]
+        (xlsx/replace-footer-text (nth sheets sheet) #"\[Todistustunnus järjestelmästä\]" (:id complete-energiatodistus))
         (doseq [[cell {:keys [path f dp percent?]}] sheet-mappings]
           (xlsx/set-cell-value-at (nth sheets sheet)
                                   cell
