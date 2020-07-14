@@ -44,6 +44,7 @@
                 :julkinenpuhelin :julkinen_puhelin
                 :julkinenemail :julkinen_email
                 :julkinenosoite :julkinen_osoite
+                :julkinenwwwosoite :julkinen_wwwosoite
                 :vastaanottajan-tarkenne :vastaanottajan_tarkenne})
 
 (defn add-laatija! [db laatija]

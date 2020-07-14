@@ -46,6 +46,7 @@
           :julkinenpuhelin                          schema/Bool
           :julkinenemail                            schema/Bool
           :julkinenosoite                           schema/Bool
+          :julkinenwwwosoite                        schema/Bool
           :wwwosoite                                (schema/maybe schema/Str)
           :laskutuskieli                            (schema/enum 0 1 2)}))
 
