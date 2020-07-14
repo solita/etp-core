@@ -3,7 +3,7 @@
             [clojure.java.io :as io])
   (:import (org.apache.poi.ss.usermodel WorkbookFactory)
            (org.apache.poi.ss.util CellAddress)
-           (org.apache.poi.xssf.usermodel XSSFWorkbook)))
+           (org.apache.poi.xssf.usermodel XSSFSimpleShape)))
 
 ;;
 ;; Reading
@@ -93,3 +93,11 @@
 
 (defn set-column-width [sheet idx width]
   (.setColumnWidth sheet idx width))
+
+(defn replace-footer-text [sheet match replacement]
+  (doseq [shape (-> sheet .getDrawingPatriarch .getShapes .iterator iterator-seq)]
+    (when-let [footer (and (instance? XSSFSimpleShape shape)
+                           (re-find match (.getText shape))
+                           (-> shape .getTextParagraphs first .getTextRuns first))]
+      (let [footer-text (str/replace (.getText shape) match replacement)]
+        (.setText footer footer-text)))))
