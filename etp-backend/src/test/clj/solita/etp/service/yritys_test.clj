@@ -18,6 +18,7 @@
 (defn generate-yritykset [n]
   (map #(c/complete {:ytunnus %
                      :verkkolaskuoperaattori (rand-int 32)
+                     :verkkolaskuosoite "003712345671"
                      :maa "FI"} yritys-schema/YritysSave)
        (unique-ytunnus-range n)))
 
