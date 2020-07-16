@@ -21,11 +21,11 @@
 (def LaatijaAdd
   "Only for internal use in laatija services.
    Represents laatija information which is stored in laatija-table."
-  (merge geo-schema/Postiosoite
-         {:henkilotunnus      common-schema/Henkilotunnus
-          :patevyystaso       common-schema/Key
-          :toteamispaivamaara common-schema/Date
-          :toteaja            PatevyydenToteaja}))
+  (st/merge (st/select-keys geo-schema/Postiosoite [:jakeluosoite :postinumero :postitoimipaikka :maa])
+            {:henkilotunnus      common-schema/Henkilotunnus
+             :patevyystaso       common-schema/Key
+             :toteamispaivamaara common-schema/Date
+             :toteaja            PatevyydenToteaja}))
 
 (def LaatijaAdminUpdate
   "Only for internal use in laatija services.
