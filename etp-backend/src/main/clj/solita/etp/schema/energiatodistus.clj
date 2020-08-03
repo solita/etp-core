@@ -135,8 +135,8 @@
    :ilmanvaihto          LahtotiedotIlmanvaihto
    :lammitys             LahtotiedotLammitys
    :jaahdytysjarjestelma {:jaahdytyskauden-painotettu-kylmakerroin (common-schema/FloatBase 1.0 10.0)}
-   :lkvn-kaytto          {:kulutus-per-nelio common-schema/FloatPos
-                          :vuosikulutus      common-schema/FloatPos}
+   :lkvn-kaytto          {:ominaiskulutus common-schema/FloatPos
+                          :lammitysenergian-nettotarve common-schema/FloatPos}
    :sis-kuorma {
      :henkilot          (SisKuorma 1.0 14.0)
      :kuluttajalaitteet (SisKuorma 0.0 12.0)

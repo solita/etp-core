@@ -228,8 +228,8 @@
 
         "D55" {:path [:lahtotiedot :jaahdytysjarjestelma :jaahdytyskauden-painotettu-kylmakerroin] :dp 2}
 
-        "D59" {:path [:lahtotiedot :lkvn-kaytto :kulutus-per-nelio] :dp 0}
-        "E59" {:path [:lahtotiedot :lkvn-kaytto :vuosikulutus] :dp 0}
+        "D59" {:path [:lahtotiedot :lkvn-kaytto :ominaiskulutus] :dp 0}
+        "E59" {:path [:lahtotiedot :lkvn-kaytto :lammitysenergian-nettotarve] :dp 0}
 
         "D63" {:f #(-> % sis-kuorma (get 0) first (format-number 0 true))}
         "E63" {:f #(-> % sis-kuorma (get 0) second :henkilot (format-number 1 false))}
