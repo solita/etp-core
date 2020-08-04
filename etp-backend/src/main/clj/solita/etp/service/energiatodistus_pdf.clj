@@ -145,7 +145,8 @@
 
         "G29" {:path [:tulokset :e-luokka-info :e-luokka]}
 
-        "C38" {:path [:perustiedot :keskeiset-suositukset-fi]}}
+        "C38" {:path [:perustiedot :keskeiset-suositukset-fi]}
+        "C58" {:f #(format "Todistustunnus: %s, 2/8" (:id %))}}
      2 {"D4" {:path [:perustiedot :alakayttotarkoitus-fi]}
         "D5" {:path [:perustiedot :valmistumisvuosi]}
         "F5" {:path [:lahtotiedot :lammitetty-nettoala] :dp 1}
@@ -242,7 +243,8 @@
         "D65" {:f #(-> % sis-kuorma (get 2) first (format-number 0 true))}
         "E65" {:f #(-> % sis-kuorma (get 2) second :henkilot (format-number 1 false))}
         "F65" {:f #(-> % sis-kuorma (get 2) second :kuluttajalaitteet (format-number 1 false))}
-        "G65" {:f #(-> % sis-kuorma (get 2) second :valaistus (format-number 1 false))}}
+        "G65" {:f #(-> % sis-kuorma (get 2) second :valaistus (format-number 1 false))}
+        "B66" {:f #(format "Todistustunnus: %s, 3/8" (:id %))}}
      3 {"D4" {:path [:perustiedot :alakayttotarkoitus-fi]}
         "D7" {:path [:perustiedot :valmistumisvuosi]}
         "D8" {:path [:lahtotiedot :lammitetty-nettoala] :dp 1}
@@ -321,7 +323,8 @@
         "E70" {:path [:tulokset :lampokuormat :kvesi] :dp 0}
         "F70" {:path [:tulokset :lampokuormat :kvesi-nettoala] :dp 0}
 
-        "E74" {:path [:tulokset :laskentatyokalu]}}
+        "E74" {:path [:tulokset :laskentatyokalu]}
+        "B77" {:f #(format "Todistustunnus: %s, 4/8" (:id %))}}
      4 {"C7" {:f #(str "Lämmitetty nettoala "
                        (-> %
                            :lahtotiedot
@@ -375,7 +378,8 @@
         "H44" {:path [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa] :dp 0}
         "I44" {:path [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala] :dp 0}
         "H46" {:path [:toteutunut-ostoenergiankulutus :summa] :dp 0}
-        "I46" {:path [:toteutunut-ostoenergiankulutus :summa-nettoala] :dp 0}}
+        "I46" {:path [:toteutunut-ostoenergiankulutus :summa-nettoala] :dp 0}
+        "B54" {:f #(format "Todistustunnus: %s, 5/8" (:id %))}}
      5 {"B5" {:path [:huomiot :ymparys :teksti-fi]}
         "C12" {:path [:huomiot :ymparys :toimenpide 0 :nimi-fi]}
         "C13" {:path [:huomiot :ymparys :toimenpide 1 :nimi-fi]}
@@ -425,7 +429,8 @@
         "C51" {:path [:huomiot :lammitys :toimenpide 2 :lampo] :dp 0}
         "D51" {:path [:huomiot :lammitys :toimenpide 2 :sahko] :dp 0}
         "E51" {:path [:huomiot :lammitys :toimenpide 2 :jaahdytys] :dp 0}
-        "F51" {:path [:huomiot :lammitys :toimenpide 2 :eluvun-muutos] :dp 0}}
+        "F51" {:path [:huomiot :lammitys :toimenpide 2 :eluvun-muutos] :dp 0}
+        "B52" {:f #(format "Todistustunnus: %s, 6/8" (:id %))}}
      6 {"B3" {:path [:huomiot :iv-ilmastointi :teksti-fi]}
         "C11" {:path [:huomiot :iv-ilmastointi :toimenpide 0 :nimi-fi]}
         "C12" {:path [:huomiot :iv-ilmastointi :toimenpide 1 :nimi-fi]}
@@ -460,8 +465,10 @@
         "E35" {:path [:huomiot :valaistus-muut :toimenpide 2 :jaahdytys] :dp 0}
         "F35" {:path [:huomiot :valaistus-muut :toimenpide 2 :eluvun-muutos] :dp 0}
 
-        "B37" {:path [:huomiot :suositukset-fi]}}
-     7 {"B3" {:path [:lisamerkintoja-fi]}}}))
+        "B37" {:path [:huomiot :suositukset-fi]}
+        "B59" {:f #(format "Todistustunnus: %s, 7/8" (:id %))}}
+     7 {"B3" {:path [:lisamerkintoja-fi]}
+        "B62" {:f #(format "Todistustunnus: %s, 8/8" (:id %))}}}))
 
 (defn fill-xlsx-template [complete-energiatodistus draft?]
   (with-open [is (-> xlsx-template-path io/resource io/input-stream)]
@@ -472,7 +479,6 @@
                     (format "energiatodistus-%s.xlsx")
                     (str tmp-dir))]
       (doseq [[sheet sheet-mappings] (mappings)]
-        (xlsx/replace-footer-text (nth sheets sheet) #"\[Todistustunnus järjestelmästä\]" (str (:id complete-energiatodistus)))
         (doseq [[cell {:keys [path f dp percent?]}] sheet-mappings]
           (xlsx/set-cell-value-at (nth sheets sheet)
                                   cell
