@@ -186,7 +186,7 @@ create table energiatodistus (
  to$ostetut_polttoaineet$pilkkeet_havu_sekapuu numeric,
  to$ostetut_polttoaineet$pilkkeet_koivu numeric,
  to$ostetut_polttoaineet$puupelletit numeric,
- to$ostetut_polttoaineet$vapaa ostettu_polttoaine[],
+ to$ostetut_polttoaineet$muu ostettu_polttoaine[],
  to$polttoaineet_vuosikulutus_yhteensa numeric,
  to$sahko_vuosikulutus_yhteensa numeric,
 

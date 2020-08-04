@@ -68,7 +68,7 @@
      :uusiutuvat-omavaraisenergiat {:muu db-userdefined_energia-type}}
    :toteutunut-ostoenergiankulutus
     {:ostettu-energia {:muu db-userdefined_energia-type}
-     :ostetut-polttoaineet {:vapaa db-ostettu-polttoaine-type}}
+     :ostetut-polttoaineet {:muu db-ostettu-polttoaine-type}}
    :huomiot
     {:iv-ilmastointi { :toimenpide db-toimenpide-type }
      :valaistus-muut { :toimenpide db-toimenpide-type }
