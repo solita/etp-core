@@ -24,7 +24,7 @@
            (java.awt.image BufferedImage)
            (javax.imageio ImageIO)))
 
-(def xlsx-template-path "energiatodistus-template.xlsx")
+(def xlsx-template-path "energiatodistus-2018-fi.xlsx")
 (def watermark-path-fi "watermark-fi.pdf")
 (def sheet-count 8)
 (def tmp-dir "tmp/")
