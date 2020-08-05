@@ -356,18 +356,18 @@
         "H26" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh] :dp 0}
         "I26" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh-nettoala] :dp 0}
 
-        "C27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :nimi]}
-        "E27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :maara-vuodessa] :dp 0}
-        "F27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :yksikko]}
-        "G27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :muunnoskerroin]}
-        "H27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :kwh] :dp 0}
-        "I27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :kwh-nettoala] :dp 0}
-        "C28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :nimi]}
-        "E28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :maara-vuodessa] :dp 0}
-        "F28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :yksikko]}
-        "G28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :muunnoskerroin]}
-        "H28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :kwh] :dp 0}
-        "I28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :kwh-nettoala] :dp 0}
+        "C27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 0 :nimi]}
+        "E27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 0 :maara-vuodessa] :dp 0}
+        "F27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 0 :yksikko]}
+        "G27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 0 :muunnoskerroin]}
+        "H27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 0 :kwh] :dp 0}
+        "I27" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 0 :kwh-nettoala] :dp 0}
+        "C28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 1 :nimi]}
+        "E28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 1 :maara-vuodessa] :dp 0}
+        "F28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 1 :yksikko]}
+        "G28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 1 :muunnoskerroin]}
+        "H28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 1 :kwh] :dp 0}
+        "I28" {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 1 :kwh-nettoala] :dp 0}
 
         "H38" {:path [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa] :dp 0}
         "I38" {:path [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa-nettoala] :dp 0}

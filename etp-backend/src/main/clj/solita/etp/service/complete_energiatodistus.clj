@@ -293,7 +293,7 @@
           (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kwh])
           (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kwh])
           (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh])
-          (update-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa]
+          (update-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu]
                      (fn [vapaat]
                        (if-let [nettoala (-> energiatodistus :lahtotiedot :lammitetty-nettoala)]
                          (mapv (fn [{:keys [maara-vuodessa muunnoskerroin] :as vapaa}]

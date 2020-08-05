@@ -199,7 +199,7 @@
     :pilkkeet-havu-sekapuu common-schema/FloatPos,
     :pilkkeet-koivu        common-schema/FloatPos,
     :puupelletit           common-schema/FloatPos,
-    :vapaa
+    :muu
       [{:nimi           common-schema/String30,
         :yksikko        common-schema/String12,
         :muunnoskerroin common-schema/FloatPos,
