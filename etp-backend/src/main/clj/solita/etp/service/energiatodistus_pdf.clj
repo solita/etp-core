@@ -2,6 +2,7 @@
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
             [clojure.java.shell :as shell]
+            [clojure.core.match :as match]
             [puumerkki.pdf :as puumerkki]
             [solita.common.xlsx :as xlsx]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
@@ -67,9 +68,18 @@
        (filter #(contains? #{% (last %)} e-luokka))
        ffirst))
 
-(defn mappings []
+(defn todistustunnus [id kieli sivu]
+  (format "%s: %s, %s/8"
+          (if (= kieli "sv")
+            "Certifikatbeteckning"
+            "Todistustunnus")
+          id
+          sivu))
+
+(defn mappings [kieli]
   (let [now (Instant/now)
-        today (LocalDate/now)]
+        today (LocalDate/now)
+        sv? (= kieli "sv")]
     {0 {"K7" {:path [:perustiedot :nimi]}
         "K8" {:path [:perustiedot :katuosoite-fi]}
 
@@ -78,21 +88,29 @@
         "K12" {:path [:perustiedot :rakennustunnus]}
         "K13" {:path [:perustiedot :valmistumisvuosi]}
 
-        "K14" {:path [:perustiedot :alakayttotarkoitus-fi]}
+        "K14" {:path (if sv?
+                       [:perustiedot :alakayttotarkoitus-sv]
+                       [:perustiedot :alakayttotarkoitus-fi])}
         "K16" {:path [:id]}
 
         "D19" {:f (fn [energiatodistus]
-                    (if (= (-> energiatodistus :perustiedot :laatimisvaihe) 0)
-                      "☒ Uudelle rakennukselle rakennuslupaa haettaessa"
-                      "☐ Uudelle rakennukselle rakennuslupaa haettaessa"))}
+                    (match/match [(-> energiatodistus :perustiedot :laatimisvaihe) sv?]
+                                 [0 true] "☒ för en ny byggnad I samband med att bygglov söks"
+                                 [0 false] "☒ Uudelle rakennukselle rakennuslupaa haettaessa"
+                                 [_ true] "☐ för en ny byggnad I samband med att bygglov söks"
+                                 [_ false] "☐ Uudelle rakennukselle rakennuslupaa haettaessa"))}
         "D20" {:f (fn [energiatodistus]
-                    (if (= (-> energiatodistus :perustiedot :laatimisvaihe) 1)
-                      "☒ Uudelle rakennukselle käyttöönottovaiheessa"
-                      "☐ Uudelle rakennukselle käyttöönottovaiheessa"))}
+                    (match/match [(-> energiatodistus :perustiedot :laatimisvaihe) sv?]
+                                 [1 true] "☒ för en ny byggnad när den tas I bruk"
+                                 [1 false] "☒ Uudelle rakennukselle käyttöönottovaiheessa"
+                                 [_ true] "☐ för en ny byggnad när den tas I bruk"
+                                 [_ false] "☐ Uudelle rakennukselle käyttöönottovaiheessa"))}
         "D21" {:f (fn [energiatodistus]
-                    (if (= (-> energiatodistus :perustiedot :laatimisvaihe) 2)
-                      "☒ Olemassa olevalle rakennukselle, havainnointikäynnin päivämäärä:"
-                      "☐ Olemassa olevalle rakennukselle, havainnointikäynnin päivämäärä:"))}
+                    (match/match [(-> energiatodistus :perustiedot :laatimisvaihe) sv?]
+                                 [2 true] "☒ för en befintlig byggnad, datum för iakttagelser på plats"
+                                 [2 false] "☒ Olemassa olevalle rakennukselle, havainnointikäynnin päivämäärä:"
+                                 [_ true] "☐ för en befintlig byggnad, datum för iakttagelser på plats"
+                                 [_ false] "☐ Olemassa olevalle rakennukselle, havainnointikäynnin päivämäärä:"))}
 
         "M21" {:f (fn [energiatodistus]
                     (some->> energiatodistus :perustiedot :havainnointikaynti (.format date-formatter)))}
@@ -110,8 +128,12 @@
                       :lammitetty-nettoala
                       (format-number 1 false)
                       (str " m²"))}
-        "F6" {:path [:lahtotiedot :lammitys :kuvaus-fi]}
-        "F7" {:path [:lahtotiedot :ilmanvaihto :kuvaus-fi]}
+        "F6" {:path (if sv?
+                      [:lahtotiedot :lammitys :kuvaus-sv]
+                      [:lahtotiedot :lammitys :kuvaus-fi])}
+        "F7" {:path (if sv?
+                      [:lahtotiedot :ilmanvaihto :kuvaus-sv]
+                      [:lahtotiedot :ilmanvaihto :kuvaus-fi])}
         "F14" {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo] :dp 0}
         "G14" {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala] :dp 0}
         "H14" {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]}
@@ -135,7 +157,9 @@
 
         "I20" {:path [:tulokset :e-luku]}
 
-        "G23" {:path [:tulokset :e-luokka-info :luokittelu :label-fi]}
+        "G23" {:path (if sv?
+                       [:tulokset :e-luokka-info :luokittelu :label-sv]
+                       [:tulokset :e-luokka-info :luokittelu :label-fi])}
 
         "G25" {:f #(some->> (find-raja % "A") (format "... %s"))}
         "H25" {:f #(some->> (find-raja % "B") (format "... %s"))}
@@ -147,9 +171,13 @@
 
         "G29" {:path [:tulokset :e-luokka-info :e-luokka]}
 
-        "C38" {:path [:perustiedot :keskeiset-suositukset-fi]}
-        "C58" {:f #(format "Todistustunnus: %s, 2/8" (:id %))}}
-     2 {"D4" {:path [:perustiedot :alakayttotarkoitus-fi]}
+        "C38" {:path (if sv?
+                       [:perustiedot :keskeiset-suositukset-sv]
+                       [:perustiedot :keskeiset-suositukset-fi])}
+        "C58" {:f #(todistustunnus (:id %) kieli 2)}}
+     2 {"D4" {:path (if sv?
+                      [:perustiedot :alakayttotarkoitus-sv]
+                      [:perustiedot :alakayttotarkoitus-fi])}
         "D5" {:path [:perustiedot :valmistumisvuosi]}
         "F5" {:path [:lahtotiedot :lammitetty-nettoala] :dp 1}
         "D7" {:path [:lahtotiedot :rakennusvaippa :ilmanvuotoluku] :dp 1}
@@ -202,7 +230,9 @@
         "E26" {:path [:lahtotiedot :ikkunat :luode :U] :dp 2}
         "F26" {:path [:lahtotiedot :ikkunat :luode :g-ks] :dp 2}
 
-        "D28" {:path [:lahtotiedot :ilmanvaihto :kuvaus-fi]}
+        "D28" {:path (if sv?
+                       [:lahtotiedot :ilmanvaihto :kuvaus-sv]
+                       [:lahtotiedot :ilmanvaihto :kuvaus-fi])}
         "D33" {:path [:lahtotiedot :ilmanvaihto :paaiv :tulo-poisto]}
         "E33" {:path [:lahtotiedot :ilmanvaihto :paaiv :sfp] :dp 2}
         "F33" {:path [:lahtotiedot :ilmanvaihto :paaiv :lampotilasuhde] :dp 0 :percent? true}
@@ -213,7 +243,9 @@
         "E35" {:path [:lahtotiedot :ilmanvaihto :ivjarjestelma :sfp] :dp 2}
         "E36" {:path [:lahtotiedot :ilmanvaihto :lto-vuosihyotysuhde] :dp 0 :percent? true}
 
-        "D38" {:path [:lahtotiedot :lammitys :kuvaus-fi]}
+        "D38" {:path (if sv?
+                       [:lahtotiedot :lammitys :kuvaus-sv]
+                       [:lahtotiedot :lammitys :kuvaus-fi])}
 
         "D43" {:path [:lahtotiedot :lammitys :tilat-ja-iv :tuoton-hyotysuhde] :dp 0 :percent? true}
         "E43" {:path [:lahtotiedot :lammitys :tilat-ja-iv :jaon-hyotysuhde] :dp 0 :percent? true}
@@ -246,8 +278,10 @@
         "E65" {:f #(-> % sis-kuorma (get 2) second :henkilot (format-number 1 false))}
         "F65" {:f #(-> % sis-kuorma (get 2) second :kuluttajalaitteet (format-number 1 false))}
         "G65" {:f #(-> % sis-kuorma (get 2) second :valaistus (format-number 1 false))}
-        "B66" {:f #(format "Todistustunnus: %s, 3/8" (:id %))}}
-     3 {"D4" {:path [:perustiedot :alakayttotarkoitus-fi]}
+        "B66" {:f #(todistustunnus (:id %) kieli 3)}}
+     3 {"D4" {:path (if sv?
+                      [:perustiedot :alakayttotarkoitus-sv]
+                      [:perustiedot :alakayttotarkoitus-fi])}
         "D7" {:path [:perustiedot :valmistumisvuosi]}
         "D8" {:path [:lahtotiedot :lammitetty-nettoala] :dp 1}
         "D9" {:path [:tulokset :e-luku]}
@@ -326,8 +360,10 @@
         "F70" {:path [:tulokset :lampokuormat :kvesi-nettoala] :dp 0}
 
         "E74" {:path [:tulokset :laskentatyokalu]}
-        "B77" {:f #(format "Todistustunnus: %s, 4/8" (:id %))}}
-     4 {"C7" {:f #(str "Lämmitetty nettoala "
+        "B77" {:f #(todistustunnus (:id %) kieli 4)}}
+     4 {"C7" {:f #(str (if sv?
+                         "Uppvärmd nettoarea "
+                         "Lämmitetty nettoala ")
                        (-> %
                            :lahtotiedot
                            :lammitetty-nettoala
@@ -381,11 +417,19 @@
         "I44" {:path [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala] :dp 0}
         "H46" {:path [:toteutunut-ostoenergiankulutus :summa] :dp 0}
         "I46" {:path [:toteutunut-ostoenergiankulutus :summa-nettoala] :dp 0}
-        "B54" {:f #(format "Todistustunnus: %s, 5/8" (:id %))}}
-     5 {"B5" {:path [:huomiot :ymparys :teksti-fi]}
-        "C12" {:path [:huomiot :ymparys :toimenpide 0 :nimi-fi]}
-        "C13" {:path [:huomiot :ymparys :toimenpide 1 :nimi-fi]}
-        "C14" {:path [:huomiot :ymparys :toimenpide 2 :nimi-fi]}
+        "B54" {:f #(todistustunnus (:id %) kieli 5)}}
+     5 {"B5" {:path (if sv?
+                      [:huomiot :ymparys :teksti-sv]
+                      [:huomiot :ymparys :teksti-fi])}
+        "C12" {:path (if sv?
+                       [:huomiot :ymparys :toimenpide 0 :nimi-sv]
+                       [:huomiot :ymparys :toimenpide 0 :nimi-fi])}
+        "C13" {:path (if sv?
+                       [:huomiot :ymparys :toimenpide 1 :nimi-sv]
+                       [:huomiot :ymparys :toimenpide 1 :nimi-fi])}
+        "C14" {:path (if sv?
+                       [:huomiot :ymparys :toimenpide 2 :nimi-sv]
+                       [:huomiot :ymparys :toimenpide 2 :nimi-fi])}
         "C17" {:path [:huomiot :ymparys :toimenpide 0 :lampo] :dp 0}
         "D17" {:path [:huomiot :ymparys :toimenpide 0 :sahko] :dp 0}
         "E17" {:path [:huomiot :ymparys :toimenpide 0 :jaahdytys] :dp 0}
@@ -399,10 +443,18 @@
         "E19" {:path [:huomiot :ymparys :toimenpide 2 :jaahdytys] :dp 0}
         "F19" {:path [:huomiot :ymparys :toimenpide 2 :eluvun-muutos] :dp 0}
 
-        "B21" {:path [:huomiot :alapohja-ylapohja :teksti-fi]}
-        "C28" {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :nimi-fi]}
-        "C29" {:path [:huomiot :alapohja-ylapohja :toimenpide 1 :nimi-fi]}
-        "C30" {:path [:huomiot :alapohja-ylapohja :toimenpide 2 :nimi-fi]}
+        "B21" {:path (if sv?
+                       [:huomiot :alapohja-ylapohja :teksti-sv]
+                       [:huomiot :alapohja-ylapohja :teksti-fi])}
+        "C28" {:path (if sv?
+                       [:huomiot :alapohja-ylapohja :toimenpide 0 :nimi-sv]
+                       [:huomiot :alapohja-ylapohja :toimenpide 0 :nimi-fi])}
+        "C29" {:path (if sv?
+                       [:huomiot :alapohja-ylapohja :toimenpide 1 :nimi-sv]
+                       [:huomiot :alapohja-ylapohja :toimenpide 1 :nimi-fi])}
+        "C30" {:path (if sv?
+                       [:huomiot :alapohja-ylapohja :toimenpide 2 :nimi-sv]
+                       [:huomiot :alapohja-ylapohja :toimenpide 2 :nimi-fi])}
         "C33" {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :lampo] :dp 0}
         "D33" {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :sahko] :dp 0}
         "E33" {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :jaahdytys] :dp 0}
@@ -416,10 +468,18 @@
         "E35" {:path [:huomiot :alapohja-ylapohja :toimenpide 2 :jaahdytys] :dp 0}
         "F35" {:path [:huomiot :alapohja-ylapohja :toimenpide 2 :eluvun-muutos] :dp 0}
 
-        "B37" {:path [:huomiot :lammitys :teksti-fi]}
-        "C44" {:path [:huomiot :lammitys :toimenpide 0 :nimi-fi]}
-        "C45" {:path [:huomiot :lammitys :toimenpide 1 :nimi-fi]}
-        "C46" {:path [:huomiot :lammitys :toimenpide 2 :nimi-fi]}
+        "B37" {:path (if sv?
+                       [:huomiot :lammitys :teksti-sv]
+                       [:huomiot :lammitys :teksti-fi])}
+        "C44" {:path (if sv?
+                       [:huomiot :lammitys :toimenpide 0 :nimi-sv]
+                       [:huomiot :lammitys :toimenpide 0 :nimi-fi])}
+        "C45" {:path (if sv?
+                       [:huomiot :lammitys :toimenpide 1 :nimi-sv]
+                       [:huomiot :lammitys :toimenpide 1 :nimi-fi])}
+        "C46" {:path (if sv?
+                       [:huomiot :lammitys :toimenpide 2 :nimi-sv]
+                       [:huomiot :lammitys :toimenpide 2 :nimi-fi])}
         "C49" {:path [:huomiot :lammitys :toimenpide 0 :lampo] :dp 0}
         "D49" {:path [:huomiot :lammitys :toimenpide 0 :sahko] :dp 0}
         "E49" {:path [:huomiot :lammitys :toimenpide 0 :jaahdytys] :dp 0}
@@ -432,11 +492,19 @@
         "D51" {:path [:huomiot :lammitys :toimenpide 2 :sahko] :dp 0}
         "E51" {:path [:huomiot :lammitys :toimenpide 2 :jaahdytys] :dp 0}
         "F51" {:path [:huomiot :lammitys :toimenpide 2 :eluvun-muutos] :dp 0}
-        "B52" {:f #(format "Todistustunnus: %s, 6/8" (:id %))}}
-     6 {"B3" {:path [:huomiot :iv-ilmastointi :teksti-fi]}
-        "C11" {:path [:huomiot :iv-ilmastointi :toimenpide 0 :nimi-fi]}
-        "C12" {:path [:huomiot :iv-ilmastointi :toimenpide 1 :nimi-fi]}
-        "C13" {:path [:huomiot :iv-ilmastointi :toimenpide 2 :nimi-fi]}
+        "B52" {:f #(todistustunnus (:id %) kieli 6)}}
+     6 {"B3" {:path (if sv?
+                      [:huomiot :iv-ilmastointi :teksti-sv]
+                      [:huomiot :iv-ilmastointi :teksti-fi])}
+        "C11" {:path (if sv?
+                       [:huomiot :iv-ilmastointi :toimenpide 0 :nimi-sv]
+                       [:huomiot :iv-ilmastointi :toimenpide 0 :nimi-fi])}
+        "C12" {:path (if sv?
+                       [:huomiot :iv-ilmastointi :toimenpide 1 :nimi-sv]
+                       [:huomiot :iv-ilmastointi :toimenpide 1 :nimi-fi])}
+        "C13" {:path (if sv?
+                       [:huomiot :iv-ilmastointi :toimenpide 2 :nimi-sv]
+                       [:huomiot :iv-ilmastointi :toimenpide 2 :nimi-fi])}
         "C16" {:path [:huomiot :iv-ilmastointi :toimenpide 0 :lampo] :dp 0}
         "D16" {:path [:huomiot :iv-ilmastointi :toimenpide 0 :sahko] :dp 0}
         "E16" {:path [:huomiot :iv-ilmastointi :toimenpide 0 :jaahdytys] :dp 0}
@@ -450,10 +518,18 @@
         "E18" {:path [:huomiot :iv-ilmastointi :toimenpide 2 :jaahdytys] :dp 0}
         "F18" {:path [:huomiot :iv-ilmastointi :toimenpide 2 :eluvun-muutos] :dp 0}
 
-        "B20" {:path [:huomiot :valaistus-muut :teksti-fi]}
-        "C28" {:path [:huomiot :valaistus-muut :toimenpide 0 :nimi-fi]}
-        "C29" {:path [:huomiot :valaistus-muut :toimenpide 1 :nimi-fi]}
-        "C30" {:path [:huomiot :valaistus-muut :toimenpide 2 :nimi-fi]}
+        "B20" {:path (if sv?
+                       [:huomiot :valaistus-muut :teksti-sv]
+                       [:huomiot :valaistus-muut :teksti-fi])}
+        "C28" {:path (if sv?
+                       [:huomiot :valaistus-muut :toimenpide 0 :nimi-sv]
+                       [:huomiot :valaistus-muut :toimenpide 0 :nimi-fi])}
+        "C29" {:path (if sv?
+                       [:huomiot :valaistus-muut :toimenpide 1 :nimi-sv]
+                       [:huomiot :valaistus-muut :toimenpide 1 :nimi-fi])}
+        "C30" {:path (if sv?
+                       [:huomiot :valaistus-muut :toimenpide 2 :nimi-sv]
+                       [:huomiot :valaistus-muut :toimenpide 2 :nimi-fi])}
         "C33" {:path [:huomiot :valaistus-muut :toimenpide 0 :lampo] :dp 0}
         "D33" {:path [:huomiot :valaistus-muut :toimenpide 0 :sahko] :dp 0}
         "E33" {:path [:huomiot :valaistus-muut :toimenpide 0 :jaahdytys] :dp 0}
@@ -467,10 +543,14 @@
         "E35" {:path [:huomiot :valaistus-muut :toimenpide 2 :jaahdytys] :dp 0}
         "F35" {:path [:huomiot :valaistus-muut :toimenpide 2 :eluvun-muutos] :dp 0}
 
-        "B37" {:path [:huomiot :suositukset-fi]}
-        "B59" {:f #(format "Todistustunnus: %s, 7/8" (:id %))}}
-     7 {"B3" {:path [:lisamerkintoja-fi]}
-        "B62" {:f #(format "Todistustunnus: %s, 8/8" (:id %))}}}))
+        "B37" {:path (if sv?
+                       [:huomiot :suositukset-sv]
+                       [:huomiot :suositukset-fi])}
+        "B59" {:f #(todistustunnus (:id %) kieli 7)}}
+     7 {"B3" {:path (if sv?
+                      [:lisamerkintoja-sv]
+                      [:lisamerkintoja-fi])}
+        "B62" {:f #(todistustunnus (:id %) kieli 8)}}}))
 
 (defn fill-xlsx-template [complete-energiatodistus kieli draft?]
   (with-open [is (-> xlsx-template-paths-by-kieli
@@ -483,7 +563,7 @@
                     .toString
                     (format "energiatodistus-%s.xlsx")
                     (str tmp-dir))]
-      (doseq [[sheet sheet-mappings] (mappings)]
+      (doseq [[sheet sheet-mappings] (mappings kieli)]
         (doseq [[cell {:keys [path f dp percent?]}] sheet-mappings]
           (xlsx/set-cell-value-at (nth sheets sheet)
                                   cell
