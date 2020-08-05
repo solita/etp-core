@@ -31,7 +31,7 @@
   (t/is (= "12,346 %" (service/format-number 0.1234567 3 true))))
 
 (t/deftest fill-xlsx-template-test
-  (let [path (service/fill-xlsx-template energiatodistus false)
+  (let [path (service/fill-xlsx-template energiatodistus "fi" false)
         file (-> path io/input-stream)
         loaded-xlsx (xlsx/load-xlsx file)
         sheet-0 (xlsx/get-sheet loaded-xlsx 0)]
@@ -43,19 +43,19 @@
 
 (t/deftest xlsx->pdf-test
   (let [file-path (service/xlsx->pdf (str "src/main/resources/"
-                                          service/xlsx-template-path))]
+                                          "energiatodistus-2018-fi.xlsx"))]
     (t/is (str/ends-with? file-path ".pdf"))
     (t/is (-> file-path io/as-file .exists true?))
     (io/delete-file file-path)))
 
 (t/deftest generate-pdf-as-file-test
-  (let [file-path (service/generate-pdf-as-file energiatodistus true)]
+  (let [file-path (service/generate-pdf-as-file energiatodistus "sv" true)]
     (t/is (-> file-path io/as-file .exists))
     (io/delete-file file-path)))
 
 (t/deftest pdf-file-id-test
-  (t/is (nil? (service/pdf-file-id nil)))
-  (t/is (= (service/pdf-file-id 12345) "energiatodistus-12345")))
+  (t/is (nil? (service/pdf-file-id nil "fi")))
+  (t/is (= (service/pdf-file-id 12345 "fi") "energiatodistus-12345-fi")))
 
 (t/deftest do-when-signing-test
   (let [f (constantly true)]

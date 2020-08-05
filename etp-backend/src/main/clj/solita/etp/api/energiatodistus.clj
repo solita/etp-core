@@ -30,17 +30,24 @@
           (xschema/missing-maybe-values-coercer
             energiatodistus-schema/EnergiatodistusSave2018))]]])
 
+(defn valid-pdf-filename? [filename id kieli]
+  (= filename (format "energiatodistus-%s-%s.pdf" id kieli)))
+
 (defn pdf-route [version]
-  ["/pdf"
+  ["/pdf/:kieli/:filename"
    {:get {:summary    "Lataa energiatodistus PDF-tiedostona"
-          :parameters {:path {:id common-schema/Key}}
+          :parameters {:path {:id common-schema/Key
+                              :kieli schema/Str
+                              :filename schema/Str}}
           :responses  {200 {:body nil}
                        404 {:body schema/Str}}
-          :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
-                        (api-response/pdf-response
-                          (energiatodistus-pdf-service/find-energiatodistus-pdf db whoami id)
-                          (str "energiatodistus-" version "-" id ".pdf")
-                          (str "Energiatodistus " id " does not exists.")))}}])
+          :handler    (fn [{{{:keys [id kieli filename]} :path} :parameters :keys [db whoami]}]
+                        (if (valid-pdf-filename? filename id kieli)
+                          (api-response/pdf-response
+                           (energiatodistus-pdf-service/find-energiatodistus-pdf db whoami id kieli)
+                           filename
+                           (str "Energiatodistus " id " does not exists."))
+                          (r/not-found "File not found")))}}])
 
 (def private-routes
   [["/energiatodistukset"

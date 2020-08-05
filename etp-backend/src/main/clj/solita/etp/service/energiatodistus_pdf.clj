@@ -24,7 +24,9 @@
            (java.awt.image BufferedImage)
            (javax.imageio ImageIO)))
 
-(def xlsx-template-path "energiatodistus-2018-fi.xlsx")
+(def xlsx-template-paths-by-kieli {"fi" "energiatodistus-2018-fi.xlsx"
+                                   "sv" "energiatodistus-2018-sv.xlsx"})
+
 (def watermark-path-fi "watermark-fi.pdf")
 (def sheet-count 8)
 (def tmp-dir "tmp/")
@@ -470,8 +472,11 @@
      7 {"B3" {:path [:lisamerkintoja-fi]}
         "B62" {:f #(format "Todistustunnus: %s, 8/8" (:id %))}}}))
 
-(defn fill-xlsx-template [complete-energiatodistus draft?]
-  (with-open [is (-> xlsx-template-path io/resource io/input-stream)]
+(defn fill-xlsx-template [complete-energiatodistus kieli draft?]
+  (with-open [is (-> xlsx-template-paths-by-kieli
+                     (get kieli)
+                     io/resource
+                     io/input-stream)]
     (let [loaded-xlsx (xlsx/load-xlsx is)
           sheets (map #(xlsx/get-sheet loaded-xlsx %) (range sheet-count))
           path (->> (java.util.UUID/randomUUID)
@@ -559,8 +564,8 @@
     (.save result pdf-path)
     pdf-path))
 
-(defn generate-pdf-as-file [complete-energiatodistus draft?]
-  (let [xlsx-path (fill-xlsx-template complete-energiatodistus draft?)
+(defn generate-pdf-as-file [complete-energiatodistus kieli draft?]
+  (let [xlsx-path (fill-xlsx-template complete-energiatodistus kieli draft?)
         pdf-path (xlsx->pdf xlsx-path)]
     (io/delete-file xlsx-path)
     (add-e-luokka-image pdf-path (-> complete-energiatodistus
@@ -571,28 +576,27 @@
       (add-watermark pdf-path)
       pdf-path)))
 
-(defn generate-pdf-as-input-stream [energiatodistus draft?]
-  (let [pdf-path (generate-pdf-as-file energiatodistus draft?)
+(defn generate-pdf-as-input-stream [energiatodistus kieli draft?]
+  (let [pdf-path (generate-pdf-as-file energiatodistus kieli draft?)
         is (io/input-stream pdf-path)]
     (io/delete-file pdf-path)
     is))
 
-(defn pdf-file-id [id]
-  (when id (str "energiatodistus-" id)))
+(defn pdf-file-id [id kieli]
+  (when id (format "energiatodistus-%s-%s" id kieli)))
 
-(defn find-existing-pdf [db id]
-  (->> id
-       pdf-file-id
+(defn find-existing-pdf [db id kieli]
+  (->> (pdf-file-id id kieli)
        (file-service/find-file db)
        :content
        io/input-stream))
 
-(defn find-energiatodistus-pdf [db whoami id]
+(defn find-energiatodistus-pdf [db whoami id kieli]
   (when-let [{:keys [allekirjoitusaika] :as complete-energiatodistus}
              (complete-energiatodistus-service/find-complete-energiatodistus db whoami id)]
     (if allekirjoitusaika
-      (find-existing-pdf db id)
-      (generate-pdf-as-input-stream complete-energiatodistus true))))
+      (find-existing-pdf db id kieli)
+      (generate-pdf-as-input-stream complete-energiatodistus kieli true))))
 
 (defn do-when-signing [{:keys [tila-id]} f]
   (case (energiatodistus-service/tila-key tila-id)
@@ -619,7 +623,7 @@
              (complete-energiatodistus-service/find-complete-energiatodistus db id)]
     (do-when-signing
      complete-energiatodistus
-     #(let [pdf-path (generate-pdf-as-file complete-energiatodistus false)
+     #(let [pdf-path (generate-pdf-as-file complete-energiatodistus "fi" false)
             signable-pdf-path (str/replace pdf-path #".pdf" "-signable.pdf")
             signature-png-path (str/replace pdf-path #".pdf" "-signature.png")
             _ (signature-as-png signature-png-path laatija-fullname)
@@ -632,7 +636,7 @@
                                666)
             signable-pdf-data (puumerkki/read-file signable-pdf-path)
             digest (puumerkki/compute-base64-pkcs signable-pdf-data)
-            file-id (pdf-file-id id)]
+            file-id (pdf-file-id id "fi")]
         (file-service/upsert-file-from-bytes db
                                              file-id
                                              (str file-id ".pdf")
@@ -647,7 +651,7 @@
              (energiatodistus-service/find-energiatodistus db id)]
     (do-when-signing
      energiatodistus
-     #(try (let [file-id (pdf-file-id id)
+     #(try (let [file-id (pdf-file-id id "fi")
                  {:keys [filename content] :as file-info}
                  (file-service/find-file db file-id)
                  content-bytes (.readAllBytes content)
