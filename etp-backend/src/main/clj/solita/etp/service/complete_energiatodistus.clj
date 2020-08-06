@@ -56,6 +56,9 @@
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine])
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine])
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys])
+          (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia])
+          (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia])
+          (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia])
           (combine-keys *
                         nil
                         [:tulokset :kaytettavat-energiamuodot :kaukolampo-kertoimella]
@@ -106,6 +109,21 @@
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala]
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin])
+          (combine-keys *
+                        nil
+                        [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-nettoala-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-nettoala]
+                        [:tulokset :kaytettavat-energiamuodot :muu 0 :muotokerroin])
+          (combine-keys *
+                        nil
+                        [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala]
+                        [:tulokset :kaytettavat-energiamuodot :muu 1 :muotokerroin])
+          (combine-keys *
+                        nil
+                        [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala]
+                        [:tulokset :kaytettavat-energiamuodot :muu 2 :muotokerroin])
           (combine-keys +
                         0
                         [:tulokset :kaytettavat-energiamuodot :summa]
