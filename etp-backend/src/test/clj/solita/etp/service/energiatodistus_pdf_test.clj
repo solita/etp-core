@@ -12,7 +12,13 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(def energiatodistus (energiatodistus-test/generate-energiatodistus-2018))
+(def energiatodistus-2013 (-> (energiatodistus-test/generate-energiatodistus-2013)
+                              (assoc :versio 2013)))
+
+(def energiatodistus-2018 (-> (energiatodistus-test/generate-energiatodistus-2018)
+                              (assoc :versio 2018)))
+
+(def energiatodistukset [energiatodistus-2013 energiatodistus-2018])
 
 (def sis-kuorma-data {:henkilot {:kayttoaste 0.2 :lampokuorma 1}
                       :kuluttajalaitteet {:kayttoaste 0.3 :lampokuorma 1}
@@ -35,15 +41,16 @@
   (t/is (= "12,346 %" (service/format-number 0.1234567 3 true))))
 
 (t/deftest fill-xlsx-template-test
-  (let [path (service/fill-xlsx-template energiatodistus "fi" false)
-        file (-> path io/input-stream)
-        loaded-xlsx (xlsx/load-xlsx file)
-        sheet-0 (xlsx/get-sheet loaded-xlsx 0)]
-    (t/is (str/ends-with? path ".xlsx"))
-    (t/is (-> path io/as-file .exists true?))
-    (t/is (= (-> energiatodistus :perustiedot :nimi)
-             (xlsx/get-cell-value-at sheet-0 "K7")))
-    (io/delete-file path)))
+  (doseq [energiatodistus energiatodistukset]
+    (let [path (service/fill-xlsx-template energiatodistus "fi" false)
+          file (-> path io/input-stream)
+          loaded-xlsx (xlsx/load-xlsx file)
+          sheet-0 (xlsx/get-sheet loaded-xlsx 0)]
+      (t/is (str/ends-with? path ".xlsx"))
+      (t/is (-> path io/as-file .exists true?))
+      (t/is (= (-> energiatodistus :perustiedot :yritys :nimi)
+               (xlsx/get-cell-value-at sheet-0 "J42")))
+      (io/delete-file path))))
 
 (t/deftest xlsx->pdf-test
   (let [file-path (service/xlsx->pdf (str "src/main/resources/"
@@ -53,9 +60,10 @@
     (io/delete-file file-path)))
 
 (t/deftest generate-pdf-as-file-test
-  (let [file-path (service/generate-pdf-as-file energiatodistus "sv" true)]
-    (t/is (-> file-path io/as-file .exists))
-    (io/delete-file file-path)))
+  (doseq [energiatodistus energiatodistukset]
+    (let [file-path (service/generate-pdf-as-file energiatodistus "sv" true)]
+      (t/is (-> file-path io/as-file .exists))
+      (io/delete-file file-path))))
 
 (t/deftest pdf-file-id-test
   (t/is (nil? (service/pdf-file-id nil "fi")))
@@ -72,7 +80,7 @@
 
 (t/deftest find-energiatodistus-digest-test
   (let [laatija-id (energiatodistus-test/add-laatija!)
-        id (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id)
+        id (energiatodistus-test/add-energiatodistus! energiatodistus-2018 laatija-id)
         whoami {:id laatija-id}]
     (t/is (= (service/find-energiatodistus-digest ts/*db* id)
              :not-in-signing))
@@ -85,7 +93,7 @@
 
 (t/deftest sign-energiatodistus-test
   (let [laatija-id (energiatodistus-test/add-laatija!)
-        id (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id)
+        id (energiatodistus-test/add-energiatodistus! energiatodistus-2018 laatija-id)
         whoami {:id laatija-id}]
     (t/is (= (service/sign-energiatodistus-pdf ts/*db* id nil)
              :not-in-signing))
