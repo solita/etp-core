@@ -3,7 +3,38 @@
             [clojure.java.jdbc :as jdbc]
             [solita.etp.db :as db]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
-            [schema.core :as schema]))
+            [schema.core :as schema]
+            [solita.common.map :as m]
+            [solita.common.schema :as xschema]
+            [flathead.deep :as deep]
+            [solita.etp.schema.energiatodistus :as energiatodistus-schema]
+            [flathead.flatten :as flat])
+  (:import (schema.core Constrained Predicate EqSchema)
+           (clojure.lang ArityException)))
+
+(defn- illegal-argument! [msg]
+  (throw (IllegalArgumentException. msg)))
+
+(defn- throw-ex-info [map]
+  (throw (ex-info (:message map) map)))
+
+(defn- schema-classes [schema]
+  (cond
+    (class? schema) schema
+    (= schema schema/Int) Integer
+    (xschema/maybe? schema) (schema-classes (:schema schema))
+    (instance? Constrained schema) (schema-classes (:schema schema))
+    (instance? EqSchema schema) (class (:v schema))
+    (instance? Predicate schema) (illegal-argument! (str "Predicate schema element: " + schema + " is not supported"))
+    (map? schema) (m/map-values schema-classes schema)
+    (vector? schema) (mapv schema-classes schema)
+    (coll? schema) (map schema-classes schema)
+    :else (illegal-argument! (str "Unsupported schema element: " schema))))
+
+(def search-schema
+  (flat/tree->flat "."
+    (deep/deep-merge (schema-classes energiatodistus-schema/Energiatodistus2013)
+                     (schema-classes energiatodistus-schema/Energiatodistus2018))))
 
 (def base-query
   "select energiatodistus.*,
@@ -17,9 +48,16 @@
   (or (some-> identifier keyword energiatodistus-service/db-abbreviations name)
       identifier))
 
+(defn validate-field! [field]
+  (if (nil? (some-> field keyword search-schema))
+    (throw-ex-info {:type :unknown-field :field field
+                    :message (str "Unknown field: " field)})
+    field))
+
 (defn field->sql [field]
   (str "energiatodistus."
        (as-> field $
+             (validate-field! $)
              (str/split $ #"\.")
              (update $ 0 abbreviation)
              (map db/snake-case $)
@@ -40,8 +78,20 @@
    "like"  infix-notation
    "between" between-expression})
 
+(defn- sql-formatter! [predicate-name]
+  (if-let [formatter (predicates predicate-name)]
+    formatter
+    (throw-ex-info {:type :unknown-predicate :predicate predicate-name
+                    :message (str "Unknown predicate: " predicate-name)})))
+
 (defn predicate-expression->sql [expression]
-  (apply (predicates (first expression)) expression))
+  (let [predicate (first expression)]
+    (try
+      (apply (sql-formatter! predicate) expression)
+      (catch ArityException _
+        (throw-ex-info {:type :invalid-arguments :predicate predicate
+                        :message (str "Wrong number of arguments: " (rest expression)
+                                      " for predicate: " predicate)})))))
 
 (defn expression-seq->sql [logic-operator expression->sql expressions]
   (let [sql-expressions (map expression->sql expressions)]

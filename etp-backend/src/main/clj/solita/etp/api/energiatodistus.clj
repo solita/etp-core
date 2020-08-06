@@ -55,12 +55,17 @@
             :responses  {200 {:body [energiatodistus-schema/Energiatodistus]}}
             :access     rooli-service/laatija?
             :handler    (fn [{{{:keys [where sort order limit offset]} :query} :parameters
-                              :keys [db whoami]}]
-                          (r/response (energiatodistus-search-service/search
-                                        db
-                                        {:where (json/read-value where)
-                                         :sort  sort :order order
-                                         :limit limit :offset offset})))}}]
+                                :keys [db whoami]}]
+                          (api-response/response-with-exceptions
+                            #(energiatodistus-search-service/search
+                              db
+                              {:where (json/read-value where)
+                               :sort  sort :order order
+                               :limit limit :offset offset})
+                            [{:type :unknown-field :response 400}
+                             {:type :unknown-predicate :response 400}
+                             {:type :invalid-arguments :response 400}
+                             {:type :schema.core/error :response 400}]))}}]
     ["/xlsx/energiatodistukset.xlsx"
      {:get {:summary   "Lataa laatijan energiatodistuksien tiedot XLSX-tiedostona"
             :responses {200 {:body nil}
