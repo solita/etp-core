@@ -78,6 +78,9 @@
 (defn between-expression [_ field value1 value2]
   [(str (field->sql field) " between ? and ?") (coerce-value! field value1) (coerce-value! field value2)])
 
+(defn is-null-expression [operator field]
+  [(str (field->sql field) " is null")])
+
 (def predicates
   {"="  infix-notation
    ">=" infix-notation
@@ -85,7 +88,8 @@
    ">"  infix-notation
    "<"  infix-notation
    "like"  infix-notation
-   "between" between-expression})
+   "between" between-expression
+   "nil?" is-null-expression})
 
 (defn- sql-formatter! [predicate-name]
   (if-let [formatter (predicates predicate-name)]
