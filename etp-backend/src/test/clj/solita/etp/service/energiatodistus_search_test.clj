@@ -32,6 +32,16 @@
       (t/is (= (energiatodistus-test/complete-energiatodistus energiatodistus id laatija-id 2018)
                (first (search [[["=" "perustiedot.nimi" "test"]]])))))))
 
+(t/deftest add-and-find-by-nimi-nil-test
+  (let [laatija-id (energiatodistus-test/add-laatija!)]
+    (let [energiatodistus
+          (assoc-in (energiatodistus-test/generate-energiatodistus-2018)
+                    [:perustiedot :nimi] nil)
+          id (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id 2018)]
+
+      (t/is (= (energiatodistus-test/complete-energiatodistus energiatodistus id laatija-id 2018)
+               (first (search [[["nil?" "perustiedot.nimi"]]])))))))
+
 (t/deftest add-and-find-by-havainnointikaynti-test
   (let [laatija-id (energiatodistus-test/add-laatija!)]
     (let [^LocalDate date (LocalDate/now)
