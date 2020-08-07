@@ -3,12 +3,14 @@
             [solita.etp.service.energiatodistus-search :as energiatodistus-search-service]
             [solita.etp.test-system :as ts]
             [clojure.test :as t])
-  (:import (clojure.lang ExceptionInfo)))
+  (:import (clojure.lang ExceptionInfo)
+           (java.time LocalDate)))
 
 (t/use-fixtures :each ts/fixture)
 
 (defn search [where]
-  (energiatodistus-search-service/search ts/*db* {:where where}))
+  (map #(dissoc % :laatija-fullname)
+       (energiatodistus-search-service/search ts/*db* {:where where})))
 
 (t/deftest not-found-test
   (t/is (= (search [[["=" "id" -1]]]) [])))
@@ -18,9 +20,7 @@
     (doseq [energiatodistus (repeatedly 1 energiatodistus-test/generate-energiatodistus-2018)
             :let [id (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id 2018)]]
       (t/is (= (energiatodistus-test/complete-energiatodistus energiatodistus id laatija-id 2018)
-               (dissoc (first (search [[["=" "id" id]]]))
-                       :laatija-fullname
-                       :korvaava-energiatodistus-id))))))
+               (first (search [[["=" "id" id]]])))))))
 
 (t/deftest add-and-find-by-nimi-test
   (let [laatija-id (energiatodistus-test/add-laatija!)]
@@ -30,9 +30,18 @@
           id (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id 2018)]
 
       (t/is (= (energiatodistus-test/complete-energiatodistus energiatodistus id laatija-id 2018)
-               (dissoc (first (search [[["=" "perustiedot.nimi" "test"]]]))
-                       :laatija-fullname
-                       :korvaava-energiatodistus-id))))))
+               (first (search [[["=" "perustiedot.nimi" "test"]]])))))))
+
+(t/deftest add-and-find-by-havainnointikaynti-test
+  (let [laatija-id (energiatodistus-test/add-laatija!)]
+    (let [^LocalDate date (LocalDate/now)
+          energiatodistus
+          (assoc-in (energiatodistus-test/generate-energiatodistus-2018)
+                    [:perustiedot :havainnointikaynti] date)
+          id (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id 2018)]
+
+      (t/is (= (energiatodistus-test/complete-energiatodistus energiatodistus id laatija-id 2018)
+               (first (search [[["=" "perustiedot.havainnointikaynti" (.toString date)]]])))))))
 
 (t/deftest add-and-find-by-nimi-and-id-test
   (let [laatija-id (energiatodistus-test/add-laatija!)]
@@ -42,9 +51,7 @@
           id (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id 2018)]
 
       (t/is (= (energiatodistus-test/complete-energiatodistus energiatodistus id laatija-id 2018)
-               (dissoc (first (search [[["=" "perustiedot.nimi" "test"]["=" "id" id]]]))
-                       :laatija-fullname
-                       :korvaava-energiatodistus-id))))))
+               (first (search [[["=" "perustiedot.nimi" "test"]["=" "id" id]]])))))))
 
 (defn catch-ex-data [f]
   (try (f) (catch ExceptionInfo e (ex-data e))))

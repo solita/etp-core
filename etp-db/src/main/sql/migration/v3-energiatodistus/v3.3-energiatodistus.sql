@@ -35,7 +35,7 @@ create table energiatodistus (
  laatija_id int not null references laatija (id),
  korvattu_energiatodistus_id integer references energiatodistus (id),
 
- pt$havainnointikaynti text,
+ pt$havainnointikaynti date,
  pt$katuosoite_fi text,
  pt$katuosoite_sv text,
  pt$kayttotarkoitus text,

@@ -41,7 +41,7 @@
 (defn find-energiatodistus [id]
   (let [et (service/find-energiatodistus ts/*db* id)]
     (t/is (not (nil? (:laatija-fullname et))))
-    (dissoc et :laatija-fullname :korvaava-energiatodistus-id)))
+    (dissoc et :laatija-fullname)))
 
 (defn complete-energiatodistus
   ([energiatodistus id laatija-id] (complete-energiatodistus energiatodistus id laatija-id 2018))
@@ -51,6 +51,7 @@
             :laatija-id laatija-id
             :versio versio
             :tila-id 0
+            :korvaava-energiatodistus-id nil
             :allekirjoitusaika nil})))
 
 (defn generate-energiatodistus-2018 []
@@ -88,7 +89,7 @@
         id (add-energiatodistus! energiatodistus laatija-id)]
     (t/is (= (complete-energiatodistus energiatodistus id laatija-id)
              (-> (service/find-energiatodistus ts/*db* paakayttaja id)
-                 (dissoc :laatija-fullname :korvaava-energiatodistus-id))))
+                 (dissoc :laatija-fullname))))
     (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
                             #"Forbidden"
                             (service/find-energiatodistus ts/*db* patevyydentoteaja id)))))
