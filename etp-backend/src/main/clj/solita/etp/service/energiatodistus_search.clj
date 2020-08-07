@@ -8,7 +8,9 @@
             [solita.common.schema :as xschema]
             [flathead.deep :as deep]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
-            [flathead.flatten :as flat])
+            [flathead.flatten :as flat]
+            [schema.coerce :as coerce]
+            [solita.etp.service.json :as json])
   (:import (schema.core Constrained Predicate EqSchema)
            (clojure.lang ArityException)))
 
@@ -18,23 +20,23 @@
 (defn- throw-ex-info [map]
   (throw (ex-info (:message map) map)))
 
-(defn- schema-classes [schema]
+(defn- schema-coercers [schema]
   (cond
-    (class? schema) schema
-    (= schema schema/Int) Integer
-    (xschema/maybe? schema) (schema-classes (:schema schema))
-    (instance? Constrained schema) (schema-classes (:schema schema))
-    (instance? EqSchema schema) (class (:v schema))
+    (class? schema) (coerce/coercer! schema json/json-coercions)
+    (= schema schema/Int) (coerce/coercer! schema/Int json/json-coercions)
+    (xschema/maybe? schema) (schema-coercers (:schema schema))
+    (instance? Constrained schema) (schema-coercers (:schema schema))
+    (instance? EqSchema schema) (schema-coercers (class (:v schema)))
     (instance? Predicate schema) (illegal-argument! (str "Predicate schema element: " + schema + " is not supported"))
-    (map? schema) (m/map-values schema-classes schema)
-    (vector? schema) (mapv schema-classes schema)
-    (coll? schema) (map schema-classes schema)
+    (map? schema) (m/map-values schema-coercers schema)
+    (vector? schema) (mapv schema-coercers schema)
+    (coll? schema) (map schema-coercers schema)
     :else (illegal-argument! (str "Unsupported schema element: " schema))))
 
 (def search-schema
   (flat/tree->flat "."
-    (deep/deep-merge (schema-classes energiatodistus-schema/Energiatodistus2013)
-                     (schema-classes energiatodistus-schema/Energiatodistus2018))))
+    (deep/deep-merge (schema-coercers energiatodistus-schema/Energiatodistus2013)
+                     (schema-coercers energiatodistus-schema/Energiatodistus2018))))
 
 (def base-query
   "select energiatodistus.*,
@@ -48,11 +50,18 @@
   (or (some-> identifier keyword energiatodistus-service/db-abbreviations name)
       identifier))
 
-(defn validate-field! [field]
-  (if (nil? (some-> field keyword search-schema))
+(defn- coercer! [field]
+  (if-let [coercer (some-> field keyword search-schema)]
+    coercer
     (throw-ex-info {:type :unknown-field :field field
-                    :message (str "Unknown field: " field)})
-    field))
+                    :message (str "Unknown field: " field)})))
+
+(defn validate-field! [field]
+  (coercer! field)
+  field)
+
+(defn coerce-value! [field value]
+  ((coercer! field) value))
 
 (defn field->sql [field]
   (str "energiatodistus."
@@ -64,10 +73,10 @@
              (str/join "$" $))))
 
 (defn infix-notation [operator field value]
-  [(str (field->sql field) " " operator " ?") value])
+  [(str (field->sql field) " " operator " ?") (coerce-value! field value)])
 
 (defn between-expression [_ field value1 value2]
-  [(str field " between ? and ?") value1 value2])
+  [(str (field->sql field) " between ? and ?") (coerce-value! field value1) (coerce-value! field value2)])
 
 (def predicates
   {"="  infix-notation
