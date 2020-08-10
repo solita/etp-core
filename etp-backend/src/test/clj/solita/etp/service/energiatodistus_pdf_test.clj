@@ -30,10 +30,6 @@
     (t/is (= sis-kuorma [[0.2 {:henkilot 1}]
                          [0.3 {:kuluttajalaitteet 1 :valaistus 2}]]))))
 
-(t/deftest todistustunnus-test
-  (t/is (= "Todistustunnus: 1234, 1/8" (service/todistustunnus 1234 "fi" 1)))
-  (t/is (= "Certifikatbeteckning: 9999, 8/8" (service/todistustunnus 9999 "sv" 8))) )
-
 (t/deftest format-number-test
   (t/is (= "12,346" (service/format-number 12.34567 3 false)))
   (t/is (= "0,84" (service/format-number 0.8449 2 false)))
