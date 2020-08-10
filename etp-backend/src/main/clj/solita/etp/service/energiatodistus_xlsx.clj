@@ -34,18 +34,20 @@
   (max 2000 (* (count label) 250)))
 
 (defn fill-headers [sheet style paths]
-  (let [row (xlsx/create-row sheet 0)]
+  (let [row (xlsx/get-row sheet 0)]
     (.setRowStyle row style)
     (doseq [[idx path] (map-indexed vector paths)
-            :let [label (path->str path)]]
-      (xlsx/create-cell-with-value row idx label)
+            :let [cell (xlsx/get-cell row idx)
+                  label (path->str path)]]
+      (xlsx/set-cell-value cell label)
       (xlsx/set-column-width sheet idx (col-width label)))))
 
 (defn fill-row-with-energiatodistus [sheet idx energiatodistus paths date-style]
-  (let [row (xlsx/create-row sheet idx)]
+  (let [row (xlsx/get-row sheet idx)]
     (doseq [[idx path] (map-indexed vector paths)
             :let [v (get-in energiatodistus path)
-                  cell (xlsx/create-cell-with-value row idx v)]]
+                  cell (xlsx/get-cell row idx)]]
+      (xlsx/set-cell-value cell v)
       (if (instance? java.time.LocalDate v)
         (.setCellStyle cell date-style)))))
 
