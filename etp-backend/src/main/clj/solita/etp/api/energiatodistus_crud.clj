@@ -24,7 +24,7 @@
              :parameters {:path {:id common-schema/Key}}
              :responses  {200 {:body get-schema}
                           404 {:body schema/Str}}
-             :access     rooli-service/laatija?
+             :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                            (api-response/get-response
                              (energiatodistus-service/find-energiatodistus db whoami id)
@@ -33,6 +33,7 @@
     :put    {:summary    "Päivitä energiatodistus luonnos"
              :parameters {:path {:id common-schema/Key}
                           :body save-schema}
+             :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
              :responses  {200 {:body nil}
                           404 {:body schema/Str}}
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami parameters]}]
@@ -44,6 +45,7 @@
 
     :delete {:summary    "Poista luonnostilainen energiatodistus"
              :parameters {:path {:id common-schema/Key}}
+             :access     rooli-service/laatija?
              :responses  {200 {:body nil}
                           404 {:body schema/Str}}
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
