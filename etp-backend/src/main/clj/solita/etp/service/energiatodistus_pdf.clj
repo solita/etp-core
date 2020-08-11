@@ -25,11 +25,11 @@
            (java.awt.image BufferedImage)
            (javax.imageio ImageIO)))
 
-(def xlsx-template-paths {2013 {"fi" "energiatodistus-2013-fi.xlsx"
-                                ;; TODO replace with sv template when it exists
-                                "sv" "energiatodistus-2013-fi.xlsx"}
+;; TODO replace with real templates when it exists
+(def xlsx-template-paths {2013 {"fi" "energiatodistus-2018-fi.xlsx"
+                                "sv" "energiatodistus-2018-fi.xlsx"}
                           2018 {"fi" "energiatodistus-2018-fi.xlsx"
-                                "sv" "energiatodistus-2018-sv.xlsx"}})
+                                "sv" "energiatodistus-2018-fi.xlsx"}})
 
 (def watermark-path-fi "watermark-fi.pdf")
 (def sheet-count 8)
