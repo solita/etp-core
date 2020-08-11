@@ -33,7 +33,7 @@
 (defn valid-pdf-filename? [filename id kieli]
   (= filename (format "energiatodistus-%s-%s.pdf" id kieli)))
 
-(defn pdf-route [version]
+(defn pdf-route [versio]
   ["/pdf/:kieli/:filename"
    {:get {:summary    "Lataa energiatodistus PDF-tiedostona"
           :parameters {:path {:id common-schema/Key
@@ -44,7 +44,10 @@
           :handler    (fn [{{{:keys [id kieli filename]} :path} :parameters :keys [db whoami]}]
                         (if (valid-pdf-filename? filename id kieli)
                           (api-response/pdf-response
-                           (energiatodistus-pdf-service/find-energiatodistus-pdf db whoami id kieli)
+                           (energiatodistus-pdf-service/find-energiatodistus-pdf db
+                                                                                 whoami
+                                                                                 id
+                                                                                 kieli)
                            filename
                            (str "Energiatodistus " id " does not exists."))
                           (r/not-found "File not found")))}}])
