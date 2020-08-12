@@ -2,7 +2,7 @@ FROM openjdk:11
 
 # LibreOffice installation
 RUN apt-get update && \
-apt-get install -y --no-install-recommends libxinerama1 libdbus-1-3 \
+apt-get install -y --no-install-recommends libxinerama1 libdbus-1-3 libx11-xcb1 \
 libdbus-glib-1-2 libcairo2 libcups2 libsm6 && \
 curl -L -O https://download.documentfoundation.org/libreoffice/testing/7.0.0/deb/x86_64/LibreOffice_7.0.0.3_Linux_x86-64_deb.tar.gz && \
 tar -xzvf LibreOffice_7.0.0.3_Linux_x86-64_deb.tar.gz && \
