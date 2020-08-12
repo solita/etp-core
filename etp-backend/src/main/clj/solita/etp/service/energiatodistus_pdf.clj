@@ -705,9 +705,8 @@
       (.dispose))
     (ImageIO/write img "PNG" (io/file path))))
 
-;; TODO signature position for 2013
 (defn find-energiatodistus-digest [db id]
-  (when-let [{:keys [laatija-fullname] :as complete-energiatodistus}
+  (when-let [{:keys [laatija-fullname versio] :as complete-energiatodistus}
              (complete-energiatodistus-service/find-complete-energiatodistus db id)]
     (do-when-signing
      complete-energiatodistus
@@ -721,7 +720,7 @@
                                laatija-fullname
                                signature-png-path
                                75
-                               666)
+                               (case versio 2013 648 2018 666))
             signable-pdf-data (puumerkki/read-file signable-pdf-path)
             digest (puumerkki/compute-base64-pkcs signable-pdf-data)
             file-id (pdf-file-id id "fi")]
