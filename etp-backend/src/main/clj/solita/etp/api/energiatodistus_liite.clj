@@ -53,7 +53,7 @@
    ["/:liite-id"
     {:conflicting true
      :delete {:summary    "Poista liite energiatodistuksesta."
-              :access     rooli-service/laatija?
+              :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
               :parameters {:path {:id common-schema/Key
                                   :liite-id common-schema/Key}}
               :responses  {200 {:body nil}
