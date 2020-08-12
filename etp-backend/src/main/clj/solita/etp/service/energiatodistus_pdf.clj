@@ -26,7 +26,7 @@
            (javax.imageio ImageIO)))
 
 ;; TODO replace with real templates when it exists
-(def xlsx-template-paths {2013 {"fi" "energiatodistus-2018-fi.xlsx"
+(def xlsx-template-paths {2013 {"fi" "energiatodistus-2013-fi.xlsx"
                                 "sv" "energiatodistus-2018-fi.xlsx"}
                           2018 {"fi" "energiatodistus-2018-fi.xlsx"
                                 "sv" "energiatodistus-2018-fi.xlsx"}})
@@ -142,10 +142,12 @@
       {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia] :dp 0}
       {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala] :dp 0}
       {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :muotokerroin] :dp 1}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala-kertoimella] :dp 0}
       {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :nimi]}
       {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia] :dp 0}
       {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala] :dp 0}
       {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :muotokerroin] :dp 1}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala-kertoimella] :dp 0}
       {:path [:tulokset :e-luku]}
       {:path [:tulokset :e-luokka-info :luokittelu :label-fi]}
       {:path [:tulokset :e-luokka-info :luokittelu :label-sv]}
@@ -277,6 +279,21 @@
       {:path [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin]}
       {:path [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella] :dp 0}
       {:path [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 0 :nimi]}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 0 :muotokerroin] :dp 1}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :nimi]}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :muotokerroin] :dp 1}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :nimi]}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :muotokerroin] :dp 1}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala-kertoimella] :dp 0}
       {:path [:tulokset :kaytettavat-energiamuodot :summa] :dp 0}
       {:path [:tulokset :kaytettavat-energiamuodot :kertoimella-summa] :dp 0}
       {:path [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa] :dp 0}
@@ -292,6 +309,30 @@
       {:path [:tulokset :uusiutuvat-omavaraisenergiat :muusahko-nettoala] :dp 0}
       {:path [:tulokset :uusiutuvat-omavaraisenergiat :muulampo] :dp 0}
       {:path [:tulokset :uusiutuvat-omavaraisenergiat :muulampo-nettoala] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 0 :nimi-fi]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 0 :nimi-sv]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 0 :vuosikulutus] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 0 :vuosikulutus-nettoala] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 1 :nimi-fi]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 1 :nimi-sv]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 1 :vuosikulutus] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 1 :vuosikulutus-nettoala] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 2 :nimi-fi]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 2 :nimi-sv]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 2 :vuosikulutus] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 2 :vuosikulutus-nettoala] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 3 :nimi-fi]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 3 :nimi-sv]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 3 :vuosikulutus] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 3 :vuosikulutus-nettoala] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 4 :nimi-fi]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 4 :nimi-sv]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 4 :vuosikulutus] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 4 :vuosikulutus-nettoala] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 5 :nimi-fi]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 5 :nimi-sv]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 5 :vuosikulutus] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 5 :vuosikulutus-nettoala] :dp 0}
       {:path [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :sahko] :dp 1}
       {:path [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :lampo] :dp 1}
       {:path [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :sahko] :dp 1}
@@ -348,6 +389,26 @@
       {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kayttajasahko-vuosikulutus-nettoala] :dp 0}
       {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukojaahdytys-vuosikulutus] :dp 0}
       {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukojaahdytys-vuosikulutus-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 0 :nimi-fi]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 0 :nimi-sv]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 0 :vuosikulutus] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 0 :vuosikulutus-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 1 :nimi-fi]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 1 :nimi-sv]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 1 :vuosikulutus] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 1 :vuosikulutus-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 2 :nimi-fi]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 2 :nimi-sv]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 2 :vuosikulutus] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 2 :vuosikulutus-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 3 :nimi-fi]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 3 :nimi-sv]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 3 :vuosikulutus] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 3 :vuosikulutus-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 4 :nimi-fi]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 4 :nimi-sv]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 4 :vuosikulutus] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 4 :vuosikulutus-nettoala] :dp 0}
       {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy] :dp 0}
       {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh] :dp 0}
       {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh-nettoala] :dp 0}
