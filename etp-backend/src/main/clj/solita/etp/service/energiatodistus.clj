@@ -146,16 +146,27 @@
     (exception/throw-forbidden!
       (str "User " (:id whoami) " is not the laatija of et-" (:id energiatodistus)))))
 
-(defn update-energiatodistus-luonnos! [db whoami id energiatodistus]
-  (let [current-energiatodistus (find-energiatodistus db id)]
-    (assert-laatija! whoami current-energiatodistus)
-    (assert-korvaavuus! db energiatodistus)
-    (case (-> current-energiatodistus :tila-id tila-key)
-          :draft (first (jdbc/update! db :energiatodistus
-                                     (energiatodistus->db-row energiatodistus)
-                                     ["id = ? and tila_id = 0" id] db/default-opts))
-          :signed (energiatodistus-db/update-rakennustunnus-when-energiatodistus-signed! db {:id id
-                                                                                             :rakennustunnus (-> energiatodistus :perustiedot :rakennustunnus)}))))
+(defn- update-energiatodistus-luonnos! [db id version energiatodistus]
+  (first (jdbc/update! db :energiatodistus
+                       (-> energiatodistus
+                           (assoc :versio version)
+                           energiatodistus->db-row
+                           (dissoc :versio))
+                       ["id = ? and tila_id = 0" id] db/default-opts)))
+
+(defn update-energiatodistus! [db whoami id energiatodistus]
+  (if-let [current-energiatodistus (find-energiatodistus db id)]
+    (do
+      (assert-laatija! whoami current-energiatodistus)
+      (assert-korvaavuus! db energiatodistus)
+      (case (-> current-energiatodistus :tila-id tila-key)
+            :draft (update-energiatodistus-luonnos!
+                     db id (:versio current-energiatodistus) energiatodistus)
+            :signed (energiatodistus-db/update-rakennustunnus-when-energiatodistus-signed!
+                      db {:id id
+                          :rakennustunnus (-> energiatodistus :perustiedot :rakennustunnus)})
+            0))
+    0))
 
 (defn delete-energiatodistus-luonnos! [db whoami id]
   (assert-laatija! whoami (find-energiatodistus db id))
