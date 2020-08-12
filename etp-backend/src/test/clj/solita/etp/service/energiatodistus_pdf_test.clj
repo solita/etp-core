@@ -44,8 +44,8 @@
           sheet-0 (xlsx/get-sheet loaded-xlsx 0)]
       (t/is (str/ends-with? path ".xlsx"))
       (t/is (-> path io/as-file .exists true?))
-      (t/is (= (-> energiatodistus :perustiedot :yritys :nimi)
-               (xlsx/get-cell-value-at sheet-0 "K42")))
+      (t/is (= (:id energiatodistus)
+               (xlsx/get-cell-value-at sheet-0 "A1")))
       (io/delete-file path))))
 
 (t/deftest xlsx->pdf-test
