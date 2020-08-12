@@ -36,7 +36,7 @@
 
           ;; Käyttötarkoitus is actually alakäyttötarkoitus in database
           alakayttotarkoitus-id (:kayttotarkoitus perustiedot)
-          alakayttotarkoitus (->> alakayttotarkoitukset
+          alakayttotarkoitus (->> (get alakayttotarkoitukset versio)
                                   (filter #(= (:id %) alakayttotarkoitus-id))
                                   first)]
       (-> energiatodistus
@@ -377,7 +377,9 @@
 (defn required-luokittelut [db]
   {:kielisyydet (energiatodistus-service/find-kielisyys)
    :laatimisvaiheet (energiatodistus-service/find-laatimisvaiheet)
-   :alakayttotarkoitukset (kayttotarkoitus-service/find-alakayttotarkoitukset db 2018)})
+   :alakayttotarkoitukset (reduce #(assoc %1 %2 (kayttotarkoitus-service/find-alakayttotarkoitukset db %2))
+                                  {}
+                                  [2013 2018])})
 
 (defn find-complete-energiatodistus
   ([db id]
