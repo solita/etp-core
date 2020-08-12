@@ -45,7 +45,9 @@
       (t/is (str/ends-with? path ".xlsx"))
       (t/is (-> path io/as-file .exists true?))
       (t/is (= (:id energiatodistus)
-               (xlsx/get-cell-value-at sheet-0 "A1")))
+               (xlsx/get-cell-value-at sheet-0 (case (:versio energiatodistus)
+                                                 2013 "I17"
+                                                 2018 "K16"))))
       (io/delete-file path))))
 
 (t/deftest xlsx->pdf-test
