@@ -111,14 +111,29 @@
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin])
           (combine-keys *
                         nil
+                        [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia]
+                        [:tulokset :kaytettavat-energiamuodot :muu 0 :muotokerroin])
+          (combine-keys *
+                        nil
                         [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-nettoala-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-nettoala]
                         [:tulokset :kaytettavat-energiamuodot :muu 0 :muotokerroin])
           (combine-keys *
                         nil
+                        [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia]
+                        [:tulokset :kaytettavat-energiamuodot :muu 1 :muotokerroin])
+          (combine-keys *
+                        nil
                         [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala]
                         [:tulokset :kaytettavat-energiamuodot :muu 1 :muotokerroin])
+          (combine-keys *
+                        nil
+                        [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia]
+                        [:tulokset :kaytettavat-energiamuodot :muu 2 :muotokerroin])
           (combine-keys *
                         nil
                         [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala-kertoimella]
@@ -131,7 +146,10 @@
                         [:tulokset :kaytettavat-energiamuodot :sahko]
                         [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine]
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys]
-                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine])
+                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine]
+                        [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia]
+                        [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia]
+                        [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia])
           (combine-keys +
                         0
                         [:tulokset :kaytettavat-energiamuodot :kertoimella-summa]
@@ -139,7 +157,10 @@
                         [:tulokset :kaytettavat-energiamuodot :sahko-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella])
+                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-kertoimella])
           (combine-keys (comp #(Math/ceil %) +)
                         0
                         [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]
@@ -147,7 +168,10 @@
                         [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella])
+                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-nettoala-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala-kertoimella]
+                        [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala-kertoimella])
           (copy-field [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]
                       [:tulokset :e-luku])
           (combine-keys (fn [nettoala e-luku]
@@ -245,7 +269,12 @@
           (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :muulampo])
           (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :muusahko])
           (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :lampopumppu])
-
+          (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat 0 :vuosikulutus])
+          (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat 1 :vuosikulutus])
+          (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat 2 :vuosikulutus])
+          (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat 3 :vuosikulutus])
+          (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat 4 :vuosikulutus])
+          (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat 5 :vuosikulutus])
           (combine-keys +
                         0
                         [:tulokset :tekniset-jarjestelmat :sahko-summa]
@@ -283,6 +312,11 @@
           (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :kiinteistosahko-vuosikulutus])
           (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :kayttajasahko-vuosikulutus])
           (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukojaahdytys-vuosikulutus])
+          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 0 :vuosikulutus])
+          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 1 :vuosikulutus])
+          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 2 :vuosikulutus])
+          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 3 :vuosikulutus])
+          (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 4 :vuosikulutus])
           (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kerroin] 10)
           (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kerroin] 1300)
           (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kerroin] 1700)
