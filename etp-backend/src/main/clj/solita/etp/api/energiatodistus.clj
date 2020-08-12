@@ -36,6 +36,7 @@
 (defn pdf-route [versio]
   ["/pdf/:kieli/:filename"
    {:get {:summary    "Lataa energiatodistus PDF-tiedostona"
+          :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
           :parameters {:path {:id common-schema/Key
                               :kieli schema/Str
                               :filename schema/Str}}
@@ -63,7 +64,7 @@
                                  (schema/optional-key :offset) schema/Int
                                  (schema/optional-key :where)  schema/Str}}
             :responses  {200 {:body [energiatodistus-schema/Energiatodistus]}}
-            :access     rooli-service/laatija?
+            :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
             :handler    (fn [{{{:keys [where sort order limit offset]} :query} :parameters
                                 :keys [db whoami]}]
                           (api-response/response-with-exceptions
@@ -80,7 +81,7 @@
      {:get {:summary   "Lataa laatijan energiatodistuksien tiedot XLSX-tiedostona"
             :responses {200 {:body nil}
                         404 {:body schema/Str}}
-            :access    rooli-service/laatija?
+            :access    (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
             :handler   (fn [{:keys [db whoami]}]
                          (api-response/xlsx-response
                            (energiatodistus-xlsx-service/find-laatija-energiatodistukset-xlsx
@@ -93,7 +94,7 @@
             :parameters {:path {:id common-schema/Key}}
             :responses  {200 {:body energiatodistus-schema/Energiatodistus}
                          404 {:body schema/Str}}
-            :access     rooli-service/laatija?
+            :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                           (api-response/get-response
                             (energiatodistus-service/find-energiatodistus db id)
@@ -102,7 +103,7 @@
      {:get {:summary    "Hae korvattavia energiatodistuksia"
             :parameters {:query {:id schema/Int}}
             :responses  {200 {:body [common-schema/Key]}}
-            :access     rooli-service/laatija?
+            :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
             :handler    (fn [{{{:keys [id]} :query} :parameters :keys [db]}]
                           (r/response
                             (energiatodistus-service/find-replaceable-energiatodistukset-like-id
@@ -149,6 +150,7 @@
            :responses  {200 {:body [kayttotarkoitus-schema/Alakayttotarkoitusluokka]}}
            :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
                          (r/response (kayttotarkoitus-service/find-alakayttotarkoitukset db versio)))}}]
+
    ["/e-luokka/:versio/:alakayttotarkoitusluokka/:nettoala/:e-luku"
     {:get {:summary    "Laske energiatodistukselle energiatehokkuusluokka"
            :parameters {:path {:versio common-schema/Key
