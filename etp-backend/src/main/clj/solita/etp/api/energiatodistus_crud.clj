@@ -30,7 +30,7 @@
                              (energiatodistus-service/find-energiatodistus db whoami id)
                              (str "Energiatodistus " id " does not exists.")))}
 
-    :put    {:summary    "Päivitä energiatodistus luonnos"
+    :put    {:summary    "Päivitä energiatodistuksen tietoja"
              :parameters {:path {:id common-schema/Key}
                           :body save-schema}
              :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
@@ -38,10 +38,10 @@
                           404 {:body schema/Str}}
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami parameters]}]
                            (api-response/put-response
-                             (energiatodistus-service/update-energiatodistus-luonnos!
+                             (energiatodistus-service/update-energiatodistus!
                                db whoami id
                                (:body parameters))
-                             (str "Energiatodistus luonnos " id " does not exists.")))}
+                             (str "Energiatodistus " id " does not exists.")))}
 
     :delete {:summary    "Poista luonnostilainen energiatodistus"
              :parameters {:path {:id common-schema/Key}}
