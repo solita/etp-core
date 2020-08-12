@@ -26,7 +26,7 @@
 (defn find-complete-energiatodistus* [db energiatodistus kielisyydet
                                       laatimisvaiheet alakayttotarkoitukset]
   (with-precision 20
-    (let [perustiedot (:perustiedot energiatodistus)
+    (let [{:keys [perustiedot versio]} energiatodistus
           kieli-id (:kieli perustiedot)
           kielisyys (->> kielisyydet (filter #(= (:id %) kieli-id)) first)
           laatimisvaihe-id (:laatimisvaihe perustiedot)
@@ -176,7 +176,7 @@
                       [:tulokset :e-luku])
           (combine-keys (fn [nettoala e-luku]
                           (e-luokka-service/find-e-luokka-info db
-                                                               2018
+                                                               versio
                                                                alakayttotarkoitus-id
                                                                nettoala
                                                                e-luku))
