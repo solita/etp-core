@@ -625,16 +625,16 @@
     (.close contents)
     (.save doc pdf-path)))
 
-;; TODO 2013
-(def e-luokka-y-coords (zipmap ["A" "B" "C" "D" "E" "F" "G"] (iterate #(- % 21) 457)))
+(def e-luokka-y-coords-2013 (zipmap ["A" "B" "C" "D" "E" "F" "G"] (iterate #(- % 21) 487)))
+(def e-luokka-y-coords-2018 (zipmap ["A" "B" "C" "D" "E" "F" "G"] (iterate #(- % 21) 457)))
 
-(defn add-e-luokka-image [pdf-path e-luokka]
+(defn add-e-luokka-image [pdf-path e-luokka versio]
   (when e-luokka
     (add-image pdf-path
-               (format "2018%s.png" (str/lower-case e-luokka))
+               (format "%d%s.png" versio (str/lower-case e-luokka))
                0
-               392
-               (get e-luokka-y-coords e-luokka)
+               (case versio 2013 360 2018 392)
+               (get (case versio 2013 e-luokka-y-coords-2013 e-luokka-y-coords-2018) e-luokka)
                75
                17.5)))
 
@@ -652,10 +652,13 @@
   (let [xlsx-path (fill-xlsx-template complete-energiatodistus kieli draft?)
         pdf-path (xlsx->pdf xlsx-path)]
     (io/delete-file xlsx-path)
-    (add-e-luokka-image pdf-path (-> complete-energiatodistus
-                                     :tulokset
-                                     :e-luokka-info
-                                     :e-luokka))
+    (add-e-luokka-image pdf-path
+                        (-> complete-energiatodistus
+                              :tulokset
+                              :e-luokka-info
+                              :e-luokka)
+                        (:versio complete-energiatodistus))
+
     (if draft?
       (add-watermark pdf-path)
       pdf-path)))
