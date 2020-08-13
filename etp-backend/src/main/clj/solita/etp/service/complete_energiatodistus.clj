@@ -26,7 +26,7 @@
 (defn find-complete-energiatodistus* [db energiatodistus kielisyydet
                                       laatimisvaiheet alakayttotarkoitukset]
   (with-precision 20
-    (let [perustiedot (:perustiedot energiatodistus)
+    (let [{:keys [perustiedot versio]} energiatodistus
           kieli-id (:kieli perustiedot)
           kielisyys (->> kielisyydet (filter #(= (:id %) kieli-id)) first)
           laatimisvaihe-id (:laatimisvaihe perustiedot)
@@ -36,7 +36,7 @@
 
           ;; Käyttötarkoitus is actually alakäyttötarkoitus in database
           alakayttotarkoitus-id (:kayttotarkoitus perustiedot)
-          alakayttotarkoitus (->> alakayttotarkoitukset
+          alakayttotarkoitus (->> (get alakayttotarkoitukset versio)
                                   (filter #(= (:id %) alakayttotarkoitus-id))
                                   first)]
       (-> energiatodistus
@@ -176,7 +176,7 @@
                       [:tulokset :e-luku])
           (combine-keys (fn [nettoala e-luku]
                           (e-luokka-service/find-e-luokka-info db
-                                                               2018
+                                                               versio
                                                                alakayttotarkoitus-id
                                                                nettoala
                                                                e-luku))
@@ -377,7 +377,9 @@
 (defn required-luokittelut [db]
   {:kielisyydet (energiatodistus-service/find-kielisyys)
    :laatimisvaiheet (energiatodistus-service/find-laatimisvaiheet)
-   :alakayttotarkoitukset (kayttotarkoitus-service/find-alakayttotarkoitukset db 2018)})
+   :alakayttotarkoitukset (reduce #(assoc %1 %2 (kayttotarkoitus-service/find-alakayttotarkoitukset db %2))
+                                  {}
+                                  [2013 2018])})
 
 (defn find-complete-energiatodistus
   ([db id]
