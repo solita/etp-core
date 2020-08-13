@@ -29,7 +29,7 @@
 (def xlsx-template-paths {2013 {"fi" "energiatodistus-2013-fi.xlsx"
                                 "sv" "energiatodistus-2018-fi.xlsx"}
                           2018 {"fi" "energiatodistus-2018-fi.xlsx"
-                                "sv" "energiatodistus-2018-fi.xlsx"}})
+                                "sv" "energiatodistus-2018-sv.xlsx"}})
 
 (def watermark-path-fi "watermark-fi.pdf")
 (def sheet-count 8)
