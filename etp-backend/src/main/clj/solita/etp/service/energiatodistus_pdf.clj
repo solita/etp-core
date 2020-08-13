@@ -27,7 +27,7 @@
 
 ;; TODO replace with real templates when it exists
 (def xlsx-template-paths {2013 {"fi" "energiatodistus-2013-fi.xlsx"
-                                "sv" "energiatodistus-2018-fi.xlsx"}
+                                "sv" "energiatodistus-2013-sv.xlsx"}
                           2018 {"fi" "energiatodistus-2018-fi.xlsx"
                                 "sv" "energiatodistus-2018-sv.xlsx"}})
 
