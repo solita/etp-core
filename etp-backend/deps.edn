@@ -39,6 +39,8 @@
                  :extra-deps {eftest {:mvn/version "0.5.9"}
                               prismatic/schema-generators {:mvn/version "0.1.3"}}
                  :jvm-opts ["-Djava.awt.headless=true"]}
-           :test {:main-opts ["-e" "(run-tests-and-exit!)"]}
+           :test {:main-opts ["-e" "(run-tests-and-exit!)" "-A:dev"]}
+           :coverage {:extra-deps {cloverage {:mvn/version "1.2.0"}}
+                      :main-opts ["-m" "cloverage.coverage -p src/main -s src/test -e solita.etp.api.* -e user"]}
            :uberjar {:extra-deps {uberdeps {:mvn/version "0.1.8"}}
                      :main-opts ["-m" "uberdeps.uberjar"]}}}
