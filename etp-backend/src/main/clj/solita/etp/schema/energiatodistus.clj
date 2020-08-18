@@ -151,11 +151,12 @@
    :muusahko     common-schema/FloatPos
    :lampopumppu  common-schema/FloatPos})
 
-(def UusiutuvatOmavaraisenergiatErittely (common-schema/monthly (schema/maybe UusiutuvatOmavaraisenergiat)))
-
 (def SahkoLampo
   {:sahko common-schema/FloatPos
    :lampo common-schema/FloatPos})
+
+(def Kuukausierittely (common-schema/monthly (schema/maybe {:tuotto UusiutuvatOmavaraisenergiat
+                                                            :kulutus SahkoLampo})))
 
 (def Tulokset
   {:kaytettavat-energiamuodot
@@ -168,8 +169,8 @@
    :uusiutuvat-omavaraisenergiat
    UusiutuvatOmavaraisenergiat,
 
-   :uusiutuvat-omavaraisenergiat-erittely
-   (schema/maybe UusiutuvatOmavaraisenergiatErittely)
+   :kuukausierittely
+   (schema/maybe Kuukausierittely),
 
    :tekniset-jarjestelmat
    {:tilojen-lammitys                     SahkoLampo,
