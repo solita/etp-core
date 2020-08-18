@@ -108,3 +108,6 @@
     false))
 
 (def OVTtunnus (schema/constrained schema/Str valid-ovt-tunnus?))
+
+(defn monthly [schema]
+  (schema/constrained [schema] #(= (count %) 12)))
