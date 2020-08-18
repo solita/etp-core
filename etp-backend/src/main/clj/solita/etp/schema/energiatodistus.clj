@@ -143,6 +143,16 @@
      :valaistus         (SisKuorma 0.0 19.0)}
     })
 
+(def UusiutuvatOmavaraisenergiat
+  {:aurinkosahko common-schema/FloatPos
+   :tuulisahko   common-schema/FloatPos
+   :aurinkolampo common-schema/FloatPos
+   :muulampo     common-schema/FloatPos
+   :muusahko     common-schema/FloatPos
+   :lampopumppu  common-schema/FloatPos})
+
+(def UusiutuvatOmavaraisenergiatErittely (common-schema/monthly (schema/maybe UusiutuvatOmavaraisenergiat)))
+
 (def SahkoLampo
   {:sahko common-schema/FloatPos
    :lampo common-schema/FloatPos})
@@ -156,12 +166,10 @@
     :uusiutuva-polttoaine   common-schema/FloatPos},
 
    :uusiutuvat-omavaraisenergiat
-   {:aurinkosahko common-schema/FloatPos
-    :tuulisahko   common-schema/FloatPos
-    :aurinkolampo common-schema/FloatPos
-    :muulampo     common-schema/FloatPos
-    :muusahko     common-schema/FloatPos
-    :lampopumppu  common-schema/FloatPos},
+   UusiutuvatOmavaraisenergiat,
+
+   :uusiutuvat-omavaraisenergiat-erittely
+   (schema/maybe UusiutuvatOmavaraisenergiatErittely)
 
    :tekniset-jarjestelmat
    {:tilojen-lammitys                     SahkoLampo,

@@ -15,15 +15,16 @@
 (t/use-fixtures :each ts/fixture)
 
 (def energiatodistus-generators
-  {schema.core/Num          (g/always 1.0M)
-   common-schema/Year       (g/always 2021)
-   schema/Rakennustunnus    (g/always "1035150826")
-   schema/YritysPostinumero (g/always "00100")
-   common-schema/Date       (g/always (java.time.LocalDate/now))
-   common-schema/Integer100 (g/always 50)
-   geo-schema/Postinumero   (g/always "00100")
-   common-schema/Instant    (g/always (Instant/now))
-   (schema.core/eq 2018)    (g/always 2018)})
+  {schema.core/Num                            (g/always 1.0M)
+   common-schema/Year                         (g/always 2021)
+   schema/Rakennustunnus                      (g/always "1035150826")
+   schema/YritysPostinumero                   (g/always "00100")
+   common-schema/Date                         (g/always (java.time.LocalDate/now))
+   common-schema/Integer100                   (g/always 50)
+   geo-schema/Postinumero                     (g/always "00100")
+   common-schema/Instant                      (g/always (Instant/now))
+   (schema.core/eq 2018)                      (g/always 2018)
+   schema/UusiutuvatOmavaraisenergiatErittely (g/always (repeat 12 (g/generate schema/UusiutuvatOmavaraisenergiat)))})
 
 (defn add-laatija!
   ([] (add-laatija! ts/*db*))
@@ -55,21 +56,20 @@
             :laskutettava-yritys-id nil
             :allekirjoitusaika nil})))
 
+(defn fix-energiatodistus-fk-references [energiatodistus]
+  (-> energiatodistus
+      (assoc :korvattu-energiatodistus-id nil :laskutettava-yritys-id nil)
+      (assoc-in [:perustiedot :kayttotarkoitus] "YAT")))
+
 (defn generate-energiatodistus-2018 []
   (-> (g/generate schema/EnergiatodistusSave2018
                   energiatodistus-generators)
-      ;; fix fk references in generated content
-      (assoc :korvattu-energiatodistus-id nil
-             :laskutettava-yritys-id nil)
-      (assoc-in [:perustiedot :kayttotarkoitus] "YAT")))
+      (fix-energiatodistus-fk-references)))
 
 (defn generate-energiatodistus-2013 []
   (-> (g/generate schema/EnergiatodistusSave2013
                   energiatodistus-generators)
-      ;; fix fk references in generated content
-      (assoc :korvattu-energiatodistus-id nil
-             :laskutettava-yritys-id nil)
-      (assoc-in [:perustiedot :kayttotarkoitus] "YAT")))
+      (fix-energiatodistus-fk-references)))
 
 (defn test-add-and-find-energiatodistus [versio generation]
   (let [laatija-id (add-laatija!)]
