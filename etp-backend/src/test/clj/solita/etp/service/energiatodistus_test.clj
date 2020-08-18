@@ -162,25 +162,15 @@
                energiatodistus)))))
 
 (t/deftest korvaa-energiatodistus!-test
-  (let [laatija-id (add-laatija!)
-        whoami {:id laatija-id}
-        energiatodistus (generate-energiatodistus-2018)
-        korvattava-energiatodistus-id (add-energiatodistus! energiatodistus laatija-id)]
-    (t/is (= (energiatodistus-tila korvattava-energiatodistus-id) :draft))
-    (service/start-energiatodistus-signing! ts/*db* whoami korvattava-energiatodistus-id)
-    (t/is (= (service/end-energiatodistus-signing! ts/*db* whoami korvattava-energiatodistus-id)
-             :ok))
-    (t/is (= (energiatodistus-tila korvattava-energiatodistus-id) :signed))
-
-    (let [korvaava-energiatodistus (assoc energiatodistus :korvattu-energiatodistus-id korvattava-energiatodistus-id)
-          korvaava-energiatodistus-id (add-energiatodistus! korvaava-energiatodistus laatija-id)]
-       (t/is (= (energiatodistus-tila korvaava-energiatodistus-id) :draft))
-       (service/start-energiatodistus-signing! ts/*db* whoami korvaava-energiatodistus-id)
-       (t/is (= (energiatodistus-tila korvattava-energiatodistus-id) :signed))
-       (t/is (= (service/end-energiatodistus-signing! ts/*db* whoami korvaava-energiatodistus-id)
-                :ok))
-       (t/is (= (energiatodistus-tila korvaava-energiatodistus-id) :signed))
-       (t/is (= (energiatodistus-tila korvattava-energiatodistus-id) :replaced)))))
+  (let [laatija-id                    (add-laatija!)
+        energiatodistus               (generate-energiatodistus-2018)
+        korvattava-energiatodistus-id (add-energiatodistus-and-sign! energiatodistus laatija-id)]
+    (let [korvaava-energiatodistus    (assoc energiatodistus :korvattu-energiatodistus-id korvattava-energiatodistus-id)
+          korvaava-energiatodistus-id (add-energiatodistus-and-sign! korvaava-energiatodistus laatija-id)]
+      (t/is (= (energiatodistus-tila korvattava-energiatodistus-id) :replaced))
+      (let [korvaavan-korvaava-energiatodistus (assoc energiatodistus :korvattu-energiatodistus-id korvaava-energiatodistus-id)]
+        (add-energiatodistus-and-sign! korvaavan-korvaava-energiatodistus laatija-id)
+        (t/is (= (energiatodistus-tila korvaava-energiatodistus-id) :replaced))))))
 
 (t/deftest korvaa-energiatodistus-states!-test
   (let [laatija-id                            (add-laatija!)
