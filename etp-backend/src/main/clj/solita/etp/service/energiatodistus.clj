@@ -99,6 +99,10 @@
         (logic/when*
           #(= (:versio %) 2013)
           #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] :muu))
+        (fn [energiatodistus]
+          (update-in energiatodistus
+                     [:tulokset :kuukausierittely]
+                     #(map (partial flat/flat->tree #"\$") %)))
         (partial pg-composite/parse-composite-type-literals db-composite-types)
         #(set/rename-keys % (set/map-invert db-abbreviations))
         (partial flat/flat->tree #"\$")
