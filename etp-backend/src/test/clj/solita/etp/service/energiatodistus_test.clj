@@ -52,20 +52,23 @@
             :versio versio
             :tila-id 0
             :korvaava-energiatodistus-id nil
+            :laskutettava-yritys-id nil
             :allekirjoitusaika nil})))
 
 (defn generate-energiatodistus-2018 []
   (-> (g/generate schema/EnergiatodistusSave2018
                   energiatodistus-generators)
       ;; fix fk references in generated content
-      (assoc :korvattu-energiatodistus-id nil)
+      (assoc :korvattu-energiatodistus-id nil
+             :laskutettava-yritys-id nil)
       (assoc-in [:perustiedot :kayttotarkoitus] "YAT")))
 
 (defn generate-energiatodistus-2013 []
   (-> (g/generate schema/EnergiatodistusSave2013
                   energiatodistus-generators)
       ;; fix fk references in generated content
-      (assoc :korvattu-energiatodistus-id nil)
+      (assoc :korvattu-energiatodistus-id nil
+             :laskutettava-yritys-id nil)
       (assoc-in [:perustiedot :kayttotarkoitus] "YAT")))
 
 (defn test-add-and-find-energiatodistus [versio generation]

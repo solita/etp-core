@@ -7,9 +7,11 @@
 
 (def tmp-dir "tmp/")
 
-(def col-order [:id :versio :laatija-id :laatija-fullname
-                :allekirjoitusaika :korvattu-energiatodistus-id :korvaava-energiatodistus-id :perustiedot
-                :lahtotiedot :tulokset :toteutunut-ostoenergiankulutus :huomiot
+(def col-order [:id :versio :laatija-id :laatija-fullname :allekirjoitusaika
+                :korvattu-energiatodistus-id :korvaava-energiatodistus-id
+                :laskuriviviite :laskutettava-yritys-id
+                :perustiedot :lahtotiedot
+                :tulokset :toteutunut-ostoenergiankulutus :huomiot
                 :lisamerkintoja-fi :lisamerkintoja-sv])
 
 (defn paths-for-k [energiatodistukset k]
