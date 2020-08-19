@@ -24,3 +24,8 @@
           (conj acc current-path))))
     []
     coll)))
+
+(defn dissoc-in [m ks]
+  (if (> (count ks) 1)
+    (update-in m (butlast ks) dissoc (last ks))
+    (dissoc m (first ks))))
