@@ -56,6 +56,16 @@
    :nimi-sv
    :vuosikulutus])
 
+(def db-kuukausierittely-type
+  [:tuotto$aurinkosahko
+   :tuotto$tuulisahko
+   :tuotto$aurinkolampo
+   :tuotto$muulampo
+   :tuotto$muusahko
+   :tuotto$lampopumppu
+   :kulutus$sahko
+   :kulutus$lampo])
+
 (def db-ostettu-polttoaine-type
   [:nimi
    :yksikko
@@ -65,7 +75,8 @@
 (def db-composite-types
   {:tulokset
     {:kaytettavat-energiamuodot {:muu db-userdefined_energiamuoto-type}
-     :uusiutuvat-omavaraisenergiat {:muu db-userdefined_energia-type}}
+     :uusiutuvat-omavaraisenergiat {:muu db-userdefined_energia-type}
+     :kuukausierittely db-kuukausierittely-type}
    :toteutunut-ostoenergiankulutus
     {:ostettu-energia {:muu db-userdefined_energia-type}
      :ostetut-polttoaineet {:muu db-ostettu-polttoaine-type}}
@@ -99,6 +110,10 @@
     (partial flat/tree->flat "$")
     #(set/rename-keys % db-abbreviations)
     (partial pg-composite/write-composite-type-literals db-composite-types)
+    (fn [energiatodistus]
+      (update-in energiatodistus
+                 [:tulokset :kuukausierittely]
+                 #(map (partial flat/tree->flat "$") %)))
     (logic/when*
       #(= (:versio %) 2013)
       #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] (partial assoc {} :muu)))))
@@ -133,13 +148,15 @@
 
 (defn add-energiatodistus! [db whoami versio energiatodistus]
   (assert-korvaavuus! db energiatodistus)
-  (-> (jdbc/insert! db :energiatodistus
-        (-> energiatodistus
-          (assoc :versio versio
-                 :laatija-id (:id whoami))
-          energiatodistus->db-row) db/default-opts)
-    first
-    :id))
+  (-> (jdbc/insert! db
+                    :energiatodistus
+                    (-> energiatodistus
+                        (assoc :versio versio
+                               :laatija-id (:id whoami))
+                        energiatodistus->db-row)
+                    db/default-opts)
+      first
+      :id))
 
 (defn assert-laatija! [whoami energiatodistus]
   (when-not (= (:laatija-id energiatodistus) (:id whoami))
