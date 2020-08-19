@@ -155,10 +155,12 @@
   {:sahko common-schema/FloatPos
    :lampo common-schema/FloatPos})
 
-(def Kuukausierittely (common-schema/monthly
-                       (schema/maybe
-                        {:tuotto (optional-properties UusiutuvatOmavaraisenergiat)
-                         :kulutus (optional-properties SahkoLampo)})))
+(def Kuukausierittely (schema/maybe
+                       {:tuotto (optional-properties UusiutuvatOmavaraisenergiat)
+                        :kulutus (optional-properties SahkoLampo)}))
+
+(def ZeroOrTwelveKuukausierittely (schema/constrained [Kuukausierittely]
+                                                      #(contains? #{0 12} (count %))))
 
 (def Tulokset
   {:kaytettavat-energiamuodot
@@ -171,8 +173,7 @@
    :uusiutuvat-omavaraisenergiat
    UusiutuvatOmavaraisenergiat,
 
-   :kuukausierittely
-   (schema/maybe Kuukausierittely),
+   :kuukausierittely ZeroOrTwelveKuukausierittely
 
    :tekniset-jarjestelmat
    {:tilojen-lammitys                     SahkoLampo,
