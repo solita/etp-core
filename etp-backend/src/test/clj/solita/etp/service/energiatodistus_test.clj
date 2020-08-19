@@ -14,24 +14,33 @@
 
 (t/use-fixtures :each ts/fixture)
 
+(def test-kuukausierittely {:tuotto {:aurinkosahko 1M
+                                     :tuulisahko   2M
+                                     :aurinkolampo nil
+                                     :muulampo     3.5M
+                                     :muusahko     4M
+                                     :lampopumppu  5.6789M}
+                            :kulutus {:sahko       nil
+                                      :lampo       6.789M}})
+
 (def energiatodistus-generators
-  {schema.core/Num             (g/always 1.0M)
-   common-schema/Year          (g/always 2021)
-   schema/Rakennustunnus       (g/always "1035150826")
-   schema/YritysPostinumero    (g/always "00100")
-   common-schema/Date          (g/always (java.time.LocalDate/now))
-   common-schema/Integer100    (g/always 50)
-   geo-schema/Postinumero      (g/always "00100")
-   common-schema/Instant       (g/always (Instant/now))
-   (schema.core/eq 2018)       (g/always 2018)
-   schema/Kuukausierittely     (g/always (repeat 12 {:tuotto (g/generate schema/UusiutuvatOmavaraisenergiat)
-                                                     :kulutus (g/generate schema/SahkoLampo)}))})
+  {schema.core/Num                     (g/always 1.0M)
+   common-schema/Year                  (g/always 2021)
+   schema/Rakennustunnus               (g/always "1035150826")
+   schema/YritysPostinumero            (g/always "00100")
+   common-schema/Date                  (g/always (java.time.LocalDate/now))
+   common-schema/Integer100            (g/always 50)
+   geo-schema/Postinumero              (g/always "00100")
+   common-schema/Instant               (g/always (Instant/now))
+   (schema.core/eq 2018)               (g/always 2018)
+   schema/ZeroOrTwelveKuukausierittely (g/always (rand-nth [[] (repeat 12 test-kuukausierittely)]))})
 
 (defn add-laatija!
   ([] (add-laatija! ts/*db*))
   ([db]
     (-> (laatija-service/upsert-kayttaja-laatijat!
-          db (laatija-service-test/generate-KayttajaLaatijaAdds 1))
+         db
+         (laatija-service-test/generate-KayttajaLaatijaAdds 1))
         first)))
 
 (defn add-energiatodistus!
@@ -45,17 +54,19 @@
     (t/is (not (nil? (:laatija-fullname et))))
     (dissoc et :laatija-fullname)))
 
-(defn complete-energiatodistus
-  ([energiatodistus id laatija-id] (complete-energiatodistus energiatodistus id laatija-id 2018))
+(defn energiatodistus-with-db-fields
+  ([energiatodistus id laatija-id] (energiatodistus-with-db-fields energiatodistus id laatija-id 2018))
   ([energiatodistus id laatija-id versio]
-    (merge energiatodistus
-           {:id id
-            :laatija-id laatija-id
-            :versio versio
-            :tila-id 0
-            :korvaava-energiatodistus-id nil
-            :laskutettava-yritys-id nil
-            :allekirjoitusaika nil})))
+   (cond-> (merge energiatodistus
+                  {:id id
+                   :laatija-id laatija-id
+                   :versio versio
+                   :tila-id 0
+                   :korvaava-energiatodistus-id nil
+                   :laskutettava-yritys-id nil
+                   :allekirjoitusaika nil})
+     (-> energiatodistus :tulokset :kuukausierittely nil?)
+     (assoc-in [:tulokset :kuukausierittely] []))))
 
 (defn fix-energiatodistus-fk-references [energiatodistus]
   (-> energiatodistus
@@ -72,11 +83,11 @@
                   energiatodistus-generators)
       (fix-energiatodistus-fk-references)))
 
-(defn test-add-and-find-energiatodistus [versio generation]
+(defn test-add-and-find-energiatodistus [versio gen-f]
   (let [laatija-id (add-laatija!)]
-    (doseq [energiatodistus (repeatedly 100 generation)
+    (doseq [energiatodistus (repeatedly 100 gen-f)
             :let [id (add-energiatodistus! energiatodistus laatija-id versio)]]
-      (t/is (= (complete-energiatodistus energiatodistus id laatija-id versio)
+      (t/is (= (energiatodistus-with-db-fields energiatodistus id laatija-id versio)
                (find-energiatodistus id))))))
 
 (t/deftest add-and-find-energiatodistus-2018-test
@@ -91,7 +102,7 @@
         laatija-id (add-laatija!)
         energiatodistus (generate-energiatodistus-2018)
         id (add-energiatodistus! energiatodistus laatija-id)]
-    (t/is (= (complete-energiatodistus energiatodistus id laatija-id)
+    (t/is (= (energiatodistus-with-db-fields energiatodistus id laatija-id)
              (-> (service/find-energiatodistus ts/*db* paakayttaja id)
                  (dissoc :laatija-fullname))))
     (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
@@ -103,7 +114,7 @@
         id (add-energiatodistus! (generate-energiatodistus-2018) laatija-id)
         update-energiatodistus (generate-energiatodistus-2018)]
     (service/update-energiatodistus! ts/*db* {:id laatija-id} id update-energiatodistus)
-    (t/is (= (complete-energiatodistus update-energiatodistus id laatija-id)
+    (t/is (= (energiatodistus-with-db-fields update-energiatodistus id laatija-id)
              (find-energiatodistus id)))))
 
 (t/deftest create-energiatodistus-and-delete-test
@@ -159,7 +170,7 @@
     (t/is (= (energiatodistus-tila id) :signed))
     (t/is (= 1 (service/update-energiatodistus! ts/*db* {:id laatija-id} id update-energiatodistus)))
     (let [energiatodistus (find-energiatodistus id)]
-      (t/is (= (-> (complete-energiatodistus original-energiatodistus id laatija-id)
+      (t/is (= (-> (energiatodistus-with-db-fields original-energiatodistus id laatija-id)
                    (assoc-in [:perustiedot :rakennustunnus] (-> update-energiatodistus :perustiedot :rakennustunnus))
                    (assoc :tila-id 2
                           :allekirjoitusaika (:allekirjoitusaika energiatodistus)))
