@@ -546,7 +546,9 @@
       {:path [:huomiot :valaistus-muut :toimenpide 2 :jaahdytys] :dp 0}
       {:path [:huomiot :valaistus-muut :toimenpide 2 :eluvun-muutos] :dp 0}
       {:path [:huomiot :suositukset-fi]}
-      {:path [:huomiot :suositukset-sv]}]
+      {:path [:huomiot :suositukset-sv]}
+      {:path [:huomiot :lisatietoja-fi]}
+      {:path [:huomiot :lisatietoja-sv]}]
    7 [{:path [:id]}
       {:path [:lisamerkintoja-fi]}
       {:path [:lisamerkintoja-sv]}]})
