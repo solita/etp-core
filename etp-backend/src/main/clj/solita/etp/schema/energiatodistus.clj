@@ -159,8 +159,8 @@
                        {:tuotto (optional-properties UusiutuvatOmavaraisenergiat)
                         :kulutus (optional-properties SahkoLampo)}))
 
-(def ZeroOrTwelveKuukausierittely (schema/constrained [Kuukausierittely]
-                                                      #(contains? #{0 12} (count %))))
+(def OptionalKuukausierittely (schema/constrained [Kuukausierittely]
+                                                   #(contains? #{0 12} (count %))))
 
 (def Tulokset
   {:kaytettavat-energiamuodot
@@ -173,7 +173,7 @@
    :uusiutuvat-omavaraisenergiat
    UusiutuvatOmavaraisenergiat,
 
-   :kuukausierittely ZeroOrTwelveKuukausierittely
+   :kuukausierittely OptionalKuukausierittely
 
    :tekniset-jarjestelmat
    {:tilojen-lammitys                     SahkoLampo,

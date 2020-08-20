@@ -33,7 +33,7 @@
    geo-schema/Postinumero              (g/always "00100")
    common-schema/Instant               (g/always (Instant/now))
    (schema.core/eq 2018)               (g/always 2018)
-   schema/ZeroOrTwelveKuukausierittely (g/always (rand-nth [[] (repeat 12 test-kuukausierittely)]))})
+   schema/OptionalKuukausierittely     (g/always (rand-nth [[] (repeat 12 test-kuukausierittely)]))})
 
 (defn add-laatija!
   ([] (add-laatija! ts/*db*))
