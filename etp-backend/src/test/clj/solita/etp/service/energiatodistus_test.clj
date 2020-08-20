@@ -65,6 +65,9 @@
                    :korvaava-energiatodistus-id nil
                    :laskutettava-yritys-id nil
                    :allekirjoitusaika nil})
+
+     ;; This is no longer needed if optional-properties fn is updated
+     ;; to only work on leaf schemas.
      (-> energiatodistus :tulokset :kuukausierittely nil?)
      (assoc-in [:tulokset :kuukausierittely] []))))
 
