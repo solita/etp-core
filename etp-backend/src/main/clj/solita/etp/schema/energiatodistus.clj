@@ -143,9 +143,24 @@
      :valaistus         (SisKuorma 0.0 19.0)}
     })
 
+(def UusiutuvatOmavaraisenergiat
+  {:aurinkosahko common-schema/FloatPos
+   :tuulisahko   common-schema/FloatPos
+   :aurinkolampo common-schema/FloatPos
+   :muulampo     common-schema/FloatPos
+   :muusahko     common-schema/FloatPos
+   :lampopumppu  common-schema/FloatPos})
+
 (def SahkoLampo
   {:sahko common-schema/FloatPos
    :lampo common-schema/FloatPos})
+
+(def Kuukausierittely (schema/maybe
+                       {:tuotto (optional-properties UusiutuvatOmavaraisenergiat)
+                        :kulutus (optional-properties SahkoLampo)}))
+
+(def OptionalKuukausierittely (schema/constrained [Kuukausierittely]
+                                                   #(contains? #{0 12} (count %))))
 
 (def Tulokset
   {:kaytettavat-energiamuodot
@@ -156,12 +171,9 @@
     :uusiutuva-polttoaine   common-schema/FloatPos},
 
    :uusiutuvat-omavaraisenergiat
-   {:aurinkosahko common-schema/FloatPos
-    :tuulisahko   common-schema/FloatPos
-    :aurinkolampo common-schema/FloatPos
-    :muulampo     common-schema/FloatPos
-    :muusahko     common-schema/FloatPos
-    :lampopumppu  common-schema/FloatPos},
+   UusiutuvatOmavaraisenergiat,
+
+   :kuukausierittely OptionalKuukausierittely
 
    :tekniset-jarjestelmat
    {:tilojen-lammitys                     SahkoLampo,

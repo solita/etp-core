@@ -19,7 +19,7 @@
   (let [laatija-id (energiatodistus-test/add-laatija!)]
     (doseq [energiatodistus (repeatedly 1 energiatodistus-test/generate-energiatodistus-2018)
             :let [id (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id 2018)]]
-      (t/is (= (energiatodistus-test/complete-energiatodistus energiatodistus id laatija-id 2018)
+      (t/is (= (energiatodistus-test/energiatodistus-with-db-fields energiatodistus id laatija-id 2018)
                (first (search [[["=" "id" id]]])))))))
 
 (t/deftest add-and-find-by-nimi-test
@@ -29,7 +29,7 @@
                     [:perustiedot :nimi] "test")
           id (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id 2018)]
 
-      (t/is (= (energiatodistus-test/complete-energiatodistus energiatodistus id laatija-id 2018)
+      (t/is (= (energiatodistus-test/energiatodistus-with-db-fields energiatodistus id laatija-id 2018)
                (first (search [[["=" "perustiedot.nimi" "test"]]])))))))
 
 (t/deftest add-and-find-by-nimi-nil-test
@@ -39,7 +39,7 @@
                     [:perustiedot :nimi] nil)
           id (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id 2018)]
 
-      (t/is (= (energiatodistus-test/complete-energiatodistus energiatodistus id laatija-id 2018)
+      (t/is (= (energiatodistus-test/energiatodistus-with-db-fields energiatodistus id laatija-id 2018)
                (first (search [[["nil?" "perustiedot.nimi"]]])))))))
 
 (t/deftest add-and-find-by-havainnointikaynti-test
@@ -50,7 +50,7 @@
                     [:perustiedot :havainnointikaynti] date)
           id (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id 2018)]
 
-      (t/is (= (energiatodistus-test/complete-energiatodistus energiatodistus id laatija-id 2018)
+      (t/is (= (energiatodistus-test/energiatodistus-with-db-fields energiatodistus id laatija-id 2018)
                (first (search [[["=" "perustiedot.havainnointikaynti" (.toString date)]]])))))))
 
 (t/deftest add-and-find-by-nimi-and-id-test
@@ -60,7 +60,7 @@
                     [:perustiedot :nimi] "test")
           id (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id 2018)]
 
-      (t/is (= (energiatodistus-test/complete-energiatodistus energiatodistus id laatija-id 2018)
+      (t/is (= (energiatodistus-test/energiatodistus-with-db-fields energiatodistus id laatija-id 2018)
                (first (search [[["=" "perustiedot.nimi" "test"]["=" "id" id]]])))))))
 
 (defn catch-ex-data [f]
