@@ -67,6 +67,9 @@
 
 (def LahtotiedotRakennusvaippa
   {:ilmanvuotoluku common-schema/Float50
+   :lampokapasiteetti common-schema/FloatPos
+   :ilmatilavuus common-schema/FloatPos
+
    :ulkoseinat     (Rakenneusvaippa 0.05 2.0)
    :ylapohja       (Rakenneusvaippa 0.03 2.0)
    :alapohja       (Rakenneusvaippa 0.03 4.0)
@@ -102,6 +105,7 @@
    :kuvaus-fi           common-schema/String75
    :kuvaus-sv           common-schema/String75
    :lto-vuosihyotysuhde common-schema/Float1
+   :tuloilma-lampotila  common-schema/FloatPos
    :paaiv               (merge PoistoTuloSfp {:lampotilasuhde common-schema/Float1
                                               :jaatymisenesto (common-schema/FloatBase -20.0 10.0)})})
 
@@ -109,7 +113,9 @@
   {:tuoton-hyotysuhde common-schema/FloatPos,
    :jaon-hyotysuhde   common-schema/FloatPos,
    :lampokerroin      common-schema/FloatPos,
-   :apulaitteet       common-schema/FloatPos})
+   :apulaitteet       common-schema/FloatPos,
+   :lampohavio-lammittamaton-tila common-schema/FloatPos,
+   :lampopumppu-tuotto-osuus common-schema/Float1})
 
 
 (def MaaraTuotto
