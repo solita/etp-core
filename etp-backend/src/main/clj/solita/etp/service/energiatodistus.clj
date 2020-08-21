@@ -146,8 +146,11 @@
   (when-let [korvattu-energiatodistus-id (:korvattu-energiatodistus-id energiatodistus)]
     (if-let [korvattava-energiatodistus (find-energiatodistus db korvattu-energiatodistus-id)]
       (cond
-        (:korvaava-energiatodistus-id korvattava-energiatodistus) (throw (IllegalArgumentException. "Replaceable energiatodistus is already replaced"))
-        (not (contains? #{:signed :discarded} (-> korvattava-energiatodistus :tila-id tila-key))) (throw (IllegalArgumentException. "Replaceable energiatodistus is not in signed or discarded state")))
+        (and (:korvaava-energiatodistus-id korvattava-energiatodistus)
+             (not= (:korvaava-energiatodistus-id korvattava-energiatodistus) (:id energiatodistus)))
+        (throw (IllegalArgumentException. "Replaceable energiatodistus is already replaced"))
+        (not (contains? #{:signed :discarded} (-> korvattava-energiatodistus :tila-id tila-key)))
+        (throw (IllegalArgumentException. "Replaceable energiatodistus is not in signed or discarded state")))
       (throw (IllegalArgumentException. (str "Replaceable energiatodistus is not exists"))))))
 
 (defn add-energiatodistus! [db whoami versio energiatodistus]
@@ -179,7 +182,7 @@
   (if-let [current-energiatodistus (find-energiatodistus db id)]
     (do
       (assert-laatija! whoami current-energiatodistus)
-      (assert-korvaavuus! db energiatodistus)
+      (assert-korvaavuus! db (assoc energiatodistus :id id))
       (case (-> current-energiatodistus :tila-id tila-key)
             :draft (update-energiatodistus-luonnos!
                      db id (:versio current-energiatodistus) energiatodistus)

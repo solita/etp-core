@@ -41,11 +41,15 @@ where energiatodistus.laatija_id = :laatija-id and
 
 -- name: select-replaceable-energiatodistukset-like-id
 select energiatodistus.id
-from energiatodistus, et_tilat
-where energiatodistus.tila_id in (et_tilat.allekirjoitettu, et_tilat.hylatty) and
-      energiatodistus.id::text like :id::text || '%' and
-      not exists(select id from energiatodistus et where et.korvattu_energiatodistus_id = energiatodistus.id)
-limit 100
+from energiatodistus,
+     et_tilat
+where energiatodistus.tila_id in (et_tilat.allekirjoitettu, et_tilat.hylatty)
+  and energiatodistus.id::text like :id::text || '%'
+  and not exists(select *
+                 from energiatodistus et
+                          inner join energiatodistus korvaava_energiatodistus
+                                     on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id)
+limit 100;
 
 -- name: update-energiatodistus-allekirjoituksessa!
 update energiatodistus set tila_id = et_tilat.allekirjoituksessa
