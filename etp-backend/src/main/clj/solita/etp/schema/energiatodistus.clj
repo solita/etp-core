@@ -117,7 +117,6 @@
    :lampohavio-lammittamaton-tila common-schema/FloatPos,
    :lampopumppu-tuotto-osuus common-schema/Float1})
 
-
 (def MaaraTuotto
   {:maara  common-schema/Integer100,
    :tuotto common-schema/FloatPos})
@@ -303,6 +302,7 @@
      :laatija-id common-schema/Key
      :laatija-fullname schema/Str
      :allekirjoitusaika (schema/maybe common-schema/Instant)
+     :laskutusaika (schema/maybe common-schema/Instant)
      :korvaava-energiatodistus-id (schema/maybe common-schema/Key)}))
 
 (def Energiatodistus2018
