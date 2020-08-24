@@ -64,6 +64,7 @@
                    :tila-id 0
                    :korvaava-energiatodistus-id nil
                    :laskutettava-yritys-id nil
+                   :laskutusaika nil
                    :allekirjoitusaika nil})
 
      ;; This is no longer needed if optional-properties fn is updated
