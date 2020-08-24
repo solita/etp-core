@@ -46,6 +46,7 @@ create table energiatodistus (
  laatija_id int not null references laatija (id),
  laskutettava_yritys_id int references yritys (id),
  laskuriviviite text,
+ laskutusaika timestamp with time zone,
  korvattu_energiatodistus_id integer references energiatodistus (id),
 
  pt$havainnointikaynti date,
