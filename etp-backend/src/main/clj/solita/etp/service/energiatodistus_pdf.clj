@@ -31,7 +31,8 @@
                           2018 {"fi" "energiatodistus-2018-fi.xlsx"
                                 "sv" "energiatodistus-2018-sv.xlsx"}})
 
-(def watermark-path-fi "watermark-fi.pdf")
+(def watermark-paths {"fi" "watermark-fi.pdf"
+                      "sv" "watermark-sv.pdf"})
 (def sheet-count 8)
 (def tmp-dir "tmp/")
 
@@ -642,8 +643,11 @@
                75
                17.5)))
 
-(defn- add-watermark [pdf-path]
-  (with-open [watermark (PDDocument/load (-> watermark-path-fi io/resource io/input-stream))
+(defn- add-watermark [pdf-path kieli]
+  (with-open [watermark (PDDocument/load (-> watermark-paths
+                                             (get kieli)
+                                             io/resource
+                                             io/input-stream))
               overlay   (doto (Overlay.)
                           (.setInputFile pdf-path)
                           (.setDefaultOverlayPDF watermark)
@@ -664,7 +668,7 @@
                         (:versio complete-energiatodistus))
 
     (if draft?
-      (add-watermark pdf-path)
+      (add-watermark pdf-path kieli)
       pdf-path)))
 
 (defn generate-pdf-as-input-stream [energiatodistus kieli draft?]
