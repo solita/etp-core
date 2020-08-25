@@ -65,7 +65,8 @@
                    :korvaava-energiatodistus-id nil
                    :laskutettava-yritys-id nil
                    :laskutusaika nil
-                   :allekirjoitusaika nil})
+                   :allekirjoitusaika nil
+                   :viimeinen-voimassaoloaika nil})
 
      ;; This is no longer needed if optional-properties fn is updated
      ;; to only work on leaf schemas.
@@ -177,7 +178,8 @@
       (t/is (= (-> (energiatodistus-with-db-fields original-energiatodistus id laatija-id)
                    (assoc-in [:perustiedot :rakennustunnus] (-> update-energiatodistus :perustiedot :rakennustunnus))
                    (assoc :tila-id 2
-                          :allekirjoitusaika (:allekirjoitusaika energiatodistus)))
+                          :allekirjoitusaika (:allekirjoitusaika energiatodistus)
+                          :viimeinen-voimassaoloaika (:viimeinen-voimassaoloaika energiatodistus)))
                energiatodistus)))))
 
 (t/deftest korvaa-energiatodistus!-test

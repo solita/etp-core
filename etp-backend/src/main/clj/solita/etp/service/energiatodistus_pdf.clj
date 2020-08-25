@@ -35,8 +35,8 @@
 (def sheet-count 8)
 (def tmp-dir "tmp/")
 
-(def date-formatter (DateTimeFormatter/ofPattern "dd.MM.yyyy"))
 (def timezone (ZoneId/of "Europe/Helsinki"))
+(def date-formatter (.withZone (DateTimeFormatter/ofPattern "dd.MM.yyyy") timezone))
 (def time-formatter (.withZone (DateTimeFormatter/ofPattern "dd.MM.yyyy HH:mm:ss")
                                timezone))
 
@@ -106,7 +106,9 @@
       {:path [:laatija-fullname]}
       {:path [:perustiedot :yritys :nimi]}
       {:f (fn [_] (.format date-formatter (LocalDate/now)))}
-      {:f (fn [_] (.format date-formatter (LocalDate/now)))}]
+      {:f (fn [{:keys [tila-id]}]
+            (when (and tila-id (= (energiatodistus-service/tila-key tila-id) :in-signing))
+              (.format date-formatter (.plusYears (LocalDate/now) 10))))}]
    1 [{:path [:id]}
       {:f #(-> % :lahtotiedot :lammitetty-nettoala (format-number 1 false) (str " m²"))}
       {:path [:lahtotiedot :lammitys :kuvaus-fi]}
