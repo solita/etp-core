@@ -6,10 +6,11 @@
 
 (def Maa (schema/constrained schema/Str valid-maa?))
 
-(def Postiosoite {:jakeluosoite     schema/Str
-                  :postinumero      schema/Str
-                  :postitoimipaikka schema/Str
-                  :maa              (schema/constrained schema/Str valid-maa?)})
+(def Postiosoite {:jakeluosoite            schema/Str
+                  :vastaanottajan-tarkenne (schema/maybe schema/Str)
+                  :postinumero             schema/Str
+                  :postitoimipaikka        schema/Str
+                  :maa                     (schema/constrained schema/Str valid-maa?)})
 (def Postinumero
   (schema/constrained schema/Str #(re-find #"\d{5}" %)))
 

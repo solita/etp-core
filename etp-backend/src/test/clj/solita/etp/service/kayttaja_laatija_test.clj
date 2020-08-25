@@ -78,10 +78,10 @@
                                   (:henkilotunnus original-2))
         found-original-kayttaja-1 (kayttaja-service/find-kayttaja
                                    ts/*db*
-                                   (:kayttaja found-original-laatija-1))
+                                   (:id found-original-laatija-1))
         found-original-kayttaja-2 (kayttaja-service/find-kayttaja
                                    ts/*db*
-                                   (:kayttaja found-original-laatija-2))
+                                   (:id found-original-laatija-2))
         _ (service/upsert-kayttaja-laatijat! ts/*db* [original-2 update-1])
         found-updated-laatija-1 (laatija-service/find-laatija-with-henkilotunnus
                                   ts/*db*
@@ -91,10 +91,10 @@
                                   (:henkilotunnus original-2))
         found-updated-kayttaja-1 (kayttaja-service/find-kayttaja
                                    ts/*db*
-                                   (:kayttaja found-original-laatija-1))
+                                   (:id found-original-laatija-1))
         found-updated-kayttaja-2 (kayttaja-service/find-kayttaja
                                    ts/*db*
-                                   (:kayttaja found-original-laatija-2))]
+                                   (:id found-original-laatija-2))]
     (schema/validate laatija-schema/Laatija found-original-laatija-1)
     (schema/validate laatija-schema/Laatija found-original-laatija-2)
     (schema/validate kayttaja-schema/Kayttaja found-original-kayttaja-1)

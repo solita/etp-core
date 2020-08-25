@@ -20,7 +20,7 @@
   (keyword (str/replace (.getConstraint error) "_" "-")))
 
 (defn translatePSQLException [^PSQLException psqle]
-  (let [error (.getServerErrorMessage psqle)]
+  (if-let [error (.getServerErrorMessage psqle)]
     (case (.getSQLState error)
       "23505"
       (ex-info
@@ -34,7 +34,7 @@
         {:type       :foreign-key-violation
          :constraint (constraint error)}
         psqle)
-      psqle)))
+      psqle) psqle))
 
 (defn with-db-exception-translation [db-function args]
   (try

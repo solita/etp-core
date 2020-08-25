@@ -5,7 +5,9 @@
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
             [solita.etp.schema.laatija :as laatija-schema]
+            [solita.etp.schema.whoami :as whoami-schema]
             [solita.etp.schema.rooli :as rooli-schema]
+            [solita.etp.service.whoami :as whoami-service]
             [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.laatija :as laatija-service]))
@@ -13,9 +15,9 @@
 (def routes
   [["/whoami"
     {:get {:summary "Kirjautuneen käyttäjän tiedot"
-           :responses {200 {:body kayttaja-schema/Whoami}}
+           :responses {200 {:body whoami-schema/Whoami}}
            :handler (fn [{:keys [whoami jwt-payloads db]}]
-                      (kayttaja-service/update-kayttaja-with-whoami! db whoami)
+                      (whoami-service/update-kayttaja-with-whoami! db whoami)
                       (r/response whoami))}}]
    ["/kayttajat"
     ["/:id"

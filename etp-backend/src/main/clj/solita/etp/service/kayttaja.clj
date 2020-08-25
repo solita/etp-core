@@ -14,19 +14,6 @@
 ;; *** Conversions from database data types ***
 (def coerce-kayttaja (coerce/coercer kayttaja-schema/Kayttaja json/json-coercions))
 
-;; *** Conversions from database data types ***
-(def coerce-whoami (coerce/coercer kayttaja-schema/Whoami
-                                   json/json-coercions))
-
-(defn find-whoami
-  ([db email]
-   (find-whoami db email nil))
-  ([db email cognitoid]
-   (->> {:email email :cognitoid cognitoid}
-        (kayttaja-db/select-whoami db)
-        (map coerce-whoami)
-        first)))
-
 (defn find-kayttaja
   ([db id]
    (->> {:id id}
@@ -48,10 +35,8 @@
 (defn update-kayttaja! [db whoami id kayttaja]
   (if (or (and (= id (:id whoami))
                (common-schema/not-contains-keys
-                 kayttaja kayttaja-schema/KayttajaAdminUpdate))
-        (rooli-service/paakayttaja? whoami))
+                kayttaja
+                kayttaja-schema/KayttajaAdminUpdate))
+          (rooli-service/paakayttaja? whoami))
     (jdbc/update! db :kayttaja kayttaja ["rooli <> 0 and id = ?" id])
     (exception/throw-forbidden!)))
-
-(defn update-kayttaja-with-whoami! [db whoami]
-  (kayttaja-db/update-kayttaja-with-whoami! db whoami))

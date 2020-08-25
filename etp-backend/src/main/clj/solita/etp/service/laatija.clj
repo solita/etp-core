@@ -15,6 +15,13 @@
 ;; *** Conversions from database data types ***
 (def coerce-laatija (coerce/coercer laatija-schema/Laatija json/json-coercions))
 
+(defn find-all-laatijat [db whoami]
+  (->> (laatija-db/select-laatijat db)
+       (map (fn [laatija]
+              (cond (rooli-service/paakayttaja? whoami) laatija
+                    (rooli-service/patevyydentoteaja? whoami) (update laatija :henkilotunnus #(subs % 0 6))
+                    :else  (dissoc laatija :henkilotunnus))))))
+
 (defn find-laatija-by-id
   ([db id]
    (->> {:id id}
@@ -36,7 +43,9 @@
 (def db-keymap {:muuttoimintaalueet :muut_toimintaalueet
                 :julkinenpuhelin :julkinen_puhelin
                 :julkinenemail :julkinen_email
-                :julkinenosoite :julkinen_osoite})
+                :julkinenosoite :julkinen_osoite
+                :julkinenwwwosoite :julkinen_wwwosoite
+                :vastaanottajan-tarkenne :vastaanottajan_tarkenne})
 
 (defn add-laatija! [db laatija]
   (->> (set/rename-keys laatija db-keymap)
@@ -51,13 +60,13 @@
                 ["id = ?" id]))
 
 (defn find-laatija-yritykset [db whoami id]
-  (if (or (= id (:laatija whoami))
-            (rooli-service/laatija-maintainer? whoami))
+  (if (or (= id (:id whoami))
+          (rooli-service/laatija-maintainer? whoami))
     (map :yritys-id (laatija-db/select-laatija-yritykset db {:id id}))
     (exception/throw-forbidden!)))
 
 (defn attach-laatija-yritys [db whoami laatija-id yritys-id]
-  (if (= laatija-id (:laatija whoami))
+  (if (= laatija-id (:id whoami))
     (do
       (laatija-db/insert-laatija-yritys!
        db
@@ -66,7 +75,7 @@
     (exception/throw-forbidden!)))
 
 (defn detach-laatija-yritys [db whoami laatija-id yritys-id]
-  (if (= laatija-id (:laatija whoami))
+  (if (= laatija-id (:id whoami))
     (laatija-db/delete-laatija-yritys!
      db
      (map/bindings->map laatija-id yritys-id))

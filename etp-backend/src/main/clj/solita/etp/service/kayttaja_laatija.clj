@@ -1,17 +1,12 @@
 (ns solita.etp.service.kayttaja-laatija
   (:require [clojure.java.jdbc :as jdbc]
-            [schema.coerce :as coerce]
             [schema-tools.core :as st]
             [solita.etp.exception :as exception]
-            [solita.etp.db :as db]
-            [solita.etp.service.json :as json]
             [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.service.laatija :as laatija-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.schema.laatija :as laatija-schema]
-            [solita.common.map :as map]
             [solita.etp.schema.common :as common-schema]))
-
 
 (defn- update-kayttaja [db id kayttaja]
   (jdbc/update! db :kayttaja kayttaja ["rooli = 0 and id = ?" id]))
@@ -28,11 +23,10 @@
     (if existing-laatija
       (do
         (update-kayttaja db id kayttaja)
-        (laatija-service/update-laatija-by-id!
-          db id (dissoc laatija :henkilotunnus))
+        (laatija-service/update-laatija-by-id! db id (dissoc laatija :henkilotunnus))
         id)
       (let [id (add-kayttaja db kayttaja)]
-        (laatija-service/add-laatija! db (assoc laatija :id id :kayttaja id))))))
+        (laatija-service/add-laatija! db (assoc laatija :id id))))))
 
 (defn upsert-kayttaja-laatijat! [db kayttaja-laatijat]
   (jdbc/with-db-transaction

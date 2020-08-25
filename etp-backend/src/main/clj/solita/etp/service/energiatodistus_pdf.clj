@@ -2,23 +2,37 @@
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
             [clojure.java.shell :as shell]
+            [clojure.core.match :as match]
             [puumerkki.pdf :as puumerkki]
             [solita.common.xlsx :as xlsx]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
+            [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.file :as file-service])
   (:import (java.time Instant LocalDate ZoneId)
            (java.time.format DateTimeFormatter)
+           (java.util Locale)
+           (java.text DecimalFormatSymbols DecimalFormat)
+           (java.math RoundingMode)
            (org.apache.pdfbox.multipdf Overlay)
            (org.apache.pdfbox.multipdf Overlay$Position)
-           (org.apache.pdfbox.pdmodel PDDocument)
+           (org.apache.pdfbox.pdmodel PDDocument
+                                      PDPageContentStream
+                                      PDPageContentStream$AppendMode)
+           (org.apache.pdfbox.pdmodel.graphics.image PDImageXObject)
            (java.util HashMap)
            (java.awt Font Color)
            (java.awt.image BufferedImage)
            (javax.imageio ImageIO)))
 
-(def xlsx-template-path "energiatodistus-template.xlsx")
-(def watermark-path-fi "watermark-fi.pdf")
+;; TODO replace with real templates when it exists
+(def xlsx-template-paths {2013 {"fi" "energiatodistus-2013-fi.xlsx"
+                                "sv" "energiatodistus-2013-sv.xlsx"}
+                          2018 {"fi" "energiatodistus-2018-fi.xlsx"
+                                "sv" "energiatodistus-2018-sv.xlsx"}})
+
+(def watermark-paths {"fi" "watermark-fi.pdf"
+                      "sv" "watermark-sv.pdf"})
 (def sheet-count 8)
 (def tmp-dir "tmp/")
 
@@ -26,6 +40,18 @@
 (def timezone (ZoneId/of "Europe/Helsinki"))
 (def time-formatter (.withZone (DateTimeFormatter/ofPattern "dd.MM.yyyy HH:mm:ss")
                                timezone))
+
+(def locale (Locale. "fi" "FI"))
+(def format-symbols (DecimalFormatSymbols. locale))
+
+(defn format-number [x dp percent?]
+  (when x
+    (let [format (if percent? "#.# %" "#.#")
+          number-format (doto (java.text.DecimalFormat. format  format-symbols)
+                          (.setMinimumFractionDigits (if dp dp 0))
+                          (.setMaximumFractionDigits (if dp dp Integer/MAX_VALUE))
+                          (.setRoundingMode RoundingMode/HALF_UP))]
+      (.format number-format (bigdec x)))))
 
 (defn sis-kuorma [energiatodistus]
   (->> energiatodistus
@@ -38,397 +64,521 @@
        seq
        (into [])))
 
-(defn mappings []
-  (let [now (Instant/now)
-        today (LocalDate/now)]
-    {0 {"K7" [:perustiedot :nimi]
-        "K8" [:perustiedot :katuosoite-fi]
+(defn find-raja [energiatodistus e-luokka]
+  (->> energiatodistus
+       :tulokset
+       :e-luokka-info
+       :raja-asteikko
+       (filter #(contains? #{% (last %)} e-luokka))
+       ffirst))
 
-        ;; TODO needs luokittelu for postitoimipaikka
-        "K9" #(str (-> % :perustiedot :postinumero) " " "Helsinki")
-        "K12" [:perustiedot :rakennustunnus]
-        "K13" [:perustiedot :valmistumisvuosi]
+(def mappings
+  {0 [{:path [:id]}
+      {:path [:perustiedot :nimi]}
+      {:path [:perustiedot :katuosoite-fi]}
+      {:path [:perustiedot :katuosoite-sv]}
+      ;; TODO needs luokittelu for postitoimipaikka
+      {:f #(str (-> % :perustiedot :postinumero) " Helsinki")}
+      {:path [:perustiedot :rakennustunnus]}
+      {:path [:perustiedot :valmistumisvuosi]}
+      {:path [:perustiedot :alakayttotarkoitus-fi]}
+      {:path [:perustiedot :alakayttotarkoitus-sv]}
+      {:f #(if (= (-> % :perustiedot :laatimisvaihe) 0)
+             "☒ Uudelle rakennukselle rakennuslupaa haettaessa"
+             "☐ Uudelle rakennukselle rakennuslupaa haettaessa")}
+      {:f #(if (= (-> % :perustiedot :laatimisvaihe) 0)
+             "☒ för en ny byggnad I samband med att bygglov söks"
+             "☐ för en ny byggnad I samband med att bygglov söks")}
+      {:f #(if (= (-> % :perustiedot :laatimisvaihe) 1)
+             "☒ Uudelle rakennukselle käyttöönottovaiheessa"
+             "☐ Uudelle rakennukselle käyttöönottovaiheessa")}
+      {:f #(if (= (-> % :perustiedot :laatimisvaihe) 1)
+             "☒ för en ny byggnad när den tas I bruk"
+             "☐ för en ny byggnad när den tas I bruk")}
+      {:f #(if (= (-> % :perustiedot :laatimisvaihe) 2)
+             "☒ Olemassa olevalle rakennukselle, havainnointikäynnin päivämäärä:"
+             "☐ Olemassa olevalle rakennukselle, havainnointikäynnin päivämäärä:")}
+      {:f #(if (= (-> % :perustiedot :laatimisvaihe) 2)
+             "☒ för en befintlig byggnad, datum för iakttagelser på plats"
+             "☐ för en befintlig byggnad, datum för iakttagelser på plats")}
+      {:f #(some->> % :perustiedot :havainnointikaynti (.format date-formatter))}
+      {:path  [:tulokset :e-luku]}
+      {:path  [:tulokset :e-luokka-info :raja-uusi-2018]}
+      {:path [:laatija-fullname]}
+      {:path [:perustiedot :yritys :nimi]}
+      {:f (fn [_] (.format date-formatter (LocalDate/now)))}
+      {:f (fn [_] (.format date-formatter (LocalDate/now)))}]
+   1 [{:path [:id]}
+      {:f #(-> % :lahtotiedot :lammitetty-nettoala (format-number 1 false) (str " m²"))}
+      {:path [:lahtotiedot :lammitys :kuvaus-fi]}
+      {:path [:lahtotiedot :lammitys :kuvaus-sv]}
+      {:path [:lahtotiedot :ilmanvaihto :kuvaus-fi]}
+      {:path [:lahtotiedot :ilmanvaihto :kuvaus-sv]}
+      {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]}
+      {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :sahko] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :sahko-nettoala] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :sahko-kerroin]}
+      {:path [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin]}
+      {:path [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]}
+      {:path [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]}
+      {:path [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 0 :nimi]}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-nettoala] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 0 :muotokerroin] :dp 1}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :nimi]}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :muotokerroin] :dp 1}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :nimi]}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :muotokerroin] :dp 1}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :e-luku]}
+      {:path [:tulokset :e-luokka-info :luokittelu :label-fi]}
+      {:path [:tulokset :e-luokka-info :luokittelu :label-sv]}
+      {:f #(some->> (find-raja % "A") (format "... %s"))}
+      {:f #(some->> (find-raja % "B") (format "... %s"))}
+      {:f #(some->> (find-raja % "C") (format "... %s"))}
+      {:f #(some->> (find-raja % "D") (format "... %s"))}
+      {:f #(some->> (find-raja % "E") (format "... %s"))}
+      {:f #(some->> (find-raja % "F") (format "... %s"))}
+      {:f #(some->> (find-raja % "F") inc (format "%s ..."))}
+      {:path [:tulokset :e-luokka-info :e-luokka]}
+      {:path [:perustiedot :keskeiset-suositukset-fi]}
+      {:path [:perustiedot :keskeiset-suositukset-sv]}]
+   2 [{:path [:id]}
+      {:path [:perustiedot :alakayttotarkoitus-fi]}
+      {:path [:perustiedot :alakayttotarkoitus-sv]}
+      {:path [:perustiedot :valmistumisvuosi]}
+      {:path [:lahtotiedot :lammitetty-nettoala] :dp 1}
+      {:path [:lahtotiedot :rakennusvaippa :ilmanvuotoluku] :dp 1}
+      {:path [:lahtotiedot :rakennusvaippa :ulkoseinat :ala] :dp 1}
+      {:path [:lahtotiedot :rakennusvaippa :ulkoseinat :U] :dp 2}
+      {:path [:lahtotiedot :rakennusvaippa :ulkoseinat :UA] :dp 1}
+      {:path [:lahtotiedot :rakennusvaippa :ulkoseinat :osuus-lampohaviosta] :dp 0 :percent? true}
+      {:path [:lahtotiedot :rakennusvaippa :ylapohja :ala] :dp 1}
+      {:path [:lahtotiedot :rakennusvaippa :ylapohja :U] :dp 2}
+      {:path [:lahtotiedot :rakennusvaippa :ylapohja :UA] :dp 1}
+      {:path [:lahtotiedot :rakennusvaippa :ylapohja :osuus-lampohaviosta] :dp 0 :percent? true}
+      {:path [:lahtotiedot :rakennusvaippa :alapohja :ala] :dp 1}
+      {:path [:lahtotiedot :rakennusvaippa :alapohja :U] :dp 2}
+      {:path [:lahtotiedot :rakennusvaippa :alapohja :UA] :dp 1}
+      {:path [:lahtotiedot :rakennusvaippa :alapohja :osuus-lampohaviosta] :dp 0 :percent? true}
+      {:path [:lahtotiedot :rakennusvaippa :ikkunat :ala] :dp 1}
+      {:path [:lahtotiedot :rakennusvaippa :ikkunat :U] :dp 2}
+      {:path [:lahtotiedot :rakennusvaippa :ikkunat :UA] :dp 1}
+      {:path [:lahtotiedot :rakennusvaippa :ikkunat :osuus-lampohaviosta] :dp 0 :percent? true}
+      {:path [:lahtotiedot :rakennusvaippa :ulkoovet :ala] :dp 1}
+      {:path [:lahtotiedot :rakennusvaippa :ulkoovet :U] :dp 2}
+      {:path [:lahtotiedot :rakennusvaippa :ulkoovet :UA] :dp 1}
+      {:path [:lahtotiedot :rakennusvaippa :ulkoovet :osuus-lampohaviosta] :dp 0 :percent? true}
+      {:path [:lahtotiedot :rakennusvaippa :kylmasillat-UA] :dp 1}
+      {:path [:lahtotiedot :rakennusvaippa :kylmasillat-osuus-lampohaviosta] :dp 0 :percent? true}
+      {:path [:lahtotiedot :ikkunat :pohjoinen :ala] :dp 1}
+      {:path [:lahtotiedot :ikkunat :pohjoinen :U] :dp 2}
+      {:path [:lahtotiedot :ikkunat :pohjoinen :g-ks] :dp 2}
+      {:path [:lahtotiedot :ikkunat :koillinen :ala] :dp 1}
+      {:path [:lahtotiedot :ikkunat :koillinen :U] :dp 2}
+      {:path [:lahtotiedot :ikkunat :koillinen :g-ks] :dp 2}
+      {:path [:lahtotiedot :ikkunat :ita :ala] :dp 1}
+      {:path [:lahtotiedot :ikkunat :ita :U] :dp 2}
+      {:path [:lahtotiedot :ikkunat :ita :g-ks] :dp 2}
+      {:path [:lahtotiedot :ikkunat :kaakko :ala] :dp 1}
+      {:path [:lahtotiedot :ikkunat :kaakko :U] :dp 2}
+      {:path [:lahtotiedot :ikkunat :kaakko :g-ks] :dp 2}
+      {:path [:lahtotiedot :ikkunat :etela :ala] :dp 1}
+      {:path [:lahtotiedot :ikkunat :etela :U] :dp 2}
+      {:path [:lahtotiedot :ikkunat :etela :g-ks] :dp 2}
+      {:path [:lahtotiedot :ikkunat :lounas :ala] :dp 1}
+      {:path [:lahtotiedot :ikkunat :lounas :U] :dp 2}
+      {:path [:lahtotiedot :ikkunat :lounas :g-ks] :dp 2}
+      {:path [:lahtotiedot :ikkunat :lansi :ala] :dp 1}
+      {:path [:lahtotiedot :ikkunat :lansi :U] :dp 2}
+      {:path [:lahtotiedot :ikkunat :lansi :g-ks] :dp 2}
+      {:path [:lahtotiedot :ikkunat :luode :ala] :dp 1}
+      {:path [:lahtotiedot :ikkunat :luode :U] :dp 2}
+      {:path [:lahtotiedot :ikkunat :luode :g-ks] :dp 2}
+      {:path [:lahtotiedot :ilmanvaihto :kuvaus-fi]}
+      {:path [:lahtotiedot :ilmanvaihto :kuvaus-sv]}
+      {:path [:lahtotiedot :ilmanvaihto :paaiv :tulo-poisto]}
+      {:path [:lahtotiedot :ilmanvaihto :paaiv :sfp] :dp 2}
+      {:path [:lahtotiedot :ilmanvaihto :paaiv :lampotilasuhde] :dp 0 :percent? true}
+      {:path [:lahtotiedot :ilmanvaihto :paaiv :jaatymisenesto] :dp 2}
+      {:path [:lahtotiedot :ilmanvaihto :erillispoistot :tulo-poisto]}
+      {:path [:lahtotiedot :ilmanvaihto :erillispoistot :sfp] :dp 2}
+      {:path [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo-poisto]}
+      {:path [:lahtotiedot :ilmanvaihto :ivjarjestelma :sfp] :dp 2}
+      {:path [:lahtotiedot :ilmanvaihto :lto-vuosihyotysuhde] :dp 0 :percent? true}
+      {:path [:lahtotiedot :lammitys :kuvaus-fi]}
+      {:path [:lahtotiedot :lammitys :kuvaus-sv]}
+      {:path [:lahtotiedot :lammitys :tilat-ja-iv :tuoton-hyotysuhde] :dp 0 :percent? true}
+      {:path [:lahtotiedot :lammitys :tilat-ja-iv :jaon-hyotysuhde] :dp 0 :percent? true}
+      {:path [:lahtotiedot :lammitys :tilat-ja-iv :lampokerroin] :dp 1}
+      {:path [:lahtotiedot :lammitys :tilat-ja-iv :apulaitteet] :dp 1}
+      {:path [:lahtotiedot :lammitys :lammin-kayttovesi :tuoton-hyotysuhde] :dp 0 :percent? true}
+      {:path [:lahtotiedot :lammitys :lammin-kayttovesi :jaon-hyotysuhde] :dp 0 :percent? true}
+      {:path [:lahtotiedot :lammitys :lammin-kayttovesi :lampokerroin] :dp 1}
+      {:path [:lahtotiedot :lammitys :lammin-kayttovesi :apulaitteet] :dp 1}
+      {:path [:lahtotiedot :lammitys :takka :maara]}
+      {:path [:lahtotiedot :lammitys :takka :tuotto] :dp 0}
+      {:path [:lahtotiedot :lammitys :ilmanlampopumppu :maara]}
+      {:path [:lahtotiedot :lammitys :ilmanlampopumppu :tuotto] :dp 0}
+      {:path [:lahtotiedot :jaahdytysjarjestelma :jaahdytyskauden-painotettu-kylmakerroin] :dp 2}
+      {:path [:lahtotiedot :lkvn-kaytto :ominaiskulutus] :dp 0}
+      {:path [:lahtotiedot :lkvn-kaytto :lammitysenergian-nettotarve] :dp 0}
+      {:f #(-> % sis-kuorma (get 0) first (format-number 0 true))}
+      {:f #(-> % sis-kuorma (get 0) second :henkilot (format-number 1 false))}
+      {:f #(-> % sis-kuorma (get 0) second :kuluttajalaitteet (format-number 1 false))}
+      {:f #(-> % sis-kuorma (get 0) second :valaistus (format-number 1 false))}
+      {:f #(-> % sis-kuorma (get 1) first (format-number 0 true))}
+      {:f #(-> % sis-kuorma (get 1) second :henkilot (format-number 1 false))}
+      {:f #(-> % sis-kuorma (get 1) second :kuluttajalaitteet (format-number 1 false))}
+      {:f #(-> % sis-kuorma (get 1) second :valaistus (format-number 1 false))}
+      {:f #(-> % sis-kuorma (get 2) first (format-number 0 true))}
+      {:f #(-> % sis-kuorma (get 2) second :henkilot (format-number 1 false))}
+      {:f #(-> % sis-kuorma (get 2) second :kuluttajalaitteet (format-number 1 false))}
+      {:f #(-> % sis-kuorma (get 2) second :valaistus (format-number 1 false))}]
+   3 [{:path [:id]}
+      {:path [:perustiedot :alakayttotarkoitus-fi]}
+      {:path [:perustiedot :alakayttotarkoitus-sv]}
+      {:path [:perustiedot :valmistumisvuosi]}
+      {:path [:lahtotiedot :lammitetty-nettoala] :dp 1}
+      {:path [:tulokset :e-luku]}
+      {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]}
+      {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :sahko] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :sahko-kerroin]}
+      {:path [:tulokset :kaytettavat-energiamuodot :sahko-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]}
+      {:path [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]}
+      {:path [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin]}
+      {:path [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 0 :nimi]}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 0 :muotokerroin] :dp 1}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :nimi]}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :muotokerroin] :dp 1}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :nimi]}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :muotokerroin] :dp 1}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :summa] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :kertoimella-summa] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko-nettoala] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat :aurinkolampo] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat :aurinkolampo-nettoala] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat :tuulisahko] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat :tuulisahko-nettoala] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat :lampopumppu] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat :lampopumppu-nettoala] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat :muusahko] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat :muusahko-nettoala] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat :muulampo] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat :muulampo-nettoala] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 0 :nimi-fi]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 0 :nimi-sv]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 0 :vuosikulutus] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 0 :vuosikulutus-nettoala] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 1 :nimi-fi]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 1 :nimi-sv]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 1 :vuosikulutus] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 1 :vuosikulutus-nettoala] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 2 :nimi-fi]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 2 :nimi-sv]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 2 :vuosikulutus] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 2 :vuosikulutus-nettoala] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 3 :nimi-fi]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 3 :nimi-sv]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 3 :vuosikulutus] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 3 :vuosikulutus-nettoala] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 4 :nimi-fi]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 4 :nimi-sv]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 4 :vuosikulutus] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 4 :vuosikulutus-nettoala] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 5 :nimi-fi]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 5 :nimi-sv]}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 5 :vuosikulutus] :dp 0}
+      {:path [:tulokset :uusiutuvat-omavaraisenergiat 5 :vuosikulutus-nettoala] :dp 0}
+      {:path [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :sahko] :dp 1}
+      {:path [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :lampo] :dp 1}
+      {:path [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :sahko] :dp 1}
+      {:path [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :lampo] :dp 1}
+      {:path [:tulokset :tekniset-jarjestelmat :kayttoveden-valmistus :sahko] :dp 1}
+      {:path [:tulokset :tekniset-jarjestelmat :kayttoveden-valmistus :lampo] :dp 1}
+      {:path [:tulokset :tekniset-jarjestelmat :iv-sahko] :dp 1}
+      {:path [:tulokset :tekniset-jarjestelmat :jaahdytys :sahko] :dp 1}
+      {:path [:tulokset :tekniset-jarjestelmat :jaahdytys :lampo] :dp 1}
+      {:path [:tulokset :tekniset-jarjestelmat :jaahdytys :kaukojaahdytys] :dp 1}
+      {:path [:tulokset :tekniset-jarjestelmat :kuluttajalaitteet-ja-valaistus-sahko] :dp 1}
+      {:path [:tulokset :tekniset-jarjestelmat :sahko-summa] :dp 1}
+      {:path [:tulokset :tekniset-jarjestelmat :lampo-summa] :dp 1}
+      {:path [:tulokset :tekniset-jarjestelmat :kaukojaahdytys-summa] :dp 1}
+      {:path [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus] :dp 0}
+      {:path [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus-nettoala] :dp 0}
+      {:path [:tulokset :nettotarve :ilmanvaihdon-lammitys-vuosikulutus] :dp 0}
+      {:path [:tulokset :nettotarve :ilmanvaihdon-lammitys-vuosikulutus-nettoala] :dp 0}
+      {:path [:tulokset :nettotarve :kayttoveden-valmistus-vuosikulutus] :dp 0}
+      {:path [:tulokset :nettotarve :kayttoveden-valmistus-vuosikulutus-nettoala] :dp 0}
+      {:path [:tulokset :nettotarve :jaahdytys-vuosikulutus] :dp 0}
+      {:path [:tulokset :nettotarve :jaahdytys-vuosikulutus-nettoala] :dp 0}
+      {:path [:tulokset :lampokuormat :aurinko] :dp 0}
+      {:path [:tulokset :lampokuormat :aurinko-nettoala] :dp 0}
+      {:path [:tulokset :lampokuormat :ihmiset] :dp 0}
+      {:path [:tulokset :lampokuormat :ihmiset-nettoala] :dp 0}
+      {:path [:tulokset :lampokuormat :kuluttajalaitteet] :dp 0}
+      {:path [:tulokset :lampokuormat :kuluttajalaitteet-nettoala] :dp 0}
+      {:path [:tulokset :lampokuormat :valaistus] :dp 0}
+      {:path [:tulokset :lampokuormat :valaistus-nettoala] :dp 0}
+      {:path [:tulokset :lampokuormat :kvesi] :dp 0}
+      {:path [:tulokset :lampokuormat :kvesi-nettoala] :dp 0}
+      {:path [:tulokset :laskentatyokalu]}]
+   4 [{:path [:id]}
+      {:f #(str "Lämmitetty nettoala "
+                (-> %
+                    :lahtotiedot
+                    :lammitetty-nettoala
+                    (format-number 1 false))
+                " m²")}
+      {:f #(str "Uppvärmd nettoarea "
+                (-> %
+                    :lahtotiedot
+                    :lammitetty-nettoala
+                    (format-number 1 false))
+                " m²")}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukolampo-vuosikulutus] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukolampo-vuosikulutus-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kokonaissahko-vuosikulutus] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kokonaissahko-vuosikulutus-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kiinteistosahko-vuosikulutus] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kiinteistosahko-vuosikulutus-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kayttajasahko-vuosikulutus] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kayttajasahko-vuosikulutus-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukojaahdytys-vuosikulutus] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukojaahdytys-vuosikulutus-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 0 :nimi-fi]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 0 :nimi-sv]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 0 :vuosikulutus] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 0 :vuosikulutus-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 1 :nimi-fi]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 1 :nimi-sv]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 1 :vuosikulutus] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 1 :vuosikulutus-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 2 :nimi-fi]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 2 :nimi-sv]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 2 :vuosikulutus] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 2 :vuosikulutus-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 3 :nimi-fi]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 3 :nimi-sv]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 3 :vuosikulutus] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 3 :vuosikulutus-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 4 :nimi-fi]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 4 :nimi-sv]}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 4 :vuosikulutus] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 4 :vuosikulutus-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kwh] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kwh-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kwh] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kwh-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 0 :nimi]}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 0 :maara-vuodessa] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 0 :yksikko]}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 0 :muunnoskerroin]}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 0 :kwh] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 0 :kwh-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 1 :nimi]}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 1 :maara-vuodessa] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 1 :yksikko]}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 1 :muunnoskerroin]}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 1 :kwh] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu 1 :kwh-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :summa] :dp 0}
+      {:path [:toteutunut-ostoenergiankulutus :summa-nettoala] :dp 0}]
+   5 [{:path [:id]}
+      {:path [:huomiot :ymparys :teksti-fi]}
+      {:path [:huomiot :ymparys :teksti-sv]}
+      {:path [:huomiot :ymparys :toimenpide 0 :nimi-fi]}
+      {:path [:huomiot :ymparys :toimenpide 0 :nimi-sv]}
+      {:path [:huomiot :ymparys :toimenpide 1 :nimi-fi]}
+      {:path [:huomiot :ymparys :toimenpide 1 :nimi-sv]}
+      {:path [:huomiot :ymparys :toimenpide 2 :nimi-fi]}
+      {:path [:huomiot :ymparys :toimenpide 2 :nimi-sv]}
+      {:path [:huomiot :ymparys :toimenpide 0 :lampo] :dp 0}
+      {:path [:huomiot :ymparys :toimenpide 0 :sahko] :dp 0}
+      {:path [:huomiot :ymparys :toimenpide 0 :jaahdytys] :dp 0}
+      {:path [:huomiot :ymparys :toimenpide 0 :eluvun-muutos] :dp 0}
+      {:path [:huomiot :ymparys :toimenpide 1 :lampo] :dp 0}
+      {:path [:huomiot :ymparys :toimenpide 1 :sahko] :dp 0}
+      {:path [:huomiot :ymparys :toimenpide 1 :jaahdytys] :dp 0}
+      {:path [:huomiot :ymparys :toimenpide 1 :eluvun-muutos] :dp 0}
+      {:path [:huomiot :ymparys :toimenpide 2 :lampo] :dp 0}
+      {:path [:huomiot :ymparys :toimenpide 2 :sahko] :dp 0}
+      {:path [:huomiot :ymparys :toimenpide 2 :jaahdytys] :dp 0}
+      {:path [:huomiot :ymparys :toimenpide 2 :eluvun-muutos] :dp 0}
+      {:path [:huomiot :alapohja-ylapohja :teksti-fi]}
+      {:path [:huomiot :alapohja-ylapohja :teksti-sv]}
+      {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :nimi-fi]}
+      {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :nimi-sv]}
+      {:path [:huomiot :alapohja-ylapohja :toimenpide 1 :nimi-fi]}
+      {:path [:huomiot :alapohja-ylapohja :toimenpide 1 :nimi-sv]}
+      {:path [:huomiot :alapohja-ylapohja :toimenpide 2 :nimi-fi]}
+      {:path [:huomiot :alapohja-ylapohja :toimenpide 2 :nimi-sv]}
+      {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :lampo] :dp 0}
+      {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :sahko] :dp 0}
+      {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :jaahdytys] :dp 0}
+      {:path [:huomiot :alapohja-ylapohja :toimenpide 0 :eluvun-muutos] :dp 0}
+      {:path [:huomiot :alapohja-ylapohja :toimenpide 1 :lampo] :dp 0}
+      {:path [:huomiot :alapohja-ylapohja :toimenpide 1 :sahko] :dp 0}
+      {:path [:huomiot :alapohja-ylapohja :toimenpide 1 :jaahdytys] :dp 0}
+      {:path [:huomiot :alapohja-ylapohja :toimenpide 1 :eluvun-muutos] :dp 0}
+      {:path [:huomiot :alapohja-ylapohja :toimenpide 2 :lampo] :dp 0}
+      {:path [:huomiot :alapohja-ylapohja :toimenpide 2 :sahko] :dp 0}
+      {:path [:huomiot :alapohja-ylapohja :toimenpide 2 :jaahdytys] :dp 0}
+      {:path [:huomiot :alapohja-ylapohja :toimenpide 2 :eluvun-muutos] :dp 0}
+      {:path [:huomiot :lammitys :teksti-fi]}
+      {:path [:huomiot :lammitys :teksti-sv]}
+      {:path [:huomiot :lammitys :toimenpide 0 :nimi-fi]}
+      {:path [:huomiot :lammitys :toimenpide 0 :nimi-sv]}
+      {:path [:huomiot :lammitys :toimenpide 1 :nimi-fi]}
+      {:path [:huomiot :lammitys :toimenpide 1 :nimi-sv]}
+      {:path [:huomiot :lammitys :toimenpide 2 :nimi-fi]}
+      {:path [:huomiot :lammitys :toimenpide 2 :nimi-sv]}
+      {:path [:huomiot :lammitys :toimenpide 0 :lampo] :dp 0}
+      {:path [:huomiot :lammitys :toimenpide 0 :sahko] :dp 0}
+      {:path [:huomiot :lammitys :toimenpide 0 :jaahdytys] :dp 0}
+      {:path [:huomiot :lammitys :toimenpide 0 :eluvun-muutos] :dp 0}
+      {:path [:huomiot :lammitys :toimenpide 1 :lampo] :dp 0}
+      {:path [:huomiot :lammitys :toimenpide 1 :sahko] :dp 0}
+      {:path [:huomiot :lammitys :toimenpide 1 :jaahdytys] :dp 0}
+      {:path [:huomiot :lammitys :toimenpide 1 :eluvun-muutos] :dp 0}
+      {:path [:huomiot :lammitys :toimenpide 2 :lampo] :dp 0}
+      {:path [:huomiot :lammitys :toimenpide 2 :sahko] :dp 0}
+      {:path [:huomiot :lammitys :toimenpide 2 :jaahdytys] :dp 0}
+      {:path [:huomiot :lammitys :toimenpide 2 :eluvun-muutos] :dp 0}]
+   6 [{:path [:id]}
+      {:path [:huomiot :iv-ilmastointi :teksti-fi]}
+      {:path [:huomiot :iv-ilmastointi :teksti-sv]}
+      {:path [:huomiot :iv-ilmastointi :toimenpide 0 :nimi-fi]}
+      {:path [:huomiot :iv-ilmastointi :toimenpide 0 :nimi-sv]}
+      {:path [:huomiot :iv-ilmastointi :toimenpide 1 :nimi-fi]}
+      {:path [:huomiot :iv-ilmastointi :toimenpide 1 :nimi-sv]}
+      {:path [:huomiot :iv-ilmastointi :toimenpide 2 :nimi-fi]}
+      {:path [:huomiot :iv-ilmastointi :toimenpide 2 :nimi-sv]}
+      {:path [:huomiot :iv-ilmastointi :toimenpide 0 :lampo] :dp 0}
+      {:path [:huomiot :iv-ilmastointi :toimenpide 0 :sahko] :dp 0}
+      {:path [:huomiot :iv-ilmastointi :toimenpide 0 :jaahdytys] :dp 0}
+      {:path [:huomiot :iv-ilmastointi :toimenpide 0 :eluvun-muutos] :dp 0}
+      {:path [:huomiot :iv-ilmastointi :toimenpide 1 :lampo] :dp 0}
+      {:path [:huomiot :iv-ilmastointi :toimenpide 1 :sahko] :dp 0}
+      {:path [:huomiot :iv-ilmastointi :toimenpide 1 :jaahdytys] :dp 0}
+      {:path [:huomiot :iv-ilmastointi :toimenpide 1 :eluvun-muutos] :dp 0}
+      {:path [:huomiot :iv-ilmastointi :toimenpide 2 :lampo] :dp 0}
+      {:path [:huomiot :iv-ilmastointi :toimenpide 2 :sahko] :dp 0}
+      {:path [:huomiot :iv-ilmastointi :toimenpide 2 :jaahdytys] :dp 0}
+      {:path [:huomiot :iv-ilmastointi :toimenpide 2 :eluvun-muutos] :dp 0}
+      {:path [:huomiot :valaistus-muut :teksti-fi]}
+      {:path [:huomiot :valaistus-muut :teksti-sv]}
+      {:path [:huomiot :valaistus-muut :toimenpide 0 :nimi-fi]}
+      {:path [:huomiot :valaistus-muut :toimenpide 0 :nimi-sv]}
+      {:path [:huomiot :valaistus-muut :toimenpide 1 :nimi-fi]}
+      {:path [:huomiot :valaistus-muut :toimenpide 1 :nimi-sv]}
+      {:path [:huomiot :valaistus-muut :toimenpide 2 :nimi-fi]}
+      {:path [:huomiot :valaistus-muut :toimenpide 2 :nimi-sv]}
+      {:path [:huomiot :valaistus-muut :toimenpide 0 :lampo] :dp 0}
+      {:path [:huomiot :valaistus-muut :toimenpide 0 :sahko] :dp 0}
+      {:path [:huomiot :valaistus-muut :toimenpide 0 :jaahdytys] :dp 0}
+      {:path [:huomiot :valaistus-muut :toimenpide 0 :eluvun-muutos] :dp 0}
+      {:path [:huomiot :valaistus-muut :toimenpide 1 :lampo] :dp 0}
+      {:path [:huomiot :valaistus-muut :toimenpide 1 :sahko] :dp 0}
+      {:path [:huomiot :valaistus-muut :toimenpide 1 :jaahdytys] :dp 0}
+      {:path [:huomiot :valaistus-muut :toimenpide 1 :eluvun-muutos] :dp 0}
+      {:path [:huomiot :valaistus-muut :toimenpide 2 :lampo] :dp 0}
+      {:path [:huomiot :valaistus-muut :toimenpide 2 :sahko] :dp 0}
+      {:path [:huomiot :valaistus-muut :toimenpide 2 :jaahdytys] :dp 0}
+      {:path [:huomiot :valaistus-muut :toimenpide 2 :eluvun-muutos] :dp 0}
+      {:path [:huomiot :suositukset-fi]}
+      {:path [:huomiot :suositukset-sv]}
+      {:path [:huomiot :lisatietoja-fi]}
+      {:path [:huomiot :lisatietoja-sv]}]
+   7 [{:path [:id]}
+      {:path [:lisamerkintoja-fi]}
+      {:path [:lisamerkintoja-sv]}]})
 
-        "K14" [:perustiedot :alakayttotarkoitus-fi]
-        "K16" [:id]
-
-        "D19" (fn [energiatodistus]
-                (if (= (-> energiatodistus :perustiedot :laatimisvaihe) 0)
-                  "☒ Uudelle rakennukselle rakennuslupaa haettaessa"
-                  "☐ Uudelle rakennukselle rakennuslupaa haettaessa"))
-        "D20" (fn [energiatodistus]
-                (if (= (-> energiatodistus :perustiedot :laatimisvaihe) 1)
-                  "☒ Uudelle rakennukselle käyttöönottovaiheessa"
-                  "☐ Uudelle rakennukselle käyttöönottovaiheessa"))
-        "D21" (fn [energiatodistus]
-                (if (= (-> energiatodistus :perustiedot :laatimisvaihe) 2)
-                  "☒ Olemassa olevalle rakennukselle, havainnointikäynnin päivämäärä:"
-                  "☐ Olemassa olevalle rakennukselle, havainnointikäynnin päivämäärä:"))
-
-        "M21" (fn [energiatodistus]
-                (some->> energiatodistus :perustiedot :havainnointikaynti (.format date-formatter)))
-
-        ;; TODO M36 and M37 E-luku
-
-        "B42" [:laatija-fullname]
-        "J42" [:perustiedot :yritys :nimi]
-
-        "B50" (fn [_] (.format date-formatter today))
-        "K50" (fn [_] (.format date-formatter (.plusYears today 10)))}
-     1 {"F5" [:lahtotiedot :lammitetty-nettoala]
-        "F6" [:lahtotiedot :lammitys :kuvaus-fi]
-        "F7" [:lahtotiedot :ilmanvaihto :kuvaus-fi]
-        "F14" [:tulokset :kaytettavat-energiamuodot :kaukolampo]
-        "G14" [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala]
-        "H14" [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]
-        "I14" [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella]
-        "F15" [:tulokset :kaytettavat-energiamuodot :sahko]
-        "G15" [:tulokset :kaytettavat-energiamuodot :sahko-nettoala]
-        "H15" [:tulokset :kaytettavat-energiamuodot :sahko-kerroin]
-        "I15" [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kertoimella]
-        "F16" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine]
-        "G16" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala]
-        "H16" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin]
-        "I16" [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella]
-        "F17" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine]
-        "G17" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala]
-        "H17" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]
-        "I17" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella]
-        "F18" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys]
-        "G18" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala]
-        "H18" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]
-        "I18" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]
-
-        ;; TODO Energiatehokkuuden vertailuluku
-
-        ;; TODO Käytetty E-luvun luokittelu asteikko
-
-        ;; TODO Luokkien rajat asteikolla
-
-        ;; TODO Tämän rakennuksen energiatehokkuusluokka
-
-        "C38" [:perustiedot :keskeiset-suositukset-fi]}
-     2 {"E4" [:perustiedot :alakayttotarkoitus-fi]
-        "D5" [:perustiedot :valmistusmisvuosi]
-        "F5" [:lahtotiedot :lammitetty-nettoala]
-        "D7" [:lahtotiedot :rakennusvaippa :ilmanvaihtoluku]
-
-        "D10" [:lahtotiedot :rakennusvaippa :ulkoseinat :ala]
-        "E10" [:lahtotiedot :rakennusvaippa :ulkoseinat :U]
-        "F10" [:lahtotiedot :rakennusvaippa :ulkoseinat :UA]
-        "G10" [:lahtotiedot :rakennusvaippa :ulkoseinat :osuus-lampohaviosta]
-        "D11" [:lahtotiedot :rakennusvaippa :ylapohja :ala]
-        "E11" [:lahtotiedot :rakennusvaippa :ylapohja :U]
-        "F11" [:lahtotiedot :rakennusvaippa :ylapohja :UA]
-        "G11" [:lahtotiedot :rakennusvaippa :ylapohja :osuus-lampohaviosta]
-        "D12" [:lahtotiedot :rakennusvaippa :alapohja :ala]
-        "E12" [:lahtotiedot :rakennusvaippa :alapohja :U]
-        "F12" [:lahtotiedot :rakennusvaippa :alapohja :UA]
-        "G12" [:lahtotiedot :rakennusvaippa :alapohja :osuus-lampohaviosta]
-        "D13" [:lahtotiedot :rakennusvaippa :ikkunat :ala]
-        "E13" [:lahtotiedot :rakennusvaippa :ikkunat :U]
-        "F13" [:lahtotiedot :rakennusvaippa :ikkunat :UA]
-        "G13" [:lahtotiedot :rakennusvaippa :ikkunat :osuus-lampohaviosta]
-        "D14" [:lahtotiedot :rakennusvaippa :ulkoovet :ala]
-        "E14" [:lahtotiedot :rakennusvaippa :ulkoovet :U]
-        "F14" [:lahtotiedot :rakennusvaippa :ulkoovet :UA]
-        "G14" [:lahtotiedot :rakennusvaippa :ulkoovet :osuus-lampohaviosta]
-        "F15" [:lahtotiedot :rakennusvaippa :kylmasillat-UA]
-        "G15" [:lahtotiedot :rakennusvaippa :kylmasillat-osuus-lampohaviosta]
-
-        "D19" [:lahtotiedot :ikkunat :pohjoinen :ala]
-        "E19" [:lahtotiedot :ikkunat :pohjoinen :U]
-        "F19" [:lahtotiedot :ikkunat :pohjoinen :g-ks]
-        "D20" [:lahtotiedot :ikkunat :koillinen :ala]
-        "E20" [:lahtotiedot :ikkunat :koillinen :U]
-        "F20" [:lahtotiedot :ikkunat :koillinen :g-ks]
-        "D21" [:lahtotiedot :ikkunat :ita :ala]
-        "E21" [:lahtotiedot :ikkunat :ita :U]
-        "F21" [:lahtotiedot :ikkunat :ita :g-ks]
-        "D22" [:lahtotiedot :ikkunat :kaakko :ala]
-        "E22" [:lahtotiedot :ikkunat :kaakko :U]
-        "F22" [:lahtotiedot :ikkunat :kaakko :g-ks]
-        "D23" [:lahtotiedot :ikkunat :etela :ala]
-        "E23" [:lahtotiedot :ikkunat :etela :U]
-        "F23" [:lahtotiedot :ikkunat :etela :g-ks]
-        "D24" [:lahtotiedot :ikkunat :lounas :ala]
-        "E24" [:lahtotiedot :ikkunat :lounas :U]
-        "F24" [:lahtotiedot :ikkunat :lounas :g-ks]
-        "D25" [:lahtotiedot :ikkunat :lansi :ala]
-        "E25" [:lahtotiedot :ikkunat :lansi :U]
-        "F25" [:lahtotiedot :ikkunat :lansi :g-ks]
-        "D26" [:lahtotiedot :ikkunat :luode :ala]
-        "E26" [:lahtotiedot :ikkunat :luode :U]
-        "F26" [:lahtotiedot :ikkunat :luode :g-ks]
-
-        "D28" [:lahtotiedot :ilmanvaihto :kuvaus-fi]
-        "D33" [:lahtotiedot :ilmanvaihto :paaiv :tulo-poisto]
-        "E33" [:lahtotiedot :ilmanvaihto :paaiv :sfp]
-        "F33" [:lahtotiedot :ilmanvaihto :paaiv :lampotilasuhde]
-        "G33" [:lahtotiedot :ilmanvaihto :paaiv :jaatymisenesto]
-        "D34" [:lahtotiedot :ilmanvaihto :erillispoistot :tulo-poisto]
-        "E34" [:lahtotiedot :ilmanvaihto :erillispoistot :sfp]
-        "D35" [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo-poisto]
-        "E35" [:lahtotiedot :ilmanvaihto :ivjarjestelma :sfp]
-        "E36" [:lahtotiedot :ilmanvaihto :lto-vuosihyotysuhde]
-
-        "D38" [:lahtotiedot :lammitys :kuvaus-fi]
-
-        "D43" [:lahtotiedot :lammitys :tilat-ja-iv :tuoton-hyotysuhde]
-        "E43" [:lahtotiedot :lammitys :tilat-ja-iv :jaon-hyotysuhde]
-        "F43" [:lahtotiedot :lammitys :tilat-ja-iv :lampokerroin]
-        "G43" [:lahtotiedot :lammitys :tilat-ja-iv :apulaitteet]
-        "D44" [:lahtotiedot :lammitys :lammin-kayttovesi :tuoton-hyotysuhde]
-        "E44" [:lahtotiedot :lammitys :lammin-kayttovesi :jaon-hyotysuhde]
-        "F44" [:lahtotiedot :lammitys :lammin-kayttovesi :lampokerroin]
-        "G44" [:lahtotiedot :lammitys :lammin-kayttovesi :apulaitteet]
-
-        "D50" [:lahtotiedot :lammitys :takka :maara]
-        "E50" [:lahtotiedot :lammitys :takka :tuotto]
-        "D51" [:lahtotiedot :lammitys :ilmanlampopumppu :maara]
-        "E51" [:lahtotiedot :lammitys :ilmanlampopumppu :tuotto]
-
-        "D55" [:lahtotiedot :jaahdytysjarjestelma :jaahdytyskauden-painotettu-kylmakerroin]
-
-        ;; TODO lämmin käyttövesi ominaiskulutus, lämmitysenergian nettotarve
-
-        "D63" #(-> % sis-kuorma (get 0) first)
-        "E63" #(-> % sis-kuorma (get 0) second :henkilot)
-        "F63" #(-> % sis-kuorma (get 0) second :kuluttajalaitteet)
-        "G63" #(-> % sis-kuorma (get 0) second :valaistus)
-        "D64" #(-> % sis-kuorma (get 1) first)
-        "E64" #(-> % sis-kuorma (get 1) second :henkilot)
-        "F64" #(-> % sis-kuorma (get 1) second :kuluttajalaitteet)
-        "G64" #(-> % sis-kuorma (get 1) second :valaistus)
-        "D65" #(-> % sis-kuorma (get 2) first)
-        "E65" #(-> % sis-kuorma (get 2) second :henkilot)
-        "F65" #(-> % sis-kuorma (get 2) second :kuluttajalaitteet)
-        "G65" #(-> % sis-kuorma (get 2) second :valaistus)}
-     3 {"D4" [:perustiedot :alakayttotarkoitus-fi]
-        "D7" [:perustiedot :valmistumisvuosi]
-        "D8" [:lahtotiedot :lammitetty-nettoala]
-
-        ;; TODO e-luku
-
-        "D17" [:tulokset :kaytettavat-energiamuodot :kaukolampo]
-        "E17" [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]
-        "F17" [:tulokset :kaytettavat-energiamuodot :kaukolampo-kertoimella]
-        "G17" [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella]
-        "D18" [:tulokset :kaytettavat-energiamuodot :sahko]
-        "E18" [:tulokset :kaytettavat-energiamuodot :sahko-kerroin]
-        "F18" [:tulokset :kaytettavat-energiamuodot :sahko-kertoimella]
-        "G18" [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kertoimella]
-        "D19" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine]
-        "E19" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]
-        "F19" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kertoimella]
-        "G19" [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella]
-        "D20" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys]
-        "E20" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]
-        "F20" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kertoimella]
-        "G20" [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]
-        "D22" [:tulokset :kaytettavat-energiamuodot :summa-ilman-uusiutuvia]
-        "E22" [:tulokset :kaytettavat-energiamuodot :kerroin-summa-ilman-uusiutuvia]
-        "F22" [:tulokset :kaytettavat-energiamuodot :kertoimella-summa-ilman-uusiutuvia]
-        "G22" [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-ilman-uusiutuvia]
-
-        "E28" [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko]
-        "F28" [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko-nettoala]
-        "E29" [:tulokset :uusiutuvat-omavaraisenergiat :aurinkolampo]
-        "F29" [:tulokset :uusiutuvat-omavaraisenergiat :aurinkolampo-nettoala]
-        "E30" [:tulokset :uusiutuvat-omavaraisenergiat :tuulisahko]
-        "F30" [:tulokset :uusiutuvat-omavaraisenergiat :tuulisahko-nettoala]
-        "E31" [:tulokset :uusiutuvat-omavaraisenergiat :lampopumppu]
-        "F31" [:tulokset :uusiutuvat-omavaraisenergiat :lampopumppu-nettoala]
-        "E32" [:tulokset :uusiutuvat-omavaraisenergiat :muusahko]
-        "F32" [:tulokset :uusiutuvat-omavaraisenergiat :muusahko-nettoala]
-        "E33" [:tulokset :uusiutuvat-omavaraisenergiat :muulampo]
-        "F33" [:tulokset :uusiutuvat-omavaraisenergiat :muulampo-nettoala]
-
-        "E41" [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :sahko]
-        "F41" [:tulokset :tekniset-jarjestelmat :tilojen-lammitys :lampo]
-        "E42" [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :sahko]
-        "F42" [:tulokset :tekniset-jarjestelmat :tuloilman-lammitys :lampo]
-        "E43" [:tulokset :tekniset-jarjestelmat :kayttoveden-valmistus :sahko]
-        "F43" [:tulokset :tekniset-jarjestelmat :kayttoveden-valmistus :lampo]
-        "E44" [:tulokset :tekniset-jarjestelmat :iv-sahko]
-        "E45" [:tulokset :tekniset-jarjestelmat :jaahdytys :sahko]
-        "F45" [:tulokset :tekniset-jarjestelmat :jaahdytys :lampo]
-        "G45" [:tulokset :tekniset-jarjestelmat :jaahdytys :kaukojaahdytys]
-        "E46" [:tulokset :tekniset-jarjestelmat :kuluttajalaitteet-ja-valaistus-sahko]
-
-        "E54" [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus]
-        "F54" [:tulokset :nettotarve :tilojen-lammitys-vuosikulutus-nettoala]
-        "E55" [:tulokset :nettotarve :ilmanvaihdon-lammitys-vuosikulutus]
-        "F55" [:tulokset :nettotarve :ilmanvaihdon-lammitys-vuosikulutus-nettoala]
-        "E56" [:tulokset :nettotarve :kayttoveden-valmistus-vuosikulutus]
-        "F56" [:tulokset :nettotarve :kayttoveden-valmistus-vuosikulutus-nettoala]
-        "E57" [:tulokset :nettotarve :jaahdytys-vuosikulutus]
-        "F57" [:tulokset :nettotarve :jaahdytys-vuosikulutus-nettoala]
-
-        "E66" [:tulokset :lampokuormat :aurinko]
-        "F66" [:tulokset :lampokuormat :aurinko-nettoala]
-        "E67" [:tulokset :lampokuormat :ihmiset]
-        "F67" [:tulokset :lampokuormat :ihmiset-nettoala]
-        "E68" [:tulokset :lampokuormat :kuluttajalaitteet]
-        "F68" [:tulokset :lampokuormat :kuluttajalaitteet-nettoala]
-        "E69" [:tulokset :lampokuormat :valaistus]
-        "F69" [:tulokset :lampokuormat :valaistus-nettoala]
-        "E70" [:tulokset :lampokuormat :kvesi]
-        "F70" [:tulokset :lampokuormat :kvesi-nettoala]
-
-        "E74" [:tulokset :laskentatyokalu]}
-     4 {"C7" #(format "Lämmitetty nettoala %s m²" (-> % :lahtotiedot :lammitetty-nettoala))
-
-        "H12" [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukolampo-vuosikulutus]
-        "I12" [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukolampo-vuosikulutus-nettoala]
-        "H14" [:toteutunut-ostoenergiankulutus :ostettu-energia :kokonaissahko-vuosikulutus]
-        "I14" [:toteutunut-ostoenergiankulutus :ostettu-energia :kokonaissahko-vuosikulutus-nettoala]
-        "H16" [:toteutunut-ostoenergiankulutus :ostettu-energia :kiinteistosahko-vuosikulutus]
-        "I16" [:toteutunut-ostoenergiankulutus :ostettu-energia :kiinteistosahko-vuosikulutus-nettoala]
-        "H17" [:toteutunut-ostoenergiankulutus :ostettu-energia :kayttajasahko-vuosikulutus]
-        "I17" [:toteutunut-ostoenergiankulutus :ostettu-energia :kayttajasahko-vuosikulutus-nettoala]
-        "H19" [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukojaahdytys-vuosikulutus]
-        "I19" [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukojaahdytys-vuosikulutus-nettoala]
-
-        "E23" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy]
-        "H23" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh]
-        "I23" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh-nettoala]
-        "E24" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu]
-        "H24" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kwh]
-        "I24" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kwh-nettoala]
-        "E25" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu]
-        "H25" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kwh]
-        "I25" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kwh-nettoala]
-        "E26" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit]
-        "H26" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh]
-        "I26" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kwh-nettoala]
-
-        "C27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :nimi]
-        "E27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :maara-vuodessa]
-        "F27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :yksikko]
-        "G27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :muunnoskerroin]
-        "H27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :kwh]
-        "I27" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 0 :kwh-nettoala]
-        "C28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :nimi]
-        "E28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :maara-vuodessa]
-        "F28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :yksikko]
-        "G28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :muunnoskerroin]
-        "H28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :kwh]
-        "I28" [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :vapaa 1 :kwh-nettoala]
-
-        "H38" [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa]
-        "I38" [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa-nettoala]
-        "H40" [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa]
-        "I40" [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa-nettoala]
-        "H42" [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa]
-        "I42" [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa-nettoala]
-        "H44" [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa]
-        "I44" [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala]
-        "H46" [:toteutunut-ostoenergiankulutus :summa]
-        "I46" [:toteutunut-ostoenergiankulutus :summa-nettoala]}
-     5 {"B5" [:huomiot :ymparys :teksti-fi]
-        "C12" [:huomiot :ymparys :toimenpide 0 :nimi-fi]
-        "C13" [:huomiot :ymparys :toimenpide 1 :nimi-fi]
-        "C14" [:huomiot :ymparys :toimenpide 2 :nimi-fi]
-        "C17" [:huomiot :ymparys :toimenpide 0 :lampo]
-        "D17" [:huomiot :ymparys :toimenpide 0 :sahko]
-        "E17" [:huomiot :ymparys :toimenpide 0 :jaahdytys]
-        "F17" [:huomiot :ymparys :toimenpide 0 :eluvun-muutos]
-        "C18" [:huomiot :ymparys :toimenpide 1 :lampo]
-        "D18" [:huomiot :ymparys :toimenpide 1 :sahko]
-        "E18" [:huomiot :ymparys :toimenpide 1 :jaahdytys]
-        "F18" [:huomiot :ymparys :toimenpide 1 :eluvun-muutos]
-        "C19" [:huomiot :ymparys :toimenpide 2 :lampo]
-        "D19" [:huomiot :ymparys :toimenpide 2 :sahko]
-        "E19" [:huomiot :ymparys :toimenpide 2 :jaahdytys]
-        "F19" [:huomiot :ymparys :toimenpide 2 :eluvun-muutos]
-
-        "B21" [:huomiot :alapohja-ylapohja :teksti-fi]
-        "C28" [:huomiot :alapohja-ylapohja :toimenpide 0 :nimi-fi]
-        "C29" [:huomiot :alapohja-ylapohja :toimenpide 1 :nimi-fi]
-        "C30" [:huomiot :alapohja-ylapohja :toimenpide 2 :nimi-fi]
-        "C33" [:huomiot :alapohja-ylapohja :toimenpide 0 :lampo]
-        "D33" [:huomiot :alapohja-ylapohja :toimenpide 0 :sahko]
-        "E33" [:huomiot :alapohja-ylapohja :toimenpide 0 :jaahdytys]
-        "F33" [:huomiot :alapohja-ylapohja :toimenpide 0 :eluvun-muutos]
-        "C34" [:huomiot :alapohja-ylapohja :toimenpide 1 :lampo]
-        "D34" [:huomiot :alapohja-ylapohja :toimenpide 1 :sahko]
-        "E34" [:huomiot :alapohja-ylapohja :toimenpide 1 :jaahdytys]
-        "F34" [:huomiot :alapohja-ylapohja :toimenpide 1 :eluvun-muutos]
-        "C35" [:huomiot :alapohja-ylapohja :toimenpide 2 :lampo]
-        "D35" [:huomiot :alapohja-ylapohja :toimenpide 2 :sahko]
-        "E35" [:huomiot :alapohja-ylapohja :toimenpide 2 :jaahdytys]
-        "F35" [:huomiot :alapohja-ylapohja :toimenpide 2 :eluvun-muutos]
-
-        "B37" [:huomiot :lammitys :teksti-fi]
-        "C44" [:huomiot :lammitys :toimenpide 0 :nimi-fi]
-        "C45" [:huomiot :lammitys :toimenpide 1 :nimi-fi]
-        "C46" [:huomiot :lammitys :toimenpide 2 :nimi-fi]
-        "C49" [:huomiot :lammitys :toimenpide 0 :lampo]
-        "D49" [:huomiot :lammitys :toimenpide 0 :sahko]
-        "E49" [:huomiot :lammitys :toimenpide 0 :jaahdytys]
-        "F49" [:huomiot :lammitys :toimenpide 0 :eluvun-muutos]
-        "C50" [:huomiot :lammitys :toimenpide 1 :lampo]
-        "D50" [:huomiot :lammitys :toimenpide 1 :sahko]
-        "E50" [:huomiot :lammitys :toimenpide 1 :jaahdytys]
-        "F50" [:huomiot :lammitys :toimenpide 1 :eluvun-muutos]
-        "C51" [:huomiot :lammitys :toimenpide 2 :lampo]
-        "D51" [:huomiot :lammitys :toimenpide 2 :sahko]
-        "E51" [:huomiot :lammitys :toimenpide 2 :jaahdytys]
-        "F51" [:huomiot :lammitys :toimenpide 2 :eluvun-muutos]}
-     6 {"B3" [:huomiot :iv-ilmastointi :teksti-fi]
-        "C11" [:huomiot :iv-ilmastointi :toimenpide 0 :nimi-fi]
-        "C12" [:huomiot :iv-ilmastointi :toimenpide 1 :nimi-fi]
-        "C13" [:huomiot :iv-ilmastointi :toimenpide 2 :nimi-fi]
-        "C16" [:huomiot :iv-ilmastointi :toimenpide 0 :lampo]
-        "D16" [:huomiot :iv-ilmastointi :toimenpide 0 :sahko]
-        "E16" [:huomiot :iv-ilmastointi :toimenpide 0 :jaahdytys]
-        "F16" [:huomiot :iv-ilmastointi :toimenpide 0 :eluvun-muutos]
-        "C17" [:huomiot :iv-ilmastointi :toimenpide 1 :lampo]
-        "D17" [:huomiot :iv-ilmastointi :toimenpide 1 :sahko]
-        "E17" [:huomiot :iv-ilmastointi :toimenpide 1 :jaahdytys]
-        "F17" [:huomiot :iv-ilmastointi :toimenpide 1 :eluvun-muutos]
-        "C18" [:huomiot :iv-ilmastointi :toimenpide 2 :lampo]
-        "D18" [:huomiot :iv-ilmastointi :toimenpide 2 :sahko]
-        "E18" [:huomiot :iv-ilmastointi :toimenpide 2 :jaahdytys]
-        "F18" [:huomiot :iv-ilmastointi :toimenpide 2 :eluvun-muutos]
-
-        "B20" [:huomiot :valaistus-muut :teksti-fi]
-        "C28" [:huomiot :valaistus-muut :toimenpide 0 :nimi-fi]
-        "C29" [:huomiot :valaistus-muut :toimenpide 1 :nimi-fi]
-        "C30" [:huomiot :valaistus-muut :toimenpide 2 :nimi-fi]
-        "C33" [:huomiot :valaistus-muut :toimenpide 0 :lampo]
-        "D33" [:huomiot :valaistus-muut :toimenpide 0 :sahko]
-        "E33" [:huomiot :valaistus-muut :toimenpide 0 :jaahdytys]
-        "F33" [:huomiot :valaistus-muut :toimenpide 0 :eluvun-muutos]
-        "C34" [:huomiot :valaistus-muut :toimenpide 1 :lampo]
-        "D34" [:huomiot :valaistus-muut :toimenpide 1 :sahko]
-        "E34" [:huomiot :valaistus-muut :toimenpide 1 :jaahdytys]
-        "F34" [:huomiot :valaistus-muut :toimenpide 1 :eluvun-muutos]
-        "C35" [:huomiot :valaistus-muut :toimenpide 2 :lampo]
-        "D35" [:huomiot :valaistus-muut :toimenpide 2 :sahko]
-        "E35" [:huomiot :valaistus-muut :toimenpide 2 :jaahdytys]
-        "F35" [:huomiot :valaistus-muut :toimenpide 2 :eluvun-muutos]
-
-        "B37" [:huomiot :suositukset-fi]}
-     7 {"B3" [:lisamerkintoja-fi]}}))
-
-(defn fill-xlsx-template [complete-energiatodistus draft?]
-  (with-open [is (-> xlsx-template-path io/resource io/input-stream)]
+(defn fill-xlsx-template [{:keys [versio] :as complete-energiatodistus} kieli draft?]
+  (with-open [is (-> xlsx-template-paths
+                     (get-in [versio kieli])
+                     io/resource
+                     io/input-stream)]
     (let [loaded-xlsx (xlsx/load-xlsx is)
           sheets (map #(xlsx/get-sheet loaded-xlsx %) (range sheet-count))
           path (->> (java.util.UUID/randomUUID)
                     .toString
                     (format "energiatodistus-%s.xlsx")
                     (str tmp-dir))]
-      (doseq [[sheet sheet-mappings] (mappings)]
-        (doseq [[cell cursor-or-f] sheet-mappings
-                :when cursor-or-f]
-          (xlsx/set-cell-value-at (nth sheets sheet)
-                                  cell
-                                  (if (vector? cursor-or-f)
-                                    (get-in complete-energiatodistus cursor-or-f)
-                                    (cursor-or-f complete-energiatodistus)))))
+      (doseq [[sheet-idx sheet-mappings] mappings]
+        (doseq [[row-idx {:keys [path f dp percent?]}] (map-indexed vector sheet-mappings)
+                :let [sheet (nth sheets sheet-idx)
+                      row (xlsx/get-row sheet row-idx)
+                      cell (xlsx/get-cell row 0)
+                      path-v (when path (get-in complete-energiatodistus path))
+                      v (cond
+                          path-v (if (number? path-v)
+                                   (format-number path-v dp percent?)
+                                   path-v)
+
+                          f (f complete-energiatodistus))]]
+          (xlsx/set-cell-value cell (or v " "))))
+      (xlsx/evaluate-formulas loaded-xlsx)
       (io/make-parents path)
       (xlsx/save-xlsx loaded-xlsx path)
       path)))
@@ -457,8 +607,45 @@
                   :xlsx filename
                   :pdf-result? (.exists (io/as-file result-pdf))))))))
 
-(defn- add-watermark [pdf-path]
-  (with-open [watermark (PDDocument/load (-> watermark-path-fi io/resource io/input-stream))
+(defn input-stream->bytes [is]
+  (with-open [is is
+              xout (java.io.ByteArrayOutputStream.)]
+    (io/copy is xout)
+    (.toByteArray xout)))
+
+(defn add-image [pdf-path image-path page ^Float x ^Float y
+                 ^Float width ^Float height]
+  (let [file (io/file pdf-path)
+        doc (PDDocument/load file)
+        page (.getPage doc page)
+        contents (PDPageContentStream. doc
+                                       page
+                                       PDPageContentStream$AppendMode/APPEND
+                                       true)
+        image-is (-> image-path io/resource io/input-stream input-stream->bytes)
+        image (PDImageXObject/createFromByteArray doc image-is image-path)]
+    (.drawImage contents ^PDImageXObject image x y width height)
+    (.close contents)
+    (.save doc pdf-path)))
+
+(def e-luokka-y-coords-2013 (zipmap ["A" "B" "C" "D" "E" "F" "G"] (iterate #(- % 21) 487)))
+(def e-luokka-y-coords-2018 (zipmap ["A" "B" "C" "D" "E" "F" "G"] (iterate #(- % 21) 457)))
+
+(defn add-e-luokka-image [pdf-path e-luokka versio]
+  (when e-luokka
+    (add-image pdf-path
+               (format "%d%s.png" versio (str/lower-case e-luokka))
+               0
+               (case versio 2013 360 2018 392)
+               (get (case versio 2013 e-luokka-y-coords-2013 e-luokka-y-coords-2018) e-luokka)
+               75
+               17.5)))
+
+(defn- add-watermark [pdf-path kieli]
+  (with-open [watermark (PDDocument/load (-> watermark-paths
+                                             (get kieli)
+                                             io/resource
+                                             io/input-stream))
               overlay   (doto (Overlay.)
                           (.setInputFile pdf-path)
                           (.setDefaultOverlayPDF watermark)
@@ -467,36 +654,42 @@
     (.save result pdf-path)
     pdf-path))
 
-(defn generate-pdf-as-file [complete-energiatodistus draft?]
-  (let [xlsx-path (fill-xlsx-template complete-energiatodistus draft?)
+(defn generate-pdf-as-file [complete-energiatodistus kieli draft?]
+  (let [xlsx-path (fill-xlsx-template complete-energiatodistus kieli draft?)
         pdf-path (xlsx->pdf xlsx-path)]
     (io/delete-file xlsx-path)
+    (add-e-luokka-image pdf-path
+                        (-> complete-energiatodistus
+                              :tulokset
+                              :e-luokka-info
+                              :e-luokka)
+                        (:versio complete-energiatodistus))
+
     (if draft?
-      (add-watermark pdf-path)
+      (add-watermark pdf-path kieli)
       pdf-path)))
 
-(defn generate-pdf-as-input-stream [energiatodistus draft?]
-  (let [pdf-path (generate-pdf-as-file energiatodistus draft?)
+(defn generate-pdf-as-input-stream [energiatodistus kieli draft?]
+  (let [pdf-path (generate-pdf-as-file energiatodistus kieli draft?)
         is (io/input-stream pdf-path)]
     (io/delete-file pdf-path)
     is))
 
-(defn pdf-file-id [id]
-  (when id (str "energiatodistus-" id)))
+(defn pdf-file-id [id kieli]
+  (when id (format "energiatodistus-%s-%s" id kieli)))
 
-(defn find-existing-pdf [db id]
-  (->> id
-       pdf-file-id
+(defn find-existing-pdf [db id kieli]
+  (->> (pdf-file-id id kieli)
        (file-service/find-file db)
        :content
        io/input-stream))
 
-(defn find-energiatodistus-pdf [db whoami id]
+(defn find-energiatodistus-pdf [db whoami id kieli]
   (when-let [{:keys [allekirjoitusaika] :as complete-energiatodistus}
-             (energiatodistus-service/find-complete-energiatodistus db whoami id)]
+             (complete-energiatodistus-service/find-complete-energiatodistus db whoami id)]
     (if allekirjoitusaika
-      (find-existing-pdf db id)
-      (generate-pdf-as-input-stream complete-energiatodistus true))))
+      (find-existing-pdf db id kieli)
+      (generate-pdf-as-input-stream complete-energiatodistus kieli true))))
 
 (defn do-when-signing [{:keys [tila-id]} f]
   (case (energiatodistus-service/tila-key tila-id)
@@ -519,11 +712,11 @@
     (ImageIO/write img "PNG" (io/file path))))
 
 (defn find-energiatodistus-digest [db id]
-  (when-let [{:keys [laatija-fullname] :as complete-energiatodistus}
-             (energiatodistus-service/find-complete-energiatodistus db id)]
+  (when-let [{:keys [laatija-fullname versio] :as complete-energiatodistus}
+             (complete-energiatodistus-service/find-complete-energiatodistus db id)]
     (do-when-signing
      complete-energiatodistus
-     #(let [pdf-path (generate-pdf-as-file complete-energiatodistus false)
+     #(let [pdf-path (generate-pdf-as-file complete-energiatodistus "fi" false)
             signable-pdf-path (str/replace pdf-path #".pdf" "-signable.pdf")
             signature-png-path (str/replace pdf-path #".pdf" "-signature.png")
             _ (signature-as-png signature-png-path laatija-fullname)
@@ -533,10 +726,10 @@
                                laatija-fullname
                                signature-png-path
                                75
-                               666)
+                               (case versio 2013 648 2018 666))
             signable-pdf-data (puumerkki/read-file signable-pdf-path)
             digest (puumerkki/compute-base64-pkcs signable-pdf-data)
-            file-id (pdf-file-id id)]
+            file-id (pdf-file-id id "fi")]
         (file-service/upsert-file-from-bytes db
                                              file-id
                                              (str file-id ".pdf")
@@ -551,7 +744,7 @@
              (energiatodistus-service/find-energiatodistus db id)]
     (do-when-signing
      energiatodistus
-     #(try (let [file-id (pdf-file-id id)
+     #(try (let [file-id (pdf-file-id id "fi")
                  {:keys [filename content] :as file-info}
                  (file-service/find-file db file-id)
                  content-bytes (.readAllBytes content)

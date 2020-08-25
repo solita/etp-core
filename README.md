@@ -66,10 +66,15 @@ command:
     cd etp-backend
     clojure -m solita.etp.core
 
-Tests can be run with
+Tests can be run (parallel) with
 
     cd etp-backend
-    clojure -A:test
+    clojure -A:dev:test
+
+Test coverage report (without API layer) can be generated with
+
+    cd etp-backend
+    clojure -A:dev:coverage
 
 About database usage
 --------------------

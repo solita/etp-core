@@ -41,4 +41,14 @@
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
                            (api-response/put-response
                              (yritys-service/update-yritys! db id (:body parameters))
-                             (str "Yritys " id " does not exists.")))}}]]]])
+                             (str "Yritys " id " does not exists.")))}}]]]
+   ["/laskutuskielet/"
+    {:get {:summary    "Hae laskutuskielet -luokittelu"
+           :responses  {200 {:body [common-schema/Luokittelu]}}
+           :handler    (fn [{:keys [db]}]
+                         (r/response (yritys-service/find-all-laskutuskielet db)))}}]
+   ["/verkkolaskuoperaattorit/"
+    {:get {:summary    "Hae verkkolaskuoperaattorit -luokittelu"
+           :responses  {200 {:body [yritys-schema/Verkkolaskuoperaattori]}}
+           :handler    (fn [{:keys [db]}]
+                         (r/response (yritys-service/find-all-verkkolaskuoperaattorit db)))}}] ])

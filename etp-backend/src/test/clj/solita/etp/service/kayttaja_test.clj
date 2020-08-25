@@ -72,21 +72,3 @@
       :else
       (do (schema/validate kayttaja-schema/Kayttaja found)
           (t/is (map/submap? updated-kayttaja found))))))
-
-(t/deftest update-kayttaja-with-whoami!-test
-  (doseq [kayttaja (repeatedly 100 #(g/generate laatija-schema/KayttajaAdd))
-          :let [id (service/add-kayttaja! ts/*db* kayttaja)
-                found-before (service/find-kayttaja ts/*db* paakayttaja id)
-                new-email (str "new-" (:email found-before))
-                cognitoid (str "cognitoid-" (rand-int 1000000))
-                _ (service/update-kayttaja-with-whoami! ts/*db*
-                                                        {:id id
-                                                         :email new-email
-                                                         :cognitoid cognitoid})
-                found-after (service/find-kayttaja ts/*db* paakayttaja id)]]
-    (schema/validate kayttaja-schema/Kayttaja found-after)
-    (t/is (-> found-before :login nil?))
-    (t/is (-> found-after :login nil? not))
-    (t/is (-> found-after :email (= new-email)))
-    (t/is (-> found-before :cognitoid nil?))
-    (t/is (= cognitoid (:cognitoid found-after)))))

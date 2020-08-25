@@ -10,14 +10,32 @@ services:
         target: /docker-entrypoint-initdb.d
         read_only: true
     ports:
-      - 5432:5432
+      - 127.0.0.1:5432:5432
     environment:
       POSTGRES_PASSWORD: etp
 
   admin:
     image: dpage/pgadmin4
     ports:
-      - 9090:80
+      - 127.0.0.1:9090:80
     environment:
       PGADMIN_DEFAULT_PASSWORD: etp
       PGADMIN_DEFAULT_EMAIL: etp@solita.fi
+
+  mpollux:
+    image: nginx
+    ports:
+      - 127.0.0.1:53952:443
+    volumes:
+      - type: bind
+        source: ./mpollux/api
+        target: /usr/share/nginx/html
+        read_only: true
+      - type: bind
+        source: ./mpollux/conf.d
+        target: /etc/nginx/conf.d
+        read_only: true
+      - type: bind
+        source: ../../etp-front/keys
+        target: /keys
+        read_only: true

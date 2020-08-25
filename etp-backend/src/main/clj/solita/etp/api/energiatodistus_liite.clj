@@ -5,21 +5,23 @@
             [solita.etp.service.liite :as liite-service]
             [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]
-            [solita.etp.api.response :as api-response])
+            [solita.etp.api.response :as api-response]
+            [solita.etp.service.rooli :as rooli-service])
   (:import (java.io InputStream)))
 
 (def routes
   ["/liitteet"
    ["/files"
     {:conflicting true
-     :post {:summary "Energiatodistuksen liitteiden lisäys tiedostoista."
+     :post {:summary    "Energiatodistuksen liitteiden lisäys tiedostoista."
+            :access     rooli-service/laatija?
             :parameters {:path {:id common-schema/Key}
                          :multipart {:files (schema/conditional
                                               vector? [reitit-schema/TempFilePart]
                                               :else reitit-schema/TempFilePart)}}
-            :responses {201 {:body nil}
+            :responses  {201 {:body nil}
                         404 common-schema/ConstraintError}
-            :handler (fn [{{{:keys [id]} :path {:keys [files]} :multipart} :parameters
+            :handler    (fn [{{{:keys [id]} :path {:keys [files]} :multipart} :parameters
                            :keys [db whoami]}]
                        (api-response/response-with-exceptions 201
                          #(liite-service/add-liitteet-from-files
@@ -28,12 +30,13 @@
 
    ["/link"
     {:conflicting true
-     :post {:summary "Liite linkin lisäys energiatodistukseen."
+     :post {:summary    "Liite linkin lisäys energiatodistukseen."
+            :access     rooli-service/laatija?
             :parameters {:path {:id common-schema/Key}
                          :body liite-schema/LiiteLinkAdd}
-            :responses {201 {:body nil}
+            :responses  {201 {:body nil}
                         404 common-schema/ConstraintError}
-            :handler (fn [{{{:keys [id]} :path :keys [body]} :parameters
+            :handler    (fn [{{{:keys [id]} :path :keys [body]} :parameters
                            :keys [db whoami]}]
                        (api-response/response-with-exceptions 201
                          #(liite-service/add-liite-from-link! db whoami id body)
@@ -41,6 +44,7 @@
 
    [""
     {:get {:summary "Hae energiatodistuksen liitteet."
+           :access  (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
            :parameters {:path {:id common-schema/Key}}
            :responses {200 {:body [liite-schema/Liite]}}
            :handler (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
@@ -48,18 +52,20 @@
 
    ["/:liite-id"
     {:conflicting true
-     :delete {:summary "Poista liite energiatodistuksesta."
+     :delete {:summary    "Poista liite energiatodistuksesta."
+              :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
               :parameters {:path {:id common-schema/Key
                                   :liite-id common-schema/Key}}
-              :responses {200 {:body nil}
+              :responses  {200 {:body nil}
                           404 {:body schema/Str}}
-              :handler (fn [{{{:keys [id liite-id]} :path} :parameters :keys [db]}]
+              :handler    (fn [{{{:keys [id liite-id]} :path} :parameters :keys [db]}]
                           (api-response/put-response
                               (liite-service/delete-liite db liite-id)
                               (str "Energiatodistuksen " id " liite " liite-id " does not exists.")))}}]
 
    ["/:liite-id/content"
     {:get {:summary "Hae energiatodistuksen yhden liitteen sisältö."
+           :access  (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
            :parameters {:path {:id common-schema/Key
                                :liite-id common-schema/Key}}
            :responses {200 {:body nil}

@@ -14,7 +14,8 @@
               :current-schema "public"}))
 
 (defn config-for-tests [db-name]
-  (config/db {:database-name db-name}))
+  (config/db {:database-name db-name
+              :re-write-batched-inserts true}))
 
 (def db-name-counter (atom 0))
 
@@ -43,5 +44,7 @@
     (drop-db! management-db db-name)
     (ig/halt! management-system)))
 
-(defn db-user [kayttaja-id]
-  (assoc *db* :application-name (str kayttaja-id "@core.etp.test")))
+(defn db-user
+  ([kayttaja-id] (db-user *db* kayttaja-id))
+  ([db kayttaja-id]
+    (assoc db :application-name (str kayttaja-id "@core.etp.test"))))
