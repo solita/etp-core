@@ -9,3 +9,7 @@ INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli) VALUES
 ('Risto', 'Laatija', 'risto.laatija@example.com', '0451234567', 0),
 ('Marko', 'Laatija', 'marko.laatija@example.com', '0451234567', 0),
 ('Aleksi', 'Laatija', 'aleksi.laatija@example.com', '0451234567', 0);
+
+INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli, virtu_id, virtu_organisaatio) VALUES
+('Päivi', 'Pääkäyttäjä', 'paakayttaja2@example.com', '0501234567', 2, 'vvirkamies', 'testivirasto.fi');
+
