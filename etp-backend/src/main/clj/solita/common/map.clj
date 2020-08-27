@@ -29,14 +29,3 @@
   (if (> (count ks) 1)
     (update-in m (butlast ks) dissoc (last ks))
     (dissoc m (first ks))))
-
-(defn select-key-paths
-  "Select keys for nested maps."
-  [map paths]
-  (reduce (fn [result path]
-            (let [value (get-in map path ::undefined)]
-              (if (= value ::undefined)
-                result
-                (assoc-in result path value))))
-          {}
-          paths))
