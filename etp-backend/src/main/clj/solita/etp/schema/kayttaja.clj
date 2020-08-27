@@ -31,12 +31,14 @@
 (def Kayttaja
   "Schema representing any persistent kayttaja (any role)"
   (merge common-schema/Id
-     {:login         (schema/maybe common-schema/Instant)
-      :cognitoid     (schema/maybe schema/Str)
-      :rooli         (schema/enum 0 1 2)
-      :ensitallennus schema/Bool
-      :passivoitu    schema/Bool
-      :etunimi       schema/Str
-      :sukunimi      schema/Str
-      :puhelin       schema/Str
-      :email         schema/Str}))
+         {:login             (schema/maybe common-schema/Instant)
+          :cognitoid         (schema/maybe schema/Str)
+          :virtuid           (schema/maybe schema/Str)
+          :virtuorganisaatio (schema/maybe schema/Str)
+          :rooli             (schema/enum 0 1 2)
+          :ensitallennus     schema/Bool
+          :passivoitu        schema/Bool
+          :etunimi           schema/Str
+          :sukunimi          schema/Str
+          :puhelin           schema/Str
+          :email             schema/Str}))

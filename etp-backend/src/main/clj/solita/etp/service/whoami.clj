@@ -13,7 +13,9 @@
 (defn find-whoami [db opts]
   (->> (merge {:email nil
                :cognitoid nil
-               :henkilotunnus nil}
+               :henkilotunnus nil
+               :virtuid nil
+               :virtuorganisaatio nil}
               opts)
        (whoami-db/select-whoami db)
        (map coerce-whoami)

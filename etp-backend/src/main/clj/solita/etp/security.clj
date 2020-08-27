@@ -22,7 +22,9 @@
                   db
                   {:email email
                    :cognitoid cognitoid
-                   :henkilotunnus (:custom:FI_nationalIN data)})]
+                   :henkilotunnus (:custom:FI_nationalIN data)
+                   :virtuid (:custom:VIRTU_localID data)
+                   :virtuorganisaatio (:custom:VIRTU_localOrg data)})]
       (if whoami
         (->> (cond-> whoami
                email (assoc :email email)
