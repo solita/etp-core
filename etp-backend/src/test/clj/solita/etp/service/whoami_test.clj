@@ -18,14 +18,22 @@
                 found-before (kayttaja-service/find-kayttaja ts/*db* paakayttaja id)
                 new-email (str "new-" (:email found-before))
                 cognitoid (str "cognitoid-" (rand-int 1000000))
+                virtuid "tunnus"
+                virtuorganisaatio "organisaatio"
                 _ (service/update-kayttaja-with-whoami! ts/*db*
                                                         {:id id
                                                          :email new-email
-                                                         :cognitoid cognitoid})
+                                                         :cognitoid cognitoid
+                                                         :virtuid virtuid
+                                                         :virtuorganisaatio virtuorganisaatio})
                 found-after (kayttaja-service/find-kayttaja ts/*db* paakayttaja id)]]
     (schema/validate kayttaja-schema/Kayttaja found-after)
     (t/is (-> found-before :login nil?))
     (t/is (-> found-after :login nil? not))
     (t/is (-> found-after :email (= new-email)))
     (t/is (-> found-before :cognitoid nil?))
-    (t/is (= cognitoid (:cognitoid found-after)))))
+    (t/is (= cognitoid (:cognitoid found-after)))
+    (t/is (-> found-before :virtuid nil?))
+    (t/is (= virtuid (:virtuid found-after)))
+    (t/is (-> found-before :virtuorganisaatio nil?))
+    (t/is (= virtuorganisaatio (:virtuorganisaatio found-after)))))
