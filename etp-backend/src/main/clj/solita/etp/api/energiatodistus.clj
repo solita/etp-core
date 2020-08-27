@@ -156,7 +156,7 @@
     {:get {:summary    "Hae energiatodistuksen ilmanvaihtotyypit"
            :responses  {200 {:body [common-schema/Luokittelu]}}
            :handler    (fn [{:keys [db]}]
-                         (r/response (ilmanvaihtotyyppi-service/find-ilmanvaihtotyyppi db)))}}]
+                         (r/response (ilmanvaihtotyyppi-service/find-ilmanvaihtotyypit db)))}}]
 
    ["/e-luokka/:versio/:alakayttotarkoitusluokka/:nettoala/:e-luku"
     {:get {:summary    "Laske energiatodistukselle energiatehokkuusluokka"

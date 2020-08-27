@@ -4,5 +4,5 @@
 ;; *** Require sql functions ***
 (db/require-queries 'ilmanvaihtotyyppi)
 
-(defn find-ilmanvaihtotyyppi [db]
-  (ilmanvaihtotyyppi-db/select-ilmanvaihtotyyppi db))
+(defn find-ilmanvaihtotyypit [db]
+  (ilmanvaihtotyyppi-db/select-ilmanvaihtotyypit db))
