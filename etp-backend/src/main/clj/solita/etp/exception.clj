@@ -1,6 +1,12 @@
 (ns solita.etp.exception
   (:require [reitit.ring.middleware.exception :as exception]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [solita.common.map :as map]))
+
+(defn throw-ex-info!
+  ([map]
+    (throw (ex-info (:message map) map)))
+  ([type message] (throw-ex-info! (map/bindings->map type message))))
 
 (defn unique-exception-handler [exception request]
   (let [error (ex-data exception)]
@@ -17,9 +23,9 @@
   (let [error (ex-data exception)]
     (log/info (str "Service "
                    (:uri request)
-                   " forbidden for access-token "
+                   " forbidden for access-token: "
                    (get-in request [:headers "x-amzn-oidc-accesstoken"])
-                   (or (:reason error) "")))
+                   (or (some->> error :reason (str " - ")) "")))
     {:status  403
      :body "Forbidden"}))
 

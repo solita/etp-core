@@ -37,11 +37,14 @@
              :responses  {200 {:body nil}
                           404 {:body schema/Str}}
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami parameters]}]
-                           (api-response/put-response
-                             (energiatodistus-service/update-energiatodistus!
+                           (api-response/response-with-exceptions
+                             #(energiatodistus-service/update-energiatodistus!
                                db whoami id
                                (:body parameters))
-                             (str "Energiatodistus " id " does not exists.")))}
+                             [{:type :not-found :response 404}
+                              {:type :invalid-replace :response 400}
+                              {:type :update-conflict :response 409}
+                              {:type :foreign-key-violation :response 400}]))}
 
     :delete {:summary    "Poista luonnostilainen energiatodistus"
              :parameters {:path {:id common-schema/Key}}

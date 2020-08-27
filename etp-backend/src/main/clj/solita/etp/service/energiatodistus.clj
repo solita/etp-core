@@ -12,6 +12,7 @@
             [clojure.set :as set]
             [flathead.flatten :as flat]
             [clojure.string :as str]
+            [clojure.core.match :as match]
             [schema.core :as schema]
             [solita.common.map :as map]
             [solita.common.logic :as logic]
@@ -148,10 +149,10 @@
       (cond
         (and (:korvaava-energiatodistus-id korvattava-energiatodistus)
              (not= (:korvaava-energiatodistus-id korvattava-energiatodistus) (:id energiatodistus)))
-        (throw (IllegalArgumentException. "Replaceable energiatodistus is already replaced"))
+        (exception/throw-ex-info! :invalid-replace "Replaceable energiatodistus is already replaced")
         (not (contains? #{:signed :discarded} (-> korvattava-energiatodistus :tila-id tila-key)))
-        (throw (IllegalArgumentException. "Replaceable energiatodistus is not in signed or discarded state")))
-      (throw (IllegalArgumentException. (str "Replaceable energiatodistus is not exists"))))))
+        (exception/throw-ex-info! :invalid-replace "Replaceable energiatodistus is not in signed or discarded state"))
+      (exception/throw-ex-info! :invalid-replace "Replaceable energiatodistus does not exists"))))
 
 (defn add-energiatodistus! [db whoami versio energiatodistus]
   (assert-korvaavuus! db energiatodistus)
@@ -166,31 +167,80 @@
       :id))
 
 (defn assert-laatija! [whoami energiatodistus]
-  (when-not (= (:laatija-id energiatodistus) (:id whoami))
+  (when (and (not= (:laatija-id energiatodistus) (:id whoami))
+             (rooli-service/laatija? whoami))
     (exception/throw-forbidden!
-      (str "User " (:id whoami) " is not the laatija of et-" (:id energiatodistus)))))
+      (str "User " (:id whoami)
+           " is not the laatija of energiatodistus: "
+           (:id energiatodistus)))))
 
-(defn- update-energiatodistus-luonnos! [db id version energiatodistus]
-  (first (jdbc/update! db :energiatodistus
-                       (-> energiatodistus
-                           (assoc :versio version)
-                           energiatodistus->db-row
-                           (dissoc :versio))
-                       ["id = ? and tila_id = 0" id] db/default-opts)))
+(defn- select-energiatodistus-for-update
+  [energiatodistus-update
+   id tila-id rooli laskutettu?]
+
+  (match/match
+    [(tila-key tila-id) rooli laskutettu?]
+    [:draft :laatija false] energiatodistus-update
+    [:signed :laatija false]
+    (select-keys energiatodistus-update
+                 [:laskutettava_yritys_id
+                  :laskuriviviite
+                  :pt$rakennustunnus])
+    [:signed :laatija true]
+    (select-keys energiatodistus-update
+                 [:pt$rakennustunnus])
+    [:signed :paakayttaja false]
+    (select-keys energiatodistus-update
+                 [:laskutettava_yritys_id
+                  :laskuriviviite
+                  :pt$rakennustunnus
+                  :korvattu_energiatodistus_id])
+    [:signed :paakayttaja true]
+    (select-keys energiatodistus-update
+                 [:pt$rakennustunnus
+                  :korvattu_energiatodistus_id])
+    :else (exception/throw-forbidden!
+            (str "Role: " rooli
+                 " is not allowed to update energiatodistus " id
+                 " in state: " (tila-key tila-id) " laskutettu: " laskutettu?))))
+
+(defn- db-update-energiatodistus! [db id version energiatodistus
+                                   tila-id rooli laskutettu?]
+  (first (jdbc/update!
+           db :energiatodistus
+           (-> energiatodistus
+               (assoc :versio version)
+               energiatodistus->db-row
+               (dissoc :versio)
+               (select-energiatodistus-for-update id tila-id rooli laskutettu?))
+           ["id = ? and tila_id = ? and (laskutusaika is not null) = ?"
+            id tila-id laskutettu?]
+           db/default-opts)))
+
+(defn- assert-update! [id result]
+  (if (== result 0)
+    (exception/throw-ex-info!
+      :update-conflict
+      (str "Energiatodistus " id
+           " update conflicts with other concurrent update."))
+    result))
 
 (defn update-energiatodistus! [db whoami id energiatodistus]
   (if-let [current-energiatodistus (find-energiatodistus db id)]
-    (do
+    (let [tila-id (:tila-id current-energiatodistus)
+          rooli (-> whoami :rooli rooli-service/rooli-key)
+          laskutettu? (-> current-energiatodistus :laskutusaika ((complement nil?)))]
       (assert-laatija! whoami current-energiatodistus)
       (assert-korvaavuus! db (assoc energiatodistus :id id))
-      (case (-> current-energiatodistus :tila-id tila-key)
-            :draft (update-energiatodistus-luonnos!
-                     db id (:versio current-energiatodistus) energiatodistus)
-            :signed (energiatodistus-db/update-rakennustunnus-when-energiatodistus-signed!
-                      db {:id id
-                          :rakennustunnus (-> energiatodistus :perustiedot :rakennustunnus)})
-            0))
-    0))
+      (assert-update! id
+        (db-update-energiatodistus!
+          db id (:version current-energiatodistus)
+          energiatodistus
+          tila-id rooli laskutettu?))
+      nil)
+    (exception/throw-ex-info!
+      :not-found
+      (str "Energiatodistus " id " does not exists."))))
 
 (defn delete-energiatodistus-luonnos! [db whoami id]
   (assert-laatija! whoami (find-energiatodistus db id))
