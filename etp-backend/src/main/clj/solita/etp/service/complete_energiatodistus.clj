@@ -3,7 +3,8 @@
             [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
             [solita.etp.service.laatimisvaihe :as laatimisvaihe]
             [solita.etp.service.e-luokka :as e-luokka-service]
-            [solita.etp.service.kielisyys :as kielisyys]))
+            [solita.etp.service.kielisyys :as kielisyys]
+            [solita.common.map :as map]))
 
 (defn combine-keys [m f nil-replacement path-new & paths]
   (let [vals (map #(or (get-in m %) nil-replacement) paths)]
@@ -24,6 +25,20 @@
 (defn copy-field [m from-path to-path]
   (let [v (get-in m from-path)]
     (assoc-in m to-path v)))
+
+(defn kuukausierittely-hyodyt [kuukausierittely]
+  (mapv (fn [{:keys [tuotto kulutus] :as month}]
+         (let [{:keys [aurinkosahko tuulisahko aurinkolampo
+                       muulampo muusahko lampopumppu]} (map/map-values #(or % 0) tuotto)
+               {:keys [sahko lampo]} (map/map-values #(or % 0) kulutus)]
+           (cond-> month
+             (-> sahko zero? not)
+             (assoc-in [:hyoty :sahko]
+                       (with-precision 5 (/ (+ aurinkosahko tuulisahko muusahko) sahko)))
+             (-> lampo zero? not)
+             (assoc-in [:hyoty :lampo]
+                       (with-precision 5 (/ (+ aurinkolampo muulampo lampopumppu) lampo))))))
+       kuukausierittely))
 
 (defn find-complete-energiatodistus* [db energiatodistus kielisyydet
                                       laatimisvaiheet alakayttotarkoitukset]
@@ -53,6 +68,7 @@
           (assoc-in [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin] 0.5)
           (assoc-in [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin] 1)
           (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin] (case versio 2013 0.4 2018 0.28))
+          (update-in [:tulokset :kuukausierittely] kuukausierittely-hyodyt)
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukolampo])
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :sahko])
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine])
