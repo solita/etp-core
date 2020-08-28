@@ -5,7 +5,7 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(t/deftest find-ilmanvaihto-test
+(t/deftest find-ilmanvaihtotyypit-test
   (let [ilmanvaihtotyypit (service/find-ilmanvaihtotyypit ts/*db*)]
     (t/is (= (-> ilmanvaihtotyypit last :label-fi) "Muu, mikä"))
     (t/is (= 7 (count ilmanvaihtotyypit)))))
