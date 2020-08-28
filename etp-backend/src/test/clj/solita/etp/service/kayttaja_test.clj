@@ -4,6 +4,7 @@
             [schema-generators.generators :as g]
             [solita.common.map :as map]
             [solita.etp.test-system :as ts]
+            [solita.etp.test-utils :as tu]
             [solita.etp.service.kayttaja :as service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
@@ -24,7 +25,7 @@
                          (throw e)))))
 
 (t/deftest add-and-find-test
-  (doseq [kayttaja (repeatedly 100 #(g/generate laatija-schema/KayttajaAdd))
+  (doseq [kayttaja (tu/generate-kayttaja 100 laatija-schema/KayttajaAdd)
           :let [id (service/add-kayttaja! ts/*db* kayttaja)
                 whoami (rand-nth (conj roolit {:id id}))
                 found (find-kayttaja whoami id)]]

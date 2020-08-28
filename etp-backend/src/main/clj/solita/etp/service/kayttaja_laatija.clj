@@ -22,8 +22,8 @@
         id (:id existing-laatija)]
     (if existing-laatija
       (do
-        (update-kayttaja db id kayttaja)
-        (laatija-service/update-laatija-by-id! db id (dissoc laatija :henkilotunnus))
+        (update-kayttaja db id (dissoc kayttaja :henkilotunnus))
+        (laatija-service/update-laatija-by-id! db id laatija)
         id)
       (let [id (add-kayttaja db kayttaja)]
         (laatija-service/add-laatija! db (assoc laatija :id id))))))

@@ -6,7 +6,6 @@ INSERT INTO laskutuskieli (id, label_fi, label_sv) VALUES (0, 'Suomi', 'Finska')
 
 create table laatija (
   id int primary key references kayttaja (id) not null,
-  henkilotunnus text NOT NULL,
   patevyystaso int NOT NULL,
   toteamispaivamaara date NOT NULL,
   toteaja text NOT NULL,

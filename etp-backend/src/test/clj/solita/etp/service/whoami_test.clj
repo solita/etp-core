@@ -3,6 +3,7 @@
             [schema.core :as schema]
             [schema-generators.generators :as g]
             [solita.etp.test-system :as ts]
+            [solita.etp.test-utils :as tu]
             [solita.etp.service.whoami :as service]
             [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
@@ -13,7 +14,7 @@
 (def paakayttaja {:rooli 2})
 
 (t/deftest update-kayttaja-with-whoami!-test
-  (doseq [kayttaja (repeatedly 100 #(g/generate laatija-schema/KayttajaAdd))
+  (doseq [kayttaja (tu/generate-kayttaja 100 laatija-schema/KayttajaAdd)
           :let [id (kayttaja-service/add-kayttaja! ts/*db* kayttaja)
                 found-before (kayttaja-service/find-kayttaja ts/*db* paakayttaja id)
                 new-email (str "new-" (:email found-before))

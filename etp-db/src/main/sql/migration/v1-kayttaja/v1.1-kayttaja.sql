@@ -8,6 +8,7 @@ create table kayttaja (
   rooli int DEFAULT 0 NOT NULL,
   login timestamp with time zone,
   ensitallennus boolean DEFAULT FALSE,
+  henkilotunnus text,
   cognito_id text,
   virtu_id text,
   virtu_organisaatio text
