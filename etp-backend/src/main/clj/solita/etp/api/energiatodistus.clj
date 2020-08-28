@@ -14,6 +14,7 @@
             [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf-service]
             [solita.etp.service.energiatodistus-xlsx :as energiatodistus-xlsx-service]
             [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
+            [solita.etp.service.ilmanvaihtotyyppi :as ilmanvaihtotyyppi-service]
             [solita.etp.service.e-luokka :as e-luokka-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.security :as security]
@@ -150,6 +151,12 @@
            :responses  {200 {:body [kayttotarkoitus-schema/Alakayttotarkoitusluokka]}}
            :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
                          (r/response (kayttotarkoitus-service/find-alakayttotarkoitukset db versio)))}}]
+
+   ["/ilmanvaihtotyyppi"
+    {:get {:summary    "Hae energiatodistuksen ilmanvaihtotyypit"
+           :responses  {200 {:body [common-schema/Luokittelu]}}
+           :handler    (fn [{:keys [db]}]
+                         (r/response (ilmanvaihtotyyppi-service/find-ilmanvaihtotyypit db)))}}]
 
    ["/e-luokka/:versio/:alakayttotarkoitusluokka/:nettoala/:e-luku"
     {:get {:summary    "Laske energiatodistukselle energiatehokkuusluokka"
