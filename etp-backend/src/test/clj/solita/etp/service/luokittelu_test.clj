@@ -1,9 +1,14 @@
-(ns solita.etp.service.lammitys-test
+(ns solita.etp.service.luokittelu-test
   (:require [clojure.test :as t]
             [solita.etp.test-system :as ts]
-            [solita.etp.service.lammitys :as service]))
+            [solita.etp.service.luokittelu :as service]))
 
-(t/use-fixtures :each ts/fixture)
+(t/use-fixtures :once ts/fixture)
+
+(t/deftest find-ilmanvaihtotyypit-test
+  (let [ilmanvaihtotyypit (service/find-ilmanvaihtotyypit ts/*db*)]
+    (t/is (= (-> ilmanvaihtotyypit last :label-fi) "Muu, mikä"))
+    (t/is (= 7 (count ilmanvaihtotyypit)))))
 
 (t/deftest find-lammitysmuodot-test
   (let [lammitysmuodot (service/find-lammitysmuodot ts/*db*)]
@@ -14,3 +19,4 @@
   (let [lammonjaot (service/find-lammonjaot ts/*db*)]
     (t/is (= (-> lammonjaot last :label-fi) "Muu, mikä"))
     (t/is (= 13 (count lammonjaot)))))
+

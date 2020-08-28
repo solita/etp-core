@@ -14,8 +14,7 @@
             [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf-service]
             [solita.etp.service.energiatodistus-xlsx :as energiatodistus-xlsx-service]
             [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
-            [solita.etp.service.lammitys :as lammitys-service]
-            [solita.etp.service.ilmanvaihtotyyppi :as ilmanvaihtotyyppi-service]
+            [solita.etp.service.luokittelu :as luokittelu-service]
             [solita.etp.service.e-luokka :as e-luokka-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.security :as security]
@@ -157,19 +156,19 @@
     {:get {:summary    "Hae energiatodistuksen lämmitysmuodot"
            :responses  {200 {:body [common-schema/Luokittelu]}}
            :handler    (fn [{:keys [db]}]
-                         (r/response (lammitys-service/find-lammitysmuodot db)))}}]
+                         (r/response (luokittelu-service/find-lammitysmuodot db)))}}]
 
    ["/lammonjako"
     {:get {:summary    "Hae energiatodistuksen lämmönjaot"
            :responses  {200 {:body [common-schema/Luokittelu]}}
            :handler    (fn [{:keys [db]}]
-                         (r/response (lammitys-service/find-lammonjaot db)))}}]
+                         (r/response (luokittelu-service/find-lammonjaot db)))}}]
 
    ["/ilmanvaihtotyyppi"
     {:get {:summary    "Hae energiatodistuksen ilmanvaihtotyypit"
            :responses  {200 {:body [common-schema/Luokittelu]}}
            :handler    (fn [{:keys [db]}]
-                         (r/response (ilmanvaihtotyyppi-service/find-ilmanvaihtotyypit db)))}}]
+                         (r/response (luokittelu-service/find-ilmanvaihtotyypit db)))}}]
 
    ["/e-luokka/:versio/:alakayttotarkoitusluokka/:nettoala/:e-luku"
     {:get {:summary    "Laske energiatodistukselle energiatehokkuusluokka"
