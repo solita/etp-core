@@ -286,9 +286,9 @@
 ;; Energiatodistuksen kielisyys
 ;;
 
-(def kielisyys [{:id 0 :label-fi "Suomi" :label-sv "Finska"}
-                {:id 1 :label-fi "Ruotsi" :label-sv "Svenska"}
-                {:id 2 :label-fi "Kaksikielinen" :label-sv "Tvåspråkig"}])
+(def kielisyys [{:id 0 :label-fi "Suomi" :label-sv "Finska" :valid true}
+                {:id 1 :label-fi "Ruotsi" :label-sv "Svenska" :valid true}
+                {:id 2 :label-fi "Kaksikielinen" :label-sv "Tvåspråkig" :valid true}])
 
 (defn find-kielisyys [] kielisyys)
 
@@ -296,8 +296,8 @@
 ;; Energiatodistuksen laatimisvaihe
 ;;
 
-(def laatimisvaiheet [{:id 0 :label-fi "Rakennuslupa" :label-sv "Bygglov"}
-                      {:id 1 :label-fi "Käyttöönotto" :label-sv "Införandet"}
-                      {:id 2 :label-fi "Olemassa oleva rakennus" :label-sv "Befintlig byggnad"}])
+(def laatimisvaiheet [{:id 0 :label-fi "Rakennuslupa" :label-sv "Bygglov" :valid true}
+                      {:id 1 :label-fi "Käyttöönotto" :label-sv "Införandet" :valid true}
+                      {:id 2 :label-fi "Olemassa oleva rakennus" :label-sv "Befintlig byggnad" :valid true}])
 
 (defn find-laatimisvaiheet [] laatimisvaiheet)

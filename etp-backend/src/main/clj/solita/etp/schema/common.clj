@@ -53,10 +53,7 @@
 
 (def Luokittelu (merge Id {:label-fi schema/Str
                            :label-sv schema/Str
-
-                           ;; TODO valid and deleted should be combined for all luokittelut
-                           (schema/optional-key :valid) schema/Bool
-                           (schema/optional-key :deleted) schema/Bool}))
+                           :valid schema/Bool}))
 
 (def Date java.time.LocalDate)
 (def DateInterval {:start Date
