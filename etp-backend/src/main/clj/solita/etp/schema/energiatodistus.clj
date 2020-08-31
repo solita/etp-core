@@ -102,6 +102,7 @@
 (def LahtotiedotIlmanvaihto
   {:erillispoistot      PoistoTuloSfp
    :ivjarjestelma       PoistoTuloSfp
+   :tyyppi-id           common-schema/Key
    :kuvaus-fi           common-schema/String75
    :kuvaus-sv           common-schema/String75
    :lto-vuosihyotysuhde common-schema/Float1
@@ -122,12 +123,15 @@
    :tuotto common-schema/FloatPos})
 
 (def LahtotiedotLammitys
-  {:kuvaus-fi         common-schema/String75
-   :kuvaus-sv         common-schema/String75
-   :tilat-ja-iv       Hyotysuhde
-   :lammin-kayttovesi Hyotysuhde
-   :takka             MaaraTuotto
-   :ilmanlampopumppu  MaaraTuotto})
+  {:lammitysmuoto-1-id common-schema/Key
+   :lammitysmuoto-2-id common-schema/Key
+   :lammonjako-id      common-schema/Key
+   :kuvaus-fi          common-schema/String75
+   :kuvaus-sv          common-schema/String75
+   :tilat-ja-iv        Hyotysuhde
+   :lammin-kayttovesi  Hyotysuhde
+   :takka              MaaraTuotto
+   :ilmanlampopumppu   MaaraTuotto})
 
 (defn SisKuorma [mininclusive maxinclusive]
   {:kayttoaste        (common-schema/FloatBase 0.1 1.0)
@@ -321,3 +325,12 @@
     (partial versio? 2013) Energiatodistus2013))
 
 (def Signature {:signature schema/Str :chain [schema/Str]})
+
+(def Range
+  {:min schema/Num
+   :max schema/Num})
+
+(def NumericValidation
+  {:property schema/Str,
+   :warning Range,
+   :error Range})
