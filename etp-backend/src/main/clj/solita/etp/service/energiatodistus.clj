@@ -4,7 +4,6 @@
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.json :as json]
             [solita.etp.service.rooli :as rooli-service]
-            [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
             [solita.postgresql.composite :as pg-composite]
             [solita.common.schema :as xschema]
             [schema.coerce :as coerce]
@@ -95,6 +94,43 @@
       (str/replace #"\-ua$" "-UA")
       keyword))
 
+(defn- find-numeric-column-validations [db versio]
+  (->>
+    (energiatodistus-db/select-numeric-validations db {:versio versio})
+    (map db/kebab-case-keys)
+    (map #(flat/flat->tree #"\$" %))))
+
+(defn replace-abbreviation->fullname [path]
+  (reduce (fn [result [fullname abbreviation]]
+            (if (str/starts-with? result (name abbreviation))
+              (reduced (str/replace-first
+                         result (name abbreviation) (name fullname)))
+              result))
+          path db-abbreviations))
+
+(defn to-property-name [column-name]
+  (-> column-name
+      convert-db-key-case name
+      replace-abbreviation->fullname
+      (str/replace "$" ".")))
+
+(defn find-numeric-validations [db versio]
+  (map (comp
+         #(set/rename-keys % {:column-name :property})
+         #(update % :column-name to-property-name))
+       (find-numeric-column-validations db versio)))
+
+(defn validate-db-row! [energiatodistus db versio]
+  (doseq [{{:keys [min max]} :error :keys [column-name]}
+          (find-numeric-column-validations db versio)]
+    (if-let [value ((keyword column-name) energiatodistus)]
+      (when (or (< value min) (> value max))
+        (exception/throw-ex-info!
+          :invalid-value
+          (str "Property: " (to-property-name column-name)
+               " has an invalid value: " value)))))
+  energiatodistus)
+
 (def db-row->energiatodistus
   (comp coerce-energiatodistus
         (logic/when*
@@ -161,7 +197,8 @@
                     (-> energiatodistus
                         (assoc :versio versio
                                :laatija-id (:id whoami))
-                        energiatodistus->db-row)
+                        energiatodistus->db-row
+                        (validate-db-row! db versio))
                     db/default-opts)
       first
       :id))
@@ -204,15 +241,16 @@
                  " is not allowed to update energiatodistus " id
                  " in state: " (tila-key tila-id) " laskutettu: " laskutettu?))))
 
-(defn- db-update-energiatodistus! [db id version energiatodistus
+(defn- db-update-energiatodistus! [db id versio energiatodistus
                                    tila-id rooli laskutettu?]
   (first (jdbc/update!
            db :energiatodistus
            (-> energiatodistus
-               (assoc :versio version)
+               (assoc :versio versio)
                energiatodistus->db-row
                (dissoc :versio)
-               (select-energiatodistus-for-update id tila-id rooli laskutettu?))
+               (select-energiatodistus-for-update id tila-id rooli laskutettu?)
+               (validate-db-row! db versio))
            ["id = ? and tila_id = ? and (laskutusaika is not null) = ?"
             id tila-id laskutettu?]
            db/default-opts)))
