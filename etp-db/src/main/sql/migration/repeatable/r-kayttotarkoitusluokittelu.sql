@@ -1,5 +1,5 @@
 
-insert into kayttotarkoitusluokka (id, versio, label_fi, label_sv, ordinal, deleted)
+insert into kayttotarkoitusluokka (id, versio, label_fi, label_sv, ordinal, valid)
 values
 (1, 2013, 'Erilliset pientalot', 'Fristående småhus', 1, false),
 (2, 2013, 'Rivi- ja ketjutalot', 'Rad- och kedjehus', 2, false),
@@ -26,10 +26,10 @@ values
 on conflict (id, versio) do update
   set label_fi = excluded.label_fi,
       label_sv = excluded.label_sv,
-      deleted = excluded.deleted;
+      valid = excluded.valid;
 
 
-insert into alakayttotarkoitusluokka (id, versio, kayttotarkoitusluokka_id, label_fi, label_sv, deleted)
+insert into alakayttotarkoitusluokka (id, versio, kayttotarkoitusluokka_id, label_fi, label_sv, valid)
 values
 ('YAT', 2013, 1, 'Yhden asunnon talot', 'Hus med en bostad', false),
 ('KAT', 2013, 1, 'Kahden asunnon talot', 'Hus med två bostäder', false),
@@ -110,4 +110,4 @@ values
 on conflict (id, versio) do update
   set label_fi = excluded.label_fi,
       label_sv = excluded.label_sv,
-      deleted = excluded.deleted;
+      valid = excluded.valid;
