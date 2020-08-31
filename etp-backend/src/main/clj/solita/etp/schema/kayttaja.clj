@@ -18,7 +18,8 @@
   "Only administrators can update this information.
    Not intended for laatija-users."
   {:passivoitu schema/Bool
-   :rooli      (schema/enum 1 2)})
+   :rooli      (schema/enum 1 2)
+   :henkilotunnus (schema/maybe common-schema/Henkilotunnus)})
 
 (def KayttajaUpdate
   "Schema to update all other users (kayttaja) except laatija."
