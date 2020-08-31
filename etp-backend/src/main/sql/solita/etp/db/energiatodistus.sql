@@ -68,3 +68,7 @@ update energiatodistus set
   tila_id = et_tilat.korvattu
 from et_tilat
 where tila_id = et_tilat.allekirjoitettu and laatija_id = :laatija-id and id = :id
+
+-- name: select-numeric-validations
+select column_name, warning$min, warning$max, error$min, error$max
+from validation_numeric_column where versio = :versio;

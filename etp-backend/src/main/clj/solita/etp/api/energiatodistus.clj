@@ -185,4 +185,12 @@
                                                                alakayttotarkoitusluokka
                                                                nettoala
                                                                e-luku)
-                          "Could not find luokittelu with given versio and alakayttotarkoitusluokka"))}}]])
+                          "Could not find luokittelu with given versio and alakayttotarkoitusluokka"))}}]
+
+   ["/validation/numeric/:versio"
+    {:get {:summary    "Hae energiatodistuksen numeroarvojen validointisäännöt"
+           :parameters {:path {:versio common-schema/Key}}
+           :responses  {200 {:body [energiatodistus-schema/NumericValidation]}}
+           :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
+                         (r/response (energiatodistus-service/find-numeric-validations
+                                       db versio)))}}]])
