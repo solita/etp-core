@@ -1,7 +1,7 @@
 (ns solita.etp.schema.whoami
   (:require [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]))
-; fff
+
 (def Whoami (merge common-schema/Id
                    {:etunimi            schema/Str
                     :sukunimi           schema/Str
