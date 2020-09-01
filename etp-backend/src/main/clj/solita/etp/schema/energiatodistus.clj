@@ -122,16 +122,19 @@
   {:maara  common-schema/Integer100,
    :tuotto common-schema/FloatPos})
 
+(def FormalDescription
+  {:id        common-schema/Key
+   :kuvaus-fi common-schema/String75
+   :kuvaus-sv common-schema/String75})
+
 (def LahtotiedotLammitys
-  {:lammitysmuoto-1-id common-schema/Key
-   :lammitysmuoto-2-id common-schema/Key
-   :lammonjako-id      common-schema/Key
-   :kuvaus-fi          common-schema/String75
-   :kuvaus-sv          common-schema/String75
-   :tilat-ja-iv        Hyotysuhde
-   :lammin-kayttovesi  Hyotysuhde
-   :takka              MaaraTuotto
-   :ilmanlampopumppu   MaaraTuotto})
+  {:lammitysmuoto-1   FormalDescription
+   :lammitysmuoto-2   FormalDescription
+   :lammonjako        FormalDescription
+   :tilat-ja-iv       Hyotysuhde
+   :lammin-kayttovesi Hyotysuhde
+   :takka             MaaraTuotto
+   :ilmanlampopumppu  MaaraTuotto})
 
 (defn SisKuorma [mininclusive maxinclusive]
   {:kayttoaste        (common-schema/FloatBase 0.1 1.0)
