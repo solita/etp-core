@@ -45,9 +45,9 @@
                          (throw e)))))
 
 (t/deftest add-update-and-find-test
-  (doseq [kayttaja (repeatedly 100 #(g/generate kayttaja-schema/KayttajaAdd))
+  (doseq [kayttaja (tu/generate-kayttaja 100 kayttaja-schema/KayttajaAdd)
           :let [id (service/add-kayttaja! ts/*db* kayttaja)
-                updated-kayttaja (g/generate kayttaja-schema/KayttajaUpdate)
+                updated-kayttaja (first (tu/generate-kayttaja 1 kayttaja-schema/KayttajaUpdate))
                 whoami (rand-nth (conj roolit {:id id}))
                 _ (update-kayttaja! whoami id updated-kayttaja)
                 new-rooli (:rooli updated-kayttaja)
