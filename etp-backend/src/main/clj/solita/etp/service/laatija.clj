@@ -88,4 +88,4 @@
 (def patevyystasot [{:id 1 :label-fi "Perustaso" :label-sv "Basnivå"}
                     {:id 2 :label-fi "Ylempi taso" :label-sv "Högre nivå"}])
 
-(defn find-patevyystasot [] patevyystasot)
+(defn find-patevyystasot [] (map #(assoc % :valid true) patevyystasot))

@@ -68,4 +68,4 @@
                       :label-fi "Varsinais-Suomi"
                       :label-sv "Egentliga Finland"}])
 
-(defn find-toimintaalueet [] toimintaalueet)
+(defn find-toimintaalueet [] (map #(assoc % :valid true) toimintaalueet))
