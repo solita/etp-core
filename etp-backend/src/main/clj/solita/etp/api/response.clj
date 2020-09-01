@@ -17,21 +17,33 @@
         matched-error (select-keys error (keys matcher))]
     (= matcher matched-error)))
 
+(defn with-exceptions
+  "Convert exceptions defined in error-descriptions to error responses.
+  If exception data matches error description then it is returned as a response.
+  The http response status is defined in error description.
+  These exceptions must not contain any sensitive data."
+  ([response-fn error-descriptions]
+   (try
+     (response-fn)
+     (catch ExceptionInfo e
+       (let [error (ex-data e)
+             description (first (filter (partial matches-description? error)
+                                        error-descriptions))]
+         (if (nil? description)
+           (throw e)
+           {:status  (:response description)
+            :headers {}
+            :body    error}))))))
+
 (defn response-with-exceptions
   ([service-fn error-descriptions] (response-with-exceptions 200 service-fn error-descriptions))
   ([status service-fn error-descriptions]
-    (try
-      {:status  status
-       :headers {}
-       :body    (service-fn)}
-      (catch ExceptionInfo e
-        (let [error (ex-data e)
-              description (first (filter (partial matches-description? error)
-                                         error-descriptions))]
-          (if (nil? description) (throw e)
-            {:status  (:response description)
-             :headers {}
-             :body    error}))))))
+   (with-exceptions
+     (fn []
+       {:status  status
+        :headers {}
+        :body    (service-fn)})
+     error-descriptions)))
 
 (defn created [path id]
   (r/created (str path "/" id) {:id id}))

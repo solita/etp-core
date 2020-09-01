@@ -13,9 +13,11 @@
      :responses  {201 {:body common-schema/Id}}
      :access     rooli-service/laatija?
      :handler    (fn [{:keys [db whoami parameters uri]}]
-                   (api-response/created uri
-                     (energiatodistus-service/add-energiatodistus!
-                       db whoami version (coerce (:body parameters)))))}})
+                   (api-response/with-exceptions
+                     #(api-response/created uri
+                       (energiatodistus-service/add-energiatodistus!
+                         db whoami version (coerce (:body parameters))))
+                     [{:type :invalid-value :response 400}]))}})
   ([version save-schema] (post version save-schema identity)))
 
 (defn gpd-routes [get-schema save-schema]
