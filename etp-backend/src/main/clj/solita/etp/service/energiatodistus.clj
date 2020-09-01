@@ -272,7 +272,7 @@
       (assert-korvaavuus! db (assoc energiatodistus :id id))
       (assert-update! id
         (db-update-energiatodistus!
-          db id (:version current-energiatodistus)
+          db id (:versio current-energiatodistus)
           energiatodistus
           tila-id rooli laskutettu?))
       nil)
