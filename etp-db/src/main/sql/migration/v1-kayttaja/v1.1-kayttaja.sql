@@ -10,7 +10,7 @@ create table kayttaja (
   ensitallennus boolean DEFAULT FALSE,
   henkilotunnus text,
   cognito_id text,
-  virtu_id text,
+  virtu_localid text,
   virtu_organisaatio text
 );
 

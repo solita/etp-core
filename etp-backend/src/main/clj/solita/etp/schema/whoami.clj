@@ -9,5 +9,5 @@
                     :rooli              common-schema/Key
                     :cognitoid          (schema/maybe schema/Str)
                     :henkilotunnus      (schema/maybe common-schema/Henkilotunnus)
-                    :virtuid            (schema/maybe schema/Str)
+                    :virtulocalid       (schema/maybe schema/Str)
                     :virtuorganisaatio  (schema/maybe schema/Str)}))

@@ -14,7 +14,7 @@
   (->> (merge {:email nil
                :cognitoid nil
                :henkilotunnus nil
-               :virtuid nil
+               :virtulocalid nil
                :virtuorganisaatio nil}
               opts)
        (whoami-db/select-whoami db)
