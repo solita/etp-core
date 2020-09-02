@@ -22,8 +22,7 @@
   "Only for internal use in laatija services.
    Represents laatija information which is stored in laatija-table."
   (st/merge (st/select-keys geo-schema/Postiosoite [:jakeluosoite :postinumero :postitoimipaikka :maa])
-            {:henkilotunnus      common-schema/Henkilotunnus
-             :patevyystaso       common-schema/Key
+            {:patevyystaso       common-schema/Key
              :toteamispaivamaara common-schema/Date
              :toteaja            PatevyydenToteaja}))
 
@@ -40,8 +39,7 @@
    Represents laatija information which is stored in laatija-table."
   (merge geo-schema/Postiosoite
          (st/optional-keys LaatijaAdminUpdate)
-         {:henkilotunnus                            common-schema/Henkilotunnus
-          :toimintaalue                             (schema/maybe common-schema/Key)
+         {:toimintaalue                             (schema/maybe common-schema/Key)
           :muuttoimintaalueet                       MuutToimintaalueet
           :julkinenpuhelin                          schema/Bool
           :julkinenemail                            schema/Bool
@@ -54,7 +52,8 @@
   "Schema representing the persistent laatija.
   This defines only the laatija specific kayttaja information."
   (merge LaatijaUpdate
-         common-schema/Id))
+         common-schema/Id
+         {:henkilotunnus common-schema/Henkilotunnus}))
 
 (def KayttajaAdd
   "Only for internal use in laatija services.
@@ -62,7 +61,8 @@
   {:etunimi  schema/Str
    :sukunimi schema/Str
    :email    schema/Str
-   :puhelin  schema/Str})
+   :puhelin  schema/Str
+   :henkilotunnus common-schema/Henkilotunnus})
 
 (def KayttajaUpdate
   "Only for internal use in laatija services.

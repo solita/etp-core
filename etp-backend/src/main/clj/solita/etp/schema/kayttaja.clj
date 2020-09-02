@@ -18,7 +18,8 @@
   "Only administrators can update this information.
    Not intended for laatija-users."
   {:passivoitu schema/Bool
-   :rooli      (schema/enum 1 2)})
+   :rooli      (schema/enum 1 2)
+   :henkilotunnus (schema/maybe common-schema/Henkilotunnus)})
 
 (def KayttajaUpdate
   "Schema to update all other users (kayttaja) except laatija."
@@ -31,12 +32,15 @@
 (def Kayttaja
   "Schema representing any persistent kayttaja (any role)"
   (merge common-schema/Id
-     {:login         (schema/maybe common-schema/Instant)
-      :cognitoid     (schema/maybe schema/Str)
-      :rooli         (schema/enum 0 1 2)
-      :ensitallennus schema/Bool
-      :passivoitu    schema/Bool
-      :etunimi       schema/Str
-      :sukunimi      schema/Str
-      :puhelin       schema/Str
-      :email         schema/Str}))
+         {:login             (schema/maybe common-schema/Instant)
+          :cognitoid         (schema/maybe schema/Str)
+          :virtu             {:localid (schema/maybe schema/Str)
+                              :organisaatio (schema/maybe schema/Str)}
+          :henkilotunnus     (schema/maybe common-schema/Henkilotunnus)
+          :rooli             (schema/enum 0 1 2)
+          :ensitallennus     schema/Bool
+          :passivoitu        schema/Bool
+          :etunimi           schema/Str
+          :sukunimi          schema/Str
+          :puhelin           schema/Str
+          :email             schema/Str}))

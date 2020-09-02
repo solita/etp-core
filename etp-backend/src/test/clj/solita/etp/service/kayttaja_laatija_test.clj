@@ -4,12 +4,11 @@
             [schema-generators.generators :as g]
             [schema-tools.core :as st]
             [solita.etp.test-system :as ts]
+            [solita.etp.test-utils :as tu]
             [solita.common.map :as map]
             [solita.etp.service.kayttaja-laatija :as service]
             [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.service.laatija :as laatija-service]
-            [solita.etp.schema.common :as common-schema]
-            [solita.etp.schema.geo :as geo-schema]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
             [solita.etp.schema.laatija :as laatija-schema]))
 
@@ -20,29 +19,12 @@
 (def paakayttaja {:rooli 2})
 (def roolit [laatija patevyydentoteaja paakayttaja])
 
-(defn unique-henkilotunnus-range [to]
-  (->> (range 0 to)
-       (map (partial format "%09d"))
-       (map #(str % (common-schema/henkilotunnus-checksum %)))
-       (map #(str (subs % 0 6) "-" (subs % 6 10)))))
-
-(def laatija-generators
-  {common-schema/Henkilotunnus       (g/always "130200A892S")
-   laatija-schema/MuutToimintaalueet (g/always [0, 1, 2, 3, 17])
-   common-schema/Date                (g/always (java.time.LocalDate/now))
-   geo-schema/Maa                    (g/always "FI")})
-
-(defn generate-kayttaja-laatija [n schema]
-  (map #(assoc %1 :henkilotunnus %2)
-       (repeatedly n #(g/generate schema laatija-generators))
-       (unique-henkilotunnus-range n)))
-
 (defn generate-KayttajaLaatijaAdds [n]
-  (generate-kayttaja-laatija n laatija-schema/KayttajaLaatijaAdd))
+  (tu/generate-kayttaja n laatija-schema/KayttajaLaatijaAdd))
 
 (defn generate-KayttajaLaatijaUpdates [n]
   (->> laatija-schema/KayttajaLaatijaUpdate
-       (generate-kayttaja-laatija n)
+       (tu/generate-kayttaja n)
        (map #(assoc % :rooli 0))))
 
 (t/deftest upsert-test

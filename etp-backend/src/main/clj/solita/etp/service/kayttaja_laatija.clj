@@ -6,10 +6,11 @@
             [solita.etp.service.laatija :as laatija-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.schema.laatija :as laatija-schema]
-            [solita.etp.schema.common :as common-schema]))
+            [solita.etp.schema.common :as common-schema]
+            [flathead.flatten :as flat]))
 
 (defn- update-kayttaja [db id kayttaja]
-  (jdbc/update! db :kayttaja kayttaja ["rooli = 0 and id = ?" id]))
+  (jdbc/update! db :kayttaja (flat/tree->flat "$" kayttaja) ["rooli = 0 and id = ?" id]))
 
 (defn- add-kayttaja [db kayttaja]
   (kayttaja-service/add-kayttaja! db (assoc kayttaja :rooli 0)))
@@ -22,8 +23,8 @@
         id (:id existing-laatija)]
     (if existing-laatija
       (do
-        (update-kayttaja db id kayttaja)
-        (laatija-service/update-laatija-by-id! db id (dissoc laatija :henkilotunnus))
+        (update-kayttaja db id (dissoc kayttaja :henkilotunnus))
+        (laatija-service/update-laatija-by-id! db id laatija)
         id)
       (let [id (add-kayttaja db kayttaja)]
         (laatija-service/add-laatija! db (assoc laatija :id id))))))
