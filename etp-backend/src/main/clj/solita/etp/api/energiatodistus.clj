@@ -22,14 +22,17 @@
             [solita.etp.service.json :as json]))
 
 (def external-routes
-  [["/energiatodistukset/2018" {:middleware [[security/wrap-whoami-from-basic-auth]
-                                             [security/wrap-access]
-                                             [security/wrap-db-application-name]]}
-    ["" (crud-api/post 2018
-          (xschema/optional-key-for-maybe
-            energiatodistus-schema/EnergiatodistusSave2018)
-          (xschema/missing-maybe-values-coercer
-            energiatodistus-schema/EnergiatodistusSave2018))]]])
+  [["/energiatodistukset"
+    ["/2013" (crud-api/post 2013
+                            (xschema/optional-key-for-maybe
+                             energiatodistus-schema/EnergiatodistusSave2013)
+                            (xschema/missing-maybe-values-coercer
+                             energiatodistus-schema/EnergiatodistusSave2013))]
+    ["/2018" (crud-api/post 2018
+                            (xschema/optional-key-for-maybe
+                             energiatodistus-schema/EnergiatodistusSave2018)
+                            (xschema/missing-maybe-values-coercer
+                             energiatodistus-schema/EnergiatodistusSave2018))]]])
 
 (defn valid-pdf-filename? [filename id kieli]
   (= filename (format "energiatodistus-%s-%s.pdf" id kieli)))
