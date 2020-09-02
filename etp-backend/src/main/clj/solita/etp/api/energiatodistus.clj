@@ -196,4 +196,13 @@
            :responses  {200 {:body [energiatodistus-schema/NumericValidation]}}
            :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
                          (r/response (energiatodistus-service/find-numeric-validations
-                                       db versio)))}}]])
+                                       db versio)))}}]
+
+   ["/validation/required/:versio"
+    {:get {:summary    "Hae voimassaolevan energiatodistuksen pakolliset kentät"
+           :parameters {:path {:versio common-schema/Key}}
+           :responses  {200 {:body [schema/Str]}}
+           :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
+                         (api-response/get-response
+                           (energiatodistus-service/find-required-properties versio)
+                           (str "Versio " versio " does not exists.")))}}]])
