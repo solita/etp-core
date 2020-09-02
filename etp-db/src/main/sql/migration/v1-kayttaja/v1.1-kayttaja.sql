@@ -10,8 +10,8 @@ create table kayttaja (
   ensitallennus boolean DEFAULT FALSE,
   henkilotunnus text,
   cognito_id text,
-  virtu_localid text,
-  virtu_organisaatio text
+  virtu$localid text,
+  virtu$organisaatio text
 );
 
 create or replace function current_kayttaja_id() returns int as $$

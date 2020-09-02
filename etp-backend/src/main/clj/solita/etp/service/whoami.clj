@@ -1,5 +1,6 @@
 (ns solita.etp.service.whoami
   (:require [schema.coerce :as coerce]
+            [flathead.flatten :as flat]
             [solita.etp.db :as db]
             [solita.etp.service.json :as json]
             [solita.etp.schema.whoami :as whoami-schema]))
@@ -14,12 +15,14 @@
   (->> (merge {:email nil
                :cognitoid nil
                :henkilotunnus nil
-               :virtulocalid nil
-               :virtuorganisaatio nil}
+               :virtu {:localid nil
+                       :organisaatio nil}}
               opts)
+       (flat/tree->flat "_")
        (whoami-db/select-whoami db)
+       (map (partial flat/flat->tree #"\$"))
        (map coerce-whoami)
        first))
 
 (defn update-kayttaja-with-whoami! [db whoami]
-  (whoami-db/update-kayttaja-with-whoami! db whoami))
+  (whoami-db/update-kayttaja-with-whoami! db (flat/tree->flat "_" whoami)))

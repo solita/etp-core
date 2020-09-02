@@ -6,7 +6,8 @@
             [solita.etp.service.json :as json]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
-            [solita.etp.schema.common :as common-schema]))
+            [solita.etp.schema.common :as common-schema]
+            [flathead.flatten :as flat]))
 
 ;; *** Require sql functions ***
 (db/require-queries 'kayttaja)
@@ -18,6 +19,7 @@
   ([db id]
    (->> {:id id}
         (kayttaja-db/select-kayttaja db)
+        (map (partial flat/flat->tree #"\$"))
         (map coerce-kayttaja)
         first))
   ([db whoami id]
@@ -30,7 +32,7 @@
        (exception/throw-forbidden!)))))
 
 (defn add-kayttaja! [db kayttaja]
-  (-> (jdbc/insert! db :kayttaja kayttaja) first :id))
+  (-> (jdbc/insert! db :kayttaja (flat/tree->flat "$" kayttaja)) first :id))
 
 (defn update-kayttaja! [db whoami id kayttaja]
   (if (or (and (= id (:id whoami))
@@ -38,5 +40,5 @@
                 kayttaja
                 kayttaja-schema/KayttajaAdminUpdate))
           (rooli-service/paakayttaja? whoami))
-    (jdbc/update! db :kayttaja kayttaja ["rooli <> 0 and id = ?" id])
+    (jdbc/update! db :kayttaja (flat/tree->flat "$" kayttaja) ["rooli <> 0 and id = ?" id])
     (exception/throw-forbidden!)))

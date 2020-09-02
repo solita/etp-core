@@ -34,8 +34,8 @@
   (merge common-schema/Id
          {:login             (schema/maybe common-schema/Instant)
           :cognitoid         (schema/maybe schema/Str)
-          :virtulocalid      (schema/maybe schema/Str)
-          :virtuorganisaatio (schema/maybe schema/Str)
+          :virtu             {:localid (schema/maybe schema/Str)
+                              :organisaatio (schema/maybe schema/Str)}
           :henkilotunnus     (schema/maybe common-schema/Henkilotunnus)
           :rooli             (schema/enum 0 1 2)
           :ensitallennus     schema/Bool

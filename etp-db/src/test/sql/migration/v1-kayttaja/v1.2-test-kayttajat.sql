@@ -9,6 +9,6 @@ INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli, henkilotunnus) V
 ('Marko', 'Laatija', 'marko.laatija@example.com', '0451234567', 0, '020190-9521'),
 ('Aleksi', 'Laatija', 'aleksi.laatija@example.com', '0451234567', 0, '110106A998M');
 
-INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli, virtu_localid, virtu_organisaatio) VALUES
+INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli, virtu$localid, virtu$organisaatio) VALUES
 ('Päivi', 'Pääkäyttäjä', 'paakayttaja@example.com', '0501234567', 2, 'vvirkamies', 'testivirasto.fi');
 

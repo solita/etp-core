@@ -25,8 +25,8 @@
                                                         {:id id
                                                          :email new-email
                                                          :cognitoid cognitoid
-                                                         :virtulocalid virtulocalid
-                                                         :virtuorganisaatio virtuorganisaatio})
+                                                         :virtu {:localid virtulocalid
+                                                                 :organisaatio virtuorganisaatio}})
                 found-after (kayttaja-service/find-kayttaja ts/*db* paakayttaja id)]]
     (schema/validate kayttaja-schema/Kayttaja found-after)
     (t/is (-> found-before :login nil?))
@@ -34,7 +34,7 @@
     (t/is (-> found-after :email (= new-email)))
     (t/is (-> found-before :cognitoid nil?))
     (t/is (= cognitoid (:cognitoid found-after)))
-    (t/is (-> found-before :virtulocalid nil?))
-    (t/is (= virtulocalid (:virtulocalid found-after)))
-    (t/is (-> found-before :virtuorganisaatio nil?))
-    (t/is (= virtuorganisaatio (:virtuorganisaatio found-after)))))
+    (t/is (-> found-before :virtu :localid nil?))
+    (t/is (= virtulocalid (-> found-after :virtu :localid)))
+    (t/is (-> found-before :virtu :organisaatio nil?))
+    (t/is (= virtuorganisaatio (-> found-after :virtu :organisaatio)))))

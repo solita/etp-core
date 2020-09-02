@@ -1,5 +1,6 @@
 (ns solita.etp.security
   (:require [clojure.tools.logging :as log]
+            [flathead.flatten :as flat]
             [solita.common.jdbc :as common-jdbc]
             [solita.etp.jwt :as jwt]
             [solita.etp.basic-auth :as basic-auth]
@@ -20,11 +21,11 @@
           cognitoid (:sub data)
           whoami (whoami-service/find-whoami
                   db
-                  {:email email
-                   :cognitoid cognitoid
-                   :henkilotunnus (:custom:FI_nationalIN data)
-                   :virtulocalid (:custom:VIRTU_localID data)
-                   :virtuorganisaatio (:custom:VIRTU_localOrg data)})]
+                  (flat/tree->flat "$" {:email         email
+                                        :cognitoid     cognitoid
+                                        :henkilotunnus (:custom:FI_nationalIN data)
+                                        :virtu         {:localid      (:custom:VIRTU_localID data)
+                                                        :organisaatio (:custom:VIRTU_localOrg data)}}))]
       (if whoami
         (->> (cond-> whoami
                email (assoc :email email)
