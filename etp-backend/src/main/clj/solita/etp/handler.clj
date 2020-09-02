@@ -74,7 +74,9 @@
             (tag "Laatijat API" laatija-api/routes)
             (tag "Geo API" geo-api/routes)
             (tag "Energiatodistus API" energiatodistus-api/private-routes))]
-   ["/external"
+   ["/external" {:middleware [[security/wrap-whoami-from-basic-auth]
+                              [security/wrap-access]
+                              [security/wrap-db-application-name]]}
     (concat (tag "Energiatodistus API" energiatodistus-api/external-routes))]])
 
 (def route-opts
