@@ -78,9 +78,9 @@
       (assoc :korvattu-energiatodistus-id nil :laskutettava-yritys-id nil)
       (assoc-in [:perustiedot :kayttotarkoitus] "YAT")
       (assoc-in [:lahtotiedot :ilmanvaihto :tyyppi-id] (rand-int 7))
-      (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-1-id] (rand-int 10))
-      (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-2-id] (rand-int 10))
-      (assoc-in [:lahtotiedot :lammitys :lammonjako-id] (rand-int 13))))
+      (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-1 :id] (rand-int 10))
+      (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-2 :id] (rand-int 10))
+      (assoc-in [:lahtotiedot :lammitys :lammonjako :id] (rand-int 13))))
 
 (defn generate-energiatodistus-2018 []
   (-> (g/generate schema/EnergiatodistusSave2018
