@@ -71,7 +71,8 @@
 (defn kebab-case [snake-case]
   (str/replace snake-case \_ \-))
 
-(def default-opts {:entities snake-case})
+(def default-opts {:entities snake-case
+                   :identifiers kebab-case})
 
 (defn kebab-case-keys [object]
   (map/map-keys (comp keyword kebab-case name) object))

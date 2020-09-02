@@ -53,7 +53,7 @@
 
 (def Luokittelu (merge Id {:label-fi schema/Str
                            :label-sv schema/Str
-                           (schema/optional-key :deleted) schema/Bool}))
+                           :valid schema/Bool}))
 
 (def Date java.time.LocalDate)
 (def DateInterval {:start Date

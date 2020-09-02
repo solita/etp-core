@@ -8,7 +8,10 @@ create table kayttaja (
   rooli int DEFAULT 0 NOT NULL,
   login timestamp with time zone,
   ensitallennus boolean DEFAULT FALSE,
-  cognito_id text
+  henkilotunnus text,
+  cognito_id text,
+  virtu$localid text,
+  virtu$organisaatio text
 );
 
 create or replace function current_kayttaja_id() returns int as $$

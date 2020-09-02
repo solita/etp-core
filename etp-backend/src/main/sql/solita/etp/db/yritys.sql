@@ -17,7 +17,7 @@ SELECT id, ytunnus, nimi, verkkolaskuoperaattori, verkkolaskuosoite, laskutuskie
 FROM yritys
 
 --name: select-all-laskutuskielet
-SELECT id, label_fi as "label-fi", label_sv as "label-sv", deleted FROM laskutuskieli;
+SELECT id, label_fi as "label-fi", label_sv as "label-sv", valid FROM laskutuskieli;
 
 -- name: select-all-verkkolaskuoperaattorit
 SELECT id, valittajatunnus, nimi FROM verkkolaskuoperaattori;

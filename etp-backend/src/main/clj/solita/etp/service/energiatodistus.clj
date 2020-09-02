@@ -4,7 +4,6 @@
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.json :as json]
             [solita.etp.service.rooli :as rooli-service]
-            [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
             [solita.postgresql.composite :as pg-composite]
             [solita.common.schema :as xschema]
             [schema.coerce :as coerce]
@@ -12,6 +11,7 @@
             [clojure.set :as set]
             [flathead.flatten :as flat]
             [clojure.string :as str]
+            [clojure.core.match :as match]
             [schema.core :as schema]
             [solita.common.map :as map]
             [solita.common.logic :as logic]
@@ -94,6 +94,43 @@
       (str/replace #"\-ua$" "-UA")
       keyword))
 
+(defn- find-numeric-column-validations [db versio]
+  (->>
+    (energiatodistus-db/select-numeric-validations db {:versio versio})
+    (map db/kebab-case-keys)
+    (map #(flat/flat->tree #"\$" %))))
+
+(defn replace-abbreviation->fullname [path]
+  (reduce (fn [result [fullname abbreviation]]
+            (if (str/starts-with? result (name abbreviation))
+              (reduced (str/replace-first
+                         result (name abbreviation) (name fullname)))
+              result))
+          path db-abbreviations))
+
+(defn to-property-name [column-name]
+  (-> column-name
+      convert-db-key-case name
+      replace-abbreviation->fullname
+      (str/replace "$" ".")))
+
+(defn find-numeric-validations [db versio]
+  (map (comp
+         #(set/rename-keys % {:column-name :property})
+         #(update % :column-name to-property-name))
+       (find-numeric-column-validations db versio)))
+
+(defn validate-db-row! [energiatodistus db versio]
+  (doseq [{{:keys [min max]} :error :keys [column-name]}
+          (find-numeric-column-validations db versio)]
+    (if-let [value ((keyword column-name) energiatodistus)]
+      (when (or (< value min) (> value max))
+        (exception/throw-ex-info!
+          :invalid-value
+          (str "Property: " (to-property-name column-name)
+               " has an invalid value: " value)))))
+  energiatodistus)
+
 (def db-row->energiatodistus
   (comp coerce-energiatodistus
         (logic/when*
@@ -148,10 +185,10 @@
       (cond
         (and (:korvaava-energiatodistus-id korvattava-energiatodistus)
              (not= (:korvaava-energiatodistus-id korvattava-energiatodistus) (:id energiatodistus)))
-        (throw (IllegalArgumentException. "Replaceable energiatodistus is already replaced"))
+        (exception/throw-ex-info! :invalid-replace "Replaceable energiatodistus is already replaced")
         (not (contains? #{:signed :discarded} (-> korvattava-energiatodistus :tila-id tila-key)))
-        (throw (IllegalArgumentException. "Replaceable energiatodistus is not in signed or discarded state")))
-      (throw (IllegalArgumentException. (str "Replaceable energiatodistus is not exists"))))))
+        (exception/throw-ex-info! :invalid-replace "Replaceable energiatodistus is not in signed or discarded state"))
+      (exception/throw-ex-info! :invalid-replace "Replaceable energiatodistus does not exists"))))
 
 (defn add-energiatodistus! [db whoami versio energiatodistus]
   (assert-korvaavuus! db energiatodistus)
@@ -160,37 +197,88 @@
                     (-> energiatodistus
                         (assoc :versio versio
                                :laatija-id (:id whoami))
-                        energiatodistus->db-row)
+                        energiatodistus->db-row
+                        (validate-db-row! db versio))
                     db/default-opts)
       first
       :id))
 
 (defn assert-laatija! [whoami energiatodistus]
-  (when-not (= (:laatija-id energiatodistus) (:id whoami))
+  (when (and (not= (:laatija-id energiatodistus) (:id whoami))
+             (rooli-service/laatija? whoami))
     (exception/throw-forbidden!
-      (str "User " (:id whoami) " is not the laatija of et-" (:id energiatodistus)))))
+      (str "User " (:id whoami)
+           " is not the laatija of energiatodistus: "
+           (:id energiatodistus)))))
 
-(defn- update-energiatodistus-luonnos! [db id version energiatodistus]
-  (first (jdbc/update! db :energiatodistus
-                       (-> energiatodistus
-                           (assoc :versio version)
-                           energiatodistus->db-row
-                           (dissoc :versio))
-                       ["id = ? and tila_id = 0" id] db/default-opts)))
+(defn- select-energiatodistus-for-update
+  [energiatodistus-update
+   id tila-id rooli laskutettu?]
+
+  (match/match
+    [(tila-key tila-id) rooli laskutettu?]
+    [:draft :laatija false] energiatodistus-update
+    [:signed :laatija false]
+    (select-keys energiatodistus-update
+                 [:laskutettava_yritys_id
+                  :laskuriviviite
+                  :pt$rakennustunnus])
+    [:signed :laatija true]
+    (select-keys energiatodistus-update
+                 [:pt$rakennustunnus])
+    [:signed :paakayttaja false]
+    (select-keys energiatodistus-update
+                 [:laskutettava_yritys_id
+                  :laskuriviviite
+                  :pt$rakennustunnus
+                  :korvattu_energiatodistus_id])
+    [:signed :paakayttaja true]
+    (select-keys energiatodistus-update
+                 [:pt$rakennustunnus
+                  :korvattu_energiatodistus_id])
+    :else (exception/throw-forbidden!
+            (str "Role: " rooli
+                 " is not allowed to update energiatodistus " id
+                 " in state: " (tila-key tila-id) " laskutettu: " laskutettu?))))
+
+(defn- db-update-energiatodistus! [db id versio energiatodistus
+                                   tila-id rooli laskutettu?]
+  (first (jdbc/update!
+           db :energiatodistus
+           (-> energiatodistus
+               (assoc :versio versio)
+               energiatodistus->db-row
+               (dissoc :versio)
+               (select-energiatodistus-for-update id tila-id rooli laskutettu?)
+               (validate-db-row! db versio))
+           ["id = ? and tila_id = ? and (laskutusaika is not null) = ?"
+            id tila-id laskutettu?]
+           db/default-opts)))
+
+(defn- assert-update! [id result]
+  (if (== result 0)
+    (exception/throw-ex-info!
+      :update-conflict
+      (str "Energiatodistus " id
+           " update conflicts with other concurrent update."))
+    result))
 
 (defn update-energiatodistus! [db whoami id energiatodistus]
   (if-let [current-energiatodistus (find-energiatodistus db id)]
-    (do
+    (let [tila-id (:tila-id current-energiatodistus)
+          rooli (-> whoami :rooli rooli-service/rooli-key)
+          laskutettu? (-> current-energiatodistus :laskutusaika ((complement nil?)))]
       (assert-laatija! whoami current-energiatodistus)
       (assert-korvaavuus! db (assoc energiatodistus :id id))
-      (case (-> current-energiatodistus :tila-id tila-key)
-            :draft (update-energiatodistus-luonnos!
-                     db id (:versio current-energiatodistus) energiatodistus)
-            :signed (energiatodistus-db/update-rakennustunnus-when-energiatodistus-signed!
-                      db {:id id
-                          :rakennustunnus (-> energiatodistus :perustiedot :rakennustunnus)})
-            0))
-    0))
+      (assert-update! id
+        (db-update-energiatodistus!
+          db id (:versio current-energiatodistus)
+          energiatodistus
+          tila-id rooli laskutettu?))
+      nil)
+    (exception/throw-ex-info!
+      :not-found
+      (str "Energiatodistus " id " does not exists."))))
 
 (defn delete-energiatodistus-luonnos! [db whoami id]
   (assert-laatija! whoami (find-energiatodistus db id))
@@ -236,9 +324,9 @@
 ;; Energiatodistuksen kielisyys
 ;;
 
-(def kielisyys [{:id 0 :label-fi "Suomi" :label-sv "Finska"}
-                {:id 1 :label-fi "Ruotsi" :label-sv "Svenska"}
-                {:id 2 :label-fi "Kaksikielinen" :label-sv "Tvåspråkig"}])
+(def kielisyys [{:id 0 :label-fi "Suomi" :label-sv "Finska" :valid true}
+                {:id 1 :label-fi "Ruotsi" :label-sv "Svenska" :valid true}
+                {:id 2 :label-fi "Kaksikielinen" :label-sv "Tvåspråkig" :valid true}])
 
 (defn find-kielisyys [] kielisyys)
 
@@ -246,8 +334,8 @@
 ;; Energiatodistuksen laatimisvaihe
 ;;
 
-(def laatimisvaiheet [{:id 0 :label-fi "Rakennuslupa" :label-sv "Bygglov"}
-                      {:id 1 :label-fi "Käyttöönotto" :label-sv "Införandet"}
-                      {:id 2 :label-fi "Olemassa oleva rakennus" :label-sv "Befintlig byggnad"}])
+(def laatimisvaiheet [{:id 0 :label-fi "Rakennuslupa" :label-sv "Bygglov" :valid true}
+                      {:id 1 :label-fi "Käyttöönotto" :label-sv "Införandet" :valid true}
+                      {:id 2 :label-fi "Olemassa oleva rakennus" :label-sv "Befintlig byggnad" :valid true}])
 
 (defn find-laatimisvaiheet [] laatimisvaiheet)

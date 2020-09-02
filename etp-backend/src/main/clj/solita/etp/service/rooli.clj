@@ -10,6 +10,9 @@
               :label-fi "Pääkäyttäjä"
               :label-sv "Pääkäyttäjä-SV"}])
 
+(def ^:private rooli-keys
+  [:laatija :patevyyden-toteaja :paakayttaja])
+
 (defn find-roolit [] roolit)
 
 (defn laatija? [{:keys [rooli]}]
@@ -23,3 +26,5 @@
 
 (defn laatija-maintainer? [{:keys [rooli]}]
   (contains? #{1 2} rooli))
+
+(defn rooli-key [rooli-id] (nth rooli-keys rooli-id))

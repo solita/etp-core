@@ -102,6 +102,7 @@
 (def LahtotiedotIlmanvaihto
   {:erillispoistot      PoistoTuloSfp
    :ivjarjestelma       PoistoTuloSfp
+   :tyyppi-id           common-schema/Key
    :kuvaus-fi           common-schema/String75
    :kuvaus-sv           common-schema/String75
    :lto-vuosihyotysuhde common-schema/Float1
@@ -121,9 +122,15 @@
   {:maara  common-schema/Integer100,
    :tuotto common-schema/FloatPos})
 
+(def FormalDescription
+  {:id        common-schema/Key
+   :kuvaus-fi common-schema/String75
+   :kuvaus-sv common-schema/String75})
+
 (def LahtotiedotLammitys
-  {:kuvaus-fi         common-schema/String75
-   :kuvaus-sv         common-schema/String75
+  {:lammitysmuoto-1   FormalDescription
+   :lammitysmuoto-2   FormalDescription
+   :lammonjako        FormalDescription
    :tilat-ja-iv       Hyotysuhde
    :lammin-kayttovesi Hyotysuhde
    :takka             MaaraTuotto
@@ -322,3 +329,12 @@
     (partial versio? 2013) Energiatodistus2013))
 
 (def Signature {:signature schema/Str :chain [schema/Str]})
+
+(def Range
+  {:min schema/Num
+   :max schema/Num})
+
+(def NumericValidation
+  {:property schema/Str,
+   :warning Range,
+   :error Range})

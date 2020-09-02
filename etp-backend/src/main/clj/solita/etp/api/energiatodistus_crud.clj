@@ -13,9 +13,11 @@
      :responses  {201 {:body common-schema/Id}}
      :access     rooli-service/laatija?
      :handler    (fn [{:keys [db whoami parameters uri]}]
-                   (api-response/created uri
-                     (energiatodistus-service/add-energiatodistus!
-                       db whoami version (coerce (:body parameters)))))}})
+                   (api-response/with-exceptions
+                     #(api-response/created uri
+                       (energiatodistus-service/add-energiatodistus!
+                         db whoami version (coerce (:body parameters))))
+                     [{:type :invalid-value :response 400}]))}})
   ([version save-schema] (post version save-schema identity)))
 
 (defn gpd-routes [get-schema save-schema]
@@ -37,11 +39,15 @@
              :responses  {200 {:body nil}
                           404 {:body schema/Str}}
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami parameters]}]
-                           (api-response/put-response
-                             (energiatodistus-service/update-energiatodistus!
+                           (api-response/response-with-exceptions
+                             #(energiatodistus-service/update-energiatodistus!
                                db whoami id
                                (:body parameters))
-                             (str "Energiatodistus " id " does not exists.")))}
+                             [{:type :not-found :response 404}
+                              {:type :invalid-replace :response 400}
+                              {:type :update-conflict :response 409}
+                              {:type :foreign-key-violation :response 400}
+                              {:type :invalid-value :response 400}]))}
 
     :delete {:summary    "Poista luonnostilainen energiatodistus"
              :parameters {:path {:id common-schema/Key}}

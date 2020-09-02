@@ -20,9 +20,11 @@
           cognitoid (:sub data)
           whoami (whoami-service/find-whoami
                   db
-                  {:email email
-                   :cognitoid cognitoid
-                   :henkilotunnus (:custom:FI_nationalIN data)})]
+                  {:email         email
+                   :cognitoid     cognitoid
+                   :henkilotunnus (:custom:FI_nationalIN data)
+                   :virtu         {:localid      (:custom:VIRTU_localID data)
+                                   :organisaatio (:custom:VIRTU_localOrg data)}})]
       (if whoami
         (->> (cond-> whoami
                email (assoc :email email)
