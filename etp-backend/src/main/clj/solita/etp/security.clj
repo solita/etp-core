@@ -1,6 +1,5 @@
 (ns solita.etp.security
   (:require [clojure.tools.logging :as log]
-            [flathead.flatten :as flat]
             [solita.common.jdbc :as common-jdbc]
             [solita.etp.jwt :as jwt]
             [solita.etp.basic-auth :as basic-auth]
