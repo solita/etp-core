@@ -339,3 +339,10 @@
                       {:id 2 :label-fi "Olemassa oleva rakennus" :label-sv "Befintlig byggnad" :valid true}])
 
 (defn find-laatimisvaiheet [] laatimisvaiheet)
+
+(def ^:private required-properties
+  {2018 ["perustiedot.nimi"]
+   2013 ["perustiedot.nimi"]})
+
+(defn find-required-properties [versio]
+  (required-properties versio))
