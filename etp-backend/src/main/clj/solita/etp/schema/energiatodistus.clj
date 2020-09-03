@@ -309,7 +309,7 @@
      :laatija-id common-schema/Key
      :laatija-fullname schema/Str
      :allekirjoitusaika (schema/maybe common-schema/Instant)
-     :viimeinen-voimassaoloaika (schema/maybe common-schema/Instant)
+     :voimassaolo-paattymisaika (schema/maybe common-schema/Instant)
      :laskutusaika (schema/maybe common-schema/Instant)
      :korvaava-energiatodistus-id (schema/maybe common-schema/Key)}))
 

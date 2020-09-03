@@ -43,7 +43,7 @@ create table energiatodistus (
  versio int not null,
  tila_id int not null default 0 references energiatodistustila (id),
  allekirjoitusaika timestamp with time zone,
- viimeinen_voimassaoloaika timestamp with time zone,
+ voimassaolo_paattymisaika timestamp with time zone,
  laatija_id int not null references laatija (id),
  laskutettava_yritys_id int references yritys (id),
  laskuriviviite text,

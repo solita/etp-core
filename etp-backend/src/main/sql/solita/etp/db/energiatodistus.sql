@@ -60,7 +60,7 @@ where tila_id = et_tilat.luonnos and laatija_id = :laatija-id and id = :id
 update energiatodistus set
   tila_id = et_tilat.allekirjoitettu,
   allekirjoitusaika = now(),
-  viimeinen_voimassaoloaika = current_date + interval '10 year' + interval '1 day' - interval '1 second'
+  voimassaolo_paattymisaika = current_date + interval '10 year' + interval '1 day'
 
 from et_tilat
 where tila_id = et_tilat.allekirjoituksessa and laatija_id = :laatija-id and id = :id
