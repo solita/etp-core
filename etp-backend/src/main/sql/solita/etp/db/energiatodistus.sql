@@ -59,7 +59,9 @@ where tila_id = et_tilat.luonnos and laatija_id = :laatija-id and id = :id
 -- name: update-energiatodistus-allekirjoitettu!
 update energiatodistus set
   tila_id = et_tilat.allekirjoitettu,
-  allekirjoitusaika = now()
+  allekirjoitusaika = now(),
+  voimassaolo_paattymisaika = timezone('Europe/Helsinki', now()::date::timestamp) + interval '10 year' + interval '1 day'
+
 from et_tilat
 where tila_id = et_tilat.allekirjoituksessa and laatija_id = :laatija-id and id = :id
 
