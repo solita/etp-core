@@ -60,7 +60,7 @@ create table energiatodistus (
  pt$laatimisvaihe integer,
  pt$uudisrakennus boolean,
  pt$nimi text,
- pt$onko_julkinen_rakennus boolean,
+ pt$julkinen_rakennus boolean,
  pt$postinumero text,
  pt$rakennusosa text,
  pt$rakennustunnus text,
