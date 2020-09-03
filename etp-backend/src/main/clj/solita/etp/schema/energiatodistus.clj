@@ -44,7 +44,7 @@
   {:katuosoite-fi            common-schema/String100
    :katuosoite-sv            common-schema/String100
    :valmistumisvuosi         common-schema/Year
-   :onko-julkinen-rakennus   schema/Bool
+   :julkinen-rakennus        schema/Bool
    :havainnointikaynti       common-schema/Date
    :rakennustunnus           Rakennustunnus
    :postinumero              geo-schema/Postinumero
