@@ -1,21 +1,8 @@
--- name: insert-energiatodistus<!
-insert into energiatodistus (versio, laatija_id, data)
-values (:versio, :laatija-id, :data :: JSONB) returning id
-
--- name: update-energiatodistus-luonnos!
-update energiatodistus set data = :data :: JSONB
-from et_tilat
-where tila_id = et_tilat.luonnos and id = :id
 
 -- name: delete-energiatodistus-luonnos!
 update energiatodistus set tila_id = et_tilat.poistettu
 from et_tilat
 where tila_id = et_tilat.luonnos and id = :id
-
--- name: update-rakennustunnus-when-energiatodistus-signed!
-update energiatodistus
-set pt$rakennustunnus = :rakennustunnus
-where id = :id and tila_id = 2
 
 -- name: select-energiatodistus
 select energiatodistus.*,
