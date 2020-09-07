@@ -34,7 +34,7 @@
    geo-schema/Postinumero              (g/always "00100")
    common-schema/Instant               (g/always (Instant/now))
    (schema.core/eq 2018)               (g/always 2018)
-   schema/OptionalKuukausierittely     (g/always (rand-nth [[] (repeat 12 test-kuukausierittely)]))})
+   schema/OptionalKuukausierittely     (g/always (rand-nth [[] (vec (repeat 12 test-kuukausierittely))]))})
 
 (defn add-laatija!
   ([] (add-laatija! ts/*db*))
@@ -95,7 +95,7 @@
 
 (defn test-add-and-find-energiatodistus [versio gen-f]
   (let [laatija-id (add-laatija!)]
-    (doseq [energiatodistus (repeatedly 100 gen-f)
+    (doseq [energiatodistus (repeatedly 1 gen-f)
             :let [id (add-energiatodistus! energiatodistus laatija-id versio)]]
       (t/is (= (energiatodistus-with-db-fields energiatodistus id laatija-id versio)
                (find-energiatodistus id))))))

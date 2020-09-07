@@ -51,7 +51,7 @@
         (let [read #((composite-literal-parser keys) (.getValue %))]
           (cond
             (instance? PGobject value) (read value)
-            (seqable? value) (map read value)
+            (seqable? value) (mapv read value)
             :else (throw (IllegalArgumentException.
                            (str "Unsupported postgresql object value: " value)))))))
     db-object))
