@@ -3,6 +3,7 @@
             [solita.etp.exception :as exception]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.json :as json]
+            [solita.etp.service.energiatodistus-validation :as validation]
             [solita.etp.service.rooli :as rooli-service]
             [solita.postgresql.composite :as pg-composite]
             [solita.common.schema :as xschema]
@@ -262,6 +263,26 @@
            " update conflicts with other concurrent update."))
     result))
 
+(defn find-required-properties [db versio]
+  (map (comp to-property-name :column_name)
+       (energiatodistus-db/select-required-columns db {:versio versio})))
+
+(defn find-required-constraints [db energiatodistus]
+  (->> energiatodistus
+      :versio
+      (find-required-properties db)
+      validation/required-constraints))
+
+(defn validate-required!
+  ([db current update]
+   (validation/validate-required!
+     (find-required-constraints db current)
+     current update))
+  ([db energiatodistus]
+   (validation/validate-required!
+     (find-required-constraints db energiatodistus)
+     energiatodistus)))
+
 (defn update-energiatodistus! [db whoami id energiatodistus]
   (if-let [current-energiatodistus (find-energiatodistus db id)]
     (let [tila-id (:tila-id current-energiatodistus)
@@ -269,6 +290,10 @@
           laskutettu? (-> current-energiatodistus :laskutusaika ((complement nil?)))]
       (assert-laatija! whoami current-energiatodistus)
       (assert-korvaavuus! db (assoc energiatodistus :id id))
+      (when (not= (tila-key tila-id) :draft)
+        (validate-required! db
+          current-energiatodistus
+          energiatodistus))
       (assert-update! id
         (db-update-energiatodistus!
           db id (:versio current-energiatodistus)
@@ -288,15 +313,20 @@
 ;;
 
 (defn start-energiatodistus-signing! [db whoami id]
-  (let [result (energiatodistus-db/update-energiatodistus-allekirjoituksessa!
-                 db {:id id :laatija-id (:id whoami)})]
-    (if (= result 1) :ok
-      (when-let [{:keys [tila-id] :as et} (find-energiatodistus db id)]
-        (assert-laatija! whoami et)
-        (case (tila-key tila-id)
-          :in-signing :already-in-signing
-          :deleted nil
-          :already-signed)))))
+  (jdbc/with-db-transaction [db db]
+    (let [result (energiatodistus-db/update-energiatodistus-allekirjoituksessa!
+                   db {:id id :laatija-id (:id whoami)})
+          energiatodistus (find-energiatodistus db id)]
+      (if (= result 1)
+        (do
+          (validate-required! db energiatodistus)
+          :ok)
+        (when-let [{:keys [tila-id]} energiatodistus]
+          (assert-laatija! whoami energiatodistus)
+          (case (tila-key tila-id)
+            :in-signing :already-in-signing
+            :deleted nil
+            :already-signed))))))
 
 (defn mark-energiatodistus-as-korvattu! [db whoami id]
   (let [result (energiatodistus-db/update-energiatodistus-korvattu!
@@ -328,20 +358,3 @@
                 {:id 2 :label-fi "Kaksikielinen" :label-sv "Tvåspråkig" :valid true}])
 
 (defn find-kielisyys [] kielisyys)
-
-;;
-;; Energiatodistuksen laatimisvaihe
-;;
-
-(def laatimisvaiheet [{:id 0 :label-fi "Rakennuslupa" :label-sv "Bygglov" :valid true}
-                      {:id 1 :label-fi "Käyttöönotto" :label-sv "Införandet" :valid true}
-                      {:id 2 :label-fi "Olemassa oleva rakennus" :label-sv "Befintlig byggnad" :valid true}])
-
-(defn find-laatimisvaiheet [] laatimisvaiheet)
-
-(def ^:private required-properties
-  {2018 ["perustiedot.nimi"]
-   2013 ["perustiedot.nimi"]})
-
-(defn find-required-properties [versio]
-  (required-properties versio))
