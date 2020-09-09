@@ -4,21 +4,28 @@
             [solita.etp.schema.common :as common-schema]
             [solita.common.schema :as xschema]
             [solita.etp.schema.geo :as geo-schema]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [solita.etp.exception :as exception])
   (:import (schema.core Predicate EnumSchema Constrained)))
 
 (defn optional-properties [schema]
-  (m/map-values
-    #(cond
-       (xschema/maybe? %) %
-       (instance? Constrained %) (schema/maybe %)
-       (instance? EnumSchema %) (schema/maybe %)
-       (instance? Predicate %) (schema/maybe %)
-       (class? %) (schema/maybe %)
-       (map? %) (optional-properties %)
-       (vector? %) (mapv optional-properties %)
-       (coll? %) (map optional-properties %))
-    schema))
+  (if (record? schema)
+    (cond
+      (xschema/maybe? schema) schema
+      (instance? Constrained schema)
+        (let [constrained-schema (optional-properties (:schema schema))]
+          (if (xschema/maybe? constrained-schema)
+            (schema/maybe schema)
+            (assoc schema :schema constrained-schema)))
+      (instance? EnumSchema schema) (schema/maybe schema)
+      (instance? Predicate schema) (schema/maybe schema)
+      :else (exception/illegal-argument! (str "Unsupported schema record: " schema)))
+    (cond
+      (class? schema) (schema/maybe schema)
+      (map? schema) (m/map-values optional-properties schema)
+      (vector? schema) (mapv optional-properties schema)
+      (coll? schema) (map optional-properties schema)
+      :else (exception/illegal-argument! (str "Unsupported schema: " schema)))))
 
 (defn valid-rakennustunnus? [s]
   (try

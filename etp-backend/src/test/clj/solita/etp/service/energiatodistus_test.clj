@@ -1,5 +1,6 @@
 (ns solita.etp.service.energiatodistus-test
   (:require [clojure.test :as t]
+            [clojure.test.check.generators :as test-generators]
             [schema-generators.generators :as g]
             [solita.etp.test-system :as ts]
             [solita.etp.service.energiatodistus :as service]
@@ -7,9 +8,7 @@
             [solita.etp.service.kayttaja-laatija-test :as laatija-service-test]
             [solita.etp.schema.energiatodistus :as schema]
             [solita.etp.schema.common :as common-schema]
-            [solita.etp.schema.geo :as geo-schema]
-            [clojure.java.jdbc :as jdbc]
-            [solita.etp.db :as db])
+            [solita.etp.schema.geo :as geo-schema])
   (:import [java.time Instant]
            (clojure.lang ExceptionInfo)))
 
@@ -34,7 +33,10 @@
    geo-schema/Postinumero              (g/always "00100")
    common-schema/Instant               (g/always (Instant/now))
    (schema.core/eq 2018)               (g/always 2018)
-   schema/OptionalKuukausierittely     (g/always (rand-nth [[] (repeat 12 test-kuukausierittely)]))})
+   (schema.core/eq 2013)               (g/always 2013)
+   schema/OptionalKuukausierittely     (test-generators/one-of
+                                         [(g/always (vec (repeat 12 test-kuukausierittely)))
+                                          (g/always [])])})
 
 (defn add-laatija!
   ([] (add-laatija! ts/*db*))
@@ -58,21 +60,16 @@
 (defn energiatodistus-with-db-fields
   ([energiatodistus id laatija-id] (energiatodistus-with-db-fields energiatodistus id laatija-id 2018))
   ([energiatodistus id laatija-id versio]
-   (cond-> (merge energiatodistus
-                  {:id id
-                   :laatija-id laatija-id
-                   :versio versio
-                   :tila-id 0
-                   :korvaava-energiatodistus-id nil
-                   :laskutettava-yritys-id nil
-                   :laskutusaika nil
-                   :allekirjoitusaika nil
-                   :voimassaolo-paattymisaika nil})
-
-     ;; This is no longer needed if optional-properties fn is updated
-     ;; to only work on leaf schemas.
-     (-> energiatodistus :tulokset :kuukausierittely nil?)
-     (assoc-in [:tulokset :kuukausierittely] []))))
+   (merge energiatodistus
+          {:id                          id
+           :laatija-id                  laatija-id
+           :versio                      versio
+           :tila-id                     0
+           :korvaava-energiatodistus-id nil
+           :laskutettava-yritys-id      nil
+           :laskutusaika                nil
+           :allekirjoitusaika           nil
+           :voimassaolo-paattymisaika   nil})))
 
 (defn fix-energiatodistus-fk-references [energiatodistus]
   (-> energiatodistus

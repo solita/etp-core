@@ -73,19 +73,16 @@
    :maara-vuodessa])
 
 (def db-composite-types
-  {:tulokset
-    {:kaytettavat-energiamuodot {:muu db-userdefined_energiamuoto-type}
-     :uusiutuvat-omavaraisenergiat {:muu db-userdefined_energia-type}
-     :kuukausierittely db-kuukausierittely-type}
-   :toteutunut-ostoenergiankulutus
-    {:ostettu-energia {:muu db-userdefined_energia-type}
-     :ostetut-polttoaineet {:muu db-ostettu-polttoaine-type}}
-   :huomiot
-    {:iv-ilmastointi { :toimenpide db-toimenpide-type }
-     :valaistus-muut { :toimenpide db-toimenpide-type }
-     :lammitys { :toimenpide db-toimenpide-type }
-     :ymparys { :toimenpide db-toimenpide-type }
-     :alapohja-ylapohja { :toimenpide db-toimenpide-type }}})
+  {:t$kaytettavat-energiamuodot$muu    db-userdefined_energiamuoto-type
+   :t$uusiutuvat-omavaraisenergiat$muu db-userdefined_energia-type
+   :t$kuukausierittely                 db-kuukausierittely-type
+   :to$ostettu-energia$muu             db-userdefined_energia-type
+   :to$ostetut-polttoaineet$muu        db-ostettu-polttoaine-type
+   :h$iv-ilmastointi$toimenpide        db-toimenpide-type
+   :h$valaistus-muut$toimenpide        db-toimenpide-type
+   :h$lammitys$toimenpide              db-toimenpide-type
+   :h$ymparys$toimenpide               db-toimenpide-type
+   :h$alapohja-ylapohja$toimenpide     db-toimenpide-type})
 
 (defn convert-db-key-case [key]
   (-> key
@@ -131,30 +128,32 @@
                " has an invalid value: " value)))))
   energiatodistus)
 
+(defn flat->tree [energiatodistus]
+  (->> energiatodistus
+    (map/map-values (logic/when* vector? (partial mapv flat->tree)))
+    (flat/flat->tree #"\$")))
+
 (def db-row->energiatodistus
   (comp coerce-energiatodistus
         (logic/when*
           #(= (:versio %) 2013)
           #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] :muu))
-        (fn [energiatodistus]
-          (update-in energiatodistus
-                     [:tulokset :kuukausierittely]
-                     #(map (partial flat/flat->tree #"\$") %)))
-        (partial pg-composite/parse-composite-type-literals db-composite-types)
         #(set/rename-keys % (set/map-invert db-abbreviations))
-        (partial flat/flat->tree #"\$")
+        flat->tree
+        (partial pg-composite/parse-composite-type-literals db-composite-types)
         (partial map/map-keys convert-db-key-case)
         db/kebab-case-keys))
 
+(defn tree->flat [energiatodistus]
+  (->> energiatodistus
+       (flat/tree->flat "$")
+       (map/map-values (logic/when* vector? (partial mapv tree->flat)))))
+
 (def energiatodistus->db-row
   (comp
-    (partial flat/tree->flat "$")
-    #(set/rename-keys % db-abbreviations)
     (partial pg-composite/write-composite-type-literals db-composite-types)
-    (fn [energiatodistus]
-      (update-in energiatodistus
-                 [:tulokset :kuukausierittely]
-                 #(map (partial flat/tree->flat "$") %)))
+    tree->flat
+    #(set/rename-keys % db-abbreviations)
     (logic/when*
       #(= (:versio %) 2013)
       #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] (partial assoc {} :muu)))))

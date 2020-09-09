@@ -3,6 +3,9 @@
             [clojure.tools.logging :as log]
             [solita.common.map :as map]))
 
+(defn illegal-argument! [msg]
+  (throw (IllegalArgumentException. msg)))
+
 (defn throw-ex-info!
   ([map]
     (throw (ex-info (:message map) map)))
