@@ -15,6 +15,7 @@
             [solita.etp.service.energiatodistus-xlsx :as energiatodistus-xlsx-service]
             [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
             [solita.etp.service.luokittelu :as luokittelu-service]
+            [solita.etp.service.laatimisvaihe :as laatimisvaihe]
             [solita.etp.service.e-luokka :as e-luokka-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.security :as security]
@@ -139,7 +140,7 @@
    ["/laatimisvaiheet"
     {:get {:summary   "Hae energiatodistuksen laatimisvaiheluokittelu"
            :responses {200 {:body [common-schema/Luokittelu]}}
-           :handler   (fn [_] (r/response (energiatodistus-service/find-laatimisvaiheet)))}}]
+           :handler   (fn [_] (r/response (laatimisvaihe/find-laatimisvaiheet)))}}]
 
    ["/kayttotarkoitusluokat/:versio"
     {:get {:summary    "Hae energiatodistuksen käyttötarkoitusluokat"
@@ -204,5 +205,5 @@
            :responses  {200 {:body [schema/Str]}}
            :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
                          (api-response/get-response
-                           (energiatodistus-service/find-required-properties versio)
+                           (energiatodistus-service/find-required-properties db versio)
                            (str "Versio " versio " does not exists.")))}}]])

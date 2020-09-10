@@ -2,13 +2,16 @@
   (:require [clojure.test :as t]
             [clojure.test.check.generators :as test-generators]
             [schema-generators.generators :as g]
+            [flathead.deep :as deep]
             [solita.etp.test-system :as ts]
             [solita.etp.service.energiatodistus :as service]
             [solita.etp.service.kayttaja-laatija :as laatija-service]
             [solita.etp.service.kayttaja-laatija-test :as laatija-service-test]
             [solita.etp.schema.energiatodistus :as schema]
             [solita.etp.schema.common :as common-schema]
-            [solita.etp.schema.geo :as geo-schema])
+            [solita.etp.schema.geo :as geo-schema]
+            [solita.common.schema :as xschema]
+            [solita.common.logic :as logic])
   (:import [java.time Instant]
            (clojure.lang ExceptionInfo)))
 
@@ -85,6 +88,13 @@
                   energiatodistus-generators)
       (fix-energiatodistus-fk-references)))
 
+(defn generate-energiatodistus-2018-complete []
+  (-> (g/generate (deep/map-values record?
+                                   (logic/when* xschema/maybe? :schema)
+                                   schema/EnergiatodistusSave2018)
+                  energiatodistus-generators)
+      (fix-energiatodistus-fk-references)))
+
 (defn generate-energiatodistus-2013 []
   (-> (g/generate schema/EnergiatodistusSave2013
                   energiatodistus-generators)
@@ -144,7 +154,7 @@
 (t/deftest start-energiatodistus-signing!-test
   (let [laatija-id (add-laatija!)
         whoami {:id laatija-id :rooli 0}
-        id (add-energiatodistus! (generate-energiatodistus-2018) laatija-id)]
+        id (add-energiatodistus! (generate-energiatodistus-2018-complete) laatija-id)]
     (t/is (= (energiatodistus-tila id) :draft))
     (t/is (= (service/start-energiatodistus-signing! ts/*db* whoami id) :ok))
     (t/is (= (energiatodistus-tila id) :in-signing))
@@ -153,7 +163,7 @@
 (t/deftest stop-energiatodistus-signing!-test
   (let [laatija-id (add-laatija!)
         whoami {:id laatija-id :rooli 0}
-        id (add-energiatodistus! (generate-energiatodistus-2018) laatija-id)]
+        id (add-energiatodistus! (generate-energiatodistus-2018-complete) laatija-id)]
     (t/is (= (energiatodistus-tila id) :draft))
     (t/is (=  (service/end-energiatodistus-signing! ts/*db* whoami id)
               :not-in-signing))
@@ -168,9 +178,9 @@
 (t/deftest update-signed-energiatodistus!-test
   (let [laatija-id               (add-laatija!)
         whoami                   {:id laatija-id :rooli 0}
-        original-energiatodistus (generate-energiatodistus-2018)
+        original-energiatodistus (generate-energiatodistus-2018-complete)
         id                       (add-energiatodistus! original-energiatodistus laatija-id)
-        update-energiatodistus   (assoc-in (generate-energiatodistus-2018) [:perustiedot :rakennustunnus] "103515074X")]
+        update-energiatodistus   (assoc-in (generate-energiatodistus-2018-complete) [:perustiedot :rakennustunnus] "103515074X")]
 
     (t/is (= (energiatodistus-tila id) :draft))
     (service/start-energiatodistus-signing! ts/*db* whoami id)
@@ -189,7 +199,7 @@
 
 (t/deftest korvaa-energiatodistus!-test
   (let [laatija-id                    (add-laatija!)
-        energiatodistus               (generate-energiatodistus-2018)
+        energiatodistus               (generate-energiatodistus-2018-complete)
         korvattava-energiatodistus-id (add-energiatodistus-and-sign! energiatodistus laatija-id)]
     (let [korvaava-energiatodistus    (assoc energiatodistus :korvattu-energiatodistus-id korvattava-energiatodistus-id)
           korvaava-energiatodistus-id (add-energiatodistus-and-sign! korvaava-energiatodistus laatija-id)]
@@ -201,7 +211,7 @@
 (t/deftest korvaa-energiatodistus-states!-test
   (let [laatija-id                            (add-laatija!)
         whoami                                {:id laatija-id :rooli 0}
-        energiatodistus                       (generate-energiatodistus-2018)
+        energiatodistus                       (generate-energiatodistus-2018-complete)
         signed-energiatodistus-id             (add-energiatodistus-and-sign! energiatodistus laatija-id)
         replaced-energiatodistus-id           (add-energiatodistus-and-sign! energiatodistus laatija-id)
         replaceses-energiatodistus-id         (add-energiatodistus-and-sign! (assoc energiatodistus :korvattu-energiatodistus-id replaced-energiatodistus-id) laatija-id)

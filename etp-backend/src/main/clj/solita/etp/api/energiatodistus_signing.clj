@@ -16,9 +16,11 @@
             :responses  {200 {:body nil}
                          404 {:body schema/Str}}
             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
-                          (api-response/signature-response
-                            (energiatodistus-service/start-energiatodistus-signing! db whoami id)
-                            (str "Energiatodistus " id)))}}]
+                          (api-response/with-exceptions
+                            #(api-response/signature-response
+                              (energiatodistus-service/start-energiatodistus-signing! db whoami id)
+                              (str "Energiatodistus " id))
+                            [{:type :missing-value :response 400}]))}}]
    ["/digest"
     {:get {:summary    "Hae PDF-tiedoston digest allekirjoitusta varten"
            :parameters {:path {:id common-schema/Key}}

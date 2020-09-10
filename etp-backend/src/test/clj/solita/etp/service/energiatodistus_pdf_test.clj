@@ -78,7 +78,9 @@
 
 (t/deftest find-energiatodistus-digest-test
   (let [laatija-id (energiatodistus-test/add-laatija!)
-        id (energiatodistus-test/add-energiatodistus! energiatodistus-2018 laatija-id)
+        id (energiatodistus-test/add-energiatodistus!
+             (energiatodistus-test/generate-energiatodistus-2018-complete)
+             laatija-id)
         whoami {:id laatija-id}]
     (t/is (= (service/find-energiatodistus-digest ts/*db* id)
              :not-in-signing))
@@ -91,7 +93,9 @@
 
 (t/deftest sign-energiatodistus-test
   (let [laatija-id (energiatodistus-test/add-laatija!)
-        id (energiatodistus-test/add-energiatodistus! energiatodistus-2018 laatija-id)
+        id (energiatodistus-test/add-energiatodistus!
+             (energiatodistus-test/generate-energiatodistus-2018-complete)
+             laatija-id)
         whoami {:id laatija-id}]
     (t/is (= (service/sign-energiatodistus-pdf ts/*db* id nil)
              :not-in-signing))

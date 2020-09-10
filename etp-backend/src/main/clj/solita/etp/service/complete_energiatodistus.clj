@@ -1,6 +1,7 @@
 (ns solita.etp.service.complete-energiatodistus
   (:require [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
+            [solita.etp.service.laatimisvaihe :as laatimisvaihe]
             [solita.etp.service.e-luokka :as e-luokka-service]))
 
 (defn combine-keys [m f nil-replacement path-new & paths]
@@ -376,7 +377,7 @@
 
 (defn required-luokittelut [db]
   {:kielisyydet (energiatodistus-service/find-kielisyys)
-   :laatimisvaiheet (energiatodistus-service/find-laatimisvaiheet)
+   :laatimisvaiheet (laatimisvaihe/find-laatimisvaiheet)
    :alakayttotarkoitukset (reduce #(assoc %1 %2 (kayttotarkoitus-service/find-alakayttotarkoitukset db %2))
                                   {}
                                   [2013 2018])})
