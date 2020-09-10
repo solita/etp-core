@@ -85,11 +85,15 @@
    :h$ymparys$toimenpide               db-toimenpide-type
    :h$alapohja-ylapohja$toimenpide     db-toimenpide-type})
 
+(defn convert-db-case [name]
+  (-> name
+      (str/replace #"\$u$" "\\$U")
+      (str/replace #"\-ua$" "-UA")))
+
 (defn convert-db-key-case [key]
   (-> key
       name
-      (str/replace #"\$u$" "\\$U")
-      (str/replace #"\-ua$" "-UA")
+      convert-db-case
       keyword))
 
 (defn- find-numeric-column-validations [db versio]
@@ -108,7 +112,8 @@
 
 (defn to-property-name [column-name]
   (-> column-name
-      convert-db-key-case name
+      db/kebab-case
+      convert-db-case
       replace-abbreviation->fullname
       (str/replace "$" ".")))
 
@@ -348,13 +353,3 @@
             :draft :not-in-signing
             :deleted nil
             :already-signed))))))
-
-;;
-;; Energiatodistuksen kielisyys
-;;
-
-(def kielisyys [{:id 0 :label-fi "Suomi" :label-sv "Finska" :valid true}
-                {:id 1 :label-fi "Ruotsi" :label-sv "Svenska" :valid true}
-                {:id 2 :label-fi "Kaksikielinen" :label-sv "Tvåspråkig" :valid true}])
-
-(defn find-kielisyys [] kielisyys)

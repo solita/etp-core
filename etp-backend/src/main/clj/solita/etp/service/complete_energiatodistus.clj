@@ -2,7 +2,8 @@
   (:require [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
             [solita.etp.service.laatimisvaihe :as laatimisvaihe]
-            [solita.etp.service.e-luokka :as e-luokka-service]))
+            [solita.etp.service.e-luokka :as e-luokka-service]
+            [solita.etp.service.kielisyys :as kielisyys]))
 
 (defn combine-keys [m f nil-replacement path-new & paths]
   (let [vals (map #(or (get-in m %) nil-replacement) paths)]
@@ -376,8 +377,8 @@
                         [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala])))))
 
 (defn required-luokittelut [db]
-  {:kielisyydet (energiatodistus-service/find-kielisyys)
-   :laatimisvaiheet (laatimisvaihe/find-laatimisvaiheet)
+  {:kielisyydet           (kielisyys/find-kielisyys)
+   :laatimisvaiheet       (laatimisvaihe/find-laatimisvaiheet)
    :alakayttotarkoitukset (reduce #(assoc %1 %2 (kayttotarkoitus-service/find-alakayttotarkoitukset db %2))
                                   {}
                                   [2013 2018])})
