@@ -60,6 +60,35 @@ values
 (2018, 'lt$ikkunat$luode$U'),
 (2018, 'lt$ikkunat$luode$g_ks'),
 (2018, 'lt$ikkunat$pohjoinen$U'),
-(2018, 'lt$ikkunat$pohjoinen$g_ks')
-       
+(2018, 'lt$ikkunat$pohjoinen$g_ks'),
+
+(2018, 'lt$ilmanvaihto$tyyppi_id'),
+(2018, 'lt$ilmanvaihto$kuvaus_fi'),
+(2018, 'lt$ilmanvaihto$kuvaus_sv'),
+(2018, 'lt$ilmanvaihto$paaiv$poisto'),
+(2018, 'lt$ilmanvaihto$paaiv$tulo'),
+(2018, 'lt$ilmanvaihto$erillispoistot$poisto'),
+(2018, 'lt$ilmanvaihto$erillispoistot$tulo'),
+(2018, 'lt$ilmanvaihto$ivjarjestelma$poisto'),
+(2018, 'lt$ilmanvaihto$ivjarjestelma$tulo'),
+
+(2018, 'lt$lammitys$lammitysmuoto_1$id'),
+(2018, 'lt$lammitys$lammitysmuoto_1$kuvaus_fi'),
+(2018, 'lt$lammitys$lammitysmuoto_1$kuvaus_sv'),
+(2018, 'lt$lammitys$lammitysmuoto_2$id'),
+(2018, 'lt$lammitys$lammitysmuoto_2$kuvaus_fi'),
+(2018, 'lt$lammitys$lammitysmuoto_2$kuvaus_sv'),
+(2018, 'lt$lammitys$lammonjako$id'),
+(2018, 'lt$lammitys$lammonjako$kuvaus_fi'),
+(2018, 'lt$lammitys$lammonjako$kuvaus_sv'),
+(2018, 'lt$lammitys$lammin_kayttovesi$jaon_hyotysuhde'),
+(2018, 'lt$lammitys$lammin_kayttovesi$tuoton_hyotysuhde'),
+(2018, 'lt$lammitys$tilat_ja_iv$apulaitteet'),
+(2018, 'lt$lammitys$tilat_ja_iv$jaon_hyotysuhde'),
+(2018, 'lt$lammitys$tilat_ja_iv$tuoton_hyotysuhde'),
+
+(2018, 'lt$lkvn_kaytto$ominaiskulutus'),
+(2018, 'lt$lkvn_kaytto$lammitysenergian_nettotarve'),
+
+(2018, 't$laskentatyokalu')
 on conflict (column_name, versio) do nothing
