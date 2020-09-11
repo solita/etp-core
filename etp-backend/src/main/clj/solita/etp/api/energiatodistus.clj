@@ -20,7 +20,8 @@
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.security :as security]
             [solita.etp.api.response :as api-response]
-            [solita.etp.service.json :as json]))
+            [solita.etp.service.json :as json]
+            [solita.etp.service.kielisyys :as kielisyys]))
 
 (def external-routes
   [["/energiatodistukset"
@@ -135,7 +136,7 @@
    ["/kielisyys"
     {:get {:summary   "Hae energiatodistuksen kielisyysluokittelu"
            :responses {200 {:body [common-schema/Luokittelu]}}
-           :handler   (fn [_] (r/response (energiatodistus-service/find-kielisyys)))}}]
+           :handler   (fn [_] (r/response (kielisyys/find-kielisyys)))}}]
 
    ["/laatimisvaiheet"
     {:get {:summary   "Hae energiatodistuksen laatimisvaiheluokittelu"

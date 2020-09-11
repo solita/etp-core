@@ -9,7 +9,7 @@
   (:import (schema.core Predicate EnumSchema Constrained)))
 
 (defn optional-properties [schema]
-  (if (record? schema)
+  (if (xschema/schema-record? schema)
     (cond
       (xschema/maybe? schema) schema
       (instance? Constrained schema)

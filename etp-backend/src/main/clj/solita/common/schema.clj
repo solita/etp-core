@@ -6,6 +6,11 @@
             [schema-tools.coerce :as schema-tools-coerce])
   (:import (schema.core Maybe)))
 
+(defn schema-record?
+  "Tests if the parameter is schema record."
+  [x]
+  (and (record? x) (satisfies? schema/Schema x)))
+
 (defn maybe? [schema]
   (instance? Maybe schema))
 
