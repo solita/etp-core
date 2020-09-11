@@ -2,15 +2,26 @@
   (:require [clojure.string :as str]
             [solita.etp.exception :as exception]
             [solita.etp.service.laatimisvaihe :as laatimisvaihe]
-            [solita.etp.service.kielisyys :as kielisyys]))
+            [solita.etp.service.kielisyys :as kielisyys]
+            [solita.etp.service.luokittelu :as luokittelu]))
 
 (def required-condition
   {"perustiedot.rakennustunnus" (complement laatimisvaihe/rakennuslupa?)
    "perustiedot.havainnointikaynti" laatimisvaihe/olemassaoleva-rakennus?
-   "perustiedot.keskeiset-suositukset-fi"
-   (every-pred laatimisvaihe/olemassaoleva-rakennus? kielisyys/fi?)
-   "perustiedot.keskeiset-suositukset-sv"
-   (every-pred laatimisvaihe/olemassaoleva-rakennus? kielisyys/sv?)})
+   "perustiedot.keskeiset-suositukset-fi" laatimisvaihe/olemassaoleva-rakennus?
+   "perustiedot.keskeiset-suositukset-sv" laatimisvaihe/olemassaoleva-rakennus?
+
+   "lahtotiedot.ilmanvaihto.kuvaus-fi" luokittelu/ilmanvaihto-kuvaus-required?
+   "lahtotiedot.ilmanvaihto.kuvaus-sv" luokittelu/ilmanvaihto-kuvaus-required?
+
+   "lahtotiedot.lammitys.lammitysmuoto-1.kuvaus-fi" luokittelu/lammitysmuoto-1-kuvaus-required?
+   "lahtotiedot.lammitys.lammitysmuoto-1.kuvaus-sv" luokittelu/lammitysmuoto-1-kuvaus-required?
+
+   "lahtotiedot.lammitys.lammitysmuoto-2.kuvaus-fi" luokittelu/lammitysmuoto-2-kuvaus-required?
+   "lahtotiedot.lammitys.lammitysmuoto-2.kuvaus-sv" luokittelu/lammitysmuoto-2-kuvaus-required?
+
+   "lahtotiedot.lammitys.lammonjako.kuvaus-fi" luokittelu/lammonjako-kuvaus-required?
+   "lahtotiedot.lammitys.lammonjako.kuvaus-sv" luokittelu/lammonjako-kuvaus-required?})
 
 (defn localized-property-condition [property]
   (cond
@@ -27,19 +38,25 @@
   (assoc v (dec (count v)) new-value))
 
 (defn u-property-condition [property]
-  (when (str/ends-with? property ".U")
+  (when (or (str/ends-with? property ".U") (str/ends-with? property ".g-ks"))
     (let [u-path (vec (path property))
           ala-path (assoc-last u-path :ala)]
-      #(> (get-in % ala-path 0) 0))))
+      #(> (or (get-in % ala-path) 0) 0))))
 
 (defn required-constraints
   "Required constraint is a pair of predicate and a required property.
   The property is required if predicate is true for particular energiatodistus."
   [required-properties]
-  (map #(vector (or (get required-condition %)
-                    (localized-property-condition %)
-                    (u-property-condition %)
-                    (constantly true)) %)
+  (map (juxt
+         (comp
+           #(if (empty? %)
+              (constantly true)
+              (apply every-pred %))
+           (partial filter (complement nil?))
+           (juxt required-condition
+                 localized-property-condition
+                 u-property-condition))
+         identity)
        required-properties))
 
 (defn missing-properties [required-constraints energiatodistus]
