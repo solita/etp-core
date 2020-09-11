@@ -75,7 +75,6 @@ values
 (2018, 'lt$lammitys$lammitysmuoto_1$id'),
 (2018, 'lt$lammitys$lammitysmuoto_1$kuvaus_fi'),
 (2018, 'lt$lammitys$lammitysmuoto_1$kuvaus_sv'),
-(2018, 'lt$lammitys$lammitysmuoto_2$id'),
 (2018, 'lt$lammitys$lammitysmuoto_2$kuvaus_fi'),
 (2018, 'lt$lammitys$lammitysmuoto_2$kuvaus_sv'),
 (2018, 'lt$lammitys$lammonjako$id'),
