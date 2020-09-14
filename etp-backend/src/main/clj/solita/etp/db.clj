@@ -65,6 +65,7 @@
          (jeesql/defqueries (str "solita/etp/db/" name ".sql") options)))
      (alias (symbol (str name "-db")) db-namespace))))
 
+;; These can be probably replaced with function from camel-snake-kebab
 (defn snake-case [kebab-case]
   (str/replace kebab-case \- \_))
 
