@@ -13,6 +13,7 @@ create table validation_numeric_column (
 create table validation_required_column (
   column_name text,
   versio int,
+  ordinal int not null default 0,
   valid boolean default true,
 
   primary key (column_name, versio)
