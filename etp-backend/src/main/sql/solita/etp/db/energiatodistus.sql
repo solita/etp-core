@@ -64,4 +64,5 @@ from validation_numeric_column where versio = :versio;
 
 -- name: select-required-columns
 select column_name
-from validation_required_column where versio = :versio;
+from validation_required_column where versio = :versio
+order by ordinal asc;
