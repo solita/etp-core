@@ -17,4 +17,4 @@
 (def ilmanvaihto-kuvaus-required? (partial path= 6 [:lahtotiedot :ilmanvaihto :tyyppi-id]))
 (def lammitysmuoto-1-kuvaus-required? (partial path= 9, [:lahtotiedot :lammitys :lammitysmuoto-1 :id]))
 (def lammitysmuoto-2-kuvaus-required? (partial path= 9, [:lahtotiedot :lammitys :lammitysmuoto-2 :id]))
-(def lammonjako-kuvaus-required? (partial path= 6 [:lahtotiedot :lammitys :lammonjako :id]))
+(def lammonjako-kuvaus-required? (partial path= 12 [:lahtotiedot :lammitys :lammonjako :id]))
