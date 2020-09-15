@@ -147,6 +147,11 @@
   {:kayttoaste        (common-schema/FloatBase 0.1 1.0)
    :lampokuorma       (common-schema/FloatBase mininclusive maxinclusive)})
 
+(def SisKuormat
+  {:henkilot          (SisKuorma 1.0 14.0)
+   :kuluttajalaitteet (SisKuorma 0.0 12.0)
+   :valaistus         (SisKuorma 0.0 19.0)})
+
 (def Lahtotiedot
   {:lammitetty-nettoala  common-schema/FloatPos
    :rakennusvaippa       LahtotiedotRakennusvaippa
@@ -156,11 +161,7 @@
    :jaahdytysjarjestelma {:jaahdytyskauden-painotettu-kylmakerroin (common-schema/FloatBase 1.0 10.0)}
    :lkvn-kaytto          {:ominaiskulutus common-schema/FloatPos
                           :lammitysenergian-nettotarve common-schema/FloatPos}
-   :sis-kuorma {
-     :henkilot          (SisKuorma 1.0 14.0)
-     :kuluttajalaitteet (SisKuorma 0.0 12.0)
-     :valaistus         (SisKuorma 0.0 19.0)}
-    })
+   :sis-kuorma SisKuormat})
 
 (def UusiutuvatOmavaraisenergiat
   {:aurinkosahko common-schema/FloatPos

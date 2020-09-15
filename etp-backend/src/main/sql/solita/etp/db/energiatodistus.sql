@@ -66,3 +66,14 @@ from validation_numeric_column where versio = :versio;
 select column_name
 from validation_required_column where versio = :versio
 order by ordinal asc;
+
+-- name: select-sisaiset-kuormat
+select
+  kayttotarkoitusluokka_id,
+  henkilot$kayttoaste,
+  henkilot$lampokuorma,
+  kuluttajalaitteet$kayttoaste,
+  kuluttajalaitteet$lampokuorma,
+  valaistus$kayttoaste,
+  valaistus$lampokuorma
+from validation_sisainen_kuorma where versio = :versio;

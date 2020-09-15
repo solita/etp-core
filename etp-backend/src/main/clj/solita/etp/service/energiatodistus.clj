@@ -139,6 +139,10 @@
     (map/map-values (logic/when* vector? (partial mapv flat->tree)))
     (flat/flat->tree #"\$")))
 
+(defn find-sisaiset-kuormat [db versio]
+  (map (comp flat->tree db/kebab-case-keys)
+       (energiatodistus-db/select-sisaiset-kuormat db {:versio versio})))
+
 (def db-row->energiatodistus
   (comp coerce-energiatodistus
         (logic/when*
