@@ -33,7 +33,11 @@
         org.apache.poi/poi-ooxml {:mvn/version "4.1.2"}
         org.apache.pdfbox/pdfbox {:mvn/version "2.0.19"}
         puumerkki {:mvn/version "0.9.2"}
-        org.clojure/core.match {:mvn/version "1.0.0"}}
+        org.clojure/core.match {:mvn/version "1.0.0"}
+
+        ;; Non-alpha version does not support xml namespaces
+        org.clojure/data.xml {:mvn/version "0.2.0-alpha6"}
+        camel-snake-kebab {:mvn/version "0.4.1"}}
  :aliases {:dev {:extra-paths ["src/test/clj"
                                "src/test/resources"]
                  :extra-deps {eftest {:mvn/version "0.5.9"}
