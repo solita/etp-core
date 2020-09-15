@@ -91,4 +91,23 @@ values
 (2018, 'lt$lkvn_kaytto$lammitysenergian_nettotarve', 66)
 
 on conflict (column_name, versio) do update
-  set ordinal = excluded.ordinal
+  set ordinal = excluded.ordinal;
+
+insert into validation_sisainen_kuorma (
+  versio, kayttotarkoitusluokka_id,
+
+  valaistus$kayttoaste,
+  valaistus$lampokuorma,
+  kuluttajalaitteet$kayttoaste,
+  kuluttajalaitteet$lampokuorma,
+  henkilot$kayttoaste,
+  henkilot$lampokuorma)
+values
+(2018, 1, 0.1, 6, 0.6, 3, 0.6, 2)
+on conflict (kayttotarkoitusluokka_id, versio) do update
+  set valaistus$kayttoaste = excluded.valaistus$kayttoaste,
+      valaistus$lampokuorma = excluded.valaistus$lampokuorma,
+      kuluttajalaitteet$kayttoaste = excluded.kuluttajalaitteet$kayttoaste,
+      kuluttajalaitteet$lampokuorma = excluded.kuluttajalaitteet$lampokuorma,
+      henkilot$kayttoaste = excluded.henkilot$kayttoaste,
+      henkilot$lampokuorma = excluded.henkilot$lampokuorma;

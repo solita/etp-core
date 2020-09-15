@@ -205,6 +205,14 @@
            :parameters {:path {:versio common-schema/Key}}
            :responses  {200 {:body [schema/Str]}}
            :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
-                         (api-response/get-response
-                           (energiatodistus-service/find-required-properties db versio)
-                           (str "Versio " versio " does not exists.")))}}]])
+                         (r/response (energiatodistus-service/find-required-properties
+                                       db versio)))}}]
+
+   ["/validation/sisaiset-kuormat/:versio"
+    {:get {:summary    "Hae voimassaolevan energiatodistuksen pakolliset kentät"
+           :parameters {:path {:versio common-schema/Key}}
+           :responses  {200 {:body [(assoc energiatodistus-schema/SisKuormat
+                                      :kayttotarkoitusluokka-id common-schema/Key)]}}
+           :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
+                         (r/response (energiatodistus-service/find-sisaiset-kuormat
+                                       db versio)))}}]])
