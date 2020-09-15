@@ -8,7 +8,8 @@
             [solita.etp.schema.energiatodistus :as schema]
             [solita.etp.service.energiatodistus-pdf :as service]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
-            [solita.etp.service.energiatodistus-test :as energiatodistus-test]))
+            [solita.etp.service.energiatodistus-test :as energiatodistus-test]
+            [solita.common.certificates-test :as certificates-test]))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -91,13 +92,24 @@
     (t/is (= (service/find-energiatodistus-digest ts/*db* id)
              :already-signed))))
 
+(t/deftest comparable-name-test
+  (t/is (= "abc" (service/comparable-name "abc")))
+  (t/is (= "aeiouao" (service/comparable-name "á, é, í, ó, ú. ä ö"))))
+
+(t/deftest validate-surname!-test
+  (t/is (thrown? clojure.lang.ExceptionInfo
+                 (service/validate-surname! "Meikäläinen"
+                                            certificates-test/test-cert-str)))
+  (t/is (nil? (service/validate-surname! "Specimen-POtex"
+                                         certificates-test/test-cert-str))))
+
 (t/deftest sign-energiatodistus-test
   (let [laatija-id (energiatodistus-test/add-laatija!)
         id (energiatodistus-test/add-energiatodistus!
              (energiatodistus-test/generate-energiatodistus-2018-complete)
              laatija-id)
         whoami {:id laatija-id}]
-    (t/is (= (service/sign-energiatodistus-pdf ts/*db* id nil)
+    (t/is (= (service/sign-energiatodistus-pdf ts/*db* whoami id nil)
              :not-in-signing))
     (energiatodistus-service/start-energiatodistus-signing! ts/*db* whoami id)
 
@@ -105,5 +117,5 @@
     ;; the success case?
 
     (energiatodistus-service/end-energiatodistus-signing! ts/*db* whoami id)
-    (t/is (= (service/sign-energiatodistus-pdf ts/*db* id nil)
+    (t/is (= (service/sign-energiatodistus-pdf ts/*db* whoami id nil)
              :already-signed))))

@@ -38,13 +38,16 @@
            :access rooli-service/laatija?
            :responses {200 {:body nil}
                        404 {:body schema/Str}}
-           :handler (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
-                      (api-response/signature-response
-                        (energiatodistus-pdf-service/sign-energiatodistus-pdf
-                          db
-                          id
-                          (:body parameters))
-                        (str "Energiatodistus " id)))}}]
+           :handler (fn [{{{:keys [id]} :path} :parameters :keys [db whoami parameters]}]
+                      (api-response/with-exceptions
+                        #(api-response/signature-response
+                          (energiatodistus-pdf-service/sign-energiatodistus-pdf
+                           db
+                           whoami
+                           id
+                           (:body parameters))
+                          (str "Energiatodistus " id))
+                        [{:type :name-does-not-match :response 403}]))}}]
    ["/finish"
     {:post {:summary "Siirrä energiatodistus allekirjoitettu-tilaan"
             :parameters {:path {:id common-schema/Key}}
