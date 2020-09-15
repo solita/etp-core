@@ -3,8 +3,11 @@
             [clojure.java.io :as io]
             [clojure.java.shell :as shell]
             [clojure.core.match :as match]
+            [clojure.tools.logging :as log]
             [puumerkki.pdf :as puumerkki]
+            [solita.etp.exception :as exception]
             [solita.common.xlsx :as xlsx]
+            [solita.common.certificates :as certificates]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]
             [solita.etp.service.rooli :as rooli-service]
@@ -23,7 +26,8 @@
            (java.util HashMap)
            (java.awt Font Color)
            (java.awt.image BufferedImage)
-           (javax.imageio ImageIO)))
+           (javax.imageio ImageIO)
+           (java.text Normalizer Normalizer$Form)))
 
 ;; TODO replace with real templates when it exists
 (def xlsx-template-paths {2013 {"fi" "energiatodistus-2013-fi.xlsx"
@@ -741,21 +745,42 @@
         (io/delete-file signature-png-path)
         {:digest digest}))))
 
-(defn sign-energiatodistus-pdf [db id signature-and-chain]
+(defn comparable-name [s]
+  (-> s
+      (Normalizer/normalize Normalizer$Form/NFD)
+      str/lower-case
+      (str/replace #"[^a-z]" "")))
+
+(defn validate-surname! [last-name certificate-str]
+  (let [surname (-> certificate-str
+                    certificates/pem-str->certificate
+                    certificates/subject
+                    :surname)]
+    (when-not (= (comparable-name last-name) (comparable-name surname))
+      (log/warn "Last name from certificate did not match with whoami info when signing energiatodistus PDF.")
+      (exception/throw-ex-info!
+       {:type :name-does-not-match
+        :message (format "Last names did not match. Whoami has '%s' and certificate has '%s'"
+                         last-name
+                         surname)}))))
+
+(defn sign-energiatodistus-pdf [db whoami id {:keys [chain] :as signature-and-chain}]
   (when-let [energiatodistus
              (energiatodistus-service/find-energiatodistus db id)]
     (do-when-signing
      energiatodistus
-     #(try (let [file-id (pdf-file-id id "fi")
-                 {:keys [filename content] :as file-info}
-                 (file-service/find-file db file-id)
-                 content-bytes (.readAllBytes content)
-                 pkcs7 (puumerkki/make-pkcs7 signature-and-chain content-bytes)
-                 filename (str file-id ".pdf")]
-             (do
-               (->> (puumerkki/write-signature! content-bytes pkcs7)
-                    (file-service/upsert-file-from-bytes db
-                                                         file-id
-                                                         filename))
-               filename))
-           (catch java.lang.ArrayIndexOutOfBoundsException e :pdf-exists)))))
+     #(try
+        (validate-surname! (:sukunimi whoami) (first chain))
+        (let [file-id (pdf-file-id id "fi")
+              {:keys [filename content] :as file-info}
+              (file-service/find-file db file-id)
+              content-bytes (.readAllBytes content)
+              pkcs7 (puumerkki/make-pkcs7 signature-and-chain content-bytes)
+              filename (str file-id ".pdf")]
+          (do
+            (->> (puumerkki/write-signature! content-bytes pkcs7)
+                 (file-service/upsert-file-from-bytes db
+                                                      file-id
+                                                      filename))
+            filename))
+        (catch java.lang.ArrayIndexOutOfBoundsException e :pdf-exists)))))
