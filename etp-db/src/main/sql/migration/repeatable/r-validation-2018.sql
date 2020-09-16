@@ -103,7 +103,14 @@ insert into validation_sisainen_kuorma (
   henkilot$kayttoaste,
   henkilot$lampokuorma)
 values
-(2018, 1, 0.1, 6, 0.6, 3, 0.6, 2)
+(2018, 1, 0.1, 6, 0.6, 3, 0.6, 2),
+(2018, 2, 0.1, 9, 0.6, 4, 0.6, 3),
+(2018, 3, 0.65, 10, 0.65, 12, 0.65, 5),
+(2018, 4, 1, 19, 1, 1, 1, 2),
+(2018, 5, 0.3, 11, 0.3, 4, 0.3, 4),
+(2018, 6, 0.6, 14, 0.6, 8, 0.6, 14),
+(2018, 7, 0.5, 10, 0.5, 0, 0.5, 5),
+(2018, 8, 0.6, 7, 0.6, 9, 0.6, 8)
 on conflict (kayttotarkoitusluokka_id, versio) do update
   set valaistus$kayttoaste = excluded.valaistus$kayttoaste,
       valaistus$lampokuorma = excluded.valaistus$lampokuorma,
