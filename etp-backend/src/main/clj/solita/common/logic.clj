@@ -17,3 +17,19 @@
   "Higher order ramda style unless function."
   ([predicate then-fn]
    #(if (predicate %) (then-fn %) %)))
+
+(defn is-divisible-by [num divisor]
+  (zero? (mod num divisor)))
+
+(defmacro
+  if-let*
+  "This if-let allows multiple bindings.
+  Multiple bindings are transformed to nested if-lets.
+  Else expression can only refer to the first variable."
+  ([bindings expr] `(if-let* ~bindings ~expr nil))
+  ([bindings expr else]
+   {:pre [(is-divisible-by (count bindings) 2)]}
+   (if ((complement empty?) bindings)
+     `(if-let [~(first bindings) ~(second bindings)]
+        (if-let* ~(drop 2 bindings) ~expr ~else) ~else)
+     expr)))

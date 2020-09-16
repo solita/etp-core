@@ -44,11 +44,12 @@
                                db whoami id
                                (:body parameters))
                              [{:type :not-found :response 404}
-                              {:type :invalid-replace :response 400}
                               {:type :update-conflict :response 409}
+                              {:type :invalid-replace :response 400}
                               {:type :foreign-key-violation :response 400}
                               {:type :invalid-value :response 400}
-                              {:type :missing-value :response 400}]))}
+                              {:type :missing-value :response 400}
+                              {:type :invalid-sisainen-kuorma :response 400}]))}
 
     :delete {:summary    "Poista luonnostilainen energiatodistus"
              :parameters {:path {:id common-schema/Key}}

@@ -18,3 +18,8 @@
 (def lammitysmuoto-1-kuvaus-required? (partial path= 9, [:lahtotiedot :lammitys :lammitysmuoto-1 :id]))
 (def lammitysmuoto-2-kuvaus-required? (partial path= 9, [:lahtotiedot :lammitys :lammitysmuoto-2 :id]))
 (def lammonjako-kuvaus-required? (partial path= 12 [:lahtotiedot :lammitys :lammonjako :id]))
+
+(defn find-luokka [id luokat]
+  (->> luokat
+       (filter (comp (partial = id) :id))
+       first))

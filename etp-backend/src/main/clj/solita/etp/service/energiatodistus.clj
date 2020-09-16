@@ -4,6 +4,7 @@
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.json :as json]
             [solita.etp.service.energiatodistus-validation :as validation]
+            [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.postgresql.composite :as pg-composite]
             [solita.common.schema :as xschema]
@@ -199,8 +200,16 @@
         (exception/throw-ex-info! :invalid-replace "Replaceable energiatodistus is not in signed or discarded state"))
       (exception/throw-ex-info! :invalid-replace "Replaceable energiatodistus does not exists"))))
 
+(defn validate-sisainen-kuorma!
+  [db versio energiatodistus]
+  (validation/validate-sisainen-kuorma!
+    (find-sisaiset-kuormat db versio)
+    (kayttotarkoitus-service/find-alakayttotarkoitukset db versio)
+    energiatodistus))
+
 (defn add-energiatodistus! [db whoami versio energiatodistus]
   (assert-korvaavuus! db energiatodistus)
+  (validate-sisainen-kuorma! db versio energiatodistus)
   (-> (jdbc/insert! db
                     :energiatodistus
                     (-> energiatodistus
@@ -303,6 +312,9 @@
         (validate-required! db
           current-energiatodistus
           energiatodistus))
+      (when (= (tila-key tila-id) :draft)
+        (validate-sisainen-kuorma!
+          db (:versio current-energiatodistus) energiatodistus))
       (assert-update! id
         (db-update-energiatodistus!
           db id (:versio current-energiatodistus)
