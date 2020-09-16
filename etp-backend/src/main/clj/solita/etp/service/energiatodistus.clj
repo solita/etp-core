@@ -173,7 +173,7 @@
    (first (map db-row->energiatodistus
                (energiatodistus-db/select-energiatodistus db {:id id}))))
   ([db whoami id]
-   (let [energiatodistus (find-energiatodistus db id)]
+   (if-let [energiatodistus (find-energiatodistus db id)]
      (if (or (rooli-service/paakayttaja? whoami)
              (and (rooli-service/laatija? whoami)
                   (= (:laatija-id energiatodistus) (:id whoami))))
