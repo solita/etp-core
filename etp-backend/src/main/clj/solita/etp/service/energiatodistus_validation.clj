@@ -113,7 +113,7 @@
     (when-not (= constant-kuorma
                  (->> energiatodistus
                       :lahtotiedot :sis-kuorma constant-kuorma-properties
-                      (deep/map-values bigdec)))
+                      (deep/map-values (logic/when* number? bigdec))))
       (exception/throw-ex-info!
         {:type         :invalid-sisainen-kuorma
          :valid-kuorma constant-kuorma
