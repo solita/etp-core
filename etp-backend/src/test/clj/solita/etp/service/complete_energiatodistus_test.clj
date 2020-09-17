@@ -6,7 +6,7 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(def energiatodistus (->
+(def generate-energiatodistus #(->
                       (energiatodistus-test/generate-energiatodistus-2018)
                       (assoc-in [:tulokset
                                  :kaytettavat-energiamuodot
@@ -28,7 +28,7 @@
 
 (t/deftest find-complete-energiatodistus-test
   (let [laatija-id (energiatodistus-test/add-laatija!)
-        id (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id)
+        id (energiatodistus-test/add-energiatodistus! (generate-energiatodistus) laatija-id)
         whoami {:id laatija-id :rooli 0}
         complete-energiatodistus (service/find-complete-energiatodistus ts/*db*
                                                                         whoami
@@ -37,8 +37,8 @@
 
 (t/deftest find-complete-energiatodistukset-by-laatija-test
   (let [laatija-id (energiatodistus-test/add-laatija!)
-        _ (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id)
-        _ (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id)
+        _ (energiatodistus-test/add-energiatodistus! (generate-energiatodistus) laatija-id)
+        _ (energiatodistus-test/add-energiatodistus! (generate-energiatodistus) laatija-id)
         complete-energiatodistukset (service/find-complete-energiatodistukset-by-laatija
                                      ts/*db*
                                      laatija-id
