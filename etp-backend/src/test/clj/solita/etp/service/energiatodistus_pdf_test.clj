@@ -12,13 +12,13 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(def energiatodistus-2013 (-> (energiatodistus-test/generate-energiatodistus-2013)
-                              (assoc :versio 2013)))
+(def energiatodistus-2013 #(-> (energiatodistus-test/generate-energiatodistus-2013)
+                               (assoc :versio 2013)))
 
-(def energiatodistus-2018 (-> (energiatodistus-test/generate-energiatodistus-2018)
-                              (assoc :versio 2018)))
+(def energiatodistus-2018 #(-> (energiatodistus-test/generate-energiatodistus-2018)
+                               (assoc :versio 2018)))
 
-(def energiatodistukset [energiatodistus-2013 energiatodistus-2018])
+(def energiatodistukset (pcalls energiatodistus-2018 energiatodistus-2013))
 
 (def sis-kuorma-data {:henkilot {:kayttoaste 0.2 :lampokuorma 1}
                       :kuluttajalaitteet {:kayttoaste 0.3 :lampokuorma 1}

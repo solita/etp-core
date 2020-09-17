@@ -106,7 +106,7 @@
     [alakayttotarkoitusluokka
      (find-alakayttotarkoitusluokka alakayttotarkoitusluokat energiatodistus)
      constant-kuorma
-     (-> constant-kuormat
+     (some-> constant-kuormat
          (find-constant-kuorma (:kayttotarkoitusluokka-id alakayttotarkoitusluokka))
          constant-kuorma-properties)]
 
