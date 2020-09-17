@@ -13,13 +13,13 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(def energiatodistus-2013 (-> (energiatodistus-test/generate-energiatodistus-2013)
-                              (assoc :versio 2013)))
+(def energiatodistus-2013 #(-> (energiatodistus-test/generate-energiatodistus-2013)
+                               (assoc :versio 2013)))
 
-(def energiatodistus-2018 (-> (energiatodistus-test/generate-energiatodistus-2018)
-                              (assoc :versio 2018)))
+(def energiatodistus-2018 #(-> (energiatodistus-test/generate-energiatodistus-2018)
+                               (assoc :versio 2018)))
 
-(def energiatodistukset [energiatodistus-2013 energiatodistus-2018])
+(def energiatodistukset #(pcalls energiatodistus-2018 energiatodistus-2013))
 
 (def sis-kuorma-data {:henkilot {:kayttoaste 0.2 :lampokuorma 1}
                       :kuluttajalaitteet {:kayttoaste 0.3 :lampokuorma 1}
@@ -38,7 +38,7 @@
   (t/is (= "12,346 %" (service/format-number 0.1234567 3 true))))
 
 (t/deftest fill-xlsx-template-test
-  (doseq [energiatodistus energiatodistukset]
+  (doseq [energiatodistus (energiatodistukset)]
     (let [path (service/fill-xlsx-template energiatodistus "fi" false)
           file (-> path io/input-stream)
           loaded-xlsx (xlsx/load-xlsx file)
@@ -59,7 +59,7 @@
     (io/delete-file file-path)))
 
 (t/deftest generate-pdf-as-file-test
-  (doseq [energiatodistus energiatodistukset]
+  (doseq [energiatodistus (energiatodistukset)]
     (let [file-path (service/generate-pdf-as-file energiatodistus "sv" true)]
       (t/is (-> file-path io/as-file .exists))
       (io/delete-file file-path))))

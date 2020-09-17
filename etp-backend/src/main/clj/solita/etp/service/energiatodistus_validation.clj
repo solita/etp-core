@@ -3,7 +3,9 @@
             [solita.etp.exception :as exception]
             [solita.etp.service.laatimisvaihe :as laatimisvaihe]
             [solita.etp.service.kielisyys :as kielisyys]
-            [solita.etp.service.luokittelu :as luokittelu]))
+            [solita.etp.service.luokittelu :as luokittelu]
+            [solita.common.logic :as logic]
+            [flathead.deep :as deep]))
 
 (def required-condition
   {"perustiedot.rakennustunnus" (complement laatimisvaihe/rakennuslupa?)
@@ -81,3 +83,38 @@
            :missing missing
            :message (str "Required value is missing in properties: "
                          (str/join ", " missing))})))))
+
+(defn- find-constant-kuorma [constant-kuormat kayttotarkoitusluokka-id]
+  (->> constant-kuormat
+      (filter (comp (partial = kayttotarkoitusluokka-id) :kayttotarkoitusluokka-id))
+       first))
+
+(defn- find-alakayttotarkoitusluokka [alakayttotarkoitusluokat energiatodistus]
+  (some-> energiatodistus
+          :perustiedot :kayttotarkoitus
+          (luokittelu/find-luokka alakayttotarkoitusluokat)))
+
+(defn- constant-kuorma-properties [kuorma]
+  (-> kuorma
+      (dissoc :kayttotarkoitusluokka-id)
+      (update :valaistus #(dissoc % :lampokuorma))))
+
+(defn validate-sisainen-kuorma! [constant-kuormat
+                                  alakayttotarkoitusluokat
+                                  energiatodistus]
+  (logic/if-let*
+    [alakayttotarkoitusluokka
+     (find-alakayttotarkoitusluokka alakayttotarkoitusluokat energiatodistus)
+     constant-kuorma
+     (some-> constant-kuormat
+         (find-constant-kuorma (:kayttotarkoitusluokka-id alakayttotarkoitusluokka))
+         constant-kuorma-properties)]
+
+    (when-not (= constant-kuorma
+                 (->> energiatodistus
+                      :lahtotiedot :sis-kuorma constant-kuorma-properties
+                      (deep/map-values (logic/when* number? bigdec))))
+      (exception/throw-ex-info!
+        {:type         :invalid-sisainen-kuorma
+         :valid-kuorma constant-kuorma
+         :message      (str "Values of sisainen kuorma are fixed and must be: " constant-kuorma)}))))

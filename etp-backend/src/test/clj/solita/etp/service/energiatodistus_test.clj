@@ -26,6 +26,12 @@
                             :kulutus {:sahko       nil
                                       :lampo       6.789M}})
 
+(defn test-sisainen-kuorma [versio id]
+  (-> (service/find-sisaiset-kuormat ts/*db* versio)
+      (->> (filter (comp (partial = id) :kayttotarkoitusluokka-id)))
+      first
+      (dissoc :kayttotarkoitusluokka-id)))
+
 (def energiatodistus-generators
   {schema.core/Num                     (g/always 1.0M)
    common-schema/Year                  (g/always 2021)
@@ -83,22 +89,32 @@
       (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-2 :id] (rand-int 10))
       (assoc-in [:lahtotiedot :lammitys :lammonjako :id] (rand-int 13))))
 
+(defn fix-sisainen-kuorma [energiatodistus versio]
+  (if-let [constant-kuorma (test-sisainen-kuorma versio 1)]
+    (assoc-in energiatodistus [:lahtotiedot :sis-kuorma] constant-kuorma)
+    energiatodistus))
+
+(defn fix-energiatodistus [energiatodistus versio]
+  (-> energiatodistus
+      fix-energiatodistus-fk-references
+      (fix-sisainen-kuorma versio)))
+
 (defn generate-energiatodistus-2018 []
   (-> (g/generate schema/EnergiatodistusSave2018
                   energiatodistus-generators)
-      (fix-energiatodistus-fk-references)))
+      (fix-energiatodistus 2018)))
 
 (defn generate-energiatodistus-2018-complete []
   (-> (g/generate (deep/map-values record?
                                    (logic/when* xschema/maybe? :schema)
                                    schema/EnergiatodistusSave2018)
                   energiatodistus-generators)
-      (fix-energiatodistus-fk-references)))
+      (fix-energiatodistus 2018)))
 
 (defn generate-energiatodistus-2013 []
   (-> (g/generate schema/EnergiatodistusSave2013
                   energiatodistus-generators)
-      (fix-energiatodistus-fk-references)))
+      (fix-energiatodistus 2013)))
 
 (defn test-add-and-find-energiatodistus [versio gen-f]
   (let [laatija-id (add-laatija!)]
