@@ -105,13 +105,10 @@
    :takka             (maara-tuotto (xml/get-in-xml xml [:lammitys-takka]))
    :ilmanlampopumppu  (maara-tuotto (xml/get-in-xml xml [:lammitys-ilmanlampopumppu]))})
 
-
-;; TODO is this ok? Needs testing with real clients (what kind of data
-;; they actually send)
 (defn sis-kuorma [xml]
   (reduce (fn [acc k]
             (let [xml-for-k (->> xml
-                                 (filter #(xml/get-in-xml % [k]))
+                                 (filter #(xml/get-content % [k]))
                                  first)]
               (assoc acc k {:kayttoaste  (xml/get-content xml-for-k [:kayttoaste])
                             :lampokuorma (xml/get-content xml-for-k [k])})))
@@ -306,21 +303,13 @@
                           (if (xml/valid-against-schema? xml xsd-schema)
                             (try
                               (let [energiatodistus (xml->energiatodistus xml)
-                                    ;; TODO validate the energiatodistus here, and
-                                    ;; send the error-response if not valid
                                     id (energiatodistus-service/add-energiatodistus!
                                         db whoami versio energiatodistus)]
                                 ;; TODO where to get remarks?
                                 (-> (success-response id []) r/response response/->xml-response))
 
                               (catch clojure.lang.ExceptionInfo e
-                                ;; If the xsd validation succeeds, then xml->energiatodistus
-                                ;; function should know how to build an energiatodistus map
-                                ;; that can be coerced into an energiatodistus. If this
-                                ;; happens there's definitely some case for this integration
-                                ;; that we have not thought about before.
-                                (-> ["XML passed XSD validation, but coercing to energiatodistus failed"
-                                     (.getMessage e)]
+                                (-> [(.getMessage e)]
                                     error-response
                                     response/internal-server-error
                                     response/->xml-response)))
