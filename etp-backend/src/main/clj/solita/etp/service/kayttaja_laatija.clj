@@ -37,7 +37,9 @@
 (defn update-kayttaja-laatija! [db whoami id kayttaja-laatija]
   (if (or (and (= id (:id whoami))
                (common-schema/not-contains-keys
-                 kayttaja-laatija laatija-schema/LaatijaAdminUpdate))
+                kayttaja-laatija laatija-schema/LaatijaAdminUpdate)
+               (common-schema/not-contains-keys
+                kayttaja-laatija laatija-schema/KayttajaAdminUpdate))
           (rooli-service/paakayttaja? whoami))
     (let [kayttaja (st/select-schema kayttaja-laatija laatija-schema/KayttajaUpdate)
           laatija (st/select-schema kayttaja-laatija laatija-schema/LaatijaUpdate)]

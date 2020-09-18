@@ -55,19 +55,20 @@
          common-schema/Id
          {:henkilotunnus common-schema/Henkilotunnus}))
 
-(def KayttajaAdd
+(def KayttajaAdminUpdate
   "Only for internal use in laatija services.
-  Represents laatija information which is stored in kayttaja-table."
+   Represents kayttaja information which can be updated by admins."
   {:etunimi  schema/Str
    :sukunimi schema/Str
-   :email    schema/Str
-   :puhelin  schema/Str
    :henkilotunnus common-schema/Henkilotunnus})
 
 (def KayttajaUpdate
   "Only for internal use in laatija services.
-  Represents laatija information which is stored in kayttaja-table."
-  (dissoc KayttajaAdd :email))
+   Represents kayttaja information which is stored in kayttaja-table."
+  (merge KayttajaAdminUpdate
+         {:puhelin  schema/Str}))
+
+(def KayttajaAdd (assoc KayttajaUpdate :email schema/Str))
 
 (def KayttajaLaatijaAdd
   "A schema for adding new or updating existing laatija.
