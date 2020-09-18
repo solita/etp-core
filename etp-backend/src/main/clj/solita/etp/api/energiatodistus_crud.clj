@@ -17,7 +17,11 @@
                      #(api-response/created uri
                        (energiatodistus-service/add-energiatodistus!
                          db whoami version (coerce (:body parameters))))
-                     [{:type :invalid-value :response 400}]))}})
+                     [{:type :invalid-replace :response 400}
+                      {:type :foreign-key-violation :response 400}
+                      {:type :invalid-value :response 400}
+                      {:type :invalid-sisainen-kuorma :response 400}]))}})
+
   ([version save-schema] (post version save-schema identity)))
 
 (defn gpd-routes [get-schema save-schema]
