@@ -36,13 +36,13 @@
                        #(<= mininclusive % maxinclusive) name)))
 
 (def Num1
-  (LimitedNum schema/Num 0.0 1.0 "[0, 1]"))
+  (LimitedNum schema/Num 0 1 "[0, 1]"))
 
 (def NonNegative
-  (LimitedNum schema/Num 0.0 9999999999 "[0, max]"))
+  (LimitedNum schema/Num 0 9999999999 "[0, max]"))
 
 (def IntNonNegative
-  (LimitedNum schema/Int 0.0 9999999999 "[0, max]"))
+  (LimitedNum schema/Int 0 9999999999 "[0, max]"))
 
 (def Luokittelu (merge Id {:label-fi schema/Str
                            :label-sv schema/Str
