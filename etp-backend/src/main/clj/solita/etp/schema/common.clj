@@ -9,7 +9,7 @@
 (def Id {:id Key})
 
 (defn StringBase [max]
-  (schema/constrained schema/Str #(<= 1 (count %) max)))
+  (schema/constrained schema/Str #(<= 1 (count %) max) (str "[1, " max "]")))
 
 (def String8 (StringBase 8))
 (def String12 (StringBase 12))
@@ -28,28 +28,18 @@
 (def String6300 (StringBase 6300))
 
 (def Year
-  (schema/constrained schema/Int #(<= 0 % 9999)))
+  (schema/constrained schema/Int #(<= 0 % 9999) "Year"))
 
-(def Integer100
-  (schema/constrained schema/Int #(<= 0 % 100)))
+(defn- LimitedNum
+  ([mininclusive maxinclusive name]
+   (schema/constrained
+     schema/Num #(<= mininclusive % maxinclusive) name)))
 
-(defn FloatBase
-  ([mininclusive]
-   (FloatBase mininclusive Float/MAX_VALUE))
-  ([mininclusive maxinclusive]
-   (schema/constrained schema/Num #(<= mininclusive % maxinclusive))))
+(def Num1
+  (LimitedNum 0.0 1.0 "[0, 1]"))
 
-(def Float1
-  (FloatBase 0.0 1.0))
-
-(def Float10
-  (FloatBase 0.0 10.0))
-
-(def Float50
-  (FloatBase 0.0 50.0))
-
-(def FloatPos
-  (FloatBase 0.0))
+(def NonNegative
+  (LimitedNum 0.0 9999999999 "[0, max]"))
 
 (def Luokittelu (merge Id {:label-fi schema/Str
                            :label-sv schema/Str
@@ -80,7 +70,8 @@
            (= checksum (henkilotunnus-checksum (str date-part individual-number)))))
     (catch StringIndexOutOfBoundsException _ false)))
 
-(def Henkilotunnus (schema/constrained schema/Str valid-henkilotunnus?))
+(def Henkilotunnus (schema/constrained schema/Str valid-henkilotunnus?
+                                       "henkilotunnus"))
 
 (defn ytunnus-checksum [ytunnus]
   (let [digits (map #(-> % str Integer/parseInt) (subs ytunnus 0 7))
@@ -95,7 +86,8 @@
          (= \- (get ytunnus 7))
          (= checksum (Integer/parseInt (str (get ytunnus 8)))))))
 
-(def Ytunnus (schema/constrained schema/Str valid-ytunnus?))
+(def Ytunnus (schema/constrained schema/Str valid-ytunnus?
+                                 "y-tunnus"))
 
 (def ConstraintError
   { :type schema/Keyword
@@ -107,4 +99,5 @@
       (valid-ytunnus? ytunnus))
     false))
 
-(def OVTtunnus (schema/constrained schema/Str valid-ovt-tunnus?))
+(def OVTtunnus (schema/constrained schema/Str valid-ovt-tunnus?
+                                   "ovt-tunnus"))

@@ -28,13 +28,9 @@
   [["/energiatodistukset"
     ["/2013" (crud-api/post 2013
                             (xschema/optional-key-for-maybe
-                             energiatodistus-schema/EnergiatodistusSave2013)
-                            (xschema/missing-maybe-values-coercer
                              energiatodistus-schema/EnergiatodistusSave2013))]
     ["/2018" (crud-api/post 2018
                             (xschema/optional-key-for-maybe
-                             energiatodistus-schema/EnergiatodistusSave2018)
-                            (xschema/missing-maybe-values-coercer
                              energiatodistus-schema/EnergiatodistusSave2018))]
     ["/legacy"
      ["/2013" (xml-api/post 2013)]
@@ -181,20 +177,20 @@
 
    ["/e-luokka/:versio/:alakayttotarkoitusluokka/:nettoala/:e-luku"
     {:get {:summary    "Laske energiatodistukselle energiatehokkuusluokka"
-           :parameters {:path {:versio common-schema/Key
+           :parameters {:path {:versio                   common-schema/Key
                                :alakayttotarkoitusluokka schema/Str
-                               :nettoala common-schema/FloatPos
-                               :e-luku common-schema/FloatPos}}
+                               :nettoala                 common-schema/NonNegative
+                               :e-luku                   common-schema/NonNegative}}
            :responses  {200 {:body e-luokka-schema/ELuokka}}
            :handler    (fn [{{{:keys [versio alakayttotarkoitusluokka nettoala e-luku]} :path}
-                            :parameters :keys [db]}]
+                             :parameters :keys [db]}]
                          (api-response/get-response
-                          (e-luokka-service/find-e-luokka-info db
-                                                               versio
-                                                               alakayttotarkoitusluokka
-                                                               nettoala
-                                                               e-luku)
-                          "Could not find luokittelu with given versio and alakayttotarkoitusluokka"))}}]
+                           (e-luokka-service/find-e-luokka-info db
+                                                                versio
+                                                                alakayttotarkoitusluokka
+                                                                nettoala
+                                                                e-luku)
+                           "Could not find luokittelu with given versio and alakayttotarkoitusluokka"))}}]
 
    ["/validation/numeric/:versio"
     {:get {:summary    "Hae energiatodistuksen numeroarvojen validointisäännöt"

@@ -37,7 +37,8 @@
     (catch StringIndexOutOfBoundsException _ false)))
 
 (def Rakennustunnus
-  (schema/constrained schema/Str valid-rakennustunnus?))
+  (schema/constrained schema/Str valid-rakennustunnus?
+                      "rakennustunnus"))
 
 (def YritysPostinumero common-schema/String8)
 
@@ -68,26 +69,26 @@
    ;; This in in fact alakäyttötarkoitus in database
    :kayttotarkoitus          schema/Str})
 
-(defn Rakenneusvaippa [mininclusive maxinclusive]
-  {:ala common-schema/FloatPos
-   :U (common-schema/FloatBase mininclusive maxinclusive)})
+(def Rakenneusvaippa
+  {:ala common-schema/NonNegative
+   :U   common-schema/NonNegative})
 
 (def LahtotiedotRakennusvaippa
-  {:ilmanvuotoluku common-schema/Float50
-   :lampokapasiteetti common-schema/FloatPos
-   :ilmatilavuus common-schema/FloatPos
+  {:ilmanvuotoluku    common-schema/NonNegative
+   :lampokapasiteetti common-schema/NonNegative
+   :ilmatilavuus      common-schema/NonNegative
 
-   :ulkoseinat     (Rakenneusvaippa 0.05 2.0)
-   :ylapohja       (Rakenneusvaippa 0.03 2.0)
-   :alapohja       (Rakenneusvaippa 0.03 4.0)
-   :ikkunat        (Rakenneusvaippa 0.04 6.5)
-   :ulkoovet       (Rakenneusvaippa 0.2 6.5)
-   :kylmasillat-UA common-schema/FloatPos})
+   :ulkoseinat        Rakenneusvaippa
+   :ylapohja          Rakenneusvaippa
+   :alapohja          Rakenneusvaippa
+   :ikkunat           Rakenneusvaippa
+   :ulkoovet          Rakenneusvaippa
+   :kylmasillat-UA    common-schema/NonNegative})
 
 (def LahtotiedotIkkuna
-  {:ala common-schema/FloatPos
-   :U (common-schema/FloatBase 0.4 6.5)
-   :g-ks (common-schema/FloatBase 0.1 1.0)})
+  {:ala  common-schema/NonNegative
+   :U    common-schema/NonNegative
+   :g-ks common-schema/NonNegative})
 
 (def LahtotiedotIkkunat
   {:pohjoinen LahtotiedotIkkuna
@@ -102,9 +103,9 @@
    :katto     LahtotiedotIkkuna})
 
 (def PoistoTuloSfp
-  {:poisto common-schema/FloatPos
-   :tulo   common-schema/FloatPos
-   :sfp    common-schema/Float10})
+  {:poisto common-schema/NonNegative
+   :tulo   common-schema/NonNegative
+   :sfp    common-schema/NonNegative})
 
 (def LahtotiedotIlmanvaihto
   {:erillispoistot      PoistoTuloSfp
@@ -112,22 +113,23 @@
    :tyyppi-id           common-schema/Key
    :kuvaus-fi           common-schema/String75
    :kuvaus-sv           common-schema/String75
-   :lto-vuosihyotysuhde common-schema/Float1
-   :tuloilma-lampotila  common-schema/FloatPos
-   :paaiv               (merge PoistoTuloSfp {:lampotilasuhde common-schema/Float1
-                                              :jaatymisenesto (common-schema/FloatBase -20.0 10.0)})})
+   :lto-vuosihyotysuhde common-schema/Num1
+   :tuloilma-lampotila  common-schema/NonNegative
+   :paaiv               (merge PoistoTuloSfp
+                               {:lampotilasuhde common-schema/Num1
+                                :jaatymisenesto schema/Num})})
 
 (def Hyotysuhde
-  {:tuoton-hyotysuhde common-schema/FloatPos,
-   :jaon-hyotysuhde   common-schema/FloatPos,
-   :lampokerroin      common-schema/FloatPos,
-   :apulaitteet       common-schema/FloatPos,
-   :lampohavio-lammittamaton-tila common-schema/FloatPos,
-   :lampopumppu-tuotto-osuus common-schema/Float1})
+  {:tuoton-hyotysuhde             common-schema/NonNegative,
+   :jaon-hyotysuhde               common-schema/NonNegative,
+   :lampokerroin                  common-schema/NonNegative,
+   :apulaitteet                   common-schema/NonNegative,
+   :lampohavio-lammittamaton-tila common-schema/NonNegative,
+   :lampopumppu-tuotto-osuus      common-schema/Num1})
 
 (def MaaraTuotto
-  {:maara  common-schema/Integer100,
-   :tuotto common-schema/FloatPos})
+  {:maara  schema/Int,
+   :tuotto common-schema/NonNegative})
 
 (def FormalDescription
   {:id        common-schema/Key
@@ -143,37 +145,38 @@
    :takka             MaaraTuotto
    :ilmanlampopumppu  MaaraTuotto})
 
-(defn SisKuorma [mininclusive maxinclusive]
-  {:kayttoaste        (common-schema/FloatBase 0.1 1.0)
-   :lampokuorma       (common-schema/FloatBase mininclusive maxinclusive)})
+(def SisKuorma
+  {:kayttoaste  common-schema/Num1
+   :lampokuorma common-schema/NonNegative})
 
 (def SisKuormat
-  {:henkilot          (SisKuorma 1.0 14.0)
-   :kuluttajalaitteet (SisKuorma 0.0 12.0)
-   :valaistus         (SisKuorma 0.0 19.0)})
+  {:henkilot          SisKuorma
+   :kuluttajalaitteet SisKuorma
+   :valaistus         SisKuorma})
 
 (def Lahtotiedot
-  {:lammitetty-nettoala  common-schema/FloatPos
+  {:lammitetty-nettoala  common-schema/NonNegative
    :rakennusvaippa       LahtotiedotRakennusvaippa
    :ikkunat              LahtotiedotIkkunat
    :ilmanvaihto          LahtotiedotIlmanvaihto
    :lammitys             LahtotiedotLammitys
-   :jaahdytysjarjestelma {:jaahdytyskauden-painotettu-kylmakerroin (common-schema/FloatBase 1.0 10.0)}
-   :lkvn-kaytto          {:ominaiskulutus common-schema/FloatPos
-                          :lammitysenergian-nettotarve common-schema/FloatPos}
-   :sis-kuorma SisKuormat})
+   :jaahdytysjarjestelma {:jaahdytyskauden-painotettu-kylmakerroin
+                          common-schema/NonNegative}
+   :lkvn-kaytto          {:ominaiskulutus              common-schema/NonNegative
+                          :lammitysenergian-nettotarve common-schema/NonNegative}
+   :sis-kuorma           SisKuormat})
 
 (def UusiutuvatOmavaraisenergiat
-  {:aurinkosahko common-schema/FloatPos
-   :tuulisahko   common-schema/FloatPos
-   :aurinkolampo common-schema/FloatPos
-   :muulampo     common-schema/FloatPos
-   :muusahko     common-schema/FloatPos
-   :lampopumppu  common-schema/FloatPos})
+  {:aurinkosahko common-schema/NonNegative
+   :tuulisahko   common-schema/NonNegative
+   :aurinkolampo common-schema/NonNegative
+   :muulampo     common-schema/NonNegative
+   :muusahko     common-schema/NonNegative
+   :lampopumppu  common-schema/NonNegative})
 
 (def SahkoLampo
-  {:sahko common-schema/FloatPos
-   :lampo common-schema/FloatPos})
+  {:sahko common-schema/NonNegative
+   :lampo common-schema/NonNegative})
 
 (def Kuukausierittely (schema/maybe
                        {:tuotto (optional-properties UusiutuvatOmavaraisenergiat)
@@ -184,11 +187,11 @@
 
 (def Tulokset
   {:kaytettavat-energiamuodot
-   {:fossiilinen-polttoaine common-schema/FloatPos
-    :sahko                  common-schema/FloatPos
-    :kaukojaahdytys         common-schema/FloatPos
-    :kaukolampo             common-schema/FloatPos
-    :uusiutuva-polttoaine   common-schema/FloatPos},
+   {:fossiilinen-polttoaine common-schema/NonNegative
+    :sahko                  common-schema/NonNegative
+    :kaukojaahdytys         common-schema/NonNegative
+    :kaukolampo             common-schema/NonNegative
+    :uusiutuva-polttoaine   common-schema/NonNegative},
 
    :uusiutuvat-omavaraisenergiat
    UusiutuvatOmavaraisenergiat,
@@ -199,48 +202,48 @@
    {:tilojen-lammitys                     SahkoLampo,
     :tuloilman-lammitys                   SahkoLampo,
     :kayttoveden-valmistus                SahkoLampo
-    :iv-sahko                             common-schema/FloatPos
-    :jaahdytys                            (assoc SahkoLampo :kaukojaahdytys common-schema/FloatPos)
-    :kuluttajalaitteet-ja-valaistus-sahko common-schema/FloatPos},
+    :iv-sahko                             common-schema/NonNegative
+    :jaahdytys                            (assoc SahkoLampo :kaukojaahdytys common-schema/NonNegative)
+    :kuluttajalaitteet-ja-valaistus-sahko common-schema/NonNegative},
 
    :nettotarve
-   {:tilojen-lammitys-vuosikulutus      common-schema/FloatPos
-    :ilmanvaihdon-lammitys-vuosikulutus common-schema/FloatPos
-    :kayttoveden-valmistus-vuosikulutus common-schema/FloatPos
-    :jaahdytys-vuosikulutus             common-schema/FloatPos},
+   {:tilojen-lammitys-vuosikulutus      common-schema/NonNegative
+    :ilmanvaihdon-lammitys-vuosikulutus common-schema/NonNegative
+    :kayttoveden-valmistus-vuosikulutus common-schema/NonNegative
+    :jaahdytys-vuosikulutus             common-schema/NonNegative},
 
    :lampokuormat
-   {:aurinko           common-schema/FloatPos
-    :ihmiset           common-schema/FloatPos
-    :kuluttajalaitteet common-schema/FloatPos
-    :valaistus         common-schema/FloatPos,
-    :kvesi             common-schema/FloatPos},
+   {:aurinko           common-schema/NonNegative
+    :ihmiset           common-schema/NonNegative
+    :kuluttajalaitteet common-schema/NonNegative
+    :valaistus         common-schema/NonNegative,
+    :kvesi             common-schema/NonNegative},
 
    :laskentatyokalu common-schema/String60})
 
 (def ToteutunutOstoenergiankulutus
   {:ostettu-energia
-   {:kaukolampo-vuosikulutus      common-schema/FloatPos,
-    :kokonaissahko-vuosikulutus   common-schema/FloatPos,
-    :kiinteistosahko-vuosikulutus common-schema/FloatPos,
-    :kayttajasahko-vuosikulutus   common-schema/FloatPos,
-    :kaukojaahdytys-vuosikulutus  common-schema/FloatPos},
+   {:kaukolampo-vuosikulutus      common-schema/NonNegative,
+    :kokonaissahko-vuosikulutus   common-schema/NonNegative,
+    :kiinteistosahko-vuosikulutus common-schema/NonNegative,
+    :kayttajasahko-vuosikulutus   common-schema/NonNegative,
+    :kaukojaahdytys-vuosikulutus  common-schema/NonNegative},
 
    :ostetut-polttoaineet
-   {:kevyt-polttooljy      common-schema/FloatPos,
-    :pilkkeet-havu-sekapuu common-schema/FloatPos,
-    :pilkkeet-koivu        common-schema/FloatPos,
-    :puupelletit           common-schema/FloatPos,
-    :muu
-      [{:nimi           common-schema/String30,
-        :yksikko        common-schema/String12,
-        :muunnoskerroin common-schema/FloatPos,
-        :maara-vuodessa common-schema/FloatPos}]},
+     {:kevyt-polttooljy      common-schema/NonNegative,
+      :pilkkeet-havu-sekapuu common-schema/NonNegative,
+      :pilkkeet-koivu        common-schema/NonNegative,
+      :puupelletit           common-schema/NonNegative,
+      :muu
+       [{:nimi           common-schema/String30,
+         :yksikko        common-schema/String12,
+         :muunnoskerroin common-schema/NonNegative,
+         :maara-vuodessa common-schema/NonNegative}]},
 
-   :sahko-vuosikulutus-yhteensa common-schema/FloatPos,
-   :kaukolampo-vuosikulutus-yhteensa common-schema/FloatPos,
-   :polttoaineet-vuosikulutus-yhteensa common-schema/FloatPos,
-   :kaukojaahdytys-vuosikulutus-yhteensa common-schema/FloatPos})
+   :sahko-vuosikulutus-yhteensa          common-schema/NonNegative,
+   :kaukolampo-vuosikulutus-yhteensa     common-schema/NonNegative,
+   :polttoaineet-vuosikulutus-yhteensa   common-schema/NonNegative,
+   :kaukojaahdytys-vuosikulutus-yhteensa common-schema/NonNegative})
 
 (def Huomio
   {:teksti-fi  common-schema/String1000
@@ -287,14 +290,14 @@
       (dissoc-path [:perustiedot :laatimisvaihe])))
 
 (def UserDefinedEnergiamuoto
-  {:nimi common-schema/String50
-   :muotokerroin common-schema/FloatPos
-   :ostoenergia common-schema/FloatPos})
+  {:nimi         common-schema/String50
+   :muotokerroin common-schema/NonNegative
+   :ostoenergia  common-schema/NonNegative})
 
 (def UserDefinedEnergia
-  {:nimi-fi common-schema/String50
-   :nimi-sv common-schema/String50
-   :vuosikulutus common-schema/FloatPos})
+  {:nimi-fi      common-schema/String50
+   :nimi-sv      common-schema/String50
+   :vuosikulutus common-schema/NonNegative})
 
 (def EnergiatodistusSave2013
   "This schema is used in

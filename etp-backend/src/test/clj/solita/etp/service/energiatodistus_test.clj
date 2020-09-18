@@ -38,7 +38,6 @@
    schema/Rakennustunnus               (g/always "1035150826")
    schema/YritysPostinumero            (g/always "00100")
    common-schema/Date                  (g/always (java.time.LocalDate/now))
-   common-schema/Integer100            (g/always 50)
    geo-schema/Postinumero              (g/always "00100")
    common-schema/Instant               (g/always (Instant/now))
    (schema.core/eq 2018)               (g/always 2018)
