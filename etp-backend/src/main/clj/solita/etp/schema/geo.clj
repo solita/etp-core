@@ -10,7 +10,7 @@
                   :vastaanottajan-tarkenne (schema/maybe schema/Str)
                   :postinumero             schema/Str
                   :postitoimipaikka        schema/Str
-                  :maa                     (schema/constrained schema/Str valid-maa?)})
+                  :maa                     Maa})
 (def Postinumero
   (schema/constrained schema/Str #(re-find #"\d{5}" %) "zip-code"))
 
