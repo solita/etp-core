@@ -151,7 +151,9 @@
     (cond
       (and (= whoami kayttaja-1)
            (every? #(not (contains? update-1 %))
-                   (keys laatija-schema/LaatijaAdminUpdate)))
+                   (keys laatija-schema/LaatijaAdminUpdate))
+           (every? #(not (contains? update-1 %))
+                   (keys laatija-schema/KayttajaAdminUpdate)))
       (do
         (t/is (true? kayttaja-1-updated?))
         (t/is (true? laatija-1-updated?))
@@ -160,7 +162,9 @@
 
       (and (= whoami kayttaja-2)
            (every? #(not (contains? update-2 %))
-                   (keys laatija-schema/LaatijaAdminUpdate)))
+                   (keys laatija-schema/LaatijaAdminUpdate))
+           (every? #(not (contains? update-2 %))
+                   (keys laatija-schema/KayttajaAdminUpdate)))
       (do
         (t/is (false? kayttaja-1-updated?))
         (t/is (false? laatija-1-updated?))
