@@ -4,15 +4,15 @@
 
 (defn valid-maa? [maa] (= (count maa) 2))
 
-(def Maa (schema/constrained schema/Str valid-maa?))
+(def Maa (schema/constrained schema/Str valid-maa? "country-code"))
 
 (def Postiosoite {:jakeluosoite            schema/Str
                   :vastaanottajan-tarkenne (schema/maybe schema/Str)
                   :postinumero             schema/Str
                   :postitoimipaikka        schema/Str
-                  :maa                     (schema/constrained schema/Str valid-maa?)})
+                  :maa                     Maa})
 (def Postinumero
-  (schema/constrained schema/Str #(re-find #"\d{5}" %)))
+  (schema/constrained schema/Str #(re-find #"\d{5}" %) "zip-code"))
 
 (def Toimintaalue common-schema/Luokittelu)
 
