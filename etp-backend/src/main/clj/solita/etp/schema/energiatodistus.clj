@@ -21,6 +21,7 @@
       (instance? Predicate schema) (schema/maybe schema)
       :else (exception/illegal-argument! (str "Unsupported schema record: " schema)))
     (cond
+      (= schema schema/Bool) schema
       (class? schema) (schema/maybe schema)
       (map? schema) (m/map-values optional-properties schema)
       (vector? schema) (mapv optional-properties schema)
@@ -128,7 +129,7 @@
    :lampopumppu-tuotto-osuus      common-schema/Num1})
 
 (def MaaraTuotto
-  {:maara  schema/Int,
+  {:maara  common-schema/IntNonNegative,
    :tuotto common-schema/NonNegative})
 
 (def FormalDescription

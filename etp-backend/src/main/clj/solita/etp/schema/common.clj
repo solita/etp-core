@@ -31,15 +31,18 @@
   (schema/constrained schema/Int #(<= 0 % 9999) "Year"))
 
 (defn- LimitedNum
-  ([mininclusive maxinclusive name]
-   (schema/constrained
-     schema/Num #(<= mininclusive % maxinclusive) name)))
+  ([number-type mininclusive maxinclusive name]
+   (schema/constrained number-type
+                       #(<= mininclusive % maxinclusive) name)))
 
 (def Num1
-  (LimitedNum 0.0 1.0 "[0, 1]"))
+  (LimitedNum schema/Num 0.0 1.0 "[0, 1]"))
 
 (def NonNegative
-  (LimitedNum 0.0 9999999999 "[0, max]"))
+  (LimitedNum schema/Num 0.0 9999999999 "[0, max]"))
+
+(def IntNonNegative
+  (LimitedNum schema/Int 0.0 9999999999 "[0, max]"))
 
 (def Luokittelu (merge Id {:label-fi schema/Str
                            :label-sv schema/Str

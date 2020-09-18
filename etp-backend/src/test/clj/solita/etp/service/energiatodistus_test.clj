@@ -40,6 +40,7 @@
    common-schema/Date                  (g/always (java.time.LocalDate/now))
    geo-schema/Postinumero              (g/always "00100")
    common-schema/Instant               (g/always (Instant/now))
+   common-schema/IntNonNegative        (test-generators/choose 0 10)
    (schema.core/eq 2018)               (g/always 2018)
    (schema.core/eq 2013)               (g/always 2013)
    schema/OptionalKuukausierittely     (test-generators/one-of
