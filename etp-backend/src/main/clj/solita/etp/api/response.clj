@@ -95,3 +95,16 @@
 
     :else
     (r/response result)))
+
+(defn ->xml-response [response]
+  (assoc-in response [:headers "Content-Type"] "application/xml"))
+
+(defn bad-request [body]
+  {:status 400
+   :headers {}
+   :body body})
+
+(defn internal-server-error [body]
+  {:status 500
+   :headers {}
+   :body body})

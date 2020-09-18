@@ -7,6 +7,7 @@
             [solita.etp.schema.kayttotarkoitus :as kayttotarkoitus-schema]
             [solita.etp.schema.e-luokka :as e-luokka-schema]
             [solita.etp.api.energiatodistus-crud :as crud-api]
+            [solita.etp.api.energiatodistus-xml :as xml-api]
             [solita.etp.api.energiatodistus-liite :as liite-api]
             [solita.etp.api.energiatodistus-signing :as signing-api]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
@@ -34,7 +35,10 @@
                             (xschema/optional-key-for-maybe
                              energiatodistus-schema/EnergiatodistusSave2018)
                             (xschema/missing-maybe-values-coercer
-                             energiatodistus-schema/EnergiatodistusSave2018))]]])
+                             energiatodistus-schema/EnergiatodistusSave2018))]
+    ["/legacy"
+     ["/2013" (xml-api/post 2013)]
+     ["/2018" (xml-api/post 2018)]]]])
 
 (defn valid-pdf-filename? [filename id kieli]
   (= filename (format "energiatodistus-%s-%s.pdf" id kieli)))
