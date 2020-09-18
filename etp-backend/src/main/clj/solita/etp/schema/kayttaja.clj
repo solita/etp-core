@@ -19,7 +19,9 @@
    Not intended for laatija-users."
   {:passivoitu schema/Bool
    :rooli      (schema/enum 1 2)
-   :henkilotunnus (schema/maybe common-schema/Henkilotunnus)})
+   :henkilotunnus (schema/maybe common-schema/Henkilotunnus)
+   :virtu {:localid (schema/maybe schema/Str)
+           :organisaatio (schema/maybe schema/Str)}})
 
 (def KayttajaUpdate
   "Schema to update all other users (kayttaja) except laatija."
