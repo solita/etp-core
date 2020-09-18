@@ -180,7 +180,7 @@
                         :kulutus (optional-properties SahkoLampo)}))
 
 (def OptionalKuukausierittely (schema/constrained [Kuukausierittely]
-                                                   #(contains? #{0 12} (count %))))
+                                                  #(contains? #{0 12} (count %))))
 
 (def Tulokset
   {:kaytettavat-energiamuodot
