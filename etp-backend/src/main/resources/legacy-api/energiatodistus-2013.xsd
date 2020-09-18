@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Published by JAX-WS RI (http://jax-ws.java.net). RI's version is JAX-WS RI 2.3.0 svn-revision#3528ea595bd29309f69172d231bbce272d21035c. -->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.energiatodistusrekisteri.fi/ws/energiatodistustypes" xmlns:vakiot="http://www.energiatodistusrekisteri.fi/ws/energiatodistustypes/vakiot" targetNamespace="http://www.energiatodistusrekisteri.fi/ws/energiatodistustypes" elementFormDefault="qualified">
-	<xsd:import namespace="http://www.energiatodistusrekisteri.fi/ws/energiatodistustypes/vakiot" schemaLocation="http://localhost:8080/etp/ws/etpservice?xsd=4"/>
+	<xsd:import namespace="http://www.energiatodistusrekisteri.fi/ws/energiatodistustypes/vakiot" schemaLocation="energiatodistus-2013-vakiot.xsd"/>
 	<xsd:element name="EnergiatodistusIlmoitus" type="EnergiatodistusRequestType"/>
 	<xsd:element name="EnergiatodistusVastaus" type="EnergiatodistusResponseType"/>
 	<xsd:complexType name="EnergiatodistusResponseType">
