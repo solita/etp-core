@@ -65,10 +65,11 @@
 (def KayttajaUpdate
   "Only for internal use in laatija services.
    Represents kayttaja information which is stored in kayttaja-table."
-  (merge KayttajaAdminUpdate
+  (merge (st/optional-keys KayttajaAdminUpdate)
          {:puhelin  schema/Str}))
 
-(def KayttajaAdd (assoc KayttajaUpdate :email schema/Str))
+(def KayttajaAdd (assoc (st/required-keys KayttajaUpdate)
+                        :email schema/Str))
 
 (def KayttajaLaatijaAdd
   "A schema for adding new or updating existing laatija.
