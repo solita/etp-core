@@ -17,13 +17,12 @@
   (doseq [kayttaja (tu/generate-kayttaja 100 laatija-schema/KayttajaAdd)
           :let [id (kayttaja-service/add-kayttaja! ts/*db* kayttaja)
                 found-before (kayttaja-service/find-kayttaja ts/*db* paakayttaja id)
-                new-email (str "new-" (:email found-before))
                 cognitoid (str "cognitoid-" (rand-int 1000000))
                 virtulocalid "tunnus"
                 virtuorganisaatio "organisaatio"
                 _ (service/update-kayttaja-with-whoami! ts/*db*
                                                         {:id id
-                                                         :email new-email
+                                                         :email "example@example.com"
                                                          :cognitoid cognitoid
                                                          :virtu {:localid virtulocalid
                                                                  :organisaatio virtuorganisaatio}})
@@ -31,7 +30,7 @@
     (schema/validate kayttaja-schema/Kayttaja found-after)
     (t/is (-> found-before :login nil?))
     (t/is (-> found-after :login nil? not))
-    (t/is (-> found-after :email (= new-email)))
+    (t/is (-> found-after :email (:email found-before)))
     (t/is (-> found-before :cognitoid nil?))
     (t/is (= cognitoid (:cognitoid found-after)))
     (t/is (-> found-before :virtu :localid nil?))
