@@ -9,4 +9,4 @@ WHERE (k.email IS NOT NULL AND k.email  = :email) OR
        (k.virtu$organisaatio IS NOT NULL AND k.virtu$organisaatio = :virtu_organisaatio))
 
 -- name: update-kayttaja-with-whoami!
-UPDATE kayttaja SET login = now(), email = :email, cognito_id = :cognitoid, virtu$localid = :virtu_localid, virtu$organisaatio = :virtu_organisaatio  WHERE id = :id
+UPDATE kayttaja SET login = now(), cognito_id = :cognitoid, virtu$localid = :virtu_localid, virtu$organisaatio = :virtu_organisaatio WHERE id = :id
