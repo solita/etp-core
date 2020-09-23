@@ -53,7 +53,7 @@
 
 (defn load-schema [s local?]
   (.newSchema schema-factory (if local?
-                               (-> s io/resource io/file)
+                               (-> s io/resource)
                                (URL. s))))
 
 ;; Use of emit-str is safe and works, but it's not memory-efficient.
