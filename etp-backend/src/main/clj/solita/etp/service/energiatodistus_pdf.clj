@@ -243,8 +243,8 @@
       {:path [:lahtotiedot :lammitys :lammin-kayttovesi :apulaitteet] :dp 1}
       {:path [:lahtotiedot :lammitys :takka :maara]}
       {:path [:lahtotiedot :lammitys :takka :tuotto] :dp 0}
-      {:path [:lahtotiedot :lammitys :ilmanlampopumppu :maara]}
-      {:path [:lahtotiedot :lammitys :ilmanlampopumppu :tuotto] :dp 0}
+      {:path [:lahtotiedot :lammitys :ilmalampopumppu :maara]}
+      {:path [:lahtotiedot :lammitys :ilmalampopumppu :tuotto] :dp 0}
       {:path [:lahtotiedot :jaahdytysjarjestelma :jaahdytyskauden-painotettu-kylmakerroin] :dp 2}
       {:path [:lahtotiedot :lkvn-kaytto :ominaiskulutus] :dp 0}
       {:path [:lahtotiedot :lkvn-kaytto :lammitysenergian-nettotarve] :dp 0}

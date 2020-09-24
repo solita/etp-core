@@ -103,7 +103,7 @@
    :tilat-ja-iv       (hyotysuhde (xml/get-in-xml xml [:lammitys-tilat-ja-iv]))
    :lammin-kayttovesi (hyotysuhde (xml/get-in-xml xml [:lammitys-tilat-ja-iv]))
    :takka             (maara-tuotto (xml/get-in-xml xml [:lammitys-takka]))
-   :ilmanlampopumppu  (maara-tuotto (xml/get-in-xml xml [:lammitys-ilmanlampopumppu]))})
+   :ilmalampopumppu   (maara-tuotto (xml/get-in-xml xml [:lammitys-ilmanlampopumppu]))})
 
 (defn sis-kuorma [xml]
   (reduce (fn [acc k]

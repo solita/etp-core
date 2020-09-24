@@ -20,8 +20,8 @@ values
 
 (2018, 'lt$lammitys$takka$maara',             0, 10, 0, 100),
 (2018, 'lt$lammitys$takka$tuotto',            0, 30000, 0, 300000),
-(2018, 'lt$lammitys$ilmanlampopumppu$maara',  0, 10, 0, 100),
-(2018, 'lt$lammitys$ilmanlampopumppu$tuotto', 0, 60000, 0, 600000),
+(2018, 'lt$lammitys$ilmalampopumppu$maara',  0, 10, 0, 100),
+(2018, 'lt$lammitys$ilmalampopumppu$tuotto', 0, 60000, 0, 600000),
 
 (2018, 'lt$lkvn_kaytto$lammitysenergian_nettotarve', 0, 700, 0, 999999),
 (2018, 'lt$lkvn_kaytto$ominaiskulutus',              0, 40,  0, 999999),

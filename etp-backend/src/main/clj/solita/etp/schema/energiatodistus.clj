@@ -144,7 +144,7 @@
    :tilat-ja-iv       Hyotysuhde
    :lammin-kayttovesi Hyotysuhde
    :takka             MaaraTuotto
-   :ilmanlampopumppu  MaaraTuotto})
+   :ilmalampopumppu   MaaraTuotto})
 
 (def SisKuorma
   {:kayttoaste  common-schema/Num1
