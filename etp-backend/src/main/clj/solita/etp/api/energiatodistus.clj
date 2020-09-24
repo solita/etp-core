@@ -71,6 +71,7 @@
                           (api-response/response-with-exceptions
                             #(energiatodistus-search-service/search
                               db
+                              whoami
                               {:where (json/read-value where)
                                :sort  sort :order order
                                :limit limit :offset offset})

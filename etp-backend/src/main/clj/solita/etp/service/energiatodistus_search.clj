@@ -10,7 +10,8 @@
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [flathead.flatten :as flat]
             [schema.coerce :as coerce]
-            [solita.etp.service.json :as json])
+            [solita.etp.service.json :as json]
+            [solita.etp.service.rooli :as rooli-service])
   (:import (schema.core Constrained Predicate EqSchema)
            (clojure.lang ArityException)))
 
@@ -117,21 +118,28 @@
     #(expression-seq->sql "and" predicate-expression->sql %)
     where))
 
-(def blank? (some-fn nil? empty?))
+(defn whoami->sql [{:keys [id] :as whoami}]
+  (cond
+    (rooli-service/paakayttaja? whoami) ["tila_id <> ?" 0]
+    (rooli-service/laatija? whoami) ["energiatodistus.laatija_id = ?" id]))
 
-(defn query->sql [{:keys [where sort order limit offset]}]
+(defn sql-query [whoami {:keys [where sort order limit offset]}]
   (schema/validate [[[(schema/one schema/Str "predicate") schema/Any]]] where)
+  (let [[where-sql & where-params] (where->sql where)
+        [visibility-sql & visibility-params] (whoami->sql whoami)]
+    (concat [(str base-query
+                  \newline
+                  "where "
+                  visibility-sql
+                  (when-not (str/blank? where-sql) (str " and " where-sql))
+                  (when-not (str/blank? sort)
+                    (str \newline "order by " (field->sql sort) " " (or order "asc")))
+                  (str \newline "limit " (or limit 100))
+                  (when-not (nil? offset) (str \newline "offset " offset)))]
+            visibility-params
+            where-params)))
 
-  (let [[where-sql & params] (where->sql where)]
-    (cons (str base-query
-               (when-not (blank? where-sql) (str \newline "where " where-sql))
-               (when-not (blank? sort)
-                 (str \newline "order by " (field->sql sort) " " (or order "asc")))
-               (str \newline "limit " (or limit 100))
-               (when-not (nil? offset) (str \newline "offset " offset)))
-          params)))
-
-(defn search [db query]
+(defn search [db whoami query]
   (map energiatodistus-service/db-row->energiatodistus
-       (jdbc/query db (query->sql query) nil)))
+       (jdbc/query db (sql-query whoami query) nil)))
 
