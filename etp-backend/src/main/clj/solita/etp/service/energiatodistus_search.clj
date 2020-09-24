@@ -120,7 +120,7 @@
 
 (defn whoami->sql [{:keys [id] :as whoami}]
   (cond
-    (rooli-service/paakayttaja? whoami) ["tila_id <> ?" 0]
+    (rooli-service/paakayttaja? whoami) ["energiatodistus.tila_id <> ?" 0]
     (rooli-service/laatija? whoami) ["energiatodistus.laatija_id = ?" id]))
 
 (defn sql-query [whoami {:keys [where sort order limit offset]}]

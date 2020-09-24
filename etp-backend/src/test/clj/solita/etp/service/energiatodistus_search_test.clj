@@ -22,7 +22,7 @@
   (let [whoami (add-laatija!)]
     (-> (energiatodistus-test/generate-energiatodistus-2018)
         (energiatodistus-test/add-energiatodistus! (:id whoami) 2018))
-    (t/is (= (search whoami [[["=" "id" -1]]]) []))))
+    (t/is (empty? (search whoami [[["=" "id" -1]]])))))
 
 (t/deftest add-and-find-by-id-test
   (let [whoami (add-laatija!)
@@ -96,6 +96,25 @@
               2018)
              (first (search whoami [[["=" "perustiedot.nimi" "test"]
                                      ["=" "id" id]]]))))))
+
+(t/deftest laatija-cant-find-other-laatijas-energiatodistukset-test
+  (let [adder (add-laatija!)
+        searcher (add-laatija!)
+        energiatodistus (energiatodistus-test/generate-energiatodistus-2018)
+        id (energiatodistus-test/add-energiatodistus! energiatodistus
+                                                      (:id adder)
+                                                      2018)]
+    (t/is (empty? (search searcher [[["=" "perustiedot.nimi" "test"]
+                                     ["=" "id" id]]])))))
+
+(t/deftest paakayttaja-cant-find-luonnokset
+  (let [laatija (add-laatija!)
+        energiatodistus (energiatodistus-test/generate-energiatodistus-2018)
+        id (energiatodistus-test/add-energiatodistus! energiatodistus
+                                                      (:id laatija)
+                                                      2018)]
+    (t/is (empty? (search paakayttaja [[["=" "perustiedot.nimi" "test"]
+                                        ["=" "id" id]]])))))
 
 (defn catch-ex-data [f]
   (try (f) (catch ExceptionInfo e (ex-data e))))
