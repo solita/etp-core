@@ -63,12 +63,7 @@
   [["/energiatodistukset"
     [""
      {:get {:summary    "Hae energiatodistuksia"
-            :parameters {:query {(schema/optional-key :tila)   schema/Int ;; deprecated
-                                 (schema/optional-key :sort)   schema/Str
-                                 (schema/optional-key :order)  schema/Str
-                                 (schema/optional-key :limit)  schema/Int
-                                 (schema/optional-key :offset) schema/Int
-                                 (schema/optional-key :where)  schema/Str}}
+            :parameters {:query energiatodistus-schema/EnergiatodistusSearch}
             :responses  {200 {:body [energiatodistus-schema/Energiatodistus]}}
             :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
             :handler    (fn [{{{:keys [where sort order limit offset]} :query} :parameters
