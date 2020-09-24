@@ -29,6 +29,7 @@
     (st/optional-keys KayttajaAdminUpdate)
     {:etunimi       schema/Str
      :sukunimi      schema/Str
+     :email         schema/Str
      :puhelin       schema/Str}))
 
 (def Kayttaja
