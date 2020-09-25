@@ -7,7 +7,8 @@
 
 (defonce s3 (aws/client {:api                  :s3}))
 
-(println (System/getenv))
+(jwt/http-get (str "http://169.254.170.2" (System/getenv "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI") )
+              #(-> % println))
 
 (defn put-object [file-name, bytes]
   (aws/invoke s3 {:op      :PutObject
