@@ -5,6 +5,8 @@
             [solita.etp.service.file :as file-service]
             [schema.coerce :as coerce]
             [clojure.java.jdbc :as jdbc]
+            [solita.common.aws :as aws]
+
             [clojure.set :as set]))
 
 ; *** Require sql functions ***
@@ -20,7 +22,7 @@
   (str "energiatodistus/liite/" liite-id))
 
 (defn- insert-file! [key db file]
-  (file-service/upsert-file-from-file db key file))
+  (aws/put-object key (file-service/file->byte-array file)))
 
 (defn add-liite-from-file! [db whoami energiatodistus-id liite]
   (jdbc/with-db-transaction [db db]
@@ -56,7 +58,7 @@
 
 (defn find-energiatodistus-liite-content [db liite-id]
   (merge
-    (file-service/find-file db (file-key liite-id))
+    {:content (aws/get-object (file-key liite-id))}
     (first (liite-db/select-liite db {:id liite-id}))))
 
 (defn delete-liite [db liite-id]

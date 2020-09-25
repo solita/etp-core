@@ -39,3 +39,12 @@ services:
         source: ./mpollux/keys
         target: /keys
         read_only: true
+        
+  minio:
+    image: minio/minio
+    ports:
+      - 127.0.0.1:9000:9000
+    command: server /data
+    environment:
+      MINIO_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
+      MINIO_SECRET_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
