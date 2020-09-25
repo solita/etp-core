@@ -131,7 +131,8 @@
                   \newline
                   "where "
                   visibility-sql
-                  (when-not (str/blank? where-sql) (str " and " where-sql))
+                  (when-not (str/blank? where-sql) (format " and (%s) "
+                                                           where-sql))
                   (when-not (str/blank? sort)
                     (str \newline "order by " (field->sql sort) " " (or order "asc")))
                   (str \newline "limit " (or limit 100))
@@ -142,4 +143,3 @@
 (defn search [db whoami query]
   (map energiatodistus-service/db-row->energiatodistus
        (jdbc/query db (sql-query whoami query) nil)))
-
