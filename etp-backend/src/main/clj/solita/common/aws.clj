@@ -8,6 +8,7 @@
 
 (defn put-object [file-name, bytes]
   (aws/invoke s3 {:op      :PutObject
+                  :credentials-provider (credentials/container-credentials-provider)
                   :request {:Bucket bucket-name
                             :Key    file-name
                             :Body   bytes}}))
