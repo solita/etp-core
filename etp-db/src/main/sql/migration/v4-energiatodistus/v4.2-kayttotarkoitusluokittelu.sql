@@ -5,7 +5,7 @@ create table kayttotarkoitusluokka (
   label_fi text,
   label_sv text,
   ordinal int not null default 0,
-  valid boolean not null default false,
+  valid boolean not null default true,
   primary key (id, versio)
 );
 
@@ -16,7 +16,7 @@ create table alakayttotarkoitusluokka (
   label_fi text,
   label_sv text,
   ordinal int not null default 0,
-  valid boolean not null default false,
+  valid boolean not null default true,
   primary key (id, versio),
   foreign key (kayttotarkoitusluokka_id, versio)
     references kayttotarkoitusluokka (id, versio)
