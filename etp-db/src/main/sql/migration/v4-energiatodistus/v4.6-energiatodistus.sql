@@ -62,7 +62,7 @@ create table energiatodistus (
  pt$uudisrakennus boolean not null default false,
  pt$nimi text,
  pt$julkinen_rakennus boolean not null default false,
- pt$postinumero text,
+ pt$postinumero int references postinumero (id),
  pt$rakennusosa text,
  pt$rakennustunnus text,
  pt$tilaaja text,

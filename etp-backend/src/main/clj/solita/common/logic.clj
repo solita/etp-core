@@ -16,7 +16,7 @@
 (defn unless*
   "Higher order ramda style unless function."
   ([predicate then-fn]
-   #(if (predicate %) (then-fn %) %)))
+   #(if (not (predicate %)) (then-fn %) %)))
 
 (defn is-divisible-by [num divisor]
   (zero? (mod num divisor)))
