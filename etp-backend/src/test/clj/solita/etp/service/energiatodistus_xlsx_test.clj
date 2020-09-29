@@ -9,7 +9,8 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(def energiatodistukset (repeatedly 100 energiatodistus-test/generate-energiatodistus-2018))
+(def energiatodistukset
+  (repeatedly 100 energiatodistus-test/generate-energiatodistus-2018))
 
 (t/deftest other-paths-test
   (t/is (empty? (service/other-paths nil)))
@@ -33,11 +34,29 @@
   (t/is (= (service/path->str [1 2 3]) "1 / 2 / 3"))
   (t/is (= (service/path->str [:foo "bar" 3 :baz]) "Foo / Bar / 3 / Baz")))
 
-(t/deftest find-laatija-energiatodistukset-xlsx-test
+(t/deftest search-completed-energiatodistukset-test
+  (let [laatija-id (energiatodistus-test/add-laatija!)]
+    (doseq [energiatodistus energiatodistukset]
+      (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id))
+    (let [found-energiatodistukset (service/search-completed-energiatodistukset
+                                    ts/*db*
+                                    {:id laatija-id :rooli 0}
+                                    {})]
+      (t/is (every? #(-> % :tulokset :e-luku) found-energiatodistukset))
+      (t/is (= 100 (count found-energiatodistukset)))
+      (t/is (-> (service/search-completed-energiatodistukset
+                 ts/*db*
+                 {:id (inc laatija-id) :rooli 0}
+                 {})
+                count
+                zero?)))))
+
+(t/deftest find-energiatodistukset-xlsx-test
   (let [laatija-id (energiatodistus-test/add-laatija!)]
     (doseq [energiatodistus energiatodistukset]
       (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id))
     (t/is (instance? java.io.InputStream
-                     (service/find-laatija-energiatodistukset-xlsx
+                     (service/find-energiatodistukset-xlsx
                       ts/*db*
-                      laatija-id)))))
+                      {:id laatija-id :rooli 0}
+                      {})))))
