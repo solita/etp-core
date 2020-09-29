@@ -14,7 +14,7 @@
 (def coerce-liite (coerce/coercer liite-schema/Liite json/json-coercions))
 
 (defn- insert-liite! [liite db]
-  (db/with-db-exception-translation jdbc/insert! [db :liite liite db/default-opts]))
+  (db/with-db-exception-translation jdbc/insert! db :liite liite db/default-opts))
 
 (defn- file-key [liite-id]
   (str "energiatodistus/liite/" liite-id))

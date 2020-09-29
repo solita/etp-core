@@ -56,7 +56,7 @@
    :julkinen-rakennus        schema/Bool
    :havainnointikaynti       common-schema/Date
    :rakennustunnus           Rakennustunnus
-   :postinumero              geo-schema/Postinumero
+   :postinumero              geo-schema/PostinumeroFI
    :keskeiset-suositukset-fi common-schema/String2500
    :keskeiset-suositukset-sv common-schema/String2500
    :laatimisvaihe            common-schema/Key

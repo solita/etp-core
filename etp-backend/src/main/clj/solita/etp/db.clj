@@ -36,7 +36,7 @@
         psqle)
       psqle) psqle))
 
-(defn with-db-exception-translation [db-function args]
+(defn with-db-exception-translation [db-function & args]
   (try
     (apply db-function args)
     (catch PSQLException psqle
@@ -50,8 +50,7 @@
 (defn- generate-query-fn [original-generate-query-fn ns query query-options]
   (let [db-function (original-generate-query-fn ns query query-options)]
     (with-meta
-      (fn [& args]
-        (with-db-exception-translation db-function args))
+      (partial with-db-exception-translation db-function)
       (meta db-function))))
 
 (defn require-queries
@@ -71,7 +70,7 @@
 
 (defn kebab-case [snake-case]
   (str/replace snake-case \_ \-))
-
+00100
 (def default-opts {:entities snake-case
                    :identifiers kebab-case})
 

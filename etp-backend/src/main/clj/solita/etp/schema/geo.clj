@@ -11,8 +11,8 @@
                   :postinumero             schema/Str
                   :postitoimipaikka        schema/Str
                   :maa                     Maa})
-(def Postinumero
-  (schema/constrained schema/Str #(re-find #"\d{5}" %) "zip-code"))
+(def PostinumeroFI
+  (schema/constrained schema/Str #(re-find #"\d{5}" %) "FI postal code"))
 
 (def Toimintaalue common-schema/Luokittelu)
 
