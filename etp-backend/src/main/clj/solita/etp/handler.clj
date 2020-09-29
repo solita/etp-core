@@ -65,6 +65,16 @@
 (def routes
   ["/api"
    system-routes
+   ["/public" {:middleware [[security/wrap-public]
+                            [security/wrap-db-application-name]]}
+    ["/test"
+     {:get {:summary "Test endpoint"
+            :tags #{"test"}
+            :handler (fn [{:keys [whoami public? db]}]
+                       {:status 200
+                        :body {:whoami whoami
+                               :public? public?
+                               :db (str db)}})}}]]
    ["/private" {:middleware [[security/wrap-jwt-payloads]
                              [security/wrap-whoami-from-jwt-payloads]
                              [security/wrap-access]
@@ -84,8 +94,7 @@
    ;;:reitit.middleware/transform dev/print-request-diffs
    :exception pretty/exception
    :validate rs/validate
-   :data {
-          :coercion reitit.coercion.schema/coercion
+   :data {:coercion reitit.coercion.schema/coercion
           :muuntaja m/instance
           :middleware [swagger/swagger-feature
                        parameters/parameters-middleware
@@ -108,4 +117,3 @@
                            :config {:validationUrl nil}
                            :operationsSorter "alpha"})
                         (ring/create-default-handler))))
-
