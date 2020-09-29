@@ -684,9 +684,9 @@
 (defn pdf-file-id [id kieli]
   (when id (format "energiatodistus-%s-%s" id kieli)))
 
-(defn find-existing-pdf [db id kieli]
+(defn find-existing-pdf [id kieli]
   (->> (pdf-file-id id kieli)
-       (file-service/find-file db)
+       file-service/find-file
        :content
        io/input-stream))
 
@@ -694,7 +694,7 @@
   (when-let [{:keys [allekirjoitusaika] :as complete-energiatodistus}
              (complete-energiatodistus-service/find-complete-energiatodistus db whoami id)]
     (if allekirjoitusaika
-      (find-existing-pdf db id kieli)
+      (find-existing-pdf id kieli)
       (generate-pdf-as-input-stream complete-energiatodistus kieli true))))
 
 (defn do-when-signing [{:keys [tila-id]} f]
@@ -736,10 +736,7 @@
             signable-pdf-data (puumerkki/read-file signable-pdf-path)
             digest (puumerkki/compute-base64-pkcs signable-pdf-data)
             file-id (pdf-file-id id "fi")]
-        (file-service/upsert-file-from-bytes db
-                                             file-id
-                                             (str file-id ".pdf")
-                                             signable-pdf-data)
+        (file-service/upsert-file-from-bytes file-id signable-pdf-data)
         (io/delete-file pdf-path)
         (io/delete-file signable-pdf-path)
         (io/delete-file signature-png-path)
@@ -772,15 +769,12 @@
      #(try
         (validate-surname! (:sukunimi whoami) (first chain))
         (let [file-id (pdf-file-id id "fi")
-              {:keys [filename content] :as file-info}
-              (file-service/find-file db file-id)
+              {:keys [content]} (file-service/find-file file-id)
               content-bytes (.readAllBytes content)
               pkcs7 (puumerkki/make-pkcs7 signature-and-chain content-bytes)
               filename (str file-id ".pdf")]
           (do
             (->> (puumerkki/write-signature! content-bytes pkcs7)
-                 (file-service/upsert-file-from-bytes db
-                                                      file-id
-                                                      filename))
+                 (file-service/upsert-file-from-bytes file-id))
             filename))
         (catch java.lang.ArrayIndexOutOfBoundsException e :pdf-exists)))))

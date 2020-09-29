@@ -21,8 +21,8 @@
 (defn- file-key [liite-id]
   (str "energiatodistus/liite/" liite-id))
 
-(defn- insert-file! [key db file]
-  (aws/put-object key (file-service/file->byte-array file)))
+(defn- insert-file! [file]
+  (file-service/upsert-file-from-file file))
 
 (defn add-liite-from-file! [db whoami energiatodistus-id liite]
   (jdbc/with-db-transaction [db db]
@@ -34,7 +34,7 @@
         first
         :id
         file-key
-        (insert-file! db (:tempfile liite)))))
+        (insert-file! (:tempfile liite)))))
 
 (defn add-liitteet-from-files [db whoami energiatodistus-id files]
   (jdbc/with-db-transaction [db db]
@@ -58,7 +58,7 @@
 
 (defn find-energiatodistus-liite-content [db liite-id]
   (merge
-    {:content (aws/get-object (file-key liite-id))}
+    (file-service/find-file (file-key liite-id))
     (first (liite-db/select-liite db {:id liite-id}))))
 
 (defn delete-liite [db liite-id]

@@ -3,20 +3,23 @@
             [solita.etp.jwt :as jwt]
             [cognitect.aws.credentials :as credentials]))
 
-(def bucket-name "etp-energiatodistuksen-tiedostot-dev")
+(def bucket "etp-energiatodistuksen-tiedostot-dev")
 
-(defonce s3 (aws/client {:api                  :s3}))
+(defonce s3 (aws/client {:api                  :s3
+                         :credentials-provider (credentials/basic-credentials-provider
+                                                 {:access-key-id     "AKIAIOSFODNN7EXAMPLE"
+                                                  :secret-access-key "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"})
+                         :endpoint-override    {:protocol :http
+                                                :hostname "localhost"
+                                                :port     9000}}))
 
-(jwt/http-get (str "http://169.254.170.2" (System/getenv "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI") )
-              #(-> % println))
-
-(defn put-object [file-name, bytes]
+(defn put-object [{:keys [filename content]}]
   (aws/invoke s3 {:op      :PutObject
-                  :request {:Bucket bucket-name
-                            :Key    file-name
-                            :Body   bytes}}))
+                  :request {:Bucket bucket
+                            :Key    filename
+                            :Body   content}}))
 
-(defn get-object [file-name]
-  (:Body (aws/invoke s3 {:op      :GetObject
-                         :request {:Bucket bucket-name
-                                   :Key    file-name}})))
+(defn get-object [filename]
+  {:content (:Body (aws/invoke s3 {:op      :GetObject
+                                   :request {:Bucket bucket
+                                             :Key    filename}}))})
