@@ -413,15 +413,3 @@
       kielisyydet
       laatimisvaiheet
       alakayttotarkoitukset))))
-
-(defn find-complete-energiatodistukset-by-laatija [db laatija-id tila-id]
-  (let [{:keys [kielisyydet laatimisvaiheet alakayttotarkoitukset]}
-        (required-luokittelut db)]
-    (->> (energiatodistus-service/find-energiatodistukset-by-laatija db
-                                                                     laatija-id
-                                                                     tila-id)
-         (map #(complete-energiatodistus db
-                                         %
-                                         kielisyydet
-                                         laatimisvaiheet
-                                         alakayttotarkoitukset)))))

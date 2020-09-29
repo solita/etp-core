@@ -3,7 +3,10 @@
             [clojure.java.io :as io]
             [solita.common.map :as solita-map]
             [solita.common.xlsx :as xlsx]
-            [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]))
+            [solita.etp.service.energiatodistus-search :as
+             energiatodistus-search-service]
+            [solita.etp.service.complete-energiatodistus
+             :as complete-energiatodistus-service]))
 
 (def tmp-dir "tmp/")
 
@@ -53,28 +56,39 @@
       (if (instance? java.time.LocalDate v)
         (.setCellStyle cell date-style)))))
 
-(defn find-laatija-energiatodistukset-xlsx [db laatija-id]
-  (when-let [energiatodistukset
-             (complete-energiatodistus-service/find-complete-energiatodistukset-by-laatija
-              db
-              laatija-id
-              nil)]
-    (let [file-path (->> (java.util.UUID/randomUUID)
-                    .toString
-                    (format "energiatodistus-%s.xlsx")
-                    (str tmp-dir))
-          paths (concat (mapcat #(paths-for-k energiatodistukset %) col-order)
-                        (other-paths energiatodistukset))
-          xlsx (xlsx/create-xlsx)
-          sheet (xlsx/create-sheet xlsx "Energiatodistukset")
-          bold-font (xlsx/create-bold-font xlsx)
-          bold-style (xlsx/create-style-with-font xlsx bold-font)
-          date-style (xlsx/create-style-with-format xlsx "d.mm.yyyy")]
-      (fill-headers sheet bold-style paths)
-      (doseq [[idx energiatodistus] (map-indexed vector energiatodistukset)]
-        (fill-row-with-energiatodistus sheet (inc idx) energiatodistus paths date-style))
-      (io/make-parents file-path)
-      (xlsx/save-xlsx xlsx file-path)
-      (let [is (io/input-stream file-path)]
-        (io/delete-file file-path)
-        is))))
+(defn search-completed-energiatodistukset [db whoami query]
+  (let [{:keys [kielisyydet laatimisvaiheet alakayttotarkoitukset]}
+        (complete-energiatodistus-service/required-luokittelut db)]
+    (->> (energiatodistus-search-service/search db whoami query)
+         (map #(complete-energiatodistus-service/complete-energiatodistus
+                db
+                %
+                kielisyydet
+                laatimisvaiheet
+                alakayttotarkoitukset)))))
+
+(defn find-energiatodistukset-xlsx [db whoami query]
+  (let [energiatodistukset (search-completed-energiatodistukset db whoami query)
+        file-path (->> (java.util.UUID/randomUUID)
+                       .toString
+                       (format "energiatodistus-%s.xlsx")
+                       (str tmp-dir))
+        paths (concat (mapcat #(paths-for-k energiatodistukset %) col-order)
+                      (other-paths energiatodistukset))
+        xlsx (xlsx/create-xlsx)
+        sheet (xlsx/create-sheet xlsx "Energiatodistukset")
+        bold-font (xlsx/create-bold-font xlsx)
+        bold-style (xlsx/create-style-with-font xlsx bold-font)
+        date-style (xlsx/create-style-with-format xlsx "d.mm.yyyy")]
+    (fill-headers sheet bold-style paths)
+    (doseq [[idx energiatodistus] (map-indexed vector energiatodistukset)]
+      (fill-row-with-energiatodistus sheet
+                                     (inc idx)
+                                     energiatodistus
+                                     paths
+                                     date-style))
+    (io/make-parents file-path)
+    (xlsx/save-xlsx xlsx file-path)
+    (let [is (io/input-stream file-path)]
+      (io/delete-file file-path)
+      is)))

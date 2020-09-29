@@ -51,14 +51,3 @@
                                                                         whoami
                                                                         id)]
     (t/is (assert-complete-energiatoditus complete-energiatodistus))))
-
-(t/deftest find-complete-energiatodistukset-by-laatija-test
-  (let [laatija-id (energiatodistus-test/add-laatija!)
-        _ (energiatodistus-test/add-energiatodistus! (generate-energiatodistus) laatija-id)
-        _ (energiatodistus-test/add-energiatodistus! (generate-energiatodistus) laatija-id)
-        complete-energiatodistukset (service/find-complete-energiatodistukset-by-laatija
-                                     ts/*db*
-                                     laatija-id
-                                     nil)]
-    (t/is (= 2 (count complete-energiatodistukset)))
-    (t/is (every? assert-complete-energiatoditus complete-energiatodistukset))))
