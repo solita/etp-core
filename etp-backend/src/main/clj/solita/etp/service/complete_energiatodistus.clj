@@ -40,8 +40,8 @@
                        (with-precision 5 (/ (+ aurinkolampo muulampo lampopumppu) lampo))))))
        kuukausierittely))
 
-(defn find-complete-energiatodistus* [db energiatodistus kielisyydet
-                                      laatimisvaiheet alakayttotarkoitukset]
+(defn complete-energiatodistus [db energiatodistus kielisyydet
+                                laatimisvaiheet alakayttotarkoitukset]
   (with-precision 20
     (let [{:keys [perustiedot versio]} energiatodistus
           kieli-id (:kieli perustiedot)
@@ -405,7 +405,7 @@
   ([db whoami id]
    (let [{:keys [kielisyydet laatimisvaiheet alakayttotarkoitukset]}
          (required-luokittelut db)]
-     (find-complete-energiatodistus*
+     (complete-energiatodistus
       db
       (if whoami
         (energiatodistus-service/find-energiatodistus db whoami id)
@@ -413,15 +413,3 @@
       kielisyydet
       laatimisvaiheet
       alakayttotarkoitukset))))
-
-(defn find-complete-energiatodistukset-by-laatija [db laatija-id tila-id]
-  (let [{:keys [kielisyydet laatimisvaiheet alakayttotarkoitukset]}
-        (required-luokittelut db)]
-    (->> (energiatodistus-service/find-energiatodistukset-by-laatija db
-                                                                     laatija-id
-                                                                     tila-id)
-         (map #(find-complete-energiatodistus* db
-                                               %
-                                               kielisyydet
-                                               laatimisvaiheet
-                                               alakayttotarkoitukset)))))

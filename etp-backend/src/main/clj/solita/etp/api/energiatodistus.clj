@@ -59,6 +59,11 @@
                            (str "Energiatodistus " id " does not exists."))
                           (r/not-found "File not found")))}}])
 
+(def search-exceptions [{:type :unknown-field :response 400}
+                        {:type :unknown-predicate :response 400}
+                        {:type :invalid-arguments :response 400}
+                        {:type :schema.core/error :response 400}])
+
 (def private-routes
   [["/energiatodistukset"
     [""
@@ -66,30 +71,28 @@
             :parameters {:query energiatodistus-schema/EnergiatodistusSearch}
             :responses  {200 {:body [energiatodistus-schema/Energiatodistus]}}
             :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
-            :handler    (fn [{{{:keys [where sort order limit offset]} :query} :parameters
-                                :keys [db whoami]}]
+            :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
                           (api-response/response-with-exceptions
-                            #(energiatodistus-search-service/search
-                              db
-                              whoami
-                              {:where (json/read-value where)
-                               :sort  sort :order order
-                               :limit limit :offset offset})
-                            [{:type :unknown-field :response 400}
-                             {:type :unknown-predicate :response 400}
-                             {:type :invalid-arguments :response 400}
-                             {:type :schema.core/error :response 400}]))}}]
+                           #(energiatodistus-search-service/search
+                             db
+                             whoami
+                             (update query :where json/read-value))
+                           search-exceptions))}}]
     ["/xlsx/energiatodistukset.xlsx"
-     {:get {:summary   "Lataa laatijan energiatodistuksien tiedot XLSX-tiedostona"
-            :responses {200 {:body nil}
-                        404 {:body schema/Str}}
-            :access    (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
-            :handler   (fn [{:keys [db whoami]}]
-                         (api-response/xlsx-response
-                           (energiatodistus-xlsx-service/find-laatija-energiatodistukset-xlsx
-                             db (:id whoami))
-                           "energiatodistukset.xlsx"
-                           "Not found."))}}]
+     {:get {:summary    "Hae energiatodistusten tiedot XLSX-tiedostona"
+            :parameters {:query energiatodistus-schema/EnergiatodistusSearch}
+            :responses  {200 {:body nil}}
+            :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
+            :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
+                          (api-response/with-exceptions
+                            #(api-response/xlsx-response
+                              (energiatodistus-xlsx-service/find-energiatodistukset-xlsx
+                               db
+                               whoami
+                               (update query :where json/read-value))
+                              "energiatodistukset.xlsx"
+                              "Not found.")
+                            search-exceptions))}}]
     ["/all"
      ["/:id"
      {:get {:summary   "Hae mikä tahansa yksittäinen energiatodistus tunnisteella (id)"
