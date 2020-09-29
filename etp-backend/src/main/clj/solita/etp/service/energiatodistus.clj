@@ -23,7 +23,7 @@
 (db/require-queries 'energiatodistus)
 
 ; *** Conversions from database data types ***
-(def coerce-energiatodistus (coerce/coercer energiatodistus-schema/Energiatodistus
+(def coerce-energiatodistus (coerce/coercer! energiatodistus-schema/Energiatodistus
                                             (stc/or-matcher
                                               stc/map-filter-matcher
                                               (assoc json/json-coercions
