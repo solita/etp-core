@@ -65,4 +65,4 @@
       #(handler (assoc-in
                  req
                  [:db :application-name]
-                 (format "%s@core.etp" (if whoami (:id whoami) "public")))))))
+                 (format "%s@core.etp" (or (:id whoami) "public")))))))
