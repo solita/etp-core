@@ -3,7 +3,7 @@ INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli, henkilotunnus) V
 ('Liisa', 'Specimen-Potex', 'laatija1@example.com', '0441234567', 0, '210281-9988'),
 ('Lauri', 'Laatija', 'laatija2@example.com', '0451234567', 0, '010469-999W'),
 ('Niina', 'Specimen-Pirix', 'ulla.laatija@example.com', '0451234567', 0, '010675-9981'),
-('Dennis', 'Juutilainen', 'kirsi.laatija@example.com', '0451234567', 0, '261298-998X'),
+('DENIS', 'Juutilainen', 'kirsi.laatija@example.com', '0451234567', 0, '261298-998X'),
 ('Ari', 'Laatija', 'ari.laatija@example.com', '0451234567', 0, '040265-9985'),
 ('Risto', 'Laatija', 'risto.laatija@example.com', '0451234567', 0, '260991-999R'),
 ('Marko', 'Laatija', 'marko.laatija@example.com', '0451234567', 0, '020190-9521'),
