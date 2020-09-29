@@ -556,9 +556,27 @@
       {:path [:huomiot :suositukset-sv]}
       {:path [:huomiot :lisatietoja-fi]}
       {:path [:huomiot :lisatietoja-sv]}]
-   7 [{:path [:id]}
-      {:path [:lisamerkintoja-fi]}
-      {:path [:lisamerkintoja-sv]}]})
+   7  (concat [{:path [:id]}
+               {:path [:lisamerkintoja-fi]}
+               {:path [:lisamerkintoja-sv]}
+               {:path [:lahtotiedot :rakennusvaippa :lampokapasiteetti] :dp 1}
+               {:path [:lahtotiedot :rakennusvaippa :ilmatilavuus] :dp 1}
+               {:path [:lahtotiedot :ilmanvaihto :tuloilma-lampotila] :dp 1}
+               {:path [:lahtotiedot :lammitys :tilat-ja-iv :lampopumppu-tuotto-osuus] :dp 0 :percent? true}
+               {:path [:lahtotiedot :lammitys :lammin-kayttovesi :lampopumppu-tuotto-osuus] :dp 0 :percent? true}
+               {:path [:lahtotiedot :lammitys :tilat-ja-iv :lampohavio-lammittamaton-tila] :dp 1}
+               {:path [:lahtotiedot :lammitys :lammin-kayttovesi :lampohavio-lammittamaton-tila] :dp 1}]
+              (flatten (for [i (range 13)]
+                         [{:path [:tulokset :kuukausierittely i :tuotto :aurinkosahko] :dp 0}
+                          {:path [:tulokset :kuukausierittely i :tuotto :tuulisahko] :dp 0}
+                          {:path [:tulokset :kuukausierittely i :tuotto :muusahko] :dp 0}
+                          {:path [:tulokset :kuukausierittely i :tuotto :aurinkolampo] :dp 0}
+                          {:path [:tulokset :kuukausierittely i :tuotto :muulampo] :dp 0}
+                          {:path [:tulokset :kuukausierittely i :tuotto :lampopumppu] :dp 0}
+                          {:path [:tulokset :kuukausierittely i :kulutus :sahko] :dp 0}
+                          {:path [:tulokset :kuukausierittely i :kulutus :lampo] :dp 0}
+                          {:path [:tulokset :kuukausierittely i :hyoty :sahko] :dp 0 :percent? true}
+                          {:path [:tulokset :kuukausierittely i :hyoty :lampo] :dp 0 :percent? true}])))})
 
 (defn fill-xlsx-template [{:keys [versio] :as complete-energiatodistus} kieli draft?]
   (with-open [is (-> xlsx-template-paths
