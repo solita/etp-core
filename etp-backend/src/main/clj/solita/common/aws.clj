@@ -13,13 +13,17 @@
                                                 :hostname "localhost"
                                                 :port     9000}}))
 
-(defn put-object [{:keys [filename content]}]
-  (aws/invoke s3 {:op      :PutObject
-                  :request {:Bucket bucket
-                            :Key    filename
-                            :Body   content}}))
+(defn put-object [{:keys [key content] :as d}]
+  (let [result
+        (aws/invoke s3 {:op      :PutObject
+                        :request {:Bucket bucket
+                                  :Key    key
+                                  :Body   content}})]
+    (clojure.pprint/pprint result)))
 
-(defn get-object [filename]
+(defn get-object [key]
   {:content (:Body (aws/invoke s3 {:op      :GetObject
                                    :request {:Bucket bucket
-                                             :Key    filename}}))})
+                                             :Key    key}}))})
+
+; :cognitect.anomalies/category :cognitect.anomalies/not-found
