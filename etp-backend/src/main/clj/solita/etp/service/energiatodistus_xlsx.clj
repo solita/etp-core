@@ -57,7 +57,8 @@
         (.setCellStyle cell date-style)))))
 
 (defn search-completed-energiatodistukset [db whoami query]
-  (let [{:keys [kielisyydet laatimisvaiheet alakayttotarkoitukset]}
+  (let [query (update query :limit #(or % 1000))
+        {:keys [kielisyydet laatimisvaiheet alakayttotarkoitukset]}
         (complete-energiatodistus-service/required-luokittelut db)]
     (->> (energiatodistus-search-service/search db whoami query)
          (map #(complete-energiatodistus-service/complete-energiatodistus
