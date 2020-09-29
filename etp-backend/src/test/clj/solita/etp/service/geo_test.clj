@@ -6,7 +6,7 @@
 (t/use-fixtures :each ts/fixture)
 
 (t/deftest find-toimintaalueet-test
-  (let [toimintaalueet (service/find-toimintaalueet)
+  (let [toimintaalueet (service/find-all-toiminta-alueet ts/*db*)
         fi-labels (set (map :label-fi toimintaalueet))
         se-labels (set (map :label-sv toimintaalueet))]
     (t/is (every? #(contains? fi-labels %) ["Pirkanmaa" "Etelä-Savo"]))
