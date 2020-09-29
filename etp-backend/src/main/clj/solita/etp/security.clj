@@ -7,10 +7,6 @@
             [solita.etp.service.whoami :as whoami-service]
             [solita.etp.service.rooli :as rooli-service]))
 
-(defn wrap-public [handler]
-  (fn [req]
-    (-> req (assoc :public? true) handler)))
-
 (defn wrap-jwt-payloads [handler]
   (fn [req]
     (if-let [jwt-payloads (jwt/req->verified-jwt-payloads req)]
@@ -63,19 +59,10 @@
                      :whoami whoami})
           response/forbidden)))))
 
-(defn application-name [public? whoami]
-  (format "%s@core.etp"
-           (cond
-             whoami (:id whoami)
-             public? "public"
-             :else (do
-                     (log/warn "Unknown application name. This should not happen.")
-                     "unknown"))))
-
 (defn wrap-db-application-name [handler]
   (fn [{:keys [public? whoami] :as req}]
     (common-jdbc/with-application-name-support
       #(handler (assoc-in
                  req
                  [:db :application-name]
-                 (application-name public? whoami))))))
+                 (format "%s@core.etp" (if whoami (:id whoami) "public")))))))

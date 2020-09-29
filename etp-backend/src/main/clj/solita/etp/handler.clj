@@ -65,15 +65,13 @@
 (def routes
   ["/api"
    system-routes
-   ["/public" {:middleware [[security/wrap-public]
-                            [security/wrap-db-application-name]]}
+   ["/public" {:middleware [[security/wrap-db-application-name]]}
     ["/test"
      {:get {:summary "Test endpoint"
             :tags #{"test"}
-            :handler (fn [{:keys [whoami public? db]}]
+            :handler (fn [{:keys [whoami db]}]
                        {:status 200
                         :body {:whoami whoami
-                               :public? public?
                                :db (str db)}})}}]]
    ["/private" {:middleware [[security/wrap-jwt-payloads]
                              [security/wrap-whoami-from-jwt-payloads]
