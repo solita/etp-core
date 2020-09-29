@@ -70,7 +70,7 @@
 
 (defn kebab-case [snake-case]
   (str/replace snake-case \_ \-))
-00100
+
 (def default-opts {:entities snake-case
                    :identifiers kebab-case})
 
