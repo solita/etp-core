@@ -1,11 +1,7 @@
 (ns solita.etp.service.file
   (:require [clojure.java.io :as io]
-            [solita.etp.db :as db]
             [solita.common.aws :as aws])
   (:import (java.io FileInputStream)))
-
-; *** Require sql functions ***
-(db/require-queries 'file)
 
 (defn file->byte-array [file]
   (-> file FileInputStream. .readAllBytes))
