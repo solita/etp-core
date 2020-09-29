@@ -1,4 +1,8 @@
 
+-- conversion
+-- select '(' || postinumero::int || ', ''' || nimi || ''', ''' || nimisv || ''', ''' || kunta || '''),'
+-- from etp.postinumero order by postinumero;
+
 insert into postinumero (id, label_fi, label_sv, kunta_id)
 values
 (2, 'HELSINKI', 'HELSINGFORS', '091'),
