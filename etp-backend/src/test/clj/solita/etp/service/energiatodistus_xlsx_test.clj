@@ -35,17 +35,21 @@
   (t/is (= (service/path->str [:foo "bar" 3 :baz]) "Foo / Bar / 3 / Baz")))
 
 (t/deftest search-completed-energiatodistukset-test
-  (let [laatija-id-1 (energiatodistus-test/add-laatija!)
-        laatija-id-2 (energiatodistus-test/add-laatija!)]
-    (doseq [energiatodistus energiatodistukset
-            laatija-id [laatija-id-1 laatija-id-2]]
+  (let [laatija-id (energiatodistus-test/add-laatija!)]
+    (doseq [energiatodistus energiatodistukset]
       (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id))
     (let [found-energiatodistukset (service/search-completed-energiatodistukset
                                     ts/*db*
-                                    {:id laatija-id-1 :rooli 0}
+                                    {:id laatija-id :rooli 0}
                                     {})]
       (t/is (every? #(-> % :tulokset :e-luku) found-energiatodistukset))
-      (t/is (= 100 (count found-energiatodistukset))))))
+      (t/is (= 100 (count found-energiatodistukset)))
+      (t/is (-> (service/search-completed-energiatodistukset
+                 ts/*db*
+                 {:id (inc laatija-id) :rooli 0}
+                 {})
+                count
+                zero?)))))
 
 (t/deftest find-energiatodistukset-xlsx-test
   (let [laatija-id (energiatodistus-test/add-laatija!)]
