@@ -10,14 +10,15 @@
 (defn file->byte-array [file]
   (-> file FileInputStream. .readAllBytes))
 
-(defn upsert-file-from-bytes [key bytes]
-  (aws/put-object {:key key :content bytes}))
+(defn upsert-file-from-bytes [key filename bytes]
+  (aws/put-object {:key key :filename filename :content bytes}))
 
 (defn upsert-file-from-file [key file]
-  (upsert-file-from-bytes key (file->byte-array file)))
+  (upsert-file-from-bytes key (.getName file) (file->byte-array file)))
 
-(defn upsert-file-from-input-stream [key is]
-  (upsert-file-from-bytes key (.readAllBytes is)))
+(defn upsert-file-from-input-stream [key filename is]
+  (upsert-file-from-bytes key filename (.readAllBytes is)))
 
 (defn find-file [key]
-  (some->> (aws/get-object key) io/input-stream (assoc {} :content)))
+  (some-> (aws/get-object key)
+          (update :content io/input-stream)))

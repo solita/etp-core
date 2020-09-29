@@ -29,6 +29,7 @@
 
 (t/deftest upsert-file-and-find-test
   (service/upsert-file-from-bytes (:id file-info-1)
+                                  (:filename file-info-1)
                                   (:bytes file-info-1))
   (service/upsert-file-from-file (:id file-info-2)
                                  (-> file-info-2 :path io/file))
@@ -49,6 +50,7 @@
                                     (:filename file-info-1)
                                     (:bytes file-info-1))
     (service/upsert-file-from-input-stream id
+                                           (:filename file-info-2)
                                            (-> file-info-2 :path io/input-stream))
     (let [{:keys [filename content]} (service/find-file id)]
       (t/is (= (:filename file-info-2) filename))

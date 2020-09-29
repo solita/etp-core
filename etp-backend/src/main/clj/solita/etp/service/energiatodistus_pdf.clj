@@ -754,7 +754,9 @@
             signable-pdf-data (puumerkki/read-file signable-pdf-path)
             digest (puumerkki/compute-base64-pkcs signable-pdf-data)
             file-id (pdf-file-id id "fi")]
-        (file-service/upsert-file-from-bytes file-id signable-pdf-data)
+        (file-service/upsert-file-from-bytes file-id
+                                             (str file-id ".pdf")
+                                             signable-pdf-data)
         (io/delete-file pdf-path)
         (io/delete-file signable-pdf-path)
         (io/delete-file signature-png-path)
@@ -793,6 +795,7 @@
               filename (str file-id ".pdf")]
           (do
             (->> (puumerkki/write-signature! content-bytes pkcs7)
-                 (file-service/upsert-file-from-bytes file-id))
+                 (file-service/upsert-file-from-bytes file-id
+                                                      filename))
             filename))
         (catch java.lang.ArrayIndexOutOfBoundsException e :pdf-exists)))))
