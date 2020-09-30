@@ -27,8 +27,7 @@
           :let [id (service/add-yritys! ts/*db* yritys)]]
     (t/is (= (assoc yritys :id id) (service/find-yritys ts/*db* id)))))
 
-
-(t/deftest add-duplicate-ytunnus
+#_(t/deftest add-duplicate-ytunnus
   (let [ytunnus "0000001-9"
         [yritys-1 yritys-2] (->> (generate-yritykset 2)
                                  (map #(assoc % :ytunnus ytunnus)))]
