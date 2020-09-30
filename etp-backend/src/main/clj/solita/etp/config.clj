@@ -3,8 +3,7 @@
             [cognitect.aws.credentials :as credentials]))
 
 (def use-local-env-credentials?
-  (not (or (System/getenv "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI")
-           (System/getenv "AWS_CONTAINER_CREDENTIALS_FULL_URI"))))
+  (not (System/getenv "FILES_BUCKET_NAME")))
 
 (defn env [name default]
   (or (System/getenv name) default))
