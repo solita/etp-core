@@ -66,20 +66,14 @@
   ["/api"
    system-routes
    ["/public" {:middleware [[security/wrap-db-application-name]]}
-    ["/test"
-     {:get {:summary "Test endpoint"
-            :tags #{"test"}
-            :handler (fn [{:keys [whoami db]}]
-                       {:status 200
-                        :body {:whoami whoami
-                               :db (str db)}})}}]]
+    (concat (tag "Laatijat Public API" laatija-api/public-routes))]
    ["/private" {:middleware [[security/wrap-jwt-payloads]
                              [security/wrap-whoami-from-jwt-payloads]
                              [security/wrap-access]
                              [security/wrap-db-application-name]]}
     (concat (tag "Käyttäjä API" kayttaja-api/routes)
             (tag "Yritys API" yritys-api/routes)
-            (tag "Laatijat API" laatija-api/routes)
+            (tag "Laatijat Private API" laatija-api/private-routes)
             (tag "Geo API" geo-api/routes)
             (tag "Energiatodistus API" energiatodistus-api/private-routes))]
    ["/external" {:middleware [[security/wrap-whoami-from-basic-auth]

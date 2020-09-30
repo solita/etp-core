@@ -15,6 +15,9 @@
 
 (defn find-roolit [] roolit)
 
+(defn public? [whoami]
+  (nil? whoami))
+
 (defn laatija? [{:keys [rooli]}]
   (= rooli 0))
 
