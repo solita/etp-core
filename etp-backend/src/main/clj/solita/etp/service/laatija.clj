@@ -1,7 +1,6 @@
 (ns solita.etp.service.laatija
   (:require [clojure.set :as set]
             [clojure.java.jdbc :as jdbc]
-            [schema.coerce :as coerce]
             [solita.common.map :as map]
             [solita.etp.exception :as exception]
             [solita.etp.db :as db]
@@ -11,9 +10,6 @@
 
 ;; *** Require sql functions ***
 (db/require-queries 'laatija)
-
-;; *** Conversions from database data types ***
-(def coerce-laatija (coerce/coercer laatija-schema/Laatija json/json-coercions))
 
 (defn find-all-laatijat [db whoami]
   (->> (laatija-db/select-laatijat db)
@@ -26,7 +22,6 @@
   ([db id]
    (->> {:id id}
         (laatija-db/select-laatija-by-id db)
-        (map coerce-laatija)
         first))
   ([db whoami id]
    (if (or (= id (:id whoami))
@@ -37,7 +32,6 @@
 (defn find-laatija-with-henkilotunnus [db henkilotunnus]
   (->> {:henkilotunnus henkilotunnus}
        (laatija-db/select-laatija-with-henkilotunnus db)
-       (map coerce-laatija)
        first))
 
 (def db-keymap {:muuttoimintaalueet :muut_toimintaalueet
