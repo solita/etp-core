@@ -11,12 +11,35 @@
 ;; *** Require sql functions ***
 (db/require-queries 'laatija)
 
+(defn public-laatija [{:keys [voimassa laatimiskielto julkinenpuhelin
+                              julkinenemail julkinenwwwosoite julkinenosoite]
+                       :as laatija}]
+  (when (and voimassa (not laatimiskielto))
+    (select-keys laatija
+                 (cond-> laatija-schema/always-public-kayttaja-laatija-ks
+                   julkinenpuhelin (conj :puhelin)
+                   julkinenemail (conj :email)
+                   julkinenwwwosoite (conj :wwwosoite)
+                   julkinenosoite (conj :jakeluosoite
+                                        :postinumero
+                                        :postitoimipaikka
+                                        :maa)))))
+
 (defn find-all-laatijat [db whoami]
   (->> (laatija-db/select-laatijat db)
-       (map (fn [laatija]
-              (cond (rooli-service/paakayttaja? whoami) laatija
-                    (rooli-service/patevyydentoteaja? whoami) (update laatija :henkilotunnus #(subs % 0 6))
-                    :else  (dissoc laatija :henkilotunnus))))))
+       (keep (fn [laatija]
+               (cond (rooli-service/paakayttaja? whoami)
+                     laatija
+
+                     (rooli-service/patevyydentoteaja? whoami)
+                     (update laatija :henkilotunnus #(subs % 0 6))
+
+                     (rooli-service/laatija? whoami)
+                     (exception/throw-forbidden!
+                      "Laatija can't list all laatijas.")
+
+                     (rooli-service/public? whoami)
+                     (public-laatija laatija))))))
 
 (defn find-laatija-by-id
   ([db id]

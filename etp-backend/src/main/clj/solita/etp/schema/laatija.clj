@@ -83,13 +83,16 @@
   (merge LaatijaUpdate
          KayttajaUpdate))
 
+(def always-public-kayttaja-laatija-ks
+  [:etunimi :sukunimi :patevyystaso :toteamispaivamaara :toimintaalue :muuttoimintaalueet :voimassa])
+
 (def LaatijaFind
   "A schema for find all existing laatija"
-  (-> (st/merge
-        (st/select-keys Laatija [:patevyystaso :toteamispaivamaara :toimintaalue :postinumero :postitoimipaikka :laatimiskielto])
-        (st/select-keys kayttaja-schema/Kayttaja [:id :etunimi :sukunimi :puhelin :email :ensitallennus]))
-      (st/assoc
-        :yritys [common-schema/Key]
-        :voimassa schema/Bool
-        :henkilotunnus (s/conditional common-schema/valid-henkilotunnus? common-schema/Henkilotunnus :else s/Str))
-      (st/optional-keys [:henkilotunnus])))
+  (-> (st/merge Laatija kayttaja-schema/Kayttaja)
+      (st/assoc :voimassa schema/Bool)
+      (st/assoc :henkilotunnus schema/Str)
+      (st/assoc :yritys [common-schema/Key])
+
+      ;; Pätevyydentoteajat do not see the last part of hetu
+      (st/optional-keys)
+      (st/required-keys always-public-kayttaja-laatija-ks)))
