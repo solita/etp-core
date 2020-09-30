@@ -17,7 +17,7 @@
            :handler    (fn [{:keys [db]}]
                          (r/response (geo-service/find-all-countries db)))}}]
 
-   ["/postinumerot/"
+   ["/postinumerot"
     {:get {:summary   "Hae kaikki postinumerot"
            :responses {200 {:body [common-schema/Luokittelu]}}
            :handler   (fn [{:keys [db]}]
