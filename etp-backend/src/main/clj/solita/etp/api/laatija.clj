@@ -12,8 +12,7 @@
   {:summary    "Hae laatijat"
    :responses  {200 {:body [laatija-schema/LaatijaFind]}}
    :handler    (fn [{:keys [db whoami]}]
-                 (-> (laatija-service/find-all-laatijat db whoami)
-                     (api-response/get-response nil)))})
+                 (r/response (laatija-service/find-all-laatijat db whoami)))})
 
 (def get-patevyydet
   {:summary   "Hae pätevyydet-luokittelu"
