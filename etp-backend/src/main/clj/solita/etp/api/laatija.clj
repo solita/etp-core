@@ -8,14 +8,30 @@
             [solita.etp.service.kayttaja-laatija :as kayttaja-laatija-service]
             [solita.etp.service.rooli :as rooli-service]))
 
-(def routes
+(def get-laatijat
+  {:summary    "Hae laatijat"
+   :responses  {200 {:body [laatija-schema/LaatijaFind]}}
+   :handler    (fn [{:keys [db whoami]}]
+                 (-> (laatija-service/find-all-laatijat db whoami)
+                     (api-response/get-response nil)))})
+
+(def get-patevyydet
+  {:summary   "Hae pätevyydet-luokittelu"
+   :responses {200 {:body [laatija-schema/Patevyystaso]}}
+   :handler   (fn [_]
+                (r/response (laatija-service/find-patevyystasot)))})
+
+(def public-routes
   [["/laatijat"
     [""
-     {:get {:summary    "Hae laatijat"
-            :responses  {200 {:body [laatija-schema/LaatijaFind]}}
-            :handler    (fn [{:keys [db whoami]}]
-                          (-> (laatija-service/find-all-laatijat db whoami)
-                              (api-response/get-response nil)))}
+     {:get get-laatijat}]]
+   ["/patevyydet/"
+    {:get get-patevyydet}]])
+
+(def private-routes
+  [["/laatijat"
+    [""
+     {:get get-laatijat
       :put {:summary    "Lisää laatijat laatijarekisteriin (luo myös käyttäjä)"
             :parameters {:body [laatija-schema/KayttajaLaatijaAdd]}
             :responses  {200 {:body [common-schema/Key]}}
@@ -68,7 +84,4 @@
                                 (laatija-service/detach-laatija-yritys db whoami id yritys-id)
                                 (str "Laatija and yritys liitos " id "/" yritys-id " does not exist.")))}}]]]]
    ["/patevyydet/"
-    {:get {:summary   "Hae pätevyydet-luokittelu"
-           :responses {200 {:body [laatija-schema/Patevyystaso]}}
-           :handler   (fn [_]
-                        (r/response (laatija-service/find-patevyystasot)))}}]])
+    {:get get-patevyydet}]])
