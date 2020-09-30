@@ -28,31 +28,37 @@
              "class [B"))))
 
 (t/deftest upsert-file-and-find-test
-  (service/upsert-file-from-bytes (:id file-info-1)
+  (println "dd"  ts/*aws-s3-client*)
+  (service/upsert-file-from-bytes ts/*aws-s3-client*
+                                  (:id file-info-1)
                                   (:filename file-info-1)
                                   (:bytes file-info-1))
-  (service/upsert-file-from-file (:id file-info-2)
+  (service/upsert-file-from-file ts/*aws-s3-client*
+                                 (:id file-info-2)
                                  (-> file-info-2 :path io/file))
-  (service/upsert-file-from-input-stream (:id file-info-3)
+  (service/upsert-file-from-input-stream ts/*aws-s3-client*
+                                         (:id file-info-3)
                                          (:filename file-info-3)
                                          (-> file-info-3 :path io/input-stream))
   (doseq [file-info [file-info-1 file-info-2 file-info-3]
-          :let [{:keys [filename content]} (service/find-file (:id file-info))]]
+          :let [{:keys [filename content]} (service/find-file ts/*aws-s3-client* (:id file-info))]]
     (t/is (= (:filename file-info) filename))
     (t/is (true? (instance? java.io.InputStream content)))
     (t/is (= (into [] (:bytes file-info))
              (into [] (.readAllBytes content)))))
-  (t/is (nil? (service/find-file "nonexisting"))))
+  (t/is (nil? (service/find-file ts/*aws-s3-client* "nonexisting"))))
 
 (t/deftest rewrite-test
   (let [id (:id file-info-1)]
-    (service/upsert-file-from-bytes id
+    (service/upsert-file-from-bytes ts/*aws-s3-client*
+                                    id
                                     (:filename file-info-1)
                                     (:bytes file-info-1))
-    (service/upsert-file-from-input-stream id
+    (service/upsert-file-from-input-stream ts/*aws-s3-client*
+                                           id
                                            (:filename file-info-2)
                                            (-> file-info-2 :path io/input-stream))
-    (let [{:keys [filename content]} (service/find-file id)]
+    (let [{:keys [filename content]} (service/find-file ts/*aws-s3-client* id)]
       (t/is (= (:filename file-info-2) filename))
       (t/is (true? (instance? java.io.InputStream content)))
       (t/is (= (into [] (:bytes file-info-2))

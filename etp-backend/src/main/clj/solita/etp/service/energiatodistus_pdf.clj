@@ -702,17 +702,17 @@
 (defn pdf-file-id [id kieli]
   (when id (format "energiatodistus-%s-%s" id kieli)))
 
-(defn find-existing-pdf [id kieli]
+(defn find-existing-pdf [aws-s3-client id kieli]
   (->> (pdf-file-id id kieli)
-       file-service/find-file
+       (file-service/find-file aws-s3-client)
        :content
        io/input-stream))
 
-(defn find-energiatodistus-pdf [db whoami id kieli]
+(defn find-energiatodistus-pdf [db whoami aws-s3-client id kieli]
   (when-let [{:keys [allekirjoitusaika] :as complete-energiatodistus}
              (complete-energiatodistus-service/find-complete-energiatodistus db whoami id)]
     (if allekirjoitusaika
-      (find-existing-pdf id kieli)
+      (find-existing-pdf aws-s3-client id kieli)
       (generate-pdf-as-input-stream complete-energiatodistus kieli true))))
 
 (defn do-when-signing [{:keys [tila-id]} f]
@@ -735,7 +735,7 @@
       (.dispose))
     (ImageIO/write img "PNG" (io/file path))))
 
-(defn find-energiatodistus-digest [db id]
+(defn find-energiatodistus-digest [db aws-s3-client id]
   (when-let [{:keys [laatija-fullname versio] :as complete-energiatodistus}
              (complete-energiatodistus-service/find-complete-energiatodistus db id)]
     (do-when-signing
@@ -754,7 +754,8 @@
             signable-pdf-data (puumerkki/read-file signable-pdf-path)
             digest (puumerkki/compute-base64-pkcs signable-pdf-data)
             file-id (pdf-file-id id "fi")]
-        (file-service/upsert-file-from-bytes file-id
+        (file-service/upsert-file-from-bytes aws-s3-client
+                                             file-id
                                              (str file-id ".pdf")
                                              signable-pdf-data)
         (io/delete-file pdf-path)
@@ -781,7 +782,7 @@
                          last-name
                          surname)}))))
 
-(defn sign-energiatodistus-pdf [db whoami id {:keys [chain] :as signature-and-chain}]
+(defn sign-energiatodistus-pdf [db aws-s3-client whoami id {:keys [chain] :as signature-and-chain}]
   (when-let [energiatodistus
              (energiatodistus-service/find-energiatodistus db id)]
     (do-when-signing
@@ -789,13 +790,14 @@
      #(try
         (validate-surname! (:sukunimi whoami) (first chain))
         (let [file-id (pdf-file-id id "fi")
-              {:keys [content]} (file-service/find-file file-id)
+              {:keys [content]} (file-service/find-file aws-s3-client file-id)
               content-bytes (.readAllBytes content)
               pkcs7 (puumerkki/make-pkcs7 signature-and-chain content-bytes)
               filename (str file-id ".pdf")]
           (do
             (->> (puumerkki/write-signature! content-bytes pkcs7)
-                 (file-service/upsert-file-from-bytes file-id
+                 (file-service/upsert-file-from-bytes aws-s3-client
+                                                      file-id
                                                       filename))
             filename))
         (catch java.lang.ArrayIndexOutOfBoundsException e :pdf-exists)))))

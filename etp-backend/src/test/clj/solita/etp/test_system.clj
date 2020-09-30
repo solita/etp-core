@@ -3,9 +3,11 @@
             [clojure.java.jdbc :as jdbc]
             [solita.common.jdbc :as common-jdbc]
             [solita.etp.config :as config]
-            [solita.etp.db]))
+            [solita.etp.db]
+            [solita.etp.aws-s3-client]))
 
 (def ^:dynamic *db* nil)
+(def ^:dynamic *aws-s3-client* nil)
 
 (defn config-for-management []
   (config/db {:username (config/env "DB_MANAGEMENT_USER" "etp")
@@ -14,8 +16,9 @@
               :current-schema "public"}))
 
 (defn config-for-tests [db-name]
-  (config/db {:database-name db-name
-              :re-write-batched-inserts true}))
+  (merge (config/db {:database-name            db-name
+                     :re-write-batched-inserts true})
+         (config/aws-s3-client)))
 
 (def db-name-counter (atom 0))
 
@@ -38,7 +41,8 @@
         management-db (:solita.etp/db management-system)
         _ (create-db! management-db db-name)
         test-system (ig/init (config-for-tests db-name))]
-    (with-bindings {#'*db* (:solita.etp/db test-system)}
+    (with-bindings {#'*db* (:solita.etp/db test-system)
+                    #'*aws-s3-client* (:solita.etp/aws-s3-client test-system)}
       (common-jdbc/with-application-name-support f))
     (ig/halt! test-system)
     (drop-db! management-db db-name)

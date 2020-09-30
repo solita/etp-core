@@ -19,10 +19,10 @@
 (defn- file-key [liite-id]
   (str "energiatodistus/liite/" liite-id))
 
-(defn- insert-file! [key file]
-  (file-service/upsert-file-from-file key file))
+(defn- insert-file! [key aws-s3-client file]
+  (file-service/upsert-file-from-file aws-s3-client key file))
 
-(defn add-liite-from-file! [db whoami energiatodistus-id liite]
+(defn add-liite-from-file! [db aws-s3-client whoami energiatodistus-id liite]
   (jdbc/with-db-transaction [db db]
     (-> liite
         (dissoc :tempfile :size)
@@ -32,12 +32,13 @@
         first
         :id
         file-key
-        (insert-file! (:tempfile liite)))))
+        (insert-file! aws-s3-client (:tempfile liite)))))
 
-(defn add-liitteet-from-files [db whoami energiatodistus-id files]
+(defn add-liitteet-from-files [db aws-s3-client whoami energiatodistus-id files]
+  (println aws-s3-client)
   (jdbc/with-db-transaction [db db]
     (doseq [file files]
-      (add-liite-from-file! db whoami energiatodistus-id
+      (add-liite-from-file! db aws-s3-client whoami energiatodistus-id
         (set/rename-keys file {:content-type :contenttype
                                :filename :nimi})))))
 
@@ -54,9 +55,9 @@
        (liite-db/select-liite-by-energiatodistus-id
          db {:energiatodistus-id energiatodistus-id})))
 
-(defn find-energiatodistus-liite-content [db liite-id]
+(defn find-energiatodistus-liite-content [db aws-s3-client liite-id]
   (merge
-    (file-service/find-file (file-key liite-id))
+    (file-service/find-file aws-s3-client (file-key liite-id))
     (first (liite-db/select-liite db {:id liite-id}))))
 
 (defn delete-liite [db liite-id]
