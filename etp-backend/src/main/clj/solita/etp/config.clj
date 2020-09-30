@@ -2,6 +2,10 @@
   (:require [integrant.core :as ig]
             [cognitect.aws.credentials :as credentials]))
 
+(def use-local-env-credentials?
+  (not (or (System/getenv "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI")
+           (System/getenv "AWS_CONTAINER_CREDENTIALS_FULL_URI"))))
+
 (defn env [name default]
   (or (System/getenv name) default))
 
@@ -32,14 +36,16 @@
 (defn aws-s3-client
   ([] (aws-s3-client {}))
   ([opts]
-   {:solita.etp/aws-s3-client (merge {:api                  :s3
-                                      :credentials-provider (credentials/basic-credentials-provider
-                                                              {:access-key-id     "minio"
-                                                               :secret-access-key "minio123"})
-                                      :endpoint-override    {:protocol :http
-                                                             :hostname "localhost"
-                                                             :port     9000}}
-                                     opts)}))
+   (let [config (when use-local-env-credentials?
+                  {:credentials-provider (credentials/basic-credentials-provider
+                                           {:access-key-id     "minio"
+                                            :secret-access-key "minio123"})
+                   :endpoint-override    {:protocol :http
+                                          :hostname "localhost"
+                                          :port     9000}})]
+     {:solita.etp/aws-s3-client (merge {:api :s3}
+                                       config
+                                       opts)})))
 
 ;;
 ;; Misc config
