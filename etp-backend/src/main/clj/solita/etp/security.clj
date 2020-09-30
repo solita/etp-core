@@ -60,9 +60,9 @@
           response/forbidden)))))
 
 (defn wrap-db-application-name [handler]
-  (fn [{:keys [whoami] :as req}]
-    (let [application-name (str (:id whoami) "@core.etp")]
+  (fn [{:keys [public? whoami] :as req}]
     (common-jdbc/with-application-name-support
       #(handler (assoc-in
-                  req [:db :application-name]
-                  application-name))))))
+                 req
+                 [:db :application-name]
+                 (format "%s@core.etp" (or (:id whoami) "public")))))))

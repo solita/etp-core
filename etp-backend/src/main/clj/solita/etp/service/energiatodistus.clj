@@ -2,6 +2,7 @@
   (:require [solita.etp.db :as db]
             [solita.etp.exception :as exception]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
+            [solita.etp.schema.geo :as geo-schema]
             [solita.etp.service.json :as json]
             [solita.etp.service.energiatodistus-validation :as validation]
             [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
@@ -27,6 +28,7 @@
                                             (stc/or-matcher
                                               stc/map-filter-matcher
                                               (assoc json/json-coercions
+                                                geo-schema/PostinumeroFI (logic/unless* nil? #(format "%05d" %))
                                                 schema/Num xschema/parse-big-decimal))))
 
 (def tilat [:draft :in-signing :signed :discarded :replaced :deleted])
@@ -160,11 +162,14 @@
        (flat/tree->flat "$")
        (map/map-values (logic/when* vector? (partial mapv tree->flat)))))
 
+(defn- parseInt [str] (Integer/parseInt str))
+
 (def energiatodistus->db-row
   (comp
     (partial pg-composite/write-composite-type-literals db-composite-types)
     tree->flat
     #(set/rename-keys % db-abbreviations)
+    #(update-in % [:perustiedot :postinumero] (logic/unless* nil? parseInt))
     (logic/when*
       #(= (:versio %) 2013)
       #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] (partial assoc {} :muu)))))
@@ -210,14 +215,15 @@
 (defn add-energiatodistus! [db whoami versio energiatodistus]
   (assert-korvaavuus! db energiatodistus)
   (validate-sisainen-kuorma! db versio energiatodistus)
-  (-> (jdbc/insert! db
-                    :energiatodistus
-                    (-> energiatodistus
-                        (assoc :versio versio
-                               :laatija-id (:id whoami))
-                        energiatodistus->db-row
-                        (validate-db-row! db versio))
-                    db/default-opts)
+  (-> (db/with-db-exception-translation
+        jdbc/insert! db
+        :energiatodistus
+        (-> energiatodistus
+            (assoc :versio versio
+                   :laatija-id (:id whoami))
+            energiatodistus->db-row
+            (validate-db-row! db versio))
+        db/default-opts)
       first
       :id))
 
@@ -261,7 +267,7 @@
 
 (defn- db-update-energiatodistus! [db id versio energiatodistus
                                    tila-id rooli laskutettu?]
-  (first (jdbc/update!
+  (first (db/with-db-exception-translation jdbc/update!
            db :energiatodistus
            (-> energiatodistus
                (assoc :versio versio)

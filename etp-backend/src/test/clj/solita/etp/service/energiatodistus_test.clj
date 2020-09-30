@@ -33,19 +33,19 @@
       (dissoc :kayttotarkoitusluokka-id)))
 
 (def energiatodistus-generators
-  {schema.core/Num                     (g/always 1.0M)
-   common-schema/Year                  (g/always 2021)
-   schema/Rakennustunnus               (g/always "1035150826")
-   schema/YritysPostinumero            (g/always "00100")
-   common-schema/Date                  (g/always (java.time.LocalDate/now))
-   geo-schema/Postinumero              (g/always "00100")
-   common-schema/Instant               (g/always (Instant/now))
-   common-schema/IntNonNegative        (test-generators/choose 0 10)
-   (schema.core/eq 2018)               (g/always 2018)
-   (schema.core/eq 2013)               (g/always 2013)
-   schema/OptionalKuukausierittely     (test-generators/one-of
-                                         [(g/always (vec (repeat 12 test-kuukausierittely)))
-                                          (g/always [])])})
+  {schema.core/Num                 (g/always 1.0M)
+   common-schema/Year              (g/always 2021)
+   schema/Rakennustunnus           (g/always "1035150826")
+   schema/YritysPostinumero        (g/always "00100")
+   common-schema/Date              (g/always (java.time.LocalDate/now))
+   geo-schema/PostinumeroFI        (g/always "00100")
+   common-schema/Instant           (g/always (Instant/now))
+   common-schema/IntNonNegative    (test-generators/choose 0 10)
+   (schema.core/eq 2018)           (g/always 2018)
+   (schema.core/eq 2013)           (g/always 2013)
+   schema/OptionalKuukausierittely (test-generators/one-of
+                                     [(g/always (vec (repeat 12 test-kuukausierittely)))
+                                      (g/always [])])})
 
 (defn add-laatija!
   ([] (add-laatija! ts/*db*))
