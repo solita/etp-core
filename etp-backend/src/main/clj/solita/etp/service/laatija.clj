@@ -26,20 +26,18 @@
                                         :maa)))))
 
 (defn find-all-laatijat [db whoami]
-  (->> (laatija-db/select-laatijat db)
-       (keep (fn [laatija]
-               (cond (rooli-service/paakayttaja? whoami)
-                     laatija
+  (if (rooli-service/laatija? whoami)
+    (exception/throw-forbidden! "Laatija can't list all laatijas.")
+    (->> (laatija-db/select-laatijat db)
+         (keep (fn [laatija]
+                 (cond (rooli-service/paakayttaja? whoami)
+                       laatija
 
-                     (rooli-service/patevyydentoteaja? whoami)
-                     (update laatija :henkilotunnus #(subs % 0 6))
+                       (rooli-service/patevyydentoteaja? whoami)
+                       (update laatija :henkilotunnus #(subs % 0 6))
 
-                     (rooli-service/laatija? whoami)
-                     (exception/throw-forbidden!
-                      "Laatija can't list all laatijas.")
-
-                     (rooli-service/public? whoami)
-                     (public-laatija laatija))))))
+                       (rooli-service/public? whoami)
+                       (public-laatija laatija)))))))
 
 (defn find-laatija-by-id
   ([db id]
