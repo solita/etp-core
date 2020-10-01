@@ -66,7 +66,8 @@
   ["/api"
    system-routes
    ["/public" {:middleware [[security/wrap-db-application-name]]}
-    (concat (tag "Laatijat Public API" laatija-api/public-routes))]
+    (concat (tag "Laatijat Public API" laatija-api/public-routes)
+            (tag "Geo Public API" geo-api/routes))]
    ["/private" {:middleware [[security/wrap-jwt-payloads]
                              [security/wrap-whoami-from-jwt-payloads]
                              [security/wrap-access]
@@ -74,7 +75,7 @@
     (concat (tag "Käyttäjä API" kayttaja-api/routes)
             (tag "Yritys API" yritys-api/routes)
             (tag "Laatijat Private API" laatija-api/private-routes)
-            (tag "Geo API" geo-api/routes)
+            (tag "Geo Private API" geo-api/routes)
             (tag "Energiatodistus API" energiatodistus-api/private-routes))]
    ["/external" {:middleware [[security/wrap-whoami-from-basic-auth]
                               [security/wrap-access]
