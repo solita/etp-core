@@ -55,4 +55,5 @@
 (def trusted-jwt-iss (env "TRUSTED_JWT_ISS" "https://raw.githubusercontent.com/solita/etp-core/develop/etp-backend/src/test/resources/"))
 (def data-jwt-public-key-base-url (env "DATA_JWT_PUBLIC_KEY_BASE_URL" "https://raw.githubusercontent.com/solita/etp-core/develop/etp-backend/src/test/resources/"))
 (def cognito-logout-url (env "COGNITO_LOGOUT_URL" "https://localhost:3000"))
-(def files-bucket-name (env "FILES_BUCKET_NAME" "files"))
+(defn getFilesBucketName []
+  (env "FILES_BUCKET_NAME" "files"))

@@ -7,13 +7,13 @@
   (let [{:keys [Error] :as result} (aws/invoke aws-s3-client {:op      op
                                                               :request request})]
     (if Error
-      (log/error "Unable to invoke aws client " (:message Error))
+      (log/error "Unable to invoke aws client " result)
       result)))
 
 (defn put-object [aws-s3-client key filename content]
   (invoke aws-s3-client
           :PutObject
-          {:Bucket   config/files-bucket-name
+          {:Bucket   (config/getFilesBucketName)
            :Key      key
            :Body     content
            :Metadata {:filename filename}}))
@@ -21,6 +21,6 @@
 (defn get-object [aws-s3-client key]
   (when-let [result (invoke aws-s3-client
                             :GetObject
-                            {:Bucket config/files-bucket-name
+                            {:Bucket (config/getFilesBucketName)
                              :Key    key})]
     {:content (:Body result) :filename (-> result :Metadata :filename)}))
