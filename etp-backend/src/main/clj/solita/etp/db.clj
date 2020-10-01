@@ -47,8 +47,17 @@
           (if (instance? PSQLException cause)
             (translatePSQLException cause) e))))))
 
+(defn kebab-case [snake-case]
+  (str/replace snake-case \_ \-))
+
+(defn kebab-case-keys [object]
+  (map/map-keys (comp keyword kebab-case name) object))
+
 (defn- generate-query-fn [original-generate-query-fn ns query query-options]
-  (let [db-function (original-generate-query-fn ns query query-options)]
+  (let [new-query (update-in query
+                             [:attributes :row-fn]
+                             #(if (nil? %) kebab-case-keys (comp kebab-case-keys %)))
+        db-function (original-generate-query-fn ns new-query query-options)]
     (with-meta
       (partial with-db-exception-translation db-function)
       (meta db-function))))
@@ -64,12 +73,8 @@
          (jeesql/defqueries (str "solita/etp/db/" name ".sql") options)))
      (alias (symbol (str name "-db")) db-namespace))))
 
-;; These can be probably replaced with function from camel-snake-kebab
 (defn snake-case [kebab-case]
   (str/replace kebab-case \- \_))
-
-(defn kebab-case [snake-case]
-  (str/replace snake-case \_ \-))
 
 (def default-opts {:entities snake-case
                    :identifiers kebab-case})

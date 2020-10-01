@@ -288,7 +288,7 @@
     result))
 
 (defn find-required-properties [db versio]
-  (map (comp to-property-name :column_name)
+  (map (comp to-property-name :column-name)
        (energiatodistus-db/select-required-columns db {:versio versio})))
 
 (defn find-required-constraints [db energiatodistus]
