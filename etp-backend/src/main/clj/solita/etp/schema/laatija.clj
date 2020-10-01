@@ -84,14 +84,16 @@
          KayttajaUpdate))
 
 (def always-public-kayttaja-laatija-ks
-  [:etunimi :sukunimi :patevyystaso :toteamispaivamaara :toimintaalue :muuttoimintaalueet :voimassa])
+  [:id :etunimi :sukunimi :patevyystaso :toteamispaivamaara :toimintaalue :muuttoimintaalueet :voimassa :aktiivinen])
 
 (def LaatijaFind
   "A schema for find all existing laatija"
   (-> (st/merge Laatija kayttaja-schema/Kayttaja)
+      (st/assoc :aktiivinen schema/Bool)
       (st/assoc :voimassa schema/Bool)
       (st/assoc :henkilotunnus schema/Str)
       (st/assoc :yritys [common-schema/Key])
+      (st/dissoc :login :cognitoid :virtu :rooli :passivoitu)
 
       ;; Pätevyydentoteajat do not see the last part of hetu
       (st/optional-keys)
