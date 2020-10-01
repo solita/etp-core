@@ -28,7 +28,6 @@
              "class [B"))))
 
 (t/deftest upsert-file-and-find-test
-  (println "dd"  ts/*aws-s3-client*)
   (service/upsert-file-from-bytes ts/*aws-s3-client*
                                   (:id file-info-1)
                                   (:filename file-info-1)

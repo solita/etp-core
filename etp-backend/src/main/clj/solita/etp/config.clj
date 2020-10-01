@@ -2,11 +2,10 @@
   (:require [integrant.core :as ig]
             [cognitect.aws.credentials :as credentials]))
 
+; use local evn credentials in codebuild and local env
+; only ecs use s3
 (def use-local-env-credentials?
-  (not (or (System/getenv "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI")
-           (System/getenv "AWS_CONTAINER_CREDENTIALS_FULL_URI"))))
-
-(println (System/getenv))
+  (not (System/getenv "FILES_BUCKET_NAME")))
 
 (defn env [name default]
   (or (System/getenv name) default))
