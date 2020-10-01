@@ -708,7 +708,7 @@
        :content
        io/input-stream))
 
-(defn find-energiatodistus-pdf [db whoami aws-s3-client id kieli]
+(defn find-energiatodistus-pdf [db aws-s3-client whoami id kieli]
   (when-let [{:keys [allekirjoitusaika] :as complete-energiatodistus}
              (complete-energiatodistus-service/find-complete-energiatodistus db whoami id)]
     (if allekirjoitusaika
