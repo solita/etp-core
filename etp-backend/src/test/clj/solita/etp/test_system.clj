@@ -44,7 +44,12 @@
   (#'aws/invoke aws-s3-client :CreateBucket {:Bucket bucket}))
 
 (defn drop-bucket! [aws-s3-client bucket]
-  (#'aws/invoke aws-s3-client :DeleteBucket {:Bucket bucket}))
+  (let [keys (->> (#'aws/invoke aws-s3-client :ListObjectsV2 {:Bucket bucket})
+                  :Contents
+                  (map #(select-keys % [:Key])))]
+    (#'aws/invoke aws-s3-client :DeleteObjects {:Delete {:Objects keys}
+                                                :Bucket bucket})
+    (#'aws/invoke aws-s3-client :DeleteBucket {:Bucket bucket})))
 
 (defn fixture [f]
   (let [db-name                  (next-db-name)

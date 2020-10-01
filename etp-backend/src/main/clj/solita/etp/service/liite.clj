@@ -35,7 +35,6 @@
         (insert-file! aws-s3-client (:tempfile liite)))))
 
 (defn add-liitteet-from-files [db aws-s3-client whoami energiatodistus-id files]
-  (println aws-s3-client)
   (jdbc/with-db-transaction [db db]
     (doseq [file files]
       (add-liite-from-file! db aws-s3-client whoami energiatodistus-id
