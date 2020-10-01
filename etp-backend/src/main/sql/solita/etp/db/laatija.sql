@@ -21,7 +21,8 @@ SELECT k.id,
        l.julkinen_wwwosoite julkinenwwwosoite,
        l.julkinen_osoite julkinenosoite,
        array(select yritys_id from laatija_yritys where laatija_id = l.id) as yritys,
-       current_date between l.toteamispaivamaara and l.toteamispaivamaara + interval '7 year' as voimassa
+       current_date between l.toteamispaivamaara and l.toteamispaivamaara + interval '7 year' as voimassa,
+       coalesce(current_timestamp < login + interval '6 month', false) as aktiivinen
 FROM laatija l
 INNER JOIN kayttaja k
 ON l.id = k.id
