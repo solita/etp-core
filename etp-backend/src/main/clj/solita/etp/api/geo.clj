@@ -10,13 +10,11 @@
            :responses  {200 {:body [geo-schema/Toimintaalue]}}
            :handler    (fn [{:keys [db]}]
                          (r/response (geo-service/find-all-toiminta-alueet db)))}}]
-
    ["/countries/"
     {:get {:summary    "Hae kaikki maat"
            :responses  {200 {:body [geo-schema/Country]}}
            :handler    (fn [{:keys [db]}]
                          (r/response (geo-service/find-all-countries db)))}}]
-
    ["/postinumerot"
     {:get {:summary   "Hae kaikki postinumerot"
            :responses {200 {:body [common-schema/Luokittelu]}}
