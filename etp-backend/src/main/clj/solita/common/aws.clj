@@ -7,7 +7,7 @@
   (let [{:keys [Error] :as result} (aws/invoke aws-s3-client {:op      op
                                                               :request request})]
     (if Error
-      (log/error "Unable to invoke aws client " result)
+      (log/error "Unable to invoke aws client " (merge {:op op :request request} result))
       result)))
 
 (defn put-object [aws-s3-client key filename content]

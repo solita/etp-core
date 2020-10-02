@@ -59,6 +59,6 @@ services:
       /usr/bin/mc config host rm local;
       /usr/bin/mc config host add --quiet --api s3v4 local http://minio:9000 minio minio123;
       /usr/bin/mc rb --force local/files;
-      /usr/bin/mc mb --quiet local/files;
+      /usr/bin/mc mb --quiet local/files --with-lock;
       /usr/bin/mc policy set public local/files;
       "     

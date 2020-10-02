@@ -48,7 +48,7 @@
   (t/is (nil? (service/find-file ts/*aws-s3-client* "nonexisting"))))
 
 (t/deftest rewrite-test
-  (let [id (:id file-info-1)]
+  (let [id (str (:id file-info-1) "-rewrite-test")]
     (service/upsert-file-from-bytes ts/*aws-s3-client*
                                     id
                                     (:filename file-info-1)
