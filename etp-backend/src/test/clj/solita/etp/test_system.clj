@@ -52,18 +52,17 @@
 
 (defn fixture [f]
   (let [db-name                  (next-db-name)
-        bucket-name              (next-bucket-name)
         management-system        (ig/init (config-for-management))
         management-db            (:solita.etp/db management-system)
         _                        (create-db! management-db db-name)
-        test-system              (ig/init (config-for-tests db-name))
-        aws-s3-client            (:solita.etp/aws-s3-client test-system)
-        _                        (create-bucket! aws-s3-client bucket-name)]
+        test-system              (ig/init (config-for-tests db-name))]
     (with-bindings {#'*db*            (:solita.etp/db test-system)
                     #'*aws-s3-client* (:solita.etp/aws-s3-client test-system)}
-      (with-redefs [config/getFilesBucketName (fn [] bucket-name)]
-        (common-jdbc/with-application-name-support f)))
-    (drop-bucket! aws-s3-client bucket-name)
+      (let [bucket-name (next-bucket-name)]
+        (with-redefs [config/getFilesBucketName (fn [] bucket-name)]
+          (create-bucket! *aws-s3-client* bucket-name)
+          (common-jdbc/with-application-name-support f)
+          (drop-bucket! *aws-s3-client* bucket-name))))
     (ig/halt! test-system)
     (drop-db! management-db db-name)
     (ig/halt! management-system)))
