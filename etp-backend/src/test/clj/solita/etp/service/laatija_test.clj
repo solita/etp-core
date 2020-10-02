@@ -44,6 +44,7 @@
         (t/is (every? #(not (nil? %)) found-laatijat))
         (t/is (= (set (map :sukunimi laatijat))
                  (set (map :sukunimi found-laatijat))))
+        (t/is (every? #(-> % :aktiivinen nil? not) found-laatijat))
         (when (= whoami paakayttaja)
           (t/is (every? #(-> % :henkilotunnus count (= 11)) found-laatijat))
           (t/is (every? #(contains? % :postitoimipaikka) found-laatijat))
