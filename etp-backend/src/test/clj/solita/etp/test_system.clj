@@ -1,6 +1,7 @@
 (ns solita.etp.test-system
-  (:require [integrant.core :as ig]
+  (:require [clojure.string :as str]
             [clojure.java.jdbc :as jdbc]
+            [integrant.core :as ig]
             [solita.common.jdbc :as common-jdbc]
             [solita.etp.config :as config]
             [solita.etp.db]
@@ -10,25 +11,17 @@
 (def ^:dynamic *db* nil)
 (def ^:dynamic *aws-s3-client* nil)
 
-(defn config-for-management []
+(defn config-for-management [bucket]
   (merge (config/db {:username       (config/env "DB_MANAGEMENT_USER" "etp")
                      :password       (config/env "DB_MANAGEMENT_PASSWORD" "etp")
                      :database-name  "template1"
                      :current-schema "public"})
-         (config/aws-s3-client)))
+         (config/aws-s3-client {:bucket bucket})))
 
-(defn config-for-tests [db-name]
+(defn config-for-tests [db-name bucket]
   (merge (config/db {:database-name            db-name
                      :re-write-batched-inserts true})
-         (config/aws-s3-client)))
-
-(def db-name-counter (atom 0))
-
-(defn next-db-name []
-  (str "etp_test_" (first (swap-vals! db-name-counter inc))))
-
-(defn next-bucket-name []
-  (.toString (java.util.UUID/randomUUID)))
+         (config/aws-s3-client {:bucket bucket})))
 
 (defn create-db! [db db-name]
   (jdbc/execute! db
@@ -40,37 +33,39 @@
                  [(format "DROP DATABASE IF EXISTS %s" db-name)]
                  {:transaction? false}))
 
-(defn create-bucket! [aws-s3-client bucket]
-  (#'aws/invoke aws-s3-client :CreateBucket {:Bucket bucket
-                                             :CreateBucketConfiguration
-                                                     {:LocationConstraint "eu-central-1"}}))
+(defn create-bucket! [{:keys [client bucket]}]
+  (#'aws/invoke client :CreateBucket {:Bucket bucket
+                                      :CreateBucketConfiguration
+                                      {:LocationConstraint "eu-central-1"}}))
 
-(defn drop-bucket! [aws-s3-client bucket]
-  (let [keys (->> (#'aws/invoke aws-s3-client :ListObjectsV2 {:Bucket bucket})
+(defn drop-bucket! [{:keys [client bucket]}]
+  (let [keys (->> (#'aws/invoke client :ListObjectsV2 {:Bucket bucket})
                   :Contents
                   (map #(select-keys % [:Key])))]
-    (#'aws/invoke aws-s3-client :DeleteObjects {:Delete {:Objects keys}
-                                                :Bucket bucket})
-    (#'aws/invoke aws-s3-client :DeleteBucket {:Bucket bucket})))
+    (#'aws/invoke client :DeleteObjects {:Delete {:Objects keys}
+                                         :Bucket bucket})
+    (#'aws/invoke client :DeleteBucket {:Bucket bucket})))
 
 (defn fixture [f]
-  (let [db-name                  (next-db-name)
-        bucket-name              (next-bucket-name)
-        management-system        (ig/init (config-for-management))
+  (let [uuid                     (-> (java.util.UUID/randomUUID)
+                                     .toString
+                                     (str/replace "-" ""))
+        db-name                  (str "etp_test_" uuid)
+        bucket-name              (str "files-" uuid)
+        management-system        (ig/init (config-for-management bucket-name))
         management-db            (:solita.etp/db management-system)
         management-aws-s3-client (:solita.etp/aws-s3-client management-system)]
     (try
       (create-db! management-db db-name)
-      (create-bucket! management-aws-s3-client bucket-name)
-      (let [test-system (ig/init (config-for-tests db-name))]
+      (create-bucket! management-aws-s3-client)
+      (let [test-system (ig/init (config-for-tests db-name bucket-name))]
         (with-bindings {#'*db*            (:solita.etp/db test-system)
                         #'*aws-s3-client* (:solita.etp/aws-s3-client test-system)}
-          (with-redefs [config/getFilesBucketName (fn [] bucket-name)]
-            (common-jdbc/with-application-name-support f)))
+          (common-jdbc/with-application-name-support f))
         (ig/halt! test-system))
       (finally
         (drop-db! management-db db-name)
-        (drop-bucket! management-aws-s3-client bucket-name)
+        (drop-bucket! management-aws-s3-client)
         (ig/halt! management-system)))))
 
 (defn db-user
