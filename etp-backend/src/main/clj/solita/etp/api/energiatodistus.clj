@@ -48,10 +48,11 @@
                               :filename schema/Str}}
           :responses  {200 {:body nil}
                        404 {:body schema/Str}}
-          :handler    (fn [{{{:keys [id kieli filename]} :path} :parameters :keys [db whoami]}]
+          :handler    (fn [{{{:keys [id kieli filename]} :path} :parameters :keys [db aws-s3-client whoami]}]
                         (if (valid-pdf-filename? filename id kieli)
                           (api-response/pdf-response
                            (energiatodistus-pdf-service/find-energiatodistus-pdf db
+                                                                                 aws-s3-client
                                                                                  whoami
                                                                                  id
                                                                                  kieli)

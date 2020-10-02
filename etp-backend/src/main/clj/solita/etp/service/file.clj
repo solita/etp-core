@@ -1,25 +1,20 @@
 (ns solita.etp.service.file
   (:require [clojure.java.io :as io]
-            [clojure.java.jdbc :as jdbc]
-            [solita.etp.db :as db])
+            [solita.common.aws :as aws])
   (:import (java.io FileInputStream)))
-
-; *** Require sql functions ***
-(db/require-queries 'file)
 
 (defn file->byte-array [file]
   (-> file FileInputStream. .readAllBytes))
 
-(defn upsert-file-from-bytes [db id filename bytes]
-  (:id (file-db/upsert-file<! db {:id id :filename filename :content bytes})))
+(defn upsert-file-from-bytes [aws-s3-client key filename bytes]
+  (aws/put-object aws-s3-client key filename bytes))
 
-(defn upsert-file-from-file [db id file]
-  (upsert-file-from-bytes db id (.getName file) (file->byte-array file)))
+(defn upsert-file-from-file [aws-s3-client key file]
+  (upsert-file-from-bytes aws-s3-client key (.getName file) (file->byte-array file)))
 
-(defn upsert-file-from-input-stream [db id filename is]
-  (upsert-file-from-bytes db id filename (.readAllBytes is)))
+(defn upsert-file-from-input-stream [aws-s3-client key filename is]
+  (upsert-file-from-bytes aws-s3-client key filename (.readAllBytes is)))
 
-(defn find-file [db id]
-  (some-> (file-db/select-file db {:id id})
-          first
+(defn find-file [aws-s3-client key]
+  (some-> (aws/get-object aws-s3-client key)
           (update :content io/input-stream)))

@@ -3,24 +3,31 @@
             [clojure.java.jdbc :as jdbc]
             [solita.common.jdbc :as common-jdbc]
             [solita.etp.config :as config]
-            [solita.etp.db]))
+            [solita.etp.db]
+            [solita.etp.aws-s3-client]
+            [solita.common.aws :as aws]))
 
 (def ^:dynamic *db* nil)
+(def ^:dynamic *aws-s3-client* nil)
 
 (defn config-for-management []
-  (config/db {:username (config/env "DB_MANAGEMENT_USER" "etp")
-              :password (config/env "DB_MANAGEMENT_PASSWORD" "etp")
-              :database-name "template1"
+  (config/db {:username       (config/env "DB_MANAGEMENT_USER" "etp")
+              :password       (config/env "DB_MANAGEMENT_PASSWORD" "etp")
+              :database-name  "template1"
               :current-schema "public"}))
 
 (defn config-for-tests [db-name]
-  (config/db {:database-name db-name
-              :re-write-batched-inserts true}))
+  (merge (config/db {:database-name            db-name
+                     :re-write-batched-inserts true})
+         (config/aws-s3-client)))
 
 (def db-name-counter (atom 0))
 
 (defn next-db-name []
   (str "etp_test_" (first (swap-vals! db-name-counter inc))))
+
+(defn next-bucket-name []
+  (str "etp-test-" (first (swap-vals! db-name-counter inc))))
 
 (defn create-db! [db db-name]
   (jdbc/execute! db
@@ -32,14 +39,31 @@
                  [(format "DROP DATABASE IF EXISTS %s" db-name)]
                  {:transaction? false}))
 
+(defn create-bucket! [aws-s3-client bucket]
+  (#'aws/invoke aws-s3-client :CreateBucket {:Bucket bucket}))
+
+(defn drop-bucket! [aws-s3-client bucket]
+  (let [keys (->> (#'aws/invoke aws-s3-client :ListObjectsV2 {:Bucket bucket})
+                  :Contents
+                  (map #(select-keys % [:Key])))]
+    (#'aws/invoke aws-s3-client :DeleteObjects {:Delete {:Objects keys}
+                                                :Bucket bucket})
+    (#'aws/invoke aws-s3-client :DeleteBucket {:Bucket bucket})))
+
 (defn fixture [f]
-  (let [db-name (next-db-name)
-        management-system (ig/init (config-for-management))
-        management-db (:solita.etp/db management-system)
-        _ (create-db! management-db db-name)
-        test-system (ig/init (config-for-tests db-name))]
-    (with-bindings {#'*db* (:solita.etp/db test-system)}
-      (common-jdbc/with-application-name-support f))
+  (let [db-name                  (next-db-name)
+        bucket-name              (next-bucket-name)
+        management-system        (ig/init (config-for-management))
+        management-db            (:solita.etp/db management-system)
+        _                        (create-db! management-db db-name)
+        test-system              (ig/init (config-for-tests db-name))
+        aws-s3-client            (:solita.etp/aws-s3-client test-system)
+        _                        (create-bucket! aws-s3-client bucket-name)]
+    (with-bindings {#'*db*            (:solita.etp/db test-system)
+                    #'*aws-s3-client* aws-s3-client}
+      (with-redefs [config/getFilesBucketName (fn [] bucket-name)]
+        (common-jdbc/with-application-name-support f)))
+    (drop-bucket! aws-s3-client bucket-name)
     (ig/halt! test-system)
     (drop-db! management-db db-name)
     (ig/halt! management-system)))

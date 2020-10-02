@@ -27,9 +27,9 @@
            :access rooli-service/laatija?
            :responses  {200 {:body nil}
                         404 {:body schema/Str}}
-           :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+           :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db aws-s3-client]}]
                          (api-response/signature-response
-                           (energiatodistus-pdf-service/find-energiatodistus-digest db id)
+                           (energiatodistus-pdf-service/find-energiatodistus-digest db aws-s3-client id)
                            (str "Energiatodistus " id)))}}]
    ["/pdf"
     {:put {:summary "Luo allekirjoitettu PDF"
@@ -38,11 +38,12 @@
            :access rooli-service/laatija?
            :responses {200 {:body nil}
                        404 {:body schema/Str}}
-           :handler (fn [{{{:keys [id]} :path} :parameters :keys [db whoami parameters]}]
+           :handler (fn [{{{:keys [id]} :path} :parameters :keys [db aws-s3-client whoami parameters]}]
                       (api-response/with-exceptions
                         #(api-response/signature-response
                           (energiatodistus-pdf-service/sign-energiatodistus-pdf
                            db
+                           aws-s3-client
                            whoami
                            id
                            (:body parameters))
