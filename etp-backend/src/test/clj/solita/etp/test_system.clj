@@ -11,11 +11,10 @@
 (def ^:dynamic *aws-s3-client* nil)
 
 (defn config-for-management []
-  (merge (config/db {:username       (config/env "DB_MANAGEMENT_USER" "etp")
-                     :password       (config/env "DB_MANAGEMENT_PASSWORD" "etp")
-                     :database-name  "template1"
-                     :current-schema "public"})
-         (config/aws-s3-client)))
+  (config/db {:username       (config/env "DB_MANAGEMENT_USER" "etp")
+              :password       (config/env "DB_MANAGEMENT_PASSWORD" "etp")
+              :database-name  "template1"
+              :current-schema "public"}))
 
 (defn config-for-tests [db-name]
   (merge (config/db {:database-name            db-name
@@ -58,16 +57,15 @@
         management-db            (:solita.etp/db management-system)
         _                        (create-db! management-db db-name)
         test-system              (ig/init (config-for-tests db-name))
-        management-aws-s3-client (:solita.etp/aws-s3-client management-system)
-        _                        (create-bucket! management-aws-s3-client bucket-name)]
+        aws-s3-client            (:solita.etp/aws-s3-client test-system)
+        _                        (create-bucket! aws-s3-client bucket-name)]
     (with-bindings {#'*db*            (:solita.etp/db test-system)
-                    #'*aws-s3-client* (:solita.etp/aws-s3-client test-system)}
+                    #'*aws-s3-client* aws-s3-client}
       (with-redefs [config/getFilesBucketName (fn [] bucket-name)]
         (common-jdbc/with-application-name-support f)))
-
+    (drop-bucket! aws-s3-client bucket-name)
     (ig/halt! test-system)
     (drop-db! management-db db-name)
-    (drop-bucket! management-aws-s3-client bucket-name)
     (ig/halt! management-system)))
 
 (defn db-user
