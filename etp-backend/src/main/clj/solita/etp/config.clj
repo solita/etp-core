@@ -36,18 +36,20 @@
 
 (defn aws-s3-client
   ([] (aws-s3-client {}))
-  ([opts]
-   (let [config (when use-local-env-credentials?
-                  {:credentials-provider (credentials/basic-credentials-provider
-                                           {:access-key-id     "minio"
-                                            :secret-access-key "minio123"})
-                   :endpoint-override    {:protocol :http
-                                          :hostname "localhost"
-                                          :port     9000}})]
-     {:solita.etp/aws-s3-client (merge {:api :s3
-                                        :region "eu-central-1"}
-                                       config
-                                       opts)})))
+  ([{:keys [client bucket]}]
+   {:solita.etp/aws-s3-client
+    {:client (merge
+              {:api :s3
+               :region "eu-central-1"}
+              (when use-local-env-credentials?
+                {:credentials-provider (credentials/basic-credentials-provider
+                                        {:access-key-id     "minio"
+                                         :secret-access-key "minio123"})
+                 :endpoint-override    {:protocol :http
+                                        :hostname "localhost"
+                                        :port     9000}})
+              client)
+     :bucket (or bucket (env "FILES_BUCKET_NAME" "files"))}}))
 
 ;;
 ;; Misc config
@@ -56,5 +58,3 @@
 (def trusted-jwt-iss (env "TRUSTED_JWT_ISS" "https://raw.githubusercontent.com/solita/etp-core/develop/etp-backend/src/test/resources/"))
 (def data-jwt-public-key-base-url (env "DATA_JWT_PUBLIC_KEY_BASE_URL" "https://raw.githubusercontent.com/solita/etp-core/develop/etp-backend/src/test/resources/"))
 (def cognito-logout-url (env "COGNITO_LOGOUT_URL" "https://localhost:3000"))
-(defn getFilesBucketName []
-  (env "FILES_BUCKET_NAME" "files"))

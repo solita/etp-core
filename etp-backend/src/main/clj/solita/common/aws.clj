@@ -3,24 +3,25 @@
             [solita.etp.config :as config]
             [clojure.tools.logging :as log]))
 
-(defn- invoke [aws-s3-client op request]
-  (let [{:keys [Error] :as result} (aws/invoke aws-s3-client {:op      op
-                                                              :request request})]
+(defn- invoke [client op request]
+  (let [{:keys [Error] :as result} (aws/invoke client {:op      op
+                                                       :request request})]
     (if Error
-      (log/error "Unable to invoke aws client " (merge {:op op :request request} result))
+      (log/error "Unable to invoke aws client "
+                 (merge {:op op :request request} result))
       result)))
 
-(defn put-object [aws-s3-client key filename content]
-  (invoke aws-s3-client
+(defn put-object [{:keys [client bucket]} key filename content]
+  (invoke client
           :PutObject
-          {:Bucket   (config/getFilesBucketName)
+          {:Bucket   bucket
            :Key      key
            :Body     content
            :Metadata {:filename filename}}))
 
-(defn get-object [aws-s3-client key]
-  (when-let [result (invoke aws-s3-client
+(defn get-object [{:keys [client bucket]} key]
+  (when-let [result (invoke client
                             :GetObject
-                            {:Bucket (config/getFilesBucketName)
+                            {:Bucket bucket
                              :Key    key})]
     {:content (:Body result) :filename (-> result :Metadata :filename)}))
