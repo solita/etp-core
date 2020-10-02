@@ -27,7 +27,7 @@
   (str "etp_test_" (first (swap-vals! db-name-counter inc))))
 
 (defn next-bucket-name []
-  (str "etp-test-" (first (swap-vals! db-name-counter inc))))
+  (str "etp-test-" @db-name-counter))
 
 (defn create-db! [db db-name]
   (jdbc/execute! db
