@@ -60,7 +60,7 @@
         aws-s3-client            (:solita.etp/aws-s3-client test-system)
         _                        (create-bucket! aws-s3-client bucket-name)]
     (with-bindings {#'*db*            (:solita.etp/db test-system)
-                    #'*aws-s3-client* aws-s3-client}
+                    #'*aws-s3-client* (:solita.etp/aws-s3-client test-system)}
       (with-redefs [config/getFilesBucketName (fn [] bucket-name)]
         (common-jdbc/with-application-name-support f)))
     (drop-bucket! aws-s3-client bucket-name)
