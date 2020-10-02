@@ -41,10 +41,13 @@ services:
         read_only: true
         
   minio:
-    image: minio/minio
-    container_name: minio
+    image: minio/minio:latest
     ports:
       - 127.0.0.1:9000:9000
+    networks:
+      - minio
+    volumes:
+      - data:/data  
     command: server /files
     environment:
       MINIO_ACCESS_KEY: minio
@@ -54,11 +57,18 @@ services:
     image: minio/mc:latest
     depends_on:
       - minio
+    networks:
+      - minio  
     entrypoint: >
       /bin/sh -c "
-      /usr/bin/mc config host rm local;
-      /usr/bin/mc config host add --quiet --api s3v4 local http://minio:9000 minio minio123;
-      /usr/bin/mc rb --force local/files;
-      /usr/bin/mc mb --quiet local/files --with-lock;
+      sleep 5;
+      /usr/bin/mc alias set local http://minio:9000 minio minio123 --api S3v4;
+      /usr/bin/mc mb local/files --region=eu-central-1 --with-lock;
       /usr/bin/mc policy set public local/files;
-      "     
+      "
+
+volumes:
+  data:
+
+networks:
+  minio:      

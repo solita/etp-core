@@ -44,7 +44,8 @@
                    :endpoint-override    {:protocol :http
                                           :hostname "localhost"
                                           :port     9000}})]
-     {:solita.etp/aws-s3-client (merge {:api :s3}
+     {:solita.etp/aws-s3-client (merge {:api :s3
+                                        :region "eu-central-1"}
                                        config
                                        opts)})))
 

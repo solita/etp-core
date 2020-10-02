@@ -41,7 +41,9 @@
                  {:transaction? false}))
 
 (defn create-bucket! [aws-s3-client bucket]
-  (#'aws/invoke aws-s3-client :CreateBucket {:Bucket bucket}))
+  (#'aws/invoke aws-s3-client :CreateBucket {:Bucket bucket
+                                             :CreateBucketConfiguration
+                                                     {:LocationConstraint "eu-central-1"}}))
 
 (defn drop-bucket! [aws-s3-client bucket]
   (let [keys (->> (#'aws/invoke aws-s3-client :ListObjectsV2 {:Bucket bucket})
@@ -52,23 +54,24 @@
     (#'aws/invoke aws-s3-client :DeleteBucket {:Bucket bucket})))
 
 (defn fixture [f]
-  (let [db-name           (next-db-name)
-        bucket-name       (next-bucket-name)
-        management-system (ig/init (config-for-management))
-        management-db     (:solita.etp/db management-system)
-        _                 (create-db! management-db db-name)
-        test-system       (ig/init (config-for-tests db-name))
-        aws-s3-client     (:solita.etp/aws-s3-client management-system)
-        _                 (create-bucket! aws-s3-client bucket-name)]
-    (with-bindings {#'*db*            (:solita.etp/db test-system)
-                    #'*aws-s3-client* (:solita.etp/aws-s3-client test-system)}
-      (with-redefs [config/getFilesBucketName (fn [] bucket-name)]
-        (common-jdbc/with-application-name-support f)))
-
-    (ig/halt! test-system)
-    (drop-db! management-db db-name)
-    (drop-bucket! aws-s3-client bucket-name)
-    (ig/halt! management-system)))
+  (let [db-name                  (next-db-name)
+        bucket-name              (next-bucket-name)
+        management-system        (ig/init (config-for-management))
+        management-db            (:solita.etp/db management-system)
+        management-aws-s3-client (:solita.etp/aws-s3-client management-system)]
+    (try
+      (create-db! management-db db-name)
+      (create-bucket! management-aws-s3-client bucket-name)
+      (let [test-system (ig/init (config-for-tests db-name))]
+        (with-bindings {#'*db*            (:solita.etp/db test-system)
+                        #'*aws-s3-client* (:solita.etp/aws-s3-client test-system)}
+          (with-redefs [config/getFilesBucketName (fn [] bucket-name)]
+            (common-jdbc/with-application-name-support f)))
+        (ig/halt! test-system))
+      (finally
+        (drop-db! management-db db-name)
+        (drop-bucket! management-aws-s3-client bucket-name)
+        (ig/halt! management-system)))))
 
 (defn db-user
   ([kayttaja-id] (db-user *db* kayttaja-id))
