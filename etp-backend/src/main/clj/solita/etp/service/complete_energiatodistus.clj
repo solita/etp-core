@@ -4,6 +4,7 @@
             [solita.etp.service.laatimisvaihe :as laatimisvaihe]
             [solita.etp.service.e-luokka :as e-luokka-service]
             [solita.etp.service.kielisyys :as kielisyys]
+            [solita.etp.service.luokittelu :as luokittelu]
             [solita.common.map :as map]))
 
 (defn combine-keys [m f nil-replacement path-new & paths]
@@ -40,8 +41,9 @@
                        (with-precision 5 (/ (+ aurinkolampo muulampo lampopumppu) lampo))))))
        kuukausierittely))
 
-(defn complete-energiatodistus [db energiatodistus kielisyydet
-                                laatimisvaiheet alakayttotarkoitukset]
+(defn complete-energiatodistus
+  [db energiatodistus {:keys [kielisyydet laatimisvaiheet alakayttotarkoitukset
+                              ilmanvaihtotyypit lammitysmuodot lammonjaot]}]
   (with-precision 20
     (let [{:keys [perustiedot versio]} energiatodistus
           kieli-id (:kieli perustiedot)
@@ -281,6 +283,7 @@
                         [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo-poisto]
                         [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo]
                         [:lahtotiedot :ilmanvaihto :ivjarjestelma :poisto])
+
           (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko])
           (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :tuulisahko])
           (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :aurinkolampo])
@@ -397,19 +400,19 @@
    :laatimisvaiheet       (laatimisvaihe/find-laatimisvaiheet)
    :alakayttotarkoitukset (reduce #(assoc %1 %2 (kayttotarkoitus-service/find-alakayttotarkoitukset db %2))
                                   {}
-                                  [2013 2018])})
+                                  [2013 2018])
+   :ilmanvaihtotyypit     (luokittelu/find-ilmanvaihtotyypit db)
+   :lammitysmuodot        (luokittelu/find-lammitysmuodot db)
+   :lammonjaot            (luokittelu/find-lammonjaot db)})
 
 (defn find-complete-energiatodistus
   ([db id]
    (find-complete-energiatodistus db nil id))
   ([db whoami id]
-   (let [{:keys [kielisyydet laatimisvaiheet alakayttotarkoitukset]}
-         (required-luokittelut db)]
+   (let [luokittelut (required-luokittelut db)]
      (complete-energiatodistus
       db
       (if whoami
         (energiatodistus-service/find-energiatodistus db whoami id)
         (energiatodistus-service/find-energiatodistus db id))
-      kielisyydet
-      laatimisvaiheet
-      alakayttotarkoitukset))))
+      luokittelut))))
