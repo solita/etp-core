@@ -7,13 +7,16 @@
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
             [solita.etp.schema.common :as common-schema]
-            [flathead.flatten :as flat]))
+            [flathead.flatten :as flat]
+            [schema.core :as schema]))
 
 ;; *** Require sql functions ***
 (db/require-queries 'kayttaja)
 
 ;; *** Conversions from database data types ***
-(def coerce-kayttaja (coerce/coercer kayttaja-schema/Kayttaja json/json-coercions))
+(def coerce-kayttaja (coerce/coercer! kayttaja-schema/Kayttaja
+                                      {(schema/maybe kayttaja-schema/VirtuId)
+                                       #(if (every? nil? (vals %)) nil %)}))
 
 (defn find-kayttaja
   ([db id]
@@ -31,14 +34,19 @@
        kayttaja
        (exception/throw-forbidden!)))))
 
-(defn add-kayttaja! [db kayttaja]
-  (-> (jdbc/insert! db :kayttaja (flat/tree->flat "$" kayttaja)) first :id))
+(defn- kayttaja->db-row [kayttaja]
+  (dissoc (flat/tree->flat "$" kayttaja) :virtu))
 
-(defn update-kayttaja! [db whoami id kayttaja]
+(defn add-kayttaja! [db kayttaja]
+  (-> (jdbc/insert! db :kayttaja (kayttaja->db-row kayttaja)) first :id))
+
+(defn update-kayttaja!
+  "Update all other users (kayttaja) except laatija."
+  [db whoami id kayttaja]
   (if (or (and (= id (:id whoami))
                (common-schema/not-contains-keys
                 kayttaja
                 kayttaja-schema/KayttajaAdminUpdate))
           (rooli-service/paakayttaja? whoami))
-    (jdbc/update! db :kayttaja (flat/tree->flat "$" kayttaja) ["rooli <> 0 and id = ?" id])
+    (jdbc/update! db :kayttaja (kayttaja->db-row kayttaja) ["rooli <> 0 and id = ?" id])
     (exception/throw-forbidden!)))
