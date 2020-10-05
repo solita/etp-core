@@ -244,7 +244,7 @@
     [:draft :laatija false] energiatodistus-update
     [:signed :laatija false]
     (select-keys energiatodistus-update
-                 [:laskutettava_yritys_id
+                 [:laskutettava-yritys-id
                   :laskuriviviite
                   :pt$rakennustunnus])
     [:signed :laatija true]
@@ -252,14 +252,14 @@
                  [:pt$rakennustunnus])
     [:signed :paakayttaja false]
     (select-keys energiatodistus-update
-                 [:laskutettava_yritys_id
+                 [:laskutettava-yritys-id
                   :laskuriviviite
                   :pt$rakennustunnus
-                  :korvattu_energiatodistus_id])
+                  :korvattu-energiatodistus-id])
     [:signed :paakayttaja true]
     (select-keys energiatodistus-update
                  [:pt$rakennustunnus
-                  :korvattu_energiatodistus_id])
+                  :korvattu-energiatodistus-id])
     :else (exception/throw-forbidden!
             (str "Role: " rooli
                  " is not allowed to update energiatodistus " id
