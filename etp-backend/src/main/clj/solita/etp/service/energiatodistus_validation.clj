@@ -23,7 +23,10 @@
    "lahtotiedot.lammitys.lammitysmuoto-2.kuvaus-sv" luokittelu/lammitysmuoto-2-kuvaus-required?
 
    "lahtotiedot.lammitys.lammonjako.kuvaus-fi" luokittelu/lammonjako-kuvaus-required?
-   "lahtotiedot.lammitys.lammonjako.kuvaus-sv" luokittelu/lammonjako-kuvaus-required?})
+   "lahtotiedot.lammitys.lammonjako.kuvaus-sv" luokittelu/lammonjako-kuvaus-required?
+
+   "huomiot.ymparys.teksti-fi" laatimisvaihe/olemassaoleva-rakennus?
+   "huomiot.ymparys.teksti-sv" laatimisvaihe/olemassaoleva-rakennus?})
 
 (defn localized-property-condition [property]
   (cond
