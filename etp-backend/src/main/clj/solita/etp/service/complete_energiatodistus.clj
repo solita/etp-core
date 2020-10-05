@@ -1,5 +1,6 @@
 (ns solita.etp.service.complete-energiatodistus
-  (:require [solita.etp.service.energiatodistus :as energiatodistus-service]
+  (:require [clojure.string :as str]
+            [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
             [solita.etp.service.laatimisvaihe :as laatimisvaihe]
             [solita.etp.service.e-luokka :as e-luokka-service]
@@ -41,23 +42,56 @@
                        (with-precision 5 (/ (+ aurinkolampo muulampo lampopumppu) lampo))))))
        kuukausierittely))
 
+(defn find-by-id [coll id]
+  (->> coll (filter #(= (:id %) id)) first))
+
+(defn join-strings [& strs]
+  (->> strs (remove str/blank?) (str/join ", ")))
+
 (defn complete-energiatodistus
   [db energiatodistus {:keys [kielisyydet laatimisvaiheet alakayttotarkoitukset
                               ilmanvaihtotyypit lammitysmuodot lammonjaot]}]
   (with-precision 20
-    (let [{:keys [perustiedot versio]} energiatodistus
-          kieli-id (:kieli perustiedot)
-          kielisyys (->> kielisyydet (filter #(= (:id %) kieli-id)) first)
-          laatimisvaihe-id (:laatimisvaihe perustiedot)
-          laatimisvaihe (->> laatimisvaiheet
-                             (filter #(= (:id %) laatimisvaihe-id))
-                             first)
-
+    (let [{:keys [versio]} energiatodistus
+          kielisyys (find-by-id kielisyydet (-> energiatodistus
+                                                :perustiedot
+                                                :kieli))
+          laatimisvaihe (find-by-id laatimisvaiheet (-> energiatodistus
+                                                        :perustiedot
+                                                        :laatimisvaihe))
+          ilmanvaihtotyyppi-id (-> energiatodistus
+                                   :lahtotiedot
+                                   :ilmanvaihto
+                                   :tyyppi-id)
+          muu-ilmanvaihtotyyppi? (= 6 ilmanvaihtotyyppi-id)
+          ilmanvaihtotyyppi (find-by-id ilmanvaihtotyypit ilmanvaihtotyyppi-id)
+          lammitysmuoto-1-id (-> energiatodistus
+                                 :lahtotiedot
+                                 :lammitys
+                                 :lammitysmuoto-1
+                                 :id)
+          muu-lammitysmuoto-1? (= 9 lammitysmuoto-1-id)
+          lammitysmuoto-1 (find-by-id lammitysmuodot lammitysmuoto-1-id)
+          lammitysmuoto-2-id (-> energiatodistus
+                                 :lahtotiedot
+                                 :lammitys
+                                 :lammitysmuoto-2
+                                 :id)
+          muu-lammitysmuoto-2? (= 9 lammitysmuoto-2-id)
+          lammitysmuoto-2 (find-by-id lammitysmuodot lammitysmuoto-2-id)
+          lammonjako-id (-> energiatodistus
+                            :lahtotiedot
+                            :lammitys
+                            :lammonjako
+                            :id)
+          muu-lammonjako? (= 12 lammonjako-id)
+          lammonjako (find-by-id lammonjaot lammonjako-id)
           ;; Käyttötarkoitus is actually alakäyttötarkoitus in database
-          alakayttotarkoitus-id (:kayttotarkoitus perustiedot)
-          alakayttotarkoitus (->> (get alakayttotarkoitukset versio)
-                                  (filter #(= (:id %) alakayttotarkoitus-id))
-                                  first)]
+          alakayttotarkoitus-id (-> energiatodistus
+                                    :perustiedot
+                                    :kayttotarkoitus)
+          alakayttotarkoitus (-> (get alakayttotarkoitukset versio)
+                                 (find-by-id alakayttotarkoitus-id))]
       (-> energiatodistus
           (assoc-in [:perustiedot :kieli-fi] (:label-fi kielisyys))
           (assoc-in [:perustiedot :kieli-sv] (:label-sv kielisyys))
@@ -283,7 +317,59 @@
                         [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo-poisto]
                         [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo]
                         [:lahtotiedot :ilmanvaihto :ivjarjestelma :poisto])
-
+          (assoc-in [:lahtotiedot :ilmanvaihto :label-fi]
+                    (if muu-ilmanvaihtotyyppi?
+                      (-> energiatodistus :lahtotiedot :ilmanvaihto :kuvaus-fi)
+                      (-> ilmanvaihtotyyppi :label-fi)))
+          (assoc-in [:lahtotiedot :ilmanvaihto :label-sv]
+                    (if muu-ilmanvaihtotyyppi?
+                      (-> energiatodistus :lahtotiedot :ilmanvaihto :kuvaus-sv)
+                      (-> ilmanvaihtotyyppi :label-sv)))
+          (assoc-in [:lahtotiedot :lammitys :label-fi]
+                    (join-strings (if muu-lammitysmuoto-1?
+                                    (-> energiatodistus
+                                        :lahtotiedot
+                                        :lammitys
+                                        :lammitysmuoto-1
+                                        :kuvaus-fi)
+                                    (-> lammitysmuoto-1 :label-fi))
+                                  (if muu-lammitysmuoto-2?
+                                    (-> energiatodistus
+                                        :lahtotiedot
+                                        :lammitys
+                                        :lammitysmuoto-2
+                                        :kuvaus-fi)
+                                    (-> lammitysmuoto-2 :label-fi))
+                                  (if muu-lammonjako?
+                                    (-> energiatodistus
+                                        :lahtotiedot
+                                        :lammitys
+                                        :lammonjako
+                                        :kuvaus-fi)
+                                    (-> lammonjako :label-fi))))
+        (assoc-in [:lahtotiedot :lammitys :label-sv]
+                  (join-strings "TODO SV"
+                                (if muu-lammitysmuoto-1?
+                                  (-> energiatodistus
+                                      :lahtotiedot
+                                      :lammitys
+                                      :lammitysmuoto-1
+                                      :kuvaus-sv)
+                                  (-> lammitysmuoto-1 :label-sv))
+                                (if muu-lammitysmuoto-2?
+                                  (-> energiatodistus
+                                      :lahtotiedot
+                                      :lammitys
+                                      :lammitysmuoto-2
+                                      :kuvaus-sv)
+                                  (-> lammitysmuoto-2 :label-sv))
+                                (if muu-lammonjako?
+                                  (-> energiatodistus
+                                      :lahtotiedot
+                                      :lammitys
+                                      :lammonjako
+                                      :kuvaus-sv)
+                                  (-> lammonjako :label-sv))))
           (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko])
           (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :tuulisahko])
           (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :aurinkolampo])
