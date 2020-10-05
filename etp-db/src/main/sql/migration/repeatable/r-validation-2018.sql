@@ -73,7 +73,10 @@ values
 (2018, 'lt$lammitys$lammin_kayttovesi$jaon_hyotysuhde', 64),
 
 (2018, 'lt$lkvn_kaytto$ominaiskulutus', 65),
-(2018, 'lt$lkvn_kaytto$lammitysenergian_nettotarve', 66)
+(2018, 'lt$lkvn_kaytto$lammitysenergian_nettotarve', 66),
+
+(2018, 'h$ymparys$teksti_fi', 67),
+(2018, 'h$ymparys$teksti_sv', 68)
 
 on conflict (column_name, versio) do update
   set ordinal = excluded.ordinal;
