@@ -19,6 +19,8 @@
 (def paakayttaja {:rooli 2})
 (def roolit [laatija patevyydentoteaja paakayttaja])
 
+(def LaatijaUpdate (dissoc laatija-schema/LaatijaUpdate :api-key))
+
 (defn generate-KayttajaLaatijaAdds [n]
   (tu/generate-kayttaja n laatija-schema/KayttajaLaatijaAdd))
 
@@ -137,11 +139,11 @@
                                      found-kayttaja-2)
                 laatija-1-updated? (map/submap? (st/select-schema
                                                  update-1
-                                                 laatija-schema/LaatijaUpdate)
+                                                 LaatijaUpdate)
                                                 found-laatija-1)
                 laatija-2-updated? (map/submap? (st/select-schema
                                                  update-2
-                                                 laatija-schema/LaatijaUpdate)
+                                                 LaatijaUpdate)
                                                 found-laatija-2)]]
     (schema/validate kayttaja-schema/Kayttaja found-kayttaja-1)
     (schema/validate kayttaja-schema/Kayttaja found-kayttaja-2)

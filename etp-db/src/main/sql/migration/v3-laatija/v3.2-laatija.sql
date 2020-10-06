@@ -22,5 +22,6 @@ create table laatija (
   vastaanottajan_tarkenne text,
   postinumero text NOT NULL,
   postitoimipaikka text NOT NULL,
-  maa char(2) REFERENCES country (id) NOT NULL DEFAULT 'FI'
+  maa char(2) REFERENCES country (id) NOT NULL DEFAULT 'FI',
+  api_key_hash text
 );
