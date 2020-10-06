@@ -596,12 +596,18 @@
                       cell (xlsx/get-cell row 0)
                       path-v (when path (get-in complete-energiatodistus path))
                       v (cond
-                          path-v (if (number? path-v)
+                          path-v (cond
+                                   (number? path-v)
                                    (format-number path-v dp percent?)
-                                   path-v)
+
+                                   (string? path-v)
+                                   (if (str/blank? path-v) " " path-v)
+
+                                   :else
+                                   (or path-v " "))
 
                           f (f complete-energiatodistus))]]
-          (xlsx/set-cell-value cell (or v " "))))
+          (xlsx/set-cell-value cell v)))
       (xlsx/evaluate-formulas loaded-xlsx)
       (io/make-parents path)
       (xlsx/save-xlsx loaded-xlsx path)
