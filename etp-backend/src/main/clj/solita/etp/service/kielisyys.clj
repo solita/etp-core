@@ -1,10 +1,7 @@
-(ns solita.etp.service.kielisyys)
+(ns solita.etp.service.kielisyys
+  (:require [solita.etp.service.luokittelu :as luokittelu-service]))
 
-(def kielisyys [{:id 0 :label-fi "Suomi" :label-sv "Finska" :valid true}
-                {:id 1 :label-fi "Ruotsi" :label-sv "Svenska" :valid true}
-                {:id 2 :label-fi "Kaksikielinen" :label-sv "Tvåspråkig" :valid true}])
-
-(defn find-kielisyys [] kielisyys)
+(def find-kielisyys luokittelu-service/find-kielisyys)
 
 (def ^:private kieli-keys
   [:fi,
