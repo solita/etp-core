@@ -196,8 +196,28 @@
     (t/is (= (service/end-energiatodistus-signing! ts/*db* whoami id)
              :ok))
     (t/is (= (energiatodistus-tila id) :signed))
-    (t/is (=  (service/end-energiatodistus-signing! ts/*db* whoami id)
-              :already-signed))))
+    (t/is (= (service/end-energiatodistus-signing! ts/*db* whoami id)
+             :already-signed))))
+
+(t/deftest cancel-energiatodistus-signing!-test
+  (let [laatija-id (add-laatija!)
+        whoami {:id laatija-id :rooli 0}
+        id (add-energiatodistus! (generate-energiatodistus-2018-complete) laatija-id)]
+
+    (t/is (= (energiatodistus-tila id) :draft))
+    (t/is (=  (service/cancel-energiatodistus-signing! ts/*db* whoami id)
+              :not-in-signing))
+    (t/is (= (energiatodistus-tila id) :draft))
+
+    (service/start-energiatodistus-signing! ts/*db* whoami id)
+    (t/is (= (service/cancel-energiatodistus-signing! ts/*db* whoami id)
+             :ok))
+    (t/is (= (energiatodistus-tila id) :draft))
+
+    (service/start-energiatodistus-signing! ts/*db* whoami id)
+    (service/end-energiatodistus-signing! ts/*db* whoami id)
+    (t/is (= (service/cancel-energiatodistus-signing! ts/*db* whoami id)
+             :already-signed))))
 
 (t/deftest update-signed-energiatodistus!-test
   (let [laatija-id               (add-laatija!)
