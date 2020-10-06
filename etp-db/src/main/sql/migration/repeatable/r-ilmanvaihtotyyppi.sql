@@ -2,7 +2,7 @@ INSERT INTO ilmanvaihtotyyppi (id, label_fi, label_sv, ordinal)
 VALUES
 (0, 'Painovoimainen ilmanvaihtojärjestelmä', '', 1),
 (1, 'Koneellinen poistoilmanvaihtojärjestelmä', '', 2),
-(2, 'Koneellinen tulo- ja poistoilmanvaihtojärjeslmä', '', 3),
+(2, 'Koneellinen tulo- ja poistoilmanvaihtojärjestelmä', '', 3),
 (3, 'Poistoilmalämpöpumppu (vain käyttötarkoitusluokka 1)', '', 4),
 (4, 'Painovoimainen/koneellinen poisto', '', 5),
 (5, 'Painovoimainen/koneellinen tulo- ja poisto', '', 6),
