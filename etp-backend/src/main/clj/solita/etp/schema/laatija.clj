@@ -36,7 +36,7 @@
 
 (def Password
   (schema/constrained schema/Str
-                      #(<= 8 (count (str/trim %)) 20)
+                      #(<= 8 (count (str/trim %)) 200)
                       "password"))
 
 (def LaatijaUpdate
