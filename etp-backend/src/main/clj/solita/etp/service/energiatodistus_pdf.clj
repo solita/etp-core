@@ -248,18 +248,18 @@
       {:path [:lahtotiedot :jaahdytysjarjestelma :jaahdytyskauden-painotettu-kylmakerroin] :dp 2}
       {:path [:lahtotiedot :lkvn-kaytto :ominaiskulutus] :dp 0}
       {:path [:lahtotiedot :lkvn-kaytto :lammitysenergian-nettotarve] :dp 0}
-      {:f #(-> % sis-kuorma (get 0) first (format-number 0 true))}
-      {:f #(-> % sis-kuorma (get 0) second :henkilot (format-number 1 false))}
-      {:f #(-> % sis-kuorma (get 0) second :kuluttajalaitteet (format-number 1 false))}
-      {:f #(-> % sis-kuorma (get 0) second :valaistus (format-number 1 false))}
-      {:f #(-> % sis-kuorma (get 1) first (format-number 0 true))}
-      {:f #(-> % sis-kuorma (get 1) second :henkilot (format-number 1 false))}
-      {:f #(-> % sis-kuorma (get 1) second :kuluttajalaitteet (format-number 1 false))}
-      {:f #(-> % sis-kuorma (get 1) second :valaistus (format-number 1 false))}
-      {:f #(-> % sis-kuorma (get 2) first (format-number 0 true))}
-      {:f #(-> % sis-kuorma (get 2) second :henkilot (format-number 1 false))}
-      {:f #(-> % sis-kuorma (get 2) second :kuluttajalaitteet (format-number 1 false))}
-      {:f #(-> % sis-kuorma (get 2) second :valaistus (format-number 1 false))}]
+      {:f #(-> % sis-kuorma (get 0) first) :dp 0 :percent? true}
+      {:f #(-> % sis-kuorma (get 0) second :henkilot) :dp 1}
+      {:f #(-> % sis-kuorma (get 0) second :kuluttajalaitteet) :dp 1}
+      {:f #(-> % sis-kuorma (get 0) second :valaistus) :dp 1}
+      {:f #(-> % sis-kuorma (get 1) first) :dp 0 :percent? true}
+      {:f #(-> % sis-kuorma (get 1) second :henkilot) :dp 1}
+      {:f #(-> % sis-kuorma (get 1) second :kuluttajalaitteet) :dp 1}
+      {:f #(-> % sis-kuorma (get 1) second :valaistus) :dp 1}
+      {:f #(-> % sis-kuorma (get 2) first) :dp 0 :percent? true}
+      {:f #(-> % sis-kuorma (get 2) second :henkilot) :dp 1}
+      {:f #(-> % sis-kuorma (get 2) second :kuluttajalaitteet) :dp 1}
+      {:f #(-> % sis-kuorma (get 2) second :valaistus) :dp 1}]
    3 [{:path [:id]}
       {:path [:perustiedot :alakayttotarkoitus-fi]}
       {:path [:perustiedot :alakayttotarkoitus-sv]}
@@ -594,20 +594,19 @@
                 :let [sheet (nth sheets sheet-idx)
                       row (xlsx/get-row sheet row-idx)
                       cell (xlsx/get-cell row 0)
-                      path-v (when path (get-in complete-energiatodistus path))
+                      v (if path
+                          (get-in complete-energiatodistus path)
+                          (f complete-energiatodistus))
                       v (cond
 
-                          (number? path-v)
-                          (format-number path-v dp percent?)
+                          (number? v)
+                          (format-number v dp percent?)
 
-                          (string? path-v)
-                          (if (str/blank? path-v) " " path-v)
-
-                          f
-                          (or (f complete-energiatodistus) " ")
+                          (string? v)
+                          (if (str/blank? v) " " v)
 
                           :else
-                          (or path-v " "))]]
+                          (or v " "))]]
           (xlsx/set-cell-value cell v)))
       (xlsx/evaluate-formulas loaded-xlsx)
       (io/make-parents path)
