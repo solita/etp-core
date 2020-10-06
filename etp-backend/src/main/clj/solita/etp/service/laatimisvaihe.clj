@@ -1,11 +1,7 @@
-(ns solita.etp.service.laatimisvaihe)
+(ns solita.etp.service.laatimisvaihe
+  (:require [solita.etp.service.luokittelu :as luokittelu-service]))
 
-(def ^:private laatimisvaiheet
-  [{:id 0 :label-fi "Rakennuslupa" :label-sv "Bygglov" :valid true}
-   {:id 1 :label-fi "Käyttöönotto" :label-sv "Införandet" :valid true}
-   {:id 2 :label-fi "Olemassa oleva rakennus" :label-sv "Befintlig byggnad" :valid true}])
-
-(defn find-laatimisvaiheet [] laatimisvaiheet)
+(def find-laatimisvaiheet luokittelu-service/find-laatimisvaiheet)
 
 (def ^:private vaihe-keys
   [:rakennuslupa,

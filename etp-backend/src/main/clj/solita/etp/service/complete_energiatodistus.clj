@@ -486,8 +486,8 @@
                         [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala])))))
 
 (defn required-luokittelut [db]
-  {:kielisyydet           (kielisyys/find-kielisyys)
-   :laatimisvaiheet       (laatimisvaihe/find-laatimisvaiheet)
+  {:kielisyydet           (kielisyys/find-kielisyys db)
+   :laatimisvaiheet       (laatimisvaihe/find-laatimisvaiheet db)
    :alakayttotarkoitukset (reduce #(assoc %1 %2 (kayttotarkoitus-service/find-alakayttotarkoitukset db %2))
                                   {}
                                   [2013 2018])

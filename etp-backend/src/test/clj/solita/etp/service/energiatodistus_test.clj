@@ -80,10 +80,17 @@
            :allekirjoitusaika           nil
            :voimassaolo-paattymisaika   nil})))
 
+(defn assoc-in-if-exists [m ks v]
+  (if (not= (get-in m ks :not-found) :not-found)
+    (assoc-in m ks v)
+    m))
+
 (defn fix-energiatodistus-fk-references [energiatodistus]
   (-> energiatodistus
       (assoc :korvattu-energiatodistus-id nil :laskutettava-yritys-id nil)
       (assoc-in [:perustiedot :kayttotarkoitus] "YAT")
+      (assoc-in-if-exists [:perustiedot :laatimisvaihe] (rand-int 2))
+      (assoc-in [:perustiedot :kieli] (rand-int 2))
       (assoc-in [:lahtotiedot :ilmanvaihto :tyyppi-id] (rand-int 7))
       (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-1 :id] (rand-int 10))
       (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-2 :id] (rand-int 10))
