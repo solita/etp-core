@@ -5,7 +5,7 @@
             [solita.etp.schema.geo :as geo-schema]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
             [schema-tools.core :as st]
-            [schema.core :as s]))
+            [clojure.string :as str]))
 
 (def Patevyystaso common-schema/Luokittelu)
 
@@ -34,24 +34,30 @@
    :toteaja            PatevyydenToteaja
    :laatimiskielto     schema/Bool})
 
+(def Password
+  (schema/constrained schema/Str
+                      #(<= 8 (count (str/trim %)) 20)
+                      "password"))
+
 (def LaatijaUpdate
   "Only for internal use in laatija services.
    Represents laatija information which is stored in laatija-table."
   (merge geo-schema/Postiosoite
          (st/optional-keys LaatijaAdminUpdate)
-         {:toimintaalue                             (schema/maybe common-schema/Key)
-          :muuttoimintaalueet                       MuutToimintaalueet
-          :julkinenpuhelin                          schema/Bool
-          :julkinenemail                            schema/Bool
-          :julkinenosoite                           schema/Bool
-          :julkinenwwwosoite                        schema/Bool
-          :wwwosoite                                (schema/maybe schema/Str)
-          :laskutuskieli                            (schema/enum 0 1 2)}))
+         {:toimintaalue       (schema/maybe common-schema/Key)
+          :muuttoimintaalueet MuutToimintaalueet
+          :julkinenpuhelin    schema/Bool
+          :julkinenemail      schema/Bool
+          :julkinenosoite     schema/Bool
+          :julkinenwwwosoite  schema/Bool
+          :wwwosoite          (schema/maybe schema/Str)
+          :laskutuskieli      (schema/enum 0 1 2)
+          :api-key            (schema/maybe Password)}))
 
 (def Laatija
   "Schema representing the persistent laatija.
   This defines only the laatija specific kayttaja information."
-  (merge LaatijaUpdate
+  (merge (dissoc LaatijaUpdate :api-key)
          common-schema/Id
          {:henkilotunnus common-schema/Henkilotunnus}))
 
