@@ -116,10 +116,10 @@
               (.format date-formatter (.plusYears (LocalDate/now) 10))))}]
    1 [{:path [:id]}
       {:f #(-> % :lahtotiedot :lammitetty-nettoala (format-number 1 false) (str " m²"))}
-      {:path [:lahtotiedot :lammitys :kuvaus-fi]}
-      {:path [:lahtotiedot :lammitys :kuvaus-sv]}
-      {:path [:lahtotiedot :ilmanvaihto :kuvaus-fi]}
-      {:path [:lahtotiedot :ilmanvaihto :kuvaus-sv]}
+      {:path [:lahtotiedot :lammitys :label-fi]}
+      {:path [:lahtotiedot :lammitys :label-sv]}
+      {:path [:lahtotiedot :ilmanvaihto :label-fi]}
+      {:path [:lahtotiedot :ilmanvaihto :label-sv]}
       {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo] :dp 0}
       {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala] :dp 0}
       {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]}
@@ -220,8 +220,8 @@
       {:path [:lahtotiedot :ikkunat :luode :ala] :dp 1}
       {:path [:lahtotiedot :ikkunat :luode :U] :dp 2}
       {:path [:lahtotiedot :ikkunat :luode :g-ks] :dp 2}
-      {:path [:lahtotiedot :ilmanvaihto :kuvaus-fi]}
-      {:path [:lahtotiedot :ilmanvaihto :kuvaus-sv]}
+      {:path [:lahtotiedot :ilmanvaihto :label-fi]}
+      {:path [:lahtotiedot :ilmanvaihto :label-sv]}
       {:path [:lahtotiedot :ilmanvaihto :paaiv :tulo-poisto]}
       {:path [:lahtotiedot :ilmanvaihto :paaiv :sfp] :dp 2}
       {:path [:lahtotiedot :ilmanvaihto :paaiv :lampotilasuhde] :dp 0 :percent? true}
@@ -231,8 +231,8 @@
       {:path [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo-poisto]}
       {:path [:lahtotiedot :ilmanvaihto :ivjarjestelma :sfp] :dp 2}
       {:path [:lahtotiedot :ilmanvaihto :lto-vuosihyotysuhde] :dp 0 :percent? true}
-      {:path [:lahtotiedot :lammitys :kuvaus-fi]}
-      {:path [:lahtotiedot :lammitys :kuvaus-sv]}
+      {:path [:lahtotiedot :lammitys :label-fi]}
+      {:path [:lahtotiedot :lammitys :label-sv]}
       {:path [:lahtotiedot :lammitys :tilat-ja-iv :tuoton-hyotysuhde] :dp 0 :percent? true}
       {:path [:lahtotiedot :lammitys :tilat-ja-iv :jaon-hyotysuhde] :dp 0 :percent? true}
       {:path [:lahtotiedot :lammitys :tilat-ja-iv :lampokerroin] :dp 1}
@@ -596,12 +596,18 @@
                       cell (xlsx/get-cell row 0)
                       path-v (when path (get-in complete-energiatodistus path))
                       v (cond
-                          path-v (if (number? path-v)
+                          path-v (cond
+                                   (number? path-v)
                                    (format-number path-v dp percent?)
-                                   path-v)
+
+                                   (string? path-v)
+                                   (if (str/blank? path-v) " " path-v)
+
+                                   :else
+                                   (or path-v " "))
 
                           f (f complete-energiatodistus))]]
-          (xlsx/set-cell-value cell (or v " "))))
+          (xlsx/set-cell-value cell v)))
       (xlsx/evaluate-formulas loaded-xlsx)
       (io/make-parents path)
       (xlsx/save-xlsx loaded-xlsx path)

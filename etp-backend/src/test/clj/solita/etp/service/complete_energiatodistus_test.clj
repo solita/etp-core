@@ -30,15 +30,11 @@
 
 (t/deftest complete-energiatodistus-test
   (let [laatija-id (energiatodistus-test/add-laatija!)
-        {:keys [kielisyydet
-                laatimisvaiheet
-                alakayttotarkoitukset]} (service/required-luokittelut ts/*db*)
+        luokittelut (service/required-luokittelut ts/*db*)
         complete-energiatodistus (service/complete-energiatodistus
                                   ts/*db*
                                   (generate-energiatodistus)
-                                  kielisyydet
-                                  laatimisvaiheet
-                                  alakayttotarkoitukset)]
+                                  luokittelut)]
     (t/is (assert-complete-energiatoditus complete-energiatodistus))))
 
 

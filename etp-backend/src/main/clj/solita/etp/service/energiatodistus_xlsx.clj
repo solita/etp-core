@@ -58,15 +58,12 @@
 
 (defn search-completed-energiatodistukset [db whoami query]
   (let [query (update query :limit #(or % 1000))
-        {:keys [kielisyydet laatimisvaiheet alakayttotarkoitukset]}
-        (complete-energiatodistus-service/required-luokittelut db)]
+        luokittelut (complete-energiatodistus-service/required-luokittelut db)]
     (->> (energiatodistus-search-service/search db whoami query)
          (map #(complete-energiatodistus-service/complete-energiatodistus
                 db
                 %
-                kielisyydet
-                laatimisvaiheet
-                alakayttotarkoitukset)))))
+                luokittelut)))))
 
 (defn find-energiatodistukset-xlsx [db whoami query]
   (let [energiatodistukset (search-completed-energiatodistukset db whoami query)
