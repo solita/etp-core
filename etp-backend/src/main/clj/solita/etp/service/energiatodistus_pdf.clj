@@ -374,18 +374,8 @@
       {:path [:tulokset :lampokuormat :kvesi-nettoala] :dp 0}
       {:path [:tulokset :laskentatyokalu]}]
    4 [{:path [:id]}
-      {:f #(str "Lämmitetty nettoala "
-                (-> %
-                    :lahtotiedot
-                    :lammitetty-nettoala
-                    (format-number 1 false))
-                " m²")}
-      {:f #(str "Uppvärmd nettoarea "
-                (-> %
-                    :lahtotiedot
-                    :lammitetty-nettoala
-                    (format-number 1 false))
-                " m²")}
+      {:path [:lahtotiedot :lammitetty-nettoala] :dp 1}
+      {:path [:lahtotiedot :lammitetty-nettoala] :dp 1}
       {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukolampo-vuosikulutus] :dp 0}
       {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kaukolampo-vuosikulutus-nettoala] :dp 0}
       {:path [:toteutunut-ostoenergiankulutus :ostettu-energia :kokonaissahko-vuosikulutus] :dp 0}
