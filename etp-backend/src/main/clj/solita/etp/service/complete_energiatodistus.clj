@@ -63,28 +63,32 @@
                                    :lahtotiedot
                                    :ilmanvaihto
                                    :tyyppi-id)
-          muu-ilmanvaihtotyyppi? (= 6 ilmanvaihtotyyppi-id)
+          use-ilmanvaihto-kuvaus? (luokittelu/ilmanvaihto-kuvaus-required?
+                                   energiatodistus)
           ilmanvaihtotyyppi (find-by-id ilmanvaihtotyypit ilmanvaihtotyyppi-id)
           lammitysmuoto-1-id (-> energiatodistus
                                  :lahtotiedot
                                  :lammitys
                                  :lammitysmuoto-1
                                  :id)
-          muu-lammitysmuoto-1? (= 9 lammitysmuoto-1-id)
+          use-lammitysmuoto-1-kuvaus? (luokittelu/lammitysmuoto-1-kuvaus-required?
+                                       energiatodistus)
           lammitysmuoto-1 (find-by-id lammitysmuodot lammitysmuoto-1-id)
           lammitysmuoto-2-id (-> energiatodistus
                                  :lahtotiedot
                                  :lammitys
                                  :lammitysmuoto-2
                                  :id)
-          muu-lammitysmuoto-2? (= 9 lammitysmuoto-2-id)
+          use-lammitysmuoto-2-kuvaus? (luokittelu/lammitysmuoto-2-kuvaus-required?
+                                       energiatodistus)
           lammitysmuoto-2 (find-by-id lammitysmuodot lammitysmuoto-2-id)
           lammonjako-id (-> energiatodistus
                             :lahtotiedot
                             :lammitys
                             :lammonjako
                             :id)
-          muu-lammonjako? (= 12 lammonjako-id)
+          use-lammonjako-kuvaus? (luokittelu/lammonjako-kuvaus-required?
+                                  energiatodistus)
           lammonjako (find-by-id lammonjaot lammonjako-id)
           ;; Käyttötarkoitus is actually alakäyttötarkoitus in database
           alakayttotarkoitus-id (-> energiatodistus
@@ -318,29 +322,29 @@
                         [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo]
                         [:lahtotiedot :ilmanvaihto :ivjarjestelma :poisto])
           (assoc-in [:lahtotiedot :ilmanvaihto :label-fi]
-                    (if muu-ilmanvaihtotyyppi?
+                    (if use-ilmanvaihto-kuvaus?
                       (-> energiatodistus :lahtotiedot :ilmanvaihto :kuvaus-fi)
                       (-> ilmanvaihtotyyppi :label-fi)))
           (assoc-in [:lahtotiedot :ilmanvaihto :label-sv]
-                    (if muu-ilmanvaihtotyyppi?
+                    (if use-ilmanvaihto-kuvaus?
                       (-> energiatodistus :lahtotiedot :ilmanvaihto :kuvaus-sv)
-                      (-> ilmanvaihtotyyppi :label-sv)))
+                      (str "TODO SV " (-> ilmanvaihtotyyppi :label-sv))))
           (assoc-in [:lahtotiedot :lammitys :label-fi]
-                    (join-strings (if muu-lammitysmuoto-1?
+                    (join-strings (if use-lammitysmuoto-1-kuvaus?
                                     (-> energiatodistus
                                         :lahtotiedot
                                         :lammitys
                                         :lammitysmuoto-1
                                         :kuvaus-fi)
                                     (-> lammitysmuoto-1 :label-fi))
-                                  (if muu-lammitysmuoto-2?
+                                  (if use-lammitysmuoto-1-kuvaus?
                                     (-> energiatodistus
                                         :lahtotiedot
                                         :lammitys
                                         :lammitysmuoto-2
                                         :kuvaus-fi)
                                     (-> lammitysmuoto-2 :label-fi))
-                                  (if muu-lammonjako?
+                                  (if use-lammonjako-kuvaus?
                                     (-> energiatodistus
                                         :lahtotiedot
                                         :lammitys
@@ -349,21 +353,21 @@
                                     (-> lammonjako :label-fi))))
         (assoc-in [:lahtotiedot :lammitys :label-sv]
                   (join-strings "TODO SV"
-                                (if muu-lammitysmuoto-1?
+                                (if use-lammitysmuoto-1-kuvaus?
                                   (-> energiatodistus
                                       :lahtotiedot
                                       :lammitys
                                       :lammitysmuoto-1
                                       :kuvaus-sv)
                                   (-> lammitysmuoto-1 :label-sv))
-                                (if muu-lammitysmuoto-2?
+                                (if use-lammitysmuoto-2-kuvaus?
                                   (-> energiatodistus
                                       :lahtotiedot
                                       :lammitys
                                       :lammitysmuoto-2
                                       :kuvaus-sv)
                                   (-> lammitysmuoto-2 :label-sv))
-                                (if muu-lammonjako?
+                                (if use-lammonjako-kuvaus?
                                   (-> energiatodistus
                                       :lahtotiedot
                                       :lammitys
