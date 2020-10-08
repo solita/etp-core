@@ -17,6 +17,11 @@
                          (r/response (geo-service/find-all-countries db)))}}]
    ["/postinumerot"
     {:get {:summary   "Hae kaikki postinumerot"
-           :responses {200 {:body [common-schema/Luokittelu]}}
+           :responses {200 {:body [geo-schema/Postinumero]}}
            :handler   (fn [{:keys [db]}]
-                        (r/response (geo-service/find-all-postinumerot db)))}}]])
+                        (r/response (geo-service/find-all-postinumerot db)))}}]
+   ["/kunnat"
+    {:get {:summary   "Hae kaikki kunnat"
+           :responses {200 {:body [geo-schema/Kunta]}}
+           :handler   (fn [{:keys [db]}]
+                        (r/response (geo-service/find-all-kunnat db)))}}]])
