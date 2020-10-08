@@ -1,6 +1,7 @@
 (ns solita.etp.service.kayttaja-laatija
   (:require [clojure.java.jdbc :as jdbc]
             [schema-tools.core :as st]
+            [solita.etp.db :as db]
             [solita.etp.exception :as exception]
             [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.service.laatija :as laatija-service]
@@ -10,7 +11,12 @@
             [flathead.flatten :as flat]))
 
 (defn- update-kayttaja [db id kayttaja]
-  (jdbc/update! db :kayttaja (flat/tree->flat "$" kayttaja) ["rooli = 0 and id = ?" id]))
+  (db/with-db-exception-translation
+    jdbc/update!
+    db
+    :kayttaja
+    (flat/tree->flat "$" kayttaja)
+    ["rooli = 0 and id = ?" id]))
 
 (defn- add-kayttaja [db kayttaja]
   (kayttaja-service/add-kayttaja! db (assoc kayttaja :rooli 0)))
