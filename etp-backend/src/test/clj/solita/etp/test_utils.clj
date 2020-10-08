@@ -17,7 +17,11 @@
    common-schema/Date                (g/always (java.time.LocalDate/now))
    geo-schema/Maa                    (g/always "FI")})
 
+
 (defn generate-kayttaja [n schema]
-  (map #(assoc %1 :henkilotunnus %2)
+  (map #(assoc %1
+               :email (str %2 "@example.com")
+               :henkilotunnus %3)
        (repeatedly n #(g/generate schema laatija-generators))
+       (repeatedly n #(.toString (java.util.UUID/randomUUID)))
        (unique-henkilotunnus-range n)))

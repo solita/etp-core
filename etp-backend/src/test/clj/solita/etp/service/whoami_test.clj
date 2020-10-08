@@ -18,7 +18,7 @@
           :let [id (kayttaja-service/add-kayttaja! ts/*db* kayttaja)
                 found-before (kayttaja-service/find-kayttaja ts/*db* paakayttaja id)
                 cognitoid (str "cognitoid-" (rand-int 1000000))
-                virtulocalid "tunnus"
+                virtulocalid (:email kayttaja)
                 virtuorganisaatio "organisaatio"
                 _ (service/update-kayttaja-with-whoami! ts/*db*
                                                         {:id id
