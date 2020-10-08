@@ -10,7 +10,7 @@
 (def routes
   ["/signature"
    ["/start"
-    {:post {:summary    "Siirrä energiatodistus allekirjoitus-tilaan"
+    {:post {:summary    "Tarkista energiatodistus ja siirrä energiatodistus allekirjoitus-tilaan"
             :parameters {:path {:id common-schema/Key}}
             :access rooli-service/laatija?
             :responses  {200 {:body nil}
@@ -21,9 +21,10 @@
                               (energiatodistus-service/start-energiatodistus-signing! db whoami id)
                               id)
                             [{:type :missing-value :response 400}]))}}]
-   ["/digest"
+   ["/digest/:language"
     {:get {:summary    "Hae PDF-tiedoston digest allekirjoitusta varten"
-           :parameters {:path {:id common-schema/Key}}
+           :parameters {:path {:id common-schema/Key
+                               :language schema/Str}}
            :access rooli-service/laatija?
            :responses  {200 {:body nil}
                         404 {:body schema/Str}}
@@ -31,9 +32,10 @@
                          (api-response/signature-response
                            (energiatodistus-pdf-service/find-energiatodistus-digest db aws-s3-client id)
                            id))}}]
-   ["/pdf"
+   ["/pdf/:language"
     {:put {:summary "Luo allekirjoitettu PDF"
-           :parameters {:path {:id common-schema/Key}
+           :parameters {:path {:id common-schema/Key
+                               :language schema/Str}
                         :body energiatodistus-schema/Signature}
            :access rooli-service/laatija?
            :responses {200 {:body nil}
