@@ -38,7 +38,10 @@
 (defn wrap-whoami-from-basic-auth [handler]
   (fn [{:keys [db] :as req}]
     (let [{:keys [id password]} (basic-auth/req->id-and-password req)
-          whoami (whoami-service/find-whoami db {:email id})]
+          whoami (whoami-service/find-whoami-with-api-key
+                  db
+                  {:email id}
+                  password)]
       (if whoami
         (handler (assoc req :whoami whoami))
         (do
