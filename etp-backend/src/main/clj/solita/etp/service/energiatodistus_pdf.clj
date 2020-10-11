@@ -731,12 +731,12 @@
       (.dispose))
     (ImageIO/write img "PNG" (io/file path))))
 
-(defn find-energiatodistus-digest [db aws-s3-client id]
+(defn find-energiatodistus-digest [db aws-s3-client id language]
   (when-let [{:keys [laatija-fullname versio] :as complete-energiatodistus}
              (complete-energiatodistus-service/find-complete-energiatodistus db id)]
     (do-when-signing
      complete-energiatodistus
-     #(let [pdf-path (generate-pdf-as-file complete-energiatodistus "fi" false)
+     #(let [pdf-path (generate-pdf-as-file complete-energiatodistus language false)
             signable-pdf-path (str/replace pdf-path #".pdf" "-signable.pdf")
             signature-png-path (str/replace pdf-path #".pdf" "-signature.png")
             _ (signature-as-png signature-png-path laatija-fullname)
@@ -749,7 +749,7 @@
                                (case versio 2013 648 2018 666))
             signable-pdf-data (puumerkki/read-file signable-pdf-path)
             digest (puumerkki/compute-base64-pkcs signable-pdf-data)
-            file-id (pdf-file-id id "fi")]
+            file-id (pdf-file-id id language)]
         (file-service/upsert-file-from-bytes aws-s3-client
                                              file-id
                                              (str file-id ".pdf")
@@ -778,14 +778,15 @@
                          last-name
                          surname)}))))
 
-(defn sign-energiatodistus-pdf [db aws-s3-client whoami id {:keys [chain] :as signature-and-chain}]
+(defn sign-energiatodistus-pdf [db aws-s3-client whoami id language
+                                {:keys [chain] :as signature-and-chain}]
   (when-let [energiatodistus
              (energiatodistus-service/find-energiatodistus db id)]
     (do-when-signing
      energiatodistus
      #(try
         (validate-surname! (:sukunimi whoami) (first chain))
-        (let [file-id (pdf-file-id id "fi")
+        (let [file-id (pdf-file-id id language)
               {:keys [content]} (file-service/find-file aws-s3-client file-id)
               content-bytes (.readAllBytes content)
               pkcs7 (puumerkki/make-pkcs7 signature-and-chain content-bytes)

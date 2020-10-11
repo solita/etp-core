@@ -28,10 +28,11 @@
            :access rooli-service/laatija?
            :responses  {200 {:body nil}
                         404 {:body schema/Str}}
-           :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db aws-s3-client]}]
+           :handler    (fn [{{{:keys [id language]} :path} :parameters :keys [db aws-s3-client]}]
                          (api-response/signature-response
-                           (energiatodistus-pdf-service/find-energiatodistus-digest db aws-s3-client id)
-                           id))}}]
+                           (energiatodistus-pdf-service/find-energiatodistus-digest
+                             db aws-s3-client id language)
+                           (str id "/" language)))}}]
    ["/pdf/:language"
     {:put {:summary "Luo allekirjoitettu PDF"
            :parameters {:path {:id common-schema/Key
@@ -40,16 +41,14 @@
            :access rooli-service/laatija?
            :responses {200 {:body nil}
                        404 {:body schema/Str}}
-           :handler (fn [{{{:keys [id]} :path} :parameters :keys [db aws-s3-client whoami parameters]}]
+           :handler (fn [{{{:keys [id language]} :path} :parameters :keys [db aws-s3-client whoami parameters]}]
                       (api-response/with-exceptions
                         #(api-response/signature-response
                           (energiatodistus-pdf-service/sign-energiatodistus-pdf
-                           db
-                           aws-s3-client
-                           whoami
-                           id
+                           db aws-s3-client whoami
+                           id language
                            (:body parameters))
-                          id)
+                          (str id "/" language))
                         [{:type :name-does-not-match :response 403}]))}}]
    ["/finish"
     {:post {:summary "Siirrä energiatodistus allekirjoitettu-tilaan"
