@@ -337,7 +337,7 @@
                                         :lammitysmuoto-1
                                         :kuvaus-fi)
                                     (-> lammitysmuoto-1 :label-fi))
-                                  (if use-lammitysmuoto-1-kuvaus?
+                                  (if use-lammitysmuoto-2-kuvaus?
                                     (-> energiatodistus
                                         :lahtotiedot
                                         :lammitys
