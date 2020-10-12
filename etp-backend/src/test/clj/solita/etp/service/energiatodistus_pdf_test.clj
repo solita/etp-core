@@ -83,13 +83,13 @@
              (energiatodistus-test/generate-energiatodistus-2018-complete)
              laatija-id)
         whoami {:id laatija-id}]
-    (t/is (= (service/find-energiatodistus-digest ts/*db* ts/*aws-s3-client* id)
+    (t/is (= (service/find-energiatodistus-digest ts/*db* ts/*aws-s3-client* id "fi")
              :not-in-signing))
     (energiatodistus-service/start-energiatodistus-signing! ts/*db* whoami id)
-    (t/is (contains? (service/find-energiatodistus-digest ts/*db* ts/*aws-s3-client* id)
+    (t/is (contains? (service/find-energiatodistus-digest ts/*db* ts/*aws-s3-client* id "fi")
                      :digest))
     (energiatodistus-service/end-energiatodistus-signing! ts/*db* whoami id)
-    (t/is (= (service/find-energiatodistus-digest ts/*db* ts/*aws-s3-client* id)
+    (t/is (= (service/find-energiatodistus-digest ts/*db* ts/*aws-s3-client* id "fi")
              :already-signed))))
 
 (t/deftest comparable-name-test
@@ -109,7 +109,7 @@
              (energiatodistus-test/generate-energiatodistus-2018-complete)
              laatija-id)
         whoami {:id laatija-id}]
-    (t/is (= (service/sign-energiatodistus-pdf ts/*db* ts/*aws-s3-client* whoami id nil)
+    (t/is (= (service/sign-energiatodistus-pdf ts/*db* ts/*aws-s3-client* whoami id "fi" nil)
              :not-in-signing))
     (energiatodistus-service/start-energiatodistus-signing! ts/*db* whoami id)
 
@@ -117,5 +117,5 @@
     ;; the success case?
 
     (energiatodistus-service/end-energiatodistus-signing! ts/*db* whoami id)
-    (t/is (= (service/sign-energiatodistus-pdf ts/*db* ts/*aws-s3-client* whoami id nil)
+    (t/is (= (service/sign-energiatodistus-pdf ts/*db* ts/*aws-s3-client* whoami id "fi" nil)
              :already-signed))))
