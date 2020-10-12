@@ -306,17 +306,17 @@
                         [:lahtotiedot :rakennusvaippa :kylmasillat-osuus-lampohaviosta]
                         [:lahtotiedot :rakennusvaippa :kylmasillat-UA]
                         [:lahtotiedot :rakennusvaippa :UA-summa])
-          (combine-keys #(str %1 " / " %2)
+          (combine-keys #(format "%.3f / %.3f" %1 %2)
                         nil
                         [:lahtotiedot :ilmanvaihto :paaiv :tulo-poisto]
                         [:lahtotiedot :ilmanvaihto :paaiv :tulo]
                         [:lahtotiedot :ilmanvaihto :paaiv :poisto])
-          (combine-keys #(str %1 " / " %2)
+          (combine-keys #(format "%.3f / %.3f" %1 %2)
                         nil
                         [:lahtotiedot :ilmanvaihto :erillispoistot :tulo-poisto]
                         [:lahtotiedot :ilmanvaihto :erillispoistot :tulo]
                         [:lahtotiedot :ilmanvaihto :erillispoistot :poisto])
-          (combine-keys #(str %1 " / " %2)
+          (combine-keys #(format "%.3f / %.3f" %1 %2)
                         nil
                         [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo-poisto]
                         [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo]
@@ -337,7 +337,7 @@
                                         :lammitysmuoto-1
                                         :kuvaus-fi)
                                     (-> lammitysmuoto-1 :label-fi))
-                                  (if use-lammitysmuoto-1-kuvaus?
+                                  (if use-lammitysmuoto-2-kuvaus?
                                     (-> energiatodistus
                                         :lahtotiedot
                                         :lammitys
