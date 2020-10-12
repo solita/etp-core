@@ -73,22 +73,22 @@
   {:status 409
    :body body})
 
-(defn signature-response [result entity-name]
+(defn signature-response [result id]
   (cond
     (= result :already-signed)
-    (conflict (str entity-name " already signed"))
+    (conflict (str "Energiatodistus " id " is already signed"))
 
     (= result :already-in-signing)
-    (conflict (str entity-name " is already in signing process"))
+    (conflict (str "Energiatodistus " id " is already in signing process"))
 
     (= result :not-in-signing)
-    (conflict (str "Signing process for " entity-name " has not been started"))
+    (conflict (str "Signing process for energiatodistus " id " has not been started"))
 
     (= result :pdf-exists)
-    (conflict (str "Signed PDF exists for " entity-name ". Get digest to sign again."))
+    (conflict (str "Signed PDF exists for energiatodistus " id ". Get digest to sign again."))
 
     (nil? result)
-    (r/not-found (str entity-name " does not exist"))
+    (r/not-found (str "Energiatodistus " id " does not exist"))
 
     (= result :ok)
     (r/response "Ok")

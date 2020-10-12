@@ -31,7 +31,7 @@
                                                 geo-schema/PostinumeroFI (logic/unless* nil? #(format "%05d" %))
                                                 schema/Num xschema/parse-big-decimal))))
 
-(def tilat [:draft :in-signing :signed :discarded :replaced :deleted])
+(def ^:private tilat [:draft :in-signing :signed :discarded :replaced :deleted])
 
 (defn tila-key [tila-id] (nth tilat tila-id))
 
@@ -185,11 +185,6 @@
                   (= (:laatija-id energiatodistus) (:id whoami))))
        energiatodistus
        (exception/throw-forbidden!)))))
-
-(defn find-energiatodistukset-by-laatija [db laatija-id tila-id]
-  (map db-row->energiatodistus
-       (energiatodistus-db/select-energiatodistukset-by-laatija
-         db {:laatija-id laatija-id :tila-id tila-id})))
 
 (defn find-replaceable-energiatodistukset-like-id [db id]
   (map :id (energiatodistus-db/select-replaceable-energiatodistukset-like-id db {:id id})))
@@ -361,6 +356,14 @@
     (when (= result 1)
       :ok)))
 
+(defn- failure-code [db whoami id]
+  (when-let [{:keys [tila-id] :as et} (find-energiatodistus db id)]
+    (assert-laatija! whoami et)
+    (case (tila-key tila-id)
+      :draft :not-in-signing
+      :deleted nil
+      :already-signed)))
+
 (defn end-energiatodistus-signing! [db whoami id]
   (jdbc/with-db-transaction [db db]
     (let [result (energiatodistus-db/update-energiatodistus-allekirjoitettu!
@@ -369,9 +372,9 @@
         (if-let [korvattu-energiatodistus-id (:korvattu-energiatodistus-id (find-energiatodistus db id))]
           (mark-energiatodistus-as-korvattu! db whoami korvattu-energiatodistus-id)
           :ok)
-        (when-let [{:keys [tila-id] :as et} (find-energiatodistus db id)]
-          (assert-laatija! whoami et)
-          (case (tila-key tila-id)
-            :draft :not-in-signing
-            :deleted nil
-            :already-signed))))))
+        (failure-code db whoami id)))))
+
+(defn cancel-energiatodistus-signing! [db whoami id]
+  (let [result (energiatodistus-db/update-energiatodistus-luonnos!
+                 db {:id id :laatija-id (:id whoami)})]
+    (if (= result 1) :ok (failure-code db whoami id))))
