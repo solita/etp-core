@@ -1,6 +1,5 @@
 (ns solita.etp.service.whoami
-  (:require [clojure.core.match :as match]
-            [schema.core :as schema]
+  (:require [schema.core :as schema]
             [schema-tools.core :as st]
             [buddy.hashers :as hashers]
             [flathead.flatten :as flat]
@@ -32,8 +31,8 @@
   (-> (find-whoami-with-api-key-hash db opts)
       (st/select-schema whoami-schema/Whoami)))
 
-(defn find-whoami-with-api-key [db opts api-key]
-  (let [whoami (find-whoami-with-api-key-hash db opts)]
+(defn find-whoami-by-email-and-api-key [db email api-key]
+  (let [whoami (find-whoami-with-api-key-hash db {:email email})]
     (when (verified-api-key? api-key (:api-key-hash whoami))
       (st/select-schema whoami whoami-schema/Whoami))))
 
