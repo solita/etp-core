@@ -2,6 +2,7 @@
 insert into validation_numeric_column
   (versio, column_name, warning$min, warning$max, error$min, error$max)
 values
+(2018, 'lt$lammitetty_nettoala', 50, 999999, 0, 999999),
 (2013, 'lt$rakennusvaippa$ilmanvuotoluku', 0.2, 15, 0, 50),
 (2013, 'lt$rakennusvaippa$ulkoseinat$U', 0.08, 0.81, 0.05, 2),
 (2013, 'lt$rakennusvaippa$ylapohja$U',   0.05, 0.47, 0.03, 2),
