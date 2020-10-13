@@ -22,11 +22,11 @@
                     :tulokset
                     :kaytettavat-energiamuodot
                     :kaukolampo-kertoimella))
-       (= "15 / 35" (-> complete-energiatodistus
-                        :lahtotiedot
-                        :ilmanvaihto
-                        :paaiv
-                        :tulo-poisto))))
+       (= "15.000 / 35.000" (-> complete-energiatodistus
+                                :lahtotiedot
+                                :ilmanvaihto
+                                :paaiv
+                                :tulo-poisto))))
 
 (t/deftest complete-energiatodistus-test
   (let [laatija-id (energiatodistus-test/add-laatija!)
