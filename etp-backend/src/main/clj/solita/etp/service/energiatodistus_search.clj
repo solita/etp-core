@@ -120,8 +120,11 @@
 
 (defn whoami->sql [{:keys [id] :as whoami}]
   (cond
-    (rooli-service/paakayttaja? whoami) ["energiatodistus.tila_id <> ?" 0]
-    (rooli-service/laatija? whoami) ["energiatodistus.laatija_id = ?" id]))
+    (rooli-service/paakayttaja? whoami)
+    ["energiatodistus.tila_id IN (2, 3, 4)" ]
+
+    (rooli-service/laatija? whoami)
+    ["energiatodistus.laatija_id = ? and energiatodistus.tila_id <> 5" id]))
 
 (defn sql-query [whoami {:keys [where sort order limit offset]}]
   (schema/validate [[[(schema/one schema/Str "predicate") schema/Any]]] where)
