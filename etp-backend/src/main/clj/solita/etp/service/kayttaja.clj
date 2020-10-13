@@ -3,7 +3,6 @@
             [schema.coerce :as coerce]
             [solita.etp.exception :as exception]
             [solita.etp.db :as db]
-            [solita.etp.service.json :as json]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
             [solita.etp.schema.common :as common-schema]
@@ -38,7 +37,9 @@
   (dissoc (flat/tree->flat "$" kayttaja) :virtu))
 
 (defn add-kayttaja! [db kayttaja]
-  (-> (jdbc/insert! db :kayttaja (kayttaja->db-row kayttaja)) first :id))
+  (-> (db/with-db-exception-translation
+        jdbc/insert! db :kayttaja (kayttaja->db-row kayttaja))
+      first :id))
 
 (defn update-kayttaja!
   "Update all other users (kayttaja) except laatija."
@@ -48,5 +49,6 @@
                 kayttaja
                 kayttaja-schema/KayttajaAdminUpdate))
           (rooli-service/paakayttaja? whoami))
-    (jdbc/update! db :kayttaja (kayttaja->db-row kayttaja) ["rooli <> 0 and id = ?" id])
+    (db/with-db-exception-translation
+      jdbc/update! db :kayttaja (kayttaja->db-row kayttaja) ["rooli <> 0 and id = ?" id])
     (exception/throw-forbidden!)))
