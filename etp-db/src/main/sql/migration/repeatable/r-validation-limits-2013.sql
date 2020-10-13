@@ -23,8 +23,8 @@ values
 (2013, 'lt$lammitys$ilmalampopumppu$maara',  0, 10, 0, 100),
 (2013, 'lt$lammitys$ilmalampopumppu$tuotto', 0, 60000, 0, 600000),
 
-(2013, 'lt$lkvn_kaytto$lammitysenergian_nettotarve', 0, 700, 0, 999999),
-(2013, 'lt$lkvn_kaytto$ominaiskulutus',              0, 40,  0, 999999),
+(2013, 'lt$lkvn_kaytto$lammitysenergian_nettotarve', 0, 40, 0, 999999),
+(2013, 'lt$lkvn_kaytto$ominaiskulutus',              0, 700, 0, 999999),
 
 (2013, 'lt$jaahdytysjarjestelma$jaahdytyskauden_painotettu_kylmakerroin', 0, 3.5, 0, 30)
 
