@@ -1,6 +1,7 @@
 (ns solita.etp.service.energiatodistus-search-test
   (:require [solita.etp.service.energiatodistus-test :as energiatodistus-test]
             [solita.etp.service.energiatodistus-search :as energiatodistus-search-service]
+            [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.test-system :as ts]
             [clojure.test :as t])
   (:import (clojure.lang ExceptionInfo)
@@ -99,22 +100,30 @@
 
 (t/deftest laatija-cant-find-other-laatijas-energiatodistukset-test
   (let [adder (add-laatija!)
-        searcher (add-laatija!)
+        searcher (update adder :id inc)
         energiatodistus (energiatodistus-test/generate-energiatodistus-2018)
         id (energiatodistus-test/add-energiatodistus! energiatodistus
                                                       (:id adder)
                                                       2018)]
-    (t/is (empty? (search searcher [[["=" "perustiedot.nimi" "test"]
-                                     ["=" "id" id]]])))))
+    (t/is (empty? (search searcher [[["=" "id" id]]])))))
 
-(t/deftest paakayttaja-cant-find-luonnokset
+(t/deftest paakayttaja-cant-find-luonnokset-test
   (let [laatija (add-laatija!)
         energiatodistus (energiatodistus-test/generate-energiatodistus-2018)
         id (energiatodistus-test/add-energiatodistus! energiatodistus
                                                       (:id laatija)
                                                       2018)]
-    (t/is (empty? (search paakayttaja [[["=" "perustiedot.nimi" "test"]
-                                        ["=" "id" id]]])))))
+    (t/is (empty? (search paakayttaja [[["=" "id" id]]])))))
+
+(t/deftest deleted-are-not-found-test
+  (let [laatija (add-laatija!)
+        energiatodistus (energiatodistus-test/generate-energiatodistus-2018)
+        id (energiatodistus-test/add-energiatodistus! energiatodistus
+                                                      (:id laatija)
+                                                      2018)]
+    (energiatodistus-service/delete-energiatodistus-luonnos! ts/*db* laatija id)
+    (t/is (empty? (search laatija [[["=" "id" id]]])))
+    (t/is (empty? (search paakayttaja [[["=" "id" id]]])))))
 
 (defn catch-ex-data [f]
   (try (f) (catch ExceptionInfo e (ex-data e))))
