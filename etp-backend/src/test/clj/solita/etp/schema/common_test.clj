@@ -13,7 +13,6 @@
   (t/is (some? (schema/check common/Henkilotunnus "1A0200A892S")))
   (t/is (nil? (schema/check common/Henkilotunnus "130200A892S"))))
 
-
 (t/deftest valid-ytunnus?-test
   (t/is (nil? (schema/check common/Ytunnus "1234567-1")))
   (t/is (some? (schema/check common/Ytunnus "1234567-2")))
@@ -24,7 +23,6 @@
 
   (t/is (some? (schema/check common/Ytunnus "a060155-7")))
   (t/is (some? (schema/check common/Ytunnus "aaaaaaa-b"))))
-
 
 (t/deftest valid-ovt-tunnus?-test
   (t/is (nil? (schema/check common/OVTtunnus "003712345671")))
@@ -37,3 +35,12 @@
   (t/is (some? (schema/check common/OVTtunnus "000012345671")))
   (t/is (some? (schema/check common/OVTtunnus nil)))
   (t/is (some? (schema/check common/OVTtunnus ""))))
+
+(t/deftest valid-iban?-test
+  (t/is (nil? (schema/check common/IBAN "FI1410093000123458")))
+  (t/is (nil? (schema/check common/IBAN "BR1500000000000010932840814P2")))
+
+  (t/is (some? (schema/check common/IBAN "FI1410093000123459")))
+  (t/is (some? (schema/check common/IBAN "FI14")))
+  (t/is (some? (schema/check common/IBAN "")))
+  (t/is (some? (schema/check common/IBAN nil))))

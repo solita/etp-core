@@ -96,11 +96,32 @@
   { :type schema/Keyword
     :constraint schema/Keyword})
 
-(defn- valid-ovt-tunnus? [ovt]
-  (if (re-find #"^0037\d{8,13}$" ovt)
-    (let [ytunnus (str (subs ovt 4 11) "-" (subs ovt 11 12))]
+(defn valid-ovt-tunnus? [s]
+  (if (re-find #"^0037\d{8,13}$" s)
+    (let [ytunnus (str (subs s 4 11) "-" (subs s 11 12))]
       (valid-ytunnus? ytunnus))
     false))
 
 (def OVTtunnus (schema/constrained schema/Str valid-ovt-tunnus?
                                    "ovt-tunnus"))
+
+(def iban-char-map (zipmap (map char (range (int \a) (inc (int \z))))
+                           (range 10 36) ))
+
+(defn valid-iban? [s]
+  (try
+    (let [country (subs s 0 2)
+          checksum (subs s 2 4)
+          bban (subs s 4)]
+      (= (mod (->> (str bban country checksum)
+                   str/lower-case
+                   (map #(or (get iban-char-map %) %))
+                   (apply str)
+                   bigint)
+              97)
+         1))
+    (catch Exception e
+      false)))
+
+(def IBAN (schema/constrained schema/Str valid-iban?
+                              "iban"))
