@@ -123,5 +123,11 @@
     (catch Exception e
       false)))
 
-(def IBAN (schema/constrained schema/Str valid-iban?
-                              "iban"))
+(def IBAN (schema/constrained schema/Str valid-iban? "iban"))
+
+(defn valid-te-ovt-tunnus? [s]
+  (and (-> s str/lower-case (str/starts-with? "te"))
+       (-> s (subs 2) valid-ovt-tunnus?)))
+
+(def TEOVTtunnus (schema/constrained schema/Str valid-te-ovt-tunnus?
+                                      "te-ovt-tunnus"))

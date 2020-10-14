@@ -44,3 +44,13 @@
   (t/is (some? (schema/check common/IBAN "FI14")))
   (t/is (some? (schema/check common/IBAN "")))
   (t/is (some? (schema/check common/IBAN nil))))
+
+(t/deftest valid-te-ovt-tunnus?-test
+  (t/is (nil? (schema/check common/TEOVTtunnus "TE003712345671")))
+  (t/is (nil? (schema/check common/TEOVTtunnus "TE0037123456710")))
+  (t/is (nil? (schema/check common/TEOVTtunnus "TE00371234567101234")))
+
+  (t/is (some? (schema/check common/TEOVTtunnus "003712345671")))
+  (t/is (some? (schema/check common/TEOVTtunnus "TE003712345672" )))
+  (t/is (some? (schema/check common/TEOVTtunnus nil)))
+  (t/is (some? (schema/check common/TEOVTtunnus ""))))
