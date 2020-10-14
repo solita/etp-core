@@ -1,14 +1,19 @@
 INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli, henkilotunnus) VALUES
-('Pauli', 'Pätevyyden toteaja', 'patevyydentoteaja@example.com', '0401234567', 1, '290574-9981'),
-('Liisa', 'Specimen-Potex', 'laatija1@example.com', '0441234567', 0, '210281-9988'),
-('Lauri', 'Laatija', 'laatija2@example.com', '0451234567', 0, '010469-999W'),
-('Niina', 'Specimen-Pirix', 'ulla.laatija@example.com', '0451234567', 0, '010675-9981'),
-('DENIS', 'Juutilainen', 'kirsi.laatija@example.com', '0451234567', 0, '261298-998X'),
-('Ari', 'Laatija', 'ari.laatija@example.com', '0451234567', 0, '040265-9985'),
-('Risto', 'Laatija', 'risto.laatija@example.com', '0451234567', 0, '260991-999R'),
-('Marko', 'Laatija', 'marko.laatija@example.com', '0451234567', 0, '020190-9521'),
-('Aleksi', 'Laatija', 'aleksi.laatija@example.com', '0451234567', 0, '110106A998M');
+('Pauli', 'Pätevyyden toteaja', 'patevyydentoteaja@solita.fi', '0451234567', 1, '010280-952L'),
+('Liisa', 'Laatija', 'laatija@solita.fi', '0451234567', 0, '010469-999W'),
+('Harri', 'Specimen-Potex', 'harri.lindberg@solita.fi', '0451234567', 0, '010675-9981'),
+('Aleksi', 'Kallan', 'aleksi.kallan@solita.fi', '0451234567', 0, '261298-998X'),
+('Ulla', 'Specimen-Pirix', 'ulla.laapotti@ara.fi', '0451234567', 0, '040265-9985'),
+('Kirsi', 'Juutilainen', 'kirsi.unhonen@ara.fi', '0451234567', 0, '260991-999R'),
+('Ari', 'Manninen', 'ari.manninen@ara.fi', '0451234567', 0, '020365-999P'),
+('Risto', 'Jesoi', 'risto.jesoi@ara.fi', '0451234567', 0, '180883-998N'),
+('Lamitor', 'Laatija', 'laatija@lamit.fi', '0451234567', 0, '110106A998M'),
+('Riuska', 'Laatija', 'laatija@granlund.fi', '0451234567', 0, '290574-9981'),
+('Cadmatic', 'Laatija', 'laatija@cadmatic.com', '0451234567', 0, '050391-999B'),
+('Timbal', 'Laatija', 'laatija@timbal.fi', '0451234567', 0, '120997-9998'),
+('Etlas', 'Laatija', 'laatija@etlas.fi', '0451234567', 0, '271258-9988'),
+('Caverion', 'Laatija', 'laatija@caverion.fi', '0451234567', 0, '010170-960F'),
+('Laskentapalvelut', 'Laatija', 'laatija@dof.fi', '0451234567', 0, '010170-999R');
 
 INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli, virtu$localid, virtu$organisaatio) VALUES
-('Päivi', 'Pääkäyttäjä', 'paakayttaja@example.com', '0501234567', 2, 'vvirkamies', 'testivirasto.fi');
-
+('Päivi', 'Pääkäyttäjä', 'paakayttaja@solita.fi', '0501234567', 2, 'vvirkamies', 'testivirasto.fi');
