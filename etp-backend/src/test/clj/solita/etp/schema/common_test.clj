@@ -54,3 +54,12 @@
   (t/is (some? (schema/check common/TEOVTtunnus "TE003712345672" )))
   (t/is (some? (schema/check common/TEOVTtunnus nil)))
   (t/is (some? (schema/check common/TEOVTtunnus ""))))
+
+(t/deftest valid-verkkolaskuosoite?-test
+  (t/is (nil? (schema/check common/Verkkolaskuosoite "003712345671")))
+  (t/is (nil? (schema/check common/Verkkolaskuosoite "FI1410093000123458")))
+  (t/is (nil? (schema/check common/Verkkolaskuosoite "TE003712345671")))
+
+  (t/is (some? (schema/check common/Verkkolaskuosoite "FI1410093000123459")))
+  (t/is (some? (schema/check common/Verkkolaskuosoite "")))
+  (t/is (some? (schema/check common/Verkkolaskuosoite nil))))

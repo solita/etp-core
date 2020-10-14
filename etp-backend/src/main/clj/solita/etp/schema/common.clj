@@ -129,5 +129,15 @@
   (and (-> s str/lower-case (str/starts-with? "te"))
        (-> s (subs 2) valid-ovt-tunnus?)))
 
-(def TEOVTtunnus (schema/constrained schema/Str valid-te-ovt-tunnus?
-                                      "te-ovt-tunnus"))
+(def TEOVTtunnus (schema/constrained schema/Str
+                                     valid-te-ovt-tunnus?
+                                     "te-ovt-tunnus"))
+
+(defn valid-verkkolaskuosoite? [s]
+  (or (valid-ovt-tunnus? s)
+      (valid-iban? s)
+      (valid-te-ovt-tunnus? s)))
+
+(def Verkkolaskuosoite (schema/constrained schema/Str
+                                           valid-verkkolaskuosoite?
+                                           "verkkolaskuosoite"))
