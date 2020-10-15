@@ -283,7 +283,7 @@
   (-> (map (fn [remark]
              (xml/element (xml/qname types-ns "Huomautus") {} remark))
            remarks)
-      (conj (xml/element (xml/qname types-ns "Todistustunnus") {} id))
+      (conj (xml/element (xml/qname types-ns "TodistusTunnus") {} id))
       response))
 
 (defn error-response [errors]
