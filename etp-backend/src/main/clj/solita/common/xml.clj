@@ -62,15 +62,16 @@
 (defn xml->stream-source [xml]
   (-> xml xml/emit-str StringReader. StreamSource.))
 
-(defn valid-against-schema? [xml schema]
+(defn schema-validation [xml schema]
   (try
     (when (-> schema .newValidator (.validate (xml->stream-source xml)) nil?)
-      true)
+      {:valid? true})
     (catch SAXException e
       ;; TODO should we expose validation error outside?
       (log/warn (format "XSD validation failed. Exception message was: %s"
                         (.getMessage e)))
-      false)))
+      {:valid? false
+       :error (.getMessage e)})))
 
 (defn get-in-xml
   "Similar to get-in in core but works with xml. Keywords filter elements by

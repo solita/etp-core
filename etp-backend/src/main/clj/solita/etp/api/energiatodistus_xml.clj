@@ -299,8 +299,9 @@
           :swagger    {:consumes ["application/xml"]
                        :produces ["application/xml"]}
           :handler    (fn [{:keys [db whoami body]}]
-                        (let [xml (-> body xml/input-stream->xml xml/without-soap-envelope)]
-                          (if (xml/valid-against-schema? xml xsd-schema)
+                        (let [xml (-> body xml/input-stream->xml xml/without-soap-envelope)
+                              validation-result (xml/schema-validation xml xsd-schema)]
+                          (if (:valid? validation-result)
                             (try
                               (let [energiatodistus (xml->energiatodistus xml)
                                     id (energiatodistus-service/add-energiatodistus!
@@ -313,7 +314,8 @@
                                     error-response
                                     response/internal-server-error
                                     response/->xml-response)))
-                            (-> ["XSD validation did not pass"]
+                            (-> ["XSD validation did not pass"
+                                 (:error validation-result)]
                                 error-response
                                 response/bad-request
                                 response/->xml-response))))}})
