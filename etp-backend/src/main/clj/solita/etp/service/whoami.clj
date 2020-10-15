@@ -16,20 +16,20 @@
     false))
 
 (defn- find-whoami-with-api-key-hash [db opts]
-  (->> (merge {:email nil
-               :cognitoid nil
-               :henkilotunnus nil
-               :virtu {:localid nil
-                       :organisaatio nil}}
-              opts)
-       (flat/tree->flat "_")
-       (whoami-db/select-whoami db)
-       first
-       (flat/flat->tree #"\$")))
+  (some->> (merge {:email nil
+                   :cognitoid nil
+                   :henkilotunnus nil
+                   :virtu {:localid nil
+                           :organisaatio nil}}
+                  opts)
+           (flat/tree->flat "_")
+           (whoami-db/select-whoami db)
+           first
+           (flat/flat->tree #"\$")))
 
 (defn find-whoami [db opts]
-  (-> (find-whoami-with-api-key-hash db opts)
-      (st/select-schema whoami-schema/Whoami)))
+  (some-> (find-whoami-with-api-key-hash db opts)
+          (st/select-schema whoami-schema/Whoami)))
 
 (defn find-whoami-by-email-and-api-key [db email api-key]
   (let [whoami (find-whoami-with-api-key-hash db {:email email})]
