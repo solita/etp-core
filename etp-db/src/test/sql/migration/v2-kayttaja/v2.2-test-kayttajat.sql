@@ -5,7 +5,7 @@ INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli, henkilotunnus) V
 ('Aleksi', 'Kallan', 'aleksi.kallan@solita.fi', '0451234567', 0, '261298-998X'),
 ('Ulla', 'Specimen-Pirix', 'ulla.laapotti@ara.fi', '0451234567', 0, '040265-9985'),
 ('Kirsi', 'Juutilainen', 'kirsi.unhonen@ara.fi', '0451234567', 0, '260991-999R'),
-('Ari', 'Manninen', 'ari.manninen@ara.fi', '0451234567', 0, '020365-999P'),
+('Ari', 'Manninen', 'ari.manninen@ara.fi', '0451234567', 0, '010101-123N'),
 ('Risto', 'Jesoi', 'risto.jesoi@ara.fi', '0451234567', 0, '180883-998N'),
 ('Lamitor', 'Laatija', 'laatija@lamit.fi', '0451234567', 0, '110106A998M'),
 ('Riuska', 'Laatija', 'laatija@granlund.fi', '0451234567', 0, '290574-9981'),
