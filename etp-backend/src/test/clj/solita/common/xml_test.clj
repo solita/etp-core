@@ -44,8 +44,11 @@
   (t/is (instance? javax.xml.transform.stream.StreamSource
                    (xml/xml->stream-source raw-xml))))
 
-(t/deftest valid-against-schema?-test
-  (t/is (xml/valid-against-schema? xml-without-soap-envelope test-schema)))
+(t/deftest schema-validation-test
+  (t/is (= {:valid? true}
+           (xml/schema-validation xml-without-soap-envelope test-schema)))
+  (t/is (contains? (xml/schema-validation sanitized-xml test-schema)
+                   :error)))
 
 (t/deftest get-in-xml-test
   (t/is (= "Kilpikonna"
