@@ -7,9 +7,10 @@ test='https://private.testi.energiatodistuspalvelu.com'
 
 server=${!1}
 file=${2-'complete-2018.json'}
-user=${3-'laatija@solita.fi:asdfasdf'}
+version=${3-'2018'}
+user=${4-'laatija@solita.fi:asdfasdf'}
 
 curl -v -d "@$file" \
   -H "Content-Type: application/json" \
   -u $user \
-  "$server/api/external/energiatodistukset/2018"
+  "$server/api/external/energiatodistukset/$version"

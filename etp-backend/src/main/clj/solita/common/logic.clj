@@ -21,6 +21,13 @@
 (defn is-divisible-by [num divisor]
   (zero? (mod num divisor)))
 
+(defn pipe
+  "Function composition where functions are defined in reversed order.
+   Same as ramda pipe."
+  [& fns] (apply comp (reverse fns)))
+
+(defn pred [binary-predicate fn value] #(binary-predicate (fn %) value))
+
 (defmacro
   if-let*
   "This if-let allows multiple bindings.

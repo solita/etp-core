@@ -10,10 +10,8 @@ values
 (2013, 'pt$katuosoite_fi', 7),
 (2013, 'pt$katuosoite_sv', 8),
 (2013, 'pt$postinumero', 9),
---(2013, 'pt$rakennustunnus', 10),
+(2013, 'pt$rakennustunnus', 10),
 (2013, 'pt$kayttotarkoitus', 11),
---(2013, 'pt$keskeiset_suositukset_fi', 12),
---(2013, 'pt$keskeiset_suositukset_sv', 13),
 
 (2013, 'lt$lammitetty_nettoala', 14),
 (2013, 'lt$rakennusvaippa$ilmanvuotoluku', 15),
