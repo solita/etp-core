@@ -8,7 +8,10 @@
             [flathead.deep :as deep]))
 
 (def required-condition
-  {"perustiedot.rakennustunnus" (complement laatimisvaihe/rakennuslupa?)
+  {"perustiedot.rakennustunnus" (logic/if* (logic/pred = :versio 2013)
+                                           (constantly true)
+                                           (complement laatimisvaihe/rakennuslupa?))
+
    "perustiedot.havainnointikaynti" laatimisvaihe/olemassaoleva-rakennus?
    "perustiedot.keskeiset-suositukset-fi" laatimisvaihe/olemassaoleva-rakennus?
    "perustiedot.keskeiset-suositukset-sv" laatimisvaihe/olemassaoleva-rakennus?
