@@ -27,7 +27,9 @@
 
 (t/deftest e-luku-0
   (t/is (= (e-luokka-service/e-luku 2018 (et 1 {})) 0M))
-  (t/is (= (e-luokka-service/e-luku 2018 (et-all-same 1 nil)) 0M)))
+  (t/is (= (e-luokka-service/e-luku 2018 (et-all-same 1 nil)) 0M))
+  (t/is (= (e-luokka-service/e-luku 2018 (et 1 {:muu nil})) 0M))
+  (t/is (= (e-luokka-service/e-luku 2018 (et 1 {:muu []})) 0M)))
 
 
 (defn test-energiamuoto [versio energiamuoto]
