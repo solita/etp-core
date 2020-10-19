@@ -1,6 +1,7 @@
 (ns solita.etp.service.e-luokka
   (:require [clojure.core.match :as match]
-            [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]))
+            [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
+            [solita.common.logic :as logic]))
 
 (def default-luokka "G")
 
@@ -143,3 +144,39 @@
               :e-luokka (e-luokka-from-raja-asteikko raja-asteikko e-luku)}
              (when (and (= versio 2018) raja-uusi-2018)
                {:raja-uusi-2018 raja-uusi-2018})))))
+
+(def energiamuotokerroin
+  {2018 {:fossiilinen-polttoaine 1M
+         :sahko 1.2M
+         :kaukojaahdytys 0.28M
+         :kaukolampo 0.5M
+         :uusiutuva-polttoaine 0.5M}
+   2013 {:fossiilinen-polttoaine 1M
+         :sahko 1.7M
+         :kaukojaahdytys 0.4M
+         :kaukolampo 0.7M
+         :uusiutuva-polttoaine 0.5M}})
+
+(defn painotettu-ostoenergiankulutus [versio energiatodistus]
+  (logic/if-let*
+    [energiamuodot (-> energiatodistus :tulokset :kaytettavat-energiamuodot)
+     fixed-energiamuodot (dissoc energiamuodot :muu)
+     muotokerroin (get energiamuotokerroin versio)]
+    (with-precision 20
+      (reduce + 0M (map #(* %1 (or %2 0M))
+                        (concat
+                          (map muotokerroin (keys fixed-energiamuodot))
+                          (map :muotokerroin (:muu energiamuodot)))
+                        (concat
+                          (vals fixed-energiamuodot)
+                          (map :ostoenergia (:muu energiamuodot))))))))
+
+(defn e-luku
+  "E-luvun määritelmä:
+  https://www.finlex.fi/fi/laki/alkup/2017/20171010#Pidp446079392"
+  [versio energiatodistus]
+  (logic/if-let*
+    [kulutus (painotettu-ostoenergiankulutus versio energiatodistus)
+     nettoala (-> energiatodistus :lahtotiedot :nettoala)]
+    (with-precision 20
+      (when-not (zero? nettoala) (/ kulutus nettoala)))))
