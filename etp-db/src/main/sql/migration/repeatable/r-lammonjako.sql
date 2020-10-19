@@ -2,7 +2,7 @@ INSERT INTO lammonjako (id, label_fi, label_sv, ordinal)
 VALUES
 (0, 'Vesikiertoinen patterilämmitys', '', 1),
 (1, 'Vesikiertoinen lattialämmitys', '', 2),
-(2, 'Vesikiertoinen kattosäteilylämmity', '', 3),
+(2, 'Vesikiertoinen kattosäteilylämmitys', '', 3),
 (3, 'Sähköpatterilämmitys', '', 4),
 (4, 'Sähköinen lattialämmitys', '', 5),
 (5, 'Sähköinen kattolämmitys', '', 6),
