@@ -174,6 +174,16 @@
       #(= (:versio %) 2013)
       #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] (partial assoc {} :muu)))))
 
+;; TODO this could be later modified to handle deleted energiatodistus
+;; by returning nil (turned 404 in api) and throwing forbidden
+;; if role is paakayttaja and energiatodistus is draft
+(defn- select-energiatodistus-for-find
+  [{:keys [id tila-id] :as energiatodistus} rooli]
+  (match/match
+   [(tila-key tila-id) rooli]
+   [_ :laatija] (dissoc energiatodistus :kommentti)
+   [_ :paakayttaja] energiatodistus))
+
 (defn find-energiatodistus
   ([db id]
    (first (map db-row->energiatodistus
@@ -183,7 +193,9 @@
      (if (or (rooli-service/paakayttaja? whoami)
              (and (rooli-service/laatija? whoami)
                   (= (:laatija-id energiatodistus) (:id whoami))))
-       energiatodistus
+       (select-energiatodistus-for-find
+        energiatodistus
+        (-> whoami :rooli rooli-service/rooli-key))
        (exception/throw-forbidden!)))))
 
 (defn find-replaceable-energiatodistukset-like-id [db id]
@@ -216,6 +228,7 @@
         (-> energiatodistus
             (assoc :versio versio
                    :laatija-id (:id whoami))
+            (dissoc :kommentti)
             energiatodistus->db-row
             (validate-db-row! db versio))
         db/default-opts)
@@ -236,7 +249,7 @@
 
   (match/match
     [(tila-key tila-id) rooli laskutettu?]
-    [:draft :laatija false] energiatodistus-update
+    [:draft :laatija false] (dissoc energiatodistus-update :kommentti)
     [:signed :laatija false]
     (select-keys energiatodistus-update
                  [:laskutettava-yritys-id
@@ -250,11 +263,13 @@
                  [:laskutettava-yritys-id
                   :laskuriviviite
                   :pt$rakennustunnus
-                  :korvattu-energiatodistus-id])
+                  :korvattu-energiatodistus-id
+                  :kommentti])
     [:signed :paakayttaja true]
     (select-keys energiatodistus-update
                  [:pt$rakennustunnus
-                  :korvattu-energiatodistus-id])
+                  :korvattu-energiatodistus-id
+                  :kommentti])
     :else (exception/throw-forbidden!
             (str "Role: " rooli
                  " is not allowed to update energiatodistus " id
