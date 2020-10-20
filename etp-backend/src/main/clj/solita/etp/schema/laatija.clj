@@ -90,11 +90,14 @@
          KayttajaUpdate))
 
 (def always-public-kayttaja-laatija-ks
-  [:id :etunimi :sukunimi :patevyystaso :toteamispaivamaara :toimintaalue :muuttoimintaalueet :voimassa :aktiivinen])
+  [:id :etunimi :sukunimi :patevyystaso :toteamispaivamaara
+   :voimassaolo-paattymisaika :toimintaalue :muuttoimintaalueet
+   :voimassa :aktiivinen])
 
 (def LaatijaFind
   "A schema for find all existing laatija"
   (-> (st/merge Laatija kayttaja-schema/Kayttaja)
+      (st/assoc :voimassaolo-paattymisaika common-schema/Instant)
       (st/assoc :aktiivinen schema/Bool)
       (st/assoc :voimassa schema/Bool)
       (st/assoc :henkilotunnus schema/Str)
