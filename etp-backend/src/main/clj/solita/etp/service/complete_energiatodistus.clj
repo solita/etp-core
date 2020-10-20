@@ -49,8 +49,9 @@
   (->> strs (remove str/blank?) (str/join ", ")))
 
 (defn complete-energiatodistus
-  [db energiatodistus {:keys [kielisyydet laatimisvaiheet alakayttotarkoitukset
-                              ilmanvaihtotyypit lammitysmuodot lammonjaot]}]
+  [energiatodistus {:keys [kielisyydet laatimisvaiheet
+                           kayttotarkoitukset alakayttotarkoitukset
+                           ilmanvaihtotyypit lammitysmuodot lammonjaot]}]
   (with-precision 20
     (let [{:keys [versio]} energiatodistus
           kielisyys (find-by-id kielisyydet (-> energiatodistus
@@ -230,14 +231,13 @@
                         [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-nettoala-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala-kertoimella])
-          (copy-field [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]
-                      [:tulokset :e-luku])
           (combine-keys (fn [nettoala e-luku]
-                          (e-luokka-service/find-e-luokka-info db
-                                                               versio
-                                                               alakayttotarkoitus-id
-                                                               nettoala
-                                                               e-luku))
+                          (e-luokka-service/e-luokka-info (kayttotarkoitukset versio)
+                                                          (alakayttotarkoitukset versio)
+                                                          versio
+                                                          alakayttotarkoitus-id
+                                                          nettoala
+                                                          e-luku))
                         nil
                         [:tulokset :e-luokka-info]
                         [:lahtotiedot :lammitetty-nettoala]
@@ -488,9 +488,10 @@
 (defn required-luokittelut [db]
   {:kielisyydet           (kielisyys/find-kielisyys db)
    :laatimisvaiheet       (laatimisvaihe/find-laatimisvaiheet db)
-   :alakayttotarkoitukset (reduce #(assoc %1 %2 (kayttotarkoitus-service/find-alakayttotarkoitukset db %2))
-                                  {}
-                                  [2013 2018])
+   :kayttotarkoitukset    (into {} (map #(vector % (kayttotarkoitus-service/find-kayttotarkoitukset db %)))
+                                [2013 2018])
+   :alakayttotarkoitukset (into {} (map #(vector % (kayttotarkoitus-service/find-alakayttotarkoitukset db %)))
+                                [2013 2018])
    :ilmanvaihtotyypit     (luokittelu/find-ilmanvaihtotyypit db)
    :lammitysmuodot        (luokittelu/find-lammitysmuodot db)
    :lammonjaot            (luokittelu/find-lammonjaot db)})
@@ -501,7 +502,6 @@
   ([db whoami id]
    (let [luokittelut (required-luokittelut db)]
      (complete-energiatodistus
-      db
       (if whoami
         (energiatodistus-service/find-energiatodistus db whoami id)
         (energiatodistus-service/find-energiatodistus db id))

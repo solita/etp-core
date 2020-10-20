@@ -313,18 +313,23 @@
                 [(optional-properties UserDefinedEnergia)])
       (assoc-in [:toteutunut-ostoenergiankulutus :ostettu-energia :muu]
                 [(optional-properties UserDefinedEnergia)])))
+(def Energiatehokkuus
+  {:e-luku (schema/maybe schema/Num)
+   :e-luokka (schema/maybe schema/Str)})
 
 (defn energiatodistus-versio [versio save-schema]
   "Energiatodistus schema contains basic information about persistent energiatodistus"
-  (merge common-schema/Id save-schema
-    {:versio (schema/eq versio)
-     :tila-id common-schema/Key
-     :laatija-id common-schema/Key
-     :laatija-fullname schema/Str
-     :allekirjoitusaika (schema/maybe common-schema/Instant)
-     :voimassaolo-paattymisaika (schema/maybe common-schema/Instant)
-     :laskutusaika (schema/maybe common-schema/Instant)
-     :korvaava-energiatodistus-id (schema/maybe common-schema/Key)}))
+  (-> save-schema
+      (merge common-schema/Id
+        {:versio (schema/eq versio)
+         :tila-id common-schema/Key
+         :laatija-id common-schema/Key
+         :laatija-fullname schema/Str
+         :allekirjoitusaika (schema/maybe common-schema/Instant)
+         :voimassaolo-paattymisaika (schema/maybe common-schema/Instant)
+         :laskutusaika (schema/maybe common-schema/Instant)
+         :korvaava-energiatodistus-id (schema/maybe common-schema/Key)})
+      (update :tulokset (partial merge Energiatehokkuus))))
 
 (def Energiatodistus2018
   "Energiatodistus 2018"

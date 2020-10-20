@@ -18,7 +18,8 @@
             [schema.core :as schema]
             [solita.common.map :as map]
             [solita.common.logic :as logic]
-            [schema-tools.coerce :as stc]))
+            [schema-tools.coerce :as stc]
+            [solita.etp.service.e-luokka :as e-luokka-service]))
 
 ; *** Require sql functions ***
 (db/require-queries 'energiatodistus)
@@ -126,6 +127,18 @@
          #(update % :column-name to-property-name))
        (find-numeric-column-validations db versio)))
 
+(defn assoc-e-luokka [energiatodistus db versio]
+  (logic/if-let*
+    [e-luku (e-luokka-service/e-luku versio energiatodistus)
+     alakayttotarkoitus-id (-> energiatodistus :perustiedot :kayttotarkoitus)
+     nettoala (-> energiatodistus :lahtotiedot :lammitetty-nettoala)
+     e-luokka (e-luokka-service/find-e-luokka-info
+                db versio alakayttotarkoitus-id nettoala e-luku)]
+    (-> energiatodistus
+        (assoc-in [:tulokset :e-luku] e-luku)
+        (assoc-in [:tulokset :e-luokka] (:e-luokka e-luokka)))
+    energiatodistus))
+
 (defn validate-db-row! [energiatodistus db versio]
   (doseq [{{:keys [min max]} :error :keys [column-name]}
           (find-numeric-column-validations db versio)]
@@ -228,6 +241,7 @@
         (-> energiatodistus
             (assoc :versio versio
                    :laatija-id (:id whoami))
+            (assoc-e-luokka db versio)
             (dissoc :kommentti)
             energiatodistus->db-row
             (validate-db-row! db versio))
@@ -280,6 +294,7 @@
   (first (db/with-db-exception-translation jdbc/update!
            db :energiatodistus
            (-> energiatodistus
+               (assoc-e-luokka db versio)
                (assoc :versio versio)
                energiatodistus->db-row
                (dissoc :versio)

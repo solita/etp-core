@@ -1,7 +1,8 @@
 (ns solita.etp.service.e-luokka
   (:require [clojure.core.match :as match]
             [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
-            [solita.common.logic :as logic]))
+            [solita.common.logic :as logic])
+  (:import (java.math RoundingMode)))
 
 (def default-luokka "G")
 
@@ -129,21 +130,29 @@
             raja-asteikko)
       default-luokka))
 
+(defn- find-by-id [id collection]
+  (->> collection (filter (logic/pred = :id id)) first))
+
+(defn e-luokka-info [kayttotarkoitukset alakayttotarkoitukset
+                     versio alakayttotarkoitus-id nettoala e-luku]
+  (logic/if-let*
+    [alakayttotarkoitus (find-by-id alakayttotarkoitus-id alakayttotarkoitukset)
+     kayttotarkoitus (find-by-id (:kayttotarkoitusluokka-id alakayttotarkoitus)
+                                 kayttotarkoitukset)
+     {:keys [raja-asteikko raja-uusi-2018]} (raja-asteikko-f versio
+                                                             (:id kayttotarkoitus)
+                                                             alakayttotarkoitus-id
+                                                             nettoala)]
+    (merge {:raja-asteikko raja-asteikko
+            :luokittelu    kayttotarkoitus
+            :e-luokka      (e-luokka-from-raja-asteikko raja-asteikko e-luku)}
+           (when (and (= versio 2018) raja-uusi-2018)
+             {:raja-uusi-2018 raja-uusi-2018}))))
+
 (defn find-e-luokka-info [db versio alakayttotarkoitus-id nettoala e-luku]
-  (let [kayttotarkoitus (kayttotarkoitus-service/find-kayttotarkoitus-by-alakayttotarkoitus-id
-                         db
-                         versio
-                         alakayttotarkoitus-id)
-        {:keys [raja-asteikko raja-uusi-2018]} (raja-asteikko-f versio
-                                                                (:id kayttotarkoitus)
-                                                                alakayttotarkoitus-id
-                                                                nettoala)]
-    (when kayttotarkoitus
-      (merge {:raja-asteikko raja-asteikko
-              :luokittelu kayttotarkoitus
-              :e-luokka (e-luokka-from-raja-asteikko raja-asteikko e-luku)}
-             (when (and (= versio 2018) raja-uusi-2018)
-               {:raja-uusi-2018 raja-uusi-2018})))))
+  (e-luokka-info (kayttotarkoitus-service/find-kayttotarkoitukset db versio)
+                 (kayttotarkoitus-service/find-alakayttotarkoitukset db versio)
+                 versio alakayttotarkoitus-id nettoala e-luku))
 
 (def energiamuotokerroin
   {2018 {:fossiilinen-polttoaine 1M
@@ -163,7 +172,7 @@
      fixed-energiamuodot (dissoc energiamuodot :muu)
      muotokerroin (get energiamuotokerroin versio)]
     (with-precision 20
-      (reduce + 0M (map #(* %1 (or %2 0M))
+      (reduce + 0M (map #(* %1 (bigdec (or %2 0M)))
                         (concat
                           (map muotokerroin (keys fixed-energiamuodot))
                           (map :muotokerroin (:muu energiamuodot)))
@@ -176,7 +185,6 @@
   https://www.finlex.fi/fi/laki/alkup/2017/20171010#Pidp446079392"
   [versio energiatodistus]
   (logic/if-let*
-    [kulutus (painotettu-ostoenergiankulutus versio energiatodistus)
-     nettoala (-> energiatodistus :lahtotiedot :nettoala)]
-    (with-precision 20
-      (when-not (zero? nettoala) (/ kulutus nettoala)))))
+    [^BigDecimal kulutus (painotettu-ostoenergiankulutus versio energiatodistus)
+     ^BigDecimal nettoala (some-> energiatodistus :lahtotiedot :lammitetty-nettoala bigdec)]
+    (when-not (zero? nettoala) (.divide kulutus nettoala 0 RoundingMode/CEILING))))

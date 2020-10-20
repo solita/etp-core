@@ -1,10 +1,11 @@
 (ns solita.etp.service.e-luku-test
   (:require [clojure.test :as t]
-            [solita.etp.service.e-luokka :as e-luokka-service]))
+            [solita.etp.service.e-luokka :as e-luokka-service])
+  (:import (java.math RoundingMode)))
 
 (defn et [nettoala energiamuodot]
   {:lahtotiedot
-    {:nettoala nettoala}
+    {:lammitetty-nettoala nettoala}
    :tulokset
     {:kaytettavat-energiamuodot energiamuodot}})
 
@@ -34,7 +35,8 @@
 
 (defn test-energiamuoto [versio energiamuoto]
   (t/is (= (e-luokka-service/e-luku versio (et 1 {energiamuoto 1}))
-           (energiamuoto (e-luokka-service/energiamuotokerroin versio)))))
+           (.setScale (energiamuoto (e-luokka-service/energiamuotokerroin versio))
+                      0 RoundingMode/CEILING))))
 
 (t/deftest e-luku-kerroin-2018
   (test-energiamuoto 2018 :fossiilinen-polttoaine)
