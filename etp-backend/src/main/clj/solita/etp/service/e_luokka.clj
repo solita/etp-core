@@ -131,7 +131,7 @@
       default-luokka))
 
 (defn- find-by-id [id collection]
-  (->> collection (filter (logic/pred = :id id)) first))
+  (->> collection (filter #(= (:id %) id)) first))
 
 (defn e-luokka-rajat [kayttotarkoitukset alakayttotarkoitukset
                       versio alakayttotarkoitus-id nettoala]
