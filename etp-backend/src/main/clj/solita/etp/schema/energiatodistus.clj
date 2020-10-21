@@ -274,7 +274,8 @@
   (optional-properties
     {:korvattu-energiatodistus-id    common-schema/Key
      :laskutettava-yritys-id         common-schema/Key
-     :laskuriviviite                 common-schema/String50
+     :laskuriviviite                 common-schema/String6300
+     :kommentti                      common-schema/String6300
      :perustiedot                    Perustiedot
      :lahtotiedot                    Lahtotiedot
      :tulokset                       Tulokset

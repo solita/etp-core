@@ -262,6 +262,7 @@
     (-> {:korvattu-energiatodistus-id    nil
          :laskutettava-yritys-id         nil
          :laskuriviviite                 nil
+         :kommentti                      nil
          :perustiedot                    (perustiedot (f :perustiedot))
          :lahtotiedot                    (lahtotiedot (f :lahtotiedot))
          :tulokset                       (tulokset (f :tulokset))

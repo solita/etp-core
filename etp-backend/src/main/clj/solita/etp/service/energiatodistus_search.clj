@@ -144,5 +144,6 @@
             where-params)))
 
 (defn search [db whoami query]
-  (map energiatodistus-service/db-row->energiatodistus
+  (map (comp energiatodistus-service/db-row->energiatodistus
+          #(assoc % :kommentti nil))
        (jdbc/query db (sql-query whoami query) nil)))
