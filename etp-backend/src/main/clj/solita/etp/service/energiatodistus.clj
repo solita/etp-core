@@ -181,7 +181,7 @@
   [{:keys [id tila-id] :as energiatodistus} rooli]
   (match/match
    [(tila-key tila-id) rooli]
-   [_ :laatija] (dissoc energiatodistus :kommentti)
+   [_ :laatija] (assoc energiatodistus :kommentti nil)
    [_ :paakayttaja] energiatodistus))
 
 (defn find-energiatodistus

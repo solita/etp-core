@@ -272,17 +272,17 @@
   add-energiatodistus and update-energiatodistus
   services for 2018 version"
   (optional-properties
-    {:korvattu-energiatodistus-id     common-schema/Key
-     :laskutettava-yritys-id          common-schema/Key
-     :laskuriviviite                  common-schema/String6300
-     (schema/optional-key :kommentti) common-schema/String6300
-     :perustiedot                     Perustiedot
-     :lahtotiedot                     Lahtotiedot
-     :tulokset                        Tulokset
-     :toteutunut-ostoenergiankulutus  ToteutunutOstoenergiankulutus
-     :huomiot                         Huomiot
-     :lisamerkintoja-fi               common-schema/String6300
-     :lisamerkintoja-sv               common-schema/String6300}))
+    {:korvattu-energiatodistus-id    common-schema/Key
+     :laskutettava-yritys-id         common-schema/Key
+     :laskuriviviite                 common-schema/String6300
+     :kommentti                      common-schema/String6300
+     :perustiedot                    Perustiedot
+     :lahtotiedot                    Lahtotiedot
+     :tulokset                       Tulokset
+     :toteutunut-ostoenergiankulutus ToteutunutOstoenergiankulutus
+     :huomiot                        Huomiot
+     :lisamerkintoja-fi              common-schema/String6300
+     :lisamerkintoja-sv              common-schema/String6300}))
 
 (defn- dissoc-path [map path]
   (update-in map (butlast path) #(dissoc % (last path))))
