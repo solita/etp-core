@@ -172,7 +172,7 @@
      fixed-energiamuodot (dissoc energiamuodot :muu)
      muotokerroin (get energiamuotokerroin versio)]
     (with-precision 20
-      (reduce + 0M (map #(* %1 (bigdec (or %2 0M)))
+      (reduce + 0M (map #(* (bigdec (or %1 1M)) (bigdec (or %2 0M)))
                         (concat
                           (map muotokerroin (keys fixed-energiamuodot))
                           (map :muotokerroin (:muu energiamuodot)))

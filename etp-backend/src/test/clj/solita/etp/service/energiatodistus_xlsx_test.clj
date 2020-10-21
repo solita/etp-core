@@ -42,7 +42,8 @@
                                     ts/*db*
                                     {:id laatija-id :rooli 0}
                                     {})]
-      (t/is (every? #(-> % :tulokset :e-luku) found-energiatodistukset))
+      (t/is (every? #(-> % :tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa)
+                    found-energiatodistukset))
       (t/is (= 100 (count found-energiatodistukset)))
       (t/is (-> (service/search-completed-energiatodistukset
                  ts/*db*

@@ -231,13 +231,11 @@
                         [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-nettoala-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala-kertoimella])
-          (combine-keys (fn [nettoala e-luku]
-                          (e-luokka-service/e-luokka-info (kayttotarkoitukset versio)
-                                                          (alakayttotarkoitukset versio)
-                                                          versio
-                                                          alakayttotarkoitus-id
-                                                          nettoala
-                                                          e-luku))
+          (combine-keys (partial e-luokka-service/e-luokka-info
+                                 (kayttotarkoitukset versio)
+                                 (alakayttotarkoitukset versio)
+                                 versio
+                                 alakayttotarkoitus-id)
                         nil
                         [:tulokset :e-luokka-info]
                         [:lahtotiedot :lammitetty-nettoala]

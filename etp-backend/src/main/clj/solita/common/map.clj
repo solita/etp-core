@@ -27,5 +27,6 @@
 
 (defn dissoc-in [m ks]
   (if (> (count ks) 1)
-    (update-in m (butlast ks) dissoc (last ks))
+    (if (map? (get-in m (butlast ks)))
+      (update-in m (butlast ks) dissoc (last ks)) m)
     (dissoc m (first ks))))

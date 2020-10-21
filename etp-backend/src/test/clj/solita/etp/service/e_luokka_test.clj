@@ -1,7 +1,8 @@
 (ns solita.etp.service.e-luokka-test
   (:require [clojure.test :as t]
             [solita.etp.test-system :as ts]
-            [solita.etp.service.e-luokka :as service]))
+            [solita.etp.service.e-luokka :as service]
+            [solita.common.map :as map]))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -22,7 +23,9 @@
     (t/is (= "G" (service/e-luokka-from-raja-asteikko raja-asteikko 61)))))
 
 (defn find-e-luokka-info [versio alakayttotarkoitus-id nettoala e-luku]
-  (service/find-e-luokka-info ts/*db* versio alakayttotarkoitus-id nettoala e-luku))
+  (map/dissoc-in
+    (service/find-e-luokka-info ts/*db* versio alakayttotarkoitus-id nettoala e-luku)
+    [:luokittelu :valid]))
 
 (t/deftest find-e-luokka-info-test
   (t/is (= {:e-luokka "A"
