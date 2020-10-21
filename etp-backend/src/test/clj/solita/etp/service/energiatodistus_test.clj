@@ -104,6 +104,7 @@
 (defn fix-energiatodistus [energiatodistus versio]
   (-> energiatodistus
       (assoc :versio versio)
+      (assoc :kommentti nil)
       fix-energiatodistus-fk-references
       (fix-sisainen-kuorma versio)))
 
