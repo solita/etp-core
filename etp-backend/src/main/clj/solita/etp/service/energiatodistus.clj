@@ -6,6 +6,7 @@
             [solita.etp.service.json :as json]
             [solita.etp.service.energiatodistus-validation :as validation]
             [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
+            [solita.etp.service.e-luokka :as e-luokka-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.postgresql.composite :as pg-composite]
             [solita.common.schema :as xschema]
@@ -18,8 +19,7 @@
             [schema.core :as schema]
             [solita.common.map :as map]
             [solita.common.logic :as logic]
-            [schema-tools.coerce :as stc]
-            [solita.etp.service.e-luokka :as e-luokka-service]))
+            [schema-tools.coerce :as stc]))
 
 ; *** Require sql functions ***
 (db/require-queries 'energiatodistus)
@@ -133,10 +133,9 @@
     (logic/if-let*
       [e-luku (-> energiatodistus :tulokset :e-luku)
        alakayttotarkoitus-id (-> energiatodistus :perustiedot :kayttotarkoitus)
-       nettoala (-> energiatodistus :lahtotiedot :lammitetty-nettoala)
-       e-luokka (e-luokka-service/find-e-luokka-info
-                  db versio alakayttotarkoitus-id nettoala e-luku)]
-      (:e-luokka e-luokka))))
+       nettoala (-> energiatodistus :lahtotiedot :lammitetty-nettoala)]
+      (:e-luokka (e-luokka-service/find-e-luokka
+          db versio alakayttotarkoitus-id nettoala e-luku)))))
 
 (defn assoc-e-tehokkuus [energiatodistus db versio]
   (-> energiatodistus

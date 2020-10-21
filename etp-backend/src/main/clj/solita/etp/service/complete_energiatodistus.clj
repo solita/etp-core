@@ -220,26 +220,14 @@
                         [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-kertoimella])
-          (combine-keys (comp #(Math/ceil %) +)
-                        0
-                        [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]
-                        [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-nettoala-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala-kertoimella])
-          (combine-keys (partial e-luokka-service/e-luokka-info
+          (combine-keys (partial e-luokka-service/e-luokka-rajat
                                  (kayttotarkoitukset versio)
                                  (alakayttotarkoitukset versio)
                                  versio
                                  alakayttotarkoitus-id)
                         nil
-                        [:tulokset :e-luokka-info]
-                        [:lahtotiedot :lammitetty-nettoala]
-                        [:tulokset :e-luku])
+                        [:tulokset :e-luokka-rajat]
+                        [:lahtotiedot :lammitetty-nettoala])
           (combine-keys *
                         nil
                         [:lahtotiedot :rakennusvaippa :ulkoseinat :UA]

@@ -133,26 +133,33 @@
 (defn- find-by-id [id collection]
   (->> collection (filter (logic/pred = :id id)) first))
 
-(defn e-luokka-info [kayttotarkoitukset alakayttotarkoitukset
-                     versio alakayttotarkoitus-id nettoala e-luku]
+(defn e-luokka-rajat [kayttotarkoitukset alakayttotarkoitukset
+                      versio alakayttotarkoitus-id nettoala]
   (logic/if-let*
     [alakayttotarkoitus (find-by-id alakayttotarkoitus-id alakayttotarkoitukset)
      kayttotarkoitus (find-by-id (:kayttotarkoitusluokka-id alakayttotarkoitus)
-                                 kayttotarkoitukset)
-     {:keys [raja-asteikko raja-uusi-2018]} (raja-asteikko-f versio
-                                                             (:id kayttotarkoitus)
-                                                             alakayttotarkoitus-id
-                                                             nettoala)]
-    (merge {:raja-asteikko raja-asteikko
-            :luokittelu    kayttotarkoitus
-            :e-luokka      (e-luokka-from-raja-asteikko raja-asteikko e-luku)}
-           (when (and (= versio 2018) raja-uusi-2018)
-             {:raja-uusi-2018 raja-uusi-2018}))))
+                                 kayttotarkoitukset)]
 
-(defn find-e-luokka-info [db versio alakayttotarkoitus-id nettoala e-luku]
-  (e-luokka-info (kayttotarkoitus-service/find-kayttotarkoitukset db versio)
-                 (kayttotarkoitus-service/find-alakayttotarkoitukset db versio)
-                 versio alakayttotarkoitus-id nettoala e-luku))
+    (assoc (raja-asteikko-f versio
+                            (:id kayttotarkoitus)
+                            alakayttotarkoitus-id
+                            nettoala)
+      :kayttotarkoitus kayttotarkoitus)))
+
+(defn e-luokka [kayttotarkoitukset alakayttotarkoitukset
+                versio alakayttotarkoitus-id nettoala e-luku]
+  (logic/if-let*
+    [{:keys [raja-asteikko] :as rajat}
+     (e-luokka-rajat kayttotarkoitukset alakayttotarkoitukset
+                     versio alakayttotarkoitus-id nettoala)]
+
+    (assoc rajat
+      :e-luokka (e-luokka-from-raja-asteikko raja-asteikko e-luku))))
+
+(defn find-e-luokka [db versio alakayttotarkoitus-id nettoala e-luku]
+  (e-luokka (kayttotarkoitus-service/find-kayttotarkoitukset db versio)
+            (kayttotarkoitus-service/find-alakayttotarkoitukset db versio)
+            versio alakayttotarkoitus-id nettoala e-luku))
 
 (def energiamuotokerroin
   {2018 {:fossiilinen-polttoaine 1M
