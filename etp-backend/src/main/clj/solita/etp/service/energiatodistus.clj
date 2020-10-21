@@ -178,7 +178,7 @@
 ;; by returning nil (turned 404 in api) and throwing forbidden
 ;; if role is paakayttaja and energiatodistus is draft
 (defn- select-energiatodistus-for-find
-  [{:keys [id tila-id] :as energiatodistus} rooli]
+  [{:keys [tila-id] :as energiatodistus} rooli]
   (match/match
    [(tila-key tila-id) rooli]
    [_ :laatija] (assoc energiatodistus :kommentti nil)
