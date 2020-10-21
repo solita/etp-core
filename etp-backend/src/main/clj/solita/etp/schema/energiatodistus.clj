@@ -5,7 +5,8 @@
             [solita.common.schema :as xschema]
             [solita.etp.schema.geo :as geo-schema]
             [clojure.string :as str]
-            [solita.etp.exception :as exception])
+            [solita.etp.exception :as exception]
+            [solita.common.map :as map])
   (:import (schema.core Predicate EnumSchema Constrained)))
 
 (defn optional-properties [schema]
@@ -284,12 +285,9 @@
      :lisamerkintoja-fi              common-schema/String6300
      :lisamerkintoja-sv              common-schema/String6300}))
 
-(defn- dissoc-path [map path]
-  (update-in map (butlast path) #(dissoc % (last path))))
-
 (defn dissoc-not-in-2013 [schema2018]
   (-> schema2018
-      (dissoc-path [:perustiedot :laatimisvaihe])))
+      (map/dissoc-in [:perustiedot :laatimisvaihe])))
 
 (def UserDefinedEnergiamuoto
   {:nimi         common-schema/String50
