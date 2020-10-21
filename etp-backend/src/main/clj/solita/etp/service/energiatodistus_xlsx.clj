@@ -10,12 +10,14 @@
 
 (def tmp-dir "tmp/")
 
-(def col-order [:id :versio :laatija-id :laatija-fullname :allekirjoitusaika :voimassaolo-paattymisaika
-                :korvattu-energiatodistus-id :korvaava-energiatodistus-id
-                :laskuriviviite :laskutettava-yritys-id
-                :perustiedot :lahtotiedot
+(def col-order [:id :versio :laatija-id :laatija-fullname :allekirjoitusaika
+                :voimassaolo-paattymisaika :korvattu-energiatodistus-id
+                :korvaava-energiatodistus-id :laskuriviviite
+                :laskutettava-yritys-id :perustiedot :lahtotiedot
                 :tulokset :toteutunut-ostoenergiankulutus :huomiot
                 :lisamerkintoja-fi :lisamerkintoja-sv])
+
+(def omitted-cols [:kommentti])
 
 (defn paths-for-k [energiatodistukset k]
   (->> energiatodistukset
@@ -25,7 +27,8 @@
 
 (defn other-paths [energiatodistukset]
   (->> energiatodistukset
-       (map #(-> (apply dissoc % col-order) solita-map/paths))
+       (map #(-> (apply dissoc % (concat col-order omitted-cols))
+                 solita-map/paths))
        (apply concat)
        (into (sorted-set))))
 
