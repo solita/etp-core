@@ -13,9 +13,13 @@
       (handler (assoc req :jwt-payloads jwt-payloads))
       response/forbidden)))
 
-(defn log-safe-whoami-opts [whoami-opts]
-  (update whoami-opts :henkilotunnus #(when (and % (>= (count %) 6))
-                                        (subs % 0 6))))
+(defn log-safe-henkilotunnus [henkilotunnus]
+  (let [henkilotunnus (or henkilotunnus "")
+        char-count (count henkilotunnus)]
+    (->> (repeat "*")
+         (take (- char-count (min 7 char-count)))
+         (apply str)
+         (str (subs henkilotunnus 0 (min 7 char-count))))))
 
 (defn wrap-whoami-from-jwt-payloads [handler]
   (fn [{:keys [db jwt-payloads] :as req}]
@@ -36,7 +40,7 @@
              handler)
         (do
           (log/error "Unable to find kayttaja using the following opts data JWT: "
-                     (log-safe-whoami-opts whoami-opts))
+                     (update whoami-opts :henkilotunnus log-safe-henkilotunnus))
           response/forbidden)))))
 
 (defn wrap-whoami-from-basic-auth [handler]
