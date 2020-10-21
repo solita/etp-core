@@ -48,6 +48,7 @@
 (defn created [path id]
   (r/created (str path "/" id) {:id id}))
 
+(def unauthorized {:status 401 :body "Unauthorized"})
 (def forbidden {:status 403 :body "Forbidden"})
 
 (defn file-response [body filename content-type inline? not-found]

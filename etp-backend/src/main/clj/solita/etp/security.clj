@@ -43,7 +43,7 @@
                      (update whoami-opts :henkilotunnus log-safe-henkilotunnus))
           response/forbidden)))))
 
-(defn wrap-whoami-from-basic-auth [handler]
+(defn wrap-whoami-from-basic-auth [handler realm]
   (fn [{:keys [db] :as req}]
     (let [{:keys [id password]} (basic-auth/req->id-and-password req)
           whoami (whoami-service/find-whoami-by-email-and-api-key db
@@ -54,7 +54,9 @@
         (do
           (log/error "Unable to find käyttäjä with Basic Auth"
                      {:id id})
-          response/forbidden)))))
+          (-> response/unauthorized
+              (merge {:headers {"WWW-Authenticate" (format "Basic realm=\"%s\""
+                                                           realm)}})))))))
 
 (defn wrap-access [handler]
   (fn [{:keys [request-method whoami] :as req}]
