@@ -13,18 +13,25 @@
       (handler (assoc req :jwt-payloads jwt-payloads))
       response/forbidden)))
 
+(defn log-safe-henkilotunnus [henkilotunnus]
+  (let [henkilotunnus (or henkilotunnus "")
+        char-count (count henkilotunnus)]
+    (->> (repeat "*")
+         (take (- char-count (min 7 char-count)))
+         (apply str)
+         (str (subs henkilotunnus 0 (min 7 char-count))))))
+
 (defn wrap-whoami-from-jwt-payloads [handler]
   (fn [{:keys [db jwt-payloads] :as req}]
     (let [{:keys [data]} jwt-payloads
           email (:email data)
           cognitoid (:sub data)
-          whoami (whoami-service/find-whoami
-                  db
-                  {:email         email
-                   :cognitoid     cognitoid
-                   :henkilotunnus (:custom:FI_nationalIN data)
-                   :virtu         {:localid      (:custom:VIRTU_localID data)
-                                   :organisaatio (:custom:VIRTU_localOrg data)}})]
+          whoami-opts {:email         email
+                       :cognitoid     cognitoid
+                       :henkilotunnus (:custom:FI_nationalIN data)
+                       :virtu         {:localid     (:custom:VIRTU_localID data)
+                                       :organisaatio (:custom:VIRTU_localOrg data)}}
+          whoami (whoami-service/find-whoami db whoami-opts)]
       (if whoami
         (->> (cond-> whoami
                email (assoc :email email)
@@ -32,7 +39,8 @@
              (assoc req :whoami)
              handler)
         (do
-          (log/error "Unable to find käyttäjä using email in data JWT")
+          (log/error "Unable to find kayttaja using the following opts data JWT: "
+                     (update whoami-opts :henkilotunnus log-safe-henkilotunnus))
           response/forbidden)))))
 
 (defn wrap-whoami-from-basic-auth [handler]
