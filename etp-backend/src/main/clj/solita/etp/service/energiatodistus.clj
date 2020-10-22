@@ -6,6 +6,7 @@
             [solita.etp.service.json :as json]
             [solita.etp.service.energiatodistus-validation :as validation]
             [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
+            [solita.etp.service.e-luokka :as e-luokka-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.postgresql.composite :as pg-composite]
             [solita.common.schema :as xschema]
@@ -126,6 +127,24 @@
          #(update % :column-name to-property-name))
        (find-numeric-column-validations db versio)))
 
+(defn- assoc-in-e-luokka [energiatodistus ks db versio]
+  (assoc-in
+    energiatodistus ks
+    (logic/if-let*
+      [e-luku (-> energiatodistus :tulokset :e-luku)
+       alakayttotarkoitus-id (-> energiatodistus :perustiedot :kayttotarkoitus)
+       nettoala (-> energiatodistus :lahtotiedot :lammitetty-nettoala)]
+      (:e-luokka (e-luokka-service/find-e-luokka
+          db versio alakayttotarkoitus-id nettoala e-luku)))))
+
+(defn assoc-e-tehokkuus [energiatodistus db versio]
+  (-> energiatodistus
+      (assoc-in
+        [:tulokset :e-luku]
+        (e-luokka-service/e-luku versio energiatodistus))
+      (assoc-in-e-luokka
+        [:tulokset :e-luokka] db versio)))
+
 (defn validate-db-row! [energiatodistus db versio]
   (doseq [{{:keys [min max]} :error :keys [column-name]}
           (find-numeric-column-validations db versio)]
@@ -228,6 +247,7 @@
         (-> energiatodistus
             (assoc :versio versio
                    :laatija-id (:id whoami))
+            (assoc-e-tehokkuus db versio)
             (dissoc :kommentti)
             energiatodistus->db-row
             (validate-db-row! db versio))
@@ -280,6 +300,7 @@
   (first (db/with-db-exception-translation jdbc/update!
            db :energiatodistus
            (-> energiatodistus
+               (assoc-e-tehokkuus db versio)
                (assoc :versio versio)
                energiatodistus->db-row
                (dissoc :versio)

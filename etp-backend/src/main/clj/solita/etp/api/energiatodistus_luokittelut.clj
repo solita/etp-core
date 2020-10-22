@@ -48,9 +48,9 @@
            :handler    (fn [{{{:keys [versio alakayttotarkoitusluokka nettoala e-luku]} :path}
                              :parameters :keys [db]}]
                          (api-response/get-response
-                           (e-luokka-service/find-e-luokka-info db
-                                                                versio
-                                                                alakayttotarkoitusluokka
-                                                                nettoala
-                                                                e-luku)
+                           (e-luokka-service/find-e-luokka db
+                                                           versio
+                                                           alakayttotarkoitusluokka
+                                                           nettoala
+                                                           e-luku)
                            "Could not find luokittelu with given versio and alakayttotarkoitusluokka"))}}]])

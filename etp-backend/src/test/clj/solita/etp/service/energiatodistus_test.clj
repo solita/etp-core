@@ -69,16 +69,20 @@
 (defn energiatodistus-with-db-fields
   ([energiatodistus id laatija-id] (energiatodistus-with-db-fields energiatodistus id laatija-id 2018))
   ([energiatodistus id laatija-id versio]
-   (merge energiatodistus
-          {:id                          id
-           :laatija-id                  laatija-id
-           :versio                      versio
-           :tila-id                     0
-           :korvaava-energiatodistus-id nil
-           :laskutettava-yritys-id      nil
-           :laskutusaika                nil
-           :allekirjoitusaika           nil
-           :voimassaolo-paattymisaika   nil})))
+   (-> energiatodistus
+       (merge energiatodistus
+              {:id                          id
+               :laatija-id                  laatija-id
+               :versio                      versio
+               :tila-id                     0
+               :korvaava-energiatodistus-id nil
+               :laskutettava-yritys-id      nil
+               :laskutusaika                nil
+               :allekirjoitusaika           nil
+               :voimassaolo-paattymisaika   nil})
+       (service/assoc-e-tehokkuus ts/*db* versio)
+       (update-in [:tulokset :e-luku] (logic/unless* nil? int))
+       (update :tulokset (partial merge {:e-luku nil :e-luokka nil})))))
 
 (defn assoc-in-if-exists [m ks v]
   (if (not= (get-in m ks :not-found) :not-found)

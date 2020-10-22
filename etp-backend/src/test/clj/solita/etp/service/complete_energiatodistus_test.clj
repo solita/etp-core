@@ -29,10 +29,8 @@
                                 :tulo-poisto))))
 
 (t/deftest complete-energiatodistus-test
-  (let [laatija-id (energiatodistus-test/add-laatija!)
-        luokittelut (service/required-luokittelut ts/*db*)
+  (let [luokittelut (service/required-luokittelut ts/*db*)
         complete-energiatodistus (service/complete-energiatodistus
-                                  ts/*db*
                                   (generate-energiatodistus)
                                   luokittelut)]
     (t/is (assert-complete-energiatoditus complete-energiatodistus))))

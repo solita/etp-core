@@ -71,7 +71,7 @@
 (defn find-raja [energiatodistus e-luokka]
   (->> energiatodistus
        :tulokset
-       :e-luokka-info
+       :e-luokka-rajat
        :raja-asteikko
        (filter #(contains? #{% (last %)} e-luokka))
        ffirst))
@@ -107,7 +107,7 @@
              "☐ för en befintlig byggnad, datum för iakttagelser på plats")}
       {:f #(some->> % :perustiedot :havainnointikaynti (.format date-formatter))}
       {:path  [:tulokset :e-luku]}
-      {:path  [:tulokset :e-luokka-info :raja-uusi-2018]}
+      {:path  [:tulokset :e-luokka-rajat :raja-uusi-2018]}
       {:path [:laatija-fullname]}
       {:path [:perustiedot :yritys :nimi]}
       {:f (fn [_] (.format date-formatter (LocalDate/now)))}
@@ -156,8 +156,8 @@
       {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :muotokerroin] :dp 1}
       {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala-kertoimella] :dp 0}
       {:path [:tulokset :e-luku]}
-      {:path [:tulokset :e-luokka-info :luokittelu :label-fi]}
-      {:path [:tulokset :e-luokka-info :luokittelu :label-sv]}
+      {:path [:tulokset :e-luokka-rajat :kayttotarkoitus :label-fi]}
+      {:path [:tulokset :e-luokka-rajat :kayttotarkoitus :label-sv]}
       {:f #(some->> (find-raja % "A") (format "... %s"))}
       {:f #(some->> (find-raja % "B") (format "... %s"))}
       {:f #(some->> (find-raja % "C") (format "... %s"))}
@@ -165,7 +165,7 @@
       {:f #(some->> (find-raja % "E") (format "... %s"))}
       {:f #(some->> (find-raja % "F") (format "... %s"))}
       {:f #(some->> (find-raja % "F") inc (format "%s ..."))}
-      {:path [:tulokset :e-luokka-info :e-luokka]}
+      {:path [:tulokset :e-luokka]}
       {:path [:perustiedot :keskeiset-suositukset-fi]}
       {:path [:perustiedot :keskeiset-suositukset-sv]}]
    2 [{:path [:id]}
@@ -303,7 +303,7 @@
       {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala-kertoimella] :dp 0}
       {:path [:tulokset :kaytettavat-energiamuodot :summa] :dp 0}
       {:path [:tulokset :kaytettavat-energiamuodot :kertoimella-summa] :dp 0}
-      {:path [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa] :dp 0}
+      {:path [:tulokset :e-luku] :dp 0}
       {:path [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko] :dp 0}
       {:path [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko-nettoala] :dp 0}
       {:path [:tulokset :uusiutuvat-omavaraisenergiat :aurinkolampo] :dp 0}
@@ -681,7 +681,6 @@
     (add-e-luokka-image pdf-path
                         (-> complete-energiatodistus
                               :tulokset
-                              :e-luokka-info
                               :e-luokka)
                         (:versio complete-energiatodistus))
 

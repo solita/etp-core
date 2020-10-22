@@ -169,6 +169,8 @@ create table energiatodistus (
  lt$sis_kuorma$valaistus$kayttoaste numeric,
  lt$sis_kuorma$valaistus$lampokuorma numeric,
 
+ t$e_luku integer,
+ t$e_luokka char(1),
  t$kaytettavat_energiamuodot$fossiilinen_polttoaine numeric,
  t$kaytettavat_energiamuodot$kaukojaahdytys numeric,
  t$kaytettavat_energiamuodot$kaukolampo numeric,

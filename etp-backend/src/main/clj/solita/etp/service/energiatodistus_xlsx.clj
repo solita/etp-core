@@ -64,9 +64,7 @@
         luokittelut (complete-energiatodistus-service/required-luokittelut db)]
     (->> (energiatodistus-search-service/search db whoami query)
          (map #(complete-energiatodistus-service/complete-energiatodistus
-                db
-                %
-                luokittelut)))))
+                % luokittelut)))))
 
 (defn find-energiatodistukset-xlsx [db whoami query]
   (let [energiatodistukset (search-completed-energiatodistukset db whoami query)

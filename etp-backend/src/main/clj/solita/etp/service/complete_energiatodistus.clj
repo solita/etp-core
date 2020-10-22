@@ -48,9 +48,15 @@
 (defn join-strings [& strs]
   (->> strs (remove str/blank?) (str/join ", ")))
 
+(def ^:private energiamuotokertoimet
+  (map/map-values
+    (partial map/map-keys #(-> % name (str "-kerroin") keyword))
+    e-luokka-service/energiamuotokerroin))
+
 (defn complete-energiatodistus
-  [db energiatodistus {:keys [kielisyydet laatimisvaiheet alakayttotarkoitukset
-                              ilmanvaihtotyypit lammitysmuodot lammonjaot]}]
+  [energiatodistus {:keys [kielisyydet laatimisvaiheet
+                           kayttotarkoitukset alakayttotarkoitukset
+                           ilmanvaihtotyypit lammitysmuodot lammonjaot]}]
   (with-precision 20
     (let [{:keys [versio]} energiatodistus
           kielisyys (find-by-id kielisyydet (-> energiatodistus
@@ -103,11 +109,7 @@
           (assoc-in [:perustiedot :laatimisvaihe-sv] (:label-sv laatimisvaihe))
           (assoc-in [:perustiedot :alakayttotarkoitus-fi] (:label-fi alakayttotarkoitus))
           (assoc-in [:perustiedot :alakayttotarkoitus-sv] (:label-sv alakayttotarkoitus))
-          (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin] (case versio 2013 0.7 2018 0.5))
-          (assoc-in [:tulokset :kaytettavat-energiamuodot :sahko-kerroin] (case versio 2013 1.7 2018 1.2))
-          (assoc-in [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin] 0.5)
-          (assoc-in [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin] 1)
-          (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin] (case versio 2013 0.4 2018 0.28))
+          (update-in [:tulokset :kaytettavat-energiamuodot] (partial merge (energiamuotokertoimet versio)))
           (update-in [:tulokset :kuukausierittely] kuukausierittely-hyodyt)
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukolampo])
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :sahko])
@@ -219,29 +221,14 @@
                         [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-kertoimella])
-          (combine-keys (comp #(Math/ceil %) +)
-                        0
-                        [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]
-                        [:tulokset :kaytettavat-energiamuodot :kaukolampo-nettoala-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :sahko-nettoala-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-nettoala-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-nettoala-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-nettoala-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-nettoala-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala-kertoimella])
-          (copy-field [:tulokset :kaytettavat-energiamuodot :nettoala-kertoimella-summa]
-                      [:tulokset :e-luku])
-          (combine-keys (fn [nettoala e-luku]
-                          (e-luokka-service/find-e-luokka-info db
-                                                               versio
-                                                               alakayttotarkoitus-id
-                                                               nettoala
-                                                               e-luku))
+          (combine-keys (partial e-luokka-service/e-luokka-rajat
+                                 (kayttotarkoitukset versio)
+                                 (alakayttotarkoitukset versio)
+                                 versio
+                                 alakayttotarkoitus-id)
                         nil
-                        [:tulokset :e-luokka-info]
-                        [:lahtotiedot :lammitetty-nettoala]
-                        [:tulokset :e-luku])
+                        [:tulokset :e-luokka-rajat]
+                        [:lahtotiedot :lammitetty-nettoala])
           (combine-keys *
                         nil
                         [:lahtotiedot :rakennusvaippa :ulkoseinat :UA]
@@ -488,9 +475,10 @@
 (defn required-luokittelut [db]
   {:kielisyydet           (kielisyys/find-kielisyys db)
    :laatimisvaiheet       (laatimisvaihe/find-laatimisvaiheet db)
-   :alakayttotarkoitukset (reduce #(assoc %1 %2 (kayttotarkoitus-service/find-alakayttotarkoitukset db %2))
-                                  {}
-                                  [2013 2018])
+   :kayttotarkoitukset    (into {} (map #(vector % (kayttotarkoitus-service/find-kayttotarkoitukset db %)))
+                                [2013 2018])
+   :alakayttotarkoitukset (into {} (map #(vector % (kayttotarkoitus-service/find-alakayttotarkoitukset db %)))
+                                [2013 2018])
    :ilmanvaihtotyypit     (luokittelu/find-ilmanvaihtotyypit db)
    :lammitysmuodot        (luokittelu/find-lammitysmuodot db)
    :lammonjaot            (luokittelu/find-lammonjaot db)})
@@ -501,7 +489,6 @@
   ([db whoami id]
    (let [luokittelut (required-luokittelut db)]
      (complete-energiatodistus
-      db
       (if whoami
         (energiatodistus-service/find-energiatodistus db whoami id)
         (energiatodistus-service/find-energiatodistus db id))

@@ -1,6 +1,8 @@
 (ns solita.etp.service.e-luokka
   (:require [clojure.core.match :as match]
-            [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]))
+            [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
+            [solita.common.logic :as logic])
+  (:import (java.math RoundingMode)))
 
 (def default-luokka "G")
 
@@ -128,18 +130,68 @@
             raja-asteikko)
       default-luokka))
 
-(defn find-e-luokka-info [db versio alakayttotarkoitus-id nettoala e-luku]
-  (let [kayttotarkoitus (kayttotarkoitus-service/find-kayttotarkoitus-by-alakayttotarkoitus-id
-                         db
-                         versio
-                         alakayttotarkoitus-id)
-        {:keys [raja-asteikko raja-uusi-2018]} (raja-asteikko-f versio
-                                                                (:id kayttotarkoitus)
-                                                                alakayttotarkoitus-id
-                                                                nettoala)]
-    (when kayttotarkoitus
-      (merge {:raja-asteikko raja-asteikko
-              :luokittelu kayttotarkoitus
-              :e-luokka (e-luokka-from-raja-asteikko raja-asteikko e-luku)}
-             (when (and (= versio 2018) raja-uusi-2018)
-               {:raja-uusi-2018 raja-uusi-2018})))))
+(defn- find-by-id [id collection]
+  (->> collection (filter #(= (:id %) id)) first))
+
+(defn e-luokka-rajat [kayttotarkoitukset alakayttotarkoitukset
+                      versio alakayttotarkoitus-id nettoala]
+  (logic/if-let*
+    [alakayttotarkoitus (find-by-id alakayttotarkoitus-id alakayttotarkoitukset)
+     kayttotarkoitus (find-by-id (:kayttotarkoitusluokka-id alakayttotarkoitus)
+                                 kayttotarkoitukset)]
+
+    (assoc (raja-asteikko-f versio
+                            (:id kayttotarkoitus)
+                            alakayttotarkoitus-id
+                            nettoala)
+      :kayttotarkoitus kayttotarkoitus)))
+
+(defn e-luokka [kayttotarkoitukset alakayttotarkoitukset
+                versio alakayttotarkoitus-id nettoala e-luku]
+  (logic/if-let*
+    [{:keys [raja-asteikko] :as rajat}
+     (e-luokka-rajat kayttotarkoitukset alakayttotarkoitukset
+                     versio alakayttotarkoitus-id nettoala)]
+
+    (assoc rajat
+      :e-luokka (e-luokka-from-raja-asteikko raja-asteikko e-luku))))
+
+(defn find-e-luokka [db versio alakayttotarkoitus-id nettoala e-luku]
+  (e-luokka (kayttotarkoitus-service/find-kayttotarkoitukset db versio)
+            (kayttotarkoitus-service/find-alakayttotarkoitukset db versio)
+            versio alakayttotarkoitus-id nettoala e-luku))
+
+(def energiamuotokerroin
+  {2018 {:fossiilinen-polttoaine 1M
+         :sahko 1.2M
+         :kaukojaahdytys 0.28M
+         :kaukolampo 0.5M
+         :uusiutuva-polttoaine 0.5M}
+   2013 {:fossiilinen-polttoaine 1M
+         :sahko 1.7M
+         :kaukojaahdytys 0.4M
+         :kaukolampo 0.7M
+         :uusiutuva-polttoaine 0.5M}})
+
+(defn painotettu-ostoenergiankulutus [versio energiatodistus]
+  (logic/if-let*
+    [energiamuodot (-> energiatodistus :tulokset :kaytettavat-energiamuodot)
+     fixed-energiamuodot (dissoc energiamuodot :muu)
+     muotokerroin (get energiamuotokerroin versio)]
+    (with-precision 20
+      (reduce + 0M (map #(* (bigdec (or %1 1M)) (bigdec (or %2 0M)))
+                        (concat
+                          (map muotokerroin (keys fixed-energiamuodot))
+                          (map :muotokerroin (:muu energiamuodot)))
+                        (concat
+                          (vals fixed-energiamuodot)
+                          (map :ostoenergia (:muu energiamuodot))))))))
+
+(defn e-luku
+  "E-luvun määritelmä:
+  https://www.finlex.fi/fi/laki/alkup/2017/20171010#Pidp446079392"
+  [versio energiatodistus]
+  (logic/if-let*
+    [^BigDecimal kulutus (painotettu-ostoenergiankulutus versio energiatodistus)
+     ^BigDecimal nettoala (some-> energiatodistus :lahtotiedot :lammitetty-nettoala bigdec)]
+    (when-not (zero? nettoala) (.divide kulutus nettoala 0 RoundingMode/CEILING))))
