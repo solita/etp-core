@@ -25,22 +25,17 @@
             [solita.etp.service.json :as json]
             [solita.etp.service.kielisyys :as kielisyys]))
 
-(def external-routes
-  [["/energiatodistukset"
-    ["/2013" (crud-api/post 2013
-                            (-> energiatodistus-schema/EnergiatodistusSave2013
-                                (dissoc :kommentti)
-                                xschema/optional-key-for-maybe))]
-    ["/2018" (crud-api/post 2018
-                            (-> energiatodistus-schema/EnergiatodistusSave2018
-                                (dissoc :kommentti)
-                                xschema/optional-key-for-maybe))]
-    ["/legacy"
-     ["/2013" (xml-api/post 2013)]
-     ["/2018" (xml-api/post 2018)]]]])
+(defn valid-pdf-filename? [filename id kieli]
+  (= filename (format "energiatodistus-%s-%s.pdf" id kieli)))
+
 
 (defn valid-pdf-filename? [filename id kieli]
   (= filename (format "energiatodistus-%s-%s.pdf" id kieli)))
+
+(def search-exceptions [{:type :unknown-field :response 400}
+                        {:type :unknown-predicate :response 400}
+                        {:type :invalid-arguments :response 400}
+                        {:type :schema.core/error :response 400}])
 
 (defn pdf-route [versio]
   ["/pdf/:kieli/:filename"
@@ -62,11 +57,6 @@
                            filename
                            (str "Energiatodistus " id " does not exists."))
                           (r/not-found "File not found")))}}])
-
-(def search-exceptions [{:type :unknown-field :response 400}
-                        {:type :unknown-predicate :response 400}
-                        {:type :invalid-arguments :response 400}
-                        {:type :schema.core/error :response 400}])
 
 (def private-routes
   (concat
@@ -162,3 +152,17 @@
                            (r/response (energiatodistus-service/find-sisaiset-kuormat
                                          db versio)))}}]]
     luokittelut-api/routes))
+
+(def external-routes
+  [["/energiatodistukset"
+    ["/2013" (crud-api/post 2013
+                            (-> energiatodistus-schema/EnergiatodistusSave2013
+                                (dissoc :kommentti)
+                                xschema/optional-key-for-maybe))]
+    ["/2018" (crud-api/post 2018
+                            (-> energiatodistus-schema/EnergiatodistusSave2018
+                                (dissoc :kommentti)
+                                xschema/optional-key-for-maybe))]
+    ["/legacy"
+     ["/2013" (xml-api/post 2013)]
+     ["/2018" (xml-api/post 2018)]]]])
