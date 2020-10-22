@@ -148,9 +148,9 @@
         laatija-id (add-laatija!)
         energiatodistus (generate-energiatodistus-2018)
         id (add-energiatodistus! energiatodistus laatija-id)]
-    (t/is (= (energiatodistus-with-db-fields energiatodistus id laatija-id)
-             (-> (service/find-energiatodistus ts/*db* paakayttaja id)
-                 (dissoc :laatija-fullname))))
+    (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
+                            #"Forbidden"
+                            (service/find-energiatodistus ts/*db* paakayttaja id)))
     (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
                             #"Forbidden"
                             (service/find-energiatodistus ts/*db* patevyydentoteaja id)))))
