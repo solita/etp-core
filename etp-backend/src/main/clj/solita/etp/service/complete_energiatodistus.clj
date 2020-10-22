@@ -48,6 +48,11 @@
 (defn join-strings [& strs]
   (->> strs (remove str/blank?) (str/join ", ")))
 
+(def ^:private energiamuotokertoimet
+  (map/map-values
+    (partial map/map-keys #(-> % name (str "-kerroin") keyword))
+    e-luokka-service/energiamuotokerroin))
+
 (defn complete-energiatodistus
   [energiatodistus {:keys [kielisyydet laatimisvaiheet
                            kayttotarkoitukset alakayttotarkoitukset
@@ -104,11 +109,7 @@
           (assoc-in [:perustiedot :laatimisvaihe-sv] (:label-sv laatimisvaihe))
           (assoc-in [:perustiedot :alakayttotarkoitus-fi] (:label-fi alakayttotarkoitus))
           (assoc-in [:perustiedot :alakayttotarkoitus-sv] (:label-sv alakayttotarkoitus))
-          (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin] (case versio 2013 0.7 2018 0.5))
-          (assoc-in [:tulokset :kaytettavat-energiamuodot :sahko-kerroin] (case versio 2013 1.7 2018 1.2))
-          (assoc-in [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin] 0.5)
-          (assoc-in [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin] 1)
-          (assoc-in [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin] (case versio 2013 0.4 2018 0.28))
+          (update-in [:tulokset :kaytettavat-energiamuodot] (partial merge (energiamuotokertoimet versio)))
           (update-in [:tulokset :kuukausierittely] kuukausierittely-hyodyt)
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukolampo])
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :sahko])
