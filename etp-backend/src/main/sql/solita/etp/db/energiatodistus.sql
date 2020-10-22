@@ -12,6 +12,7 @@ from energiatodistus
   inner join kayttaja on kayttaja.id = energiatodistus.laatija_id
   left join energiatodistus korvaava_energiatodistus on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
 where energiatodistus.id = :id
+  and energiatodistus.tila_id <> (select poistettu FROM et_tilat);
 
 -- name: select-replaceable-energiatodistukset-like-id
 select energiatodistus.id

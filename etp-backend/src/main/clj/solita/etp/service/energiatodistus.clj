@@ -193,15 +193,15 @@
       #(= (:versio %) 2013)
       #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] (partial assoc {} :muu)))))
 
-;; TODO this could be later modified to handle deleted energiatodistus
-;; by returning nil (turned 404 in api) and throwing forbidden
-;; if role is paakayttaja and energiatodistus is draft
 (defn- select-energiatodistus-for-find
-  [{:keys [tila-id] :as energiatodistus} rooli]
+  [{:keys [tila-id laatija-id] :as energiatodistus} whoami]
   (match/match
-   [(tila-key tila-id) rooli]
-   [_ :laatija] (assoc energiatodistus :kommentti nil)
-   [_ :paakayttaja] energiatodistus))
+   [(tila-key tila-id)
+    (-> whoami :rooli rooli-service/rooli-key)
+    (= laatija-id (:id whoami))]
+   [_ :laatija true] (assoc energiatodistus :kommentti nil)
+   [(:or :signed :discarded :replaced) :paakayttaja _] energiatodistus
+   :else (exception/throw-forbidden!)))
 
 (defn find-energiatodistus
   ([db id]
@@ -209,13 +209,7 @@
                (energiatodistus-db/select-energiatodistus db {:id id}))))
   ([db whoami id]
    (if-let [energiatodistus (find-energiatodistus db id)]
-     (if (or (rooli-service/paakayttaja? whoami)
-             (and (rooli-service/laatija? whoami)
-                  (= (:laatija-id energiatodistus) (:id whoami))))
-       (select-energiatodistus-for-find
-        energiatodistus
-        (-> whoami :rooli rooli-service/rooli-key))
-       (exception/throw-forbidden!)))))
+     (select-energiatodistus-for-find energiatodistus whoami))))
 
 (defn find-replaceable-energiatodistukset-like-id [db id]
   (map :id (energiatodistus-db/select-replaceable-energiatodistukset-like-id db {:id id})))

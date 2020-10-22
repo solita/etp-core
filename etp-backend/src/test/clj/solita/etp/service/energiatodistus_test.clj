@@ -148,9 +148,9 @@
         laatija-id (add-laatija!)
         energiatodistus (generate-energiatodistus-2018)
         id (add-energiatodistus! energiatodistus laatija-id)]
-    (t/is (= (energiatodistus-with-db-fields energiatodistus id laatija-id)
-             (-> (service/find-energiatodistus ts/*db* paakayttaja id)
-                 (dissoc :laatija-fullname))))
+    (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
+                            #"Forbidden"
+                            (service/find-energiatodistus ts/*db* paakayttaja id)))
     (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
                             #"Forbidden"
                             (service/find-energiatodistus ts/*db* patevyydentoteaja id)))))
@@ -167,7 +167,11 @@
 (t/deftest create-energiatodistus-and-delete-test
   (let [laatija-id (add-laatija!)
         id (add-energiatodistus! (generate-energiatodistus-2018) laatija-id)]
-    (service/delete-energiatodistus-luonnos! ts/*db* {:id laatija-id} id)))
+    (find-energiatodistus id)
+    (service/delete-energiatodistus-luonnos! ts/*db*
+                                             {:id laatija-id}
+                                             id)
+    (t/is (nil? (service/find-energiatodistus ts/*db* id)))))
 
 (defn energiatodistus-tila [id] (-> id find-energiatodistus :tila-id service/tila-key))
 
