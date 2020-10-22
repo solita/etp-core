@@ -58,21 +58,30 @@
                            (str "Energiatodistus " id " does not exists."))
                           (r/not-found "File not found")))}}])
 
+(def search-route
+  [""
+   {:get {:summary    "Hae energiatodistuksia"
+          :parameters {:query energiatodistus-schema/EnergiatodistusSearch}
+          :responses  {200 {:body [energiatodistus-schema/Energiatodistus]}}
+          :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
+          :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
+                        (api-response/response-with-exceptions
+                         #(energiatodistus-search-service/search
+                           db
+                           whoami
+                           (update query :where json/read-value))
+                         search-exceptions))}}])
+
+(def public-routes
+  (concat
+   [["/energiatodistukset"
+     search-route
+     luokittelut-api/routes]]))
+
 (def private-routes
   (concat
     [["/energiatodistukset"
-      [""
-       {:get {:summary    "Hae energiatodistuksia"
-              :parameters {:query energiatodistus-schema/EnergiatodistusSearch}
-              :responses  {200 {:body [energiatodistus-schema/Energiatodistus]}}
-              :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
-              :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
-                            (api-response/response-with-exceptions
-                              #(energiatodistus-search-service/search
-                                 db
-                                 whoami
-                                 (update query :where json/read-value))
-                              search-exceptions))}}]
+      search-route
       ["/xlsx/energiatodistukset.xlsx"
        {:get {:summary    "Hae energiatodistusten tiedot XLSX-tiedostona"
               :parameters {:query energiatodistus-schema/EnergiatodistusSearch}

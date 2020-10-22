@@ -67,7 +67,9 @@
    system-routes
    ["/public" {:middleware [[security/wrap-db-application-name]]}
     (concat (tag "Laatijat Public API" laatija-api/public-routes)
-            (tag "Geo Public API" geo-api/routes))]
+            (tag "Geo Public API" geo-api/routes)
+            (tag "Energiatodistus Public API"
+                 energiatodistus-api/public-routes))]
    ["/private" {:middleware [[security/wrap-jwt-payloads]
                              [security/wrap-whoami-from-jwt-payloads]
                              [security/wrap-access]
