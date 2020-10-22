@@ -18,7 +18,7 @@
     (assoc-in [:lahtotiedot :ilmanvaihto :paaiv :poisto] 35)))
 
 (defn assert-complete-energiatoditus [complete-energiatodistus]
-  (and (= 750.0 (-> complete-energiatodistus
+  (and (= 750.0M (-> complete-energiatodistus
                     :tulokset
                     :kaytettavat-energiamuodot
                     :kaukolampo-kertoimella))
