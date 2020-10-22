@@ -167,7 +167,11 @@
 (t/deftest create-energiatodistus-and-delete-test
   (let [laatija-id (add-laatija!)
         id (add-energiatodistus! (generate-energiatodistus-2018) laatija-id)]
-    (service/delete-energiatodistus-luonnos! ts/*db* {:id laatija-id} id)))
+    (find-energiatodistus id)
+    (service/delete-energiatodistus-luonnos! ts/*db*
+                                             {:id laatija-id}
+                                             id)
+    (t/is (nil? (service/find-energiatodistus ts/*db* id)))))
 
 (defn energiatodistus-tila [id] (-> id find-energiatodistus :tila-id service/tila-key))
 
