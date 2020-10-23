@@ -32,7 +32,7 @@
   (or (System/getenv name) default))
 
 (defn read-configuration []
-  {:user "etp"
+  {:user (env "DB_USER" "etp")
    :password (env "DB_PASSWORD" "etp")
    :url (env "DB_URL" "jdbc:postgresql://localhost:5432/postgres")})
 
