@@ -30,6 +30,7 @@
   ([] (http-server {}))
   ([opts]
    {:solita.etp/http-server (merge {:port (env "HTTP_SERVER_PORT" 8080)
+                                    :max-body (* 1024 1024 50)
                                     :ctx {:db (ig/ref :solita.etp/db)
                                           :aws-s3-client (ig/ref :solita.etp/aws-s3-client)}}
                                    opts)}))
