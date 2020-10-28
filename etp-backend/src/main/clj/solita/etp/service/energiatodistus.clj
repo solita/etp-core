@@ -25,12 +25,15 @@
 (db/require-queries 'energiatodistus)
 
 ; *** Conversions from database data types ***
-(def coerce-energiatodistus (coerce/coercer! energiatodistus-schema/Energiatodistus
-                                            (stc/or-matcher
-                                              stc/map-filter-matcher
-                                              (assoc json/json-coercions
-                                                geo-schema/PostinumeroFI (logic/unless* nil? #(format "%05d" %))
-                                                schema/Num xschema/parse-big-decimal))))
+(defn coerce-energiatodistus [energiatodistus-schema]
+  (coerce/coercer! energiatodistus-schema
+                   (stc/or-matcher
+                    stc/map-filter-matcher
+                    (assoc json/json-coercions
+                           geo-schema/PostinumeroFI
+                           (logic/unless* nil? #(format "%05d" %))
+                           schema/Num
+                           xschema/parse-big-decimal))))
 
 (def ^:private tilat [:draft :in-signing :signed :discarded :replaced :deleted])
 
@@ -165,16 +168,19 @@
   (map (comp flat->tree db/kebab-case-keys)
        (energiatodistus-db/select-sisaiset-kuormat db {:versio versio})))
 
-(def db-row->energiatodistus
-  (comp coerce-energiatodistus
+(defn db-row->energiatodistus-f [schema]
+  (comp (coerce-energiatodistus schema)
         (logic/when*
-          #(= (:versio %) 2013)
-          #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] :muu))
+         #(= (:versio %) 2013)
+         #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] :muu))
         #(set/rename-keys % (set/map-invert db-abbreviations))
         flat->tree
         (partial pg-composite/parse-composite-type-literals db-composite-types)
         (partial map/map-keys convert-db-key-case)
         db/kebab-case-keys))
+
+(def db-row->energiatodistus
+  (db-row->energiatodistus-f energiatodistus-schema/Energiatodistus))
 
 (defn tree->flat [energiatodistus]
   (->> energiatodistus

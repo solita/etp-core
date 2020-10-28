@@ -8,6 +8,7 @@
             [solita.common.schema :as xschema]
             [flathead.deep :as deep]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
+            [solita.etp.schema.public-energiatodistus :as public-energiatodistus-schema]
             [flathead.flatten :as flat]
             [schema.coerce :as coerce]
             [solita.etp.service.json :as json]
@@ -146,7 +147,11 @@
             visibility-params
             where-params)))
 
+(def db-row->public-energiatodistus
+  (energiatodistus-service/db-row->energiatodistus-f
+   public-energiatodistus-schema/Energiatodistus))
+
 (defn search [db whoami query]
-  (map (comp energiatodistus-service/db-row->energiatodistus
+  (map (comp db-row->public-energiatodistus
           #(assoc % :kommentti nil))
        (jdbc/query db (sql-query whoami query) nil)))
