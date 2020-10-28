@@ -1,9 +1,11 @@
 (ns solita.etp.service.energiatodistus-search-test
-  (:require [solita.etp.service.energiatodistus-test :as energiatodistus-test]
+  (:require [clojure.test :as t]
+            [schema-tools.core :as st]
+            [solita.etp.test-system :as ts]
+            [solita.etp.service.energiatodistus-test :as energiatodistus-test]
             [solita.etp.service.energiatodistus-search :as energiatodistus-search-service]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
-            [solita.etp.test-system :as ts]
-            [clojure.test :as t])
+            [solita.etp.schema.public-energiatodistus :as public-energiatodistus-schema])
   (:import (clojure.lang ExceptionInfo)
            (java.time LocalDate)))
 
@@ -19,6 +21,16 @@
   (map #(dissoc % :laatija-fullname)
        (energiatodistus-search-service/search ts/*db* whoami {:where where})))
 
+(defn public-energiatodistus-with-db-fields
+  [energiatodistus id laatija-id versio]
+  (-> energiatodistus
+      (energiatodistus-test/energiatodistus-with-db-fields id
+                                                           laatija-id
+                                                           versio)
+      (assoc :laatija-fullname "")
+      (st/select-schema public-energiatodistus-schema/Energiatodistus)
+      (dissoc :laatija-fullname)))
+
 (t/deftest not-found-test
   (let [whoami (add-laatija!)]
     (-> (energiatodistus-test/generate-energiatodistus-2018)
@@ -31,11 +43,10 @@
         id (energiatodistus-test/add-energiatodistus! energiatodistus
                                                       (:id whoami)
                                                       2018)]
-    (t/is (= (energiatodistus-test/energiatodistus-with-db-fields
-              energiatodistus
-              id
-              (:id whoami)
-              2018)
+    (t/is (= (public-energiatodistus-with-db-fields energiatodistus
+                                                    id
+                                                    (:id whoami)
+                                                    2018)
              (first (search whoami [[["=" "id" id]]]))))))
 
 (t/deftest add-and-find-by-nimi-test
@@ -45,11 +56,10 @@
         id (energiatodistus-test/add-energiatodistus! energiatodistus
                                                       (:id whoami)
                                                       2018)]
-    (t/is (= (energiatodistus-test/energiatodistus-with-db-fields
-              energiatodistus
-              id
-              (:id whoami)
-              2018)
+    (t/is (= (public-energiatodistus-with-db-fields energiatodistus
+                                                    id
+                                                    (:id whoami)
+                                                    2018)
              (first (search whoami [[["=" "perustiedot.nimi" "test"]]]))))))
 
 (t/deftest add-and-find-by-nimi-nil-test
@@ -59,11 +69,10 @@
         id (energiatodistus-test/add-energiatodistus! energiatodistus
                                                       (:id whoami)
                                                       2018)]
-    (t/is (= (energiatodistus-test/energiatodistus-with-db-fields
-              energiatodistus
-              id
-              (:id whoami)
-              2018)
+    (t/is (= (public-energiatodistus-with-db-fields energiatodistus
+                                                    id
+                                                    (:id whoami)
+                                                    2018)
              (first (search whoami [[["nil?" "perustiedot.nimi"]]]))))))
 
 (t/deftest add-and-find-by-havainnointikaynti-test
@@ -74,11 +83,10 @@
         id (energiatodistus-test/add-energiatodistus! energiatodistus
                                                       (:id whoami)
                                                       2018)]
-    (t/is (= (energiatodistus-test/energiatodistus-with-db-fields
-              energiatodistus
-              id
-              (:id whoami)
-              2018)
+    (t/is (= (public-energiatodistus-with-db-fields energiatodistus
+                                                    id
+                                                    (:id whoami)
+                                                    2018)
              (first (search whoami [[["="
                                       "perustiedot.havainnointikaynti"
                                       (.toString date)]]]))))))
@@ -90,11 +98,10 @@
         id (energiatodistus-test/add-energiatodistus! energiatodistus
                                                       (:id whoami)
                                                       2018)]
-    (t/is (= (energiatodistus-test/energiatodistus-with-db-fields
-              energiatodistus
-              id
-              (:id whoami)
-              2018)
+    (t/is (= (public-energiatodistus-with-db-fields energiatodistus
+                                                    id
+                                                    (:id whoami)
+                                                    2018)
              (first (search whoami [[["=" "perustiedot.nimi" "test"]
                                      ["=" "id" id]]]))))))
 

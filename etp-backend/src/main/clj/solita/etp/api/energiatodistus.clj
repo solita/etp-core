@@ -4,6 +4,7 @@
             [solita.common.schema :as xschema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
+            [solita.etp.schema.public-energiatodistus :as public-energiatodistus-schema]
             [solita.etp.schema.kayttotarkoitus :as kayttotarkoitus-schema]
             [solita.etp.schema.e-luokka :as e-luokka-schema]
             [solita.etp.api.energiatodistus-crud :as crud-api]
@@ -62,7 +63,7 @@
   [""
    {:get {:summary    "Hae energiatodistuksia"
           :parameters {:query energiatodistus-schema/EnergiatodistusSearch}
-          :responses  {200 {:body [energiatodistus-schema/Energiatodistus]}}
+          :responses  {200 {:body [public-energiatodistus-schema/Energiatodistus]}}
           :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
           :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
                         (api-response/response-with-exceptions

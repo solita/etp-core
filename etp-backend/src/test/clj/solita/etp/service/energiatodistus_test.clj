@@ -70,8 +70,7 @@
   ([energiatodistus id laatija-id] (energiatodistus-with-db-fields energiatodistus id laatija-id 2018))
   ([energiatodistus id laatija-id versio]
    (-> energiatodistus
-       (merge energiatodistus
-              {:id                          id
+       (merge {:id                          id
                :laatija-id                  laatija-id
                :versio                      versio
                :tila-id                     0
