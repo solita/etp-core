@@ -53,20 +53,20 @@
       (assoc-in [:perustiedot :laatimisvaihe] 1)
       (assoc :versio 2018)))
 
-(t/deftest PublicEnergiatodistus-test
+(t/deftest Energiatodistus-test
   (t/is (= example-2013
            (schema/validate
-            public-energiatodistus-schema/PublicEnergiatodistus2013
+            public-energiatodistus-schema/Energiatodistus2013
             example-2013)))
   (t/is (= example-2013
            (schema/validate
-            public-energiatodistus-schema/PublicEnergiatodistus
+            public-energiatodistus-schema/Energiatodistus
             example-2013)))
   (t/is (= example-2018
            (schema/validate
-            public-energiatodistus-schema/PublicEnergiatodistus2018
+            public-energiatodistus-schema/Energiatodistus2018
             example-2018)))
   (t/is (= example-2018
            (schema/validate
-            public-energiatodistus-schema/PublicEnergiatodistus
+            public-energiatodistus-schema/Energiatodistus
             example-2018))))
