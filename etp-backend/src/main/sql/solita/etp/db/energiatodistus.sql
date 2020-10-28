@@ -14,18 +14,6 @@ from energiatodistus
 where energiatodistus.id = :id
   and energiatodistus.tila_id <> (select poistettu FROM et_tilat);
 
--- name: select-replaceable-energiatodistukset-like-id
-select energiatodistus.id
-from energiatodistus,
-     et_tilat
-where energiatodistus.tila_id in (et_tilat.allekirjoitettu, et_tilat.hylatty)
-  and energiatodistus.id::text like :id::text || '%'
-  and not exists(select *
-                 from energiatodistus et
-                          inner join energiatodistus korvaava_energiatodistus
-                                     on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id)
-limit 100;
-
 -- name: update-energiatodistus-allekirjoituksessa!
 update energiatodistus set tila_id = et_tilat.allekirjoituksessa
 from et_tilat
@@ -49,7 +37,15 @@ where tila_id = et_tilat.allekirjoituksessa and laatija_id = :laatija-id and id 
 update energiatodistus set
   tila_id = et_tilat.korvattu
 from et_tilat
-where tila_id = et_tilat.allekirjoitettu and laatija_id = :laatija-id and id = :id
+where tila_id in (et_tilat.allekirjoitettu, et_tilat.hylatty) and id = :id
+
+-- name: revert-energiatodistus-korvattu!
+update energiatodistus set
+  tila_id = (
+    select tila_id from energiatodistus_tila_history
+    order by modifytime desc, id desc limit 1 offset 1)
+from et_tilat
+where tila_id = et_tilat.korvattu and id = :id
 
 -- name: select-numeric-validations
 select column_name, warning$min, warning$max, error$min, error$max

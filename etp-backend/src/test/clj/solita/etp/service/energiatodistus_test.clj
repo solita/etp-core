@@ -273,12 +273,6 @@
         first-replaceable-energiatodistus-id  (add-energiatodistus-and-sign! energiatodistus laatija-id)
         second-replaceable-energiatodistus-id (add-energiatodistus-and-sign! energiatodistus laatija-id)]
 
-    ; find replaceable energiatodistukset
-    (t/is (= (service/find-replaceable-energiatodistukset-like-id ts/*db* signed-energiatodistus-id) [signed-energiatodistus-id]))
-    (t/is (= (service/find-replaceable-energiatodistukset-like-id ts/*db* replaced-energiatodistus-id) []))
-    (t/is (= (service/find-replaceable-energiatodistukset-like-id ts/*db* replaceses-energiatodistus-id) [replaceses-energiatodistus-id]))
-    (t/is (= (service/find-replaceable-energiatodistukset-like-id ts/*db* draft-energiatodistus-id) []))
-
     ; create energiatodistus with illegals and valid replaceable energiatodistus
     (t/is (thrown-with-msg? ExceptionInfo #"Replaceable energiatodistus does not exists"
                             (add-energiatodistus! (assoc energiatodistus :korvattu-energiatodistus-id 101) laatija-id)))

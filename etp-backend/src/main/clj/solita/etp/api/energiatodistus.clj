@@ -108,15 +108,6 @@
                              (api-response/get-response
                                (energiatodistus-service/find-energiatodistus db id)
                                (str "Energiatodistus " id " does not exists.")))}}]]
-      ["/replaceable"
-       {:get {:summary    "Hae korvattavia energiatodistuksia"
-              :parameters {:query {:id schema/Int}}
-              :responses  {200 {:body [common-schema/Key]}}
-              :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
-              :handler    (fn [{{{:keys [id]} :query} :parameters :keys [db]}]
-                            (r/response
-                              (energiatodistus-service/find-replaceable-energiatodistukset-like-id
-                                db id)))}}]
       ["/2013"
        ["" (crud-api/post 2013 energiatodistus-schema/EnergiatodistusSave2013)]
        ["/:id"
