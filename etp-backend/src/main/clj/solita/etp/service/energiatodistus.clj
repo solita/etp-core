@@ -168,7 +168,7 @@
   (map (comp flat->tree db/kebab-case-keys)
        (energiatodistus-db/select-sisaiset-kuormat db {:versio versio})))
 
-(defn db-row->energiatodistus-f [schema]
+(defn schema->db-row->energiatodistus [schema]
   (comp (coerce-energiatodistus schema)
         (logic/when*
          #(= (:versio %) 2013)
@@ -179,8 +179,8 @@
         (partial map/map-keys convert-db-key-case)
         db/kebab-case-keys))
 
-(def db-row->energiatodistus
-  (db-row->energiatodistus-f energiatodistus-schema/Energiatodistus))
+(def ^:private db-row->energiatodistus
+  (schema->db-row->energiatodistus energiatodistus-schema/Energiatodistus))
 
 (defn tree->flat [energiatodistus]
   (->> energiatodistus

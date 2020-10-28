@@ -148,7 +148,7 @@
             where-params)))
 
 (def db-row->public-energiatodistus
-  (energiatodistus-service/db-row->energiatodistus-f
+  (energiatodistus-service/schema->db-row->energiatodistus
    public-energiatodistus-schema/Energiatodistus))
 
 (defn search [db whoami query]
