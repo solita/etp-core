@@ -142,10 +142,15 @@
     ["energiatodistus.tila_id IN (2, 3, 4)"]
 
     (rooli-service/laatija? whoami)
-    ["energiatodistus.laatija_id = ? and energiatodistus.tila_id <> 5" id]
+    ["energiatodistus.laatija_id = ? AND energiatodistus.tila_id <> 5" id]
 
     (rooli-service/public? whoami)
-    ["energiatodistus.tila_id = 2"]))
+    ["energiatodistus.tila_id = 2 AND
+     ((energiatodistus.versio = 2013 AND
+       energiatodistus.pt$kayttotarkoitus NOT IN ('YAT', 'KAT', 'MEP', 'MAEP'))
+      OR
+      (energiatodistus.versio = 2018 AND
+       energiatodistus.pt$kayttotarkoitus NOT IN ('YAT', 'KAT', 'KREP')))"]))
 
 (defn sql-query [whoami {:keys [where sort order limit offset]}]
   (schema/validate [[[(schema/one schema/Str "predicate") schema/Any]]] where)
