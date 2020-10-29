@@ -35,10 +35,19 @@
     (coll? schema) (map schema-coercers schema)
     :else (illegal-argument! (str "Unsupported schema element: " schema))))
 
-(def search-schema
-  (flat/tree->flat "."
-    (deep/deep-merge (schema-coercers energiatodistus-schema/Energiatodistus2013)
-                     (schema-coercers energiatodistus-schema/Energiatodistus2018))))
+(defn schemas->search-schema [& schemas]
+  (->> schemas
+       (map schema-coercers)
+       (apply deep/deep-merge)
+       (flat/tree->flat ".")))
+
+(def search-schema (schemas->search-schema
+                    energiatodistus-schema/Energiatodistus2013
+                    energiatodistus-schema/Energiatodistus2018))
+
+(def public-search-schema (schemas->search-schema
+                           public-energiatodistus-schema/Energiatodistus2013
+                           public-energiatodistus-schema/Energiatodistus2018))
 
 (def base-query
   "select energiatodistus.*,
@@ -52,36 +61,39 @@
   (or (some-> identifier keyword energiatodistus-service/db-abbreviations name)
       identifier))
 
-(defn- coercer! [field]
+(defn- coercer! [field search-schema]
   (if-let [coercer (some-> field keyword search-schema)]
     coercer
     (throw-ex-info {:type :unknown-field :field field
                     :message (str "Unknown field: " field)})))
 
-(defn validate-field! [field]
-  (coercer! field)
+(defn validate-field! [field search-schema]
+  (coercer! field search-schema)
   field)
 
-(defn coerce-value! [field value]
-  ((coercer! field) value))
+(defn coerce-value! [field value search-schema]
+  ((coercer! field search-schema) value))
 
-(defn field->sql [field]
+(defn field->sql [field search-schema]
   (str "energiatodistus."
        (as-> field $
-             (validate-field! $)
+             (validate-field! $ search-schema)
              (str/split $ #"\.")
              (update $ 0 abbreviation)
              (map db/snake-case $)
              (str/join "$" $))))
 
-(defn infix-notation [operator field value]
-  [(str (field->sql field) " " operator " ?") (coerce-value! field value)])
+(defn infix-notation [operator field value search-schema]
+  [(str (field->sql field search-schema) " " operator " ?")
+   (coerce-value! field value search-schema)])
 
-(defn between-expression [_ field value1 value2]
-  [(str (field->sql field) " between ? and ?") (coerce-value! field value1) (coerce-value! field value2)])
+(defn between-expression [_ field value1 value2 search-schema]
+  [(str (field->sql field search-schema) " between ? and ?")
+   (coerce-value! field value1 search-schema)
+   (coerce-value! field value2 search-schema)])
 
-(defn is-null-expression [operator field]
-  [(str (field->sql field) " is null")])
+(defn is-null-expression [operator field search-schema]
+  [(str (field->sql field search-schema) " is null")])
 
 (def predicates
   {"="  infix-notation
@@ -99,10 +111,10 @@
     (throw-ex-info {:type :unknown-predicate :predicate predicate-name
                     :message (str "Unknown predicate: " predicate-name)})))
 
-(defn predicate-expression->sql [expression]
+(defn predicate-expression->sql [search-schema expression]
   (let [predicate (first expression)]
     (try
-      (apply (sql-formatter! predicate) expression)
+      (apply (sql-formatter! predicate) (concat expression [search-schema]))
       (catch ArityException _
         (throw-ex-info {:type :invalid-arguments :predicate predicate
                         :message (str "Wrong number of arguments: " (rest expression)
@@ -113,11 +125,16 @@
     (cons (str/join (format " %s " logic-operator) (map first sql-expressions))
           (mapcat rest sql-expressions))))
 
-(defn where->sql [where]
-  (expression-seq->sql
-    "or"
-    #(expression-seq->sql "and" predicate-expression->sql %)
-    where))
+(defn where->sql [whoami where]
+  (let [search-schema (if (rooli-service/public? whoami)
+                        public-search-schema
+                        search-schema)]
+    (expression-seq->sql
+     "or"
+     #(expression-seq->sql "and"
+                           (partial predicate-expression->sql search-schema)
+                           %)
+     where)))
 
 (defn whoami->sql [{:keys [id] :as whoami}]
   (cond
@@ -132,7 +149,7 @@
 
 (defn sql-query [whoami {:keys [where sort order limit offset]}]
   (schema/validate [[[(schema/one schema/Str "predicate") schema/Any]]] where)
-  (let [[where-sql & where-params] (where->sql where)
+  (let [[where-sql & where-params] (where->sql whoami where)
         [visibility-sql & visibility-params] (whoami->sql whoami)]
     (concat [(str base-query
                   \newline
