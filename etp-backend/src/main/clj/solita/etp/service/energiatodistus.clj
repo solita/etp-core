@@ -217,19 +217,19 @@
    (if-let [energiatodistus (find-energiatodistus db id)]
      (select-energiatodistus-for-find energiatodistus whoami))))
 
-(defn find-replaceable-energiatodistukset-like-id [db id]
-  (map :id (energiatodistus-db/select-replaceable-energiatodistukset-like-id db {:id id})))
+(defn- throw-invalid-replace! [id msg]
+  (exception/throw-ex-info! :invalid-replace (str "Replaceable energiatodistus " id msg)))
 
-(defn assert-korvaavuus! [db energiatodistus]
+(defn assert-korvaavuus-draft! [db energiatodistus]
   (when-let [korvattu-energiatodistus-id (:korvattu-energiatodistus-id energiatodistus)]
     (if-let [korvattava-energiatodistus (find-energiatodistus db korvattu-energiatodistus-id)]
       (cond
         (and (:korvaava-energiatodistus-id korvattava-energiatodistus)
              (not= (:korvaava-energiatodistus-id korvattava-energiatodistus) (:id energiatodistus)))
-        (exception/throw-ex-info! :invalid-replace "Replaceable energiatodistus is already replaced")
+        (throw-invalid-replace! korvattu-energiatodistus-id " is already replaced")
         (not (contains? #{:signed :discarded} (-> korvattava-energiatodistus :tila-id tila-key)))
-        (exception/throw-ex-info! :invalid-replace "Replaceable energiatodistus is not in signed or discarded state"))
-      (exception/throw-ex-info! :invalid-replace "Replaceable energiatodistus does not exists"))))
+        (throw-invalid-replace! korvattu-energiatodistus-id " is not in signed or discarded state"))
+      (throw-invalid-replace! korvattu-energiatodistus-id " does not exists"))))
 
 (defn validate-sisainen-kuorma!
   [db versio energiatodistus]
@@ -239,7 +239,7 @@
     energiatodistus))
 
 (defn add-energiatodistus! [db whoami versio energiatodistus]
-  (assert-korvaavuus! db energiatodistus)
+  (assert-korvaavuus-draft! db energiatodistus)
   (validate-sisainen-kuorma! db versio energiatodistus)
   (-> (db/with-db-exception-translation
         jdbc/insert! db
@@ -295,8 +295,26 @@
                  " is not allowed to update energiatodistus " id
                  " in state: " (tila-key tila-id) " laskutettu: " laskutettu?))))
 
+(defn- mark-energiatodistus-korvattu! [db id]
+  (when id
+    (when-not (== (energiatodistus-db/update-energiatodistus-korvattu! db {:id id}) 1)
+      (throw-invalid-replace! id " is not in signed or discarded state"))))
+
+(defn- revert-energiatodistus-korvattu! [db id]
+  (when id (energiatodistus-db/revert-energiatodistus-korvattu! db {:id id})))
+
+(defn- update-korvattu! [energiatodistus db tila-id current-korvattu-energiatodistus-id]
+  (let [new-korvattava-energiatodistus-id (get energiatodistus :korvattu-energiatodistus-id :not-found)]
+    (when (and (#{:signed :replaced :discarded} (tila-key tila-id))
+               (not= new-korvattava-energiatodistus-id :not-found)
+               (not= new-korvattava-energiatodistus-id current-korvattu-energiatodistus-id))
+      (mark-energiatodistus-korvattu! db new-korvattava-energiatodistus-id)
+      (revert-energiatodistus-korvattu! db current-korvattu-energiatodistus-id)))
+  energiatodistus)
+
 (defn- db-update-energiatodistus! [db id versio energiatodistus
-                                   tila-id rooli laskutettu?]
+                                   tila-id rooli laskutettu?
+                                   current-korvattu-energiatodistus-id]
   (first (db/with-db-exception-translation jdbc/update!
            db :energiatodistus
            (-> energiatodistus
@@ -305,6 +323,7 @@
                energiatodistus->db-row
                (dissoc :versio)
                (select-energiatodistus-for-update id tila-id rooli laskutettu?)
+               (update-korvattu! db tila-id current-korvattu-energiatodistus-id)
                (validate-db-row! db versio))
            ["id = ? and tila_id = ? and (laskutusaika is not null) = ?"
             id tila-id laskutettu?]
@@ -342,21 +361,23 @@
   (if-let [current-energiatodistus (find-energiatodistus db id)]
     (let [tila-id (:tila-id current-energiatodistus)
           rooli (-> whoami :rooli rooli-service/rooli-key)
-          laskutettu? (-> current-energiatodistus :laskutusaika ((complement nil?)))]
+          laskutettu? (-> current-energiatodistus :laskutusaika ((complement nil?)))
+          current-korvattu-energiatodistus-id (:korvattu-energiatodistus-id current-energiatodistus)]
       (assert-laatija! whoami current-energiatodistus)
-      (assert-korvaavuus! db (assoc energiatodistus :id id))
       (when (not= (tila-key tila-id) :draft)
         (validate-required! db
           current-energiatodistus
           energiatodistus))
       (when (= (tila-key tila-id) :draft)
+        (assert-korvaavuus-draft! db energiatodistus)
         (validate-sisainen-kuorma!
           db (:versio current-energiatodistus) energiatodistus))
       (assert-update! id
         (db-update-energiatodistus!
           db id (:versio current-energiatodistus)
           energiatodistus
-          tila-id rooli laskutettu?))
+          tila-id rooli laskutettu?
+          current-korvattu-energiatodistus-id))
       nil)
     (exception/throw-ex-info!
       :not-found
@@ -386,12 +407,6 @@
             :deleted nil
             :already-signed))))))
 
-(defn mark-energiatodistus-as-korvattu! [db whoami id]
-  (let [result (energiatodistus-db/update-energiatodistus-korvattu!
-                 db {:id id :laatija-id (:id whoami)})]
-    (when (= result 1)
-      :ok)))
-
 (defn- failure-code [db whoami id]
   (when-let [{:keys [tila-id] :as et} (find-energiatodistus db id)]
     (assert-laatija! whoami et)
@@ -405,8 +420,8 @@
     (let [result (energiatodistus-db/update-energiatodistus-allekirjoitettu!
                    db {:id id :laatija-id (:id whoami)})]
       (if (= result 1)
-        (if-let [korvattu-energiatodistus-id (:korvattu-energiatodistus-id (find-energiatodistus db id))]
-          (mark-energiatodistus-as-korvattu! db whoami korvattu-energiatodistus-id)
+        (let [korvattu-energiatodistus-id (:korvattu-energiatodistus-id (find-energiatodistus db id))]
+          (mark-energiatodistus-korvattu! db korvattu-energiatodistus-id)
           :ok)
         (failure-code db whoami id)))))
 

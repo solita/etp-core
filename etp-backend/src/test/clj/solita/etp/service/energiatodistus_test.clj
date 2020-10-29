@@ -272,27 +272,21 @@
         first-replaceable-energiatodistus-id  (add-energiatodistus-and-sign! energiatodistus laatija-id)
         second-replaceable-energiatodistus-id (add-energiatodistus-and-sign! energiatodistus laatija-id)]
 
-    ; find replaceable energiatodistukset
-    (t/is (= (service/find-replaceable-energiatodistukset-like-id ts/*db* signed-energiatodistus-id) [signed-energiatodistus-id]))
-    (t/is (= (service/find-replaceable-energiatodistukset-like-id ts/*db* replaced-energiatodistus-id) []))
-    (t/is (= (service/find-replaceable-energiatodistukset-like-id ts/*db* replaceses-energiatodistus-id) [replaceses-energiatodistus-id]))
-    (t/is (= (service/find-replaceable-energiatodistukset-like-id ts/*db* draft-energiatodistus-id) []))
-
     ; create energiatodistus with illegals and valid replaceable energiatodistus
-    (t/is (thrown-with-msg? ExceptionInfo #"Replaceable energiatodistus does not exists"
+    (t/is (thrown-with-msg? ExceptionInfo #"Replaceable energiatodistus 101 does not exists"
                             (add-energiatodistus! (assoc energiatodistus :korvattu-energiatodistus-id 101) laatija-id)))
-    (t/is (thrown-with-msg? ExceptionInfo #"Replaceable energiatodistus is not in signed or discarded state"
+    (t/is (thrown-with-msg? ExceptionInfo #"Replaceable energiatodistus [0-9]+ is not in signed or discarded state"
                             (add-energiatodistus! (assoc energiatodistus :korvattu-energiatodistus-id draft-energiatodistus-id) laatija-id)))
-    (t/is (thrown-with-msg? ExceptionInfo #"Replaceable energiatodistus is already replaced"
+    (t/is (thrown-with-msg? ExceptionInfo #"Replaceable energiatodistus [0-9]+ is already replaced"
                             (add-energiatodistus! (assoc energiatodistus :korvattu-energiatodistus-id replaced-energiatodistus-id) laatija-id)))
     (t/is (number? (add-energiatodistus! (assoc energiatodistus :korvattu-energiatodistus-id first-replaceable-energiatodistus-id) laatija-id)))
 
     ; update energiatodistus with illegals and valid replaceable energiatodistus
-    (t/is (thrown-with-msg? ExceptionInfo #"Replaceable energiatodistus does not exists"
+    (t/is (thrown-with-msg? ExceptionInfo #"Replaceable energiatodistus 101 does not exists"
                             (service/update-energiatodistus! ts/*db* whoami update-energiatodistus-id (assoc energiatodistus :korvattu-energiatodistus-id 101))))
-    (t/is (thrown-with-msg? ExceptionInfo #"Replaceable energiatodistus is not in signed or discarded state"
+    (t/is (thrown-with-msg? ExceptionInfo #"Replaceable energiatodistus [0-9]+ is not in signed or discarded state"
                             (service/update-energiatodistus! ts/*db* whoami update-energiatodistus-id (assoc energiatodistus :korvattu-energiatodistus-id draft-energiatodistus-id))))
-    (t/is (thrown-with-msg? ExceptionInfo #"Replaceable energiatodistus is already replaced"
+    (t/is (thrown-with-msg? ExceptionInfo #"Replaceable energiatodistus [0-9]+ is already replaced"
                             (service/update-energiatodistus! ts/*db* whoami update-energiatodistus-id (assoc energiatodistus :korvattu-energiatodistus-id replaced-energiatodistus-id))))
 
     (service/update-energiatodistus!
