@@ -8,6 +8,7 @@
   {:laatija-fullname "Liisa Laatija"
    :laatija-id 0
    :voimassaolo-paattymisaika (java.time.Instant/now)
+   :korvaava-energiatodistus-id nil
    :tulokset {:e-luku 10
               :e-luokka "B"
               :kaytettavat-energiamuodot
