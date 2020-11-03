@@ -65,8 +65,8 @@
       (io/delete-file file-path))))
 
 (t/deftest pdf-file-id-test
-  (t/is (nil? (service/pdf-file-id nil "fi")))
-  (t/is (= (service/pdf-file-id 12345 "fi") "energiatodistus-12345-fi")))
+  (t/is (nil? (service/file-key nil "fi")))
+  (t/is (= (service/file-key 12345 "fi") "energiatodistukset/energiatodistus-12345-fi")))
 
 (t/deftest do-when-signing-test
   (let [f (constantly true)]
