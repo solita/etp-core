@@ -98,7 +98,7 @@
     (r/response result)))
 
 (defn ->xml-response [response]
-  (assoc-in response [:headers "Content-Type"] "application/xml"))
+  (assoc-in response [:headers "Content-Type"] "text/xml"))
 
 (defn bad-request [body]
   {:status 400
