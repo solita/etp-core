@@ -17,7 +17,7 @@
   (db/with-db-exception-translation jdbc/insert! db :liite liite db/default-opts))
 
 (defn- file-key [liite-id]
-  (str "energiatodistus/liite/" liite-id))
+  (str "liitteet/" liite-id))
 
 (defn- insert-file! [key aws-s3-client file]
   (file-service/upsert-file-from-file aws-s3-client key file))

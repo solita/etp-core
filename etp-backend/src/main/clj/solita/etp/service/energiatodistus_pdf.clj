@@ -694,11 +694,11 @@
     (io/delete-file pdf-path)
     is))
 
-(defn pdf-file-id [id kieli]
-  (when id (format "energiatodistus-%s-%s" id kieli)))
+(defn file-key [id kieli]
+  (when id (format "energiatodistukset/energiatodistus-%s-%s" id kieli)))
 
 (defn find-existing-pdf [aws-s3-client id kieli]
-  (->> (pdf-file-id id kieli)
+  (->> (file-key id kieli)
        (file-service/find-file aws-s3-client)
        :content
        io/input-stream))
@@ -748,10 +748,10 @@
                                (case versio 2013 648 2018 666))
             signable-pdf-data (puumerkki/read-file signable-pdf-path)
             digest (puumerkki/compute-base64-pkcs signable-pdf-data)
-            file-id (pdf-file-id id language)]
+            key (file-key id language)]
         (file-service/upsert-file-from-bytes aws-s3-client
-                                             file-id
-                                             (str file-id ".pdf")
+                                             key
+                                             (str key ".pdf")
                                              signable-pdf-data)
         (io/delete-file pdf-path)
         (io/delete-file signable-pdf-path)
@@ -785,15 +785,15 @@
      energiatodistus
      #(try
         (validate-surname! (:sukunimi whoami) (first chain))
-        (let [file-id (pdf-file-id id language)
-              {:keys [content]} (file-service/find-file aws-s3-client file-id)
+        (let [key (file-key id language)
+              {:keys [content]} (file-service/find-file aws-s3-client key)
               content-bytes (.readAllBytes content)
               pkcs7 (puumerkki/make-pkcs7 signature-and-chain content-bytes)
-              filename (str file-id ".pdf")]
+              filename (str key ".pdf")]
           (do
             (->> (puumerkki/write-signature! content-bytes pkcs7)
                  (file-service/upsert-file-from-bytes aws-s3-client
-                                                      file-id
+                                                      key
                                                       filename))
             filename))
         (catch java.lang.ArrayIndexOutOfBoundsException e :pdf-exists)))))
