@@ -556,17 +556,27 @@
                {:path [:lahtotiedot :lammitys :lammin-kayttovesi :lampopumppu-tuotto-osuus] :dp 0 :percent? true}
                {:path [:lahtotiedot :lammitys :tilat-ja-iv :lampohavio-lammittamaton-tila] :dp 1}
                {:path [:lahtotiedot :lammitys :lammin-kayttovesi :lampohavio-lammittamaton-tila] :dp 1}]
-              (flatten (for [i (range 13)]
+              (flatten (for [i (range 12)]
                          [{:path [:tulokset :kuukausierittely i :tuotto :aurinkosahko] :dp 0}
                           {:path [:tulokset :kuukausierittely i :tuotto :tuulisahko] :dp 0}
                           {:path [:tulokset :kuukausierittely i :tuotto :muusahko] :dp 0}
                           {:path [:tulokset :kuukausierittely i :tuotto :aurinkolampo] :dp 0}
-                          {:path [:tulokset :kuukausierittely i :tuotto :muulampo] :dp 0}
                           {:path [:tulokset :kuukausierittely i :tuotto :lampopumppu] :dp 0}
+                          {:path [:tulokset :kuukausierittely i :tuotto :muulampo] :dp 0}
                           {:path [:tulokset :kuukausierittely i :kulutus :sahko] :dp 0}
                           {:path [:tulokset :kuukausierittely i :kulutus :lampo] :dp 0}
-                          {:path [:tulokset :kuukausierittely i :hyoty :sahko] :dp 0 :percent? true}
-                          {:path [:tulokset :kuukausierittely i :hyoty :lampo] :dp 0 :percent? true}])))})
+                          {:path [:tulokset :kuukausierittely i :hyoty :sahko] :dp 0}
+                          {:path [:tulokset :kuukausierittely i :hyoty :lampo] :dp 0}]))
+              [{:path [:tulokset :kuukausierittely-summat :tuotto :aurinkosahko] :dp 0}
+               {:path [:tulokset :kuukausierittely-summat :tuotto :tuulisahko] :dp 0}
+               {:path [:tulokset :kuukausierittely-summat :tuotto :muusahko] :dp 0}
+               {:path [:tulokset :kuukausierittely-summat :tuotto :aurinkolampo] :dp 0}
+               {:path [:tulokset :kuukausierittely-summat :tuotto :lampopumppu] :dp 0}
+               {:path [:tulokset :kuukausierittely-summat :tuotto :muulampo] :dp 0}
+               {:path [:tulokset :kuukausierittely-summat :kulutus :sahko] :dp 0}
+               {:path [:tulokset :kuukausierittely-summat :kulutus :lampo] :dp 0}
+               {:path [:tulokset :kuukausierittely-summat :hyoty :sahko] :dp 0}
+               {:path [:tulokset :kuukausierittely-summat :hyoty :lampo] :dp 0}])})
 
 (defn fill-xlsx-template [{:keys [versio] :as complete-energiatodistus} kieli draft?]
   (with-open [is (-> xlsx-template-paths

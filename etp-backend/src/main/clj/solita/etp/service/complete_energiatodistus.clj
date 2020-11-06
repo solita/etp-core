@@ -28,19 +28,43 @@
   (let [v (get-in m from-path)]
     (assoc-in m to-path v)))
 
-(defn kuukausierittely-hyodyt [kuukausierittely]
+(defn kuukausierittely-hyodynnetty [kuukausierittely]
   (mapv (fn [{:keys [tuotto kulutus] :as month}]
-         (let [{:keys [aurinkosahko tuulisahko aurinkolampo
-                       muulampo muusahko lampopumppu]} (map/map-values #(or % 0) tuotto)
+          (let [{:keys [aurinkosahko tuulisahko muusahko
+                        aurinkolampo lampopumppu muulampo]}
+                (map/map-values #(or % 0) tuotto)
                {:keys [sahko lampo]} (map/map-values #(or % 0) kulutus)]
-           (cond-> month
-             (-> sahko zero? not)
-             (assoc-in [:hyoty :sahko]
-                       (with-precision 5 (/ (+ aurinkosahko tuulisahko muusahko) sahko)))
-             (-> lampo zero? not)
-             (assoc-in [:hyoty :lampo]
-                       (with-precision 5 (/ (+ aurinkolampo muulampo lampopumppu) lampo))))))
-       kuukausierittely))
+            (-> month
+                (assoc-in [:hyoty :sahko]
+                          (min (+ aurinkosahko tuulisahko muusahko)
+                               sahko))
+                (assoc-in [:hyoty :lampo]
+                          (min (+ aurinkolampo lampopumppu muulampo)
+                               lampo)))))
+        kuukausierittely))
+
+(defn assoc-kuukausierittely-summat [energiatodistus]
+  (assoc-in energiatodistus
+            [:tulokset :kuukausierittely-summat]
+            (reduce (fn [sums month]
+                      (reduce (fn [sums k]
+                                (update-in sums
+                                           k
+                                           (fnil + 0)
+                                           (or (get-in month k) 0)))
+                              sums
+                              [[:tuotto :aurinkosahko]
+                               [:tuotto :tuulisahko]
+                               [:tuotto :muusahko]
+                               [:tuotto :aurinkolampo]
+                               [:tuotto :lampopumppu]
+                               [:tuotto :muulampo]
+                               [:kulutus :sahko]
+                               [:kulutus :lampo]
+                               [:hyoty :sahko]
+                               [:hyoty :lampo]]))
+                    {}
+                    (-> energiatodistus :tulokset :kuukausierittely))))
 
 (defn find-by-id [coll id]
   (->> coll (filter #(= (:id %) id)) first))
@@ -110,7 +134,8 @@
           (assoc-in [:perustiedot :alakayttotarkoitus-fi] (:label-fi alakayttotarkoitus))
           (assoc-in [:perustiedot :alakayttotarkoitus-sv] (:label-sv alakayttotarkoitus))
           (update-in [:tulokset :kaytettavat-energiamuodot] (partial merge (energiamuotokertoimet versio)))
-          (update-in [:tulokset :kuukausierittely] kuukausierittely-hyodyt)
+          (update-in [:tulokset :kuukausierittely] kuukausierittely-hyodynnetty)
+          (assoc-kuukausierittely-summat)
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukolampo])
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :sahko])
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine])
