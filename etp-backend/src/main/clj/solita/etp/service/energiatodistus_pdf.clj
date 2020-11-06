@@ -158,13 +158,13 @@
       {:path [:tulokset :e-luku]}
       {:path [:tulokset :e-luokka-rajat :kayttotarkoitus :label-fi]}
       {:path [:tulokset :e-luokka-rajat :kayttotarkoitus :label-sv]}
-      {:f #(some->> (find-raja % "A") (format "... %s"))}
-      {:f #(some->> (find-raja % "B") (format "... %s"))}
-      {:f #(some->> (find-raja % "C") (format "... %s"))}
-      {:f #(some->> (find-raja % "D") (format "... %s"))}
-      {:f #(some->> (find-raja % "E") (format "... %s"))}
-      {:f #(some->> (find-raja % "F") (format "... %s"))}
-      {:f #(some->> (find-raja % "F") inc (format "%s ..."))}
+      {:f #(str "A: ... " (find-raja % "A"))}
+      {:f #(str "B: " (some-> (find-raja % "A") inc) " ... " (find-raja % "B"))}
+      {:f #(str "C: " (some-> (find-raja % "B") inc) " ... " (find-raja % "C"))}
+      {:f #(str "D: " (some-> (find-raja % "C") inc) " ... " (find-raja % "D"))}
+      {:f #(str "E: " (some-> (find-raja % "D") inc) " ... " (find-raja % "E"))}
+      {:f #(str "F: " (some-> (find-raja % "E") inc) " ... " (find-raja % "F"))}
+      {:f #(str "G: " (some-> (find-raja % "F") inc))}
       {:path [:tulokset :e-luokka]}
       {:path [:perustiedot :keskeiset-suositukset-fi]}
       {:path [:perustiedot :keskeiset-suositukset-sv]}]
