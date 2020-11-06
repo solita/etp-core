@@ -46,13 +46,13 @@
 
 (def Yritys
   {:nimi             common-schema/String150
-   :katuosoite       common-schema/String100
+   :katuosoite       common-schema/String50
    :postinumero      YritysPostinumero
    :postitoimipaikka common-schema/String30})
 
 (def Perustiedot
-  {:katuosoite-fi            common-schema/String100
-   :katuosoite-sv            common-schema/String100
+  {:katuosoite-fi            common-schema/String50
+   :katuosoite-sv            common-schema/String50
    :valmistumisvuosi         common-schema/Year
    :julkinen-rakennus        schema/Bool
    :havainnointikaynti       common-schema/Date
