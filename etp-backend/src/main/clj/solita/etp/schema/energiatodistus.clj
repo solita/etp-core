@@ -260,8 +260,8 @@
 (def Huomiot
   {:suositukset-fi    common-schema/String1500
    :suositukset-sv    common-schema/String1500
-   :lisatietoja-fi    common-schema/String500
-   :lisatietoja-sv    common-schema/String500
+   :lisatietoja-fi    common-schema/String350
+   :lisatietoja-sv    common-schema/String350
    :iv-ilmastointi    Huomio
    :valaistus-muut    Huomio
    :lammitys          Huomio

@@ -21,6 +21,7 @@
 (def String100 (StringBase 100))
 (def String150 (StringBase 150))
 (def String200 (StringBase 200))
+(def String350 (StringBase 350))
 (def String500 (StringBase 500))
 (def String1000 (StringBase 1000))
 (def String1500 (StringBase 1500))
