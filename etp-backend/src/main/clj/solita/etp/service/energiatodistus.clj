@@ -220,12 +220,12 @@
 (defn- throw-invalid-replace! [id msg]
   (exception/throw-ex-info! :invalid-replace (str "Replaceable energiatodistus " id msg)))
 
-(defn assert-korvaavuus-draft! [db energiatodistus]
+(defn assert-korvaavuus-draft! [db id energiatodistus]
   (when-let [korvattu-energiatodistus-id (:korvattu-energiatodistus-id energiatodistus)]
     (if-let [korvattava-energiatodistus (find-energiatodistus db korvattu-energiatodistus-id)]
       (cond
         (and (:korvaava-energiatodistus-id korvattava-energiatodistus)
-             (not= (:korvaava-energiatodistus-id korvattava-energiatodistus) (:id energiatodistus)))
+             (not= (:korvaava-energiatodistus-id korvattava-energiatodistus) id))
         (throw-invalid-replace! korvattu-energiatodistus-id " is already replaced")
         (not (contains? #{:signed :discarded} (-> korvattava-energiatodistus :tila-id tila-key)))
         (throw-invalid-replace! korvattu-energiatodistus-id " is not in signed or discarded state"))
@@ -239,7 +239,7 @@
     energiatodistus))
 
 (defn add-energiatodistus! [db whoami versio energiatodistus]
-  (assert-korvaavuus-draft! db energiatodistus)
+  (assert-korvaavuus-draft! db nil energiatodistus)
   (validate-sisainen-kuorma! db versio energiatodistus)
   (-> (db/with-db-exception-translation
         jdbc/insert! db
@@ -369,7 +369,7 @@
           current-energiatodistus
           energiatodistus))
       (when (= (tila-key tila-id) :draft)
-        (assert-korvaavuus-draft! db energiatodistus)
+        (assert-korvaavuus-draft! db id energiatodistus)
         (validate-sisainen-kuorma!
           db (:versio current-energiatodistus) energiatodistus))
       (assert-update! id
