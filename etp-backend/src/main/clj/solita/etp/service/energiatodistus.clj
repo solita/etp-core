@@ -151,7 +151,7 @@
 (defn validate-db-row! [energiatodistus db versio]
   (doseq [{{:keys [min max]} :error :keys [column-name]}
           (find-numeric-column-validations db versio)]
-    (if-let [value ((keyword column-name) energiatodistus)]
+    (when-let [value ((-> column-name db/kebab-case keyword) energiatodistus)]
       (when (or (< value min) (> value max))
         (exception/throw-ex-info!
           :invalid-value
@@ -191,13 +191,14 @@
 
 (def energiatodistus->db-row
   (comp
-    (partial pg-composite/write-composite-type-literals db-composite-types)
-    tree->flat
-    #(set/rename-keys % db-abbreviations)
-    #(update-in % [:perustiedot :postinumero] (logic/unless* nil? parseInt))
-    (logic/when*
-      #(= (:versio %) 2013)
-      #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] (partial assoc {} :muu)))))
+   (partial pg-composite/write-composite-type-literals db-composite-types)
+   #(map/map-keys (fn [k] (-> k name str/lower-case keyword)) %)
+   tree->flat
+   #(set/rename-keys % db-abbreviations)
+   #(update-in % [:perustiedot :postinumero] (logic/unless* nil? parseInt))
+   (logic/when*
+    #(= (:versio %) 2013)
+    #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] (partial assoc {} :muu)))))
 
 (defn- select-energiatodistus-for-find
   [{:keys [tila-id laatija-id] :as energiatodistus} whoami]
