@@ -46,7 +46,8 @@
   (assoc v (dec (count v)) new-value))
 
 (defn u-property-condition [property]
-  (when (or (str/ends-with? property ".U") (str/ends-with? property ".g-ks"))
+  (when (or (str/ends-with? (str/lower-case property) ".u")
+            (str/ends-with? (str/lower-case property) ".g-ks"))
     (let [u-path (vec (path property))
           ala-path (assoc-last u-path :ala)]
       #(> (or (get-in % ala-path) 0) 0))))
