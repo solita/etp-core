@@ -35,7 +35,7 @@
   (let [whoami (add-laatija!)]
     (-> (energiatodistus-test/generate-energiatodistus-2018)
         (energiatodistus-test/add-energiatodistus! (:id whoami) 2018))
-    (t/is (empty? (search whoami [[["=" "id" -1]]])))))
+    (t/is (empty? (search whoami [[["=" "energiatodistus.id" -1]]])))))
 
 (t/deftest add-and-find-by-id-test
   (let [whoami (add-laatija!)
@@ -47,7 +47,9 @@
                                                     id
                                                     (:id whoami)
                                                     2018)
-             (first (search whoami [[["=" "id" id]]]))))))
+             (->> [[["=" "energiatodistus.id" id]]]
+                  (search whoami)
+                  first)))))
 
 (t/deftest add-and-find-by-nimi-test
   (let [whoami (add-laatija!)
@@ -60,7 +62,9 @@
                                                     id
                                                     (:id whoami)
                                                     2018)
-             (first (search whoami [[["=" "perustiedot.nimi" "test"]]]))))))
+             (->> [[["=" "energiatodistus.perustiedot.nimi" "test"]]]
+                  (search whoami)
+                  first)))))
 
 (t/deftest add-and-find-by-nimi-nil-test
   (let [whoami (add-laatija!)
@@ -73,7 +77,9 @@
                                                     id
                                                     (:id whoami)
                                                     2018)
-             (first (search whoami [[["nil?" "perustiedot.nimi"]]]))))))
+             (->> [[["nil?" "energiatodistus.perustiedot.nimi"]]]
+                  (search whoami)
+                  first)))))
 
 (t/deftest add-and-find-by-havainnointikaynti-test
   (let [whoami (add-laatija!)
@@ -87,9 +93,11 @@
                                                     id
                                                     (:id whoami)
                                                     2018)
-             (first (search whoami [[["="
-                                      "perustiedot.havainnointikaynti"
-                                      (.toString date)]]]))))))
+             (->> [[["="
+                     "energiatodistus.perustiedot.havainnointikaynti"
+                     (.toString date)]]]
+                  (search whoami)
+                  (first ))))))
 
 (t/deftest add-and-find-by-nimi-and-id-test
   (let [whoami (add-laatija!)
@@ -102,8 +110,10 @@
                                                     id
                                                     (:id whoami)
                                                     2018)
-             (first (search whoami [[["=" "perustiedot.nimi" "test"]
-                                     ["=" "id" id]]]))))))
+             (->> [[["=" "energiatodistus.perustiedot.nimi" "test"]
+                    ["=" "energiatodistus.id" id]]]
+                  (search whoami)
+                  first)))))
 
 (t/deftest laatija-cant-find-other-laatijas-energiatodistukset-test
   (let [adder (add-laatija!)
@@ -112,7 +122,7 @@
         id (energiatodistus-test/add-energiatodistus! energiatodistus
                                                       (:id adder)
                                                       2018)]
-    (t/is (empty? (search searcher [[["=" "id" id]]])))))
+    (t/is (empty? (search searcher [[["=" "energiatodistus.id" id]]])))))
 
 (t/deftest paakayttaja-cant-find-luonnokset-test
   (let [laatija (add-laatija!)
@@ -120,7 +130,7 @@
         id (energiatodistus-test/add-energiatodistus! energiatodistus
                                                       (:id laatija)
                                                       2018)]
-    (t/is (empty? (search paakayttaja [[["=" "id" id]]])))))
+    (t/is (empty? (search paakayttaja [[["=" "energiatodistus.id" id]]])))))
 
 (t/deftest deleted-are-not-found-test
   (let [laatija (add-laatija!)
@@ -129,8 +139,8 @@
                                                       (:id laatija)
                                                       2018)]
     (energiatodistus-service/delete-energiatodistus-luonnos! ts/*db* laatija id)
-    (t/is (empty? (search laatija [[["=" "id" id]]])))
-    (t/is (empty? (search paakayttaja [[["=" "id" id]]])))))
+    (t/is (empty? (search laatija [[["=" "energiatodistus.id" id]]])))
+    (t/is (empty? (search paakayttaja [[["=" "energiatodistus.id" id]]])))))
 
 (defn catch-ex-data [f]
   (try (f) (catch ExceptionInfo e (ex-data e))))
