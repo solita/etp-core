@@ -17,9 +17,15 @@
 (def Toimintaalue common-schema/Luokittelu)
 
 (def Kunta (assoc common-schema/Luokittelu
-             :toimintaalue-id common-schema/Key))
+                  :toimintaalue-id
+                  common-schema/Key))
 
 (def Postinumero (assoc common-schema/Luokittelu
-                   :kunta-id common-schema/Key))
+                        :kunta-id
+                        common-schema/Key))
 
 (def Country (assoc common-schema/Luokittelu :id schema/Str))
+
+(def Search {:postinumero  Postinumero
+             :kunta        Kunta
+             :toimintaalue Toimintaalue})
