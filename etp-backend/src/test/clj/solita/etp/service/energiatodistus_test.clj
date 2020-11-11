@@ -154,6 +154,15 @@
                             #"Forbidden"
                             (service/find-energiatodistus ts/*db* patevyydentoteaja id)))))
 
+(t/deftest validation-test
+  (let [laatija-id (add-laatija!)
+        energiatodistus (-> (generate-energiatodistus-2018)
+                            (assoc-in [:lahtotiedot :ikkunat :etela :U] 99))]
+    (t/is (thrown-with-msg?
+           clojure.lang.ExceptionInfo
+           #"Property: lahtotiedot.ikkunat.etela.U has an invalid value: 99"
+           (add-energiatodistus! energiatodistus laatija-id)))))
+
 (t/deftest update-energiatodistus-test
   (let [laatija-id (add-laatija!)
         whoami {:id laatija-id :rooli 0}
