@@ -66,6 +66,24 @@
                   (search whoami)
                   first)))))
 
+(t/deftest add-and-find-by-toimintaalue-test
+  (let [whoami (add-laatija!)
+        energiatodistus (-> (energiatodistus-test/generate-energiatodistus-2018)
+                            (assoc-in [:perustiedot :postinumero] "33100"))
+        id (energiatodistus-test/add-energiatodistus! energiatodistus
+                                                      (:id whoami)
+                                                      2018)]
+    (t/is (->> [[["like" "toimintaalue.label-fi" "Kain"]]]
+               (search whoami)
+               empty?))
+    (t/is (= (public-energiatodistus-with-db-fields energiatodistus
+                                                    id
+                                                    (:id whoami)
+                                                    2018)
+             (->> [[["like" "toimintaalue.label-fi" "Pirkanmaa"]]]
+                  (search whoami)
+                  first)))))
+
 (t/deftest add-and-find-by-nimi-nil-test
   (let [whoami (add-laatija!)
         energiatodistus (-> (energiatodistus-test/generate-energiatodistus-2018)
