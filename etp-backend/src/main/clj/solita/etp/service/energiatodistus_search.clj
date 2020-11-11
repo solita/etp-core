@@ -9,6 +9,7 @@
             [flathead.deep :as deep]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.schema.public-energiatodistus :as public-energiatodistus-schema]
+            [solita.etp.schema.geo :as geo-schema]
             [flathead.flatten :as flat]
             [schema.coerce :as coerce]
             [solita.etp.service.json :as json]
@@ -35,6 +36,7 @@
     (coll? schema) (map schema-coercers schema)
     :else (illegal-argument! (str "Unsupported schema element: " schema))))
 
+
 (defn schemas->search-schema [& schemas]
   (->> schemas
        (map schema-coercers)
@@ -42,20 +44,26 @@
        (flat/tree->flat ".")))
 
 (def search-schema (schemas->search-schema
-                    energiatodistus-schema/Energiatodistus2013
-                    energiatodistus-schema/Energiatodistus2018))
+                    {:energiatodistus energiatodistus-schema/Energiatodistus2013}
+                    {:energiatodistus energiatodistus-schema/Energiatodistus2018}
+                    geo-schema/Search))
 
 (def public-search-schema (schemas->search-schema
                            public-energiatodistus-schema/Energiatodistus2013
-                           public-energiatodistus-schema/Energiatodistus2018))
+                           public-energiatodistus-schema/Energiatodistus2018
+                           geo-schema/Search))
 
 (def base-query
-  "select energiatodistus.*,
+  "SELECT energiatodistus.*,
           fullname(kayttaja.*) laatija_fullname,
-          korvaava_energiatodistus.id as korvaava_energiatodistus_id
-   from energiatodistus
-     inner join kayttaja on kayttaja.id = energiatodistus.laatija_id
-     left join energiatodistus korvaava_energiatodistus on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id")
+          korvaava_energiatodistus.id AS korvaava_energiatodistus_id
+   FROM energiatodistus
+   INNER JOIN kayttaja ON kayttaja.id = energiatodistus.laatija_id
+   LEFT JOIN energiatodistus korvaava_energiatodistus
+     ON korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
+   LEFT JOIN postinumero ON postinumero.id = energiatodistus.pt$postinumero
+   LEFT JOIN kunta ON kunta.id = postinumero.kunta_id
+   LEFT JOIN toimintaalue ON toimintaalue.id = kunta.toimintaalue_id")
 
 (defn abbreviation [identifier]
   (or (some-> identifier keyword energiatodistus-service/db-abbreviations name)
@@ -75,13 +83,13 @@
   ((coercer! field search-schema) value))
 
 (defn field->sql [field search-schema]
-  (str "energiatodistus."
-       (as-> field $
-             (validate-field! $ search-schema)
-             (str/split $ #"\.")
-             (update $ 0 abbreviation)
-             (map db/snake-case $)
-             (str/join "$" $))))
+  (validate-field! field search-schema)
+  (let [[table & field-parts] (str/split field #"\.")]
+    (str table "." (as-> field-parts $
+                     (vec $)
+                     (update $ 0 abbreviation)
+                     (map db/snake-case $)
+                     (str/join "$" $)))))
 
 (defn infix-notation [operator field value search-schema]
   [(str (field->sql field search-schema) " " operator " ?")
