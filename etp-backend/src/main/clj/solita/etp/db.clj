@@ -19,6 +19,11 @@
 (defn constraint [^ServerErrorMessage error]
   (keyword (str/replace (.getConstraint error) "_" "-")))
 
+(defn value [^ServerErrorMessage error]
+  (->> error
+       .getDetail
+       (re-find #"(?<=\=\().*(?=\))")))
+
 (defn translatePSQLException [^PSQLException psqle]
   (if-let [error (.getServerErrorMessage psqle)]
     (case (.getSQLState error)
@@ -26,7 +31,8 @@
       (ex-info
         (.getMessage psqle)
         {:type       :unique-violation
-         :constraint (constraint error)}
+         :constraint (constraint error)
+         :value      (value error)}
         psqle)
       "23503"
       (ex-info
