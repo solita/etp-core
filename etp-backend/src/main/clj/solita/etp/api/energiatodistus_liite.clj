@@ -64,15 +64,28 @@
                               (liite-service/delete-liite db liite-id)
                               (str "Energiatodistuksen " id " liite " liite-id " does not exists.")))}}]
 
-   ["/:liite-id/content"
+   ["/:liite-id/:filename"
     {:get {:summary "Hae energiatodistuksen yhden liitteen sisältö."
            :access  (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
            :parameters {:path {:id common-schema/Key
-                               :liite-id common-schema/Key}}
+                               :liite-id common-schema/Key
+                               :filename schema/Str}}
            :responses {200 {:body nil}
                        404 {:body schema/Str}}
-           :handler (fn [{{{:keys [id liite-id]} :path} :parameters :keys [db aws-s3-client]}]
-                      (let [liite (liite-service/find-energiatodistus-liite-content db aws-s3-client liite-id)]
-                        (api-response/file-response
-                          (:content liite) (:nimi liite) (:contenttype liite) false
-                          (str "Energiatodistuksen " id " liite " liite-id " does not exists."))))}}]])
+           :handler (fn [{{{:keys [id liite-id filename]} :path} :parameters
+                         :keys [db aws-s3-client]}]
+                      (let [{:keys [content nimi contenttype]}
+                            (liite-service/find-energiatodistus-liite-content
+                             db aws-s3-client liite-id)]
+                        (if (= nimi filename)
+                          (api-response/file-response
+                           content
+                           nimi
+                           contenttype
+                           false
+                           (str "Liite "
+                                liite-id
+                                " of energiatodistus "
+                                id
+                                " does not exists."))
+                          (r/not-found "File not found"))))}}]])
