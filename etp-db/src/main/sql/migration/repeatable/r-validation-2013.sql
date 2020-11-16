@@ -61,14 +61,12 @@ values
 (2013, 'lt$lammitys$lammonjako$id', 52),
 (2013, 'lt$lammitys$lammonjako$kuvaus_fi', 53),
 (2013, 'lt$lammitys$lammonjako$kuvaus_sv', 54),
-(2013, 'lt$lammitys$tilat_ja_iv$tuoton_hyotysuhde', 55),
-(2013, 'lt$lammitys$tilat_ja_iv$jaon_hyotysuhde', 56),
-(2013, 'lt$lammitys$tilat_ja_iv$apulaitteet', 57),
-(2013, 'lt$lammitys$lammin_kayttovesi$tuoton_hyotysuhde', 58),
-(2013, 'lt$lammitys$lammin_kayttovesi$jaon_hyotysuhde', 59),
+(2013, 'lt$lammitys$tilat_ja_iv$jaon_hyotysuhde', 55),
+(2013, 'lt$lammitys$tilat_ja_iv$apulaitteet', 56),
+(2013, 'lt$lammitys$lammin_kayttovesi$jaon_hyotysuhde', 57),
 
-(2013, 'lt$lkvn_kaytto$ominaiskulutus', 60),
-(2013, 'lt$lkvn_kaytto$lammitysenergian_nettotarve', 61)
+(2013, 'lt$lkvn_kaytto$ominaiskulutus', 58),
+(2013, 'lt$lkvn_kaytto$lammitysenergian_nettotarve', 59)
 
 on conflict (column_name, versio) do update
   set ordinal = excluded.ordinal;

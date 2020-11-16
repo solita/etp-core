@@ -65,17 +65,15 @@ values
 (2018, 'lt$lammitys$lammonjako$id', 56),
 (2018, 'lt$lammitys$lammonjako$kuvaus_fi', 57),
 (2018, 'lt$lammitys$lammonjako$kuvaus_sv', 58),
-(2018, 'lt$lammitys$tilat_ja_iv$tuoton_hyotysuhde', 59),
-(2018, 'lt$lammitys$tilat_ja_iv$jaon_hyotysuhde', 60),
-(2018, 'lt$lammitys$tilat_ja_iv$apulaitteet', 61),
-(2018, 'lt$lammitys$lammin_kayttovesi$tuoton_hyotysuhde', 62),
-(2018, 'lt$lammitys$lammin_kayttovesi$jaon_hyotysuhde', 63),
+(2018, 'lt$lammitys$tilat_ja_iv$jaon_hyotysuhde', 59),
+(2018, 'lt$lammitys$tilat_ja_iv$apulaitteet', 60),
+(2018, 'lt$lammitys$lammin_kayttovesi$jaon_hyotysuhde', 61),
 
-(2018, 'lt$lkvn_kaytto$ominaiskulutus', 64),
-(2018, 'lt$lkvn_kaytto$lammitysenergian_nettotarve', 65),
+(2018, 'lt$lkvn_kaytto$ominaiskulutus', 62),
+(2018, 'lt$lkvn_kaytto$lammitysenergian_nettotarve', 63),
 
-(2018, 'h$ymparys$teksti_fi', 66),
-(2018, 'h$ymparys$teksti_sv', 67)
+(2018, 'h$ymparys$teksti_fi', 64),
+(2018, 'h$ymparys$teksti_sv', 65)
 
 on conflict (column_name, versio) do update
   set ordinal = excluded.ordinal;
