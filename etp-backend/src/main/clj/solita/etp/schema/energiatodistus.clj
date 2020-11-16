@@ -356,8 +356,9 @@
    :error Range})
 
 (def EnergiatodistusSearch
-  {(schema/optional-key :sort)   schema/Str
-   (schema/optional-key :order)  schema/Str
-   (schema/optional-key :limit)  schema/Int
-   (schema/optional-key :offset) schema/Int
-   (schema/optional-key :where)  schema/Str})
+  {(schema/optional-key :sort)    schema/Str
+   (schema/optional-key :order)   schema/Str
+   (schema/optional-key :limit)   schema/Int
+   (schema/optional-key :offset)  schema/Int
+   (schema/optional-key :where)   schema/Str
+   (schema/optional-key :keyword) schema/Str})
