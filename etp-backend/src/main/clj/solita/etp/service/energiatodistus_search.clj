@@ -144,6 +144,15 @@
                            %)
      where)))
 
+(defn keyword->sql [keyword]
+  (when (-> keyword str/blank? not)
+    (concat
+     ["postinumero.id::text = ? OR kunta.label_fi ILIKE ? OR
+       kunta.label_sv ILIKE ? OR toimintaalue.label_fi ILIKE ? OR
+       toimintaalue.label_sv ILIKE ?"]
+     [keyword]
+     (repeat 4 (str keyword "%")))))
+
 (defn whoami->sql [{:keys [id] :as whoami}]
   (cond
     (rooli-service/paakayttaja? whoami)
@@ -160,22 +169,26 @@
       (energiatodistus.versio = 2018 AND
        energiatodistus.pt$kayttotarkoitus NOT IN ('YAT', 'KAT', 'KREP')))"]))
 
-(defn sql-query [whoami {:keys [where sort order limit offset]}]
+(defn sql-query [whoami {:keys [sort order limit offset where keyword]}]
   (schema/validate [[[(schema/one schema/Str "predicate") schema/Any]]] where)
   (let [[where-sql & where-params] (where->sql whoami where)
+        [keyword-sql & keyword-params] (keyword->sql keyword)
         [visibility-sql & visibility-params] (whoami->sql whoami)]
     (concat [(str base-query
                   \newline
                   "where "
                   visibility-sql
-                  (when-not (str/blank? where-sql) (format " and (%s) "
-                                                           where-sql))
+                  (when-not (str/blank? where-sql)
+                    (format " and (%s) " where-sql))
+                  (when-not (str/blank? keyword-sql)
+                    (format " and (%s) " keyword-sql))
                   (when-not (str/blank? sort)
                     (str \newline "order by " (field->sql sort) " " (or order "asc")))
                   (str \newline "limit " (or limit 100))
                   (when-not (nil? offset) (str \newline "offset " offset)))]
             visibility-params
-            where-params)))
+            where-params
+            keyword-params)))
 
 (def db-row->public-energiatodistus
   (energiatodistus-service/schema->db-row->energiatodistus
