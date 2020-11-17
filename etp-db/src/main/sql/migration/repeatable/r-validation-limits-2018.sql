@@ -16,12 +16,12 @@ values
 (2018, 'lt$ilmanvaihto$ivjarjestelma$sfp',    0, 2.5, 0, 10),
 (2018, 'lt$ilmanvaihto$lto_vuosihyotysuhde',  0, 0.85, 0, 1),
 
-(2018, 'lt$lammitys$tilat_ja_iv$tuoton_hyotysuhde', 0, 1, 0, 1),
+(2018, 'lt$lammitys$tilat_ja_iv$tuoton_hyotysuhde', 0, 1.01, 0, 1.01),
 (2018, 'lt$lammitys$tilat_ja_iv$jaon_hyotysuhde', 0, 1, 0, 1),
 (2018, 'lt$lammitys$tilat_ja_iv$lampokerroin', 0, 10, 0, 10),
 (2018, 'lt$lammitys$tilat_ja_iv$apulaitteet', 0.5, 2.5, 0, 999999),
 
-(2018, 'lt$lammitys$lammin_kayttovesi$tuoton_hyotysuhde', 0, 1, 0, 1),
+(2018, 'lt$lammitys$lammin_kayttovesi$tuoton_hyotysuhde', 0, 1.01, 0, 1.01),
 (2018, 'lt$lammitys$lammin_kayttovesi$jaon_hyotysuhde', 0, 1, 0, 1),
 (2018, 'lt$lammitys$lammin_kayttovesi$lampokerroin', 0, 10, 0, 10),
 (2018, 'lt$lammitys$lammin_kayttovesi$apulaitteet', 0, 1.5, 0, 5),
