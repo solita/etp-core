@@ -9,6 +9,7 @@
             [flathead.deep :as deep]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.schema.public-energiatodistus :as public-energiatodistus-schema]
+            [solita.etp.schema.geo :as geo-schema]
             [flathead.flatten :as flat]
             [schema.coerce :as coerce]
             [solita.etp.service.json :as json]
@@ -35,6 +36,7 @@
     (coll? schema) (map schema-coercers schema)
     :else (illegal-argument! (str "Unsupported schema element: " schema))))
 
+
 (defn schemas->search-schema [& schemas]
   (->> schemas
        (map schema-coercers)
@@ -42,20 +44,26 @@
        (flat/tree->flat ".")))
 
 (def search-schema (schemas->search-schema
-                    energiatodistus-schema/Energiatodistus2013
-                    energiatodistus-schema/Energiatodistus2018))
+                    {:energiatodistus energiatodistus-schema/Energiatodistus2013}
+                    {:energiatodistus energiatodistus-schema/Energiatodistus2018}
+                    geo-schema/Search))
 
 (def public-search-schema (schemas->search-schema
                            public-energiatodistus-schema/Energiatodistus2013
-                           public-energiatodistus-schema/Energiatodistus2018))
+                           public-energiatodistus-schema/Energiatodistus2018
+                           geo-schema/Search))
 
 (def base-query
-  "select energiatodistus.*,
+  "SELECT energiatodistus.*,
           fullname(kayttaja.*) laatija_fullname,
-          korvaava_energiatodistus.id as korvaava_energiatodistus_id
-   from energiatodistus
-     inner join kayttaja on kayttaja.id = energiatodistus.laatija_id
-     left join energiatodistus korvaava_energiatodistus on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id")
+          korvaava_energiatodistus.id AS korvaava_energiatodistus_id
+   FROM energiatodistus
+   INNER JOIN kayttaja ON kayttaja.id = energiatodistus.laatija_id
+   LEFT JOIN energiatodistus korvaava_energiatodistus
+     ON korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
+   LEFT JOIN postinumero ON postinumero.id = energiatodistus.pt$postinumero
+   LEFT JOIN kunta ON kunta.id = postinumero.kunta_id
+   LEFT JOIN toimintaalue ON toimintaalue.id = kunta.toimintaalue_id")
 
 (defn abbreviation [identifier]
   (or (some-> identifier keyword energiatodistus-service/db-abbreviations name)
@@ -75,13 +83,13 @@
   ((coercer! field search-schema) value))
 
 (defn field->sql [field search-schema]
-  (str "energiatodistus."
-       (as-> field $
-             (validate-field! $ search-schema)
-             (str/split $ #"\.")
-             (update $ 0 abbreviation)
-             (map db/snake-case $)
-             (str/join "$" $))))
+  (validate-field! field search-schema)
+  (let [[table & field-parts] (str/split field #"\.")]
+    (str table "." (as-> field-parts $
+                     (vec $)
+                     (update $ 0 abbreviation)
+                     (map db/snake-case $)
+                     (str/join "$" $)))))
 
 (defn infix-notation [operator field value search-schema]
   [(str (field->sql field search-schema) " " operator " ?")
@@ -136,6 +144,15 @@
                            %)
      where)))
 
+(defn keyword->sql [keyword]
+  (when (-> keyword str/blank? not)
+    (concat
+     ["postinumero.id::text = ? OR kunta.label_fi ILIKE ? OR
+       kunta.label_sv ILIKE ? OR toimintaalue.label_fi ILIKE ? OR
+       toimintaalue.label_sv ILIKE ?"]
+     [keyword]
+     (repeat 4 (str keyword "%")))))
+
 (defn whoami->sql [{:keys [id] :as whoami}]
   (cond
     (rooli-service/paakayttaja? whoami)
@@ -152,22 +169,26 @@
       (energiatodistus.versio = 2018 AND
        energiatodistus.pt$kayttotarkoitus NOT IN ('YAT', 'KAT', 'KREP')))"]))
 
-(defn sql-query [whoami {:keys [where sort order limit offset]}]
+(defn sql-query [whoami {:keys [sort order limit offset where keyword]}]
   (schema/validate [[[(schema/one schema/Str "predicate") schema/Any]]] where)
   (let [[where-sql & where-params] (where->sql whoami where)
+        [keyword-sql & keyword-params] (keyword->sql keyword)
         [visibility-sql & visibility-params] (whoami->sql whoami)]
     (concat [(str base-query
                   \newline
                   "where "
                   visibility-sql
-                  (when-not (str/blank? where-sql) (format " and (%s) "
-                                                           where-sql))
+                  (when-not (str/blank? where-sql)
+                    (format " and (%s) " where-sql))
+                  (when-not (str/blank? keyword-sql)
+                    (format " and (%s) " keyword-sql))
                   (when-not (str/blank? sort)
                     (str \newline "order by " (field->sql sort) " " (or order "asc")))
                   (str \newline "limit " (or limit 100))
                   (when-not (nil? offset) (str \newline "offset " offset)))]
             visibility-params
-            where-params)))
+            where-params
+            keyword-params)))
 
 (def db-row->public-energiatodistus
   (energiatodistus-service/schema->db-row->energiatodistus
