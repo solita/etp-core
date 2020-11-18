@@ -93,11 +93,9 @@
            :message (str "Laatija: " user-id " pätevyys has expired.")}))
       (when (:laatimiskielto laatija)
         (exception/throw-ex-info!
-          {:type :laatimiskielto
-           :message (str "Laatija: " user-id " has laatimiskielto.")})))
+          :laatimiskielto (str "Laatija: " user-id " has laatimiskielto."))))
     (exception/throw-ex-info!
-      {:type :not-laatija
-       :message (str "User: " user-id " is not a laatija.")})))
+      :not-laatija (str "User: " user-id " is not a laatija."))))
 
 (defn find-laatija-yritykset [db whoami id]
   (if (or (= id (:id whoami))
