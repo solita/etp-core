@@ -59,7 +59,7 @@
   ([energiatodistus laatija-id]
    (add-energiatodistus! energiatodistus laatija-id 2018))
   ([energiatodistus laatija-id versio]
-    (service/add-energiatodistus! (ts/db-user laatija-id) {:id laatija-id} versio energiatodistus)))
+   (:id (service/add-energiatodistus! (ts/db-user laatija-id) {:id laatija-id} versio energiatodistus))))
 
 (defn find-energiatodistus [id]
   (let [et (service/find-energiatodistus ts/*db* id)]
