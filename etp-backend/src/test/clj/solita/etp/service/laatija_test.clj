@@ -2,9 +2,11 @@
   (:require [clojure.test :as t]
             [clojure.string :as str]
             [solita.etp.test-system :as ts]
+            [solita.etp.test :as etp-test]
             [solita.etp.service.laatija :as service]
             [solita.etp.service.kayttaja-laatija-test :as kl-service-test]
-            [solita.etp.service.kayttaja-laatija :as kl-service]))
+            [solita.etp.service.kayttaja-laatija :as kl-service])
+  (:import (java.time LocalDate ZoneId)))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -75,3 +77,56 @@
         se-labels  (map :label-sv patevyydet)]
     (t/is (= ["Perustaso" "Ylempi taso"] fi-labels))
     (t/is (= ["Basnivå" "Högre nivå"] se-labels))))
+
+(defn patevyys-paattymisaika [toteamispaivamaara]
+  (-> toteamispaivamaara
+      (.plusYears 7)
+      (.plusDays 1)
+      (.atStartOfDay (ZoneId/of "Europe/Helsinki"))
+      (.toInstant)))
+
+(t/deftest validate-laatija-patevyys!-test
+  (let [id (first (kl-service/upsert-kayttaja-laatijat!
+                    ts/*db* (kl-service-test/generate-KayttajaLaatijaAdds 1)))]
+    ;; valid laatija
+    (service/update-laatija-by-id!
+      ts/*db* id {:laatimiskielto false
+                  :toteamispaivamaara (LocalDate/now)})
+    (t/is (nil? (service/validate-laatija-patevyys! ts/*db* id)))
+
+    ;; laatija in laatimiskielto
+    (service/update-laatija-by-id!
+      ts/*db* id {:laatimiskielto true
+                  :toteamispaivamaara (LocalDate/now)})
+    (t/is (= (etp-test/catch-ex-data-no-msg #(service/validate-laatija-patevyys! ts/*db* id))
+             {:type :laatimiskielto}))))
+
+(t/deftest validate-laatija-patevyys!-expired-test
+  (let [id (first (kl-service/upsert-kayttaja-laatijat!
+                    ts/*db* (kl-service-test/generate-KayttajaLaatijaAdds 1)))]
+
+    ;; laatija pätevyys expires today
+    (service/update-laatija-by-id!
+      ts/*db* id {:laatimiskielto false
+                  :toteamispaivamaara (.minusYears (LocalDate/now) 7)})
+    (t/is (nil? (service/validate-laatija-patevyys! ts/*db* id)))
+
+    ;; laatija pätevyys expired three years ago
+    (let [toteamispaivamaara (.minusYears (LocalDate/now) 10)]
+      (service/update-laatija-by-id!
+        ts/*db* id {:laatimiskielto false
+                    :toteamispaivamaara toteamispaivamaara})
+      (t/is (= (etp-test/catch-ex-data-no-msg
+                 #(service/validate-laatija-patevyys! ts/*db* id))
+               {:type          :patevyys-expired
+                :paattymisaika (patevyys-paattymisaika toteamispaivamaara)})))
+
+    ;; laatija pätevyys expired yesterday
+    (let [toteamispaivamaara (-> (LocalDate/now) (.minusYears 7) (.minusDays 1))]
+      (service/update-laatija-by-id!
+        ts/*db* id {:laatimiskielto false
+                    :toteamispaivamaara toteamispaivamaara})
+      (t/is (= (etp-test/catch-ex-data-no-msg
+                 #(service/validate-laatija-patevyys! ts/*db* id))
+               {:type          :patevyys-expired
+                :paattymisaika (patevyys-paattymisaika toteamispaivamaara)})))))

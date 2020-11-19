@@ -1,11 +1,11 @@
 create or replace function patevyys_paattymisaika(l laatija) returns timestamp as $$
 begin
-  return l.toteamispaivamaara + interval '7 years';
+  return timezone('Europe/Helsinki', l.toteamispaivamaara::timestamp) + interval '7 year' + interval '1 day';
 end;
 $$ language plpgsql immutable;
 
 create or replace function patevyys_voimassa(l laatija) returns boolean as $$
 begin
-  return current_date between l.toteamispaivamaara and patevyys_paattymisaika(l);
+  return transaction_timestamp() between timezone('Europe/Helsinki', l.toteamispaivamaara::timestamp) and patevyys_paattymisaika(l);
 end;
 $$ language plpgsql immutable;
