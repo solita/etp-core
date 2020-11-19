@@ -13,8 +13,9 @@
              :parameters {:body yritys-schema/YritysSave}
              :responses  {201 {:body common-schema/Id}}
              :handler    (fn [{:keys [db parameters uri]}]
-                           (api-response/created uri
-                             (yritys-service/add-yritys! db (:body parameters))))}
+                           (api-response/created
+                            uri
+                            {:id (yritys-service/add-yritys! db (:body parameters))}))}
 
       :get {:summary    "Hae kaikki yritykset"
             :responses  {200 {:body [yritys-schema/Yritys]}}
