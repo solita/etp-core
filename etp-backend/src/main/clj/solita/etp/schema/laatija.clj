@@ -59,7 +59,9 @@
   This defines only the laatija specific kayttaja information."
   (merge (dissoc LaatijaUpdate :api-key)
          common-schema/Id
-         {:henkilotunnus common-schema/Henkilotunnus}))
+         {:henkilotunnus common-schema/Henkilotunnus
+          :voimassaolo-paattymisaika common-schema/Instant
+          :voimassa schema/Bool}))
 
 (def KayttajaAdminUpdate
   "Only for internal use in laatija services.
@@ -97,9 +99,7 @@
 (def LaatijaFind
   "A schema for find all existing laatija"
   (-> (st/merge Laatija kayttaja-schema/Kayttaja)
-      (st/assoc :voimassaolo-paattymisaika common-schema/Instant)
       (st/assoc :aktiivinen schema/Bool)
-      (st/assoc :voimassa schema/Bool)
       (st/assoc :henkilotunnus schema/Str)
       (st/assoc :yritys [common-schema/Key])
       (st/dissoc :login :cognitoid :virtu :rooli :passivoitu)

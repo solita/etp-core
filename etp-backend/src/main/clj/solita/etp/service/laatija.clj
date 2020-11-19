@@ -83,6 +83,20 @@
                     (dissoc :api-key))
                 ["id = ?" id] db/default-opts))
 
+(defn validate-laatija-patevyys! [db user-id]
+  (if-let [laatija (find-laatija-by-id db user-id)]
+    (do
+      (when-not (:voimassa laatija)
+        (exception/throw-ex-info!
+          {:type :patevyys-expired
+           :paattymisaika (:voimassaolo-paattymisaika laatija)
+           :message (str "Laatija: " user-id " pätevyys has expired.")}))
+      (when (:laatimiskielto laatija)
+        (exception/throw-ex-info!
+          :laatimiskielto (str "Laatija: " user-id " has laatimiskielto."))))
+    (exception/throw-ex-info!
+      :not-laatija (str "User: " user-id " is not a laatija."))))
+
 (defn find-laatija-yritykset [db whoami id]
   (if (or (= id (:id whoami))
           (rooli-service/laatija-maintainer? whoami))

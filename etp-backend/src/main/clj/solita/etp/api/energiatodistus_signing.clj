@@ -20,7 +20,9 @@
                             #(api-response/signature-response
                               (energiatodistus-service/start-energiatodistus-signing! db whoami id)
                               id)
-                            [{:type :missing-value :response 400}]))}}]
+                            [{:type :missing-value :response 400}
+                             {:type :patevyys-expired :response 400}
+                             {:type :laatimiskielto :response 400}]))}}]
    ["/digest/:language"
     {:get {:summary    "Hae PDF-tiedoston digest allekirjoitusta varten"
            :parameters {:path {:id common-schema/Key
