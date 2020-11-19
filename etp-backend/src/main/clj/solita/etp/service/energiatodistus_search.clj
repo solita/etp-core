@@ -103,6 +103,10 @@
 (defn is-null-expression [operator field search-schema]
   [(str (field->sql field search-schema) " is null")])
 
+(defn in-expression [_ field values search-schema]
+  [(str (field->sql field search-schema) " = any (?)")
+   (mapv #(coerce-value! field % search-schema) values)])
+
 (def predicates
   {"="  infix-notation
    ">=" infix-notation
@@ -111,7 +115,8 @@
    "<"  infix-notation
    "like"  infix-notation
    "between" between-expression
-   "nil?" is-null-expression})
+   "nil?" is-null-expression
+   "in" in-expression})
 
 (defn- sql-formatter! [predicate-name]
   (if-let [formatter (predicates predicate-name)]
