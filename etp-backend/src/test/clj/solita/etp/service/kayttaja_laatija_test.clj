@@ -48,6 +48,9 @@
                                          laatija-schema/LaatijaAdd)
                        found-laatija))))
 
+(def Laatija (dissoc laatija-schema/Laatija
+                     :voimassa :voimassaolo-paattymisaika))
+
 (t/deftest upsert-existing-test
   (let [[original-1 original-2] (generate-KayttajaLaatijaAdds 2)
 
@@ -79,12 +82,12 @@
         found-updated-kayttaja-2 (kayttaja-service/find-kayttaja
                                    ts/*db*
                                    (:id found-original-laatija-2))]
-    (schema/validate laatija-schema/Laatija found-original-laatija-1)
-    (schema/validate laatija-schema/Laatija found-original-laatija-2)
+    (schema/validate Laatija found-original-laatija-1)
+    (schema/validate Laatija found-original-laatija-2)
     (schema/validate kayttaja-schema/Kayttaja found-original-kayttaja-1)
     (schema/validate kayttaja-schema/Kayttaja found-original-kayttaja-2)
-    (schema/validate laatija-schema/Laatija found-updated-laatija-1)
-    (schema/validate laatija-schema/Laatija found-updated-laatija-2)
+    (schema/validate Laatija found-updated-laatija-1)
+    (schema/validate Laatija found-updated-laatija-2)
     (schema/validate kayttaja-schema/Kayttaja found-updated-kayttaja-1)
     (schema/validate kayttaja-schema/Kayttaja found-updated-kayttaja-2)
 
