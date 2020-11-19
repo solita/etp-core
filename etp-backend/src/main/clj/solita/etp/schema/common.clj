@@ -8,6 +8,8 @@
 (def Key schema/Int)
 (def Id {:id Key})
 
+(def IdAndWarnings (assoc Id :warnings [schema/Str]))
+
 (defn StringBase [max]
   (schema/constrained schema/Str #(<= 1 (count %) max) (str "[1, " max "]")))
 
