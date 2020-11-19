@@ -280,10 +280,15 @@
    xml/with-soap-envelope
    xml/emit-str))
 
-(defn success-response [id remarks]
-  (-> (map (fn [remark]
-             (xml/element (xml/qname types-ns "Huomautus") {} remark))
-           remarks)
+(defn success-response [id warnings]
+  (-> (map (fn [{:keys [property value]}]
+             (xml/element (xml/qname types-ns "Huomautus")
+                          {}
+                          (str "Property "
+                               property
+                               " has an invalid value "
+                               value)))
+           warnings)
       (conj (xml/element (xml/qname types-ns "TodistusTunnus") {} id))
       response))
 
@@ -305,11 +310,10 @@
                           (if (:valid? validation-result)
                             (try
                               (let [energiatodistus (xml->energiatodistus xml)
-                                    id (energiatodistus-service/add-energiatodistus!
-                                        db whoami versio energiatodistus)]
-                                ;; TODO where to get remarks?
-                                (-> (success-response id []) r/response response/->xml-response))
-
+                                    {:keys [id warnings]} (energiatodistus-service/add-energiatodistus! db whoami versio energiatodistus)]
+                                (-> (success-response id warnings)
+                                    r/response
+                                    response/->xml-response))
                               (catch clojure.lang.ExceptionInfo e
                                 (-> [(.getMessage e)]
                                     error-response
