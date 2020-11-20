@@ -23,6 +23,7 @@
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.config :as config]
             [solita.etp.security :as security]
+            [solita.etp.jwt :as jwt]
             [solita.etp.exception :as exception]
             [solita.common.map :as map]))
 
@@ -32,12 +33,18 @@
       (assoc % :tags #{tag}) %)
    routes))
 
-(defn logout-location [whoami]
-  (str (if (rooli-service/paakayttaja? whoami)
-         config/keycloak-virtu-logout-url
-         config/keycloak-suomifi-logout-url)
-       "?redirect_uri="
-       (codec/url-encode config/cognito-logout-url)))
+(defn logout-location [req]
+  (if-let [data-jwt-body (some-> req
+                                 :headers
+                                 (get "x-amzn-oidc-data")
+                                 jwt/unverified-decoded-jwt
+                                 second)]
+    (str (if (:custom:VIRTU_localID data-jwt-body)
+           config/keycloak-virtu-logout-url
+           config/keycloak-suomifi-logout-url)
+         "?redirect_uri="
+         (codec/url-encode config/cognito-logout-url))
+    config/cognito-logout-url))
 
 (def system-routes
   [["/swagger.json"
@@ -58,13 +65,12 @@
                        :headers {"Location" (-> parameters :query :redirect)}})}}]
    ["/logout"
     {:get {:summary    "Callback used to redirect user to cognito logout"
-           :middleware [[security/wrap-jwt-payloads]
-                        [security/wrap-whoami-from-jwt-payloads]]
            :tags       #{"System"}
-           :handler    (fn [{:keys [whoami]}]
+           :handler    (fn [req]
+
                          {:status  302
                           :headers {"Set-Cookie" "AWSELBAuthSessionCookie-0=; Path=/; Max-Age-1; HttpOnly; Secure;"
-                                    "Location"   (logout-location whoami)}})}}]
+                                    "Location"   (logout-location req)}})}}]
    ;; TODO Temporary endpoint for seeing headers added by load balancer
    ["/headers"
     {:get {:summary "Endpoint for seeing request headers"
