@@ -6,7 +6,9 @@
             [jeesql.generate :as jeesql-generate]
             [clojure.string :as str]
             [solita.common.map :as map])
-  (:import (org.postgresql.util PSQLException ServerErrorMessage)))
+  (:import (org.postgresql.util PSQLException ServerErrorMessage)
+           (java.time Instant)
+           (java.sql Timestamp)))
 
 (defmethod ig/init-key :solita.etp/db
   [_ opts]
@@ -113,4 +115,8 @@
           type-name (.getParameterTypeName meta i)]
       (if-let [elem-type (when (= (first type-name) \_) (apply str (rest type-name)))]
         (.setObject stmt i (.createArrayOf conn elem-type (to-array v)))
-        (.setObject stmt i v)))))
+        (.setObject stmt i v))))
+
+  Instant
+  (set-parameter [^Instant instant ^java.sql.PreparedStatement stmt ^long i]
+    (.setObject stmt i (Timestamp/from instant))))

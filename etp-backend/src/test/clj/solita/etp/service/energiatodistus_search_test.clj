@@ -7,7 +7,7 @@
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.schema.public-energiatodistus :as public-energiatodistus-schema])
   (:import (clojure.lang ExceptionInfo)
-           (java.time LocalDate)))
+           (java.time LocalDate Instant ZoneId)))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -129,6 +129,32 @@
                             [[["="
                                "energiatodistus.perustiedot.havainnointikaynti"
                                (.toString date)]]]
+                            nil))))))
+
+(defn voimassa-paattymisaika [allekirjoitus-date]
+  (-> allekirjoitus-date
+      (.plusYears 10)
+      (.plusDays 1)
+      (.atStartOfDay (ZoneId/of "Europe/Helsinki"))
+      (.toInstant)))
+
+(t/deftest add-and-find-by-allekirjoisaika-test
+  (let [whoami (add-laatija!)
+        energiatodistus (energiatodistus-test/generate-energiatodistus-2018-complete)
+        id (energiatodistus-test/add-energiatodistus-and-sign!
+             energiatodistus (:id whoami))]
+
+    (t/is (= (assoc (public-energiatodistus-with-db-fields energiatodistus
+                                                    id
+                                                    (:id whoami)
+                                                    2018)
+               :tila-id 2,
+               :voimassaolo-paattymisaika
+               (voimassa-paattymisaika (LocalDate/now)))
+             (first (search whoami
+                            [[["<"
+                               "energiatodistus.allekirjoitusaika"
+                               (str (Instant/now))]]]
                             nil))))))
 
 (t/deftest add-and-find-by-nimi-and-id-test
