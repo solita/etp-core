@@ -342,18 +342,17 @@
                                                                         laskutettu?)
                                      (update-korvattu! db
                                                        tila-id
-                                                       current-korvattu-energiatodistus-id))
-          warnings (validate-db-row! db energiatodistus-db-row versio)]
-      {:id (first (db/with-db-exception-translation jdbc/update!
-                    db
-                    :energiatodistus
-                    energiatodistus-db-row
-                    ["id = ? and tila_id = ? and (laskutusaika is not null) = ?"
-                     id
-                     tila-id
-                     laskutettu?]
-                    db/default-opts))
-       :warnings warnings})))
+                                                       current-korvattu-energiatodistus-id))]
+      (validate-db-row! db energiatodistus-db-row versio)
+      (first (db/with-db-exception-translation jdbc/update!
+               db
+               :energiatodistus
+               energiatodistus-db-row
+               ["id = ? and tila_id = ? and (laskutusaika is not null) = ?"
+                id
+                tila-id
+                laskutettu?]
+               db/default-opts)))))
 
 (defn- assert-update! [id result]
   (if (== result 0)
@@ -400,14 +399,14 @@
           db (:versio current-energiatodistus) energiatodistus))
       (assert-update!
        id
-       (:id (db-update-energiatodistus! db
-                                        id
-                                        (:versio current-energiatodistus)
-                                        energiatodistus
-                                        tila-id
-                                        rooli
-                                        laskutettu?
-                                        current-korvattu-energiatodistus-id)))
+       (db-update-energiatodistus! db
+                                   id
+                                   (:versio current-energiatodistus)
+                                   energiatodistus
+                                   tila-id
+                                   rooli
+                                   laskutettu?
+                                   current-korvattu-energiatodistus-id))
       nil)
     (exception/throw-ex-info!
       :not-found
