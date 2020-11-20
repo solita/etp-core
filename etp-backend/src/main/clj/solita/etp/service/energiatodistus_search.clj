@@ -43,7 +43,7 @@
        (apply deep/deep-merge)
        (flat/tree->flat ".")))
 
-(def admin-search-schema (schemas->search-schema
+(def private-search-schema (schemas->search-schema
                     {:energiatodistus energiatodistus-schema/Energiatodistus2013}
                     {:energiatodistus energiatodistus-schema/Energiatodistus2018}
                     geo-schema/Search))
@@ -173,7 +173,7 @@
 (defn search-schema [whoami]
   (if (rooli-service/public? whoami)
     public-search-schema
-    admin-search-schema))
+    private-search-schema))
 
 (defn sql-query [whoami {:keys [sort order limit offset where keyword]}]
   (schema/validate [[[(schema/one schema/Str "predicate") schema/Any]]] where)
