@@ -149,16 +149,28 @@
       (assoc-in-e-luokka
         [:tulokset :e-luokka] db versio)))
 
-(defn validate-db-row! [energiatodistus db versio]
-  (doseq [{{:keys [min max]} :error :keys [column-name]}
-          (find-numeric-column-validations db versio)]
-    (when-let [value ((-> column-name db/kebab-case keyword) energiatodistus)]
-      (when (or (< value min) (> value max))
-        (exception/throw-ex-info!
-          :invalid-value
-          (str "Property: " (to-property-name column-name)
-               " has an invalid value: " value)))))
-  energiatodistus)
+(defn check-error! [column-name value {:keys [min max]}]
+  (when (and value (or (< value min) (> value max)))
+    (exception/throw-ex-info!
+     :invalid-value
+     (str "Property: " (to-property-name column-name)
+          " has an invalid value: " value))))
+
+(defn check-warning [column-name value {:keys [min max]}]
+  (when (and value (or (< value min) (> value max)))
+    {:property (to-property-name column-name)
+     :value value
+     :min min
+     :max max}))
+
+(defn validate-db-row! [db energiatodistus versio]
+  (->> (find-numeric-column-validations db versio)
+       (keep (fn [{:keys [column-name] :as validation}]
+               (let [value ((-> column-name db/kebab-case keyword)
+                            energiatodistus)]
+                 (check-error! column-name value (:error validation))
+                 (check-warning column-name value (:warning validation)))))
+       doall))
 
 (defn flat->tree [energiatodistus]
   (->> energiatodistus
@@ -243,19 +255,21 @@
 (defn add-energiatodistus! [db whoami versio energiatodistus]
   (assert-korvaavuus-draft! db nil energiatodistus)
   (validate-sisainen-kuorma! db versio energiatodistus)
-  (-> (db/with-db-exception-translation
-        jdbc/insert! db
-        :energiatodistus
-        (-> energiatodistus
-            (assoc :versio versio
-                   :laatija-id (:id whoami))
-            (assoc-e-tehokkuus db versio)
-            (dissoc :kommentti)
-            energiatodistus->db-row
-            (validate-db-row! db versio))
-        db/default-opts)
-      first
-      :id))
+  (let [energiatodistus-db-row (-> energiatodistus
+                                   (assoc :versio versio
+                                          :laatija-id (:id whoami))
+                                   (assoc-e-tehokkuus db versio)
+                                   (dissoc :kommentti)
+                                   energiatodistus->db-row)
+        warnings (validate-db-row! db energiatodistus-db-row versio)]
+    {:id (-> (db/with-db-exception-translation jdbc/insert!
+               db
+               :energiatodistus
+               energiatodistus-db-row
+               db/default-opts)
+             first
+             :id)
+     :warnings warnings}))
 
 (defn assert-laatija! [whoami energiatodistus]
   (when (and (not= (:laatija-id energiatodistus) (:id whoami))
@@ -317,19 +331,29 @@
 (defn- db-update-energiatodistus! [db id versio energiatodistus
                                    tila-id rooli laskutettu?
                                    current-korvattu-energiatodistus-id]
-  (first (db/with-db-exception-translation jdbc/update!
-           db :energiatodistus
-           (-> energiatodistus
-               (assoc-e-tehokkuus db versio)
-               (assoc :versio versio)
-               energiatodistus->db-row
-               (dissoc :versio)
-               (select-energiatodistus-for-update id tila-id rooli laskutettu?)
-               (update-korvattu! db tila-id current-korvattu-energiatodistus-id)
-               (validate-db-row! db versio))
-           ["id = ? and tila_id = ? and (laskutusaika is not null) = ?"
-            id tila-id laskutettu?]
-           db/default-opts)))
+  (jdbc/with-db-transaction [db db]
+    (let [energiatodistus-db-row (-> energiatodistus
+                                     (assoc-e-tehokkuus db versio)
+                                     (assoc :versio versio)
+                                     energiatodistus->db-row
+                                     (dissoc :versio)
+                                     (select-energiatodistus-for-update id
+                                                                        tila-id
+                                                                        rooli
+                                                                        laskutettu?)
+                                     (update-korvattu! db
+                                                       tila-id
+                                                       current-korvattu-energiatodistus-id))]
+      (validate-db-row! db energiatodistus-db-row versio)
+      (first (db/with-db-exception-translation jdbc/update!
+               db
+               :energiatodistus
+               energiatodistus-db-row
+               ["id = ? and tila_id = ? and (laskutusaika is not null) = ?"
+                id
+                tila-id
+                laskutettu?]
+               db/default-opts)))))
 
 (defn- assert-update! [id result]
   (if (== result 0)
@@ -374,12 +398,16 @@
         (assert-korvaavuus-draft! db id energiatodistus)
         (validate-sisainen-kuorma!
           db (:versio current-energiatodistus) energiatodistus))
-      (assert-update! id
-        (db-update-energiatodistus!
-          db id (:versio current-energiatodistus)
-          energiatodistus
-          tila-id rooli laskutettu?
-          current-korvattu-energiatodistus-id))
+      (assert-update!
+       id
+       (db-update-energiatodistus! db
+                                   id
+                                   (:versio current-energiatodistus)
+                                   energiatodistus
+                                   tila-id
+                                   rooli
+                                   laskutettu?
+                                   current-korvattu-energiatodistus-id))
       nil)
     (exception/throw-ex-info!
       :not-found

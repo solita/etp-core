@@ -10,7 +10,7 @@
   {:post
     {:summary    "Lisää luonnostilaisen energiatodistuksen"
      :parameters {:body save-schema}
-     :responses  {201 {:body common-schema/Id}}
+     :responses  {201 {:body common-schema/IdAndWarnings}}
      :access     rooli-service/laatija?
      :handler    (fn [{:keys [db whoami parameters uri]}]
                    (api-response/with-exceptions

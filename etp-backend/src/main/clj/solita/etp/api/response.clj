@@ -45,8 +45,8 @@
         :body    (service-fn)})
      error-descriptions)))
 
-(defn created [path id]
-  (r/created (str path "/" id) {:id id}))
+(defn created [path {:keys [id] :as body}]
+  (r/created (str path "/" id) body))
 
 (def unauthorized {:status 401 :body "Unauthorized"})
 (def forbidden {:status 403 :body "Forbidden"})
