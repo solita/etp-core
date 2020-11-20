@@ -163,15 +163,13 @@
      :max max}))
 
 (defn validate-db-row! [db energiatodistus versio]
-  (reduce (fn [warnings {:keys [column-name] :as validation}]
-            (let [value ((-> column-name db/kebab-case keyword) energiatodistus)
-                  warning (check-warning column-name value (:warning validation))]
-              (check-error! column-name value (:error validation))
-              (if warning
-                (conj warnings warning)
-                warnings)))
-          []
-          (find-numeric-column-validations db versio)))
+  (->> (find-numeric-column-validations db versio)
+       (keep (fn [{:keys [column-name] :as validation}]
+               (let [value ((-> column-name db/kebab-case keyword)
+                            energiatodistus)]
+                 (check-error! column-name value (:error validation))
+                 (check-warning column-name value (:warning validation)))))
+       doall))
 
 (defn flat->tree [energiatodistus]
   (->> energiatodistus
@@ -332,29 +330,30 @@
 (defn- db-update-energiatodistus! [db id versio energiatodistus
                                    tila-id rooli laskutettu?
                                    current-korvattu-energiatodistus-id]
-  (let [energiatodistus-db-row (-> energiatodistus
-                                   (assoc-e-tehokkuus db versio)
-                                   (assoc :versio versio)
-                                   energiatodistus->db-row
-                                   (dissoc :versio)
-                                   (select-energiatodistus-for-update id
-                                                                      tila-id
-                                                                      rooli
-                                                                      laskutettu?)
-                                   (update-korvattu! db
-                                                     tila-id
-                                                     current-korvattu-energiatodistus-id))
-        warnings (validate-db-row! db energiatodistus-db-row versio)]
-    {:id (first (db/with-db-exception-translation jdbc/update!
-                  db
-                  :energiatodistus
-                  energiatodistus-db-row
-                  ["id = ? and tila_id = ? and (laskutusaika is not null) = ?"
-                   id
-                   tila-id
-                   laskutettu?]
-                  db/default-opts))
-     :warnings warnings}))
+  (jdbc/with-db-transaction [db db]
+    (let [energiatodistus-db-row (-> energiatodistus
+                                     (assoc-e-tehokkuus db versio)
+                                     (assoc :versio versio)
+                                     energiatodistus->db-row
+                                     (dissoc :versio)
+                                     (select-energiatodistus-for-update id
+                                                                        tila-id
+                                                                        rooli
+                                                                        laskutettu?)
+                                     (update-korvattu! db
+                                                       tila-id
+                                                       current-korvattu-energiatodistus-id))
+          warnings (validate-db-row! db energiatodistus-db-row versio)]
+      {:id (first (db/with-db-exception-translation jdbc/update!
+                    db
+                    :energiatodistus
+                    energiatodistus-db-row
+                    ["id = ? and tila_id = ? and (laskutusaika is not null) = ?"
+                     id
+                     tila-id
+                     laskutettu?]
+                    db/default-opts))
+       :warnings warnings})))
 
 (defn- assert-update! [id result]
   (if (== result 0)
