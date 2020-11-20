@@ -1,8 +1,11 @@
 (ns solita.etp.jwt
-  (:require [clojure.tools.logging :as log]
+  (:require [clojure.string :as str]
+            [clojure.tools.logging :as log]
             [buddy.core.keys :as keys]
             [buddy.sign.jwe :as jwe]
             [buddy.sign.jwt :as jwt]
+            [buddy.core.codecs :as codecs]
+            [buddy.core.codecs.base64 :as b64]
             [clj-http.client :as http]
 
             ;; TODO json namespace should probably not be
@@ -81,3 +84,7 @@
                      :data data-payload}))))
     (catch Exception e (log/error e (str "Exception when verifying JWTs: "
                                          (.getMessage e))))))
+
+(defn unverified-decoded-jwt [jwt]
+  (->> (str/split jwt #"\.")
+       (map #(-> % b64/decode codecs/bytes->str json/read-value))))
