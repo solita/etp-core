@@ -56,6 +56,9 @@
 ;; Misc config
 ;;
 
+(def local-dev-env-index "https://localhost:3000")
 (def trusted-jwt-iss (env "TRUSTED_JWT_ISS" "https://raw.githubusercontent.com/solita/etp-core/develop/etp-backend/src/test/resources/"))
 (def data-jwt-public-key-base-url (env "DATA_JWT_PUBLIC_KEY_BASE_URL" "https://raw.githubusercontent.com/solita/etp-core/develop/etp-backend/src/test/resources/"))
-(def cognito-logout-url (env "COGNITO_LOGOUT_URL" "https://localhost:3000"))
+(def keycloak-suomifi-logout-url (env "KEYCLOAK_SUOMIFI_LOGOUT_URL" local-dev-env-index))
+(def keycloak-virtu-logout-url (env "KEYCLOAK_VIRTU_LOGOUT_URL" local-dev-env-index))
+(def cognito-logout-url (env "COGNITO_LOGOUT_URL" local-dev-env-index))

@@ -1,5 +1,6 @@
 (ns solita.etp.handler
   (:require [clojure.walk :as w]
+            [ring.util.codec :as codec]
             [reitit.ring :as ring]
             [reitit.swagger :as swagger]
             [reitit.swagger-ui :as swagger-ui]
@@ -19,6 +20,7 @@
             [solita.etp.api.laatija :as laatija-api]
             [solita.etp.api.geo :as geo-api]
             [solita.etp.api.energiatodistus :as energiatodistus-api]
+            [solita.etp.service.rooli :as rooli-service]
             [solita.etp.config :as config]
             [solita.etp.security :as security]
             [solita.etp.exception :as exception]
@@ -29,6 +31,13 @@
    #(if (and (map? %) (contains? % :summary))
       (assoc % :tags #{tag}) %)
    routes))
+
+(defn logout-location [whoami]
+  (str (if (rooli-service/paakayttaja? whoami)
+         config/keycloak-virtu-logout-url
+         config/keycloak-suomifi-logout-url)
+       "?redirect_uri="
+       (codec/url-encode config/cognito-logout-url)))
 
 (def system-routes
   [["/swagger.json"
@@ -48,12 +57,14 @@
                       {:status 302
                        :headers {"Location" (-> parameters :query :redirect)}})}}]
    ["/logout"
-    {:get {:summary "Callback used to redirect user to cognito logout"
-           :tags    #{"System"}
-           :handler (fn [_]
-                      {:status  302
-                       :headers {"Set-Cookie" "AWSELBAuthSessionCookie-0=; Path=/; Max-Age-1; HttpOnly; Secure;"
-                                 "Location"   config/cognito-logout-url}})}}]
+    {:get {:summary    "Callback used to redirect user to cognito logout"
+           :middleware [[security/wrap-jwt-payloads]
+                        [security/wrap-whoami-from-jwt-payloads]]
+           :tags       #{"System"}
+           :handler    (fn [{:keys [whoami]}]
+                         {:status  302
+                          :headers {"Set-Cookie" "AWSELBAuthSessionCookie-0=; Path=/; Max-Age-1; HttpOnly; Secure;"
+                                    "Location"   (logout-location whoami)}})}}]
    ;; TODO Temporary endpoint for seeing headers added by load balancer
    ["/headers"
     {:get {:summary "Endpoint for seeing request headers"
