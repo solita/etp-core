@@ -34,12 +34,8 @@
    routes))
 
 (defn logout-location [req]
-  (if-let [data-jwt-body (some-> req
-                                 :headers
-                                 (get "x-amzn-oidc-data")
-                                 jwt/unverified-decoded-jwt
-                                 second)]
-    (str (if (:custom:VIRTU_localID data-jwt-body)
+  (if-let [{:keys [data]} (jwt/req->verified-jwt-payloads req)]
+    (str (if (:custom:VIRTU_localID data)
            config/keycloak-virtu-logout-url
            config/keycloak-suomifi-logout-url)
          "?redirect_uri="

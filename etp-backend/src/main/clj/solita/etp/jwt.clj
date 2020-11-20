@@ -84,7 +84,3 @@
                      :data data-payload}))))
     (catch Exception e (log/error e (str "Exception when verifying JWTs: "
                                          (.getMessage e))))))
-
-(defn unverified-decoded-jwt [jwt]
-  (->> (str/split jwt #"\.")
-       (map #(-> % b64/decode codecs/bytes->str json/read-value))))
