@@ -157,6 +157,24 @@
                                (str (Instant/now))]]]
                             nil))))))
 
+(t/deftest add-and-sort-by-allekirjoisaika-test
+  (let [whoami (add-laatija!)
+        id1 (energiatodistus-test/add-energiatodistus-and-sign!
+              (energiatodistus-test/generate-energiatodistus-2018-complete)
+              (:id whoami))
+        id2 (energiatodistus-test/add-energiatodistus-and-sign!
+              (energiatodistus-test/generate-energiatodistus-2018-complete)
+              (:id whoami))]
+
+    (t/is (= [id1 id2] (mapv :id (energiatodistus-search-service/search
+                         ts/*db* whoami
+                         {:sort "energiatodistus.allekirjoitusaika"}))))
+
+    (t/is (= [id2 id1] (mapv :id (energiatodistus-search-service/search
+                                   ts/*db* whoami
+                                   {:sort "energiatodistus.allekirjoitusaika"
+                                    :order "desc" }))))))
+
 (t/deftest add-and-find-by-nimi-and-id-test
   (let [whoami (add-laatija!)
         energiatodistus (-> (energiatodistus-test/generate-energiatodistus-2018)
