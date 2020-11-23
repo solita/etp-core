@@ -1,5 +1,6 @@
 (ns solita.etp.handler
   (:require [clojure.walk :as w]
+            [ring.middleware.cookies :as cookies]
             [ring.util.codec :as codec]
             [reitit.ring :as ring]
             [reitit.swagger :as swagger]
@@ -42,6 +43,12 @@
          (codec/url-encode config/cognito-logout-url))
     config/cognito-logout-url))
 
+(def empty-cookie {:value ""
+                   :path "/"
+                   :max-age 0
+                   :http-only true
+                   :secure true})
+
 (def system-routes
   [["/swagger.json"
     {:get {:no-doc true
@@ -62,11 +69,12 @@
    ["/logout"
     {:get {:summary    "Callback used to redirect user to cognito logout"
            :tags       #{"System"}
+           :middleware [[cookies/wrap-cookies]]
            :handler    (fn [req]
-
                          {:status  302
-                          :headers {"Set-Cookie" "AWSELBAuthSessionCookie-0=; Path=/; Max-Age-1; HttpOnly; Secure;"
-                                    "Location"   (logout-location req)}})}}]
+                          :headers {"Location" (logout-location req)}
+                          :cookies {"AWSELBAuthSessionCookie-0" empty-cookie
+                                    "AWSELBAuthSessionCookie-1" empty-cookie}})}}]
    ;; TODO Temporary endpoint for seeing headers added by load balancer
    ["/headers"
     {:get {:summary "Endpoint for seeing request headers"
