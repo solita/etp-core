@@ -43,7 +43,7 @@
        (apply deep/deep-merge)
        (flat/tree->flat ".")))
 
-(def search-schema (schemas->search-schema
+(def private-search-schema (schemas->search-schema
                     {:energiatodistus energiatodistus-schema/Energiatodistus2013}
                     {:energiatodistus energiatodistus-schema/Energiatodistus2018}
                     geo-schema/Search))
@@ -138,16 +138,12 @@
     (cons (str/join (format " %s " logic-operator) (map first sql-expressions))
           (mapcat rest sql-expressions))))
 
-(defn where->sql [whoami where]
-  (let [search-schema (if (rooli-service/public? whoami)
-                        public-search-schema
-                        search-schema)]
-    (expression-seq->sql
-     "or"
-     #(expression-seq->sql "and"
-                           (partial predicate-expression->sql search-schema)
-                           %)
-     where)))
+(defn where->sql [where search-schema]
+  (expression-seq->sql
+    "or"
+    #(expression-seq->sql
+       "and" (partial predicate-expression->sql search-schema) %)
+    where))
 
 (defn keyword->sql [keyword]
   (when (-> keyword str/blank? not)
@@ -174,9 +170,15 @@
       (energiatodistus.versio = 2018 AND
        energiatodistus.pt$kayttotarkoitus NOT IN ('YAT', 'KAT', 'KREP')))"]))
 
+(defn search-schema [whoami]
+  (if (rooli-service/public? whoami)
+    public-search-schema
+    private-search-schema))
+
 (defn sql-query [whoami {:keys [sort order limit offset where keyword]}]
   (schema/validate [[[(schema/one schema/Str "predicate") schema/Any]]] where)
-  (let [[where-sql & where-params] (where->sql whoami where)
+  (let [search-schema (search-schema whoami)
+        [where-sql & where-params] (where->sql where search-schema)
         [keyword-sql & keyword-params] (keyword->sql keyword)
         [visibility-sql & visibility-params] (whoami->sql whoami)]
     (concat [(str base-query
@@ -188,7 +190,7 @@
                   (when-not (str/blank? keyword-sql)
                     (format " and (%s) " keyword-sql))
                   (when-not (str/blank? sort)
-                    (str \newline "order by " (field->sql sort) " " (or order "asc")))
+                    (str \newline "order by " (field->sql sort search-schema) " " (or order "asc")))
                   (str \newline "limit " (or limit 100))
                   (when-not (nil? offset) (str \newline "offset " offset)))]
             visibility-params
