@@ -35,13 +35,17 @@
    routes))
 
 (defn logout-location [req]
-  (if-let [{:keys [data]} (jwt/req->verified-jwt-payloads req)]
-    (str (if (:custom:VIRTU_localID data)
-           config/keycloak-virtu-logout-url
-           config/keycloak-suomifi-logout-url)
-         "?redirect_uri="
-         (codec/url-encode config/cognito-logout-url))
-    config/cognito-logout-url))
+  (let [referer (-> req :headers (get "referer"))
+        {:keys [data]} (jwt/req->verified-jwt-payloads req)]
+    (str config/cognito-logout-url
+         "&logout_uri="
+         (if data
+           (str (if (:custom:VIRTU_localID data)
+                  config/keycloak-virtu-logout-url
+                  config/keycloak-suomifi-logout-url)
+                "?redirect_uri="
+                (codec/url-encode referer))
+           referer))))
 
 (def empty-cookie {:value ""
                    :path "/"
