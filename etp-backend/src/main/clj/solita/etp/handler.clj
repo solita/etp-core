@@ -1,5 +1,6 @@
 (ns solita.etp.handler
-  (:require [clojure.walk :as w]
+  (:require [clojure.string :as str]
+            [clojure.walk :as w]
             [ring.middleware.cookies :as cookies]
             [ring.util.codec :as codec]
             [reitit.ring :as ring]
@@ -35,17 +36,20 @@
    routes))
 
 (defn logout-location [req]
-  (let [referer (-> req :headers (get "referer"))
+  (let [referer (some-> req
+                        :headers
+                        (get "referer")
+                        (str/replace #"/api/logout" ""))
         {:keys [data]} (jwt/req->verified-jwt-payloads req)]
     (str config/cognito-logout-url
          "&logout_uri="
-         (if data
-           (str (if (:custom:VIRTU_localID data)
-                  config/keycloak-virtu-logout-url
-                  config/keycloak-suomifi-logout-url)
-                "?redirect_uri="
-                (codec/url-encode referer))
-           referer))))
+         (codec/url-encode (if data
+                             (str (if (:custom:VIRTU_localID data)
+                                    config/keycloak-virtu-logout-url
+                                    config/keycloak-suomifi-logout-url)
+                                  "?redirect_uri="
+                                  referer)
+                             referer)))))
 
 (def empty-cookie {:value ""
                    :path "/"
