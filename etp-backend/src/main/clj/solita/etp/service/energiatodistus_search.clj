@@ -43,15 +43,17 @@
        (apply deep/deep-merge)
        (flat/tree->flat ".")))
 
-(def private-search-schema (schemas->search-schema
-                    {:energiatodistus energiatodistus-schema/Energiatodistus2013}
-                    {:energiatodistus energiatodistus-schema/Energiatodistus2018}
-                    geo-schema/Search))
+(def private-search-schema
+  (schemas->search-schema
+   {:energiatodistus energiatodistus-schema/Energiatodistus2013}
+   {:energiatodistus energiatodistus-schema/Energiatodistus2018}
+   geo-schema/Search))
 
-(def public-search-schema (schemas->search-schema
-                           public-energiatodistus-schema/Energiatodistus2013
-                           public-energiatodistus-schema/Energiatodistus2018
-                           geo-schema/Search))
+(def public-search-schema
+  (schemas->search-schema
+   {:energiatodistus public-energiatodistus-schema/Energiatodistus2013}
+   {:energiatodistus public-energiatodistus-schema/Energiatodistus2018}
+   geo-schema/Search))
 
 (def base-query
   "SELECT energiatodistus.*,

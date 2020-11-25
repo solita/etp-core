@@ -200,12 +200,13 @@
                                                       2018)]
     (t/is (empty? (search searcher [[["=" "energiatodistus.id" id]]] nil)))))
 
-(t/deftest paakayttaja-cant-find-luonnokset-test
+(t/deftest public-and-paakayttaja-cant-find-luonnokset-test
   (let [laatija (add-laatija!)
         energiatodistus (energiatodistus-test/generate-energiatodistus-2018)
         id (energiatodistus-test/add-energiatodistus! energiatodistus
                                                       (:id laatija)
                                                       2018)]
+    (t/is (empty? (search nil [[["=" "energiatodistus.id" id]]] nil)))
     (t/is (empty? (search paakayttaja [[["=" "energiatodistus.id" id]]] nil)))))
 
 (t/deftest deleted-are-not-found-test
@@ -237,6 +238,12 @@
   (t/is (= (catch-ex-data #(search paakayttaja [[["asdf" "id" 1]]] nil))
            {:type :unknown-predicate :predicate "asdf"
             :message "Unknown predicate: asdf"}))
+  (t/is (= (catch-ex-data #(search nil [[["="
+                                          "energiatodistus.perustiedot.tilaaja"
+                                          "test"]]] nil))
+           {:type :unknown-field
+            :field "energiatodistus.perustiedot.tilaaja"
+            :message "Unknown field: energiatodistus.perustiedot.tilaaja"}))
   (t/is (= (catch-ex-data #(search paakayttaja [[["=" "asdf" "test"]]] nil))
            {:type :unknown-field
             :field "asdf"
