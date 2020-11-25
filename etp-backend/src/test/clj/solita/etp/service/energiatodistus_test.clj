@@ -174,20 +174,22 @@
 
 (t/deftest create-energiatodistus-and-delete-test
   (let [laatija-id (add-laatija!)
+        db (ts/db-user laatija-id)
         id (add-energiatodistus! (generate-energiatodistus-2018) laatija-id)]
     (find-energiatodistus id)
-    (service/delete-energiatodistus-luonnos! ts/*db*
+    (service/delete-energiatodistus-luonnos! db
                                              {:id laatija-id}
                                              id)
-    (t/is (nil? (service/find-energiatodistus ts/*db* id)))))
+    (t/is (nil? (service/find-energiatodistus db id)))))
 
 (defn energiatodistus-tila [id] (-> id find-energiatodistus :tila-id service/tila-key))
 
 (defn add-energiatodistus-and-sign! [energiatodistus laatija-id]
-  (let [id (add-energiatodistus! energiatodistus laatija-id)]
+  (let [id (add-energiatodistus! energiatodistus laatija-id)
+        db (ts/db-user laatija-id)]
     (t/is (= (energiatodistus-tila id) :draft))
-    (service/start-energiatodistus-signing! ts/*db* {:id laatija-id} id)
-    (t/is (= (service/end-energiatodistus-signing! ts/*db* {:id laatija-id} id)
+    (service/start-energiatodistus-signing! db {:id laatija-id} id)
+    (t/is (= (service/end-energiatodistus-signing! db {:id laatija-id} id)
              :ok))
     (t/is (= (energiatodistus-tila id) :signed))
     id))
@@ -195,60 +197,64 @@
 (t/deftest start-energiatodistus-signing!-test
   (let [laatija-id (add-laatija!)
         whoami {:id laatija-id :rooli 0}
-        id (add-energiatodistus! (generate-energiatodistus-2018-complete) laatija-id)]
+        id (add-energiatodistus! (generate-energiatodistus-2018-complete) laatija-id)
+        db (ts/db-user laatija-id)]
     (t/is (= (energiatodistus-tila id) :draft))
-    (t/is (= (service/start-energiatodistus-signing! ts/*db* whoami id) :ok))
+    (t/is (= (service/start-energiatodistus-signing! db whoami id) :ok))
     (t/is (= (energiatodistus-tila id) :in-signing))
-    (t/is (= (service/start-energiatodistus-signing! ts/*db* whoami id) :already-in-signing))))
+    (t/is (= (service/start-energiatodistus-signing! db whoami id) :already-in-signing))))
 
 (t/deftest stop-energiatodistus-signing!-test
   (let [laatija-id (add-laatija!)
         whoami {:id laatija-id :rooli 0}
-        id (add-energiatodistus! (generate-energiatodistus-2018-complete) laatija-id)]
+        id (add-energiatodistus! (generate-energiatodistus-2018-complete) laatija-id)
+        db (ts/db-user laatija-id)]
     (t/is (= (energiatodistus-tila id) :draft))
-    (t/is (=  (service/end-energiatodistus-signing! ts/*db* whoami id)
+    (t/is (=  (service/end-energiatodistus-signing! db whoami id)
               :not-in-signing))
     (t/is (= (energiatodistus-tila id) :draft))
-    (service/start-energiatodistus-signing! ts/*db* whoami id)
-    (t/is (= (service/end-energiatodistus-signing! ts/*db* whoami id)
+    (service/start-energiatodistus-signing! db whoami id)
+    (t/is (= (service/end-energiatodistus-signing! db whoami id)
              :ok))
     (t/is (= (energiatodistus-tila id) :signed))
-    (t/is (= (service/end-energiatodistus-signing! ts/*db* whoami id)
+    (t/is (= (service/end-energiatodistus-signing! db whoami id)
              :already-signed))))
 
 (t/deftest cancel-energiatodistus-signing!-test
   (let [laatija-id (add-laatija!)
         whoami {:id laatija-id :rooli 0}
-        id (add-energiatodistus! (generate-energiatodistus-2018-complete) laatija-id)]
+        id (add-energiatodistus! (generate-energiatodistus-2018-complete) laatija-id)
+        db (ts/db-user laatija-id)]
 
     (t/is (= (energiatodistus-tila id) :draft))
-    (t/is (=  (service/cancel-energiatodistus-signing! ts/*db* whoami id)
+    (t/is (=  (service/cancel-energiatodistus-signing! db whoami id)
               :not-in-signing))
     (t/is (= (energiatodistus-tila id) :draft))
 
-    (service/start-energiatodistus-signing! ts/*db* whoami id)
-    (t/is (= (service/cancel-energiatodistus-signing! ts/*db* whoami id)
+    (service/start-energiatodistus-signing! db whoami id)
+    (t/is (= (service/cancel-energiatodistus-signing! db whoami id)
              :ok))
     (t/is (= (energiatodistus-tila id) :draft))
 
-    (service/start-energiatodistus-signing! ts/*db* whoami id)
-    (service/end-energiatodistus-signing! ts/*db* whoami id)
-    (t/is (= (service/cancel-energiatodistus-signing! ts/*db* whoami id)
+    (service/start-energiatodistus-signing! db whoami id)
+    (service/end-energiatodistus-signing! db whoami id)
+    (t/is (= (service/cancel-energiatodistus-signing! db whoami id)
              :already-signed))))
 
 (t/deftest update-signed-energiatodistus!-test
   (let [laatija-id               (add-laatija!)
+        db                       (ts/db-user laatija-id)
         whoami                   {:id laatija-id :rooli 0}
         original-energiatodistus (generate-energiatodistus-2018-complete)
         id                       (add-energiatodistus! original-energiatodistus laatija-id)
         update-energiatodistus   (assoc-in (generate-energiatodistus-2018-complete) [:perustiedot :rakennustunnus] "103515074X")]
 
     (t/is (= (energiatodistus-tila id) :draft))
-    (service/start-energiatodistus-signing! ts/*db* whoami id)
-    (t/is (= (service/end-energiatodistus-signing! ts/*db* whoami id)
+    (service/start-energiatodistus-signing! db whoami id)
+    (t/is (= (service/end-energiatodistus-signing! db whoami id)
              :ok))
     (t/is (= (energiatodistus-tila id) :signed))
-    (service/update-energiatodistus! ts/*db* whoami id update-energiatodistus)
+    (service/update-energiatodistus! db whoami id update-energiatodistus)
     (let [energiatodistus (find-energiatodistus id)]
       (t/is (= (-> (energiatodistus-with-db-fields original-energiatodistus id laatija-id)
                    (assoc-in [:perustiedot :rakennustunnus] (-> update-energiatodistus :perustiedot :rakennustunnus))
@@ -272,6 +278,7 @@
 (t/deftest korvaa-energiatodistus-states!-test
   (let [laatija-id                            (add-laatija!)
         whoami                                {:id laatija-id :rooli 0}
+        db                                    (ts/db-user laatija-id)
         energiatodistus                       (generate-energiatodistus-2018-complete)
         signed-energiatodistus-id             (add-energiatodistus-and-sign! energiatodistus laatija-id)
         replaced-energiatodistus-id           (add-energiatodistus-and-sign! energiatodistus laatija-id)
@@ -292,14 +299,14 @@
 
     ; update energiatodistus with illegals and valid replaceable energiatodistus
     (t/is (thrown-with-msg? ExceptionInfo #"Replaceable energiatodistus 101 does not exists"
-                            (service/update-energiatodistus! ts/*db* whoami update-energiatodistus-id (assoc energiatodistus :korvattu-energiatodistus-id 101))))
+                            (service/update-energiatodistus! db whoami update-energiatodistus-id (assoc energiatodistus :korvattu-energiatodistus-id 101))))
     (t/is (thrown-with-msg? ExceptionInfo #"Replaceable energiatodistus [0-9]+ is not in signed or discarded state"
-                            (service/update-energiatodistus! ts/*db* whoami update-energiatodistus-id (assoc energiatodistus :korvattu-energiatodistus-id draft-energiatodistus-id))))
+                            (service/update-energiatodistus! db whoami update-energiatodistus-id (assoc energiatodistus :korvattu-energiatodistus-id draft-energiatodistus-id))))
     (t/is (thrown-with-msg? ExceptionInfo #"Replaceable energiatodistus [0-9]+ is already replaced"
-                            (service/update-energiatodistus! ts/*db* whoami update-energiatodistus-id (assoc energiatodistus :korvattu-energiatodistus-id replaced-energiatodistus-id))))
+                            (service/update-energiatodistus! db whoami update-energiatodistus-id (assoc energiatodistus :korvattu-energiatodistus-id replaced-energiatodistus-id))))
 
     (service/update-energiatodistus!
-      ts/*db* whoami update-energiatodistus-id
+      db whoami update-energiatodistus-id
       (assoc energiatodistus :korvattu-energiatodistus-id second-replaceable-energiatodistus-id))
 
     ; check states of energiatodistukset

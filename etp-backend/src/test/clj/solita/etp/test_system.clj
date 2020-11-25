@@ -11,6 +11,11 @@
 (def ^:dynamic *db* nil)
 (def ^:dynamic *aws-s3-client* nil)
 
+(defn db-user
+  ([kayttaja-id] (db-user *db* kayttaja-id))
+  ([db kayttaja-id]
+   (assoc db :application-name (str kayttaja-id "@core.etp.test"))))
+
 (defn config-for-management [bucket]
   (merge (config/db {:username       (config/env "DB_MANAGEMENT_USER" "etp")
                      :password       (config/env "DB_MANAGEMENT_PASSWORD" "etp")
@@ -24,12 +29,12 @@
          (config/aws-s3-client {:bucket bucket})))
 
 (defn create-db! [db db-name]
-  (jdbc/execute! db
+  (jdbc/execute! (db-user db "admin")
                  [(format "CREATE DATABASE %s TEMPLATE postgres" db-name)]
                  {:transaction? false}))
 
 (defn drop-db! [db db-name]
-  (jdbc/execute! db
+  (jdbc/execute! (db-user db "admin")
                  [(format "DROP DATABASE IF EXISTS %s" db-name)]
                  {:transaction? false}))
 
@@ -59,16 +64,13 @@
       (create-db! management-db db-name)
       (create-bucket! management-aws-s3-client)
       (let [test-system (ig/init (config-for-tests db-name bucket-name))]
-        (with-bindings {#'*db*            (:solita.etp/db test-system)
-                        #'*aws-s3-client* (:solita.etp/aws-s3-client test-system)}
-          (common-jdbc/with-application-name-support f))
-        (ig/halt! test-system))
+        (with-bindings
+          {#'*db*            (db-user (:solita.etp/db test-system) "public")
+           #'*aws-s3-client* (:solita.etp/aws-s3-client test-system)}
+          (try (f)
+               (finally (ig/halt! test-system)))))
       (finally
         (drop-db! management-db db-name)
         (drop-bucket! management-aws-s3-client)
         (ig/halt! management-system)))))
 
-(defn db-user
-  ([kayttaja-id] (db-user *db* kayttaja-id))
-  ([db kayttaja-id]
-    (assoc db :application-name (str kayttaja-id "@core.etp.test"))))

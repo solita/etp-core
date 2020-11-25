@@ -79,17 +79,18 @@
 
 (t/deftest find-energiatodistus-digest-test
   (let [laatija-id (energiatodistus-test/add-laatija!)
+        db (ts/db-user laatija-id)
         id (energiatodistus-test/add-energiatodistus!
              (energiatodistus-test/generate-energiatodistus-2018-complete)
              laatija-id)
         whoami {:id laatija-id}]
-    (t/is (= (service/find-energiatodistus-digest ts/*db* ts/*aws-s3-client* id "fi")
+    (t/is (= (service/find-energiatodistus-digest db ts/*aws-s3-client* id "fi")
              :not-in-signing))
-    (energiatodistus-service/start-energiatodistus-signing! ts/*db* whoami id)
-    (t/is (contains? (service/find-energiatodistus-digest ts/*db* ts/*aws-s3-client* id "fi")
+    (energiatodistus-service/start-energiatodistus-signing! db whoami id)
+    (t/is (contains? (service/find-energiatodistus-digest db ts/*aws-s3-client* id "fi")
                      :digest))
-    (energiatodistus-service/end-energiatodistus-signing! ts/*db* whoami id)
-    (t/is (= (service/find-energiatodistus-digest ts/*db* ts/*aws-s3-client* id "fi")
+    (energiatodistus-service/end-energiatodistus-signing! db whoami id)
+    (t/is (= (service/find-energiatodistus-digest db ts/*aws-s3-client* id "fi")
              :already-signed))))
 
 (t/deftest comparable-name-test
@@ -105,17 +106,18 @@
 
 (t/deftest sign-energiatodistus-test
   (let [laatija-id (energiatodistus-test/add-laatija!)
+        db (ts/db-user laatija-id)
         id (energiatodistus-test/add-energiatodistus!
              (energiatodistus-test/generate-energiatodistus-2018-complete)
              laatija-id)
         whoami {:id laatija-id}]
-    (t/is (= (service/sign-energiatodistus-pdf ts/*db* ts/*aws-s3-client* whoami id "fi" nil)
+    (t/is (= (service/sign-energiatodistus-pdf db ts/*aws-s3-client* whoami id "fi" nil)
              :not-in-signing))
-    (energiatodistus-service/start-energiatodistus-signing! ts/*db* whoami id)
+    (energiatodistus-service/start-energiatodistus-signing! db whoami id)
 
     ;; Is it possible to somehow create a valid signature and chain for testing
     ;; the success case?
 
-    (energiatodistus-service/end-energiatodistus-signing! ts/*db* whoami id)
-    (t/is (= (service/sign-energiatodistus-pdf ts/*db* ts/*aws-s3-client* whoami id "fi" nil)
+    (energiatodistus-service/end-energiatodistus-signing! db whoami id)
+    (t/is (= (service/sign-energiatodistus-pdf db ts/*aws-s3-client* whoami id "fi" nil)
              :already-signed))))
