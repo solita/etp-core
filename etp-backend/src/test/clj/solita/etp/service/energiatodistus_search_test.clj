@@ -210,11 +210,12 @@
 
 (t/deftest deleted-are-not-found-test
   (let [laatija (add-laatija!)
+        db (ts/db-user (:id laatija))
         energiatodistus (energiatodistus-test/generate-energiatodistus-2018)
         id (energiatodistus-test/add-energiatodistus! energiatodistus
                                                       (:id laatija)
                                                       2018)]
-    (energiatodistus-service/delete-energiatodistus-luonnos! ts/*db* laatija id)
+    (energiatodistus-service/delete-energiatodistus-luonnos! db laatija id)
     (t/is (empty? (search laatija [[["=" "energiatodistus.id" id]]] nil)))
     (t/is (empty? (search paakayttaja [[["=" "energiatodistus.id" id]]] nil)))))
 

@@ -5,10 +5,14 @@
             [jeesql.core :as jeesql]
             [jeesql.generate :as jeesql-generate]
             [clojure.string :as str]
-            [solita.common.map :as map])
+            [solita.common.map :as map]
+            [solita.common.jdbc :as common-jdbc]
+            [solita.etp.exception :as exception])
   (:import (org.postgresql.util PSQLException ServerErrorMessage)
            (java.time Instant)
-           (java.sql Timestamp)))
+           (java.sql Timestamp PreparedStatement Date)
+           (clojure.lang IPersistentVector)
+           (org.postgresql.jdbc PgArray)))
 
 (defmethod ig/init-key :solita.etp/db
   [_ opts]
@@ -87,29 +91,34 @@
 (def default-opts {:entities snake-case
                    :identifiers kebab-case})
 
-(defn kebab-case-keys [object]
-  (map/map-keys (comp keyword kebab-case name) object))
+;;
+;; Clojure java jdbc protocol extensions
+;;
 
-;;
-;; Protocol extensions
-;;
+(defn- set-application-name! [connection application-name]
+  (if (empty? application-name)
+    (exception/illegal-argument! "Database application name is missing.")
+    (common-jdbc/set-application-name! connection application-name)))
+
+(common-jdbc/add-connection-interceptor!
+  #(set-application-name! %1 (:application-name %2)))
 
 (extend-protocol jdbc/IResultSetReadColumn
-  java.sql.Date
+  Date
   (result-set-read-column [x _ _]
     (.toLocalDate x))
 
-  java.sql.Timestamp
+  Timestamp
   (result-set-read-column [x _ _]
     (.toInstant x))
 
-  org.postgresql.jdbc.PgArray
+  PgArray
   (result-set-read-column [x _ _]
     (-> x .getArray vec)))
 
-(extend-protocol clojure.java.jdbc/ISQLParameter
-  clojure.lang.IPersistentVector
-  (set-parameter [v ^java.sql.PreparedStatement stmt ^long i]
+(extend-protocol jdbc/ISQLParameter
+  IPersistentVector
+  (set-parameter [v ^PreparedStatement stmt ^long i]
     (let [conn (.getConnection stmt)
           meta (.getParameterMetaData stmt)
           type-name (.getParameterTypeName meta i)]
@@ -118,5 +127,5 @@
         (.setObject stmt i v))))
 
   Instant
-  (set-parameter [^Instant instant ^java.sql.PreparedStatement stmt ^long i]
+  (set-parameter [^Instant instant ^PreparedStatement stmt ^long i]
     (.setObject stmt i (Timestamp/from instant))))
