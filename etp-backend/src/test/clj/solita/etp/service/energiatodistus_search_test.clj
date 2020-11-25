@@ -238,6 +238,12 @@
   (t/is (= (catch-ex-data #(search paakayttaja [[["asdf" "id" 1]]] nil))
            {:type :unknown-predicate :predicate "asdf"
             :message "Unknown predicate: asdf"}))
+  (t/is (= (catch-ex-data #(search nil [[["="
+                                          "energiatodistus.perustiedot.tilaaja"
+                                          "test"]]] nil))
+           {:type :unknown-field
+            :field "energiatodistus.perustiedot.tilaaja"
+            :message "Unknown field: energiatodistus.perustiedot.tilaaja"}))
   (t/is (= (catch-ex-data #(search paakayttaja [[["=" "asdf" "test"]]] nil))
            {:type :unknown-field
             :field "asdf"
