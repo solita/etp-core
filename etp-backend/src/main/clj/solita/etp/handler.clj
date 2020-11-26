@@ -35,19 +35,21 @@
       (assoc % :tags #{tag}) %)
    routes))
 
-(defn logout-location [req]
-  (let [referer (some-> req
-                        :headers
-                        (get "referer")
-                        (str/replace #"/api/logout" ""))
-        {:keys [data]} (jwt/req->verified-jwt-payloads req)]
-    (str config/cognito-logout-url
-         "&logout_uri="
-         (if data
+(defn logout-location-by-headers [{:strs [host referer] :or {referer ""}}]
+  (let [host (str "https://" host)]
+    (if (str/starts-with? referer (str/replace host #":[0-9]+" ""))
+      (str/replace referer #"/api/logout" "")
+      host)))
+
+(defn logout-location [{:keys [headers] :as req}]
+  (let [{:keys [data]} (jwt/req->verified-jwt-payloads req)]
+    (if data
+      (str config/cognito-logout-url
+           "&logout_uri="
            (str (if (:custom:VIRTU_localID data)
                   config/keycloak-virtu-logout-url
-                  config/keycloak-suomifi-logout-url))
-           referer))))
+                  config/keycloak-suomifi-logout-url)))
+      (logout-location-by-headers headers))))
 
 (def empty-cookie {:value ""
                    :path "/"
