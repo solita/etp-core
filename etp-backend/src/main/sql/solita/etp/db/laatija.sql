@@ -55,12 +55,14 @@ SELECT l.id, k.henkilotunnus, l.patevyystaso,
 FROM laatija l INNER JOIN kayttaja k ON l.id = k.id WHERE k.henkilotunnus = :henkilotunnus
 
 -- name: select-laatija-yritykset
-select yritys_id "yritys-id" from laatija_yritys where laatija_id = :id
+select yritys_id "yritys-id" from laatija_yritys
+where laatija_id = :id and tila_id <> 2
 
 -- name: insert-laatija-yritys!
 insert into laatija_yritys (laatija_id, yritys_id)
 values (:laatija-id, :yritys-id)
-on conflict (laatija_id, yritys_id) do nothing
+on conflict (laatija_id, yritys_id) do update set tila_id = 0
 
 -- name: delete-laatija-yritys!
-delete from laatija_yritys where laatija_id = :laatija-id and yritys_id = :yritys-id
+update laatija_yritys set tila_id = 2
+where laatija_id = :laatija-id and yritys_id = :yritys-id

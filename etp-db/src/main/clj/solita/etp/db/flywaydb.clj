@@ -14,7 +14,7 @@
      "- migrate"]))
 
 (def flyway-configuration {
-   ConfigUtils/SCHEMAS                 "etp"
+   ConfigUtils/SCHEMAS                 "etp,audit"
    ConfigUtils/SQL_MIGRATION_PREFIX    "v"
    ConfigUtils/SQL_MIGRATION_SEPARATOR "-"
    ConfigUtils/REPEATABLE_SQL_MIGRATION_PREFIX "r"

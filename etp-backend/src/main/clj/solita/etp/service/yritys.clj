@@ -18,6 +18,9 @@
 (defn find-all-yritykset [db]
   (yritys-db/select-all-yritykset db))
 
+(defn find-laatijat [db id]
+  (yritys-db/select-laatijat db {:id id}))
+
 (defn find-all-laskutuskielet [db]
   (yritys-db/select-all-laskutuskielet db))
 

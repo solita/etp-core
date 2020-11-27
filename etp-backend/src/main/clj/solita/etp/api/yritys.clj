@@ -42,7 +42,14 @@
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
                            (api-response/put-response
                              (yritys-service/update-yritys! db id (:body parameters))
-                             (str "Yritys " id " does not exists.")))}}]]]
+                             (str "Yritys " id " does not exists.")))}}]
+     ["/laatijat"
+      {:get {:summary    "Hae yrityksen laatijat"
+             :parameters {:path {:id common-schema/Key}}
+             :responses  {200 {:body [yritys-schema/Laatija]}}
+             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                           (r/response
+                             (yritys-service/find-laatijat db id)))}}]]]
    ["/laskutuskielet/"
     {:get {:summary    "Hae laskutuskielet -luokittelu"
            :responses  {200 {:body [common-schema/Luokittelu]}}

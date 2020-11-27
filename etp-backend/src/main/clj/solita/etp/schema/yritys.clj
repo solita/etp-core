@@ -20,3 +20,10 @@
 (def Verkkolaskuoperaattori
   (merge common-schema/Id {:valittajatunnus schema/Str
                            :nimi            schema/Str}))
+
+(def Laatija
+  {:etunimi  schema/Str
+   :sukunimi schema/Str
+   :modifiedby-name schema/Str
+   :modifytime common-schema/Instant
+   :tila-id  common-schema/Key})
