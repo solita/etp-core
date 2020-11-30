@@ -42,7 +42,28 @@
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
                            (api-response/put-response
                              (yritys-service/update-yritys! db id (:body parameters))
-                             (str "Yritys " id " does not exists.")))}}]]]
+                             (str "Yritys " id " does not exists.")))}}]
+     ["/laatijat"
+      [""
+       {:get {:summary    "Hae yrityksen laatijat"
+              :parameters {:path {:id common-schema/Key}}
+              :responses  {200 {:body [yritys-schema/Laatija]}}
+              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                            (r/response
+                              (yritys-service/find-laatijat db id)))}}]
+      ["/:laatija-id"
+       {:put {:summary    "Liitä laatija yritykseen - hyväksytty"
+              :parameters {:path {:id         common-schema/Key
+                                  :laatija-id common-schema/Key}}
+              :responses  {200 {:body nil}
+                           404 common-schema/ConstraintError}
+              :handler    (fn [{{{:keys [id laatija-id]} :path} :parameters :keys [db whoami]}]
+                            (api-response/response-with-exceptions
+                              #(yritys-service/add-laatija-yritys! db whoami laatija-id id)
+                              [{:constraint :laatija-yritys-laatija-id-fkey
+                                :response   404}
+                               {:constraint :laatija-yritys-yritys-id-fkey
+                                :response   404}]))}}]]]]
    ["/laskutuskielet/"
     {:get {:summary    "Hae laskutuskielet -luokittelu"
            :responses  {200 {:body [common-schema/Luokittelu]}}
@@ -52,4 +73,4 @@
     {:get {:summary    "Hae verkkolaskuoperaattorit -luokittelu"
            :responses  {200 {:body [yritys-schema/Verkkolaskuoperaattori]}}
            :handler    (fn [{:keys [db]}]
-                         (r/response (yritys-service/find-all-verkkolaskuoperaattorit db)))}}] ])
+                         (r/response (yritys-service/find-all-verkkolaskuoperaattorit db)))}}]])
