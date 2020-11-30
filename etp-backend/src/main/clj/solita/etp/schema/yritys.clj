@@ -22,7 +22,8 @@
                            :nimi            schema/Str}))
 
 (def Laatija
-  {:etunimi  schema/Str
+  {:id common-schema/Key
+   :etunimi  schema/Str
    :sukunimi schema/Str
    :modifiedby-name schema/Str
    :modifytime common-schema/Instant

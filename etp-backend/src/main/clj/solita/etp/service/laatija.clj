@@ -5,8 +5,8 @@
             [solita.common.map :as map]
             [solita.etp.exception :as exception]
             [solita.etp.db :as db]
-            [solita.etp.service.json :as json]
             [solita.etp.service.rooli :as rooli-service]
+            [solita.etp.service.yritys :as yritys-service]
             [solita.etp.schema.laatija :as laatija-schema]))
 
 ;; *** Require sql functions ***
@@ -103,7 +103,7 @@
     (map :yritys-id (laatija-db/select-laatija-yritykset db {:id id}))
     (exception/throw-forbidden!)))
 
-(defn attach-laatija-yritys [db whoami laatija-id yritys-id]
+(defn add-laatija-yritys! [db whoami laatija-id yritys-id]
   (if (= laatija-id (:id whoami))
     (do
       (laatija-db/insert-laatija-yritys!
@@ -112,8 +112,10 @@
       nil)
     (exception/throw-forbidden!)))
 
-(defn detach-laatija-yritys [db whoami laatija-id yritys-id]
-  (if (= laatija-id (:id whoami))
+(defn detach-laatija-yritys! [db whoami laatija-id yritys-id]
+  (if (or (rooli-service/paakayttaja? whoami)
+          (= laatija-id (:id whoami))
+          (yritys-service/laatija-in-yritys? db (:id whoami) yritys-id))
     (laatija-db/delete-laatija-yritys!
      db
      (map/bindings->map laatija-id yritys-id))

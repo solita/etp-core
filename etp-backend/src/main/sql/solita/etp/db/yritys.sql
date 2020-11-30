@@ -34,6 +34,7 @@ with audit as (
   where yritys_id = :id
 )
 select
+  laatija.id,
   laatija.etunimi,
   laatija.sukunimi,
   audit.modifytime,
@@ -45,3 +46,8 @@ from laatija_yritys
                      audit.event_order = 1
   left join kayttaja modifier on modifier.id = audit.modifiedby_id
 where laatija_yritys.yritys_id = :id
+
+-- name: insert-laatija-yritys!
+insert into laatija_yritys (laatija_id, yritys_id)
+values (:laatija-id, :yritys-id)
+on conflict (laatija_id, yritys_id) do update set tila_id = 1
