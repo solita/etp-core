@@ -10,7 +10,7 @@ create table laatija (
   toteamispaivamaara date NOT NULL,
   toteaja text NOT NULL,
   laatimiskielto boolean NOT NULL DEFAULT false,
-  toimintaalue int,
+  toimintaalue int REFERENCES toimintaalue(id),
   muut_toimintaalueet int[] NOT NULL DEFAULT '{}',
   wwwosoite text,
   julkinen_puhelin boolean NOT NULL DEFAULT false,
