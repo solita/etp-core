@@ -100,7 +100,7 @@
 (defn find-laatija-yritykset [db whoami id]
   (if (or (= id (:id whoami))
           (rooli-service/laatija-maintainer? whoami))
-    (map :yritys-id (laatija-db/select-laatija-yritykset db {:id id}))
+    (laatija-db/select-laatija-yritykset db {:id id})
     (exception/throw-forbidden!)))
 
 (defn add-laatija-yritys! [db whoami laatija-id yritys-id]

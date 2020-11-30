@@ -32,7 +32,7 @@
   (yritys-db/select-all-verkkolaskuoperaattorit db))
 
 (defn laatija-in-yritys? [db laatija-id yritys-id]
-  (some #(= laatija-id(:id %))
+  (some #(= laatija-id (:id %))
         (filter laatija-yritys/accepted? (find-laatijat db yritys-id))))
 
 (defn add-laatija-yritys! [db whoami laatija-id yritys-id]

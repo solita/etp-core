@@ -107,3 +107,9 @@
       ;; Pätevyydentoteajat do not see the last part of hetu
       (st/optional-keys)
       (st/required-keys always-public-kayttaja-laatija-ks)))
+
+(def Yritys {
+  :id common-schema/Key
+  :modifiedby-name schema/Str
+  :modifytime common-schema/Instant
+  :tila-id  common-schema/Key})
