@@ -1,4 +1,3 @@
-
 -- see https://en.wikipedia.org/wiki/Country_code
 
 create table country (

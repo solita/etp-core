@@ -1,4 +1,3 @@
-
 /**
   Create audit table based on all columns in an auditable table.
 
@@ -104,4 +103,3 @@ begin
   call audit.create_audit_update_trigger(audit_table_name, audit_table_name);
 end
 $$;
-

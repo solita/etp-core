@@ -1,4 +1,3 @@
-
 create table postinumero (
   id int primary key,
   label_fi text,

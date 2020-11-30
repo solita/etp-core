@@ -1,4 +1,3 @@
-
 create table energiatodistustila (
   id int primary key,
   name text not null,
@@ -7,5 +6,3 @@ create table energiatodistustila (
   label_sv text,
   description text
 );
-
-

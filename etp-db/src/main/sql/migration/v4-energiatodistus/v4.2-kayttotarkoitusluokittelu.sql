@@ -1,4 +1,3 @@
-
 create table kayttotarkoitusluokka (
   id int,
   versio int,

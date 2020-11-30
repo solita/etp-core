@@ -1,4 +1,3 @@
-
 call create_classification('laatija_yritys_tila'::name);
 
 create table laatija_yritys (

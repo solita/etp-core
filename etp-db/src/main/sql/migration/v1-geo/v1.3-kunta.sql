@@ -1,4 +1,3 @@
-
 create table kunta (
   id int primary key,
   label_fi text,

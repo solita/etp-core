@@ -1,4 +1,3 @@
-
 create table validation_numeric_column (
   column_name text,
   versio int,
@@ -22,13 +21,11 @@ create table validation_required_column (
 create table validation_sisainen_kuorma (
   kayttotarkoitusluokka_id int,
   versio int,
-
   henkilot$kayttoaste numeric,
   henkilot$lampokuorma numeric,
   kuluttajalaitteet$kayttoaste numeric,
   kuluttajalaitteet$lampokuorma numeric,
   valaistus$kayttoaste numeric,
   valaistus$lampokuorma numeric,
-
   primary key (kayttotarkoitusluokka_id, versio)
 );

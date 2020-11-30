@@ -1,4 +1,3 @@
-
 create table toimintaalue (
   id int primary key,
   nuts_code text,

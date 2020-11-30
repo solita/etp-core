@@ -1,4 +1,3 @@
-
 create or replace procedure create_classification(table_name name)
 language plpgsql
 as $$
