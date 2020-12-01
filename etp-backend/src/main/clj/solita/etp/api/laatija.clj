@@ -57,10 +57,10 @@
       [""
        {:get {:summary    "Hae laatijan yritykset"
               :parameters {:path {:id common-schema/Key}}
-              :responses  {200 {:body [common-schema/Key]}}
+              :responses  {200 {:body [laatija-schema/Yritys]}}
               :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
-                            (-> (laatija-service/find-laatija-yritykset db whoami id)
-                                (api-response/get-response nil)))}}]
+                            (r/response
+                              (laatija-service/find-laatija-yritykset db whoami id)))}}]
       ["/:yritys-id"
        {:put    {:summary    "Liitä laatija yritykseen - liittämispyyntö"
                  :parameters {:path {:id        common-schema/Key
