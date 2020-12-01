@@ -12,7 +12,6 @@ create table kayttaja (
   cognito_id text,
   virtu$localid text,
   virtu$organisaatio text,
-
   constraint kayttaja_virtu_key unique (virtu$localid, virtu$organisaatio)
 );
 

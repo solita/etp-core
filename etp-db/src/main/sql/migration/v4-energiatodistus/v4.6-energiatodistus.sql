@@ -1,4 +1,3 @@
-
 create type ostettu_polttoaine as (
   nimi text,
   yksikko text,
@@ -272,4 +271,3 @@ create trigger energiatodistus_tila_update_trigger
   after update on energiatodistus for each row
   when ( (old.tila_id) is distinct from (new.tila_id) )
 execute procedure etp.energiatodistus_tila_audit();
-
