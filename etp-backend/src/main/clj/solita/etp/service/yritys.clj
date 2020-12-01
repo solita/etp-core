@@ -1,7 +1,5 @@
 (ns solita.etp.service.yritys
   (:require [solita.etp.db :as db]
-            [solita.etp.schema.yritys :as yritys-schema]
-            [schema.coerce :as coerce]
             [solita.etp.exception :as exception]
             [solita.etp.service.laatija-yritys :as laatija-yritys]
             [solita.etp.service.rooli :as rooli-service]
