@@ -14,7 +14,6 @@ create table validation_required_column (
   versio int,
   ordinal int not null default 0,
   valid boolean default true,
-
   primary key (column_name, versio)
 );
 
@@ -27,5 +26,7 @@ create table validation_sisainen_kuorma (
   kuluttajalaitteet$lampokuorma numeric,
   valaistus$kayttoaste numeric,
   valaistus$lampokuorma numeric,
-  primary key (kayttotarkoitusluokka_id, versio)
+  primary key (kayttotarkoitusluokka_id, versio),
+  foreign key (kayttotarkoitusluokka_id, versio)
+    references kayttotarkoitusluokka(id, versio)
 );
