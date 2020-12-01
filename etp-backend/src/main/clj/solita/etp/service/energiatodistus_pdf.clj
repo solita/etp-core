@@ -145,16 +145,8 @@
       {:path [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-nettoala] :dp 0}
       {:path [:tulokset :kaytettavat-energiamuodot :muu 0 :muotokerroin] :dp 1}
       {:path [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-nettoala-kertoimella] :dp 0}
-      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :nimi]}
-      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia] :dp 0}
-      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala] :dp 0}
-      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :muotokerroin] :dp 1}
-      {:path [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala-kertoimella] :dp 0}
-      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :nimi]}
-      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia] :dp 0}
-      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala] :dp 0}
-      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :muotokerroin] :dp 1}
-      {:path [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala-kertoimella] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :valaistus-kuluttaja-sahko] :dp 0}
+      {:path [:tulokset :kaytettavat-energiamuodot :valaistus-kuluttaja-sahko-nettoala] :dp 0}
       {:path [:tulokset :e-luku]}
       {:path [:tulokset :e-luokka-rajat :kayttotarkoitus :label-fi]}
       {:path [:tulokset :e-luokka-rajat :kayttotarkoitus :label-sv]}
