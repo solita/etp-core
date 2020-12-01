@@ -136,14 +136,20 @@
           (update-in [:tulokset :kaytettavat-energiamuodot] (partial merge (energiamuotokertoimet versio)))
           (update-in [:tulokset :kuukausierittely] kuukausierittely-hyodynnetty)
           (assoc-kuukausierittely-summat)
+          (combine-keys #(when (= versio 2013) (+ %1 %2))
+                        nil
+                        [:tulokset
+                         :kaytettavat-energiamuodot
+                         :valaistus-kuluttaja-sahko]
+                        [:tulokset :lampokuormat :kuluttajalaitteet]
+                        [:tulokset :lampokuormat :valaistus])
+          (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :valaistus-kuluttaja-sahko])
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukolampo])
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :sahko])
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine])
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine])
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys])
           (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia])
-          (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia])
-          (assoc-div-nettoala [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia])
           (combine-keys *
                         nil
                         [:tulokset :kaytettavat-energiamuodot :kaukolampo-kertoimella]
@@ -204,26 +210,6 @@
                         [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-nettoala-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-nettoala]
                         [:tulokset :kaytettavat-energiamuodot :muu 0 :muotokerroin])
-          (combine-keys *
-                        nil
-                        [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia]
-                        [:tulokset :kaytettavat-energiamuodot :muu 1 :muotokerroin])
-          (combine-keys *
-                        nil
-                        [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-nettoala]
-                        [:tulokset :kaytettavat-energiamuodot :muu 1 :muotokerroin])
-          (combine-keys *
-                        nil
-                        [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia]
-                        [:tulokset :kaytettavat-energiamuodot :muu 2 :muotokerroin])
-          (combine-keys *
-                        nil
-                        [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-nettoala]
-                        [:tulokset :kaytettavat-energiamuodot :muu 2 :muotokerroin])
           (combine-keys +
                         0
                         [:tulokset :kaytettavat-energiamuodot :summa]
@@ -232,9 +218,7 @@
                         [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine]
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys]
                         [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine]
-                        [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia]
-                        [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia]
-                        [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia])
+                        [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia])
           (combine-keys +
                         0
                         [:tulokset :kaytettavat-energiamuodot :kertoimella-summa]
@@ -243,9 +227,7 @@
                         [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kertoimella]
                         [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :muu 1 :ostoenergia-kertoimella]
-                        [:tulokset :kaytettavat-energiamuodot :muu 2 :ostoenergia-kertoimella])
+                        [:tulokset :kaytettavat-energiamuodot :muu 0 :ostoenergia-kertoimella])
           (combine-keys (partial e-luokka-service/e-luokka-rajat
                                  (kayttotarkoitukset versio)
                                  (alakayttotarkoitukset versio)
