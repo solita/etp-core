@@ -12,10 +12,10 @@
      {:post {:summary    "Lisää uuden yrityksen tiedot yritysrekisteriin"
              :parameters {:body yritys-schema/YritysSave}
              :responses  {201 {:body common-schema/Id}}
-             :handler    (fn [{:keys [db parameters uri]}]
+             :handler    (fn [{:keys [db whoami parameters uri]}]
                            (api-response/created
                             uri
-                            {:id (yritys-service/add-yritys! db (:body parameters))}))}
+                            {:id (yritys-service/add-yritys! db whoami (:body parameters))}))}
 
       :get {:summary    "Hae kaikki yritykset"
             :responses  {200 {:body [yritys-schema/Yritys]}}

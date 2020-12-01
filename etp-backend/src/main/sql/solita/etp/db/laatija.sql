@@ -56,7 +56,7 @@ FROM laatija l INNER JOIN kayttaja k ON l.id = k.id WHERE k.henkilotunnus = :hen
 
 -- name: select-laatija-yritykset
 select distinct on (laatija_yritys.yritys_id)
-    laatija_yritys.yritys_id,
+    laatija_yritys.yritys_id id,
     laatija_yritys.tila_id,
     audit.modifytime, fullname(modifier) modifiedby_name
   from laatija_yritys
