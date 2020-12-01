@@ -55,22 +55,17 @@ SELECT l.id, k.henkilotunnus, l.patevyystaso,
 FROM laatija l INNER JOIN kayttaja k ON l.id = k.id WHERE k.henkilotunnus = :henkilotunnus
 
 -- name: select-laatija-yritykset
-with audit as (
-  select row_number() over (
-    partition by yritys_id
-    order by modifytime desc, event_id desc) as event_order,
-    modifytime, modifiedby_id, yritys_id
-  from audit.laatija_yritys audit
-  where laatija_id = :id
-)
-select
-    laatija_yritys.yritys_id id, laatija_yritys.tila_id,
+select distinct on (laatija_yritys.yritys_id)
+    laatija_yritys.yritys_id,
+    laatija_yritys.tila_id,
     audit.modifytime, fullname(modifier) modifiedby_name
   from laatija_yritys
-  left join audit on audit.yritys_id = laatija_yritys.yritys_id and
-                     audit.event_order = 1
+  left join audit.laatija_yritys audit
+    on audit.yritys_id = laatija_yritys.yritys_id and
+       audit.laatija_id = laatija_yritys.laatija_id
   left join kayttaja modifier on modifier.id = audit.modifiedby_id
-where laatija_id = :id
+where laatija_yritys.laatija_id = :id
+order by laatija_yritys.yritys_id, audit.modifytime desc, audit.event_id desc
 
 -- name: insert-laatija-yritys!
 insert into laatija_yritys (laatija_id, yritys_id)
