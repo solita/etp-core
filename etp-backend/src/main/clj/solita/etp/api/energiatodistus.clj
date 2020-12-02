@@ -73,16 +73,29 @@
                            (update query :where json/read-value))
                          search-exceptions))}}])
 
+(def search-count-route
+  ["/count"
+   {:get {:summary    "Hae energiatodistuksia - energiatodistusten lukumäärä"
+          :parameters {:query energiatodistus-schema/EnergiatodistusSearch}
+          :responses  {200 {:body {:count schema/Int}}}
+          :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
+          :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
+                        (api-response/response-with-exceptions
+                          #(energiatodistus-search-service/search-count
+                             db whoami
+                             (update query :where json/read-value))
+                          search-exceptions))}}])
+
 (def public-routes
   (concat
    [["/energiatodistukset"
-     search-route
+     search-route search-count-route
      luokittelut-api/routes]]))
 
 (def private-routes
   (concat
     [["/energiatodistukset"
-      search-route
+      search-route search-count-route
       ["/xlsx/energiatodistukset.xlsx"
        {:get {:summary    "Hae energiatodistusten tiedot XLSX-tiedostona"
               :parameters {:query energiatodistus-schema/EnergiatodistusSearch}

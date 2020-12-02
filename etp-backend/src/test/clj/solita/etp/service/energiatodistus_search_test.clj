@@ -26,6 +26,13 @@
           where (assoc :where where)
           keyword (assoc :keyword keyword)))))
 
+(defn search-count [whoami where keyword]
+  (:count (energiatodistus-search-service/search-count
+            ts/*db* whoami
+            (cond-> {}
+                    where (assoc :where where)
+                    keyword (assoc :keyword keyword)))))
+
 (defn public-energiatodistus-with-db-fields
   [energiatodistus id laatija-id versio]
   (-> energiatodistus
@@ -47,12 +54,15 @@
         energiatodistus (energiatodistus-test/generate-energiatodistus-2018)
         id (energiatodistus-test/add-energiatodistus! energiatodistus
                                                       (:id whoami)
-                                                      2018)]
+                                                      2018)
+        where [[["=" "energiatodistus.id" id]]]]
     (t/is (= (public-energiatodistus-with-db-fields energiatodistus
                                                     id
                                                     (:id whoami)
                                                     2018)
-             (first (search whoami [[["=" "energiatodistus.id" id]]] nil))))))
+             (first (search whoami where nil))))
+    (t/is (= 1 (search-count whoami where nil)))
+    (t/is (= 1 (search-count whoami nil nil)))))
 
 (t/deftest add-and-find-by-nimi-test
   (let [whoami (add-laatija!)
@@ -60,14 +70,15 @@
                             (assoc-in [:perustiedot :nimi] "test"))
         id (energiatodistus-test/add-energiatodistus! energiatodistus
                                                       (:id whoami)
-                                                      2018)]
+                                                      2018)
+        where [[["=" "energiatodistus.perustiedot.nimi" "test"]]]]
     (t/is (= (public-energiatodistus-with-db-fields energiatodistus
                                                     id
                                                     (:id whoami)
                                                     2018)
-             (first (search whoami
-                            [[["=" "energiatodistus.perustiedot.nimi" "test"]]]
-                            nil))))))
+             (first (search whoami where nil))))
+    (t/is (= 1 (search-count whoami where nil)))
+    (t/is (= 1 (search-count whoami nil nil)))))
 
 (t/deftest add-and-find-by-toimintaalue-test
   (let [whoami (add-laatija!)
@@ -175,7 +186,8 @@
     (t/is (= [id2 id1] (mapv :id (energiatodistus-search-service/search
                                    ts/*db* whoami
                                    {:sort "energiatodistus.allekirjoitusaika"
-                                    :order "desc" }))))))
+                                    :order "desc" }))))
+    (t/is (= 2 (search-count whoami nil nil)))))
 
 (t/deftest add-and-find-by-nimi-and-id-test
   (let [whoami (add-laatija!)

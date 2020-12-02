@@ -55,11 +55,13 @@
    {:energiatodistus public-energiatodistus-schema/Energiatodistus2018}
    geo-schema/Search))
 
-(def base-query
+(def select-all
   "SELECT energiatodistus.*,
           fullname(kayttaja.*) laatija_fullname,
-          korvaava_energiatodistus.id AS korvaava_energiatodistus_id
-   FROM energiatodistus
+          korvaava_energiatodistus.id AS korvaava_energiatodistus_id")
+
+(def relation
+  "FROM energiatodistus
    INNER JOIN kayttaja ON kayttaja.id = energiatodistus.laatija_id
    LEFT JOIN energiatodistus korvaava_energiatodistus
      ON korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
@@ -177,14 +179,14 @@
     public-search-schema
     private-search-schema))
 
-(defn sql-query [whoami {:keys [sort order limit offset where keyword]}]
+(defn sql-query [select whoami {:keys [sort order limit offset where keyword]}]
   (schema/validate [[[(schema/one schema/Str "predicate") schema/Any]]] where)
   (let [search-schema (search-schema whoami)
         [where-sql & where-params] (where->sql where search-schema)
         [keyword-sql & keyword-params] (keyword->sql keyword)
         [visibility-sql & visibility-params] (whoami->sql whoami)]
-    (concat [(str base-query
-                  \newline
+    (concat [(str select \newline
+                  relation \newline
                   "where "
                   visibility-sql
                   (when-not (str/blank? where-sql)
@@ -204,6 +206,8 @@
    public-energiatodistus-schema/Energiatodistus))
 
 (defn search [db whoami query]
-  (map (comp db-row->public-energiatodistus
-          #(assoc % :kommentti nil))
-       (jdbc/query db (sql-query whoami query) nil)))
+  (map db-row->public-energiatodistus
+       (jdbc/query db (sql-query select-all whoami query) nil)))
+
+(defn search-count [db whoami query]
+  (first (jdbc/query db (sql-query "select count(*) count" whoami query) nil)))
