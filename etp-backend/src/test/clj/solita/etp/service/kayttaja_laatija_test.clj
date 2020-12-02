@@ -27,7 +27,7 @@
 (defn generate-KayttajaLaatijaUpdates [n]
   (->> laatija-schema/KayttajaLaatijaUpdate
        (tu/generate-kayttaja n)
-       (map #(assoc % :rooli 0))))
+       (map #(assoc % :rooli 0 :toimintaalue 1))))
 
 (t/deftest upsert-test
   (doseq [kayttaja-laatija (generate-KayttajaLaatijaAdds 100)
