@@ -45,10 +45,8 @@
    nil))
 
 (defn add-yritys!
-  ([db yritys]
-    (:id (yritys-db/insert-yritys<! db yritys)))
   ([db whoami yritys]
     (jdbc/with-db-transaction [db db]
-      (let [id (add-yritys! db yritys)]
+      (let [id (:id (yritys-db/insert-yritys<! db yritys))]
         (add-laatija-yritys! db (:id whoami) id)
         id))))

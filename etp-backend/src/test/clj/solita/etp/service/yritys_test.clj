@@ -5,7 +5,8 @@
             [solita.etp.test-system :as ts]
             [solita.etp.service.yritys :as service]
             [solita.etp.schema.yritys :as yritys-schema]
-            [solita.etp.schema.common :as common-schema]))
+            [solita.etp.schema.common :as common-schema]
+            [solita.etp.service.energiatodistus-test :as energiatodistus-test]))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -23,9 +24,11 @@
        (unique-ytunnus-range n)))
 
 (t/deftest add-and-find-yritys-test
+  (let [laatija-id (energiatodistus-test/add-laatija!)]
   (doseq [yritys (generate-yritykset 100)
-          :let [id (service/add-yritys! ts/*db* yritys)]]
-    (t/is (= (assoc yritys :id id) (service/find-yritys ts/*db* id)))))
+          :let [id (service/add-yritys! (ts/db-user laatija-id)
+                                        {:id laatija-id} yritys)]]
+    (t/is (= (assoc yritys :id id) (service/find-yritys ts/*db* id))))))
 
 #_(t/deftest add-duplicate-ytunnus
   (let [ytunnus "0000001-9"
