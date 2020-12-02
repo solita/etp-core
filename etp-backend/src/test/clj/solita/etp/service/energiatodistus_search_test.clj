@@ -142,13 +142,15 @@
   (let [whoami (add-laatija!)
         energiatodistus (energiatodistus-test/generate-energiatodistus-2018-complete)
         id (energiatodistus-test/add-energiatodistus-and-sign!
-             energiatodistus (:id whoami))]
+             energiatodistus (:id whoami))
+        et (energiatodistus-service/find-energiatodistus ts/*db* id)]
 
     (t/is (= (assoc (public-energiatodistus-with-db-fields energiatodistus
                                                     id
                                                     (:id whoami)
                                                     2018)
                :tila-id 2,
+               :allekirjoitusaika (:allekirjoitusaika et)
                :voimassaolo-paattymisaika
                (voimassa-paattymisaika (LocalDate/now)))
              (first (search whoami

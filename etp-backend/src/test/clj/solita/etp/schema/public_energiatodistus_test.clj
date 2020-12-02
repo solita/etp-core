@@ -7,6 +7,7 @@
 (def example-2013
   {:laatija-fullname "Liisa Laatija"
    :laatija-id 0
+   :allekirjoitusaika (java.time.Instant/now)
    :voimassaolo-paattymisaika (java.time.Instant/now)
    :korvaava-energiatodistus-id nil
    :tulokset {:e-luku 10
