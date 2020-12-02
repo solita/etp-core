@@ -323,51 +323,54 @@
                     (if use-ilmanvaihto-kuvaus?
                       (-> energiatodistus :lahtotiedot :ilmanvaihto :kuvaus-sv)
                       (str "TODO SV " (-> ilmanvaihtotyyppi :label-sv))))
-          (assoc-in [:lahtotiedot :lammitys :label-fi]
+          (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-label-fi]
                     (join-strings (if use-lammitysmuoto-1-kuvaus?
                                     (-> energiatodistus
                                         :lahtotiedot
                                         :lammitys
                                         :lammitysmuoto-1
                                         :kuvaus-fi)
-                                    (-> lammitysmuoto-1 :label-fi))
+                                    (:label-fi lammitysmuoto-1))
                                   (if use-lammitysmuoto-2-kuvaus?
                                     (-> energiatodistus
                                         :lahtotiedot
                                         :lammitys
                                         :lammitysmuoto-2
                                         :kuvaus-fi)
-                                    (-> lammitysmuoto-2 :label-fi))
-                                  (if use-lammonjako-kuvaus?
+                                    (:label-fi lammitysmuoto-2))))
+          (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-label-sv]
+                    (join-strings "TODO SV"
+                                  (if use-lammitysmuoto-1-kuvaus?
                                     (-> energiatodistus
                                         :lahtotiedot
                                         :lammitys
-                                        :lammonjako
-                                        :kuvaus-fi)
-                                    (-> lammonjako :label-fi))))
-        (assoc-in [:lahtotiedot :lammitys :label-sv]
-                  (join-strings "TODO SV"
-                                (if use-lammitysmuoto-1-kuvaus?
-                                  (-> energiatodistus
-                                      :lahtotiedot
-                                      :lammitys
-                                      :lammitysmuoto-1
-                                      :kuvaus-sv)
-                                  (-> lammitysmuoto-1 :label-sv))
-                                (if use-lammitysmuoto-2-kuvaus?
-                                  (-> energiatodistus
-                                      :lahtotiedot
-                                      :lammitys
-                                      :lammitysmuoto-2
-                                      :kuvaus-sv)
-                                  (-> lammitysmuoto-2 :label-sv))
-                                (if use-lammonjako-kuvaus?
-                                  (-> energiatodistus
-                                      :lahtotiedot
-                                      :lammitys
-                                      :lammonjako
-                                      :kuvaus-sv)
-                                  (-> lammonjako :label-sv))))
+                                        :lammitysmuoto-1
+                                        :kuvaus-sv)
+                                    (-> lammitysmuoto-1 :label-sv))
+                                  (if use-lammitysmuoto-2-kuvaus?
+                                    (-> energiatodistus
+                                        :lahtotiedot
+                                        :lammitys
+                                        :lammitysmuoto-2
+                                        :kuvaus-sv)
+                                    (-> lammitysmuoto-2 :label-sv))))
+          (assoc-in [:lahtotiedot :lammitys :lammonjako-label-fi]
+                    (if use-lammonjako-kuvaus?
+                      (-> energiatodistus
+                          :lahtotiedot
+                          :lammitys
+                          :lammonjako
+                          :kuvaus-fi)
+                      (:label-fi lammonjako)))
+          (assoc-in [:lahtotiedot :lammitys :lammonjako-label-sv]
+                    (str "TODO SV "
+                         (if use-lammonjako-kuvaus?
+                           (-> energiatodistus
+                               :lahtotiedot
+                               :lammitys
+                               :lammonjako
+                               :kuvaus-sv)
+                           (:label-sv lammonjako))))
           (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko])
           (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :tuulisahko])
           (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :aurinkolampo])

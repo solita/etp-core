@@ -116,8 +116,10 @@
               (.format date-formatter (.plusYears (LocalDate/now) 10))))}]
    1 [{:path [:id]}
       {:f #(-> % :lahtotiedot :lammitetty-nettoala (format-number 1 false) (str " m²"))}
-      {:path [:lahtotiedot :lammitys :label-fi]}
-      {:path [:lahtotiedot :lammitys :label-sv]}
+      {:path [:lahtotiedot :lammitys :lammitysmuoto-label-fi]}
+      {:path [:lahtotiedot :lammitys :lammitysmuoto-label-sv]}
+      {:path [:lahtotiedot :lammitys :lammonjako-label-fi]}
+      {:path [:lahtotiedot :lammitys :lammonjako-label-sv]}
       {:path [:lahtotiedot :ilmanvaihto :label-fi]}
       {:path [:lahtotiedot :ilmanvaihto :label-sv]}
       {:path [:tulokset :kaytettavat-energiamuodot :kaukolampo] :dp 0}
