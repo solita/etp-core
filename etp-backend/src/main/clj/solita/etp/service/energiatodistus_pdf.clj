@@ -81,8 +81,12 @@
       {:path [:perustiedot :nimi]}
       {:path [:perustiedot :katuosoite-fi]}
       {:path [:perustiedot :katuosoite-sv]}
-      ;; TODO needs luokittelu for postitoimipaikka
-      {:f #(str (-> % :perustiedot :postinumero) " Helsinki")}
+      {:f #(str (-> % :perustiedot :postinumero)
+                " "
+                (-> % :perustiedot :postitoimipaikka-fi))}
+      {:f #(str (-> % :perustiedot :postinumero)
+                " "
+                (-> % :perustiedot :postitoimipaikka-sv))}
       {:path [:perustiedot :rakennustunnus]}
       {:path [:perustiedot :valmistumisvuosi]}
       {:path [:perustiedot :alakayttotarkoitus-fi]}
