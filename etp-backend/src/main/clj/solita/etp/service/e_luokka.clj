@@ -70,6 +70,9 @@
   {:raja-asteikko [[150 "A"] [350 "B"] [450 "C"] [550 "D"] [650 "E"] [800 "F"]]
    :raja-uusi-2018 320})
 
+(defn varastorakennukset-ja-moottoriajoneuvosuojat-2013 [_]
+  {:raja-asteikko [[75 "A"] [115 "B"] [155 "C"] [175 "D"] [225 "E"] [265 "F"]]})
+
 (defn muut-2018 [_]
   {:raja-asteikko [[90 "A"] [130 "B"] [170 "C"] [190 "D"] [240 "E"] [280 "F"]]})
 
@@ -92,8 +95,8 @@
                 [2018 1 _ (_ :guard #(<= % 600))] pienet-asuinrakennukset-150-600-2013-2018
                 [2018 1 _ (_ :guard #(> % 600))] pienet-asuinrakennukset-600-2013-2018
 
-                ;; Luckily the rest of the tables are pretty much the same for 2013
-                ;; and 2018
+                ;; Luckily the rest of the tables are pretty much the same
+                ;; for 2013 and 2018
 
                 [2013 3 _ _] asuinkerrostalot-2013-2018
                 [2018 2 _ _] asuinkerrostalot-2013-2018
@@ -116,7 +119,9 @@
                 [2013 9 _ _] sairaalat-2013-2018
                 [2018 8 _ _] sairaalat-2013-2018
 
-                ;; TODO 2013 10 and 11?
+                ;; TODO 2013 10?
+
+                [2013 11 _ _] varastorakennukset-ja-moottoriajoneuvosuojat-2013
 
                 [2018 9 _ _] muut-2018
 

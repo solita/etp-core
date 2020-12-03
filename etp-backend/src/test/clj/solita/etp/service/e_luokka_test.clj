@@ -183,5 +183,12 @@
             :raja-asteikko [[90 "A"] [130 "B"] [170 "C"] [190 "D"] [240 "E"]
                             [280 "F"]]}
            (find-e-luokka-info 2018 "JH" 100 130)))
+  (t/is (= {:e-luokka "D"
+            :kayttotarkoitus {:id 11
+                              :label-fi "Varastorakennukset ja erilliset moottoriajoneuvosuojat"
+                              :label-sv "Lagerbyggnader och fristående utrymmen för motorfordon"}
+            :raja-asteikko [[75 "A"] [115 "B"] [155 "C"] [175 "D"] [225 "E"]
+                            [265 "F"]]}
+           (find-e-luokka-info 2013 "MRVR" 1000 156)))
   (t/is (nil? (find-e-luokka-info 2018 "NONEXISTING" 100 130)))
   (t/is (nil? (find-e-luokka-info 2080 "MAEP" 100 130))) )
