@@ -22,6 +22,7 @@
             [solita.etp.api.laatija :as laatija-api]
             [solita.etp.api.geo :as geo-api]
             [solita.etp.api.energiatodistus :as energiatodistus-api]
+            [solita.etp.api.valvonta :as valvonta-api]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.config :as config]
             [solita.etp.security :as security]
@@ -107,7 +108,8 @@
             (tag "Yritys API" yritys-api/routes)
             (tag "Laatijat Private API" laatija-api/private-routes)
             (tag "Geo Private API" geo-api/routes)
-            (tag "Energiatodistus API" energiatodistus-api/private-routes))]
+            (tag "Energiatodistus API" energiatodistus-api/private-routes)
+            (tag "Valvonta API" valvonta-api/routes))]
    ["/external" {:middleware [[security/wrap-whoami-from-basic-auth
                                "Access to external API"]
                               [security/wrap-access]
