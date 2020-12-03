@@ -49,6 +49,7 @@ create table energiatodistus (
  laskutusaika timestamp with time zone,
  korvattu_energiatodistus_id integer unique references energiatodistus (id),
  kommentti text,
+ valvonta boolean not null default false,
 
  pt$havainnointikaynti date,
  pt$katuosoite_fi text,
