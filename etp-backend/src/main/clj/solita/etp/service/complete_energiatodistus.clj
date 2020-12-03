@@ -2,6 +2,7 @@
   (:require [clojure.string :as str]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
+            [solita.etp.service.geo :as geo]
             [solita.etp.service.laatimisvaihe :as laatimisvaihe]
             [solita.etp.service.e-luokka :as e-luokka-service]
             [solita.etp.service.kielisyys :as kielisyys]
@@ -78,11 +79,15 @@
     e-luokka-service/energiamuotokerroin))
 
 (defn complete-energiatodistus
-  [energiatodistus {:keys [kielisyydet laatimisvaiheet
+  [energiatodistus {:keys [postinumerot kielisyydet laatimisvaiheet
                            kayttotarkoitukset alakayttotarkoitukset
                            ilmanvaihtotyypit lammitysmuodot lammonjaot]}]
   (with-precision 20
     (let [{:keys [versio]} energiatodistus
+          postinumero (find-by-id postinumerot (-> energiatodistus
+                                                   :perustiedot
+                                                   :postinumero
+                                                   Integer/parseInt))
           kielisyys (find-by-id kielisyydet (-> energiatodistus
                                                 :perustiedot
                                                 :kieli))
@@ -127,6 +132,8 @@
           alakayttotarkoitus (-> (get alakayttotarkoitukset versio)
                                  (find-by-id alakayttotarkoitus-id))]
       (-> energiatodistus
+          (assoc-in [:perustiedot :postitoimipaikka-fi] (:label-fi postinumero))
+          (assoc-in [:perustiedot :postitoimipaikka-sv] (:label-sv postinumero))
           (assoc-in [:perustiedot :kieli-fi] (:label-fi kielisyys))
           (assoc-in [:perustiedot :kieli-sv] (:label-sv kielisyys))
           (assoc-in [:perustiedot :laatimisvaihe-fi] (:label-fi laatimisvaihe))
@@ -483,7 +490,8 @@
                         [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala])))))
 
 (defn required-luokittelut [db]
-  {:kielisyydet           (kielisyys/find-kielisyys db)
+  {:postinumerot          (geo/find-all-postinumerot db)
+   :kielisyydet           (kielisyys/find-kielisyys db)
    :laatimisvaiheet       (laatimisvaihe/find-laatimisvaiheet db)
    :kayttotarkoitukset    (into {} (map #(vector % (kayttotarkoitus-service/find-kayttotarkoitukset db %)))
                                 [2013 2018])
