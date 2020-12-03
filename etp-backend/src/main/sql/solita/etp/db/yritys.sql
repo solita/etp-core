@@ -48,6 +48,6 @@ from laatija_yritys
 where laatija_yritys.yritys_id = :id
 
 -- name: insert-laatija-yritys!
-insert into laatija_yritys (laatija_id, yritys_id)
-values (:laatija-id, :yritys-id)
+insert into laatija_yritys (laatija_id, yritys_id, tila_id)
+values (:laatija-id, :yritys-id, 1)
 on conflict (laatija_id, yritys_id) do update set tila_id = 1
