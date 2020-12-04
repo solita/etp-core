@@ -68,7 +68,8 @@
    :kieli                    common-schema/Key
    :nimi                     common-schema/String50
 
-   ;; This in in fact alakäyttötarkoitus in database
+   ;; This is alakäyttötarkoitusluokka
+   ;; Käyttötarkoitusluokka can be inferred from this
    :kayttotarkoitus          schema/Str})
 
 (def Rakenneusvaippa
@@ -311,22 +312,29 @@
                 [(optional-properties UserDefinedEnergia)])
       (assoc-in [:toteutunut-ostoenergiankulutus :ostettu-energia :muu]
                 [(optional-properties UserDefinedEnergia)])))
+
 (def Energiatehokkuus
   {:e-luku (schema/maybe schema/Num)
    :e-luokka (schema/maybe schema/Str)})
+
+(def Status
+  {:tila-id common-schema/Key
+   :allekirjoitusaika (schema/maybe common-schema/Instant)
+   :voimassaolo-paattymisaika (schema/maybe common-schema/Instant)
+   :laskutusaika (schema/maybe common-schema/Instant)
+   :korvaava-energiatodistus-id (schema/maybe common-schema/Key)})
+
+(def Laatija
+  {:laatija-id common-schema/Key
+   :laatija-fullname schema/Str})
 
 (defn energiatodistus-versio [versio save-schema]
   "Energiatodistus schema contains basic information about persistent energiatodistus"
   (-> save-schema
       (merge common-schema/Id
-        {:versio (schema/eq versio)
-         :tila-id common-schema/Key
-         :laatija-id common-schema/Key
-         :laatija-fullname schema/Str
-         :allekirjoitusaika (schema/maybe common-schema/Instant)
-         :voimassaolo-paattymisaika (schema/maybe common-schema/Instant)
-         :laskutusaika (schema/maybe common-schema/Instant)
-         :korvaava-energiatodistus-id (schema/maybe common-schema/Key)})
+             {:versio (schema/eq versio)}
+             Status
+             Laatija)
       (update :tulokset (partial merge Energiatehokkuus))))
 
 (def Energiatodistus2018
@@ -362,3 +370,15 @@
    (schema/optional-key :offset)  schema/Int
    (schema/optional-key :where)   schema/Str
    (schema/optional-key :keyword) schema/Str})
+
+(def EnergiatodistusForAnyLaatija
+  (assoc
+    (merge common-schema/Id Status Laatija)
+    :versio schema/Int
+    :perustiedot
+    (select-keys Perustiedot
+                 [:rakennustunnus
+                  :kayttotarkoitus
+                  :nimi
+                  :katuosoite-fi :katuosoite-sv
+                  :postinumero])))
