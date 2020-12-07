@@ -119,7 +119,7 @@
                 [2013 9 _ _] sairaalat-2013-2018
                 [2018 8 _ _] sairaalat-2013-2018
 
-                ;; TODO 2013 10?
+                [2013 10 _ _] liikuntahallit-2013-2018
 
                 [2013 11 _ _] varastorakennukset-ja-moottoriajoneuvosuojat-2013
 
