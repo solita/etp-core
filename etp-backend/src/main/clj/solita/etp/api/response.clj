@@ -55,7 +55,7 @@
   (if (nil? body)
     (r/not-found not-found)
     {:status 200
-     :headers {"Content-Type" content-type
+     :headers {"Content-Type" (or content-type "application/octet-stream")
                "Content-Disposition:" (str (if inline? "inline" "attachment")
                                               (str "; filename=\"" filename "\""))}
      :body body}))
