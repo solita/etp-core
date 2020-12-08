@@ -8,4 +8,11 @@ if [[ ! -d $package ]]; then
   exit 1;
 fi
 
-java -cp $package clojure.main -m solita.etp.db.flywaydb $1
+if [ "$2" == 'test' ]
+then
+  cp="$package:target/test/sql"
+else
+  cp=$package
+fi
+
+java -cp $cp clojure.main -m solita.etp.db.flywaydb $1
