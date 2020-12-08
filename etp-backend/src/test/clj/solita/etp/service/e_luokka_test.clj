@@ -183,6 +183,14 @@
             :raja-asteikko [[90 "A"] [130 "B"] [170 "C"] [190 "D"] [240 "E"]
                             [280 "F"]]}
            (find-e-luokka-info 2018 "JH" 100 130)))
+  (t/is (= {:e-luokka "G"
+            :kayttotarkoitus {:id 10
+                              :label-fi "Liikuntahallit, uimahallit, jäähallit, liikenteen rakennukset"
+                              :label-sv "Idrottshallar, simhallar, ishallar, byggnader för trafik"}
+            :raja-asteikko [[90 "A"] [130 "B"] [170 "C"] [190 "D"] [240 "E"]
+                            [280 "F"]]
+            :raja-uusi-2018 100}
+           (find-e-luokka-info 2013 "MUJH" 100 282)))
   (t/is (= {:e-luokka "D"
             :kayttotarkoitus {:id 11
                               :label-fi "Varastorakennukset ja erilliset moottoriajoneuvosuojat"
