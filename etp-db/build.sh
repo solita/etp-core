@@ -1,16 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
-aliases=$1
-
 rm -rf target
 
-if [ -z "$aliases" ]
-then
-    clojure -A:uberjar
-else
-    clojure -A:uberjar --aliases "$aliases"
-fi
+clojure -A:uberjar
 
 unzip target/etp-db.jar -d target/etp-db
+cp -rf src/test target/test
+
 rm -f target/etp-db.jar
