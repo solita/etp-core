@@ -76,7 +76,7 @@
      :nettotarve
      (per-nettoala-for-schema
        [:tulokset :nettotarve]
-       #(str (str/replace % "vuosikulutus" "") "neliovuosikulutus")
+       #(str/replace % "vuosikulutus" "neliovuosikulutus")
        energiatodistus-schema/Energiatodistus2018)
      :lampokuormat
      (per-nettoala-for-schema
