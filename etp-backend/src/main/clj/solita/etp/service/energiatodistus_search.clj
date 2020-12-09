@@ -15,7 +15,7 @@
             [solita.etp.service.json :as json]
             [solita.etp.service.rooli :as rooli-service])
   (:import (schema.core Constrained Predicate EqSchema)
-           (clojure.lang ArityException)))
+           (clojure.lang ArityException IPersistentVector)))
 
 (defn- illegal-argument! [msg]
   (throw (IllegalArgumentException. msg)))
@@ -43,17 +43,50 @@
        (apply deep/deep-merge)
        (flat/tree->flat ".")))
 
+(defn abbreviation [identifier]
+  (or (some-> identifier keyword energiatodistus-service/db-abbreviations name)
+      identifier))
+
+(defn field->db-column
+  "If search field represents persistent column in database
+   this returns a fullname of corresponding database column. "
+  [[table & field-parts]]
+  (str table "."
+       (as-> field-parts $
+             (vec $)
+             (update $ 0 abbreviation)
+             (map db/snake-case $)
+             (str/join "$" $))))
+
+(defn neliovuosikulutus-sql [field]
+  (str (field->db-column field) " / energiatodistus.lt$lammitetty_nettoala"))
+
+(defn neliovuosikulutus [^IPersistentVector path]
+  (fn [[key schema]]
+    [(-> key name (str "-neliovuosikulutus") keyword)
+     [(neliovuosikulutus-sql (conj path (name key)))
+      schema]]))
+
+(def computed-fields
+  {:energiatodistus
+   {:tulokset
+     {:uusiutuvat-omavaraisenergiat
+      (into {} (map (neliovuosikulutus
+                      ["energiatodistus" "tulokset" "uusiutuvat-omavaraisenergiat"]))
+            energiatodistus-schema/UusiutuvatOmavaraisenergiat)}}})
+
 (def private-search-schema
   (schemas->search-schema
-   {:energiatodistus energiatodistus-schema/Energiatodistus2013}
-   {:energiatodistus energiatodistus-schema/Energiatodistus2018}
-   geo-schema/Search))
+    {:energiatodistus energiatodistus-schema/Energiatodistus2013}
+    {:energiatodistus energiatodistus-schema/Energiatodistus2018}
+    (deep/map-values second computed-fields)
+    geo-schema/Search))
 
 (def public-search-schema
   (schemas->search-schema
-   {:energiatodistus public-energiatodistus-schema/Energiatodistus2013}
-   {:energiatodistus public-energiatodistus-schema/Energiatodistus2018}
-   geo-schema/Search))
+    {:energiatodistus public-energiatodistus-schema/Energiatodistus2013}
+    {:energiatodistus public-energiatodistus-schema/Energiatodistus2018}
+    geo-schema/Search))
 
 (def select-all
   "SELECT energiatodistus.*,
@@ -68,10 +101,6 @@
    LEFT JOIN postinumero ON postinumero.id = energiatodistus.pt$postinumero
    LEFT JOIN kunta ON kunta.id = postinumero.kunta_id
    LEFT JOIN toimintaalue ON toimintaalue.id = kunta.toimintaalue_id")
-
-(defn abbreviation [identifier]
-  (or (some-> identifier keyword energiatodistus-service/db-abbreviations name)
-      identifier))
 
 (defn- coercer! [field search-schema]
   (if-let [coercer (some-> field keyword search-schema)]
@@ -88,12 +117,11 @@
 
 (defn field->sql [field search-schema]
   (validate-field! field search-schema)
-  (let [[table & field-parts] (str/split field #"\.")]
-    (str table "." (as-> field-parts $
-                     (vec $)
-                     (update $ 0 abbreviation)
-                     (map db/snake-case $)
-                     (str/join "$" $)))))
+  (let [field-parts (str/split field #"\.")
+        computed-field (get-in computed-fields (map keyword field-parts))]
+    (if (nil? computed-field)
+      (field->db-column field-parts)
+      (first computed-field))))
 
 (defn infix-notation [operator field value search-schema]
   [(str (field->sql field search-schema) " " operator " ?")
@@ -152,11 +180,11 @@
 (defn keyword->sql [keyword]
   (when (-> keyword str/blank? not)
     (concat
-     ["postinumero.id::text = ? OR kunta.label_fi ILIKE ? OR
+      ["postinumero.id::text = ? OR kunta.label_fi ILIKE ? OR
        kunta.label_sv ILIKE ? OR toimintaalue.label_fi ILIKE ? OR
        toimintaalue.label_sv ILIKE ?"]
-     [keyword]
-     (repeat 4 (str keyword "%")))))
+      [keyword]
+      (repeat 4 (str keyword "%")))))
 
 (defn whoami->sql [{:keys [id] :as whoami}]
   (cond
@@ -203,7 +231,7 @@
 
 (def db-row->public-energiatodistus
   (energiatodistus-service/schema->db-row->energiatodistus
-   public-energiatodistus-schema/Energiatodistus))
+    public-energiatodistus-schema/Energiatodistus))
 
 (defn search [db whoami query]
   (map db-row->public-energiatodistus
