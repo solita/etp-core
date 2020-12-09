@@ -3,6 +3,7 @@
             [clojure.java.jdbc :as jdbc]
             [solita.etp.db :as db]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
+            [solita.etp.service.energiatodistus-search-fields :as search-fields]
             [schema.core :as schema]
             [solita.common.map :as m]
             [solita.common.schema :as xschema]
@@ -15,7 +16,7 @@
             [solita.etp.service.json :as json]
             [solita.etp.service.rooli :as rooli-service])
   (:import (schema.core Constrained Predicate EqSchema)
-           (clojure.lang ArityException IPersistentVector)))
+           (clojure.lang ArityException)))
 
 (defn- illegal-argument! [msg]
   (throw (IllegalArgumentException. msg)))
@@ -43,43 +44,11 @@
        (apply deep/deep-merge)
        (flat/tree->flat ".")))
 
-(defn abbreviation [identifier]
-  (or (some-> identifier keyword energiatodistus-service/db-abbreviations name)
-      identifier))
-
-(defn field->db-column
-  "If search field represents persistent column in database
-   this returns a fullname of corresponding database column. "
-  [[table & field-parts]]
-  (str table "."
-       (as-> field-parts $
-             (vec $)
-             (update $ 0 abbreviation)
-             (map db/snake-case $)
-             (str/join "$" $))))
-
-(defn neliovuosikulutus-sql [field]
-  (str (field->db-column field) " / energiatodistus.lt$lammitetty_nettoala"))
-
-(defn neliovuosikulutus [^IPersistentVector path]
-  (fn [[key schema]]
-    [(-> key name (str "-neliovuosikulutus") keyword)
-     [(neliovuosikulutus-sql (conj path (name key)))
-      schema]]))
-
-(def computed-fields
-  {:energiatodistus
-   {:tulokset
-     {:uusiutuvat-omavaraisenergiat
-      (into {} (map (neliovuosikulutus
-                      ["energiatodistus" "tulokset" "uusiutuvat-omavaraisenergiat"]))
-            energiatodistus-schema/UusiutuvatOmavaraisenergiat)}}})
-
 (def private-search-schema
   (schemas->search-schema
     {:energiatodistus energiatodistus-schema/Energiatodistus2013}
     {:energiatodistus energiatodistus-schema/Energiatodistus2018}
-    (deep/map-values second computed-fields)
+    (deep/map-values second search-fields/computed-fields)
     geo-schema/Search))
 
 (def public-search-schema
@@ -118,9 +87,9 @@
 (defn field->sql [field search-schema]
   (validate-field! field search-schema)
   (let [field-parts (str/split field #"\.")
-        computed-field (get-in computed-fields (map keyword field-parts))]
+        computed-field (get-in search-fields/computed-fields (map keyword field-parts))]
     (if (nil? computed-field)
-      (field->db-column field-parts)
+      (search-fields/field->db-column field-parts)
       (first computed-field))))
 
 (defn infix-notation [operator field value search-schema]

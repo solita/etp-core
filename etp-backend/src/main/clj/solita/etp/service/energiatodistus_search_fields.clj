@@ -1,0 +1,85 @@
+(ns solita.etp.service.energiatodistus-search-fields
+  (:require [solita.etp.service.energiatodistus :as energiatodistus-service]
+            [solita.etp.service.e-luokka :as e-luokka]
+            [solita.etp.db :as db]
+            [solita.etp.schema.energiatodistus :as energiatodistus-schema]
+            [clojure.string :as str])
+  (:import (clojure.lang IPersistentVector)))
+
+(defn- abbreviation [identifier]
+  (or (some-> identifier keyword energiatodistus-service/db-abbreviations name)
+      identifier))
+
+(defn field->db-column
+  "If search field represents persistent column in database
+   this returns a fullname of corresponding database column. "
+  [[table & field-parts]]
+  (str table "."
+       (as-> field-parts $
+             (vec $)
+             (update $ 0 abbreviation)
+             (map db/snake-case $)
+             (str/join "$" $))))
+
+(defn per-nettoala-sql [field]
+  (str field " / energiatodistus.lt$lammitetty_nettoala"))
+
+(defn per-nettoala-entry [^IPersistentVector path rename]
+  (fn [[key schema]]
+    (let [computed-field-key (-> key name rename keyword)
+          field-parts (concat ["energiatodistus"] path [(name key)])]
+      [computed-field-key
+       [(per-nettoala-sql (field->db-column field-parts)) schema]])))
+
+(defn per-nettoala-for-schema [path rename-key schema]
+  (into {} (map (per-nettoala-entry (map name path) rename-key))
+        (get-in schema path)))
+
+(defn painotettu-kulutus-sql [path key]
+  (str (field->db-column (conj path (name key))) " * (case energiatodistus.versio"
+       " when 2013 then "
+       (get-in e-luokka/energiamuotokerroin [2013 key])
+       " when 2018 then "
+       (get-in e-luokka/energiamuotokerroin [2018 key])
+       " end)"))
+
+(defn painotettu-kulutus-entry [[key schema]]
+  [(-> key name (str "-painotettu") keyword)
+   [(painotettu-kulutus-sql
+      ["energiatodistus" "tulokset" "kaytettavat-energiamuodot"]
+      key)
+    schema]])
+
+(defn computed-field-neliovuosikulutus [[key [sql-expression schema]]]
+  [(-> key name (str "-neliovuosikulutus") keyword)
+   [(per-nettoala-sql sql-expression)
+    schema]])
+
+(def kaytettavat-energiamuodot-painotettu-kulutus
+  (into {} (map painotettu-kulutus-entry)
+        (:kaytettavat-energiamuodot energiatodistus-schema/Tulokset)))
+
+(def computed-fields
+  "Computed field consists of sql expression and value schema [sql, schema]"
+  {:energiatodistus
+   {:tulokset
+    {:kaytettavat-energiamuodot
+     (merge
+       kaytettavat-energiamuodot-painotettu-kulutus
+       (into {} (map computed-field-neliovuosikulutus)
+             kaytettavat-energiamuodot-painotettu-kulutus))
+     :uusiutuvat-omavaraisenergiat
+     (per-nettoala-for-schema
+       [:tulokset :uusiutuvat-omavaraisenergiat]
+       #(str % "-neliovuosikulutus")
+       energiatodistus-schema/Energiatodistus2018)
+     :nettotarve
+     (per-nettoala-for-schema
+       [:tulokset :nettotarve]
+       #(str (str/replace % "vuosikulutus" "") "neliovuosikulutus")
+       energiatodistus-schema/Energiatodistus2018)
+     :lampokuormat
+     (per-nettoala-for-schema
+       [:tulokset :lampokuormat]
+       #(str % "-neliovuosikuorma")
+       energiatodistus-schema/Energiatodistus2018)}}})
