@@ -24,22 +24,22 @@
              (map db/snake-case $)
              (str/join "$" $))))
 
-(defn per-nettoala-sql [value-expression]
+(defn- per-nettoala-sql [value-expression]
   (str value-expression " / energiatodistus.lt$lammitetty_nettoala"))
 
-(defn per-nettoala-entry [^IPersistentVector path rename]
+(defn- per-nettoala-entry [^IPersistentVector path rename]
   (fn [[key schema]]
     (let [computed-field-key (-> key name rename keyword)
           field-parts (concat ["energiatodistus"] path [(name key)])]
       [computed-field-key
        [(per-nettoala-sql (field->db-column field-parts)) schema]])))
 
-(defn per-nettoala-for-schema
+(defn- per-nettoala-for-schema
   ([path rename-key schema]
     (into {} (map (per-nettoala-entry (map name path) rename-key))
           (get-in schema path))))
 
-(defn painotettu-kulutus-sql [path key]
+(defn- painotettu-kulutus-sql [path key]
   (str (field->db-column (conj path (name key))) " * (case energiatodistus.versio"
        " when 2013 then "
        (get-in e-luokka/energiamuotokerroin [2013 key])
@@ -47,41 +47,41 @@
        (get-in e-luokka/energiamuotokerroin [2018 key])
        " end)"))
 
-(defn painotettu-kulutus-entry [[key schema]]
+(defn- painotettu-kulutus-entry [[key schema]]
   [(-> key name (str "-painotettu") keyword)
    [(painotettu-kulutus-sql
       ["energiatodistus" "tulokset" "kaytettavat-energiamuodot"]
       key)
     schema]])
 
-(defn computed-field-neliovuosikulutus [[key [sql-expression schema]]]
+(defn- computed-field-neliovuosikulutus [[key [sql-expression schema]]]
   [(-> key name (str "-neliovuosikulutus") keyword)
    [(per-nettoala-sql sql-expression)
     schema]])
 
-(def kaytettavat-energiamuodot-painotettu-kulutus
+(def ^:private kaytettavat-energiamuodot-painotettu-kulutus
   (into {} (map painotettu-kulutus-entry)
         (:kaytettavat-energiamuodot energiatodistus-schema/Tulokset)))
 
-(defn ua-sql [key]
+(defn- ua-sql [key]
   (let [db-name (-> key name db/snake-case)]
     (str "energiatodistus.lt$rakennusvaippa$" db-name "$u * "
          "energiatodistus.lt$rakennusvaippa$" db-name "$ala")))
 
-(def ua-fields
+(def ^:private ua-fields
   (into {}
         (comp
           (filter (fn [[_ value]] (= value energiatodistus-schema/Rakennusvaippa)))
           (map (fn [[key _]] [key {:UA [(ua-sql key) common-schema/NonNegative]}])))
         energiatodistus-schema/LahtotiedotRakennusvaippa))
 
-(def ua-total-sql
+(def ^:private ua-total-sql
   (->> ua-fields
        (map (fn [[key value]] (-> value :UA first)))
        (str/join " + ")
        (str "energiatodistus.lt$rakennusvaippa$kylmasillat_ua + ")))
 
-(def osuus-lampohaviosta-fields
+(def ^:private osuus-lampohaviosta-fields
   (into {:kylmasillat-osuus-lampohaviosta
          [(str "energiatodistus.lt$rakennusvaippa$kylmasillat_ua / (" ua-total-sql ")")
           common-schema/NonNegative]}
