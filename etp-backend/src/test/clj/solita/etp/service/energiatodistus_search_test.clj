@@ -287,3 +287,24 @@
                                "energiatodistus.tulokset.kaytettavat-energiamuodot.sahko-painotettu-neliovuosikulutus"
                                1.2]]]
                             nil))))))
+
+(t/deftest add-and-find-by-uusiutuvat-omavaraisenergiat-aurinkosahko-test
+  (let [whoami (add-laatija!)
+        energiatodistus (-> (energiatodistus-test/generate-energiatodistus-2018)
+                            (assoc-in [:lahtotiedot :lammitetty-nettoala] 2M)
+                            (assoc-in [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko] 2M))
+        id (energiatodistus-test/add-energiatodistus! energiatodistus
+                                                      (:id whoami)
+                                                      2018)]
+    (t/is (= (public-energiatodistus-with-db-fields energiatodistus
+                                                    id
+                                                    (:id whoami)
+                                                    2018)
+             (first (search whoami
+                            [[["="
+                               "energiatodistus.tulokset.uusiutuvat-omavaraisenergiat.aurinkosahko"
+                               2]
+                              ["="
+                               "energiatodistus.tulokset.uusiutuvat-omavaraisenergiat.aurinkosahko-neliovuosikulutus"
+                               1]]]
+                            nil))))))
