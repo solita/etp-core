@@ -3,6 +3,7 @@
             [clojure.java.jdbc :as jdbc]
             [solita.etp.db :as db]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
+            [solita.etp.service.energiatodistus-search-fields :as search-fields]
             [schema.core :as schema]
             [solita.common.map :as m]
             [solita.common.schema :as xschema]
@@ -45,15 +46,16 @@
 
 (def private-search-schema
   (schemas->search-schema
-   {:energiatodistus energiatodistus-schema/Energiatodistus2013}
-   {:energiatodistus energiatodistus-schema/Energiatodistus2018}
-   geo-schema/Search))
+    {:energiatodistus energiatodistus-schema/Energiatodistus2013}
+    {:energiatodistus energiatodistus-schema/Energiatodistus2018}
+    (deep/map-values second search-fields/computed-fields)
+    geo-schema/Search))
 
 (def public-search-schema
   (schemas->search-schema
-   {:energiatodistus public-energiatodistus-schema/Energiatodistus2013}
-   {:energiatodistus public-energiatodistus-schema/Energiatodistus2018}
-   geo-schema/Search))
+    {:energiatodistus public-energiatodistus-schema/Energiatodistus2013}
+    {:energiatodistus public-energiatodistus-schema/Energiatodistus2018}
+    geo-schema/Search))
 
 (def select-all
   "SELECT energiatodistus.*,
@@ -68,10 +70,6 @@
    LEFT JOIN postinumero ON postinumero.id = energiatodistus.pt$postinumero
    LEFT JOIN kunta ON kunta.id = postinumero.kunta_id
    LEFT JOIN toimintaalue ON toimintaalue.id = kunta.toimintaalue_id")
-
-(defn abbreviation [identifier]
-  (or (some-> identifier keyword energiatodistus-service/db-abbreviations name)
-      identifier))
 
 (defn- coercer! [field search-schema]
   (if-let [coercer (some-> field keyword search-schema)]
@@ -88,12 +86,11 @@
 
 (defn field->sql [field search-schema]
   (validate-field! field search-schema)
-  (let [[table & field-parts] (str/split field #"\.")]
-    (str table "." (as-> field-parts $
-                     (vec $)
-                     (update $ 0 abbreviation)
-                     (map db/snake-case $)
-                     (str/join "$" $)))))
+  (let [field-parts (str/split field #"\.")
+        computed-field (get-in search-fields/computed-fields (map keyword field-parts))]
+    (if (nil? computed-field)
+      (search-fields/field->db-column field-parts)
+      (first computed-field))))
 
 (defn infix-notation [operator field value search-schema]
   [(str (field->sql field search-schema) " " operator " ?")
@@ -152,11 +149,11 @@
 (defn keyword->sql [keyword]
   (when (-> keyword str/blank? not)
     (concat
-     ["postinumero.id::text = ? OR kunta.label_fi ILIKE ? OR
+      ["postinumero.id::text = ? OR kunta.label_fi ILIKE ? OR
        kunta.label_sv ILIKE ? OR toimintaalue.label_fi ILIKE ? OR
        toimintaalue.label_sv ILIKE ?"]
-     [keyword]
-     (repeat 4 (str keyword "%")))))
+      [keyword]
+      (repeat 4 (str keyword "%")))))
 
 (defn whoami->sql [{:keys [id] :as whoami}]
   (cond
@@ -203,7 +200,7 @@
 
 (def db-row->public-energiatodistus
   (energiatodistus-service/schema->db-row->energiatodistus
-   public-energiatodistus-schema/Energiatodistus))
+    public-energiatodistus-schema/Energiatodistus))
 
 (defn search [db whoami query]
   (map db-row->public-energiatodistus
