@@ -78,7 +78,7 @@
 
 (defn raja-asteikko-f [versio kayttotarkoitus-id alakayttotarkoitus-id nettoala]
   ((match/match [versio kayttotarkoitus-id alakayttotarkoitus-id nettoala]
-                [2013 1 _ (_ :guard #(<= % 120))] pienet-asuinrakennukset-120-2013
+                [2013 1 _ (_ :guard #(< % 120))] pienet-asuinrakennukset-120-2013
                 [2013 1 _ (_ :guard #(<= % 150))] pienet-asuinrakennukset-120-150-2013
                 [2013 1 _ (_ :guard #(<= % 600))] pienet-asuinrakennukset-150-600-2013-2018
                 [2013 1 _ (_ :guard #(> % 600))] pienet-asuinrakennukset-600-2013-2018
