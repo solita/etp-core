@@ -101,7 +101,7 @@
                        :kuvaus-fi nil
                        :kuvaus-sv nil}
    :tilat-ja-iv       (hyotysuhde (xml/get-in-xml xml [:lammitys-tilat-ja-iv]))
-   :lammin-kayttovesi (hyotysuhde (xml/get-in-xml xml [:lammitys-tilat-ja-iv]))
+   :lammin-kayttovesi (hyotysuhde (xml/get-in-xml xml [:lammitys-lammin-kayttovesi]))
    :takka             (maara-tuotto (xml/get-in-xml xml [:lammitys-takka]))
    :ilmalampopumppu   (maara-tuotto (xml/get-in-xml xml [:lammitys-ilmanlampopumppu]))})
 
@@ -268,8 +268,12 @@
          :tulokset                       (tulokset (f :tulokset))
          :toteutunut-ostoenergiankulutus (toteutunut-ostoenergiankulutus (f :toteutunut-ostoenergiankulutus))
          :huomiot                        (huomiot (f :huomiot))
-         :lisamerkintoja-fi              (xml/get-content xml [:lisamerkintoja-fi])
-         :lisamerkintoja-sv              (xml/get-content xml [:lisamerkintoja-sv])}
+         :lisamerkintoja-fi              (xml/get-content
+                                          xml
+                                          [:energiatodistus :lisamerkintoja-fi])
+         :lisamerkintoja-sv              (xml/get-content
+                                          xml
+                                          [:energiatodistus :lisamerkintoja-sv])}
         coercer)))
 
 (defn response [content]
