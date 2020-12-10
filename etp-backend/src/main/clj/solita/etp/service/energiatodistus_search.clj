@@ -205,9 +205,18 @@
   (energiatodistus-service/schema->db-row->energiatodistus
    public-energiatodistus-schema/Energiatodistus))
 
-(defn search [db whoami query]
-  (map db-row->public-energiatodistus
-       (jdbc/query db (sql-query select-all whoami query) nil)))
+(def db-row->energiatodistus
+  (energiatodistus-service/schema->db-row->energiatodistus
+   energiatodistus-schema/Energiatodistus))
+
+(defn- search-db-rows [db whoami query]
+  (jdbc/query db (sql-query select-all whoami query) nil))
+
+(defn public-search [db whoami query]
+  (map db-row->public-energiatodistus (search-db-rows db whoami query)))
+
+(defn private-search [db whoami query]
+  (map db-row->energiatodistus (search-db-rows db whoami query)))
 
 (defn search-count [db whoami query]
   (first (jdbc/query db (sql-query "select count(*) count" whoami query) nil)))
