@@ -268,8 +268,12 @@
          :tulokset                       (tulokset (f :tulokset))
          :toteutunut-ostoenergiankulutus (toteutunut-ostoenergiankulutus (f :toteutunut-ostoenergiankulutus))
          :huomiot                        (huomiot (f :huomiot))
-         :lisamerkintoja-fi              (xml/get-content xml [:lisamerkintoja-fi])
-         :lisamerkintoja-sv              (xml/get-content xml [:lisamerkintoja-sv])}
+         :lisamerkintoja-fi              (xml/get-content
+                                          xml
+                                          [:energiatodistus :lisamerkintoja-fi])
+         :lisamerkintoja-sv              (xml/get-content
+                                          xml
+                                          [:energiatodistus :lisamerkintoja-sv])}
         coercer)))
 
 (defn response [content]
