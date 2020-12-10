@@ -71,7 +71,7 @@
    ;; This in in fact alakäyttötarkoitus in database
    :kayttotarkoitus          schema/Str})
 
-(def Rakenneusvaippa
+(def Rakennusvaippa
   {:ala common-schema/NonNegative
    :U   common-schema/NonNegative})
 
@@ -80,11 +80,11 @@
    :lampokapasiteetti common-schema/NonNegative
    :ilmatilavuus      common-schema/NonNegative
 
-   :ulkoseinat        Rakenneusvaippa
-   :ylapohja          Rakenneusvaippa
-   :alapohja          Rakenneusvaippa
-   :ikkunat           Rakenneusvaippa
-   :ulkoovet          Rakenneusvaippa
+   :ulkoseinat        Rakennusvaippa
+   :ylapohja          Rakennusvaippa
+   :alapohja          Rakennusvaippa
+   :ikkunat           Rakennusvaippa
+   :ulkoovet          Rakennusvaippa
    :kylmasillat-UA    common-schema/NonNegative})
 
 (def LahtotiedotIkkuna
