@@ -21,8 +21,8 @@
              (map db/snake-case $)
              (str/join "$" $))))
 
-(defn per-nettoala-sql [field]
-  (str field " / energiatodistus.lt$lammitetty_nettoala"))
+(defn per-nettoala-sql [value-expression]
+  (str value-expression " / energiatodistus.lt$lammitetty_nettoala"))
 
 (defn per-nettoala-entry [^IPersistentVector path rename]
   (fn [[key schema]]
@@ -31,9 +31,10 @@
       [computed-field-key
        [(per-nettoala-sql (field->db-column field-parts)) schema]])))
 
-(defn per-nettoala-for-schema [path rename-key schema]
-  (into {} (map (per-nettoala-entry (map name path) rename-key))
-        (get-in schema path)))
+(defn per-nettoala-for-schema
+  ([path rename-key schema]
+    (into {} (map (per-nettoala-entry (map name path) rename-key))
+          (get-in schema path))))
 
 (defn painotettu-kulutus-sql [path key]
   (str (field->db-column (conj path (name key))) " * (case energiatodistus.versio"
@@ -82,4 +83,17 @@
      (per-nettoala-for-schema
        [:tulokset :lampokuormat]
        #(str % "-neliovuosikuorma")
-       energiatodistus-schema/Energiatodistus2018)}}})
+       energiatodistus-schema/Energiatodistus2018)}
+    :toteutunut-ostoenergiankulutus
+    {:ostettu-energia
+     (per-nettoala-for-schema
+       [:toteutunut-ostoenergiankulutus :ostettu-energia]
+       #(str/replace % "vuosikulutus" "neliovuosikulutus")
+       energiatodistus-schema/Energiatodistus2018)
+     :ostetut-polttoaineet
+     (dissoc
+       (per-nettoala-for-schema
+         [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet]
+         #(str % "-neliovuosikulutus")
+         energiatodistus-schema/Energiatodistus2018)
+       :muu-neliovuosikulutus)}}})
