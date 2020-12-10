@@ -72,12 +72,12 @@
   (into {}
         (comp
           (filter (fn [[_ value]] (= value energiatodistus-schema/Rakenneusvaippa)))
-          (map (fn [[key _]] [key {:ua [(ua-sql key) common-schema/NonNegative]}])))
+          (map (fn [[key _]] [key {:UA [(ua-sql key) common-schema/NonNegative]}])))
         energiatodistus-schema/LahtotiedotRakennusvaippa))
 
 (def ua-total-sql
   (->> ua-fields
-       (map (fn [[key value]] (-> value :ua first)))
+       (map (fn [[key value]] (-> value :UA first)))
        (str/join " + ")
        (str "energiatodistus.lt$rakennusvaippa$kylmasillat_ua + ")))
 
@@ -87,7 +87,7 @@
           common-schema/NonNegative]}
         (map (fn [[key value]]
                [key {:osuus-lampohaviosta
-                     [(str (-> value :ua first) " / (" ua-total-sql ")")
+                     [(str (-> value :UA first) " / (" ua-total-sql ")")
                       common-schema/NonNegative]}]))
         ua-fields))
 

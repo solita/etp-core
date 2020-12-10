@@ -308,3 +308,25 @@
                                "energiatodistus.tulokset.uusiutuvat-omavaraisenergiat.aurinkosahko-neliovuosikulutus"
                                1]]]
                             nil))))))
+
+(t/deftest add-and-find-by-rakennusvaippa-ikkunat-osuus-lampohaviosta-test
+  (let [whoami (add-laatija!)
+        energiatodistus (-> (energiatodistus-test/generate-energiatodistus-2018-complete)
+                            (assoc-in [:lahtotiedot :rakennusvaippa :ikkunat :ala] 2M)
+                            (assoc-in [:lahtotiedot :rakennusvaippa :ikkunat :U] 2M)
+                            (assoc-in [:lahtotiedot :rakennusvaippa :kylmasillat-UA] 2M))
+        id (energiatodistus-test/add-energiatodistus! energiatodistus
+                                                      (:id whoami)
+                                                      2018)]
+    (t/is (= (public-energiatodistus-with-db-fields energiatodistus
+                                                    id
+                                                    (:id whoami)
+                                                    2018)
+             (first (search whoami
+                            [[["="
+                               "energiatodistus.lahtotiedot.rakennusvaippa.ikkunat.UA"
+                               4]
+                              ["="
+                               "energiatodistus.lahtotiedot.rakennusvaippa.ikkunat.osuus-lampohaviosta"
+                               0.4]]]
+                            nil))))))
