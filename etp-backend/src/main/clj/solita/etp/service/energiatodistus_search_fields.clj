@@ -71,7 +71,7 @@
 (def ua-fields
   (into {}
         (comp
-          (filter (fn [[_ value]] (= value energiatodistus-schema/Rakenneusvaippa)))
+          (filter (fn [[_ value]] (= value energiatodistus-schema/Rakennusvaippa)))
           (map (fn [[key _]] [key {:UA [(ua-sql key) common-schema/NonNegative]}])))
         energiatodistus-schema/LahtotiedotRakennusvaippa))
 
