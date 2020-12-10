@@ -3,7 +3,10 @@
             [solita.etp.service.e-luokka :as e-luokka]
             [solita.etp.db :as db]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [schema.core :as schema]
+            [flathead.deep :as deep]
+            [solita.etp.schema.common :as common-schema])
   (:import (clojure.lang IPersistentVector)))
 
 (defn- abbreviation [identifier]
@@ -60,10 +63,40 @@
   (into {} (map painotettu-kulutus-entry)
         (:kaytettavat-energiamuodot energiatodistus-schema/Tulokset)))
 
+(defn ua-sql [key]
+  (let [db-name (-> key name db/snake-case)]
+    (str "energiatodistus.lt$rakennusvaippa$" db-name "$u * "
+         "energiatodistus.lt$rakennusvaippa$" db-name "$ala")))
+
+(def ua-fields
+  (into {}
+        (comp
+          (filter (fn [[_ value]] (= value energiatodistus-schema/Rakenneusvaippa)))
+          (map (fn [[key _]] [key {:ua [(ua-sql key) common-schema/NonNegative]}])))
+        energiatodistus-schema/LahtotiedotRakennusvaippa))
+
+(def ua-total-sql
+  (->> ua-fields
+       (map (fn [[key value]] (-> value :ua first)))
+       (str/join " + ")
+       (str "energiatodistus.lt$rakennusvaippa$kylmasillat_ua + ")))
+
+(def osuus-lampohaviosta-fields
+  (into {:kylmasillat-osuus-lampohaviosta
+         [(str "energiatodistus.lt$rakennusvaippa$kylmasillat_ua / (" ua-total-sql ")")
+          common-schema/NonNegative]}
+        (map (fn [[key value]]
+               [key {:osuus-lampohaviosta
+                     [(str (-> value :ua first) " / (" ua-total-sql ")")
+                      common-schema/NonNegative]}]))
+        ua-fields))
+
 (def computed-fields
   "Computed field consists of sql expression and value schema [sql, schema]"
   {:energiatodistus
-   {:tulokset
+   {:lahtotiedot
+    {:rakennusvaippa (deep/deep-merge ua-fields osuus-lampohaviosta-fields)}
+    :tulokset
     {:kaytettavat-energiamuodot
      (merge
        kaytettavat-energiamuodot-painotettu-kulutus
