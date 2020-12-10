@@ -19,7 +19,7 @@
 
 (defn search [whoami where keyword]
   (map #(dissoc % :laatija-fullname)
-       (energiatodistus-search-service/search
+       (energiatodistus-search-service/public-search
         ts/*db*
         whoami
         (cond-> {}
@@ -179,11 +179,11 @@
               (energiatodistus-test/generate-energiatodistus-2018-complete)
               (:id whoami))]
 
-    (t/is (= [id1 id2] (mapv :id (energiatodistus-search-service/search
+    (t/is (= [id1 id2] (mapv :id (energiatodistus-search-service/public-search
                          ts/*db* whoami
                          {:sort "energiatodistus.allekirjoitusaika"}))))
 
-    (t/is (= [id2 id1] (mapv :id (energiatodistus-search-service/search
+    (t/is (= [id2 id1] (mapv :id (energiatodistus-search-service/public-search
                                    ts/*db* whoami
                                    {:sort "energiatodistus.allekirjoitusaika"
                                     :order "desc" }))))

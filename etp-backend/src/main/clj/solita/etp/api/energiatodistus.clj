@@ -67,7 +67,7 @@
           :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
           :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
                         (api-response/response-with-exceptions
-                         #(energiatodistus-search-service/search
+                         #(energiatodistus-search-service/public-search
                            db
                            whoami
                            (update query :where json/read-value))
