@@ -67,6 +67,18 @@
                     {}
                     (-> energiatodistus :tulokset :kuukausierittely))))
 
+(defn format-tulo-or-poisto [x]
+  (some->> x bigdec (format "%.3f")))
+
+(defn assoc-tulo-poisto [energiatodistus path]
+  (assoc-in energiatodistus
+            (conj path :tulo-poisto)
+            (str (format-tulo-or-poisto (get-in energiatodistus
+                                                (conj path :tulo)))
+                 " / "
+                 (format-tulo-or-poisto (get-in energiatodistus
+                                                (conj path :poisto))))))
+
 (defn find-by-id [coll id]
   (->> coll (filter #(= (:id %) id)) first))
 
@@ -313,21 +325,9 @@
                         [:lahtotiedot :rakennusvaippa :kylmasillat-osuus-lampohaviosta]
                         [:lahtotiedot :rakennusvaippa :kylmasillat-UA]
                         [:lahtotiedot :rakennusvaippa :UA-summa])
-          (combine-keys #(format "%.3f / %.3f" (bigdec %1) (bigdec %2))
-                        nil
-                        [:lahtotiedot :ilmanvaihto :paaiv :tulo-poisto]
-                        [:lahtotiedot :ilmanvaihto :paaiv :tulo]
-                        [:lahtotiedot :ilmanvaihto :paaiv :poisto])
-          (combine-keys #(format "%.3f / %.3f" (bigdec %1) (bigdec %2))
-                        nil
-                        [:lahtotiedot :ilmanvaihto :erillispoistot :tulo-poisto]
-                        [:lahtotiedot :ilmanvaihto :erillispoistot :tulo]
-                        [:lahtotiedot :ilmanvaihto :erillispoistot :poisto])
-          (combine-keys #(format "%.3f / %.3f" (bigdec %1) (bigdec %2))
-                        nil
-                        [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo-poisto]
-                        [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo]
-                        [:lahtotiedot :ilmanvaihto :ivjarjestelma :poisto])
+          (assoc-tulo-poisto [:lahtotiedot :ilmanvaihto :paaiv])
+          (assoc-tulo-poisto [:lahtotiedot :ilmanvaihto :erillispoistot])
+          (assoc-tulo-poisto [:lahtotiedot :ilmanvaihto :ivjarjestelma])
           (assoc-in [:lahtotiedot :ilmanvaihto :label-fi]
                     (if use-ilmanvaihto-kuvaus?
                       (-> energiatodistus :lahtotiedot :ilmanvaihto :kuvaus-fi)
