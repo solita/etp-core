@@ -756,7 +756,6 @@
                                (case versio 2013 648 2018 666))
             signable-pdf-data (puumerkki/read-file signable-pdf-path)
             digest (puumerkki/compute-base64-pkcs signable-pdf-data)
-            _ (log/warn (str "DIGEST OF ET " id " BEFORE STORING TO S3: ") digest)
             key (file-key id language)]
         (file-service/upsert-file-from-bytes aws-s3-client
                                              key
@@ -797,10 +796,6 @@
         (let [key (file-key id language)
               {:keys [content]} (file-service/find-file aws-s3-client key)
               content-bytes (.readAllBytes content)
-              _ (log/warn (str "SIGNATURE FOR ET " id ": ")
-                          (:signature signature-and-chain))
-              digest (puumerkki/compute-base64-pkcs content-bytes)
-              _ (log/warn (str "DIGEST OF ET " id " AFTER STORING TO S3: ") digest)
               pkcs7 (puumerkki/make-pkcs7 signature-and-chain content-bytes)
               filename (str key ".pdf")]
           (do
