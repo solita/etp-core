@@ -36,12 +36,6 @@
       (assoc % :tags #{tag}) %)
    routes))
 
-(defn logout-location-by-headers [{:strs [host referer] :or {referer ""}}]
-  (let [host (str "https://" host)]
-    (if (str/starts-with? referer (str/replace host #":[0-9]+" ""))
-      (str/replace referer #"/api/logout" "")
-      host)))
-
 (defn logout-location [{:keys [headers] :as req}]
   (let [{:keys [data]} (jwt/req->verified-jwt-payloads req)]
     (if data
@@ -50,7 +44,7 @@
            (str (if (:custom:VIRTU_localID data)
                   config/keycloak-virtu-logout-url
                   config/keycloak-suomifi-logout-url)))
-      (logout-location-by-headers headers))))
+      (str config/index-url "/api/logout"))))
 
 (def empty-cookie {:value ""
                    :path "/"
