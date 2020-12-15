@@ -1,5 +1,6 @@
 (ns solita.etp.config
-  (:require [integrant.core :as ig]
+  (:require [clojure.string :as str]
+            [integrant.core :as ig]
             [cognitect.aws.credentials :as credentials]))
 
 ; use local evn credentials in codebuild and local env
@@ -56,9 +57,12 @@
 ;; Misc config
 ;;
 
-(def local-dev-env-index "https://localhost:3000")
+(def service-host (env "SERVICE_HOST" "localhost:3000"))
+(def index-url (str (if (str/starts-with? service-host "localhost")
+                      (str "https://" service-host)
+                      (str "https://private." service-host))))
 (def trusted-jwt-iss (env "TRUSTED_JWT_ISS" "https://raw.githubusercontent.com/solita/etp-core/develop/etp-backend/src/test/resources/"))
 (def data-jwt-public-key-base-url (env "DATA_JWT_PUBLIC_KEY_BASE_URL" "https://raw.githubusercontent.com/solita/etp-core/develop/etp-backend/src/test/resources/"))
-(def keycloak-suomifi-logout-url (env "KEYCLOAK_SUOMIFI_LOGOUT_URL" local-dev-env-index))
-(def keycloak-virtu-logout-url (env "KEYCLOAK_VIRTU_LOGOUT_URL" local-dev-env-index))
-(def cognito-logout-url (env "COGNITO_LOGOUT_URL" (str local-dev-env-index "?client=id=localhost")))
+(def keycloak-suomifi-logout-url (env "KEYCLOAK_SUOMIFI_LOGOUT_URL" index-url))
+(def keycloak-virtu-logout-url (env "KEYCLOAK_VIRTU_LOGOUT_URL" index-url))
+(def cognito-logout-url (env "COGNITO_LOGOUT_URL" (str index-url "?client=id=localhost")))

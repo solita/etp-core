@@ -36,12 +36,6 @@
       (assoc % :tags #{tag}) %)
    routes))
 
-(defn logout-location-by-headers [{:strs [host referer] :or {referer ""}}]
-  (let [host (str "https://" host)]
-    (if (str/starts-with? referer (str/replace host #":[0-9]+" ""))
-      (str/replace referer #"/api/logout" "")
-      host)))
-
 (defn logout-location [{:keys [headers] :as req}]
   (let [{:keys [data]} (jwt/req->verified-jwt-payloads req)]
     (if data
@@ -50,7 +44,7 @@
            (str (if (:custom:VIRTU_localID data)
                   config/keycloak-virtu-logout-url
                   config/keycloak-suomifi-logout-url)))
-      (logout-location-by-headers headers))))
+      (str config/index-url "/api/logout"))))
 
 (def empty-cookie {:value ""
                    :path "/"
@@ -73,8 +67,13 @@
            :tags #{"System"}
            :parameters {:query {:redirect s/Str}}
            :handler (fn [{:keys [parameters]}]
-                      {:status 302
-                       :headers {"Location" (-> parameters :query :redirect)}})}}]
+                      (let [redirect (-> parameters :query :redirect)]
+                        {:status 302
+                         :headers {"Location" (if (str/starts-with?
+                                                   redirect
+                                                   config/index-url)
+                                                redirect
+                                                config/index-url)}}))}}]
    ["/logout"
     {:get {:summary    "Callback used to redirect user to cognito logout"
            :tags       #{"System"}
