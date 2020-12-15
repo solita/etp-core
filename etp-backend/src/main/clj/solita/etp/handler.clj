@@ -67,8 +67,13 @@
            :tags #{"System"}
            :parameters {:query {:redirect s/Str}}
            :handler (fn [{:keys [parameters]}]
-                      {:status 302
-                       :headers {"Location" (-> parameters :query :redirect)}})}}]
+                      (let [redirect (-> parameters :query :redirect)]
+                        {:status 302
+                         :headers {"Location" (if (str/starts-with?
+                                                   redirect
+                                                   config/index-url)
+                                                redirect
+                                                config/index-url)}}))}}]
    ["/logout"
     {:get {:summary    "Callback used to redirect user to cognito logout"
            :tags       #{"System"}
