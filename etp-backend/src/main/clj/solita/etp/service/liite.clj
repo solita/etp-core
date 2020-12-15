@@ -26,7 +26,6 @@
   (jdbc/with-db-transaction [db db]
     (-> liite
         (dissoc :tempfile :size)
-        (assoc :createdby-id (:id whoami))
         (assoc :energiatodistus-id energiatodistus-id)
         (insert-liite! db)
         first
@@ -44,7 +43,6 @@
 (defn add-liite-from-link! [db whoami energiatodistus-id liite]
   (jdbc/with-db-transaction [db db]
     (-> liite
-        (assoc :createdby-id (:id whoami))
         (assoc :energiatodistus-id energiatodistus-id)
         (assoc :contenttype "text/uri-list")
         (insert-liite! db))))
