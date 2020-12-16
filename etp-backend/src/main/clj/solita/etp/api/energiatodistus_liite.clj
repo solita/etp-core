@@ -48,8 +48,11 @@
            :access  (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
            :parameters {:path {:id common-schema/Key}}
            :responses {200 {:body [liite-schema/Liite]}}
-           :handler (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
-                      (r/response (liite-service/find-energiatodistus-liitteet db id)))}}]
+           :handler (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+                      (r/response (liite-service/find-energiatodistus-liitteet
+                                   db
+                                   whoami
+                                   id)))}}]
 
    ["/:liite-id"
     {:conflicting true
@@ -59,9 +62,11 @@
                                   :liite-id common-schema/Key}}
               :responses  {200 {:body nil}
                           404 {:body schema/Str}}
-              :handler    (fn [{{{:keys [id liite-id]} :path} :parameters :keys [db]}]
+              :handler    (fn [{{{:keys [id liite-id]} :path}
+                               :parameters
+                               :keys [db whoami]}]
                           (api-response/put-response
-                              (liite-service/delete-liite db liite-id)
+                              (liite-service/delete-liite db whoami liite-id)
                               (str "Energiatodistuksen " id " liite " liite-id " does not exists.")))}}]
 
    ["/:liite-id/:filename"
@@ -73,10 +78,10 @@
            :responses {200 {:body nil}
                        404 {:body schema/Str}}
            :handler (fn [{{{:keys [id liite-id filename]} :path} :parameters
-                         :keys [db aws-s3-client]}]
+                         :keys [db whoami aws-s3-client]}]
                       (let [{:keys [content nimi contenttype]}
                             (liite-service/find-energiatodistus-liite-content
-                             db aws-s3-client liite-id)]
+                             db whoami aws-s3-client liite-id)]
                         (if (= nimi filename)
                           (api-response/file-response
                            content

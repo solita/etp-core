@@ -3,6 +3,8 @@
             [solita.etp.schema.liite :as liite-schema]
             [solita.etp.service.json :as json]
             [solita.etp.service.file :as file-service]
+            [solita.etp.service.energiatodistus :as energiatodistus-service]
+            [solita.etp.exception :as exception]
             [schema.coerce :as coerce]
             [clojure.java.jdbc :as jdbc]
             [clojure.set :as set]))
@@ -22,6 +24,12 @@
 (defn- insert-file! [key aws-s3-client file]
   (file-service/upsert-file-from-file aws-s3-client key file))
 
+(defn assert-permission! [db whoami energiatodistus-id]
+  (when-not (energiatodistus-service/find-energiatodistus db
+                                                          whoami
+                                                          energiatodistus-id)
+    (exception/throw-forbidden!)))
+
 (defn add-liite-from-file! [db aws-s3-client whoami energiatodistus-id liite]
   (jdbc/with-db-transaction [db db]
     (-> liite
@@ -35,6 +43,7 @@
 
 (defn add-liitteet-from-files [db aws-s3-client whoami energiatodistus-id files]
   (jdbc/with-db-transaction [db db]
+    (assert-permission! db whoami energiatodistus-id)
     (doseq [file files]
       (add-liite-from-file! db aws-s3-client whoami energiatodistus-id
         (set/rename-keys file {:content-type :contenttype
@@ -42,20 +51,31 @@
 
 (defn add-liite-from-link! [db whoami energiatodistus-id liite]
   (jdbc/with-db-transaction [db db]
+    (assert-permission! db whoami energiatodistus-id)
     (-> liite
         (assoc :energiatodistus-id energiatodistus-id)
         (assoc :contenttype "text/uri-list")
         (insert-liite! db))))
 
-(defn find-energiatodistus-liitteet [db energiatodistus-id]
-  (map coerce-liite
-       (liite-db/select-liite-by-energiatodistus-id
-         db {:energiatodistus-id energiatodistus-id})))
+(defn find-energiatodistus-liitteet [db whoami energiatodistus-id]
+  (jdbc/with-db-transaction [db db]
+    (assert-permission! db whoami energiatodistus-id)
+    (map coerce-liite
+         (liite-db/select-liite-by-energiatodistus-id
+          db {:energiatodistus-id energiatodistus-id}))))
 
-(defn find-energiatodistus-liite-content [db aws-s3-client liite-id]
-  (merge
-    (file-service/find-file aws-s3-client (file-key liite-id))
-    (first (liite-db/select-liite db {:id liite-id}))))
+(defn find-energiatodistus-liite-content [db whoami aws-s3-client liite-id]
+  (jdbc/with-db-transaction [db db]
+    (let [liite (first (liite-db/select-liite db {:id liite-id}))]
+      (assert-permission! db whoami (:energiatodistus-id liite))
+      (merge
+       (file-service/find-file aws-s3-client (file-key liite-id))
+       liite))))
 
-(defn delete-liite [db liite-id]
-  (liite-db/delete-liite! db {:id liite-id}))
+(defn delete-liite [db whoami liite-id]
+  (jdbc/with-db-transaction [db db]
+    (assert-permission! db whoami (some->> {:id liite-id}
+                                           (liite-db/select-liite db)
+                                           first
+                                           :energiatodistus-id))
+    (liite-db/delete-liite! db {:id liite-id})))
