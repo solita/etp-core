@@ -14,6 +14,7 @@ begin
       transaction_id bigint not null default txid_current(),
       modifytime timestamp with time zone not null default transaction_timestamp(),
       modifiedby_id int not null default etp.current_kayttaja_id() references kayttaja (id),
+      service_uri text not null default etp.current_service_uri(),
 
       like etp.%I including comments
     )', table_name, table_name);
@@ -31,7 +32,7 @@ begin
     from information_schema.columns
     where table_schema = 'audit' and
           table_name   = audit_table_name and
-          ordinal_position > 4
+          ordinal_position > 5
     order by ordinal_position);
 end;
 $$

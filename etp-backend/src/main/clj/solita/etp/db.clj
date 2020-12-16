@@ -98,7 +98,9 @@
 (defn- set-application-name! [connection application-name]
   (if (empty? application-name)
     (exception/illegal-argument! "Database application name is missing.")
-    (common-jdbc/set-application-name! connection application-name)))
+    (common-jdbc/set-application-name!
+      connection (subs application-name 0
+                       (min (count application-name) 64)))))
 
 (common-jdbc/add-connection-interceptor!
   #(set-application-name! %1 (:application-name %2)))
