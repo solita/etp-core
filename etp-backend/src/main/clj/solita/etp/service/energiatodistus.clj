@@ -231,6 +231,15 @@
    (if-let [energiatodistus (find-energiatodistus db id)]
      (select-energiatodistus-for-find energiatodistus whoami))))
 
+(def ^:private db-row->energiatodistus-for-any-laatija
+  (schema->db-row->energiatodistus
+    energiatodistus-schema/EnergiatodistusForAnyLaatija))
+
+(defn find-energiatodistus-any-laatija
+  ([db id]
+   (first (map db-row->energiatodistus-for-any-laatija
+               (energiatodistus-db/select-energiatodistus db {:id id})))))
+
 (defn- throw-invalid-replace! [id msg]
   (exception/throw-ex-info! :invalid-replace (str "Replaceable energiatodistus " id msg)))
 

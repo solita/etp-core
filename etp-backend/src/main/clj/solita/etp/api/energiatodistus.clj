@@ -115,12 +115,12 @@
        ["/:id"
         {:get {:summary    "Hae mikä tahansa yksittäinen energiatodistus tunnisteella (id)"
                :parameters {:path {:id common-schema/Key}}
-               :responses  {200 {:body energiatodistus-schema/Energiatodistus}
+               :responses  {200 {:body energiatodistus-schema/EnergiatodistusForAnyLaatija}
                             404 {:body schema/Str}}
                :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
-               :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+               :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                              (api-response/get-response
-                               (energiatodistus-service/find-energiatodistus db id)
+                               (energiatodistus-service/find-energiatodistus-any-laatija db id)
                                (str "Energiatodistus " id " does not exists.")))}}]]
       ["/2013"
        ["" (crud-api/post 2013 energiatodistus-schema/EnergiatodistusSave2013)]
