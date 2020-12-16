@@ -13,8 +13,8 @@ select distinct on (l.id) l.id, a.modifytime createtime,
 from liite l
 inner join audit.liite a on l.id = a.id
 inner join kayttaja k on a.modifiedby_id = k.id
-where l.energiatodistus_id = :energiatodistus-id
+where l.energiatodistus_id = :energiatodistus-id and l.deleted = false
 order by l.id, a.modifytime asc, a.event_id desc
 
 -- name: delete-liite!
-delete from liite where id = :id
+update liite set deleted = true where id = :id

@@ -3,7 +3,8 @@ create table liite (
   energiatodistus_id int not null references energiatodistus (id),
   nimi text,
   contenttype text,
-  url text
+  url text,
+  deleted boolean not null default false
 );
 
 call audit.create_audit_table('liite'::name);
