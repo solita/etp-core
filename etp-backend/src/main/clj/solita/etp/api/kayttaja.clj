@@ -56,5 +56,5 @@
    ["/roolit"
     {:get {:summary    "Hae roolit -luokittelu"
            :responses  {200 {:body [rooli-schema/Rooli]}}
-           :handler    (fn [_]
-                         (r/response (rooli-service/find-roolit)))}}]])
+           :handler    (fn [{:keys [db]}]
+                         (r/response (rooli-service/find-roolit db)))}}]])

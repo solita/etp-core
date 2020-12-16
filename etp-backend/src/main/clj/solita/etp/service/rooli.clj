@@ -1,19 +1,10 @@
-(ns solita.etp.service.rooli)
-
-(def roolit [{:id 0
-              :label-fi "Laatija"
-              :label-sv "Laatija-SV"}
-             {:id 1
-              :label-fi "Pätevyyden toteaja"
-              :label-sv "Pätevyyden toteaja -SV"}
-             {:id 2
-              :label-fi "Pääkäyttäjä"
-              :label-sv "Pääkäyttäjä-SV"}])
+(ns solita.etp.service.rooli
+  (:require [solita.etp.service.luokittelu :as luokittelu-service]))
 
 (def ^:private rooli-keys
   [:laatija :patevyyden-toteaja :paakayttaja])
 
-(defn find-roolit [] roolit)
+(defn find-roolit [db] (luokittelu-service/find-roolit db))
 
 (defn public? [whoami]
   (nil? whoami))

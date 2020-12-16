@@ -1,11 +1,15 @@
 (ns solita.etp.service.rooli-test
   (:require [clojure.test :as t]
-            [solita.etp.service.rooli :as service]))
+            [solita.etp.service.rooli :as service]
+            [solita.etp.test-system :as ts]))
+
+(t/use-fixtures :each ts/fixture)
 
 (t/deftest find-roolit-test
-  (let [roolit (service/find-roolit)
+  (let [roolit (service/find-roolit ts/*db*)
         fi-labels (set (map :label-fi roolit))]
-    (t/is (= fi-labels #{"Laatija"
+    (t/is (= fi-labels #{"Järjestelmä"
+                         "Laatija"
                          "Pätevyyden toteaja"
                          "Pääkäyttäjä"}))
     ;; TODO test swedish labels when they exist

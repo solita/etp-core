@@ -15,8 +15,8 @@
     jdbc/update!
     db
     :kayttaja
-    (flat/tree->flat "$" kayttaja)
-    ["rooli = 0 and id = ?" id]))
+    (flat/tree->flat "$" (dissoc kayttaja :rooli))
+    ["rooli_id = 0 and id = ?" id]))
 
 (defn- add-kayttaja [db kayttaja]
   (kayttaja-service/add-kayttaja! db (assoc kayttaja :rooli 0)))

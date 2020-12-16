@@ -1,6 +1,6 @@
 -- name: select-whoami
 SELECT k.id id, k.etunimi etunimi, k.sukunimi sukunimi, k.email email,
-       k.rooli rooli, k.cognito_id cognitoid, k.virtu$localid,
+       k.rooli_id rooli, k.cognito_id cognitoid, k.virtu$localid,
        k.virtu$organisaatio, k.henkilotunnus henkilotunnus,
        l.api_key_hash api_key_hash
 FROM kayttaja k

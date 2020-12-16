@@ -58,7 +58,7 @@
     (t/is (-> file-path io/as-file .exists true?))
     (io/delete-file file-path)))
 
-(t/deftest generate-pdf-as-file-test
+(t/deftest ^:eftest/synchronized generate-pdf-as-file-test
   (doseq [energiatodistus (energiatodistukset)]
     (let [file-path (service/generate-pdf-as-file energiatodistus "sv" true)]
       (t/is (-> file-path io/as-file .exists))
