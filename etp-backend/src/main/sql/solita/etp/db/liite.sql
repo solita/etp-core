@@ -4,7 +4,7 @@ insert into liite (data) values (:data :: JSONB)
 returning id
 
 -- name: select-liite
-select liite.nimi, liite.contenttype from liite
+select liite.nimi, liite.energiatodistus_id, liite.contenttype from liite
 where id = :id
 
 -- name: select-liite-by-energiatodistus-id
