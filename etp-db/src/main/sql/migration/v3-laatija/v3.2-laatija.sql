@@ -1,3 +1,5 @@
+call create_classification('patevyystaso'::name);
+
 -- Make sure Finland exists since it's the default country for laatijat
 INSERT INTO country (id, alpha3, numeric, name, label_fi, label_sv) VALUES ('FI', 'FIN', 246, 'Finland', 'Suomi', 'Finland');
 
@@ -6,7 +8,7 @@ INSERT INTO laskutuskieli (id, label_fi, label_sv) VALUES (0, 'Suomi', 'Finska')
 
 create table laatija (
   id int primary key references kayttaja (id) not null,
-  patevyystaso int NOT NULL,
+  patevyystaso int NOT NULL references patevyystaso (id),
   toteamispaivamaara date NOT NULL,
   toteaja text NOT NULL,
   laatimiskielto boolean NOT NULL DEFAULT false,

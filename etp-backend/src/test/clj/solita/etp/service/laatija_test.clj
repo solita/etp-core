@@ -72,7 +72,7 @@
 ;; TODO test for finding, attaching and detaching yritys from laatija
 
 (t/deftest find-patevyydet-test
-  (let [patevyydet (service/find-patevyystasot)
+  (let [patevyydet (service/find-patevyystasot ts/*db*)
         fi-labels  (map :label-fi patevyydet)
         se-labels  (map :label-sv patevyydet)]
     (t/is (= ["Perustaso" "Ylempi taso"] fi-labels))

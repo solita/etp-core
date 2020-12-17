@@ -22,12 +22,14 @@
 (def LaatijaUpdate (dissoc laatija-schema/LaatijaUpdate :api-key))
 
 (defn generate-KayttajaLaatijaAdds [n]
-  (tu/generate-kayttaja n laatija-schema/KayttajaLaatijaAdd))
+  (->> laatija-schema/KayttajaLaatijaAdd
+       (tu/generate-kayttaja n)
+       (map #(assoc % :patevyystaso (rand-nth [1,2])))))
 
 (defn generate-KayttajaLaatijaUpdates [n]
   (->> laatija-schema/KayttajaLaatijaUpdate
        (tu/generate-kayttaja n)
-       (map #(assoc % :rooli 0 :toimintaalue 1))))
+       (map #(assoc % :rooli 0 :toimintaalue 1 :patevyystaso (rand-nth [1,2])))))
 
 (t/deftest upsert-test
   (doseq [kayttaja-laatija (generate-KayttajaLaatijaAdds 100)
