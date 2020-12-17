@@ -17,14 +17,4 @@ create table kayttaja (
   constraint kayttaja_virtu_key unique (virtu$localid, virtu$organisaatio)
 );
 
-create or replace function current_kayttaja_id() returns int as $$
-begin
-  return split_part(current_setting('application_name'), '@', 1) :: int;
-end;
-$$ language plpgsql immutable;
-
-create or replace function current_service_uri() returns text as $$
-begin
-  return split_part(current_setting('application_name'), '@', 2) :: text;
-end;
-$$ language plpgsql immutable;
+call audit.activate('kayttaja'::name);

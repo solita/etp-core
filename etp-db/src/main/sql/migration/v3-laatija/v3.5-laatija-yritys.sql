@@ -7,5 +7,4 @@ create table laatija_yritys (
   primary key (laatija_id, yritys_id)
 );
 
-call audit.create_audit_table('laatija_yritys'::name);
 call audit.activate('laatija_yritys'::name);

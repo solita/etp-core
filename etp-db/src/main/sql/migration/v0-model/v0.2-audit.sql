@@ -1,3 +1,16 @@
+
+create or replace function etp.current_kayttaja_id() returns int as $$
+begin
+  return split_part(current_setting('application_name'), '@', 1) :: int;
+end;
+$$ language plpgsql immutable;
+
+create or replace function etp.current_service_uri() returns text as $$
+begin
+  return split_part(current_setting('application_name'), '@', 2) :: text;
+end;
+$$ language plpgsql immutable;
+
 /**
   Create audit table based on all columns in an auditable table.
 
@@ -95,12 +108,13 @@ begin
 end
 $$;
 
-create or replace procedure audit.activate(audit_table_name name)
+create or replace procedure audit.activate(table_name name)
   language plpgsql
 as $$
 begin
-  call audit.create_audit_procedure(audit_table_name);
-  call audit.create_audit_insert_trigger(audit_table_name, audit_table_name);
-  call audit.create_audit_update_trigger(audit_table_name, audit_table_name);
+  call audit.create_audit_table(table_name);
+  call audit.create_audit_procedure(table_name);
+  call audit.create_audit_insert_trigger(table_name, table_name);
+  call audit.create_audit_update_trigger(table_name, table_name);
 end
 $$;

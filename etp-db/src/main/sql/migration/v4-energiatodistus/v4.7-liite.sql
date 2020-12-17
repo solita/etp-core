@@ -7,5 +7,4 @@ create table liite (
   deleted boolean not null default false
 );
 
-call audit.create_audit_table('liite'::name);
 call audit.activate('liite'::name);
