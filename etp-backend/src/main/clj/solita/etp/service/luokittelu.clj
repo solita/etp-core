@@ -7,6 +7,8 @@
               [(format "SELECT id, label_fi, label_sv, valid FROM %s" table-name)]
               db/default-opts))
 
+(def find-roolit #(select-luokittelu % "rooli"))
+
 (def find-kielisyys #(select-luokittelu % "kielisyys"))
 (def find-laatimisvaiheet #(select-luokittelu % "laatimisvaihe"))
 (def find-ilmanvaihtotyypit #(select-luokittelu % "ilmanvaihtotyyppi"))

@@ -1,4 +1,4 @@
-INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli, henkilotunnus) VALUES
+INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli_id, henkilotunnus) VALUES
 ('Pauli', 'Pätevyyden toteaja', 'patevyydentoteaja@solita.fi', '0451234567', 1, '010280-952L'),
 ('Liisa', 'Specimen-Potex', 'laatija@solita.fi', '0451234567', 0, '010469-999W'),
 ('Harri', 'Specimen-Potex', 'harri.lindberg@solita.fi', '0451234567', 0, '010675-9981'),
@@ -15,5 +15,5 @@ INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli, henkilotunnus) V
 ('Caverion', 'Laatija', 'laatija@caverion.fi', '0451234567', 0, '010170-960F'),
 ('Laskentapalvelut', 'Laatija', 'laatija@dof.fi', '0451234567', 0, '010170-999R');
 
-INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli, virtu$localid, virtu$organisaatio) VALUES
+INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli_id, virtu$localid, virtu$organisaatio) VALUES
 ('Päivi', 'Pääkäyttäjä', 'paakayttaja@solita.fi', '0501234567', 2, 'vvirkamies', 'testivirasto.fi');

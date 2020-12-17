@@ -7,7 +7,8 @@
             [solita.etp.schema.kayttaja :as kayttaja-schema]
             [solita.etp.schema.common :as common-schema]
             [flathead.flatten :as flat]
-            [schema.core :as schema]))
+            [schema.core :as schema]
+            [clojure.set :as set]))
 
 ;; *** Require sql functions ***
 (db/require-queries 'kayttaja)
@@ -34,11 +35,14 @@
        (exception/throw-forbidden!)))))
 
 (defn- kayttaja->db-row [kayttaja]
-  (dissoc (flat/tree->flat "$" kayttaja) :virtu))
+  (-> kayttaja
+      (set/rename-keys {:rooli :rooli-id})
+      (->> (flat/tree->flat "$"))
+      (dissoc :virtu)))
 
 (defn add-kayttaja! [db kayttaja]
   (-> (db/with-db-exception-translation
-        jdbc/insert! db :kayttaja (kayttaja->db-row kayttaja))
+        jdbc/insert! db :kayttaja (kayttaja->db-row kayttaja) db/default-opts)
       first :id))
 
 (defn update-kayttaja!
@@ -50,5 +54,7 @@
                 kayttaja-schema/KayttajaAdminUpdate))
           (rooli-service/paakayttaja? whoami))
     (db/with-db-exception-translation
-      jdbc/update! db :kayttaja (kayttaja->db-row kayttaja) ["rooli <> 0 and id = ?" id])
+      jdbc/update! db :kayttaja (kayttaja->db-row kayttaja)
+        ["rooli_id > 0 and id = ?" id]
+        db/default-opts)
     (exception/throw-forbidden!)))
