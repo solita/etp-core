@@ -45,9 +45,12 @@
   (jdbc/with-db-transaction [db db]
     (assert-permission! db whoami energiatodistus-id)
     (doseq [file files]
-      (add-liite-from-file! db aws-s3-client whoami energiatodistus-id
-        (set/rename-keys file {:content-type :contenttype
-                               :filename :nimi})))))
+      (add-liite-from-file! db
+                            aws-s3-client
+                            whoami
+                            energiatodistus-id
+                            (set/rename-keys file {:content-type :contenttype
+                                                   :filename :nimi})))))
 
 (defn add-liite-from-link! [db whoami energiatodistus-id liite]
   (jdbc/with-db-transaction [db db]
