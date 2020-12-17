@@ -10,12 +10,14 @@
             [solita.etp.service.rooli :as rooli-service])
   (:import (java.io InputStream)))
 
+(def liite-access (some-fn rooli-service/laatija? rooli-service/paakayttaja?))
+
 (def routes
   ["/liitteet"
    ["/files"
     {:conflicting true
      :post {:summary    "Energiatodistuksen liitteiden lisäys tiedostoista."
-            :access     rooli-service/laatija?
+            :access     liite-access
             :parameters {:path {:id common-schema/Key}
                          :multipart {:files (schema/conditional
                                               vector? [reitit-schema/TempFilePart]
@@ -32,7 +34,7 @@
    ["/link"
     {:conflicting true
      :post {:summary    "Liite linkin lisäys energiatodistukseen."
-            :access     rooli-service/laatija?
+            :access     liite-access
             :parameters {:path {:id common-schema/Key}
                          :body liite-schema/LiiteLinkAdd}
             :responses  {201 {:body nil}
@@ -45,7 +47,7 @@
 
    [""
     {:get {:summary "Hae energiatodistuksen liitteet."
-           :access  (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
+           :access  liite-access
            :parameters {:path {:id common-schema/Key}}
            :responses {200 {:body [liite-schema/Liite]}}
            :handler (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
@@ -57,7 +59,7 @@
    ["/:liite-id"
     {:conflicting true
      :delete {:summary    "Poista liite energiatodistuksesta."
-              :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
+              :access     liite-access
               :parameters {:path {:id common-schema/Key
                                   :liite-id common-schema/Key}}
               :responses  {200 {:body nil}
@@ -71,7 +73,7 @@
 
    ["/:liite-id/:filename"
     {:get {:summary "Hae energiatodistuksen yhden liitteen sisältö."
-           :access  (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
+           :access  liite-access
            :parameters {:path {:id common-schema/Key
                                :liite-id common-schema/Key
                                :filename schema/Str}}
