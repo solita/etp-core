@@ -27,3 +27,5 @@ create table laatija (
   maa char(2) REFERENCES country (id) NOT NULL DEFAULT 'FI',
   api_key_hash text
 );
+
+call audit.activate('laatija'::name);

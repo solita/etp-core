@@ -12,3 +12,5 @@ create table yritys (
   maa char(2) REFERENCES country (id) NOT NULL DEFAULT 'FI',
   unique (ytunnus, nimi, vastaanottajan_tarkenne)
 );
+
+call audit.activate('yritys'::name);

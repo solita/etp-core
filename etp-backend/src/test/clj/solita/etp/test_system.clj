@@ -65,7 +65,7 @@
       (create-bucket! management-aws-s3-client)
       (let [test-system (ig/init (config-for-tests db-name bucket-name))]
         (with-bindings
-          {#'*db*            (db-user (:solita.etp/db test-system) "public")
+          {#'*db*            (db-user (:solita.etp/db test-system) 0)
            #'*aws-s3-client* (:solita.etp/aws-s3-client test-system)}
           (try (f)
                (finally (ig/halt! test-system)))))
