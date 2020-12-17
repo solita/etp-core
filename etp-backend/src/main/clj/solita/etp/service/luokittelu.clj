@@ -8,6 +8,7 @@
               db/default-opts))
 
 (def find-roolit #(select-luokittelu % "rooli"))
+(def find-patevyystasot #(select-luokittelu % "patevyystaso"))
 
 (def find-kielisyys #(select-luokittelu % "kielisyys"))
 (def find-laatimisvaiheet #(select-luokittelu % "laatimisvaihe"))

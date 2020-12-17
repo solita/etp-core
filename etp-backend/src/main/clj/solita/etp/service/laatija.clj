@@ -7,6 +7,7 @@
             [solita.etp.db :as db]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.yritys :as yritys-service]
+            [solita.etp.service.luokittelu :as luokittelu-service]
             [solita.etp.schema.laatija :as laatija-schema]))
 
 ;; *** Require sql functions ***
@@ -125,7 +126,4 @@
 ;; Pätevyydet
 ;;
 
-(def patevyystasot [{:id 1 :label-fi "Perustaso" :label-sv "Basnivå"}
-                    {:id 2 :label-fi "Ylempi taso" :label-sv "Högre nivå"}])
-
-(defn find-patevyystasot [] (map #(assoc % :valid true) patevyystasot))
+(defn find-patevyystasot [db] (luokittelu-service/find-patevyystasot db))

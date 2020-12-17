@@ -17,8 +17,8 @@
 (def get-patevyydet
   {:summary   "Hae pätevyydet-luokittelu"
    :responses {200 {:body [laatija-schema/Patevyystaso]}}
-   :handler   (fn [_]
-                (r/response (laatija-service/find-patevyystasot)))})
+   :handler   (fn [{:keys [db]}]
+                (r/response (laatija-service/find-patevyystasot db)))})
 
 (def public-routes
   [["/laatijat"
