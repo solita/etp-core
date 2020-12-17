@@ -76,4 +76,6 @@
     (handler (assoc-in
                req
                [:db :application-name]
-               (format "%s@core.etp" (or (:id whoami) "public"))))))
+               (format "%s@core.etp%s"
+                       (or (:id whoami) "public")
+                       (:uri req))))))
