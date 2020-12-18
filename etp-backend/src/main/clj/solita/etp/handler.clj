@@ -27,6 +27,7 @@
             [solita.etp.config :as config]
             [solita.etp.security :as security]
             [solita.etp.jwt :as jwt]
+            [solita.etp.cache :as cache]
             [solita.etp.exception :as exception]
             [solita.common.map :as map]))
 
@@ -92,7 +93,7 @@
                        :body headers})}}]])
 
 (def routes
-  ["/api"
+  ["/api" {:middleware [[cache/wrap-disable-cache]]}
    system-routes
    ["/public" {:middleware [[security/wrap-db-application-name]]}
     (concat (tag "Laatijat Public API" laatija-api/public-routes)
