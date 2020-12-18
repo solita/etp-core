@@ -7,6 +7,7 @@ create table kayttotarkoitusluokka (
   valid boolean not null default true,
   primary key (id, versio)
 );
+call audit.activate('kayttotarkoitusluokka'::name);
 
 create table alakayttotarkoitusluokka (
   id varchar(4),
@@ -20,3 +21,4 @@ create table alakayttotarkoitusluokka (
   foreign key (kayttotarkoitusluokka_id, versio)
     references kayttotarkoitusluokka (id, versio)
 );
+call audit.activate('alakayttotarkoitusluokka'::name);

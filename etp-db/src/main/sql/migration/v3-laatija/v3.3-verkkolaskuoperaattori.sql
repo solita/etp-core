@@ -4,3 +4,4 @@ CREATE TABLE verkkolaskuoperaattori (
   nimi text NOT NULL,
   valid boolean NOT NULL DEFAULT true
 );
+call audit.activate('verkkolaskuoperaattori'::name);

@@ -30,3 +30,7 @@ create table validation_sisainen_kuorma (
   foreign key (kayttotarkoitusluokka_id, versio)
     references kayttotarkoitusluokka(id, versio)
 );
+
+call audit.activate('validation_numeric_column'::name);
+call audit.activate('validation_required_column'::name);
+call audit.activate('validation_sisainen_kuorma'::name);

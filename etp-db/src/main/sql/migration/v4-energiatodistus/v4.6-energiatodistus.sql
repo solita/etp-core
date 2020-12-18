@@ -259,8 +259,7 @@ create table audit.energiatodistus_tila (
   modifiedby_id int not null default etp.current_kayttaja_id() references kayttaja (id),
   service_uri text not null default etp.current_service_uri(),
 
-  id int not null references energiatodistus (id),
-  tila_id int not null references energiatodistustila (id)
+  id int, tila_id int
 );
 
 call audit.create_audit_procedure('energiatodistus_tila'::name);

@@ -18,3 +18,9 @@ create table kayttaja (
 );
 
 call audit.activate('kayttaja'::name);
+
+/* activate auditing to geo tables */
+call audit.activate('country'::name);
+call audit.activate('toimintaalue'::name);
+call audit.activate('kunta'::name);
+call audit.activate('postinumero'::name);
