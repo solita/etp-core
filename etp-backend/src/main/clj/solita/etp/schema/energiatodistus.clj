@@ -376,9 +376,10 @@
     (merge common-schema/Id Status Laatija)
     :versio schema/Int
     :perustiedot
-    (select-keys Perustiedot
-                 [:rakennustunnus
-                  :kayttotarkoitus
-                  :nimi
-                  :katuosoite-fi :katuosoite-sv
-                  :postinumero])))
+    (optional-properties
+      (select-keys Perustiedot
+                   [:rakennustunnus
+                    :kayttotarkoitus
+                    :nimi
+                    :katuosoite-fi :katuosoite-sv
+                    :postinumero]))))
