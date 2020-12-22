@@ -77,7 +77,7 @@
 
 (defn validate-required!
   ([required-constraints current update]
-    (let [missing-current (vec (missing-properties required-constraints current))
+    (let [missing-current (set (missing-properties required-constraints current))
           constraints (filter #(not (contains? missing-current (second %)))
                               required-constraints)]
       (validate-required! constraints update)))
