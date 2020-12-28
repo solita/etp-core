@@ -12,10 +12,12 @@
            (java.time Instant)
            (java.sql Timestamp PreparedStatement Date)
            (clojure.lang IPersistentVector)
-           (org.postgresql.jdbc PgArray)))
+           (org.postgresql.jdbc PgArray)
+           (java.util TimeZone)))
 
 (defmethod ig/init-key :solita.etp/db
   [_ opts]
+  (TimeZone/setDefault (TimeZone/getTimeZone "UTC"))
   {:datasource (hikari/make-datasource opts)})
 
 (defmethod ig/halt-key! :solita.etp/db
