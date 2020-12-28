@@ -13,10 +13,10 @@
 ;; *** Require sql functions ***
 (db/require-queries 'laatija)
 
-(defn public-laatija [{:keys [voimassa laatimiskielto julkinenpuhelin
+(defn public-laatija [{:keys [login voimassa laatimiskielto julkinenpuhelin
                               julkinenemail julkinenwwwosoite julkinenosoite]
                        :as laatija}]
-  (when (and voimassa (not laatimiskielto))
+  (when (and voimassa (not laatimiskielto) (not (nil? login)))
     (select-keys laatija
                  (cond-> laatija-schema/always-public-kayttaja-laatija-ks
                    julkinenpuhelin (conj :puhelin)
