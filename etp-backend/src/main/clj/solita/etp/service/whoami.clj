@@ -37,4 +37,4 @@
       (st/select-schema whoami whoami-schema/Whoami))))
 
 (defn update-kayttaja-with-whoami! [db whoami]
-  (whoami-db/update-kayttaja-with-whoami! db (flat/tree->flat "_" whoami)))
+  (whoami-db/update-kayttaja-with-whoami! db whoami))

@@ -102,7 +102,7 @@
       (st/assoc :aktiivinen schema/Bool)
       (st/assoc :henkilotunnus schema/Str)
       (st/assoc :yritys [common-schema/Key])
-      (st/dissoc :login :cognitoid :virtu :rooli :passivoitu)
+      (st/dissoc :cognitoid :virtu :rooli :passivoitu)
 
       ;; Pätevyydentoteajat do not see the last part of hetu
       (st/optional-keys)

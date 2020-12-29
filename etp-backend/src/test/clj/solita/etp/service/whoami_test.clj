@@ -34,10 +34,7 @@
                 virtuorganisaatio "organisaatio"
                 _ (service/update-kayttaja-with-whoami! ts/*db*
                                                         {:id id
-                                                         :email "example@example.com"
-                                                         :cognitoid cognitoid
-                                                         :virtu {:localid virtulocalid
-                                                                 :organisaatio virtuorganisaatio}})
+                                                         :cognitoid cognitoid})
                 found-after (kayttaja-service/find-kayttaja ts/*db* paakayttaja id)]]
     (schema/validate kayttaja-schema/Kayttaja found-after)
     (t/is (-> found-before :login nil?))
@@ -46,6 +43,4 @@
     (t/is (-> found-before :cognitoid nil?))
     (t/is (= cognitoid (:cognitoid found-after)))
     (t/is (-> found-before :virtu :localid nil?))
-    (t/is (= virtulocalid (-> found-after :virtu :localid)))
-    (t/is (-> found-before :virtu :organisaatio nil?))
-    (t/is (= virtuorganisaatio (-> found-after :virtu :organisaatio)))))
+    (t/is (-> found-before :virtu :organisaatio nil?))))

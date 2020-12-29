@@ -5,19 +5,21 @@
             [solita.etp.test :as etp-test]
             [solita.etp.service.laatija :as service]
             [solita.etp.service.kayttaja-laatija-test :as kl-service-test]
-            [solita.etp.service.kayttaja-laatija :as kl-service])
-  (:import (java.time LocalDate ZoneId)))
+            [solita.etp.service.kayttaja-laatija :as kl-service]
+            [solita.etp.service.whoami :as whoami-service])
+  (:import (java.time LocalDate ZoneId Instant)))
 
 (t/use-fixtures :each ts/fixture)
 
 (t/deftest public-laatija-test
   (let [laatija (-> (kl-service-test/generate-KayttajaLaatijaAdds 1)
                     first
-                    (merge {:voimassa true
-                            :laatimiskielto false
+                    (merge {:login           (Instant/now)
+                            :voimassa        true
+                            :laatimiskielto  false
                             :julkinenpuhelin false
-                            :julkinenemail true
-                            :julkinenosoite false}))]
+                            :julkinenemail   true
+                            :julkinenosoite  false}))]
     (t/is (every? #(contains? (service/public-laatija laatija) %)
                   [:email :etunimi]))
     (t/is (not-every? #(contains? (service/public-laatija laatija) %)
@@ -37,6 +39,7 @@
         laatijat (kl-service-test/generate-KayttajaLaatijaAdds 100)]
     (doseq [laatija laatijat]
       (let [id (#'kl-service/upsert-kayttaja-laatija! ts/*db* laatija)]
+        (whoami-service/update-kayttaja-with-whoami! ts/*db* {:id id :cognitoid nil})
         (service/update-laatija-by-id! ts/*db* id {:julkinenemail true
                                                    :julkinenpuhelin false
                                                    :julkinenwwwosoite true
@@ -68,6 +71,23 @@
                    (set (map :email found-laatijat))))
           (t/is (= (set (map :wwwosoite laatijat))
                    (set (map :wwwosoite found-laatijat)))))))))
+
+(t/deftest find-all-laatijat-not-public-test
+  (let [paakayttaja {:rooli 2}
+        patevyydentoteaja {:rooli 1}
+        public nil
+        laatijat (kl-service-test/generate-KayttajaLaatijaAdds 100)]
+    (kl-service/upsert-kayttaja-laatijat! ts/*db* laatijat)
+    (doseq [whoami [paakayttaja patevyydentoteaja public]]
+      (let [found-laatijat (service/find-all-laatijat ts/*db* whoami)]
+        (when (not= whoami public)
+          (t/is (= (set (map #(select-keys % [:etunimi :sukunimi :email :puhelin :jakeluosoite]) laatijat))
+                   (set (map #(select-keys % [:etunimi :sukunimi :email :puhelin :jakeluosoite]) found-laatijat))))
+
+          (t/is (every? #(-> % :aktiivinen false?) found-laatijat))
+          (t/is (every? #(-> % :login nil?) found-laatijat))
+        (when (= whoami public)
+          (t/is (empty? found-laatijat))))))))
 
 ;; TODO test for finding, attaching and detaching yritys from laatija
 
