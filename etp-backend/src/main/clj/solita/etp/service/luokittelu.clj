@@ -4,7 +4,7 @@
 
 (defn- select-luokittelu [db table-name]
   (jdbc/query db
-              [(format "SELECT id, label_fi, label_sv, valid FROM %s" table-name)]
+              [(format "SELECT id, label_fi, label_sv, valid FROM %s ORDER BY ordinal ASC" table-name)]
               db/default-opts))
 
 (def find-roolit #(select-luokittelu % "rooli"))
