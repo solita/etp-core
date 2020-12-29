@@ -92,18 +92,31 @@ begin
 end
 $$;
 
+create or replace function audit.update_condition(audit_table_name name) returns text
+as $$
+declare
+  column_names text[] := audit.columns(audit_table_name);
+begin
+  return format(
+    '( %s ) is distinct from ( %s )',
+    (select string_agg('old.' || v, ', ') from unnest(column_names) as v),
+    (select string_agg('new.' || v, ', ') from unnest(column_names) as v));
+end;
+$$
+language 'plpgsql';
+
 create or replace procedure audit.create_audit_update_trigger(
-  audit_table_name name, target_table_name name)
+  audit_table_name name, target_table_name name, update_condition text)
   language plpgsql
 as $$
 begin
   execute format(
     'create trigger %I
       after update on %I for each row
-      when ( old is distinct from new )
+      when ( %s )
       execute procedure audit.%I()',
     audit_table_name || '_update_trigger',
-    target_table_name,
+    target_table_name, update_condition,
     audit_table_name || '_audit');
 end
 $$;
@@ -115,6 +128,7 @@ begin
   call audit.create_audit_table(table_name);
   call audit.create_audit_procedure(table_name);
   call audit.create_audit_insert_trigger(table_name, table_name);
-  call audit.create_audit_update_trigger(table_name, table_name);
+  call audit.create_audit_update_trigger(table_name, table_name,
+    'old is distinct from new');
 end
 $$;

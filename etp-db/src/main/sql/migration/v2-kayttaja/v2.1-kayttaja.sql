@@ -17,7 +17,13 @@ create table kayttaja (
   constraint kayttaja_virtu_key unique (virtu$localid, virtu$organisaatio)
 );
 
-call audit.activate('kayttaja'::name);
+call audit.create_audit_table('kayttaja'::name);
+alter table audit.kayttaja drop column login;
+
+call audit.create_audit_procedure('kayttaja'::name);
+call audit.create_audit_insert_trigger('kayttaja'::name, 'kayttaja'::name);
+call audit.create_audit_update_trigger('kayttaja'::name, 'kayttaja'::name,
+  audit.update_condition('kayttaja'::name));
 
 /* activate auditing to geo tables */
 call audit.activate('country'::name);
