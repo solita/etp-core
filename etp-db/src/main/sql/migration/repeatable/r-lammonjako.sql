@@ -1,18 +1,18 @@
 INSERT INTO lammonjako (id, label_fi, label_sv, ordinal)
 VALUES
-(0, 'Vesikiertoinen patterilämmitys', '', 1),
-(1, 'Vesikiertoinen lattialämmitys', '', 2),
-(2, 'Vesikiertoinen kattosäteilylämmitys', '', 3),
-(3, 'Sähköpatterilämmitys', '', 4),
-(4, 'Sähköinen lattialämmitys', '', 5),
-(5, 'Sähköinen kattolämmitys', '', 6),
-(6, 'Ilmalämmitys', '', 7),
-(7, 'Uuni- tai kamiinalämmitys', '', 8),
-(8, 'Vesikiertoinen lattia-/patterilämmitys', '', 9),
-(9, 'Vesikiertoinen lämmitys/ märkätiloissa sähköinen lattialämmitys', '', 10),
-(10, 'Ilmalämmitys/vesikiertoinen patterilämmitys', '', 11),
-(11, 'Ilmalämmitys/sähköpatterilämmitys', '', 12),
-(12, 'Muu, mikä', '', 13)
+(0, 'Vesikiertoinen patterilämmitys', 'Vattenburen elementvärme', 1),
+(1, 'Vesikiertoinen lattialämmitys', 'Vattenburen golvvärme', 2),
+(2, 'Vesikiertoinen kattosäteilylämmitys', 'Vattenburen takvärme', 3),
+(3, 'Sähköpatterilämmitys', 'Uppvärmning med elelement', 4),
+(4, 'Sähköinen lattialämmitys', 'Elburen golvvärme', 5),
+(5, 'Sähköinen kattolämmitys', 'Elburen takvärme', 6),
+(6, 'Ilmalämmitys', 'Luftuppvärmning', 7),
+(7, 'Uuni- tai kamiinalämmitys', 'Uppvärmning med ugn eller kamin', 8),
+(8, 'Vesikiertoinen lattia-/patterilämmitys', 'Vattenburen golv-/elementvärme', 9),
+(9, 'Vesikiertoinen lämmitys/ märkätiloissa sähköinen lattialämmitys', 'Vattenburen värme/elburen golvvärme i våtutrymmen', 10),
+(10, 'Ilmalämmitys/vesikiertoinen patterilämmitys', 'Luftuppvärmning/vattenburen elementvärme', 11),
+(11, 'Ilmalämmitys/sähköpatterilämmitys', 'Luftuppvärmning', 12),
+(12, 'Muu, mikä', 'Annat, vad?', 13)
 ON CONFLICT (id) DO UPDATE
 SET
 label_fi = excluded.label_fi,
