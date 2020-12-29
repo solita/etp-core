@@ -8,7 +8,7 @@
 (t/deftest find-ilmanvaihtotyypit-test
   (let [ilmanvaihtotyypit (service/find-ilmanvaihtotyypit ts/*db*)]
     (t/is (= (-> ilmanvaihtotyypit last :label-fi) "Muu, mikä"))
-    (t/is (= 7 (count ilmanvaihtotyypit)))))
+    (t/is (= 9 (count ilmanvaihtotyypit)))))
 
 (t/deftest find-lammitysmuodot-test
   (let [lammitysmuodot (service/find-lammitysmuodot ts/*db*)]
