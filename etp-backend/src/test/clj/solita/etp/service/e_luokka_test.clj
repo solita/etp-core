@@ -145,9 +145,9 @@
             :raja-uusi-2018 100}
            (find-e-luokka-info 2018 "OR" 100 230)))
   (t/is (= {:e-luokka "G"
-            :kayttotarkoitus {:id 8
-                         :label-fi "Liikuntahallit pois lukien uima- ja jäähallit"
-                         :label-sv "Idrottshallar (med undantag av simhallar och ishallar)"}
+            :kayttotarkoitus {:id 10
+                              :label-fi "Liikuntahallit, uimahallit, jäähallit, liikenteen rakennukset"
+                              :label-sv "Idrottshallar, simhallar, ishallar, byggnader för trafik"}
             :raja-asteikko [[90 "A"] [130 "B"] [170 "C"] [190 "D"] [240 "E"]
                             [280 "F"]]
             :raja-uusi-2018 100}
