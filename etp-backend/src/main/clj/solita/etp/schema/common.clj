@@ -146,3 +146,9 @@
 (def Verkkolaskuosoite (schema/constrained schema/Str
                                            valid-verkkolaskuosoite?
                                            "verkkolaskuosoite"))
+
+(defn valid-url? [s]
+  (re-matches #"^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*$)"
+              s))
+
+(def Url (schema/constrained schema/Str valid-url?))

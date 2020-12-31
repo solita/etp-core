@@ -15,8 +15,8 @@
   {common-schema/Henkilotunnus       (g/always "130200A892S")
    laatija-schema/MuutToimintaalueet (g/always [0, 1, 2, 3, 17])
    common-schema/Date                (g/always (java.time.LocalDate/now))
-   geo-schema/Maa                    (g/always "FI")})
-
+   geo-schema/Maa                    (g/always "FI")
+   common-schema/Url                 (g/always "https://example.com")})
 
 (defn generate-kayttaja [n schema]
   (map #(assoc %1
