@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>solita.etp</groupId>
   <artifactId>etp-backend</artifactId>
-  <version>0.0.3</version>
+  <version>0.0.4</version>
   <dependencies>
     <dependency>
       <groupId>metosin</groupId>
@@ -93,7 +93,7 @@
     <dependency>
       <groupId>buddy</groupId>
       <artifactId>buddy-hashers</artifactId>
-      <version>1.6.0</version>
+      <version>1.7.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.poi</groupId>
@@ -153,7 +153,7 @@
     <dependency>
       <groupId>buddy</groupId>
       <artifactId>buddy-sign</artifactId>
-      <version>3.1.0</version>
+      <version>3.3.0</version>
     </dependency>
     <dependency>
       <groupId>metosin</groupId>
