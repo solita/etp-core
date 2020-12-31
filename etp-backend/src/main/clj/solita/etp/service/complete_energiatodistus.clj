@@ -335,7 +335,7 @@
           (assoc-in [:lahtotiedot :ilmanvaihto :label-sv]
                     (if use-ilmanvaihto-kuvaus?
                       (-> energiatodistus :lahtotiedot :ilmanvaihto :kuvaus-sv)
-                      (str "TODO SV " (-> ilmanvaihtotyyppi :label-sv))))
+                      (-> ilmanvaihtotyyppi :label-sv)))
           (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-label-fi]
                     (join-strings (if use-lammitysmuoto-1-kuvaus?
                                     (-> energiatodistus
@@ -352,8 +352,7 @@
                                         :kuvaus-fi)
                                     (:label-fi lammitysmuoto-2))))
           (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-label-sv]
-                    (join-strings "TODO SV"
-                                  (if use-lammitysmuoto-1-kuvaus?
+                    (join-strings (if use-lammitysmuoto-1-kuvaus?
                                     (-> energiatodistus
                                         :lahtotiedot
                                         :lammitys
@@ -376,14 +375,13 @@
                           :kuvaus-fi)
                       (:label-fi lammonjako)))
           (assoc-in [:lahtotiedot :lammitys :lammonjako-label-sv]
-                    (str "TODO SV "
-                         (if use-lammonjako-kuvaus?
-                           (-> energiatodistus
-                               :lahtotiedot
-                               :lammitys
-                               :lammonjako
-                               :kuvaus-sv)
-                           (:label-sv lammonjako))))
+                    (if use-lammonjako-kuvaus?
+                      (-> energiatodistus
+                          :lahtotiedot
+                          :lammitys
+                          :lammonjako
+                          :kuvaus-sv)
+                      (:label-sv lammonjako)))
           (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko])
           (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :tuulisahko])
           (assoc-div-nettoala [:tulokset :uusiutuvat-omavaraisenergiat :aurinkolampo])
