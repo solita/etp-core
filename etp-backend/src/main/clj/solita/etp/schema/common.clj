@@ -148,7 +148,7 @@
                                            "verkkolaskuosoite"))
 
 (defn valid-url? [s]
-  (re-matches #"^https?:\/\/(www\.)?[\p{L}0-9@:%._\+~#=]{1,256}\.[\p{L}0-9()]{1,6}\b([\p{L}0-9()@:%_\+.~#?&//=]*$)"
+  (re-matches #"^https?:\/\/(www\.)?[-\p{L}0-9@:%._\+~#=]{1,256}\.[-\p{L}0-9()]{1,6}\b([-\p{L}0-9()@:%_\+.~#?&//=]*$)"
               s))
 
 (def Url (schema/constrained schema/Str valid-url?))
