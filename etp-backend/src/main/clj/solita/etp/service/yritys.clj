@@ -9,9 +9,6 @@
 ; *** Require sql functions ***
 (db/require-queries 'yritys)
 
-(defn update-yritys! [db id yritys]
-  (yritys-db/update-yritys! db (assoc yritys :id id)))
-
 (defn find-yritys [db id]
   (first (yritys-db/select-yritys db {:id id})))
 
@@ -31,14 +28,24 @@
   (some #(= laatija-id (:id %))
         (filter laatija-yritys/accepted? (find-laatijat db yritys-id))))
 
+(defn assert-modify-permission! [db whoami yritys-id]
+  (when-not (or (laatija-in-yritys? db (:id whoami) yritys-id)
+                (rooli-service/paakayttaja? whoami))
+    (exception/throw-forbidden!
+      (str "User " (:id whoami) " is not paakayttaja or "
+           "does not belong to organization: " yritys-id))))
+
+(defn update-yritys!
+  ([db whoami id yritys]
+   (assert-modify-permission! db whoami id)
+   (update-yritys! db id yritys))
+  ([db id yritys]
+    (yritys-db/update-yritys! db (assoc yritys :id id))))
+
 (defn add-laatija-yritys!
   ([db whoami laatija-id yritys-id]
-   (if (or (laatija-in-yritys? db (:id whoami) yritys-id)
-           (rooli-service/paakayttaja? whoami))
-     (add-laatija-yritys! db laatija-id yritys-id)
-     (exception/throw-forbidden!
-       (str "User " (:id whoami) " is not paakayttaja or "
-            "does not belong to organization: " yritys-id))))
+   (assert-modify-permission! db whoami yritys-id)
+   (add-laatija-yritys! db laatija-id yritys-id))
   ([db laatija-id yritys-id]
    (yritys-db/insert-laatija-yritys!
      db (map/bindings->map laatija-id yritys-id))
