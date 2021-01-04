@@ -229,8 +229,10 @@
       {:path [:lahtotiedot :ilmanvaihto :ivjarjestelma :tulo-poisto]}
       {:path [:lahtotiedot :ilmanvaihto :ivjarjestelma :sfp] :dp 2}
       {:path [:lahtotiedot :ilmanvaihto :lto-vuosihyotysuhde] :dp 0 :percent? true}
-      {:path [:lahtotiedot :lammitys :label-fi]}
-      {:path [:lahtotiedot :lammitys :label-sv]}
+      {:path [:lahtotiedot :lammitys :lammitysmuoto-label-fi]}
+      {:path [:lahtotiedot :lammitys :lammitysmuoto-label-sv]}
+      {:path [:lahtotiedot :lammitys :lammonjako-label-fi]}
+      {:path [:lahtotiedot :lammitys :lammonjako-label-sv]}
       {:path [:lahtotiedot :lammitys :tilat-ja-iv :tuoton-hyotysuhde] :dp 0 :percent? true}
       {:path [:lahtotiedot :lammitys :tilat-ja-iv :jaon-hyotysuhde] :dp 0 :percent? true}
       {:path [:lahtotiedot :lammitys :tilat-ja-iv :lampokerroin] :dp 1}
