@@ -36,11 +36,9 @@
            "does not belong to organization: " yritys-id))))
 
 (defn update-yritys!
-  ([db whoami id yritys]
-   (assert-modify-permission! db whoami id)
-   (update-yritys! db id yritys))
-  ([db id yritys]
-    (yritys-db/update-yritys! db (assoc yritys :id id))))
+  [db whoami id yritys]
+  (assert-modify-permission! db whoami id)
+  (yritys-db/update-yritys! db (assoc yritys :id id)))
 
 (defn add-laatija-yritys!
   ([db whoami laatija-id yritys-id]

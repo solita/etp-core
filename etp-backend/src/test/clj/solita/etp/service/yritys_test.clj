@@ -3,7 +3,9 @@
             [schema-generators.complete :as c]
             [schema.core :as schema]
             [solita.etp.test-system :as ts]
+            [solita.etp.test :as test]
             [solita.etp.service.yritys :as service]
+            [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.schema.yritys :as yritys-schema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.service.energiatodistus-test :as energiatodistus-test]))
@@ -30,14 +32,42 @@
                                         {:id laatija-id} yritys)]]
     (t/is (= (assoc yritys :id id) (service/find-yritys ts/*db* id))))))
 
-#_(t/deftest add-duplicate-ytunnus
-  (let [ytunnus "0000001-9"
+(t/deftest add-duplicate-ytunnus-nimi-vastaanottaja-tarkenne
+  (let [laatija-id (energiatodistus-test/add-laatija!)
         [yritys-1 yritys-2] (->> (generate-yritykset 2)
-                                 (map #(assoc % :ytunnus ytunnus)))]
-    (service/add-yritys! ts/*db* yritys-1)
-    (t/is (= (ex-data (t/is (thrown? Exception (service/add-yritys! ts/*db* yritys-2))))
+                                 (map #(assoc % :ytunnus "0000001-9"))
+                                 (map #(assoc % :nimi "test"))
+                                 (map #(assoc % :vastaanottajan-tarkenne "test")))]
+    (service/add-yritys! ts/*db* {:id laatija-id} yritys-1)
+    (t/is (= (test/catch-ex-data #(service/add-yritys! ts/*db* {:id laatija-id} yritys-2))
              {:type       :unique-violation
-              :constraint :yritys-ytunnus-key}))))
+              :constraint :yritys-ytunnus-nimi-vastaanottajan-tarkenne-key,
+              :value "0000001-9, test, test"}))))
+
+(defn dissoc-not-modified [yritys] (dissoc yritys :ytunnus))
+
+(t/deftest update-yritys-test
+  (let [laatija-id (energiatodistus-test/add-laatija!)
+        paakayttaja-id (kayttaja-service/add-kayttaja!
+                         ts/*db* {:rooli 2 :etunimi "P" :sukunimi "P"
+                                  :puhelin "1" :email "f.com"})
+        [yritys-1 yritys-2 yritys-3] (generate-yritykset 3)
+        id (service/add-yritys! (ts/db-user laatija-id)  {:id laatija-id} yritys-1)]
+    (t/is (= (assoc yritys-1 :id id) (service/find-yritys ts/*db* id)))
+
+    (service/update-yritys! (ts/db-user laatija-id) {:id laatija-id} id yritys-2)
+    (t/is (= (-> yritys-2 (assoc :id id) dissoc-not-modified)
+             (dissoc-not-modified (service/find-yritys ts/*db* id))))
+
+    (service/update-yritys! (ts/db-user paakayttaja-id) {:rooli 2} id yritys-3)
+    (t/is (= (-> yritys-3 (assoc :id id) dissoc-not-modified)
+             (dissoc-not-modified (service/find-yritys ts/*db* id))))
+
+    (t/is (= (-> (test/catch-ex-data #(service/update-yritys!
+                                    ts/*db* {:rooli 0}
+                                    id yritys-2))
+                 (dissoc :reason))
+             {:type :forbidden}))))
 
 (t/deftest find-all-laskutuskielet-test
   (let [laskutuskielet (service/find-all-laskutuskielet ts/*db*)]
