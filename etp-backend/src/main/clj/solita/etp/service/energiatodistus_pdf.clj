@@ -787,23 +787,30 @@
                          last-name
                          surname)}))))
 
+(defn write-signature! [id language pdf pkcs7]
+  (try
+    (puumerkki/write-signature! pdf pkcs7)
+    (catch ArrayIndexOutOfBoundsException _
+      (exception/throw-ex-info!
+        :signed-pdf-exists
+        (str "Signed PDF already exists for energiatodistus "
+             id "/" language ". Get digest to sign again.")))))
+
 (defn sign-energiatodistus-pdf [db aws-s3-client whoami id language
                                 {:keys [chain] :as signature-and-chain}]
   (when-let [energiatodistus
              (energiatodistus-service/find-energiatodistus db id)]
     (do-when-signing
-     energiatodistus
-     #(try
-        (validate-surname! (:sukunimi whoami) (first chain))
-        (let [key (file-key id language)
-              {:keys [content]} (file-service/find-file aws-s3-client key)
-              content-bytes (.readAllBytes content)
-              pkcs7 (puumerkki/make-pkcs7 signature-and-chain content-bytes)
-              filename (str key ".pdf")]
-          (do
-            (->> (puumerkki/write-signature! content-bytes pkcs7)
-                 (file-service/upsert-file-from-bytes aws-s3-client
-                                                      key
-                                                      filename))
-            filename))
-        (catch java.lang.ArrayIndexOutOfBoundsException e :pdf-exists)))))
+      energiatodistus
+      #(do
+         (validate-surname! (:sukunimi whoami) (first chain))
+         (let [key (file-key id language)
+               {:keys [content]} (file-service/find-file aws-s3-client key)
+               content-bytes (.readAllBytes content)
+               pkcs7 (puumerkki/make-pkcs7 signature-and-chain content-bytes)
+               filename (str key ".pdf")]
+           (->> (write-signature! id language content-bytes pkcs7)
+                (file-service/upsert-file-from-bytes aws-s3-client
+                                                     key
+                                                     filename))
+           filename)))))

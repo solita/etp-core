@@ -85,9 +85,6 @@
     (= result :not-in-signing)
     (conflict (str "Signing process for energiatodistus " id " has not been started"))
 
-    (= result :pdf-exists)
-    (conflict (str "Signed PDF exists for energiatodistus " id ". Get digest to sign again."))
-
     (nil? result)
     (r/not-found (str "Energiatodistus " id " does not exist"))
 
