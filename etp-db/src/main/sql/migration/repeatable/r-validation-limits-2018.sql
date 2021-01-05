@@ -4,6 +4,7 @@ insert into validation_numeric_column
 values
 (2018, 'lt$lammitetty_nettoala', 50, 999999, 0.5, 999999),
 (2018, 'lt$rakennusvaippa$ilmanvuotoluku', 0.2, 15, 0, 50),
+(2018, 'lt$rakennusvaippa$ulkoseinat$ala', 0.1, 999999, 0.1, 999999),
 (2018, 'lt$rakennusvaippa$ulkoseinat$U', 0.08, 0.81, 0.05, 2),
 (2018, 'lt$rakennusvaippa$ylapohja$U',   0.05, 0.47, 0.03, 2),
 (2018, 'lt$rakennusvaippa$alapohja$U',   0.05, 0.60, 0.03, 4),
