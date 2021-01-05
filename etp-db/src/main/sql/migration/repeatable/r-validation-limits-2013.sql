@@ -14,7 +14,7 @@ values
 
 (2013, 'lt$ilmanvaihto$paaiv$sfp',            0, 2.5, 0, 10),
 (2013, 'lt$ilmanvaihto$paaiv$jaatymisenesto', -10, 5, -20, 10),
-(2013, 'lt$ilmanvaihto$erillispoistot$sfp',   0, 1.5, 0, 10),
+(2013, 'lt$ilmanvaihto$erillispoistot$sfp',   0, 2.5, 0, 10),
 (2013, 'lt$ilmanvaihto$ivjarjestelma$sfp',    0, 2.5, 0, 10),
 (2013, 'lt$ilmanvaihto$lto_vuosihyotysuhde',  0, 0.85, 0, 1),
 
