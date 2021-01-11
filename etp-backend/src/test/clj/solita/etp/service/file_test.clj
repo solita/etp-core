@@ -45,7 +45,9 @@
     (t/is (true? (instance? java.io.InputStream content)))
     (t/is (= (into [] (:bytes file-info))
              (into [] (.readAllBytes content)))))
-  (t/is (nil? (service/find-file ts/*aws-s3-client* "nonexisting"))))
+  (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
+                          #"The specified key does not exist."
+                          (service/find-file ts/*aws-s3-client* "nonexisting"))))
 
 (t/deftest rewrite-test
   (let [id (str (:id file-info-1) "-rewrite-test")]
