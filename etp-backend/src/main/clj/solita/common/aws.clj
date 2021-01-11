@@ -4,10 +4,10 @@
             [solita.etp.exception :as exception]))
 
 (def anomalies->etp-codes
-  {:cognitect.anomalies/forbidden   :forbidden              ;http status code: 403
-   :cognitect.anomalies/not-found   :not-found              ;http status code: 404
-   :cognitect.anomalies/busy        :busy                   ;http status code: 503
-   :cognitect.anomalies/unavailable :unavailable})          ;http status code: 504
+  {:cognitect.anomalies/forbidden   :resource-forbidden     ;http status code: 403
+   :cognitect.anomalies/not-found   :resource-not-found     ;http status code: 404
+   :cognitect.anomalies/busy        :resource-busy          ;http status code: 503
+   :cognitect.anomalies/unavailable :resource-unavailable}) ;http status code: 504
 
 (defn- invoke [client op request]
   (let [result (aws/invoke client {:op      op
