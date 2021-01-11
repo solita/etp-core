@@ -1,6 +1,8 @@
 
 -- name: delete-energiatodistus-luonnos!
-update energiatodistus set tila_id = et_tilat.poistettu
+update energiatodistus set
+  tila_id = et_tilat.poistettu,
+  korvattu_energiatodistus_id = null
 from et_tilat
 where tila_id = et_tilat.luonnos and id = :id
 
