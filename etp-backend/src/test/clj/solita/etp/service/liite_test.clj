@@ -4,7 +4,8 @@
             [solita.etp.test-system :as ts]
             [solita.etp.service.liite :as liite-service]
             [solita.etp.service.file :as file-service]
-            [solita.etp.service.energiatodistus-test :as energiatodistus-test]))
+            [solita.etp.service.energiatodistus-test :as energiatodistus-test]
+            [solita.etp.service.valvonta :as valvonta-service]))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -33,6 +34,7 @@
 (t/deftest add-liitteet-from-files-and-find-test
   (let [whoami (add-laatija!)
         energiatodistus-id (add-energiatodistus! whoami)
+        _ (valvonta-service/update-valvonta! ts/*db* energiatodistus-id true)
         _ (liite-service/add-liitteet-from-files (ts/db-user (:id whoami))
                                                  ts/*aws-s3-client*
                                                  whoami
@@ -49,6 +51,7 @@
 (t/deftest add-liite-from-link-and-find-test
   (let [whoami (add-laatija!)
         energiatodistus-id (add-energiatodistus! whoami)
+        _ (valvonta-service/update-valvonta! ts/*db* energiatodistus-id true)
         _ (liite-service/add-liite-from-link! (ts/db-user (:id whoami))
                                               whoami
                                               energiatodistus-id
@@ -63,6 +66,7 @@
 (t/deftest find-energiatodistus-liite-content-test
   (let [whoami (add-laatija!)
         energiatodistus-id (add-energiatodistus! whoami)
+        _ (valvonta-service/update-valvonta! ts/*db* energiatodistus-id true)
         _ (liite-service/add-liitteet-from-files (ts/db-user (:id whoami))
                                                  ts/*aws-s3-client*
                                                  whoami
@@ -89,6 +93,7 @@
 (t/deftest delete-liite-test
   (let [whoami (add-laatija!)
         energiatodistus-id (add-energiatodistus! whoami)
+        _ (valvonta-service/update-valvonta! ts/*db* energiatodistus-id true)
         _ (liite-service/add-liite-from-link! (ts/db-user (:id whoami))
                                               whoami
                                               energiatodistus-id
@@ -97,6 +102,13 @@
                                 ts/*db*
                                 whoami
                                 energiatodistus-id)
+        _ (valvonta-service/update-valvonta! ts/*db* energiatodistus-id false)
+        _ (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
+                                  #"Forbidden"
+                                  (liite-service/delete-liite (ts/db-user (:id whoami))
+                                                              whoami
+                                                              (-> liitteet-before-delete first :id))))
+        _ (valvonta-service/update-valvonta! ts/*db* energiatodistus-id true)
         _ (liite-service/delete-liite (ts/db-user (:id whoami))
                                       whoami
                                       (-> liitteet-before-delete first :id))

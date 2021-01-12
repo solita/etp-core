@@ -7,7 +7,9 @@
             [solita.etp.exception :as exception]
             [schema.coerce :as coerce]
             [clojure.java.jdbc :as jdbc]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [solita.etp.service.valvonta :as valvonta-service]
+            [solita.etp.service.rooli :as rooli-service]))
 
 ; *** Require sql functions ***
 (db/require-queries 'liite)
@@ -30,6 +32,17 @@
                                                           energiatodistus-id)
     (exception/throw-forbidden!)))
 
+(defn assert-liite-insert-permission! [db whoami energiatodistus-id]
+  (assert-permission! db whoami energiatodistus-id)
+  (when-not (:active (valvonta-service/find-valvonta db energiatodistus-id))
+    (exception/throw-forbidden!)))
+
+(defn assert-liite-delete-permission! [db whoami energiatodistus-id]
+  (assert-permission! db whoami energiatodistus-id)
+  (when-not (or (:active (valvonta-service/find-valvonta db energiatodistus-id))
+                (rooli-service/paakayttaja? whoami))
+    (exception/throw-forbidden!)))
+
 (defn add-liite-from-file! [db aws-s3-client whoami energiatodistus-id liite]
   (jdbc/with-db-transaction [db db]
     (-> liite
@@ -43,7 +56,7 @@
 
 (defn add-liitteet-from-files [db aws-s3-client whoami energiatodistus-id files]
   (jdbc/with-db-transaction [db db]
-    (assert-permission! db whoami energiatodistus-id)
+    (assert-liite-insert-permission! db whoami energiatodistus-id)
     (doseq [file files]
       (add-liite-from-file! db
                             aws-s3-client
@@ -54,7 +67,7 @@
 
 (defn add-liite-from-link! [db whoami energiatodistus-id liite]
   (jdbc/with-db-transaction [db db]
-    (assert-permission! db whoami energiatodistus-id)
+    (assert-liite-insert-permission! db whoami energiatodistus-id)
     (-> liite
         (assoc :energiatodistus-id energiatodistus-id)
         (assoc :contenttype "text/uri-list")
@@ -77,8 +90,9 @@
 
 (defn delete-liite [db whoami liite-id]
   (jdbc/with-db-transaction [db db]
-    (assert-permission! db whoami (some->> {:id liite-id}
-                                           (liite-db/select-liite db)
-                                           first
-                                           :energiatodistus-id))
-    (liite-db/delete-liite! db {:id liite-id})))
+    (let [energiatodistus-id (some->> {:id liite-id}
+                                      (liite-db/select-liite db)
+                                      first
+                                      :energiatodistus-id)]
+      (assert-liite-delete-permission! db whoami energiatodistus-id)
+      (liite-db/delete-liite! db {:id liite-id}))))
