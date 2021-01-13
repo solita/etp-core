@@ -86,3 +86,15 @@
                                  :sis-kuorma
                                  1
                                  :valaistus])))))
+
+(t/deftest simple-elements-test
+  (t/is (nil? (xml/simple-elements nil)))
+  (t/is (= [] (xml/simple-elements [])))
+  (t/is (= (xml/element "foo" {} "bar") (xml/simple-elements ["foo" "bar"])))
+  (t/is (= (xml/element "foo"
+                        {}
+                        (xml/element "bar" {} "baz")
+                        (xml/element "x" {} "y"))
+           (xml/simple-elements ["foo"
+                                 ["bar" "baz"]
+                                 ["x" "y"]]))))
