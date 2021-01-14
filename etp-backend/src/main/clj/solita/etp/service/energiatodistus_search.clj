@@ -149,7 +149,7 @@
 (defn keyword->sql [keyword]
   (when (-> keyword str/blank? not)
     (concat
-      ["postinumero.id::text = ? OR kunta.label_fi ILIKE ? OR
+      ["postinumero.id::text = ltrim(?, '0') OR kunta.label_fi ILIKE ? OR
        kunta.label_sv ILIKE ? OR toimintaalue.label_fi ILIKE ? OR
        toimintaalue.label_sv ILIKE ?"]
       [keyword]
