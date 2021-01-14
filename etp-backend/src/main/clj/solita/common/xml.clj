@@ -95,3 +95,13 @@
   [xml path]
   (let [path (if (-> path last keyword?) (conj path 0) path)]
     (-> xml (get-in-xml path) :content first)))
+
+(defn simple-elements
+  "Walks coll and converts vectors where first element is string into xml
+  elements: [\"foo\" \"bar\"] => <foo>bar</foo>."
+  [coll]
+  (walk/postwalk (fn [x]
+                   (if (and (vector? x) (-> x first string?))
+                     (apply (partial element (first x) {}) (rest x))
+                     x))
+                 coll))
