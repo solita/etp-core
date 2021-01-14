@@ -48,6 +48,9 @@
   (schemas->search-schema
     {:energiatodistus energiatodistus-schema/Energiatodistus2013}
     {:energiatodistus energiatodistus-schema/Energiatodistus2018}
+    {:energiatodistus
+     {:perustiedot
+      {:postinumero schema/Int}}}
     (deep/map-values second search-fields/computed-fields)
     geo-schema/Search))
 
@@ -55,6 +58,9 @@
   (schemas->search-schema
     {:energiatodistus public-energiatodistus-schema/Energiatodistus2013}
     {:energiatodistus public-energiatodistus-schema/Energiatodistus2018}
+    {:energiatodistus
+     {:perustiedot
+      {:postinumero schema/Int}}}
     geo-schema/Search))
 
 (def select-all
