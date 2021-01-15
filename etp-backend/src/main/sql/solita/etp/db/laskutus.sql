@@ -1,7 +1,7 @@
 -- name: select-kuukauden-laskutus
 SELECT e.id energiatodistus_id, e.allekirjoitusaika,
        e.pt$kieli energiatodistus_kieli,
-       k.etunimi || ' ' || k.sukunimi laatija_nimi,
+       k.id laatija_id, k.etunimi || ' ' || k.sukunimi laatija_nimi,
        y.id yritys_id, y.ytunnus, v.valittajatunnus, y.verkkolaskuosoite,
 
        -- Fields depending on who should be invoiced.
