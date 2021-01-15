@@ -109,6 +109,48 @@
                             [[["=" "energiatodistus.id" id]]]
                             "Pirkanm"))))))
 
+(t/deftest add-and-find-by-postinumero-test
+  (let [whoami (add-laatija!)
+        energiatodistus (-> (energiatodistus-test/generate-energiatodistus-2018)
+                            (assoc-in [:perustiedot :postinumero] "00100"))
+        id (energiatodistus-test/add-energiatodistus! energiatodistus
+                                                      (:id whoami)
+                                                      2018)
+        energiatodistus-with-db-fields (public-energiatodistus-with-db-fields
+                                         energiatodistus
+                                         id
+                                         (:id whoami)
+                                         2018)]
+    (t/is (= energiatodistus-with-db-fields
+             (first (search whoami nil "000100"))))
+
+    (t/is (= energiatodistus-with-db-fields
+             (first (search whoami nil "00100"))))
+
+    (t/is (= energiatodistus-with-db-fields
+             (first (search whoami nil "0100"))))
+
+    (t/is (= energiatodistus-with-db-fields
+             (first (search whoami nil "100"))))))
+
+(t/deftest add-and-find-by-katuosoite-test
+  (let [whoami (add-laatija!)
+        energiatodistus (-> (energiatodistus-test/generate-energiatodistus-2018)
+                            (assoc-in [:perustiedot :katuosoite-fi] "37298365test")
+                            (assoc-in [:perustiedot :katuosoite-sv] "fd323443test"))
+        id (energiatodistus-test/add-energiatodistus! energiatodistus
+                                                      (:id whoami)
+                                                      2018)
+        energiatodistus-with-db-fields (public-energiatodistus-with-db-fields
+                                         energiatodistus
+                                         id
+                                         (:id whoami)
+                                         2018)]
+    (t/is (= energiatodistus-with-db-fields
+             (first (search whoami nil "37298365"))))
+    (t/is (= energiatodistus-with-db-fields
+             (first (search whoami nil "fd323443"))))))
+
 (t/deftest add-and-find-by-nimi-nil-test
   (let [whoami (add-laatija!)
         energiatodistus (-> (energiatodistus-test/generate-energiatodistus-2018)
