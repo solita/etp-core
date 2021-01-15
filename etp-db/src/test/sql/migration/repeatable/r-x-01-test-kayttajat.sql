@@ -13,7 +13,8 @@ INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli_id, henkilotunnus
 ('Timbal', 'Laatija', 'laatija@timbal.fi', '0451234567', 0, '120997-9998'),
 ('Etlas', 'Laatija', 'laatija@etlas.fi', '0451234567', 0, '271258-9988'),
 ('Caverion', 'Laatija', 'laatija@caverion.fi', '0451234567', 0, '010170-960F'),
-('Laskentapalvelut', 'Laatija', 'laatija@dof.fi', '0451234567', 0, '010170-999R');
+('Laskentapalvelut', 'Laatija', 'laatija@dof.fi', '0451234567', 0, '010170-999R'),
+('Laskentaohjelmat', 'Laatija', 'laatija@example.com', '0451234567', 0, '081181-9984');
 
 INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli_id, virtu$localid, virtu$organisaatio) VALUES
 ('Päivi', 'Pääkäyttäjä', 'paakayttaja@solita.fi', '0501234567', 2, 'vvirkamies', 'testivirasto.fi');
