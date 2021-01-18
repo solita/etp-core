@@ -3,12 +3,15 @@
             [clojure.test :as t]
             [clojure.java.jdbc :as jdbc]
             [solita.common.map :as xmap]
+            [solita.common.xml :as xml]
             [solita.etp.test-system :as ts]
             [solita.etp.test-data.yritys :as yritys-test-data]
             [solita.etp.test-data.laatija :as laatija-test-data]
             [solita.etp.test-data.energiatodistus :as energiatodistus-test-data]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
-            [solita.etp.service.laskutus :as laskutus-service]))
+            [solita.etp.service.laskutus :as laskutus-service]
+            [solita.etp.service.file :as file-service])
+  (:import (java.time LocalDate)))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -100,13 +103,15 @@
                           (filter #(= (:asiakastunnus %)
                                       (format "L1%08d" yritys-id)))
                           first)
-        xml-str (laskutus-service/asiakastieto-xml asiakastieto)]
+        xml-str (-> asiakastieto
+                    laskutus-service/asiakastieto-xml
+                    xml/emit-str)]
     (t/is (str/includes? xml-str (str "<AsiakasTunnus>"
                                       asiakastunnus
                                       "</AsiakasTunnus")))
-    (t/is (str/includes? xml-str (str "<LahiOsoite>"
-                                      (:jakeluosoite yritys)
-                                      "</LahiOsoite")))
+    (t/is (str/includes? xml-str (str "<YritysTunnus>"
+                                      (:ytunnus yritys)
+                                      "</YritysTunnus")))
     (t/is (str/includes? xml-str "<KumppaniNro>ETP</KumppaniNro>"))))
 
 (t/deftest laskutustiedot-test
@@ -176,7 +181,9 @@
                                              vals
                                              first
                                              :energiatodistukset)
-        xml-str (laskutus-service/laskutustieto-xml laskutustieto)]
+        xml-str (->> laskutustieto
+                     (laskutus-service/laskutustieto-xml (LocalDate/now))
+                     xml/emit-str)]
     (t/is (str/includes? xml-str (str "<AsiakasNro>"
                                       asiakastunnus
                                       "</AsiakasNro")))
@@ -197,6 +204,35 @@
                                       (->> laskutustieto-energiatodistukset
                                            first
                                            :allekirjoitusaika
-                                           (.format laskutus-service/date-formatter))
+                                           (.format laskutus-service/date-formatter-fi))
                                       "</Teksti>")))
     (t/is (str/includes? xml-str "<KumppaniNro>ETP</KumppaniNro>"))))
+
+(t/deftest xml-filename-test
+  (t/is (= "some-prefix20210114020000123.xml"
+           (laskutus-service/xml-filename (LocalDate/of 2021 01 14)
+                                          "some-prefix"
+                                          123))))
+
+(t/deftest xml-file-key
+  (t/is (= "2021/01/some-file.xml"
+           (laskutus-service/xml-file-key (LocalDate/of 2021 01 14)
+                                          "some-file.xml"))))
+
+(t/deftest do-kuukauden-laskutus-test
+  (test-data-set)
+  (laskutus-service/do-kuukauden-laskutus ts/*db* ts/*aws-s3-client*)
+  (let [now (LocalDate/now)]
+    (doseq [idx (range 4)]
+      (t/is (->> (laskutus-service/xml-filename
+                  now
+                  laskutus-service/asiakastieto-filename-prefix
+                  idx)
+                 (laskutus-service/xml-file-key now)
+                 (file-service/find-file ts/*aws-s3-client*)))
+      (t/is (->> (laskutus-service/xml-filename
+                  now
+                  laskutus-service/laskutustieto-filename-prefix
+                  idx)
+                 (laskutus-service/xml-file-key now)
+                 (file-service/find-file ts/*aws-s3-client*))))))

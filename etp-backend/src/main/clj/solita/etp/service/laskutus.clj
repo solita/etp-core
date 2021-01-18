@@ -1,18 +1,28 @@
 (ns solita.etp.service.laskutus
   (:require [clojure.string :as str]
+            [clojure.java.io :as io]
             [solita.common.xml :as xml]
-            [solita.etp.db :as db])
+            [solita.etp.db :as db]
+            [solita.etp.service.file :as file-service])
   (:import (java.time LocalDate ZoneId)
            (java.time.format DateTimeFormatter)))
 
 ;; *** Require sql functions ***
 (db/require-queries 'laskutus)
 
+(def tmp-dir "tmp-laskutus")
+
+(def asiakastieto-filename-prefix "asiakastieto_etp_ara_")
+(def laskutustieto-filename-prefix "laskutustieto_etp_ara_")
+
 (def asiakastieto-ns "http://kiekuhanke.fi/kieku/asiakasin")
 (def laskutustieto-ns "http://www.kiekuhanke.fi/kieku/myyntitilaus")
 
 (def timezone (ZoneId/of "Europe/Helsinki"))
-(def date-formatter (.withZone (DateTimeFormatter/ofPattern "dd.MM.yyyy") timezone))
+(def date-formatter-fi (.withZone (DateTimeFormatter/ofPattern "dd.MM.yyyy")
+                                  timezone))
+(def date-formatter-file (.withZone (DateTimeFormatter/ofPattern "yyyyMMdd")
+                                    timezone))
 
 (defn find-kuukauden-laskutus [db]
   (laskutus-db/select-kuukauden-laskutus db))
@@ -44,7 +54,8 @@
         ["LajittelutietoTeksti" "TODO"]
         ["KieliavainKoodi" "U"]
         ["YritysTunnus" ytunnus]
-        ["AlvNro" (str "FI" (str/replace ytunnus #"-" ""))]
+        (when ytunnus
+          ["AlvNro" (str "FI" (str/replace ytunnus #"-" ""))])
         ["VastaanottajaOVTTunnus" verkkolaskuosoite]
         ["VastaanottajaOperaattoriTunnus" valittajatunnus]
         ["LuonnollinenHloKytkin" (if yritys-id "false" "true")]
@@ -73,8 +84,7 @@
        (apply (fn [& elements]
                 (xml/element (xml/qname asiakastieto-ns "Asiakas")
                              {:xmlns/ns2 asiakastieto-ns}
-                             elements)))
-   xml/emit-str))
+                             elements)))))
 
 (defn laskutustiedot [laskutus]
   (->> laskutus
@@ -103,17 +113,18 @@
         (map #(tilausrivi (str "Energiatodistus numero: "
                                (:id %)
                                ", pvm: "
-                               (.format date-formatter (:allekirjoitusaika %)))
+                               (.format date-formatter-fi
+                                        (:allekirjoitusaika %)))
                           (:kieli %))
              energiatodistukset)))
 
 
-(defn laskutustieto-xml [{:keys [asiakastunnus laatijat] :as laskutustieto}]
+(defn laskutustieto-xml [now {:keys [asiakastunnus laatijat] :as laskutustieto}]
   (->> [["MyyntiOrganisaatioKoodi" "7010"]
         ["JakelutieKoodi" "13"]
         ["SektoriKoodi" "01"]
         ["TilausLajiKoodi" "Z001"]
-        ["LaskuPvm" (.format date-formatter (LocalDate/now))]
+        ["LaskuPvm" (.format date-formatter-fi now)]
         ["PalveluLuontiPvm" "TODO"]
         ["HinnoitteluPvm" "TODO"]
         ["SopimusPvm" "TODO"]
@@ -141,5 +152,45 @@
        (apply (fn [& elements]
                 (xml/element (xml/qname laskutustieto-ns "Myyntitilaus")
                              {:xmlns/ns2 laskutustieto-ns}
-                             elements)))
-   xml/emit-str))
+                             elements)))))
+
+(defn xml-filename [now filename-prefix idx]
+  (str filename-prefix
+       (.format date-formatter-file now)
+       "02"
+       (format "%07d" idx)
+       ".xml"))
+
+(defn xml-file-key [now filename]
+  (format "%d/%02d/%s" (.getYear now) (.getMonthValue now) filename))
+
+(defn do-laskutus-file-operations [aws-s3-client now xmls filename-prefix]
+  (doseq [[idx xml] (map-indexed vector xmls)
+          :let [filename (xml-filename now filename-prefix idx)
+                path (str tmp-dir "/" filename)]]
+    (with-open [file (io/writer path)]
+      (xml/emit xml file))
+    (file-service/upsert-file-from-file aws-s3-client
+                                        (xml-file-key now filename)
+                                        (io/file path))
+    (io/delete-file path)))
+
+(defn do-kuukauden-laskutus [db aws-s3-client]
+  (let [now (LocalDate/now)
+        laskutus (find-kuukauden-laskutus db)
+        asiakastieto-xmls (->> laskutus
+                               asiakastiedot
+                               (map asiakastieto-xml))
+        laskutustieto-xmls (->> laskutus
+                                laskutustiedot
+                                (map #(laskutustieto-xml now %)))]
+    (io/make-parents (str tmp-dir "/example.txt"))
+    (do-laskutus-file-operations aws-s3-client
+                                 now
+                                 asiakastieto-xmls
+                                 asiakastieto-filename-prefix)
+    (do-laskutus-file-operations aws-s3-client
+                                 now
+                                 laskutustieto-xmls
+                                 laskutustieto-filename-prefix)
+    (io/delete-file tmp-dir)))
