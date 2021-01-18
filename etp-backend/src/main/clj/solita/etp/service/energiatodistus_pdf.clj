@@ -38,7 +38,7 @@
 (def watermark-paths {"fi" "watermark-fi.pdf"
                       "sv" "watermark-sv.pdf"})
 (def sheet-count 8)
-(def tmp-dir "tmp/")
+(def tmp-dir "tmp-energiatodistukset/")
 
 (def timezone (ZoneId/of "Europe/Helsinki"))
 (def date-formatter (.withZone (DateTimeFormatter/ofPattern "dd.MM.yyyy") timezone))
