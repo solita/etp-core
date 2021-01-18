@@ -20,6 +20,7 @@
 
 (def element xml/element)
 (def qname xml/qname)
+(def emit xml/emit)
 (def emit-str xml/emit-str)
 
 (defn input-stream->xml [is]
