@@ -14,7 +14,21 @@ INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli_id, henkilotunnus
 ('Etlas', 'Laatija', 'laatija@etlas.fi', '0451234567', 0, '271258-9988'),
 ('Caverion', 'Laatija', 'laatija@caverion.fi', '0451234567', 0, '010170-960F'),
 ('Laskentapalvelut', 'Laatija', 'laatija@dof.fi', '0451234567', 0, '010170-999R'),
-('Laskentaohjelmat', 'Laatija', 'laatija@example.com', '0451234567', 0, '081181-9984');
+('Laskentaohjelmat', 'Laatija', 'laatija@example.com', '0451234567', 0, '081181-9984')
+on conflict (email) do update
+  set etunimi = excluded.etunimi,
+      sukunimi = excluded.sukunimi,
+      puhelin = excluded.puhelin,
+      rooli_id = excluded.rooli_id,
+      henkilotunnus = excluded.henkilotunnus;
 
 INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli_id, virtu$localid, virtu$organisaatio) VALUES
-('Päivi', 'Pääkäyttäjä', 'paakayttaja@solita.fi', '0501234567', 2, 'vvirkamies', 'testivirasto.fi');
+('Päivi', 'Pääkäyttäjä', 'paakayttaja@solita.fi', '0501234567', 2, 'vvirkamies', 'testivirasto.fi')
+on conflict (email) do update
+  set etunimi = excluded.etunimi,
+      sukunimi = excluded.sukunimi,
+      puhelin = excluded.puhelin,
+      rooli_id = excluded.rooli_id,
+      virtu$localid  = excluded.virtu$localid,
+      virtu$organisaatio = excluded.virtu$organisaatio;
+
