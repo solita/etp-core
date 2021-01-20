@@ -2,7 +2,6 @@
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
             [clojure.java.shell :as shell]
-            [clojure.core.match :as match]
             [clojure.tools.logging :as log]
             [puumerkki.pdf :as puumerkki]
             [solita.etp.exception :as exception]
@@ -10,12 +9,11 @@
             [solita.common.certificates :as certificates]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]
-            [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.file :as file-service])
   (:import (java.time Instant LocalDate ZoneId)
            (java.time.format DateTimeFormatter)
            (java.util Locale)
-           (java.text DecimalFormatSymbols DecimalFormat)
+           (java.text DecimalFormatSymbols)
            (java.math RoundingMode)
            (org.apache.pdfbox.multipdf Overlay)
            (org.apache.pdfbox.multipdf Overlay$Position)
@@ -643,20 +641,22 @@
     (io/copy is xout)
     (.toByteArray xout)))
 
-(defn add-image [pdf-path image-path page ^Float x ^Float y
+(defn add-image [pdf-path image-path page
+                 ^Float x ^Float y
                  ^Float width ^Float height]
-  (let [file (io/file pdf-path)
-        doc (PDDocument/load file)
-        page (.getPage doc page)
-        contents (PDPageContentStream. doc
-                                       page
-                                       PDPageContentStream$AppendMode/APPEND
-                                       true)
-        image-is (-> image-path io/resource io/input-stream input-stream->bytes)
-        image (PDImageXObject/createFromByteArray doc image-is image-path)]
-    (.drawImage contents ^PDImageXObject image x y width height)
-    (.close contents)
-    (.save doc pdf-path)))
+  (with-open
+    [doc (PDDocument/load (io/file pdf-path))
+     contents (PDPageContentStream. doc
+                                    (.getPage doc page)
+                                    PDPageContentStream$AppendMode/APPEND
+                                    true)]
+    (let
+      [image-bytes (-> image-path io/resource io/input-stream input-stream->bytes)
+       image (PDImageXObject/createFromByteArray doc image-bytes image-path)]
+
+      (.drawImage contents ^PDImageXObject image x y width height)
+      (.close contents)
+      (.save doc pdf-path))))
 
 (def e-luokka-y-coords-2013 (zipmap ["A" "B" "C" "D" "E" "F" "G"] (iterate #(- % 21) 487)))
 (def e-luokka-y-coords-2018 (zipmap ["A" "B" "C" "D" "E" "F" "G"] (iterate #(- % 21) 457)))
