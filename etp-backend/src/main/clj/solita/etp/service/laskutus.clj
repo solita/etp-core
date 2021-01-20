@@ -1,6 +1,7 @@
 (ns solita.etp.service.laskutus
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
+            [clojure.tools.logging :as log]
             [solita.common.xml :as xml]
             [solita.etp.db :as db]
             [solita.etp.service.file :as file-service])
@@ -176,6 +177,7 @@
     (io/delete-file path)))
 
 (defn do-kuukauden-laskutus [db aws-s3-client]
+  (log/info "Starting kuukauden laskutusajo")
   (let [now (LocalDate/now)
         laskutus (find-kuukauden-laskutus db)
         asiakastieto-xmls (->> laskutus
@@ -193,4 +195,6 @@
                                  now
                                  laskutustieto-xmls
                                  laskutustieto-filename-prefix)
-    (io/delete-file tmp-dir)))
+    (io/delete-file tmp-dir)
+    (log/info "Kuukauden laskutusajo finished")
+    nil))
