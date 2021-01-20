@@ -2,8 +2,8 @@
 set -e
 
 local='http://localhost:8080'
-dev='https://private.kehitys.energiatodistuspalvelu.com'
-test='https://private.testi.energiatodistuspalvelu.com'
+dev='https://private.kehitys.energiatodistusrekisteri.fi'
+test='https://private.testi.energiatodistusrekisteri.fi'
 
 server=${!1}
 file=${2-'complete-2018.json'}
