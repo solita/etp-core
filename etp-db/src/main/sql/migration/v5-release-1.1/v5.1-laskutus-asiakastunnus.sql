@@ -1,12 +1,12 @@
 -- Create sequences for asiakastunnukset. Start with large numbers
 -- since they are used to give temporary asiakastunnukset when
 -- columns are added.
-CREATE SEQUENCE laskutus_asiakastunnus_yritys_seq START 999999;
-CREATE SEQUENCE laskutus_asiakastunnus_laatija_seq START 999999;
+CREATE SEQUENCE yritys_laskutus_asiakastunnus_seq START 999999;
+CREATE SEQUENCE laatija_laskutus_asiakastunnus_seq START 999999;
 
 -- Create column for asiakastunnus to yritys table. Set default from new sequence.
 ALTER TABLE yritys ADD COLUMN laskutus_asiakastunnus text NOT NULL UNIQUE
-  DEFAULT 'L1' || lpad(nextval('laskutus_asiakastunnus_yritys_seq')::text, 8, '0');
+  DEFAULT 'L1' || lpad(nextval('yritys_laskutus_asiakastunnus_seq')::text, 8, '0');
 
 -- Update asiakastunnus for every existing yritys. Use id, which works nicely
 -- since yritys id = tilausasiakas id from old data.
@@ -15,11 +15,11 @@ UPDATE yritys SET laskutus_asiakastunnus = 'L1' || lpad(id::text, 8, '0');
 -- Set the new asiakastunnus sequence for yritys to the same number that is in
 -- the yritys id sequence so that they are incremented as a pair in the future
 -- and provide the same value for both the id and asiakastunnus.
-SELECT setval('laskutus_asiakastunnus_yritys_seq', (SELECT last_value FROM etp.yritys_id_seq));
+SELECT setval('yritys_laskutus_asiakastunnus_seq', (SELECT last_value FROM etp.yritys_id_seq));
 
 -- Create column for asiakastunnus to laatija table. Set default from new sequence.
 ALTER TABLE laatija ADD COLUMN laskutus_asiakastunnus text NOT NULL UNIQUE
-  DEFAULT 'L0' || lpad(nextval('laskutus_asiakastunnus_laatija_seq')::text, 8, '0');
+  DEFAULT 'L0' || lpad(nextval('laatija_laskutus_asiakastunnus_seq')::text, 8, '0');
 
 -- Two things that are only ran if conversion_etp.lasku table exists.
 DO LANGUAGE plpgsql $$
@@ -28,7 +28,7 @@ DO LANGUAGE plpgsql $$
 
       -- Set asiakastunnus sequence for laatija according to the max tilausasiakas id belonging
       -- to laatija in old data.
-      PERFORM setval('laskutus_asiakastunnus_laatija_seq',
+      PERFORM setval('laatija_laskutus_asiakastunnus_seq',
                      (SELECT max(t.id)+1
                         FROM conversion_etp.laatija l
                         LEFT JOIN conversion_etp.tilausasiakas t ON l.tilausasiakas = t.id));
@@ -43,14 +43,14 @@ DO LANGUAGE plpgsql $$
                  (SELECT conversion_laatija.tilausasiakas
                     FROM conversion_etp.laatija conversion_laatija
                     WHERE conversion_laatija.id = laatija.id),
-                 nextval('laskutus_asiakastunnus_laatija_seq'))::text,
+                 nextval('laatija_laskutus_asiakastunnus_seq'))::text,
                 8, '0');
 
       RAISE NOTICE 'LASKUTUS CONVERSION FROM OLD DATA READY';
     ELSE
       -- If old data was not available, reset new laatija sequence.
       -- This should only happen in every other environment except production.
-      PERFORM setval('laskutus_asiakastunnus_laatija_seq', (SELECT last_value FROM etp.kayttaja_id_seq));
+      PERFORM setval('laatija_laskutus_asiakastunnus_seq', (SELECT last_value FROM etp.kayttaja_id_seq));
       RAISE NOTICE 'LASKUTUS DATA WAS NOT AVAILABLE. SET UP AS NEW DATABASE.';
     END IF;
   END;
