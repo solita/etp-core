@@ -23,6 +23,7 @@
             [solita.etp.api.geo :as geo-api]
             [solita.etp.api.energiatodistus :as energiatodistus-api]
             [solita.etp.api.valvonta :as valvonta-api]
+            [solita.etp.api.laskutus :as laskutus-api]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.config :as config]
             [solita.etp.security :as security]
@@ -115,7 +116,9 @@
                                "Access to external API"]
                               [security/wrap-access]
                               [security/wrap-db-application-name]]}
-    (concat (tag "Energiatodistus API" energiatodistus-api/external-routes))]])
+    (concat (tag "Energiatodistus API" energiatodistus-api/external-routes))]
+   ["/internal"
+    (concat (tag "Laskutus API" laskutus-api/routes))]])
 
 (def route-opts
   {;; Uncomment line below to see diffs of requests in middleware chain
