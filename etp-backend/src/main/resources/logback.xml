@@ -5,6 +5,7 @@
         </encoder>
     </appender>
 
+    <logger name="org.apache.pdfbox.pdmodel.interactive.digitalsignature.visible" level="WARN" />
     <root level="info">
         <appender-ref ref="STDOUT" />
     </root>
