@@ -38,12 +38,13 @@ DO LANGUAGE plpgsql $$
       -- fallback to newly set asiakastunnus sequence for laatijat. This is to make sure that
       -- from now on, each laatija has asiakastunnus.
       UPDATE laatija
-        SET laskutus_asiakastunnus = 'L0' || lpad(subquery.tilausasiakas_id::text, 8, '0')
-        FROM (SELECT l.id laatija_id,
-                     coalesce(t.id, nextval('laskutus_asiakastunnus_laatija_seq')) tilausasiakas_id
-                FROM conversion_etp.laatija l
-                LEFT JOIN conversion_etp.tilausasiakas t ON l.tilausasiakas = t.id) subquery
-                WHERE laatija.id = subquery.laatija_id;
+       SET laskutus_asiakastunnus = 'L0' ||
+           lpad(coalesce(
+                 (SELECT conversion_laatija.tilausasiakas
+                    FROM conversion_etp.laatija conversion_laatija
+                    WHERE conversion_laatija.id = laatija.id),
+                 nextval('laskutus_asiakastunnus_laatija_seq'))::text,
+                8, '0');
 
       RAISE NOTICE 'LASKUTUS CONVERSION FROM OLD DATA READY';
     ELSE
