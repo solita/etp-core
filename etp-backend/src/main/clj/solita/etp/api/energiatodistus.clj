@@ -5,8 +5,6 @@
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.schema.public-energiatodistus :as public-energiatodistus-schema]
-            [solita.etp.schema.kayttotarkoitus :as kayttotarkoitus-schema]
-            [solita.etp.schema.e-luokka :as e-luokka-schema]
             [solita.etp.api.energiatodistus-crud :as crud-api]
             [solita.etp.api.energiatodistus-xml :as xml-api]
             [solita.etp.api.energiatodistus-liite :as liite-api]
@@ -16,15 +14,11 @@
             [solita.etp.service.energiatodistus-search :as energiatodistus-search-service]
             [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf-service]
             [solita.etp.service.energiatodistus-xlsx :as energiatodistus-xlsx-service]
-            [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
-            [solita.etp.service.luokittelu :as luokittelu-service]
-            [solita.etp.service.laatimisvaihe :as laatimisvaihe]
-            [solita.etp.service.e-luokka :as e-luokka-service]
             [solita.etp.service.rooli :as rooli-service]
-            [solita.etp.security :as security]
             [solita.etp.api.response :as api-response]
             [solita.etp.service.json :as json]
-            [solita.etp.service.kielisyys :as kielisyys]))
+            [solita.etp.exception :as exception])
+  (:import (com.fasterxml.jackson.core JsonParseException)))
 
 (defn valid-pdf-filename? [filename id kieli]
   (= filename (format "energiatodistus-%s-%s.pdf" id kieli)))
@@ -59,6 +53,13 @@
                            (str "Energiatodistus " id " does not exists."))
                           (r/not-found "File not found")))}}])
 
+(defn- parse-where [where]
+  (try (json/read-value where)
+       (catch JsonParseException _
+         (exception/throw-ex-info!
+           :invalid-arguments
+           (str "Invalid json in where: " where)))))
+
 (def search-route
   [""
    {:get {:summary    "Hae energiatodistuksia"
@@ -70,7 +71,7 @@
                          #(energiatodistus-search-service/public-search
                            db
                            whoami
-                           (update query :where json/read-value))
+                           (update query :where parse-where))
                          search-exceptions))}}])
 
 (def search-count-route
