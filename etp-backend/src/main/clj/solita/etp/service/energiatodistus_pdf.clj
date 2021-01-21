@@ -580,9 +580,9 @@
   (with-open [is (-> xlsx-template-paths
                      (get-in [versio kieli])
                      io/resource
-                     io/input-stream)]
-    (let [loaded-xlsx (xlsx/load-xlsx is)
-          sheets (map #(xlsx/get-sheet loaded-xlsx %) (range sheet-count))
+                     io/input-stream)
+              loaded-xlsx (xlsx/load-xlsx is)]
+    (let [sheets (map #(xlsx/get-sheet loaded-xlsx %) (range sheet-count))
           path (->> (java.util.UUID/randomUUID)
                     .toString
                     (format "energiatodistus-%s.xlsx")
