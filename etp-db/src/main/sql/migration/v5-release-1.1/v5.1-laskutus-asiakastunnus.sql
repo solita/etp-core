@@ -21,6 +21,12 @@ SELECT setval('yritys_laskutus_asiakastunnus_seq', (SELECT last_value FROM etp.y
 ALTER TABLE laatija ADD COLUMN laskutus_asiakastunnus text NOT NULL UNIQUE
   DEFAULT 'L0' || lpad(nextval('laatija_laskutus_asiakastunnus_seq')::text, 8, '0');
 
+-- Set owners and permissions for the new sequences.
+ALTER SEQUENCE yritys_laskutus_asiakastunnus_seq OWNED BY yritys.laskutus_asiakastunnus;
+ALTER SEQUENCE laatija_laskutus_asiakastunnus_seq OWNED BY laatija.laskutus_asiakastunnus;
+GRANT USAGE, SELECT ON SEQUENCE laatija_laskutus_asiakastunnus_seq TO etp_app;
+GRANT USAGE, SELECT ON SEQUENCE yritys_laskutus_asiakastunnus_seq TO etp_app;
+
 -- Two things that are only ran if conversion_etp.lasku table exists.
 DO LANGUAGE plpgsql $$
   BEGIN
