@@ -1,14 +1,32 @@
--- Create sequences for asiakastunnukset. Start with large numbers
--- since they are used to give temporary asiakastunnukset when
--- columns are added.
-CREATE SEQUENCE yritys_laskutus_asiakastunnus_seq START 999999;
-CREATE SEQUENCE laatija_laskutus_asiakastunnus_seq START 999999;
+-- Disable triggers for a while.
+ALTER TABLE yritys DISABLE TRIGGER yritys_update_trigger;
+ALTER TABLE laatija DISABLE TRIGGER laatija_update_trigger;
 
--- Create column for asiakastunnus to yritys table. Set default from new sequence.
-ALTER TABLE yritys ADD COLUMN laskutus_asiakastunnus text NOT NULL UNIQUE
-  DEFAULT 'L1' || lpad(nextval('yritys_laskutus_asiakastunnus_seq')::text, 8, '0');
+-- Create sequences for asiakastunnukset.
+CREATE SEQUENCE yritys_laskutus_asiakastunnus_seq START 1;
+CREATE SEQUENCE laatija_laskutus_asiakastunnus_seq START 1;
 
--- Update asiakastunnus for every existing yritys. Use id, which works nicely
+-- Create columns for audit purposes.
+ALTER TABLE audit.yritys ADD COLUMN laskutus_asiakastunnus text;
+ALTER TABLE audit.laatija ADD COLUMN laskutus_asiakastunnus text;
+
+-- Create columns for asiakastunnukset.
+ALTER TABLE yritys ADD COLUMN laskutus_asiakastunnus text UNIQUE;
+ALTER TABLE laatija ADD COLUMN laskutus_asiakastunnus text UNIQUE;
+
+-- Set owners and permissions for the new sequences.
+ALTER SEQUENCE yritys_laskutus_asiakastunnus_seq OWNED BY yritys.laskutus_asiakastunnus;
+ALTER SEQUENCE laatija_laskutus_asiakastunnus_seq OWNED BY laatija.laskutus_asiakastunnus;
+GRANT USAGE, SELECT ON SEQUENCE laatija_laskutus_asiakastunnus_seq TO etp_app;
+GRANT USAGE, SELECT ON SEQUENCE yritys_laskutus_asiakastunnus_seq TO etp_app;
+
+-- Update audit procedures and enable triggers.
+CALL audit.create_audit_procedure('yritys'::name);
+CALL audit.create_audit_procedure('laatija'::name);
+ALTER TABLE yritys ENABLE TRIGGER yritys_update_trigger;
+ALTER TABLE laatija ENABLE TRIGGER laatija_update_trigger;
+
+-- Update asiakastunnus of every existing yritys. Use id, which works nicely
 -- since yritys id = tilausasiakas id from old data.
 UPDATE yritys SET laskutus_asiakastunnus = 'L1' || lpad(id::text, 8, '0');
 
@@ -17,15 +35,10 @@ UPDATE yritys SET laskutus_asiakastunnus = 'L1' || lpad(id::text, 8, '0');
 -- and provide the same value for both the id and asiakastunnus.
 SELECT setval('yritys_laskutus_asiakastunnus_seq', (SELECT last_value FROM etp.yritys_id_seq));
 
--- Create column for asiakastunnus to laatija table. Set default from new sequence.
-ALTER TABLE laatija ADD COLUMN laskutus_asiakastunnus text NOT NULL UNIQUE
-  DEFAULT 'L0' || lpad(nextval('laatija_laskutus_asiakastunnus_seq')::text, 8, '0');
-
--- Set owners and permissions for the new sequences.
-ALTER SEQUENCE yritys_laskutus_asiakastunnus_seq OWNED BY yritys.laskutus_asiakastunnus;
-ALTER SEQUENCE laatija_laskutus_asiakastunnus_seq OWNED BY laatija.laskutus_asiakastunnus;
-GRANT USAGE, SELECT ON SEQUENCE laatija_laskutus_asiakastunnus_seq TO etp_app;
-GRANT USAGE, SELECT ON SEQUENCE yritys_laskutus_asiakastunnus_seq TO etp_app;
+-- SET asiakastunnus of yritys to NOT NULL and make it use new sequence as default.
+ALTER TABLE yritys ALTER COLUMN laskutus_asiakastunnus SET NOT NULL;
+ALTER TABLE yritys ALTER COLUMN laskutus_asiakastunnus
+  SET DEFAULT 'L1' || lpad(nextval('yritys_laskutus_asiakastunnus_seq')::text, 8, '0');
 
 -- Two things that are only ran if conversion_etp.lasku table exists.
 DO LANGUAGE plpgsql $$
@@ -61,3 +74,8 @@ DO LANGUAGE plpgsql $$
     END IF;
   END;
 $$;
+
+-- SET asiakastunnus of laatija to NOT NULL and make it use new sequence as default.
+ALTER TABLE laatija ALTER COLUMN laskutus_asiakastunnus SET NOT NULL;
+ALTER TABLE laatija ALTER COLUMN laskutus_asiakastunnus
+  SET DEFAULT 'L0' || lpad(nextval('laatija_laskutus_asiakastunnus_seq')::text, 8, '0');
