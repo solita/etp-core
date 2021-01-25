@@ -7,6 +7,7 @@
             [solita.common.xlsx :as xlsx]
             [solita.etp.schema.energiatodistus :as schema]
             [solita.etp.service.energiatodistus-pdf :as service]
+            [solita.common.formats :as formats]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.energiatodistus-test :as energiatodistus-test]
             [solita.common.certificates-test :as certificates-test]))
@@ -32,10 +33,10 @@
                          [0.3 {:kuluttajalaitteet 1 :valaistus 2}]]))))
 
 (t/deftest format-number-test
-  (t/is (= "12,346" (service/format-number 12.34567 3 false)))
-  (t/is (= "0,84" (service/format-number 0.8449 2 false)))
-  (t/is (= "100 %" (service/format-number 1 0 true)))
-  (t/is (= "12,346 %" (service/format-number 0.1234567 3 true))))
+  (t/is (= "12,346" (formats/format-number 12.34567 3 false)))
+  (t/is (= "0,84" (formats/format-number 0.8449 2 false)))
+  (t/is (= "100 %" (formats/format-number 1 0 true)))
+  (t/is (= "12,346 %" (formats/format-number 0.1234567 3 true))))
 
 (t/deftest fill-xlsx-template-test
   (doseq [energiatodistus (energiatodistukset)]

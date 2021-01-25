@@ -9,12 +9,10 @@
             [solita.common.certificates :as certificates]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]
-            [solita.etp.service.file :as file-service])
+            [solita.etp.service.file :as file-service]
+            [solita.common.formats :as formats])
   (:import (java.time Instant LocalDate ZoneId)
            (java.time.format DateTimeFormatter)
-           (java.util Locale)
-           (java.text DecimalFormatSymbols)
-           (java.math RoundingMode)
            (org.apache.pdfbox.multipdf Overlay)
            (org.apache.pdfbox.multipdf Overlay$Position)
            (org.apache.pdfbox.pdmodel PDDocument
@@ -42,18 +40,6 @@
 (def date-formatter (.withZone (DateTimeFormatter/ofPattern "dd.MM.yyyy") timezone))
 (def time-formatter (.withZone (DateTimeFormatter/ofPattern "dd.MM.yyyy HH:mm:ss")
                                timezone))
-
-(def locale (Locale. "fi" "FI"))
-(def format-symbols (DecimalFormatSymbols. locale))
-
-(defn format-number [x dp percent?]
-  (when x
-    (let [format (if percent? "#.# %" "#.#")
-          number-format (doto (java.text.DecimalFormat. format  format-symbols)
-                          (.setMinimumFractionDigits (if dp dp 0))
-                          (.setMaximumFractionDigits (if dp dp Integer/MAX_VALUE))
-                          (.setRoundingMode RoundingMode/HALF_UP))]
-      (.format number-format (bigdec x)))))
 
 (defn sis-kuorma [energiatodistus]
   (->> energiatodistus
@@ -117,7 +103,7 @@
             (when (and tila-id (= (energiatodistus-service/tila-key tila-id) :in-signing))
               (.format date-formatter (.plusYears (LocalDate/now) 10))))}]
    1 [{:path [:id]}
-      {:f #(-> % :lahtotiedot :lammitetty-nettoala (format-number 1 false) (str " m²"))}
+      {:f #(-> % :lahtotiedot :lammitetty-nettoala (formats/format-number 1 false) (str " m²"))}
       {:path [:lahtotiedot :lammitys :lammitysmuoto-label-fi]}
       {:path [:lahtotiedot :lammitys :lammitysmuoto-label-sv]}
       {:path [:lahtotiedot :lammitys :lammonjako-label-fi]}
@@ -598,7 +584,7 @@
                       v (cond
 
                           (number? v)
-                          (format-number v dp percent?)
+                          (formats/format-number v dp percent?)
 
                           (string? v)
                           (if (str/blank? v) " " v)

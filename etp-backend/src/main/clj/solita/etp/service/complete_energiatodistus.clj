@@ -7,7 +7,8 @@
             [solita.etp.service.e-luokka :as e-luokka-service]
             [solita.etp.service.kielisyys :as kielisyys]
             [solita.etp.service.luokittelu :as luokittelu]
-            [solita.common.map :as map]))
+            [solita.common.map :as map]
+            [solita.common.formats :as formats]))
 
 (defn combine-keys [m f nil-replacement path-new & paths]
   (let [vals (map #(or (get-in m %) nil-replacement) paths)]
@@ -68,7 +69,7 @@
                     (-> energiatodistus :tulokset :kuukausierittely))))
 
 (defn format-tulo-or-poisto [x]
-  (some->> x bigdec (format "%.3f")))
+  (formats/format-number x 3 false))
 
 (defn assoc-tulo-poisto [energiatodistus path]
   (assoc-in energiatodistus
