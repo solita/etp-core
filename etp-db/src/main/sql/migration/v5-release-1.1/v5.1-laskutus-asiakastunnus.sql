@@ -33,7 +33,7 @@ UPDATE yritys SET laskutus_asiakastunnus = 'L1' || lpad(id::text, 8, '0');
 -- Set the new asiakastunnus sequence for yritys to the same number that is in
 -- the yritys id sequence so that they are incremented as a pair in the future
 -- and provide the same value for both the id and asiakastunnus.
-SELECT setval('yritys_laskutus_asiakastunnus_seq', (SELECT last_value FROM etp.yritys_id_seq));
+SELECT setval('yritys_laskutus_asiakastunnus_seq', (SELECT last_value FROM etp.yritys_id_seq), true);
 
 -- SET asiakastunnus of yritys to NOT NULL and make it use new sequence as default.
 ALTER TABLE yritys ALTER COLUMN laskutus_asiakastunnus SET NOT NULL;
@@ -48,9 +48,10 @@ DO LANGUAGE plpgsql $$
       -- Set asiakastunnus sequence for laatija according to the max tilausasiakas id belonging
       -- to laatija in old data.
       PERFORM setval('laatija_laskutus_asiakastunnus_seq',
-                     (SELECT max(t.id)+1
+                     (SELECT max(t.id)
                         FROM conversion_etp.laatija l
-                        LEFT JOIN conversion_etp.tilausasiakas t ON l.tilausasiakas = t.id));
+                        LEFT JOIN conversion_etp.tilausasiakas t ON l.tilausasiakas = t.id),
+                     true);
 
       -- Update asiakastunnus for every existing laatija. Use tilausasiakas id joined from
       -- laatija table (both tables from old data). For laatijat without tilausasiakas row,
@@ -67,9 +68,14 @@ DO LANGUAGE plpgsql $$
 
       RAISE NOTICE 'LASKUTUS CONVERSION FROM OLD DATA READY';
     ELSE
-      -- If old data was not available, reset new laatija sequence.
-      -- This should only happen in every other environment except production.
-      PERFORM setval('laatija_laskutus_asiakastunnus_seq', (SELECT last_value FROM etp.kayttaja_id_seq));
+      -- If old data was not available, set asiakastunnus using the id of laatija and
+      -- reset new laatija sequence. This should only happen in every other environment
+      -- except production.
+      UPDATE laatija SET laskutus_asiakastunnus = 'L0' || lpad(id::text, 8, '0');
+
+      PERFORM setval('laatija_laskutus_asiakastunnus_seq',
+                     (SELECT last_value FROM etp.kayttaja_id_seq),
+                     true);
       RAISE NOTICE 'LASKUTUS DATA WAS NOT AVAILABLE. SET UP AS NEW DATABASE.';
     END IF;
   END;
