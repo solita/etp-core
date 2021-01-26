@@ -65,3 +65,18 @@
                              (energiatodistus-service/delete-energiatodistus-luonnos!
                                db whoami id)
                              (str "Energiatodistus luonnos " id " does not exists.")))}}])
+
+(def discarded
+  ["/discarded"
+   {:post {:summary    "Hylkää allekirjoitettu energiatodistus tai
+                        palauta hylätty energiatodistus allekirjoitetuksi"
+           :parameters {:path {:id common-schema/Key}
+                        :body schema/Bool}
+           :access     rooli-service/paakayttaja?
+           :responses  {200 {:body nil}
+                        404 {:body schema/Str}}
+           :handler    (fn [{{{:keys [id]} :path :keys [body]} :parameters :keys [db]}]
+                         (api-response/put-response
+                           (energiatodistus-service/set-energiatodistus-discarded! db id body)
+                           (str (if body "Signed" "Discarded")
+                                " energiatodistus " id " does not exists.")))}}])

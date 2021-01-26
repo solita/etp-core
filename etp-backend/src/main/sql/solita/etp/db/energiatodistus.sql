@@ -6,6 +6,16 @@ update energiatodistus set
 from et_tilat
 where tila_id = et_tilat.luonnos and id = :id
 
+-- name: discard-energiatodistus!
+update energiatodistus set tila_id = et_tilat.hylatty
+from et_tilat
+where tila_id = et_tilat.allekirjoitettu and id = :id
+
+-- name: undo-discard-energiatodistus!
+update energiatodistus set tila_id = et_tilat.allekirjoitettu
+from et_tilat
+where tila_id = et_tilat.hylatty and id = :id
+
 -- name: select-energiatodistus
 select energiatodistus.*,
        fullname(kayttaja.*) "laatija-fullname",

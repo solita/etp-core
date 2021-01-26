@@ -129,6 +129,7 @@
         (crud-api/gpd-routes energiatodistus-schema/Energiatodistus2013
                              energiatodistus-schema/EnergiatodistusSave2013)
         (pdf-route 2013)
+        crud-api/discarded
         liite-api/routes
         signing-api/routes]]
 
@@ -137,8 +138,8 @@
        ["/:id"
         (crud-api/gpd-routes energiatodistus-schema/Energiatodistus2018
                              energiatodistus-schema/EnergiatodistusSave2018)
-
         (pdf-route 2018)
+        crud-api/discarded
         liite-api/routes
         signing-api/routes]]]
 
