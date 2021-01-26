@@ -317,3 +317,28 @@
     (t/is (= (energiatodistus-tila update-energiatodistus-id) :draft))
     (t/is (= (energiatodistus-tila first-replaceable-energiatodistus-id) :signed))
     (t/is (= (energiatodistus-tila second-replaceable-energiatodistus-id) :signed))))
+
+(defn- dissoc-voimassaolo [et]
+  (dissoc et :voimassaolo-paattymisaika :allekirjoitusaika))
+
+(defn- energiatodistus-in-tila [energiatodistus id laatija-id tila-id]
+  (-> energiatodistus
+      (energiatodistus-with-db-fields id laatija-id)
+      (assoc :tila-id tila-id)
+      dissoc-voimassaolo))
+
+(t/deftest add-signed-energiatodistus-and-discard-test
+  (let [laatija-id (add-laatija!)
+        db (ts/db-user laatija-id)
+        energiatodistus (generate-energiatodistus-2018-complete)
+        id (add-energiatodistus-and-sign! energiatodistus laatija-id)]
+    (t/is (= (energiatodistus-in-tila energiatodistus id laatija-id 2)
+             (-> id find-energiatodistus dissoc-voimassaolo)))
+
+    (service/set-energiatodistus-discarded! db id true)
+    (t/is (= (energiatodistus-in-tila energiatodistus id laatija-id 3)
+             (-> id find-energiatodistus dissoc-voimassaolo)))
+
+    (service/set-energiatodistus-discarded! db id false)
+    (t/is (= (energiatodistus-in-tila energiatodistus id laatija-id 2)
+             (-> id find-energiatodistus dissoc-voimassaolo)))))

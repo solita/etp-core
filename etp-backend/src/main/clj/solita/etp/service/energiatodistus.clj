@@ -426,6 +426,11 @@
   (assert-laatija! whoami (find-energiatodistus db id))
   (energiatodistus-db/delete-energiatodistus-luonnos! db {:id id}))
 
+(defn set-energiatodistus-discarded! [db id discard?]
+  (if discard?
+    (energiatodistus-db/discard-energiatodistus! db {:id id})
+    (energiatodistus-db/undo-discard-energiatodistus! db {:id id})))
+
 ;;
 ;; Signing process
 ;;
