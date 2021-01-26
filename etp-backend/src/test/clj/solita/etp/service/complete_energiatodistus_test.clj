@@ -25,12 +25,12 @@
                     :tulokset
                     :kaytettavat-energiamuodot
                     :kaukolampo-kertoimella))
-       (= "15.000 / 35.000" (-> complete-energiatodistus
+       (= "15,000 / 35,000" (-> complete-energiatodistus
                                 :lahtotiedot
                                 :ilmanvaihto
                                 :paaiv
                                 :tulo-poisto))
-       (= " / 12.340" (-> complete-energiatodistus
+       (= " / 12,340" (-> complete-energiatodistus
                                 :lahtotiedot
                                 :ilmanvaihto
                                 :erillispoistot
