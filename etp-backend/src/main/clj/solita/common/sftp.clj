@@ -36,8 +36,12 @@
         (remove #(contains? #{"." ".."} %))
         (set))))
 
-(defn make-directory! [{:keys [channel]} path]
-  (.mkdir channel path))
+(defn make-directory! [{:keys [channel] :as con} path]
+  (try
+    (.mkdir channel path)
+    (catch SftpException e
+      (when (not= (.-id e) ChannelSftp/SSH_FX_FAILURE)
+        (throw e)))))
 
 (defn upload! [{:keys [channel]} src-path dst-path]
   (.put channel src-path dst-path))
