@@ -315,6 +315,9 @@
                  [:pt$rakennustunnus
                   :korvattu-energiatodistus-id
                   :kommentti])
+    [:replaced :paakayttaja _]
+    (select-keys energiatodistus-update
+                 [:kommentti])
     :else (exception/throw-forbidden!
             (str "Role: " rooli
                  " is not allowed to update energiatodistus " id
