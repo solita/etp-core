@@ -8,7 +8,8 @@
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.schema.laatija :as laatija-schema]
             [solita.etp.schema.common :as common-schema]
-            [flathead.flatten :as flat]))
+            [flathead.flatten :as flat]
+            [clojure.string :as str]))
 
 (defn- update-kayttaja [db id kayttaja]
   (db/with-db-exception-translation
@@ -32,7 +33,7 @@
         (update-kayttaja db id (dissoc kayttaja :henkilotunnus))
         (laatija-service/update-laatija-by-id! db id laatija)
         id)
-      (let [id (add-kayttaja db kayttaja)]
+      (let [id (add-kayttaja db (update kayttaja :henkilotunnus str/upper-case))]
         (laatija-service/add-laatija! db (assoc laatija :id id))))))
 
 (defn upsert-kayttaja-laatijat! [db kayttaja-laatijat]

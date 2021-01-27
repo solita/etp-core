@@ -3,7 +3,8 @@
             [schema-generators.generators :as g]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.laatija :as laatija-schema]
-            [solita.etp.schema.geo :as geo-schema]))
+            [solita.etp.schema.geo :as geo-schema]
+            [clojure.string :as str]))
 
 (defn unique-henkilotunnus-range [to]
   (->> (range 0 to)
@@ -21,7 +22,7 @@
 (defn generate-kayttaja [n schema]
   (map #(assoc %1
                :email (str %2 "@example.com")
-               :henkilotunnus %3)
+               :henkilotunnus (str/upper-case %3))
        (repeatedly n #(g/generate schema laatija-generators))
        (repeatedly n #(.toString (java.util.UUID/randomUUID)))
        (unique-henkilotunnus-range n)))
