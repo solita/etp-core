@@ -5,6 +5,17 @@
 
 (def default-port 22)
 
+(defn disconnect! [{:keys [session channel]}]
+  (.disconnect channel)
+  (.disconnect session)
+  nil)
+
+(defrecord SftpConnection
+    [jsch session channel]
+  java.io.Closeable
+  (close [this]
+    (disconnect! this)))
+
 (defn connect!
   ([host username password known-hosts-path]
    (connect! host default-port username password known-hosts-path))
@@ -14,15 +25,9 @@
          session (doto (.getSession jsch username host port)
                    (.setPassword password)
                    (.connect))]
-     {:jsch jsch
-      :session session
-      :channel (doto (.openChannel session "sftp")
-                 (.connect))})))
+     (->SftpConnection jsch session (doto (.openChannel session "sftp")
+                                      (.connect))))))
 
-(defn disconnect! [{:keys [session channel]}]
-  (.disconnect channel)
-  (.disconnect session)
-  nil)
 
 (defn connected? [{:keys [session]}]
   (.isConnected session))
