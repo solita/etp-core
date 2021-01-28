@@ -58,12 +58,24 @@
 ;; Misc config
 ;;
 
+;; Base URLs
 (def service-host (env "SERVICE_HOST" "localhost:3000"))
 (def index-url (str (if (str/starts-with? service-host "localhost")
                       (str "https://" service-host)
                       (str "https://private." service-host))))
+
+;; JWT
 (def trusted-jwt-iss (env "TRUSTED_JWT_ISS" "https://raw.githubusercontent.com/solita/etp-core/develop/etp-backend/src/test/resources/"))
 (def data-jwt-public-key-base-url (env "DATA_JWT_PUBLIC_KEY_BASE_URL" "https://raw.githubusercontent.com/solita/etp-core/develop/etp-backend/src/test/resources/"))
+
+;; Logout
 (def keycloak-suomifi-logout-url (env "KEYCLOAK_SUOMIFI_LOGOUT_URL" index-url))
 (def keycloak-virtu-logout-url (env "KEYCLOAK_VIRTU_LOGOUT_URL" index-url))
 (def cognito-logout-url (env "COGNITO_LOGOUT_URL" (str index-url "?client=id=localhost")))
+
+;; Laskutus
+(def laskutus-sftp-host (env "LASKUTUS_SFTP_HOST" "localhost"))
+(def laskutus-sftp-port (Integer/parseInt (env "LASKUTUS_SFTP_PORT" "2222")))
+(def laskutus-sftp-username (env "LASKUTUS_SFTP_USERNAME" "etp"))
+(def laskutus-sftp-password (env "LASKUTUS_SFTP_PASSWORD" "etp"))
+(def known-hosts-path "known_hosts")
