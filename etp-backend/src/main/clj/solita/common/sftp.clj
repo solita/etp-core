@@ -1,5 +1,6 @@
 (ns solita.common.sftp
-  (:require [clojure.java.io :as io])
+  (:require [clojure.string :as str]
+            [clojure.java.io :as io])
   (:import (com.jcraft.jsch JSch ChannelSftp SftpException)))
 
 (def default-port 22)
@@ -30,18 +31,22 @@
   ([{:keys [channel] :as connection}]
    (list-files connection (.pwd channel)))
   ([{:keys [channel]} path]
-   (->> path
+   (->> (if (str/blank? path)
+          (.pwd channel)
+          path)
         (.ls channel)
         (map #(.getFilename %))
         (remove #(contains? #{"." ".."} %))
         (set))))
 
-(defn make-directory! [{:keys [channel] :as con} path]
-  (try
-    (.mkdir channel path)
-    (catch SftpException e
-      (when (not= (.-id e) ChannelSftp/SSH_FX_FAILURE)
-        (throw e)))))
+(defn file-exists? [connection path]
+  (let [split-path (str/split path #"/")
+        dir-path (->> split-path butlast (str/join "/"))]
+    (contains? (list-files connection dir-path) (last split-path))))
+
+(defn make-directory! [{:keys [channel] :as connection} path]
+  (when-not (file-exists? connection path)
+    (.mkdir channel path)))
 
 (defn upload! [{:keys [channel]} src-path dst-path]
   (.put channel src-path dst-path))
@@ -49,11 +54,8 @@
 (defn delete!
   ([connection path]
    (delete! connection path false))
-  ([{:keys [channel]} path directory?]
-   (try
+  ([{:keys [channel] :as connection} path directory?]
+   (when (file-exists? connection path)
      (if directory?
        (.rmdir channel path)
-       (.rm channel path))
-     (catch SftpException e
-       (when (not= (.-id e) ChannelSftp/SSH_FX_NO_SUCH_FILE)
-         (throw e))))))
+       (.rm channel path)))))
