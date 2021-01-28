@@ -3,6 +3,8 @@
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [solita.common.xml :as xml]
+            [solita.common.sftp :as sftp]
+            [solita.etp.config :as config]
             [solita.etp.db :as db]
             [solita.etp.service.file :as file-service])
   (:import (java.time LocalDate ZoneId)
@@ -165,12 +167,15 @@
 (defn xml-file-key [now filename]
   (format "%d/%02d/%s" (.getYear now) (.getMonthValue now) filename))
 
-(defn do-laskutus-file-operations [aws-s3-client now xmls filename-prefix]
+(defn do-laskutus-file-operations [aws-s3-client sftp-connection now xmls filename-prefix]
   (doseq [[idx xml] (map-indexed vector xmls)
           :let [filename (xml-filename now filename-prefix idx)
                 path (str tmp-dir "/" filename)]]
     (with-open [file (io/writer path)]
       (xml/emit xml file))
+    ;; TODO directory structure?
+    (sftp/make-directory! sftp-connection "etp")
+    (sftp/upload! sftp-connection path (str "etp/" filename))
     (file-service/upsert-file-from-file aws-s3-client
                                         (xml-file-key now filename)
                                         (io/file path))
@@ -187,14 +192,21 @@
                                 laskutustiedot
                                 (map #(laskutustieto-xml now %)))]
     (io/make-parents (str tmp-dir "/example.txt"))
-    (do-laskutus-file-operations aws-s3-client
-                                 now
-                                 asiakastieto-xmls
-                                 asiakastieto-filename-prefix)
-    (do-laskutus-file-operations aws-s3-client
-                                 now
-                                 laskutustieto-xmls
-                                 laskutustieto-filename-prefix)
+    (with-open [sftp-connection (sftp/connect! config/laskutus-sftp-host
+                                               config/laskutus-sftp-port
+                                               config/laskutus-sftp-username
+                                               config/laskutus-sftp-password
+                                               config/known-hosts-path)]
+      (do-laskutus-file-operations aws-s3-client
+                                   sftp-connection
+                                   now
+                                   asiakastieto-xmls
+                                   asiakastieto-filename-prefix)
+      (do-laskutus-file-operations aws-s3-client
+                                   sftp-connection
+                                   now
+                                   laskutustieto-xmls
+                                   laskutustieto-filename-prefix))
     (io/delete-file tmp-dir)
     (log/info "Kuukauden laskutusajo finished")
     nil))

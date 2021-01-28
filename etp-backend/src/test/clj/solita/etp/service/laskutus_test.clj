@@ -4,6 +4,8 @@
             [clojure.java.jdbc :as jdbc]
             [solita.common.map :as xmap]
             [solita.common.xml :as xml]
+            [solita.common.sftp :as sftp]
+            [solita.etp.config :as config]
             [solita.etp.test-system :as ts]
             [solita.etp.test-data.yritys :as yritys-test-data]
             [solita.etp.test-data.laatija :as laatija-test-data]
@@ -223,16 +225,23 @@
   (test-data-set)
   (laskutus-service/do-kuukauden-laskutus ts/*db* ts/*aws-s3-client*)
   (let [now (LocalDate/now)]
-    (doseq [idx (range 4)]
-      (t/is (->> (laskutus-service/xml-filename
-                  now
-                  laskutus-service/asiakastieto-filename-prefix
-                  idx)
-                 (laskutus-service/xml-file-key now)
-                 (file-service/find-file ts/*aws-s3-client*)))
-      (t/is (->> (laskutus-service/xml-filename
-                  now
-                  laskutus-service/laskutustieto-filename-prefix
-                  idx)
-                 (laskutus-service/xml-file-key now)
-                 (file-service/find-file ts/*aws-s3-client*))))))
+    (with-open [sftp-connection (sftp/connect! config/laskutus-sftp-host
+                                               config/laskutus-sftp-port
+                                               config/laskutus-sftp-username
+                                               config/laskutus-sftp-password
+                                               config/known-hosts-path)]
+      (doseq [idx (range 4)
+              :let [asiakastieto-filename (laskutus-service/xml-filename
+                                           now
+                                           laskutus-service/asiakastieto-filename-prefix
+                                           idx)
+                    asiakastieto-key (laskutus-service/xml-file-key now asiakastieto-filename)
+                    laskutustieto-filename (laskutus-service/xml-filename
+                                            now
+                                            laskutus-service/laskutustieto-filename-prefix
+                                            idx)
+                    laskutustieto-key (laskutus-service/xml-file-key now laskutustieto-filename)]]
+        (t/is (sftp/file-exists? sftp-connection (str "etp/" asiakastieto-filename)))
+        (t/is (sftp/file-exists? sftp-connection (str "etp/" laskutustieto-filename)))
+        (t/is (file-service/find-file ts/*aws-s3-client* asiakastieto-key))
+        (t/is (file-service/find-file ts/*aws-s3-client* laskutustieto-key))))))
