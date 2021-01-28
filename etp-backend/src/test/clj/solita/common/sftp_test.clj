@@ -11,20 +11,26 @@
 
 (t/deftest sftp-test
   (let [tmp-dir (.toString (java.util.UUID/randomUUID))
-        dst-path (str tmp-dir "/" src-path)
-        connection (sftp/connect! host port username password known-hosts-path)]
-    (t/is (sftp/connected? connection))
-    (t/is (-> (sftp/list-files connection) (contains? tmp-dir) not))
-    (sftp/make-directory! connection tmp-dir)
-    (sftp/make-directory! connection tmp-dir)
-    (t/is (-> (sftp/list-files connection) (contains? tmp-dir)))
-    (t/is (-> (sftp/list-files connection tmp-dir) (contains? src-path) not))
-    (sftp/upload! connection src-path dst-path)
-    (t/is (-> (sftp/list-files connection tmp-dir) (contains? src-path)))
-    (sftp/delete! connection dst-path)
-    (sftp/delete! connection dst-path)
-    (t/is (-> (sftp/list-files connection tmp-dir) (contains? src-path) not))
-    (sftp/delete! connection tmp-dir true)
-    (t/is (-> (sftp/list-files connection) (contains? tmp-dir) not))
-    (sftp/disconnect! connection)
-    (t/is (false? (sftp/connected? connection)))))
+        dst-path (str tmp-dir "/" src-path)]
+    (with-open [connection (sftp/connect! host port username password known-hosts-path)]
+      (t/is (sftp/connected? connection))
+
+      ;; Creating a directory
+      (t/is (not (sftp/file-exists? connection tmp-dir)))
+      (sftp/make-directory! connection tmp-dir)
+      (sftp/make-directory! connection tmp-dir)
+      (t/is (sftp/file-exists? connection tmp-dir))
+
+      ;; Uploading the file
+      (t/is (not (sftp/file-exists? connection dst-path)))
+      (sftp/upload! connection src-path dst-path)
+      (t/is (sftp/file-exists? connection dst-path))
+
+      ;; Deleting the file
+      (sftp/delete! connection dst-path)
+      (sftp/delete! connection dst-path)
+      (t/is (not (sftp/file-exists? connection dst-path)))
+
+      ;; Deleting the directory
+      (sftp/delete! connection tmp-dir true)
+      (t/is (not (sftp/file-exists? connection tmp-dir))))))
