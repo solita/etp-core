@@ -26,7 +26,6 @@
       (sftp/upload! connection src-path dst-path)
       (t/is (sftp/file-exists? connection dst-path))
 
-
       ;; Deleting the file
       (sftp/delete! connection dst-path)
       (sftp/delete! connection dst-path)

@@ -4,6 +4,7 @@
   (:import (com.jcraft.jsch JSch ChannelSftp SftpException)))
 
 (def default-port 22)
+(def timeout (* 1000 60 10))
 
 (defn disconnect! [{:keys [session channel]}]
   (.disconnect channel)
@@ -24,7 +25,7 @@
                 (.setKnownHosts (-> known-hosts-path io/resource io/input-stream)))
          session (doto (.getSession jsch username host port)
                    (.setPassword password)
-                   (.connect))]
+                   (.connect timeout))]
      (->SftpConnection jsch session (doto (.openChannel session "sftp")
                                       (.connect))))))
 
