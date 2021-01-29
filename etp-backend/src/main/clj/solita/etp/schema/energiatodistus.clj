@@ -366,7 +366,7 @@
 (def EnergiatodistusSearch
   {(schema/optional-key :sort)    schema/Str
    (schema/optional-key :order)   (schema/enum "asc" "desc")
-   (schema/optional-key :limit)   schema/Int
+   (schema/optional-key :limit)   (common-schema/LimitedInt 1 100)
    (schema/optional-key :offset)  schema/Int
    (schema/optional-key :where)   schema/Str
    (schema/optional-key :keyword) schema/Str})
