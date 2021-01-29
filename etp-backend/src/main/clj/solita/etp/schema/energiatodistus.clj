@@ -31,8 +31,7 @@
 
 (defn valid-rakennustunnus? [s]
   (try
-    (let [s           (str/lower-case s)
-          number-part (subs s 0 9)
+    (let [number-part (subs s 0 9)
           checksum    (last s)]
       (and (= 10 (count s))
            (= checksum (common-schema/henkilotunnus-checksum number-part))))
