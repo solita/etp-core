@@ -49,6 +49,10 @@
 (def IntNonNegative
   (LimitedNum schema/Int 0 9999999999 "[0, max]"))
 
+(defn LimitedInt [mininclusive maxinclusive]
+  (LimitedNum schema/Int mininclusive maxinclusive
+              (str "[" mininclusive ", " maxinclusive "]")))
+
 (def Luokittelu (merge Id {:label-fi schema/Str
                            :label-sv schema/Str
                            :valid schema/Bool}))
