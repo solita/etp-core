@@ -12,4 +12,6 @@ ln -s /usr/local/bin/libreoffice7.0 /usr/local/bin/libreoffice
 # The application
 COPY libreoffice/registrymodifications.xcu /root/.config/libreoffice/4/user/
 COPY target/etp-backend.jar /target/
-ENTRYPOINT ["java", "-Djava.awt.headless=true", "-cp", "target/etp-backend.jar", "clojure.main", "-m", "solita.etp.core"]
+COPY start.sh /target/
+
+ENTRYPOINT ["bash", "/target/start.sh"]]
