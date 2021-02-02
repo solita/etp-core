@@ -7,7 +7,7 @@
             [solita.etp.config :as config]
             [solita.etp.db :as db]
             [solita.etp.service.file :as file-service])
-  (:import (java.time LocalDate ZoneId)
+  (:import (java.time Instant LocalDate ZoneId)
            (java.time.format DateTimeFormatter)))
 
 ;; *** Require sql functions ***
@@ -15,7 +15,9 @@
 
 (def tmp-dir "tmp-laskutus")
 
+(def asiakastieto-dir-path "etp/from_etp/asiakastieto/ara/")
 (def asiakastieto-filename-prefix "asiakastieto_etp_ara_")
+(def laskutustieto-dir-path "etp/from_etp/laskutustieto/ara/")
 (def laskutustieto-filename-prefix "laskutustieto_etp_ara_")
 
 (def asiakastieto-ns "http://kiekuhanke.fi/kieku/asiakasin")
@@ -24,7 +26,7 @@
 (def timezone (ZoneId/of "Europe/Helsinki"))
 (def date-formatter-fi (.withZone (DateTimeFormatter/ofPattern "dd.MM.yyyy")
                                   timezone))
-(def date-formatter-file (.withZone (DateTimeFormatter/ofPattern "yyyyMMdd")
+(def date-formatter-file (.withZone (DateTimeFormatter/ofPattern "yyyyMMddHHmmss")
                                     timezone))
 
 (defn find-kuukauden-laskutus [db]
@@ -121,7 +123,6 @@
                           (:kieli %))
              energiatodistukset)))
 
-
 (defn laskutustieto-xml [now {:keys [asiakastunnus laatijat] :as laskutustieto}]
   (->> [["MyyntiOrganisaatioKoodi" "7010"]
         ["JakelutieKoodi" "13"]
@@ -160,24 +161,25 @@
 (defn xml-filename [now filename-prefix idx]
   (str filename-prefix
        (.format date-formatter-file now)
-       "02"
-       (format "%07d" idx)
+       (format "%03d" idx)
        ".xml"))
 
-(defn xml-file-key [now filename]
-  (format "%d/%02d/%s" (.getYear now) (.getMonthValue now) filename))
+(defn xml-file-key [filename]
+  (let [numbers (->> filename (re-find #"(\d+)\.xml$") second)]
+    (str (subs numbers 0 4) "/" (subs numbers 4 6) "/" filename)))
 
-(defn do-laskutus-file-operations [aws-s3-client sftp-connection now xmls filename-prefix]
+(defn do-laskutus-file-operations [aws-s3-client sftp-connection xmls
+                                   filename-prefix dir-path]
+  (sftp/make-directory! sftp-connection dir-path)
   (doseq [[idx xml] (map-indexed vector xmls)
-          :let [filename (xml-filename now filename-prefix idx)
+          :let [now (Instant/now)
+                filename (xml-filename now filename-prefix idx)
                 path (str tmp-dir "/" filename)]]
     (with-open [file (io/writer path)]
       (xml/emit xml file))
-    ;; TODO directory structure?
-    (sftp/make-directory! sftp-connection "etp")
-    (sftp/upload! sftp-connection path (str "etp/" filename))
+    (sftp/upload! sftp-connection path (str dir-path filename))
     (file-service/upsert-file-from-file aws-s3-client
-                                        (xml-file-key now filename)
+                                        (xml-file-key filename)
                                         (io/file path))
     (io/delete-file path)))
 
@@ -202,14 +204,14 @@
                                                    config/known-hosts-path)]
           (do-laskutus-file-operations aws-s3-client
                                        sftp-connection
-                                       now
                                        asiakastieto-xmls
-                                       asiakastieto-filename-prefix)
+                                       asiakastieto-filename-prefix
+                                       asiakastieto-dir-path)
           (do-laskutus-file-operations aws-s3-client
                                        sftp-connection
-                                       now
                                        laskutustieto-xmls
-                                       laskutustieto-filename-prefix))
+                                       laskutustieto-filename-prefix
+                                       laskutustieto-dir-path))
         (io/delete-file tmp-dir)
         (log/info "Kuukauden laskutusajo finished")
         nil))

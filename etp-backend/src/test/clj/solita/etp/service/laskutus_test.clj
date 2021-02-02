@@ -13,7 +13,7 @@
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.laskutus :as laskutus-service]
             [solita.etp.service.file :as file-service])
-  (:import (java.time LocalDate)))
+  (:import (java.time Instant LocalDate)))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -211,37 +211,39 @@
     (t/is (str/includes? xml-str "<KumppaniNro>ETP</KumppaniNro>"))))
 
 (t/deftest xml-filename-test
-  (t/is (= "some-prefix20210114020000123.xml"
-           (laskutus-service/xml-filename (LocalDate/of 2021 01 14)
+  (t/is (= "some-prefix20210114040101123.xml"
+           (laskutus-service/xml-filename (Instant/parse "2021-01-14T02:01:01.00Z")
                                           "some-prefix"
                                           123))))
 
 (t/deftest xml-file-key
-  (t/is (= "2021/01/some-file.xml"
-           (laskutus-service/xml-file-key (LocalDate/of 2021 01 14)
-                                          "some-file.xml"))))
+  (t/is (= "2021/01/some-prefix20210114040101123.xml"
+           (laskutus-service/xml-file-key "some-prefix20210114040101123.xml"))))
 
 (t/deftest do-kuukauden-laskutus-test
   (test-data-set)
   (laskutus-service/do-kuukauden-laskutus ts/*db* ts/*aws-s3-client*)
-  (let [now (LocalDate/now)]
+  (try
     (with-open [sftp-connection (sftp/connect! config/laskutus-sftp-host
                                                config/laskutus-sftp-port
                                                config/laskutus-sftp-username
                                                config/laskutus-sftp-password
                                                config/known-hosts-path)]
-      (doseq [idx (range 4)
-              :let [asiakastieto-filename (laskutus-service/xml-filename
-                                           now
-                                           laskutus-service/asiakastieto-filename-prefix
-                                           idx)
-                    asiakastieto-key (laskutus-service/xml-file-key now asiakastieto-filename)
-                    laskutustieto-filename (laskutus-service/xml-filename
-                                            now
-                                            laskutus-service/laskutustieto-filename-prefix
-                                            idx)
-                    laskutustieto-key (laskutus-service/xml-file-key now laskutustieto-filename)]]
-        (t/is (sftp/file-exists? sftp-connection (str "etp/" asiakastieto-filename)))
-        (t/is (sftp/file-exists? sftp-connection (str "etp/" laskutustieto-filename)))
-        (t/is (file-service/find-file ts/*aws-s3-client* asiakastieto-key))
-        (t/is (file-service/find-file ts/*aws-s3-client* laskutustieto-key))))))
+      (try
+        (let [asiakastieto-filenames (sftp/files-in-dir
+                                      sftp-connection
+                                      laskutus-service/asiakastieto-dir-path)
+              laskutustieto-filenames (sftp/files-in-dir
+                                       sftp-connection
+                                       laskutus-service/laskutustieto-dir-path)]
+          (t/is (= 4 (count asiakastieto-filenames)))
+          (t/is (= 4 (count laskutustieto-filenames)))
+          (t/is (every? #(re-matches #"asiakastieto_etp_ara_.+\.xml" %)
+                        asiakastieto-filenames))
+          (t/is (every? #(re-matches #"laskutustieto_etp_ara_.+\.xml" %)
+                        laskutustieto-filenames))
+          (t/is (every? #(file-service/find-file ts/*aws-s3-client* %)
+                        (->> (concat laskutustieto-filenames)
+                             (map laskutus-service/xml-file-key)))))
+        (finally (sftp/delete! sftp-connection (str laskutus-service/asiakastieto-dir-path "*"))
+                 (sftp/delete! sftp-connection (str laskutus-service/laskutustieto-dir-path "*")))))))
