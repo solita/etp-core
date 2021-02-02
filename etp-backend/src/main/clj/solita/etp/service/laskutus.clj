@@ -182,31 +182,35 @@
     (io/delete-file path)))
 
 (defn do-kuukauden-laskutus [db aws-s3-client]
-  (log/info "Starting kuukauden laskutusajo")
-  (let [now (LocalDate/now)
-        laskutus (find-kuukauden-laskutus db)
-        asiakastieto-xmls (->> laskutus
-                               asiakastiedot
-                               (map asiakastieto-xml))
-        laskutustieto-xmls (->> laskutus
-                                laskutustiedot
-                                (map #(laskutustieto-xml now %)))]
-    (io/make-parents (str tmp-dir "/example.txt"))
-    (with-open [sftp-connection (sftp/connect! config/laskutus-sftp-host
-                                               config/laskutus-sftp-port
-                                               config/laskutus-sftp-username
-                                               config/laskutus-sftp-password
-                                               config/known-hosts-path)]
-      (do-laskutus-file-operations aws-s3-client
-                                   sftp-connection
-                                   now
-                                   asiakastieto-xmls
-                                   asiakastieto-filename-prefix)
-      (do-laskutus-file-operations aws-s3-client
-                                   sftp-connection
-                                   now
-                                   laskutustieto-xmls
-                                   laskutustieto-filename-prefix))
-    (io/delete-file tmp-dir)
-    (log/info "Kuukauden laskutusajo finished")
-    nil))
+  (if (every? #(-> % str/blank? not) [config/laskutus-sftp-host
+                                      config/laskutus-sftp-username])
+    (do
+      (log/info "Starting kuukauden laskutusajo")
+      (let [now (LocalDate/now)
+            laskutus (find-kuukauden-laskutus db)
+            asiakastieto-xmls (->> laskutus
+                                   asiakastiedot
+                                   (map asiakastieto-xml))
+            laskutustieto-xmls (->> laskutus
+                                    laskutustiedot
+                                    (map #(laskutustieto-xml now %)))]
+        (io/make-parents (str tmp-dir "/example.txt"))
+        (with-open [sftp-connection (sftp/connect! config/laskutus-sftp-host
+                                                   config/laskutus-sftp-port
+                                                   config/laskutus-sftp-username
+                                                   config/laskutus-sftp-password
+                                                   config/known-hosts-path)]
+          (do-laskutus-file-operations aws-s3-client
+                                       sftp-connection
+                                       now
+                                       asiakastieto-xmls
+                                       asiakastieto-filename-prefix)
+          (do-laskutus-file-operations aws-s3-client
+                                       sftp-connection
+                                       now
+                                       laskutustieto-xmls
+                                       laskutustieto-filename-prefix))
+        (io/delete-file tmp-dir)
+        (log/info "Kuukauden laskutusajo finished")
+        nil))
+    (log/warn "Sftp parameters not set. Kuukauden laskutus interrupted")))

@@ -58,6 +58,8 @@
 ;; Misc config
 ;;
 
+(def environment-alias (env "ENVIRONMENT_ALIAS" "test"))
+
 ;; Base URLs
 (def service-host (env "SERVICE_HOST" "localhost:3000"))
 (def index-url (str (if (str/starts-with? service-host "localhost")
