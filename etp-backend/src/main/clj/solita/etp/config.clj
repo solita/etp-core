@@ -77,7 +77,10 @@
 
 ;; Laskutus
 (def laskutus-sftp-host (env "LASKUTUS_SFTP_HOST" "localhost"))
-(def laskutus-sftp-port (Integer/parseInt (env "LASKUTUS_SFTP_PORT" "2222")))
+(def laskutus-sftp-port (try
+                          (Integer/parseInt (env "LASKUTUS_SFTP_PORT" "2222"))
+                          (catch java.lang.NumberFormatException e
+                            nil)))
 (def laskutus-sftp-username (env "LASKUTUS_SFTP_USERNAME" "etp"))
 (def laskutus-sftp-password (env "LASKUTUS_SFTP_PASSWORD" "etp"))
 (def known-hosts-path "known_hosts")
