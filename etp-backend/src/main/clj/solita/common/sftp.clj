@@ -33,26 +33,39 @@
 (defn connected? [{:keys [session]}]
   (.isConnected session))
 
-(defn list-files
+(defn files-in-dir
   ([{:keys [channel] :as connection}]
-   (list-files connection (.pwd channel)))
+   (files-in-dir connection (.pwd channel)))
   ([{:keys [channel]} path]
-   (->> (if (str/blank? path)
-          (.pwd channel)
-          path)
-        (.ls channel)
-        (map #(.getFilename %))
-        (remove #(contains? #{"." ".."} %))
-        (set))))
+   (disj
+    (->> path (.ls channel) (map #(.getFilename %)) (set))
+    "."
+    "..")))
 
-(defn file-exists? [connection path]
-  (let [split-path (str/split path #"/")
-        dir-path (->> split-path butlast (str/join "/"))]
-    (contains? (list-files connection dir-path) (last split-path))))
+(defn file-exists-in-current-dir? [connection filename]
+  (contains? (files-in-dir connection) filename))
+
+(defn file-exists? [{:keys [channel] :as connection} path]
+  (let [current-dir (.pwd channel)
+        split-path (str/split path #"/")
+        dirs-exist? (every? (fn [dir]
+                              (when (file-exists-in-current-dir? connection dir)
+                                (.cd channel dir)
+                                true))
+                            (butlast split-path))
+        file-exists? (and dirs-exist?
+                          (file-exists-in-current-dir? connection
+                                                       (last split-path)))]
+    (.cd channel current-dir)
+    file-exists?))
 
 (defn make-directory! [{:keys [channel] :as connection} path]
-  (when-not (file-exists? connection path)
-    (.mkdir channel path)))
+  (let [current-dir (.pwd channel)]
+    (doseq [dir (str/split path #"/")]
+      (when-not (file-exists-in-current-dir? connection dir)
+        (.mkdir channel dir))
+      (.cd channel dir))
+    (.cd channel current-dir)))
 
 (defn upload! [{:keys [channel]} src-path dst-path]
   (.put channel src-path dst-path))
@@ -61,7 +74,7 @@
   ([connection path]
    (delete! connection path false))
   ([{:keys [channel] :as connection} path directory?]
-   (when (file-exists? connection path)
+   (when (file-exists? connection (str/replace path #"\*$" ""))
      (if directory?
        (.rmdir channel path)
        (.rm channel path)))))

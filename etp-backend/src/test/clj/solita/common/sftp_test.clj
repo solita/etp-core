@@ -10,7 +10,9 @@
 (def src-path "deps.edn")
 
 (t/deftest sftp-test
-  (let [tmp-dir (.toString (java.util.UUID/randomUUID))
+  (let [tmp-dir-part-1 (.toString (java.util.UUID/randomUUID))
+        tmp-dir-part-2 "tmp"
+        tmp-dir (str tmp-dir-part-1 "/" tmp-dir-part-2)
         dst-path (str tmp-dir "/" src-path)]
     (with-open [connection (sftp/connect! host port username password known-hosts-path)]
       (t/is (sftp/connected? connection))
