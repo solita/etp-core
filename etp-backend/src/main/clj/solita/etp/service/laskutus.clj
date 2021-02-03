@@ -33,25 +33,26 @@
   (laskutus-db/select-kuukauden-laskutus db))
 
 (def fields-for-asiakastieto
-  #{:asiakastunnus :nimi :laskutuskieli :yritys-id :ytunnus
+  #{:laskutus-asiakastunnus :laatija-id :nimi :laskutuskieli :yritys-id :ytunnus
     :valittajatunnus :verkkolaskuosoite :jakeluosoite
     :vastaanottajan-tarkenne :postinumero :postitoimipaikka :maa})
 
 (defn asiakastiedot [laskutus]
   (->> laskutus
-       (reduce (fn [acc {:keys [asiakastunnus] :as laskutus-item}]
-                 (if (contains? acc asiakastunnus)
+       (reduce (fn [acc {:keys [laskutus-asiakastunnus] :as laskutus-item}]
+                 (if (contains? acc laskutus-asiakastunnus)
                    acc
-                   (assoc acc asiakastunnus (select-keys laskutus-item
-                                                         fields-for-asiakastieto))))
+                   (assoc acc
+                          laskutus-asiakastunnus
+                          (select-keys laskutus-item fields-for-asiakastieto))))
                {})
        vals))
 
 (defn asiakastieto-xml
-  [{:keys [asiakastunnus nimi laskutuskieli ytunnus valittajatunnus
+  [{:keys [laskutus-asiakastunnus nimi laskutuskieli ytunnus valittajatunnus
            verkkolaskuosoite jakeluosoite vastaanottajan-tarkenne postinumero
            postitoimipaikka maa yritys-id]}]
-  (->> [["AsiakasTunnus" asiakastunnus]
+  (->> [["AsiakasTunnus" laskutus-asiakastunnus]
         ["AsiakasluokitusKoodi" "03"]
         ["MaaKoodi" "FI"]
         ["Nimi1Nimi" nimi]
@@ -93,13 +94,22 @@
 
 (defn laskutustiedot [laskutus]
   (->> laskutus
-       (reduce (fn [acc {:keys [asiakastunnus laatija-id laatija-nimi
-                               energiatodistus-id allekirjoitusaika energiatodistus-kieli]
+       (reduce (fn [acc {:keys [laskutus-asiakastunnus laatija-id laatija-nimi
+                               energiatodistus-id allekirjoitusaika
+                               energiatodistus-kieli]
                         :as laskutus-item}]
                  (-> acc
-                     (assoc-in [asiakastunnus :asiakastunnus] asiakastunnus)
-                     (assoc-in [asiakastunnus :laatijat laatija-id :nimi] laatija-nimi)
-                     (update-in [asiakastunnus :laatijat laatija-id :energiatodistukset]
+                     (assoc-in [laskutus-asiakastunnus :laskutus-asiakastunnus]
+                               laskutus-asiakastunnus)
+                     (assoc-in [laskutus-asiakastunnus
+                                :laatijat
+                                laatija-id
+                                :nimi]
+                               laatija-nimi)
+                     (update-in [laskutus-asiakastunnus
+                                 :laatijat
+                                 laatija-id
+                                 :energiatodistukset]
                                 conj
                                 {:id energiatodistus-id
                                  :allekirjoitusaika allekirjoitusaika
@@ -123,7 +133,8 @@
                           (:kieli %))
              energiatodistukset)))
 
-(defn laskutustieto-xml [now {:keys [asiakastunnus laatijat] :as laskutustieto}]
+(defn laskutustieto-xml [now {:keys [laskutus-asiakastunnus laatijat]
+                              :as laskutustieto}]
   (->> [["MyyntiOrganisaatioKoodi" "7010"]
         ["JakelutieKoodi" "13"]
         ["SektoriKoodi" "01"]
@@ -136,7 +147,7 @@
         ["TiliointiViiteKoodi" "TODO"]
         ["TyomaaAvainKoodi" "TODO"]
         ["TilausAsiakasTyyppi"
-         ["AsiakasNro" asiakastunnus]]
+         ["AsiakasNro" laskutus-asiakastunnus]]
         ["LaskuttajaAsiakasTyyppi"
          ["AsiakasNro" "701013A000"]]
         ["MyyntitilausSanomaPerustietoTyyppi"
