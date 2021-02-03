@@ -1,12 +1,12 @@
 (ns solita.etp.service.energiatodistus-pdf
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
-            [clojure.java.shell :as shell]
             [clojure.tools.logging :as log]
             [puumerkki.pdf :as puumerkki]
             [solita.etp.exception :as exception]
             [solita.common.xlsx :as xlsx]
             [solita.common.certificates :as certificates]
+            [solita.common.libreoffice :as libreoffice]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]
             [solita.etp.service.file :as file-service]
@@ -606,13 +606,12 @@
         filename (.getName file)
         dir (.getParent file)
         result-pdf (str/replace path #".xlsx$" ".pdf")
-        {:keys [exit err] :as sh-result} (shell/sh "libreoffice"
-                                                   "--headless"
-                                                   "--convert-to"
-                                                   "pdf"
-                                                   filename
-                                                   :dir
-                                                   dir)]
+        {:keys [exit err] :as sh-result} (libreoffice/run-with-args
+                                          "--convert-to"
+                                          "pdf"
+                                          filename
+                                          :dir
+                                          dir)]
     (if (and (zero? exit) (str/blank? err) (.exists (io/as-file result-pdf)))
       result-pdf
       (throw (ex-info "XLSX to PDF conversion failed"
