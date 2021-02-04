@@ -1,6 +1,5 @@
 -- name: select-kuukauden-laskutus
 SELECT e.id energiatodistus_id, e.allekirjoitusaika,
-       e.pt$kieli energiatodistus_kieli,
        k.id laatija_id, k.etunimi || ' ' || k.sukunimi laatija_nimi,
        k.henkilotunnus,
        y.id yritys_id, y.ytunnus, v.valittajatunnus, y.verkkolaskuosoite,

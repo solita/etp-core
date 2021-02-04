@@ -126,11 +126,12 @@
   (->> laskutus
        (reduce (fn [acc {:keys [laskutus-asiakastunnus laatija-id laatija-nimi
                                energiatodistus-id allekirjoitusaika
-                               energiatodistus-kieli]
-                        :as laskutus-item}]
+                               laskutuskieli]}]
                  (-> acc
                      (assoc-in [laskutus-asiakastunnus :laskutus-asiakastunnus]
                                laskutus-asiakastunnus)
+                     (assoc-in [laskutus-asiakastunnus :laskutuskieli]
+                               laskutuskieli)
                      (assoc-in [laskutus-asiakastunnus
                                 :laatijat
                                 laatija-id
@@ -142,8 +143,7 @@
                                  :energiatodistukset]
                                 conj
                                 {:id energiatodistus-id
-                                 :allekirjoitusaika allekirjoitusaika
-                                 :kieli energiatodistus-kieli})))
+                                 :allekirjoitusaika allekirjoitusaika})))
                {})
        vals))
 
@@ -151,53 +151,65 @@
   ["TilausriviTekstiTyyppi"
    ["Teksti" teksti]
    ["TekstiSijaintiKoodi" "0002"]
-   ["KieliKoodi" (if (= kieli 1) "sv" "fi")]])
+   ["KieliKoodi" (case kieli
+                   1 "SV"
+                   2 "EN"
+                   "FI")]])
 
-(defn tilausrivit-for-laatija [{:keys [nimi energiatodistukset]}]
-  (cons (tilausrivi nimi 0)
-        (map #(tilausrivi (str "Energiatodistus numero: "
-                               (:id %)
-                               ", pvm: "
-                               (.format date-formatter-fi
-                                        (:allekirjoitusaika %)))
-                          (:kieli %))
+;; TODO translate text
+(defn energiatodistus-tilausrivi-text [id allekirjoitusaika laskutuskieli]
+  (str "Energiatodistus numero: "
+       id
+       ", pvm: "
+       (.format date-formatter-fi allekirjoitusaika)))
+
+(defn tilausrivit-for-laatija [{:keys [nimi energiatodistukset]} laskutuskieli]
+  (cons (tilausrivi nimi laskutuskieli)
+        (map (fn [{:keys [id allekirjoitusaika]}]
+               (tilausrivi (energiatodistus-tilausrivi-text id
+                                                            allekirjoitusaika
+                                                            laskutuskieli)
+                           laskutuskieli))
              energiatodistukset)))
 
-(defn laskutustieto-xml [now {:keys [laskutus-asiakastunnus laatijat]
-                              :as laskutustieto}]
-  (->> [["MyyntiOrganisaatioKoodi" "7010"]
-        ["JakelutieKoodi" "13"]
-        ["SektoriKoodi" "01"]
-        ["TilausLajiKoodi" "Z001"]
-        ["LaskuPvm" (.format date-formatter-fi now)]
-        ["PalveluLuontiPvm" "TODO"]
-        ["HinnoitteluPvm" "TODO"]
-        ["SopimusPvm" "TODO"]
-        ["SopimusNro" "TODO"]
-        ["TiliointiViiteKoodi" "TODO"]
-        ["TyomaaAvainKoodi" "TODO"]
-        ["TilausAsiakasTyyppi"
-         ["AsiakasNro" laskutus-asiakastunnus]]
-        ["LaskuttajaAsiakasTyyppi"
-         ["AsiakasNro" "701013A000"]]
-        ["MyyntitilausSanomaPerustietoTyyppi"
-         ["YleinenLahettajaInformaatioTyyppi"
-          ["PorttiNro" "SAPVXA"]
-          ["KumppaniNro" "ETP"]
-          ["KumppanilajiKoodi" "LS"]]]
-        (vec (concat ["MyyntiTilausriviTyyppi"
-                      ["RiviNro" "10"]
-                      ["TilausMaaraArvo" (->> laatijat
-                                              vals
-                                              (mapcat :energiatodistukset)
-                                              count)]
-                      ["NimikeNro" "RA0001"]]
-                     (mapcat tilausrivit-for-laatija (vals laatijat))))]
-       xml/simple-elements
-       (apply (fn [& elements]
-                (xml/element (xml/qname laskutustieto-ns "Myyntitilaus")
-                             {:xmlns/ns2 laskutustieto-ns}
-                             elements)))))
+(defn laskutustieto-xml [now {:keys [laskutus-asiakastunnus laskutuskieli
+                                     laatijat]}]
+  (let [last-month (.minusMonths now 1)
+        last-day-of-last-month (.withDayOfMonth last-month
+                                                (.lengthOfMonth last-month))
+        formatted-last-day-of-last-month (.format date-formatter-fi
+                                                  last-day-of-last-month)]
+    (->> [["MyyntiOrganisaatioKoodi" "7010"]
+          ["JakelutieKoodi" "13"]
+          ["SektoriKoodi" "01"]
+          ["TilausLajiKoodi" "Z001"]
+          ["LaskuPvm" (.format date-formatter-fi now)]
+          ["PalveluLuontiPvm" formatted-last-day-of-last-month]
+          ["HinnoitteluPvm" formatted-last-day-of-last-month]
+          ["TilausAsiakasTyyppi"
+           ["AsiakasNro" laskutus-asiakastunnus]]
+          ["LaskuttajaAsiakasTyyppi"
+           ["AsiakasNro" "701013A000"]]
+          ["MyyntitilausSanomaPerustietoTyyppi"
+           ["YleinenLahettajaInformaatioTyyppi"
+            ["PorttiNro" (if (= config/environment-alias "prod")
+                           "SAPVMP"
+                           "SAPVMA")]
+            ["KumppaniNro" "ETP"]
+            ["KumppanilajiKoodi" "LS"]]]
+          (vec (concat ["MyyntiTilausriviTyyppi"
+                        ["RiviNro" "10"]
+                        ["TilausMaaraArvo" (->> laatijat
+                                                vals
+                                                (mapcat :energiatodistukset)
+                                                count)]
+                        ["NimikeNro" "RA0001"]]
+                       (mapcat #(tilausrivit-for-laatija % laskutuskieli) (vals laatijat))))]
+         xml/simple-elements
+         (apply (fn [& elements]
+                  (xml/element (xml/qname laskutustieto-ns "Myyntitilaus")
+                               {:xmlns/ns2 laskutustieto-ns}
+                               elements))))))
 
 (defn xml-filename [now filename-prefix idx]
   (str filename-prefix
