@@ -4,7 +4,7 @@
 (def ^:private ketjut (atom []))
 
 (defn- viesti [whoami body]
-  {:sendtime (Instant/now)
+  {:senttime (Instant/now)
    :from-id (:id whoami)
    :body body})
 

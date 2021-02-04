@@ -13,7 +13,7 @@
 
 (def Viesti
   {:from-id common-schema/Key
-   :sendtime common-schema/Instant
+   :senttime common-schema/Instant
    :body schema/Str})
 
 (def Ketju
