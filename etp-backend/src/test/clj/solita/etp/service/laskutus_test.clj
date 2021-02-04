@@ -27,6 +27,9 @@
 ;; Energiatodistukset 1-7 are signed.
 ;; Energiatodistukset 1-6 are signed during last month.
 
+;; All of these tests expect asiakastunnus to match id, which is true in this
+;; test data set but not in other environments.
+
 (defn test-data-set []
   (let [laatijat (laatija-test-data/generate 4)
         laatija-ids (laatija-test-data/insert! laatijat)
@@ -78,20 +81,21 @@
         laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)
         asiakastiedot (laskutus-service/asiakastiedot laskutus)]
     (t/is (= 4 (count asiakastiedot)))
-    (t/is (= (set (concat (->> laatijat
-                               keys
-                               sort
-                               (take 2)
-                               (apply dissoc laatijat)
-                               (map (fn [[id {:keys [etunimi sukunimi]}]]
-                                      {:asiakastunnus (format "L0%08d" id)
-                                       :nimi (str etunimi " " sukunimi)})))
-                          (map (fn [[id {:keys [nimi]}]]
-                                 {:asiakastunnus (format "L1%08d" id)
-                                  :nimi nimi})
-                               yritykset)))
+    (t/is (= (set (concat
+                   (->> laatijat
+                        keys
+                        sort
+                        (take 2)
+                        (apply dissoc laatijat)
+                        (map (fn [[id {:keys [etunimi sukunimi]}]]
+                               {:laskutus-asiakastunnus (format "L0%08d" id)
+                                :nimi (str etunimi " " sukunimi)})))
+                   (map (fn [[id {:keys [nimi]}]]
+                          {:laskutus-asiakastunnus (format "L1%08d" id)
+                           :nimi nimi})
+                        yritykset)))
              (->> asiakastiedot
-                  (map #(select-keys % [:asiakastunnus :nimi]))
+                  (map #(select-keys % [:laskutus-asiakastunnus :nimi]))
                   set)))))
 
 (t/deftest asiakastiedot-xml-test
@@ -100,16 +104,16 @@
         asiakastiedot (laskutus-service/asiakastiedot laskutus)
         yritys-id (-> yritykset keys sort first)
         yritys (get yritykset yritys-id)
-        asiakastunnus (format "L1%08d" yritys-id)
+        laskutus-asiakastunnus (format "L1%08d" yritys-id)
         asiakastieto (->> asiakastiedot
-                          (filter #(= (:asiakastunnus %)
+                          (filter #(= (:laskutus-asiakastunnus %)
                                       (format "L1%08d" yritys-id)))
                           first)
         xml-str (-> asiakastieto
                     laskutus-service/asiakastieto-xml
                     xml/emit-str)]
     (t/is (str/includes? xml-str (str "<AsiakasTunnus>"
-                                      asiakastunnus
+                                      laskutus-asiakastunnus
                                       "</AsiakasTunnus")))
     (t/is (str/includes? xml-str (str "<YritysTunnus>"
                                       (:ytunnus yritys)
@@ -124,10 +128,11 @@
         yritys (get yritykset yritys-id)
         yritys-laatija-id (-> laatijat keys sort first)
         yritys-laatija (get laatijat yritys-laatija-id)
-        yritys-asiakastunnus (format "L1%08d" yritys-id)
+
+        yritys-laskutus-asiakastunnus (format "L1%08d" yritys-id)
         yritys-laskutustieto (->> laskutustiedot
-                                  (filter #(= (:asiakastunnus %)
-                                              yritys-asiakastunnus))
+                                  (filter #(= (:laskutus-asiakastunnus %)
+                                              yritys-laskutus-asiakastunnus))
                                   first)
         yritys-laatija-energiatodistukset (get-in yritys-laskutustieto
                                                   [:laatijat
@@ -135,10 +140,10 @@
                                                    :energiatodistukset])
         laatija-id (-> laatijat keys sort last)
         laatija (get laatijat laatija-id)
-        laatija-asiakastunnus (format "L0%08d" laatija-id)
+        laatija-laskutus-asiakastunnus (format "L0%08d" laatija-id)
         laatija-laskutustieto (->> laskutustiedot
-                                   (filter #(= (:asiakastunnus %)
-                                               laatija-asiakastunnus))
+                                   (filter #(= (:laskutus-asiakastunnus %)
+                                               laatija-laskutus-asiakastunnus))
                                    first)
         laatija-energiatodistukset (get-in laatija-laskutustieto
                                            [:laatijat
@@ -146,7 +151,7 @@
                                             :energiatodistukset])
         energiatodistus-ids (-> energiatodistukset keys sort)]
     (t/is (= 4 (count laskutustiedot)))
-    (t/is (= {:asiakastunnus yritys-asiakastunnus
+    (t/is (= {:laskutus-asiakastunnus yritys-laskutus-asiakastunnus
               :laatijat {yritys-laatija-id
                          {:nimi (str (:etunimi yritys-laatija)
                                      " "
@@ -157,7 +162,7 @@
     (t/is (= #{(first energiatodistus-ids) (nth energiatodistus-ids 4)}
              (set (map :id yritys-laatija-energiatodistukset))))
 
-    (t/is (= {:asiakastunnus laatija-asiakastunnus
+    (t/is (= {:laskutus-asiakastunnus laatija-laskutus-asiakastunnus
               :laatijat {laatija-id {:nimi (str (:etunimi laatija)
                                                 " "
                                                 (:sukunimi laatija))}}}
@@ -173,9 +178,9 @@
         laskutustiedot (laskutus-service/laskutustiedot laskutus)
         yritys-id (-> yritykset keys sort first)
         yritys (get yritykset yritys-id)
-        asiakastunnus (format "L1%08d" yritys-id)
+        laskutus-asiakastunnus (format "L1%08d" yritys-id)
         laskutustieto (->> laskutustiedot
-                           (filter #(= (:asiakastunnus %)
+                           (filter #(= (:laskutus-asiakastunnus %)
                                        (format "L1%08d" yritys-id)))
                            first)
         laskutustieto-energiatodistukset (-> laskutustieto
@@ -187,7 +192,7 @@
                      (laskutus-service/laskutustieto-xml (LocalDate/now))
                      xml/emit-str)]
     (t/is (str/includes? xml-str (str "<AsiakasNro>"
-                                      asiakastunnus
+                                      laskutus-asiakastunnus
                                       "</AsiakasNro")))
     (t/is (str/includes? xml-str "<TilausMaaraArvo>2</TilausMaaraArvo>"))
     (t/is (str/includes? xml-str (str "<TilausriviTekstiTyyppi><Teksti>"

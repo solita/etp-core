@@ -11,11 +11,9 @@ SELECT e.id energiatodistus_id, e.allekirjoitusaika,
             WHEN e.laskutettava_yritys_id IS NOT NULL THEN y.nimi
        END nimi,
 
-       CASE WHEN e.laskutettava_yritys_id IS NULL THEN 'L0' ||
-                                                       lpad(l.id::text, 8, '0')
-       WHEN e.laskutettava_yritys_id IS NOT NULL THEN 'L1' ||
-                                                       lpad(y.id::text, 8, '0')
-       END asiakastunnus,
+       CASE WHEN e.laskutettava_yritys_id IS NULL THEN l.laskutus_asiakastunnus
+       WHEN e.laskutettava_yritys_id IS NOT NULL THEN y.laskutus_asiakastunnus
+       END laskutus_asiakastunnus,
 
        CASE WHEN e.laskutettava_yritys_id IS NULL THEN l.laskutuskieli
             WHEN e.laskutettava_yritys_id IS NOT NULL THEN y.laskutuskieli
