@@ -12,13 +12,13 @@
    :body               schema/Str})
 
 (def Viesti
-  {:from-id common-schema/Key
+  {:from-id  common-schema/Key
    :senttime common-schema/Instant
-   :body schema/Str})
+   :body     schema/Str})
 
 (def Ketju
-  {:id common-schema/Key
-   :from-id common-schema/Key
+  {:id                 common-schema/Key
+   :from-id            common-schema/Key
    :kayttajat          [common-schema/Key]
    :kayttajarooli-id   (schema/maybe common-schema/Key)
    :kayttajaryhma-id   (schema/maybe common-schema/Key)
