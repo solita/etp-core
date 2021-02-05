@@ -1,11 +1,17 @@
 (ns solita.etp.service.viesti
+  (:require [clojure.set :as set])
   (:import (java.time Instant)))
 
 (def ^:private ketjut (atom []))
 
+(defn- sender [whoami]
+  (-> whoami
+      (select-keys  [:id :etunimi :sukunimi :rooli])
+      (set/rename-keys {:rooli :rooli-id})))
+
 (defn- viesti [whoami body]
   {:senttime (Instant/now)
-   :from-id (:id whoami)
+   :from (sender whoami)
    :body body})
 
 (defn add-ketju! [db whoami ketju]
@@ -13,7 +19,6 @@
       (swap! #(conj %
         (-> ketju
             (assoc :id (count %))
-            (assoc :from-id (:id whoami))
             (assoc :viestit [(viesti whoami (:body ketju))])
             (dissoc :body))))
       count dec))
