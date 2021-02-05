@@ -29,6 +29,10 @@
 (def date-formatter-file (.withZone (DateTimeFormatter/ofPattern "yyyyMMddHHmmss")
                                     timezone))
 
+(defn safe-subs [s start end]
+  (let [start (max start 0)]
+    (subs s start (max start (min end (count s))))))
+
 (defn find-kuukauden-laskutus [db]
   (laskutus-db/select-kuukauden-laskutus db))
 
@@ -47,11 +51,6 @@
                           (select-keys laskutus-item fields-for-asiakastieto))))
                {})
        vals))
-
-(defn safe-subs [s start end]
-  (if (>= (count s) end)
-    (subs s start end)
-    s))
 
 (defn asiakastieto-xml
   [{:keys [laskutus-asiakastunnus nimi henkilotunnus laskutuskieli ytunnus

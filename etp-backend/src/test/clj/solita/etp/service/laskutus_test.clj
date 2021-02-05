@@ -71,6 +71,13 @@
      :energiatodistukset (apply assoc {} (interleave energiatodistus-ids
                                                      energiatodistukset))}))
 
+(t/deftest safe-subs-test
+  (t/is (= "e" (laskutus-service/safe-subs "hello" 1 2)))
+  (t/is (= "ello" (laskutus-service/safe-subs "hello" 1 100)))
+  (t/is (= "hello" (laskutus-service/safe-subs "hello" -5 100)))
+  (t/is (= "" (laskutus-service/safe-subs "hello" -5 -2)))
+  (t/is (= "" (laskutus-service/safe-subs "hello" 1 0))))
+
 (t/deftest find-kuukauden-laskutus-test
   (let [_ (test-data-set)
         laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)]
