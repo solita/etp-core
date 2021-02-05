@@ -36,6 +36,7 @@
 (defn perustiedot [xml]
   (-> xml
       (map-values-from-xml (schema->identity-map energiatodistus-schema/Perustiedot))
+      (assoc :rakennustunnus (str/upper-case (xml/get-content xml [:rakennustunnus])))
       (assoc :julkinen-rakennus (xml/get-content xml [:onko-julkinen-rakennus]))
       (assoc :yritys (yritys (xml/get-in-xml xml [:yritys])))))
 
