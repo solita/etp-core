@@ -30,8 +30,9 @@
                                     timezone))
 
 (defn safe-subs [s start end]
-  (let [start (max start 0)]
-    (subs s start (max start (min end (count s))))))
+  (when s
+    (let [start (max start 0)]
+      (subs s start (max start (min end (count s)))))))
 
 (defn find-kuukauden-laskutus [db]
   (laskutus-db/select-kuukauden-laskutus db))

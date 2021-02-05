@@ -72,6 +72,7 @@
                                                      energiatodistukset))}))
 
 (t/deftest safe-subs-test
+  (t/is (= nil (laskutus-service/safe-subs nil 1 2)))
   (t/is (= "e" (laskutus-service/safe-subs "hello" 1 2)))
   (t/is (= "ello" (laskutus-service/safe-subs "hello" 1 100)))
   (t/is (= "hello" (laskutus-service/safe-subs "hello" -5 100)))
