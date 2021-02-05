@@ -28,7 +28,10 @@
 
 (defn populate-tmpdir [path]
   (let [src-dir (config-path)
-        cmd ["cp" "-r" src-dir (str path "/config")]
+        dst-dir (str path "/config")
+        cmd (if (.exists (io/file  src-dir))
+              ["cp" "-r" src-dir dst-dir]
+              ["mkdir" dst-dir])
         result (apply shell/sh cmd)]
     (when (not (= 0 (:exit result)))
       (throw (IOException. (:err result))))))
