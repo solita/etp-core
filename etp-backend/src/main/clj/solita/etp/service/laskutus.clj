@@ -29,6 +29,10 @@
 (def date-formatter-file (.withZone (DateTimeFormatter/ofPattern "yyyyMMddHHmmss")
                                     timezone))
 
+(defn safe-subs [s start end]
+  (let [start (max start 0)]
+    (subs s start (max start (min end (count s))))))
+
 (defn find-kuukauden-laskutus [db]
   (laskutus-db/select-kuukauden-laskutus db))
 
@@ -49,58 +53,84 @@
        vals))
 
 (defn asiakastieto-xml
-  [{:keys [laskutus-asiakastunnus nimi laskutuskieli ytunnus valittajatunnus
-           verkkolaskuosoite jakeluosoite vastaanottajan-tarkenne postinumero
-           postitoimipaikka maa yritys-id]}]
-  (->> [["AsiakasTunnus" laskutus-asiakastunnus]
-        ["AsiakasluokitusKoodi" "03"]
-        ["MaaKoodi" "FI"]
-        ["Nimi1Nimi" nimi]
-        ["Nimi2Nimi" "TODO"]
-        ["LajittelutietoTeksti" "TODO"]
-        ["KieliavainKoodi" "U"]
-        ["YritysTunnus" ytunnus]
-        (when ytunnus
-          ["AlvNro" (str "FI" (str/replace ytunnus #"-" ""))])
-        ["VastaanottajaOVTTunnus" verkkolaskuosoite]
-        ["VastaanottajaOperaattoriTunnus" valittajatunnus]
-        ["LuonnollinenHloKytkin" (if yritys-id "false" "true")]
-        ["LaskuKasittelyohjeTeksti" "01000000"]
-        ["AsiakasYritystasoinenTietoTyyppi"
-         ["YritysTunnus" "7010"]]
-        ["AsiakasYhteysTietoTyyppi"
-         ["LahiOsoite2" vastaanottajan-tarkenne]
-         ["LahiOsoite" jakeluosoite]
-         ["PaikkakuntaKoodi" postitoimipaikka]
-         ["PostiNro" postinumero]
-         ["MaaKoodi" maa]]
-        ["AsiakasMyyntiJakelutietoTyyppi"
-         ["MyyntiOrganisaatioKoodi" "7010"]
-         ["JakelutieKoodi" "01"]
-         ["SektoriKoodi" "01"]
-         ["ValuuttaKoodi" "EUR"]
-         ["AsiakasTiliointiryhmaKoodi" "03"]
-         ["MaksuehtoavainKoodi" "ZM21"]]
-        ["AsiakasSanomaPerustietoTyyppi"
-         ["YleinenLahettajaInformaatioTyyppi"
-          ["PorttiNro" "SAPVXA"]
-          ["KumppaniNro" "ETP"]
-          ["KumppanilajiKoodi" "LS"]]]]
-       xml/simple-elements
-       (apply (fn [& elements]
-                (xml/element (xml/qname asiakastieto-ns "Asiakas")
-                             {:xmlns/ns2 asiakastieto-ns}
-                             elements)))))
+  [{:keys [laskutus-asiakastunnus nimi henkilotunnus laskutuskieli ytunnus
+           valittajatunnus verkkolaskuosoite jakeluosoite
+           vastaanottajan-tarkenne postinumero postitoimipaikka maa yritys-id]}]
+  (let [verkkolaskutus? (and valittajatunnus verkkolaskuosoite)
+        long-jakeluosoite? (> (count jakeluosoite) 35)]
+    (->> [["AsiakasTunnus" laskutus-asiakastunnus]
+          ["TiliryhmaAsiakasKoodi" "Z700"]
+          ["AsiakasluokitusKoodi" (if yritys-id "03" "02")]
+          ["MaaKoodi" maa]
+          ["Nimi1Nimi" (safe-subs nimi 0 35)]
+          ["Nimi2Nimi" (safe-subs vastaanottajan-tarkenne 0 35)]
+          ["LajittelutietoTeksti" (safe-subs nimi 0 10)]
+          ["KieliavainKoodi" (case laskutuskieli
+                               1 "V"
+                               2 "E"
+                               "U")]
+          (when ytunnus
+            ["YritysTunnus" ytunnus])
+          (when ytunnus
+            ["AlvNro" (str "FI" (str/replace ytunnus #"-" ""))])
+          (when verkkolaskutus?
+            ["VastaanottajaOVTTunnus" verkkolaskuosoite])
+          (when verkkolaskutus?
+            ["VastaanottajaOperaattoriTunnus" valittajatunnus])
+          ["LuonnollinenHloKytkin" (if yritys-id "false" "true")]
+          ["LaskuKasittelyohjeTeksti" (if verkkolaskutus?
+                                        "20000000"
+                                        "01000000")]
+          ;; TODO YritysmuotoKoodi if yritys is toiminimi.
+          ["AsiakasYritystasoinenTietoTyyppi"
+           ["YritysTunnus" "7010"]
+           ["LajittelutAvainKoodi" "001"]
+           ["MaksuehtoavainKoodi" "ZM21"]
+           ["KoronlaskentaKoodi" "Z1"]
+           ["KassaSuunnitteluryhmaKoodi" "E1"]
+           ["MaksukayttaytyminenTallennusKytkin" "true"]]
+          ["AsiakasYhteysTietoTyyppi"
+           ["LahiOsoite2" (if long-jakeluosoite?
+                            (subs jakeluosoite 0 36)
+                            "")]
+           ["LahiOsoite" (if long-jakeluosoite?
+                           (subs jakeluosoite 36)
+                           jakeluosoite)]
+           ["PaikkakuntaKoodi" postitoimipaikka]
+           ["PostiNro" postinumero]
+           ["MaaKoodi" maa]
+           (when yritys-id
+             ["AsiakasHenkiloTunnus" henkilotunnus])]
+          ["AsiakasMyyntiJakelutietoTyyppi"
+           ["MyyntiOrganisaatioKoodi" "7010"]
+           ["JakelutieKoodi" "01"]
+           ["SektoriKoodi" "01"]
+           ["ValuuttaKoodi" "EUR"]
+           ["AsiakasTiliointiryhmaKoodi" (if yritys-id "03" "02")]
+           ["MaksuehtoavainKoodi" "ZM21"]]
+          ["AsiakasSanomaPerustietoTyyppi"
+           ["YleinenLahettajaInformaatioTyyppi"
+            ["PorttiNro" (if (= config/environment-alias "prod")
+                           "SAPVMP"
+                           "SAPVMA")]
+            ["KumppaniNro" "ETP"]
+            ["KumppanilajiKoodi" "LS"]]]]
+         xml/simple-elements
+         (apply (fn [& elements]
+                  (xml/element (xml/qname asiakastieto-ns "Asiakas")
+                               {:xmlns/ns2 asiakastieto-ns}
+                               elements))))))
 
 (defn laskutustiedot [laskutus]
   (->> laskutus
        (reduce (fn [acc {:keys [laskutus-asiakastunnus laatija-id laatija-nimi
                                energiatodistus-id allekirjoitusaika
-                               energiatodistus-kieli]
-                        :as laskutus-item}]
+                               laskutuskieli]}]
                  (-> acc
                      (assoc-in [laskutus-asiakastunnus :laskutus-asiakastunnus]
                                laskutus-asiakastunnus)
+                     (assoc-in [laskutus-asiakastunnus :laskutuskieli]
+                               laskutuskieli)
                      (assoc-in [laskutus-asiakastunnus
                                 :laatijat
                                 laatija-id
@@ -112,8 +142,7 @@
                                  :energiatodistukset]
                                 conj
                                 {:id energiatodistus-id
-                                 :allekirjoitusaika allekirjoitusaika
-                                 :kieli energiatodistus-kieli})))
+                                 :allekirjoitusaika allekirjoitusaika})))
                {})
        vals))
 
@@ -121,53 +150,65 @@
   ["TilausriviTekstiTyyppi"
    ["Teksti" teksti]
    ["TekstiSijaintiKoodi" "0002"]
-   ["KieliKoodi" (if (= kieli 1) "sv" "fi")]])
+   ["KieliKoodi" (case kieli
+                   1 "SV"
+                   2 "EN"
+                   "FI")]])
 
-(defn tilausrivit-for-laatija [{:keys [nimi energiatodistukset]}]
-  (cons (tilausrivi nimi 0)
-        (map #(tilausrivi (str "Energiatodistus numero: "
-                               (:id %)
-                               ", pvm: "
-                               (.format date-formatter-fi
-                                        (:allekirjoitusaika %)))
-                          (:kieli %))
+;; TODO translate text
+(defn energiatodistus-tilausrivi-text [id allekirjoitusaika laskutuskieli]
+  (str "Energiatodistus numero: "
+       id
+       ", pvm: "
+       (.format date-formatter-fi allekirjoitusaika)))
+
+(defn tilausrivit-for-laatija [{:keys [nimi energiatodistukset]} laskutuskieli]
+  (cons (tilausrivi nimi laskutuskieli)
+        (map (fn [{:keys [id allekirjoitusaika]}]
+               (tilausrivi (energiatodistus-tilausrivi-text id
+                                                            allekirjoitusaika
+                                                            laskutuskieli)
+                           laskutuskieli))
              energiatodistukset)))
 
-(defn laskutustieto-xml [now {:keys [laskutus-asiakastunnus laatijat]
-                              :as laskutustieto}]
-  (->> [["MyyntiOrganisaatioKoodi" "7010"]
-        ["JakelutieKoodi" "13"]
-        ["SektoriKoodi" "01"]
-        ["TilausLajiKoodi" "Z001"]
-        ["LaskuPvm" (.format date-formatter-fi now)]
-        ["PalveluLuontiPvm" "TODO"]
-        ["HinnoitteluPvm" "TODO"]
-        ["SopimusPvm" "TODO"]
-        ["SopimusNro" "TODO"]
-        ["TiliointiViiteKoodi" "TODO"]
-        ["TyomaaAvainKoodi" "TODO"]
-        ["TilausAsiakasTyyppi"
-         ["AsiakasNro" laskutus-asiakastunnus]]
-        ["LaskuttajaAsiakasTyyppi"
-         ["AsiakasNro" "701013A000"]]
-        ["MyyntitilausSanomaPerustietoTyyppi"
-         ["YleinenLahettajaInformaatioTyyppi"
-          ["PorttiNro" "SAPVXA"]
-          ["KumppaniNro" "ETP"]
-          ["KumppanilajiKoodi" "LS"]]]
-        (vec (concat ["MyyntiTilausriviTyyppi"
-                      ["RiviNro" "10"]
-                      ["TilausMaaraArvo" (->> laatijat
-                                              vals
-                                              (mapcat :energiatodistukset)
-                                              count)]
-                      ["NimikeNro" "RA0001"]]
-                     (mapcat tilausrivit-for-laatija (vals laatijat))))]
-       xml/simple-elements
-       (apply (fn [& elements]
-                (xml/element (xml/qname laskutustieto-ns "Myyntitilaus")
-                             {:xmlns/ns2 laskutustieto-ns}
-                             elements)))))
+(defn laskutustieto-xml [now {:keys [laskutus-asiakastunnus laskutuskieli
+                                     laatijat]}]
+  (let [last-month (.minusMonths now 1)
+        last-day-of-last-month (.withDayOfMonth last-month
+                                                (.lengthOfMonth last-month))
+        formatted-last-day-of-last-month (.format date-formatter-fi
+                                                  last-day-of-last-month)]
+    (->> [["MyyntiOrganisaatioKoodi" "7010"]
+          ["JakelutieKoodi" "13"]
+          ["SektoriKoodi" "01"]
+          ["TilausLajiKoodi" "Z001"]
+          ["LaskuPvm" (.format date-formatter-fi now)]
+          ["PalveluLuontiPvm" formatted-last-day-of-last-month]
+          ["HinnoitteluPvm" formatted-last-day-of-last-month]
+          ["TilausAsiakasTyyppi"
+           ["AsiakasNro" laskutus-asiakastunnus]]
+          ["LaskuttajaAsiakasTyyppi"
+           ["AsiakasNro" "701013A000"]]
+          ["MyyntitilausSanomaPerustietoTyyppi"
+           ["YleinenLahettajaInformaatioTyyppi"
+            ["PorttiNro" (if (= config/environment-alias "prod")
+                           "SAPVMP"
+                           "SAPVMA")]
+            ["KumppaniNro" "ETP"]
+            ["KumppanilajiKoodi" "LS"]]]
+          (vec (concat ["MyyntiTilausriviTyyppi"
+                        ["RiviNro" "10"]
+                        ["TilausMaaraArvo" (->> laatijat
+                                                vals
+                                                (mapcat :energiatodistukset)
+                                                count)]
+                        ["NimikeNro" "RA0001"]]
+                       (mapcat #(tilausrivit-for-laatija % laskutuskieli) (vals laatijat))))]
+         xml/simple-elements
+         (apply (fn [& elements]
+                  (xml/element (xml/qname laskutustieto-ns "Myyntitilaus")
+                               {:xmlns/ns2 laskutustieto-ns}
+                               elements))))))
 
 (defn xml-filename [now filename-prefix idx]
   (str filename-prefix

@@ -71,6 +71,13 @@
      :energiatodistukset (apply assoc {} (interleave energiatodistus-ids
                                                      energiatodistukset))}))
 
+(t/deftest safe-subs-test
+  (t/is (= "e" (laskutus-service/safe-subs "hello" 1 2)))
+  (t/is (= "ello" (laskutus-service/safe-subs "hello" 1 100)))
+  (t/is (= "hello" (laskutus-service/safe-subs "hello" -5 100)))
+  (t/is (= "" (laskutus-service/safe-subs "hello" -5 -2)))
+  (t/is (= "" (laskutus-service/safe-subs "hello" 1 0))))
+
 (t/deftest find-kuukauden-laskutus-test
   (let [_ (test-data-set)
         laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)]
@@ -156,19 +163,22 @@
                          {:nimi (str (:etunimi yritys-laatija)
                                      " "
                                      (:sukunimi yritys-laatija))}}}
-             (xmap/dissoc-in yritys-laskutustieto [:laatijat
-                                                   yritys-laatija-id
-                                                   :energiatodistukset])))
+             (-> yritys-laskutustieto
+                 (dissoc :laskutuskieli)
+                 (xmap/dissoc-in [:laatijat
+                                  yritys-laatija-id
+                                  :energiatodistukset]))))
     (t/is (= #{(first energiatodistus-ids) (nth energiatodistus-ids 4)}
              (set (map :id yritys-laatija-energiatodistukset))))
-
     (t/is (= {:laskutus-asiakastunnus laatija-laskutus-asiakastunnus
               :laatijat {laatija-id {:nimi (str (:etunimi laatija)
                                                 " "
                                                 (:sukunimi laatija))}}}
-             (xmap/dissoc-in laatija-laskutustieto [:laatijat
-                                                    laatija-id
-                                                    :energiatodistukset])))
+             (-> laatija-laskutustieto
+                 (dissoc :laskutuskieli)
+                 (xmap/dissoc-in [:laatijat
+                                  laatija-id
+                                  :energiatodistukset]))))
     (t/is (= #{(nth energiatodistus-ids 3)}
              (set (map :id laatija-energiatodistukset))))))
 
