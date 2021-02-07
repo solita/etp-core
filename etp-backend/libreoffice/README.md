@@ -19,6 +19,8 @@ Before execution this config folder is copied to the temporary folder: `tmpdir`.
 
 More details can be found from [here](../src/main/clj/solita/common/libreoffice.clj).
 
+See also: https://stackoverflow.com/questions/59987439/running-libreoffice-as-a-service
+
 [libre]: www.libreoffice.org
 
 
