@@ -10,8 +10,9 @@ dpkg -i LibreOffice_7.1.0.3_Linux_x86-64_deb/DEBS/*.deb && \
 ln -s /usr/local/bin/libreoffice7.1 /usr/local/bin/libreoffice
 
 # The application
-COPY libreoffice/registrymodifications.xcu /root/.config/libreoffice/4/user/
-COPY target/etp-backend.jar /target/
-COPY start.sh /target/
+COPY libreoffice/ /etp/libreoffice/
+COPY target/etp-backend.jar /etp/target/
+COPY start.sh /etp/
 
-ENTRYPOINT ["bash", "/target/start.sh"]]
+WORKDIR /etp
+ENTRYPOINT ["bash", "./start.sh"]
