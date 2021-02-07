@@ -19,7 +19,7 @@
 (def config-path
   ;; The libreoffice configuration is defined in this directory.
   ;; Directory must exists but can be empty if no specific configuration is required.
-  "./libreoffice")
+  "./libreoffice/config")
 
 (defn make-tmpdir []
   (let [attrs (make-array FileAttribute 0)]
