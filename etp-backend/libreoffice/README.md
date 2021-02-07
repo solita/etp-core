@@ -2,8 +2,7 @@ LibreOffice
 ===
 [LibreOffice][libre] is used to generate pdf-documents from excel-files.
 
-The LibreOffice configuration used in this component is defined in 
-`./config`-folder.
+The LibreOffice configuration is defined in `./config`-folder.
 
 In desktop installations this configuration is typically located e.g.:
 ```
