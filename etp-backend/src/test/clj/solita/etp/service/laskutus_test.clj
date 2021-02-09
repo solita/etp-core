@@ -1,6 +1,7 @@
 (ns solita.etp.service.laskutus-test
   (:require [clojure.string :as str]
             [clojure.test :as t]
+            [clojure.java.io :as io]
             [clojure.java.jdbc :as jdbc]
             [solita.common.map :as xmap]
             [solita.common.xml :as xml]
@@ -225,6 +226,55 @@
                                            (.format laskutus-service/date-formatter-fi))
                                       "</Teksti>")))
     (t/is (str/includes? xml-str "<KumppaniNro>ETP</KumppaniNro>"))))
+
+(t/deftest tasmaytysraportti-rows-test
+  (let [{:keys [yritykset laatijat]} (test-data-set)
+        yritys-id (-> yritykset keys sort first)
+        yritys (get yritykset yritys-id)
+        yritys-laskutus-asiakastunnus (format "L1%08d" yritys-id)
+        laatija-id (-> laatijat keys sort last)
+        laatija (get laatijat laatija-id)
+        laatija-laskutus-asiakastunnus (format "L0%08d" laatija-id)
+        laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)
+        tasmaytysraportti (laskutus-service/tasmaytysraportti-rows laskutus)]
+    (t/is (= 15 (count tasmaytysraportti)))
+    (t/is (= "ETP" (ffirst tasmaytysraportti)))
+    (t/is (= "ARA" (-> tasmaytysraportti second first)))
+    (t/is (= [["Asiakkaiden lukumäärä yhteensä" nil {:v 4 :align :left}]
+              ["Myyntitilausten lukumäärä yhteensä" nil {:v 6 :align :left}]
+              ["Velotusmyyntitilausten lukumäärä yhteensä" nil {:v 6 :align :left}]
+              ["Hyvitystilausten lukumäärä yhteensä" nil {:v 0 :align :left}]
+              ["Siirrettyjen liitetiedostojen lukumäärä" nil {:v 0 :align :left}]]
+             (->> tasmaytysraportti
+                  (drop 3)
+                  (take 5))))
+    (t/is (= [{:v "Tilauslaji" :align :center}
+              {:v "Asiakkaan numero" :align :center}
+              {:v "Asiakkaan nimi" :align :center}
+              {:v "Laskutettava nimike" :align :center}
+              {:v "KPL" :align :center}]
+             (nth tasmaytysraportti 10)))
+    (t/is (->> tasmaytysraportti (drop 11) (map #(-> % first :v)) (every? #(= % "Z001"))))
+    (t/is (->> tasmaytysraportti (drop 11) (map #(-> % (nth 3) :v)) (every? #(= % "RA0001"))))
+
+    (t/is (= laatija-laskutus-asiakastunnus
+             (-> tasmaytysraportti (nth 12) second :v)))
+    (t/is (= (str (:etunimi laatija) " " (:sukunimi laatija))
+             (-> tasmaytysraportti (nth 12) (nth 2) :v)))
+    (t/is (= 1 (-> tasmaytysraportti (nth 12) last :v)))
+
+    (t/is (= yritys-laskutus-asiakastunnus (-> tasmaytysraportti (nth 13) second :v)))
+    (t/is (= (:nimi yritys) (-> tasmaytysraportti (nth 13) (nth 2) :v)))
+    (t/is (= 2 (-> tasmaytysraportti (nth 14) last :v)))))
+
+(t/deftest create-tasmaytysraportti-file!-test
+  (test-data-set)
+  (let [laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)
+        tasmaytysraportti-path (-> laskutus
+                                   laskutus-service/tasmaytysraportti-rows
+                                   laskutus-service/create-tasmaytysraportti-file!)]
+    (t/is (-> tasmaytysraportti-path io/as-file .exists true?))
+    (io/delete-file tasmaytysraportti-path)))
 
 (t/deftest xml-filename-test
   (t/is (= "some-prefix20210114040101123.xml"

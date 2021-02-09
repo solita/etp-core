@@ -3,11 +3,14 @@
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [solita.common.xml :as xml]
+            [solita.common.xlsx :as xlsx]
+            [solita.common.libreoffice :as libreoffice]
             [solita.common.sftp :as sftp]
             [solita.etp.config :as config]
             [solita.etp.db :as db]
             [solita.etp.service.file :as file-service])
   (:import (java.time Instant LocalDate ZoneId)
+           (java.time.temporal ChronoUnit)
            (java.time.format DateTimeFormatter)))
 
 ;; *** Require sql functions ***
@@ -26,7 +29,9 @@
 (def timezone (ZoneId/of "Europe/Helsinki"))
 (def date-formatter-fi (.withZone (DateTimeFormatter/ofPattern "dd.MM.yyyy")
                                   timezone))
-(def date-formatter-file (.withZone (DateTimeFormatter/ofPattern "yyyyMMddHHmmss")
+(def time-formatter-fi (.withZone (DateTimeFormatter/ofPattern "dd.MM.yyyy HH:mm:ss")
+                                  timezone))
+(def time-formatter-file (.withZone (DateTimeFormatter/ofPattern "yyyyMMddHHmmss")
                                     timezone))
 
 (defn safe-subs [s start end]
@@ -211,9 +216,76 @@
                                {:xmlns/ns2 laskutustieto-ns}
                                elements))))))
 
+(defn tasmaytysraportti-rows [laskutus]
+  (let [now (Instant/now)
+        row-data (reduce (fn [acc {:keys [laskutus-asiakastunnus nimi]}]
+                           (if (get acc laskutus-asiakastunnus)
+                             (update-in acc [laskutus-asiakastunnus :count] inc)
+                             (assoc acc laskutus-asiakastunnus {:count 1
+                                                                :nimi nimi})))
+                         {}
+                         laskutus)
+        laskutus-count (count laskutus)]
+    (concat [["ETP" nil nil nil nil (.format time-formatter-fi now)]
+             ["ARA" nil (str "Myyntilaskut " (.format date-formatter-fi
+                                                      (.minus now 1 ChronoUnit/DAYS)))]
+             []
+             ["Asiakkaiden lukumäärä yhteensä" nil {:v (count row-data) :align :left}]
+             ["Myyntitilausten lukumäärä yhteensä" nil {:v laskutus-count :align :left}]
+             ["Velotusmyyntitilausten lukumäärä yhteensä" nil {:v laskutus-count :align :left}]
+             ["Hyvitystilausten lukumäärä yhteensä" nil {:v 0 :align :left}]
+             ["Siirrettyjen liitetiedostojen lukumäärä" nil {:v 0 :align :left}]
+             []
+             []
+             (mapv #(hash-map :v % :align :center)
+                   ["Tilauslaji" "Asiakkaan numero" "Asiakkaan nimi" "Laskutettava nimike" "KPL"])]
+            (->> row-data
+                 keys
+                 sort
+                 (map (fn [laskutus-asiakastunnus]
+                        [{:v "Z001" :align :center}
+                         {:v laskutus-asiakastunnus :align :center}
+                         {:v (get-in row-data [laskutus-asiakastunnus :nimi])
+                          :align :center}
+                         {:v "RA0001" :align :center}
+                         {:v (get-in row-data [laskutus-asiakastunnus :count])
+                          :align :center}]))))))
+
+(defn create-tasmaytysraportti-file! [tasmaytysraportti]
+  (io/make-parents (str tmp-dir "/example.txt"))
+  (let [now (Instant/now)
+        xlsx-path (str tmp-dir
+                       "/tasmaytysraportti-"
+                       (.format time-formatter-file now)
+                       ".xlsx")
+        xlsx (xlsx/create-xlsx)
+        sheet (xlsx/create-sheet xlsx "Sheet 0")
+        _ (xlsx/set-sheet-landscape sheet true)
+        _ (xlsx/fill-sheet! xlsx sheet tasmaytysraportti [5000 5000 7000 5000 5000])
+        _ (xlsx/save-xlsx xlsx xlsx-path)
+        xlsx-file (io/file xlsx-path)
+        xlsx-filename (.getName xlsx-file)
+        dir (.getParent xlsx-file)
+        pdf-path (str/replace xlsx-path #".xlsx$" ".pdf")
+        {:keys [exit err] :as sh-result} (libreoffice/run-with-args
+                                          "--convert-to"
+                                          "pdf"
+                                          xlsx-filename
+                                          :dir
+                                          dir)
+        pdf-exists? (.exists (io/as-file pdf-path))]
+    (io/delete-file xlsx-path)
+    (if (and (zero? exit) (str/blank? err) pdf-exists?)
+      pdf-path
+      (throw (ex-info "Converting täsmätytysraportti to PDF failed."
+                      (assoc sh-result
+                             :type :xlsx-pdf-conversion-failure
+                             :xlsx xlsx-filename
+                             :pdf-result? pdf-exists?))))))
+
 (defn xml-filename [now filename-prefix idx]
   (str filename-prefix
-       (.format date-formatter-file now)
+       (.format time-formatter-file now)
        (format "%03d" idx)
        ".xml"))
 
@@ -265,7 +337,6 @@
                                        laskutustieto-xmls
                                        laskutustieto-filename-prefix
                                        laskutustieto-dir-path))
-        (io/delete-file tmp-dir)
         (log/info "Kuukauden laskutusajo finished")
         nil))
     (log/warn "Sftp parameters not set. Kuukauden laskutus interrupted")))
