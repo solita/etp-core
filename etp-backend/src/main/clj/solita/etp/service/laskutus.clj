@@ -18,9 +18,9 @@
 
 (def tmp-dir "tmp-laskutus")
 
-(def asiakastieto-dir-path "etp/from_etp/asiakastieto/ara/")
+(def asiakastieto-destination-dir "etp/from_etp/asiakastieto/ara/")
 (def asiakastieto-filename-prefix "asiakastieto_etp_ara_")
-(def laskutustieto-dir-path "etp/from_etp/laskutustieto/ara/")
+(def laskutustieto-destination-dir "etp/from_etp/laskutustieto/ara/")
 (def laskutustieto-filename-prefix "laskutustieto_etp_ara_")
 
 (def asiakastieto-ns "http://kiekuhanke.fi/kieku/asiakasin")
@@ -179,7 +179,8 @@
 
 (defn laskutustieto-xml [now {:keys [laskutus-asiakastunnus laskutuskieli
                                      laatijat]}]
-  (let [last-month (.minusMonths now 1)
+  (let [today (LocalDate/ofInstant now timezone)
+        last-month (.minusMonths today 1)
         last-day-of-last-month (.withDayOfMonth last-month
                                                 (.lengthOfMonth last-month))
         formatted-last-day-of-last-month (.format date-formatter-fi
@@ -188,7 +189,7 @@
           ["JakelutieKoodi" "13"]
           ["SektoriKoodi" "01"]
           ["TilausLajiKoodi" "Z001"]
-          ["LaskuPvm" (.format date-formatter-fi now)]
+          ["LaskuPvm" (.format date-formatter-fi today)]
           ["PalveluLuontiPvm" formatted-last-day-of-last-month]
           ["HinnoitteluPvm" formatted-last-day-of-last-month]
           ["TilausAsiakasTyyppi"
@@ -216,9 +217,8 @@
                                {:xmlns/ns2 laskutustieto-ns}
                                elements))))))
 
-(defn tasmaytysraportti-rows [laskutus]
-  (let [now (Instant/now)
-        row-data (reduce (fn [acc {:keys [laskutus-asiakastunnus nimi]}]
+(defn tasmaytysraportti [laskutus now]
+  (let [row-data (reduce (fn [acc {:keys [laskutus-asiakastunnus nimi]}]
                            (if (get acc laskutus-asiakastunnus)
                              (update-in acc [laskutus-asiakastunnus :count] inc)
                              (assoc acc laskutus-asiakastunnus {:count 1
@@ -251,10 +251,9 @@
                          {:v (get-in row-data [laskutus-asiakastunnus :count])
                           :align :center}]))))))
 
-(defn create-tasmaytysraportti-file! [tasmaytysraportti]
+(defn write-tasmaytysraportti-file! [tasmaytysraportti now]
   (io/make-parents (str tmp-dir "/example.txt"))
-  (let [now (Instant/now)
-        xlsx-path (str tmp-dir
+  (let [xlsx-path (str tmp-dir
                        "/tasmaytysraportti-"
                        (.format time-formatter-file now)
                        ".xlsx")
@@ -276,7 +275,7 @@
         pdf-exists? (.exists (io/as-file pdf-path))]
     (io/delete-file xlsx-path)
     (if (and (zero? exit) (str/blank? err) pdf-exists?)
-      pdf-path
+      (io/file pdf-path)
       (throw (ex-info "Converting täsmätytysraportti to PDF failed."
                       (assoc sh-result
                              :type :xlsx-pdf-conversion-failure
@@ -293,50 +292,84 @@
   (let [numbers (->> filename (re-find #"(\d+)\.xml$") second)]
     (str (subs numbers 0 4) "/" (subs numbers 4 6) "/" filename)))
 
-(defn do-laskutus-file-operations [aws-s3-client sftp-connection xmls
-                                   filename-prefix dir-path]
-  (sftp/make-directory! sftp-connection dir-path)
-  (doseq [[idx xml] (map-indexed vector xmls)
-          :let [now (Instant/now)
-                filename (xml-filename now filename-prefix idx)
-                path (str tmp-dir "/" filename)]]
-    (with-open [file (io/writer path)]
-      (xml/emit xml file))
-    (sftp/upload! sftp-connection path (str dir-path filename))
+(defn write-xmls-files! [xmls filename-prefix]
+  (doall (for [[idx xml] (map-indexed vector xmls)
+               :let [now (Instant/now)
+                     filename (xml-filename now filename-prefix idx)
+                     path (str tmp-dir "/" filename)]]
+           (with-open [file (io/writer path)]
+             (xml/emit xml file)
+             (io/file path)))))
+
+(defn store-files! [aws-s3-client files]
+  (doseq [file files]
     (file-service/upsert-file-from-file aws-s3-client
-                                        (xml-file-key filename)
-                                        (io/file path))
-    (io/delete-file path)))
+                                        (xml-file-key (.getName file))
+                                        file)))
+
+(defn upload-files-with-sftp! [sftp-connection files destination-dir]
+  (doseq [file files]
+    (sftp/upload! sftp-connection
+                  (.getPath file)
+                  (str destination-dir (.getName file)))))
+
+(defn delete-files! [files]
+  (doseq [file files]
+    (io/delete-file (.getPath file))))
 
 (defn do-kuukauden-laskutus [db aws-s3-client]
-  (if (every? #(-> % str/blank? not) [config/laskutus-sftp-host
-                                      config/laskutus-sftp-username])
-    (do
-      (log/info "Starting kuukauden laskutusajo")
-      (let [now (LocalDate/now)
-            laskutus (find-kuukauden-laskutus db)
-            asiakastieto-xmls (->> laskutus
-                                   asiakastiedot
-                                   (map asiakastieto-xml))
-            laskutustieto-xmls (->> laskutus
-                                    laskutustiedot
-                                    (map #(laskutustieto-xml now %)))]
-        (io/make-parents (str tmp-dir "/example.txt"))
-        (with-open [sftp-connection (sftp/connect! config/laskutus-sftp-host
-                                                   config/laskutus-sftp-port
-                                                   config/laskutus-sftp-username
-                                                   config/laskutus-sftp-password
-                                                   config/known-hosts-path)]
-          (do-laskutus-file-operations aws-s3-client
-                                       sftp-connection
-                                       asiakastieto-xmls
-                                       asiakastieto-filename-prefix
-                                       asiakastieto-dir-path)
-          (do-laskutus-file-operations aws-s3-client
-                                       sftp-connection
-                                       laskutustieto-xmls
-                                       laskutustieto-filename-prefix
-                                       laskutustieto-dir-path))
-        (log/info "Kuukauden laskutusajo finished")
-        nil))
-    (log/warn "Sftp parameters not set. Kuukauden laskutus interrupted")))
+  (log/info "Starting kuukauden laskutusajo.")
+  (try
+    (io/make-parents (str tmp-dir "/example.txt"))
+    (let [now (Instant/now)
+          laskutus (find-kuukauden-laskutus db)
+          asiakastieto-xmls (->> laskutus
+                                 asiakastiedot
+                                 (map asiakastieto-xml))
+          laskutustieto-xmls (->> laskutus
+                                  laskutustiedot
+                                  (map #(laskutustieto-xml now %)))
+          asiakastieto-xml-files (write-xmls-files!
+                                  asiakastieto-xmls
+                                  asiakastieto-filename-prefix)
+          laskutustieto-xml-files (write-xmls-files!
+                                   laskutustieto-xmls
+                                   laskutustieto-filename-prefix)
+          tasmaytysraportti-file (write-tasmaytysraportti-file!
+                                  (tasmaytysraportti laskutus now)
+                                  now)]
+      (log/info "Laskutus related files created.")
+      (store-files! aws-s3-client asiakastieto-xml-files)
+      (store-files! aws-s3-client laskutustieto-xml-files)
+      (log/info "Laskutus related files stored.")
+      (if (every? #(-> % str/blank? not) [config/laskutus-sftp-host
+                                          config/laskutus-sftp-username])
+        (do (with-open [sftp-connection (sftp/connect! config/laskutus-sftp-host
+                                                       config/laskutus-sftp-port
+                                                       config/laskutus-sftp-username
+                                                       config/laskutus-sftp-password
+                                                       config/known-hosts-path)]
+              (log/info (str "SFTP connection to " config/laskutus-sftp-host " established."))
+              (upload-files-with-sftp! sftp-connection
+                                       asiakastieto-xml-files
+                                       asiakastieto-destination-dir)
+              (log/info "Asiakastieto xmls uploaded with SFTP.")
+              (upload-files-with-sftp! sftp-connection
+                                       laskutustieto-xml-files
+                                       laskutustieto-destination-dir)
+              (log/info "Laskutustieto xmls uploaded with SFTP."))
+
+            ;; TODO send täsmätytysraportti with SMTP.
+            )
+        (log/warn "SFTP configuration missing. Skipping actual integration."))
+      (delete-files! asiakastieto-xml-files)
+      (delete-files! laskutustieto-xml-files)
+      (io/delete-file (.getPath tasmaytysraportti-file))
+      (io/delete-file tmp-dir)
+      (log/info "Laskutus related temporary files deleted."))
+    (catch Exception e
+      (log/error "Exception during laskutus" e)
+      (.printStackTrace e)
+      (throw e))
+    (finally
+      (log/info "Kuukauden laskutusajo finished."))))
