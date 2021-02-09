@@ -14,7 +14,7 @@
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.laskutus :as laskutus-service]
             [solita.etp.service.file :as file-service])
-  (:import (java.time Instant LocalDate)))
+  (:import (java.time Instant)))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -201,7 +201,7 @@
                                              first
                                              :energiatodistukset)
         xml-str (->> laskutustieto
-                     (laskutus-service/laskutustieto-xml (LocalDate/now))
+                     (laskutus-service/laskutustieto-xml (Instant/now))
                      xml/emit-str)]
     (t/is (str/includes? xml-str (str "<AsiakasNro>"
                                       laskutus-asiakastunnus
@@ -227,7 +227,7 @@
                                       "</Teksti>")))
     (t/is (str/includes? xml-str "<KumppaniNro>ETP</KumppaniNro>"))))
 
-(t/deftest tasmaytysraportti-rows-test
+(t/deftest tasmaytysraportti-test
   (let [{:keys [yritykset laatijat]} (test-data-set)
         yritys-id (-> yritykset keys sort first)
         yritys (get yritykset yritys-id)
@@ -236,7 +236,7 @@
         laatija (get laatijat laatija-id)
         laatija-laskutus-asiakastunnus (format "L0%08d" laatija-id)
         laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)
-        tasmaytysraportti (laskutus-service/tasmaytysraportti-rows laskutus)]
+        tasmaytysraportti (laskutus-service/tasmaytysraportti laskutus (Instant/now))]
     (t/is (= 15 (count tasmaytysraportti)))
     (t/is (= "ETP" (ffirst tasmaytysraportti)))
     (t/is (= "ARA" (-> tasmaytysraportti second first)))
@@ -267,14 +267,15 @@
     (t/is (= (:nimi yritys) (-> tasmaytysraportti (nth 13) (nth 2) :v)))
     (t/is (= 2 (-> tasmaytysraportti (nth 14) last :v)))))
 
-(t/deftest create-tasmaytysraportti-file!-test
+(t/deftest write-tasmaytysraportti-file!-test
   (test-data-set)
-  (let [laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)
-        tasmaytysraportti-path (-> laskutus
-                                   laskutus-service/tasmaytysraportti-rows
-                                   laskutus-service/create-tasmaytysraportti-file!)]
-    (t/is (-> tasmaytysraportti-path io/as-file .exists true?))
-    (io/delete-file tasmaytysraportti-path)))
+  (let [now (Instant/now)
+        laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)
+        tasmaytysraportti-file (-> laskutus
+                                   (laskutus-service/tasmaytysraportti now)
+                                   (laskutus-service/write-tasmaytysraportti-file! now))]
+    (t/is (-> tasmaytysraportti-file .exists true?))
+    (io/delete-file tasmaytysraportti-file)))
 
 (t/deftest xml-filename-test
   (t/is (= "some-prefix20210114040101123.xml"
@@ -298,10 +299,10 @@
       (try
         (let [asiakastieto-filenames (sftp/files-in-dir
                                       sftp-connection
-                                      laskutus-service/asiakastieto-dir-path)
+                                      laskutus-service/asiakastieto-destination-dir)
               laskutustieto-filenames (sftp/files-in-dir
                                        sftp-connection
-                                       laskutus-service/laskutustieto-dir-path)]
+                                       laskutus-service/laskutustieto-destination-dir)]
           (t/is (= 4 (count asiakastieto-filenames)))
           (t/is (= 4 (count laskutustieto-filenames)))
           (t/is (every? #(re-matches #"asiakastieto_etp_ara_.+\.xml" %)
@@ -311,5 +312,7 @@
           (t/is (every? #(file-service/find-file ts/*aws-s3-client* %)
                         (->> (concat laskutustieto-filenames)
                              (map laskutus-service/xml-file-key)))))
-        (finally (sftp/delete! sftp-connection (str laskutus-service/asiakastieto-dir-path "*"))
-                 (sftp/delete! sftp-connection (str laskutus-service/laskutustieto-dir-path "*")))))))
+        (finally (sftp/delete! sftp-connection
+                               (str laskutus-service/asiakastieto-destination-dir "*"))
+                 (sftp/delete! sftp-connection
+                               (str laskutus-service/laskutustieto-destination-dir "*")))))))
