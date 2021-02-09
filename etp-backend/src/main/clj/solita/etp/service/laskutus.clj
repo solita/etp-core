@@ -307,6 +307,7 @@
                                         file)))
 
 (defn upload-files-with-sftp! [sftp-connection files destination-dir]
+  (sftp/make-directory! sftp-connection destination-dir)
   (doseq [file files]
     (sftp/upload! sftp-connection
                   (.getPath file)
