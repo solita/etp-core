@@ -287,7 +287,7 @@
   (t/is (= "2021/01/some-prefix20210114040101123.xml"
            (laskutus-service/xml-file-key "some-prefix20210114040101123.xml"))))
 
-(t/deftest do-kuukauden-laskutus-test
+(t/deftest ^:eftest/synchronized do-kuukauden-laskutus-test
   (test-data-set)
   (laskutus-service/do-kuukauden-laskutus ts/*db* ts/*aws-s3-client*)
   (try
