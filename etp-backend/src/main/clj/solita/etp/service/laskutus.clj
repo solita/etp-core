@@ -257,30 +257,29 @@
                        "/tasmaytysraportti-"
                        (.format time-formatter-file now)
                        ".xlsx")
-        xlsx (xlsx/create-xlsx)
-        sheet (xlsx/create-sheet xlsx "Sheet 0")
-        _ (xlsx/set-sheet-landscape sheet true)
-        _ (xlsx/fill-sheet! xlsx sheet tasmaytysraportti [5000 5000 7000 5000 5000])
-        _ (xlsx/save-xlsx xlsx xlsx-path)
         xlsx-file (io/file xlsx-path)
-        xlsx-filename (.getName xlsx-file)
-        dir (.getParent xlsx-file)
         pdf-path (str/replace xlsx-path #".xlsx$" ".pdf")
-        {:keys [exit err] :as sh-result} (libreoffice/run-with-args
-                                          "--convert-to"
-                                          "pdf"
-                                          xlsx-filename
-                                          :dir
-                                          dir)
-        pdf-exists? (.exists (io/as-file pdf-path))]
-    (io/delete-file xlsx-path)
-    (if (and (zero? exit) (str/blank? err) pdf-exists?)
-      (io/file pdf-path)
-      (throw (ex-info "Converting täsmätytysraportti to PDF failed."
-                      (assoc sh-result
-                             :type :xlsx-pdf-conversion-failure
-                             :xlsx xlsx-filename
-                             :pdf-result? pdf-exists?))))))
+        pdf-file (io/file pdf-path)]
+    (with-open [xlsx (xlsx/create-xlsx)]
+      (let [sheet (xlsx/create-sheet xlsx "Sheet 0")]
+        (xlsx/set-sheet-landscape sheet true)
+        (xlsx/fill-sheet! xlsx sheet tasmaytysraportti [5000 5000 7000 5000 5000])
+        (xlsx/save-xlsx xlsx xlsx-path)))
+    (let [{:keys [exit err] :as sh-result} (libreoffice/run-with-args
+                                            "--convert-to"
+                                            "pdf"
+                                            (.getName xlsx-file)
+                                            :dir
+                                            (.getParent xlsx-file))
+          pdf-exists? (.exists pdf-file)]
+      (io/delete-file xlsx-path)
+      (if (and (zero? exit) (str/blank? err) pdf-exists?)
+        pdf-file
+        (throw (ex-info "Creating tasmaytysraportti PDF failed."
+                        (assoc sh-result
+                               :type :xlsx-pdf-conversion-failure
+                               :xlsx (.getName xlsx-file)
+                               :pdf-result? pdf-exists?)))))))
 
 (defn xml-filename [now filename-prefix idx]
   (str filename-prefix
@@ -365,7 +364,6 @@
       (delete-files! asiakastieto-xml-files)
       (delete-files! laskutustieto-xml-files)
       (io/delete-file (.getPath tasmaytysraportti-file))
-      (io/delete-file tmp-dir)
       (log/info "Laskutus related temporary files deleted."))
     (catch Exception e
       (log/error "Exception during laskutus" e)
