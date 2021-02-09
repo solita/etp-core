@@ -1,7 +1,7 @@
 (ns solita.common.xlsx
   (:require [clojure.string :as str]
             [clojure.java.io :as io])
-  (:import (org.apache.poi.ss.usermodel WorkbookFactory)
+  (:import (org.apache.poi.ss.usermodel WorkbookFactory HorizontalAlignment)
            (org.apache.poi.ss.util CellAddress)
            (org.apache.poi.xssf.usermodel XSSFWorkbook XSSFFormulaEvaluator)))
 
@@ -90,8 +90,18 @@
                         .createDataFormat
                         (.getFormat format)))))
 
+(defn create-style-with-align [xlsx align]
+  (doto (.createCellStyle xlsx)
+    (.setAlignment (case align
+                     :center HorizontalAlignment/CENTER
+                     :left HorizontalAlignment/LEFT
+                     :right HorizontalAlignment/RIGHT))))
+
 (defn set-column-width [sheet idx width]
   (.setColumnWidth sheet idx width))
+
+(defn set-sheet-landscape [sheet landscape?]
+  (-> sheet (.getPrintSetup) (.setLandscape landscape?)))
 
 ;;
 ;; Formulas
@@ -99,3 +109,27 @@
 
 (defn evaluate-formulas [^XSSFWorkbook xlsx]
   (XSSFFormulaEvaluator/evaluateAllFormulaCells xlsx))
+
+;;
+;; Utility for filling a sheet from vectors
+;;
+
+(defn fill-sheet! [xlsx sheet row-vectors column-widths]
+  (let [style-center (create-style-with-align xlsx :center)
+        style-left (create-style-with-align xlsx :left)
+        style-right (create-style-with-align xlsx :right)]
+    (doseq [[row-idx row-vector] (map-indexed vector row-vectors)
+            :let [row (get-row sheet row-idx)]]
+      (doseq [[cell-idx cell-value-or-m] (map-indexed vector row-vector)
+              :let [cell (get-cell row cell-idx)]]
+        (if (map? cell-value-or-m)
+          (do
+            (set-cell-value cell (:v cell-value-or-m))
+            (.setCellStyle cell (case (:align cell-value-or-m)
+                                  :center style-center
+                                  :right style-right
+                                  style-left)))
+          (set-cell-value cell cell-value-or-m))))
+    (doseq [[col-idx width] (map-indexed vector column-widths)]
+      (set-column-width sheet col-idx width))
+    xlsx))
