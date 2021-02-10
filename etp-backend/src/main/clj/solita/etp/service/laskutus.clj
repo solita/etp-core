@@ -287,10 +287,6 @@
        (format "%03d" idx)
        ".xml"))
 
-(defn xml-file-key [filename]
-  (let [numbers (->> filename (re-find #"(\d+)\.xml$") second)]
-    (str (subs numbers 0 4) "/" (subs numbers 4 6) "/" filename)))
-
 (defn write-xmls-files! [xmls filename-prefix]
   (doall (for [[idx xml] (map-indexed vector xmls)
                :let [now (Instant/now)
@@ -300,10 +296,18 @@
              (xml/emit xml file)
              (io/file path)))))
 
-(defn store-files! [aws-s3-client files]
+(defn file-key-prefix [now]
+  (let [today (LocalDate/ofInstant now timezone)]
+    (str "laskutus/"
+         (.getYear today)
+         "/"
+         (.format time-formatter-file now)
+         "/")))
+
+(defn store-files! [aws-s3-client file-key-prefix files]
   (doseq [file files]
     (file-service/upsert-file-from-file aws-s3-client
-                                        (xml-file-key (.getName file))
+                                        (str file-key-prefix (.getName file))
                                         file)))
 
 (defn upload-files-with-sftp! [sftp-connection files destination-dir]
@@ -337,10 +341,14 @@
                                    laskutustieto-filename-prefix)
           tasmaytysraportti-file (write-tasmaytysraportti-file!
                                   (tasmaytysraportti laskutus now)
-                                  now)]
+                                  now)
+          file-key-prefix (file-key-prefix now)]
       (log/info "Laskutus related files created.")
-      (store-files! aws-s3-client asiakastieto-xml-files)
-      (store-files! aws-s3-client laskutustieto-xml-files)
+      (store-files! aws-s3-client
+                    file-key-prefix
+                    (concat asiakastieto-xml-files
+                            laskutustieto-xml-files
+                            [tasmaytysraportti-file]))
       (log/info "Laskutus related files stored.")
       (if (every? #(-> % str/blank? not) [config/laskutus-sftp-host
                                           config/laskutus-sftp-username])
@@ -365,7 +373,9 @@
       (delete-files! asiakastieto-xml-files)
       (delete-files! laskutustieto-xml-files)
       (io/delete-file (.getPath tasmaytysraportti-file))
-      (log/info "Laskutus related temporary files deleted."))
+      (log/info "Laskutus related temporary files deleted.")
+      {:started-at now
+       :stopped-at (Instant/now)})
     (catch Exception e
       (log/error "Exception during laskutus" e)
       (.printStackTrace e)

@@ -283,14 +283,16 @@
                                           "some-prefix"
                                           123))))
 
-(t/deftest xml-file-key
-  (t/is (= "2021/01/some-prefix20210114040101123.xml"
-           (laskutus-service/xml-file-key "some-prefix20210114040101123.xml"))))
+(t/deftest file-key-prefix-test
+  (t/is (= "laskutus/2021/20211101121530/"
+           (laskutus-service/file-key-prefix (Instant/parse "2021-11-01T10:15:30.00Z")))))
 
 (t/deftest ^:eftest/synchronized do-kuukauden-laskutus-test
   (test-data-set)
-  (laskutus-service/do-kuukauden-laskutus ts/*db* ts/*aws-s3-client*)
-  (try
+  (let [{:keys [started-at]} (laskutus-service/do-kuukauden-laskutus
+                              ts/*db*
+                              ts/*aws-s3-client*)
+        file-key-prefix (laskutus-service/file-key-prefix started-at)]
     (with-open [sftp-connection (sftp/connect! config/laskutus-sftp-host
                                                config/laskutus-sftp-port
                                                config/laskutus-sftp-username
@@ -311,7 +313,16 @@
                         laskutustieto-filenames))
           (t/is (every? #(file-service/find-file ts/*aws-s3-client* %)
                         (->> (concat laskutustieto-filenames)
-                             (map laskutus-service/xml-file-key)))))
+                             (map #(str file-key-prefix %)))))
+          (t/is (every? #(file-service/find-file ts/*aws-s3-client* %)
+                        (->> (concat asiakastieto-filenames)
+                             (map #(str file-key-prefix %)))))
+          (t/is (file-service/find-file
+                 ts/*aws-s3-client*
+                 (str file-key-prefix
+                      "tasmaytysraportti-"
+                      (.format laskutus-service/time-formatter-file started-at)
+                      ".pdf"))))
         (finally (sftp/delete! sftp-connection
                                (str laskutus-service/asiakastieto-destination-dir "*"))
                  (sftp/delete! sftp-connection
