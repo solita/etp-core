@@ -96,15 +96,17 @@
                         sort
                         (take 2)
                         (apply dissoc laatijat)
-                        (map (fn [[id {:keys [etunimi sukunimi]}]]
+                        (map (fn [[id {:keys [etunimi sukunimi henkilotunnus]}]]
                                {:laskutus-asiakastunnus (format "L0%08d" id)
-                                :nimi (str etunimi " " sukunimi)})))
-                   (map (fn [[id {:keys [nimi]}]]
+                                :nimi (str etunimi " " sukunimi)
+                                :henkilotunnus henkilotunnus})))
+                   (map (fn [[id {:keys [nimi henkilotunnus]}]]
                           {:laskutus-asiakastunnus (format "L1%08d" id)
-                           :nimi nimi})
+                           :nimi nimi
+                           :henkilotunnus (-> laatijat (get id) :henkilotunnus)})
                         yritykset)))
              (->> asiakastiedot
-                  (map #(select-keys % [:laskutus-asiakastunnus :nimi]))
+                  (map #(select-keys % [:laskutus-asiakastunnus :nimi :henkilotunnus]))
                   set)))))
 
 (t/deftest asiakastiedot-xml-test
@@ -128,6 +130,21 @@
                                       (:ytunnus yritys)
                                       "</YritysTunnus")))
     (t/is (str/includes? xml-str "<KumppaniNro>ETP</KumppaniNro>"))))
+
+(t/deftest energiatodistus-tilausrivi-text-test
+  (let [instant (Instant/parse "2021-01-01T10:10:10.Z")]
+    (t/is (= "Energicertifikat 100, datum: 01.01.2021"
+             (laskutus-service/energiatodistus-tilausrivi-text 100 instant nil 1)))
+    (t/is (= "Energicertifikat 10, datum: 01.01.2021, referens hello"
+             (laskutus-service/energiatodistus-tilausrivi-text 10 instant "hello" 1)))
+    (t/is (= "Energy performance certificate 1, date: 01.01.2021"
+             (laskutus-service/energiatodistus-tilausrivi-text 1 instant nil 2)))
+    (t/is (= "Energy performance certificate 123, date: 01.01.2021, reference ref123"
+             (laskutus-service/energiatodistus-tilausrivi-text 123 instant "ref123" 2)))
+    (t/is (= "Energiatodistus 99, pvm: 01.01.2021"
+             (laskutus-service/energiatodistus-tilausrivi-text 99 instant nil 0)))
+    (t/is (= "Energiatodistus 99, pvm: 01.01.2021, viite 1234"
+             (laskutus-service/energiatodistus-tilausrivi-text 99 instant "1234" 0)))))
 
 (t/deftest laskutustiedot-test
   (let [{:keys [yritykset laatijat energiatodistukset]} (test-data-set)
@@ -184,6 +201,13 @@
     (t/is (= #{(nth energiatodistus-ids 3)}
              (set (map :id laatija-energiatodistukset))))))
 
+(defn tilausrivi-pattern [id allekirjoitusaika]
+  (re-pattern (str "<TilausriviTekstiTyyppi><Teksti>"
+                   "(Energiatodistus|Energicertifikat|Energy performance certificate) "
+                   id
+                   ".*"
+                   allekirjoitusaika)))
+
 (t/deftest laskutustiedot-xml-test
   (let [{:keys [yritykset]} (test-data-set)
         laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)
@@ -207,24 +231,22 @@
                                       laskutus-asiakastunnus
                                       "</AsiakasNro")))
     (t/is (str/includes? xml-str "<TilausMaaraArvo>2</TilausMaaraArvo>"))
-    (t/is (str/includes? xml-str (str "<TilausriviTekstiTyyppi><Teksti>"
-                                      "Energiatodistus numero: "
-                                      (-> laskutustieto-energiatodistukset
-                                          first
-                                          :id)
-                                      ", pvm: ")))
-    (t/is (str/includes? xml-str (str "<TilausriviTekstiTyyppi><Teksti>"
-                                      "Energiatodistus numero: "
-                                      (-> laskutustieto-energiatodistukset
-                                          second
-                                          :id)
-                                      ", pvm: ")))
-    (t/is (str/includes? xml-str (str "pvm: "
-                                      (->> laskutustieto-energiatodistukset
+    (t/is (re-find (tilausrivi-pattern (-> laskutustieto-energiatodistukset
                                            first
-                                           :allekirjoitusaika
-                                           (.format laskutus-service/date-formatter-fi))
-                                      "</Teksti>")))
+                                           :id)
+                                       (->> laskutustieto-energiatodistukset
+                                            first
+                                            :allekirjoitusaika
+                                            (.format laskutus-service/date-formatter-fi)))
+                   xml-str))
+    (t/is (re-find (tilausrivi-pattern (-> laskutustieto-energiatodistukset
+                                           second
+                                           :id)
+                                       (->> laskutustieto-energiatodistukset
+                                            second
+                                            :allekirjoitusaika
+                                            (.format laskutus-service/date-formatter-fi)))
+                   xml-str))
     (t/is (str/includes? xml-str "<KumppaniNro>ETP</KumppaniNro>"))))
 
 (t/deftest tasmaytysraportti-test
@@ -237,35 +259,36 @@
         laatija-laskutus-asiakastunnus (format "L0%08d" laatija-id)
         laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)
         tasmaytysraportti (laskutus-service/tasmaytysraportti laskutus (Instant/now))]
-    (t/is (= 15 (count tasmaytysraportti)))
+    (t/is (= 16 (count tasmaytysraportti)))
     (t/is (= "ETP" (ffirst tasmaytysraportti)))
     (t/is (= "ARA" (-> tasmaytysraportti second first)))
     (t/is (= [["Asiakkaiden lukumäärä yhteensä" nil {:v 4 :align :left}]
-              ["Myyntitilausten lukumäärä yhteensä" nil {:v 6 :align :left}]
-              ["Velotusmyyntitilausten lukumäärä yhteensä" nil {:v 6 :align :left}]
+              ["Myyntitilausten lukumäärä yhteensä" nil {:v 4 :align :left}]
+              ["Velotusmyyntitilausten lukumäärä yhteensä" nil {:v 4 :align :left}]
+              ["Energiatodistusten lukumäärä yhteensä" nil {:v 6 :align :left}]
               ["Hyvitystilausten lukumäärä yhteensä" nil {:v 0 :align :left}]
               ["Siirrettyjen liitetiedostojen lukumäärä" nil {:v 0 :align :left}]]
              (->> tasmaytysraportti
                   (drop 3)
-                  (take 5))))
+                  (take 6))))
     (t/is (= [{:v "Tilauslaji" :align :center}
               {:v "Asiakkaan numero" :align :center}
               {:v "Asiakkaan nimi" :align :center}
               {:v "Laskutettava nimike" :align :center}
               {:v "KPL" :align :center}]
-             (nth tasmaytysraportti 10)))
-    (t/is (->> tasmaytysraportti (drop 11) (map #(-> % first :v)) (every? #(= % "Z001"))))
-    (t/is (->> tasmaytysraportti (drop 11) (map #(-> % (nth 3) :v)) (every? #(= % "RA0001"))))
+             (nth tasmaytysraportti 11)))
+    (t/is (->> tasmaytysraportti (drop 12) (map #(-> % first :v)) (every? #(= % "Z001"))))
+    (t/is (->> tasmaytysraportti (drop 12) (map #(-> % (nth 3) :v)) (every? #(= % "RA0001"))))
 
     (t/is (= laatija-laskutus-asiakastunnus
-             (-> tasmaytysraportti (nth 12) second :v)))
+             (-> tasmaytysraportti (nth 13) second :v)))
     (t/is (= (str (:etunimi laatija) " " (:sukunimi laatija))
-             (-> tasmaytysraportti (nth 12) (nth 2) :v)))
-    (t/is (= 1 (-> tasmaytysraportti (nth 12) last :v)))
+             (-> tasmaytysraportti (nth 13) (nth 2) :v)))
+    (t/is (= 1 (-> tasmaytysraportti (nth 13) last :v)))
 
-    (t/is (= yritys-laskutus-asiakastunnus (-> tasmaytysraportti (nth 13) second :v)))
-    (t/is (= (:nimi yritys) (-> tasmaytysraportti (nth 13) (nth 2) :v)))
-    (t/is (= 2 (-> tasmaytysraportti (nth 14) last :v)))))
+    (t/is (= yritys-laskutus-asiakastunnus (-> tasmaytysraportti (nth 14) second :v)))
+    (t/is (= (:nimi yritys) (-> tasmaytysraportti (nth 14) (nth 2) :v)))
+    (t/is (= 2 (-> tasmaytysraportti (nth 15) last :v)))))
 
 (t/deftest write-tasmaytysraportti-file!-test
   (test-data-set)
