@@ -3,6 +3,7 @@
             [ring.util.response :as r]
             [schema.core :as schema]
             [schema-tools.coerce :as sc]
+            [solita.common.maybe :as maybe]
             [solita.common.xml :as xml]
             [solita.etp.api.response :as response]
             [solita.common.map :as xmap]
@@ -36,7 +37,7 @@
 (defn perustiedot [xml]
   (-> xml
       (map-values-from-xml (schema->identity-map energiatodistus-schema/Perustiedot))
-      (assoc :rakennustunnus (str/upper-case (xml/get-content xml [:rakennustunnus])))
+      (assoc :rakennustunnus (maybe/map* str/upper-case (xml/get-content xml [:rakennustunnus])))
       (assoc :julkinen-rakennus (xml/get-content xml [:onko-julkinen-rakennus]))
       (assoc :yritys (yritys (xml/get-in-xml xml [:yritys])))))
 
