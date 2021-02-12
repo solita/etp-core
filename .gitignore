@@ -8,6 +8,7 @@ etp-backend/target
 etp-backend/tmp-energiatodistukset
 etp-backend/tmp-laskutus
 etp-db/target
+docker/smtp/received-emails
 
 # clojure
 .cpcache

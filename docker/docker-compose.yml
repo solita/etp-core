@@ -76,6 +76,15 @@ services:
         target: /etc/ssh
         read_only: true
 
+  smtp:
+    build: ./smtp
+    ports:
+      - 127.0.0.1:2525:25
+    volumes:
+      - type: bind
+        source: ./smtp/received-emails
+        target: /received-emails
+
 volumes:
   data:
 
