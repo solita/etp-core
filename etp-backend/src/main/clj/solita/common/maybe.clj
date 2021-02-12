@@ -1,3 +1,3 @@
 (ns solita.common.maybe)
 
-(defn map* [fn optional] (if (some? optional) (fn optional) nil))
+(defn map* [fn optional] (when (some? optional) (fn optional)))
