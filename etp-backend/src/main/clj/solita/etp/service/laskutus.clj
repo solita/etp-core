@@ -1,6 +1,7 @@
 (ns solita.etp.service.laskutus
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
+            [clojure.core.match :as match]
             [clojure.tools.logging :as log]
             [solita.common.xml :as xml]
             [solita.common.xlsx :as xlsx]
@@ -29,8 +30,11 @@
 (def timezone (ZoneId/of "Europe/Helsinki"))
 (def date-formatter-fi (.withZone (DateTimeFormatter/ofPattern "dd.MM.yyyy")
                                   timezone))
+(def date-formatter-xml (.withZone (DateTimeFormatter/ofPattern "yyyyMMdd")
+                                   timezone))
 (def time-formatter-fi (.withZone (DateTimeFormatter/ofPattern "dd.MM.yyyy HH:mm:ss")
                                   timezone))
+
 (def time-formatter-file (.withZone (DateTimeFormatter/ofPattern "yyyyMMddHHmmss")
                                     timezone))
 
@@ -43,8 +47,8 @@
   (laskutus-db/select-kuukauden-laskutus db))
 
 (def fields-for-asiakastieto
-  #{:laskutus-asiakastunnus :laatija-id :nimi :laskutuskieli :yritys-id :ytunnus
-    :valittajatunnus :verkkolaskuosoite :jakeluosoite
+  #{:laskutus-asiakastunnus :laatija-id :nimi :henkilotunnus :laskutuskieli
+    :yritys-id :ytunnus :valittajatunnus :verkkolaskuosoite :jakeluosoite
     :vastaanottajan-tarkenne :postinumero :postitoimipaikka :maa})
 
 (defn asiakastiedot [laskutus]
@@ -105,7 +109,7 @@
            ["PaikkakuntaKoodi" postitoimipaikka]
            ["PostiNro" postinumero]
            ["MaaKoodi" maa]
-           (when yritys-id
+           (when-not yritys-id
              ["AsiakasHenkiloTunnus" henkilotunnus])]
           ["AsiakasMyyntiJakelutietoTyyppi"
            ["MyyntiOrganisaatioKoodi" "7010"]
@@ -131,7 +135,7 @@
   (->> laskutus
        (reduce (fn [acc {:keys [laskutus-asiakastunnus laatija-id laatija-nimi
                                energiatodistus-id allekirjoitusaika
-                               laskutuskieli]}]
+                               laskutuskieli laskuriviviite]}]
                  (-> acc
                      (assoc-in [laskutus-asiakastunnus :laskutus-asiakastunnus]
                                laskutus-asiakastunnus)
@@ -148,7 +152,8 @@
                                  :energiatodistukset]
                                 conj
                                 {:id energiatodistus-id
-                                 :allekirjoitusaika allekirjoitusaika})))
+                                 :allekirjoitusaika allekirjoitusaika
+                                 :laskuriviviite laskuriviviite})))
                {})
        vals))
 
@@ -161,35 +166,39 @@
                    2 "EN"
                    "FI")]])
 
-;; TODO translate text
-(defn energiatodistus-tilausrivi-text [id allekirjoitusaika laskutuskieli]
-  (str "Energiatodistus numero: "
-       id
-       ", pvm: "
-       (.format date-formatter-fi allekirjoitusaika)))
+(defn energiatodistus-tilausrivi-text [id allekirjoitusaika laskuriviviite laskutuskieli]
+  (apply format
+         (match/match [laskutuskieli laskuriviviite]
+                      [1 (_ :guard nil?)] "Energicertifikat %s, datum: %s"
+                      [1 _] "Energicertifikat %s, datum: %s, referens %s"
+                      [2 (_ :guard nil?)] "Energy performance certificate %s, date: %s"
+                      [2 _] "Energy performance certificate %s, date: %s, reference %s"
+                      [_ (_ :guard nil?)] "Energiatodistus %s, pvm: %s"
+                      [_ _] "Energiatodistus %s, pvm: %s, viite %s")
+         [(str id) (.format date-formatter-fi allekirjoitusaika) laskuriviviite]))
 
 (defn tilausrivit-for-laatija [{:keys [nimi energiatodistukset]} laskutuskieli]
   (cons (tilausrivi nimi laskutuskieli)
-        (map (fn [{:keys [id allekirjoitusaika]}]
-               (tilausrivi (energiatodistus-tilausrivi-text id
-                                                            allekirjoitusaika
-                                                            laskutuskieli)
-                           laskutuskieli))
-             energiatodistukset)))
+        (->> energiatodistukset
+             (sort-by :id)
+             (map (fn [{:keys [id allekirjoitusaika laskuriviviite]}]
+                    (tilausrivi (energiatodistus-tilausrivi-text id
+                                                                 allekirjoitusaika
+                                                                 laskuriviviite
+                                                                 laskutuskieli)
+                                laskutuskieli))))))
 
 (defn laskutustieto-xml [now {:keys [laskutus-asiakastunnus laskutuskieli
                                      laatijat]}]
   (let [today (LocalDate/ofInstant now timezone)
         last-month (.minusMonths today 1)
-        last-day-of-last-month (.withDayOfMonth last-month
-                                                (.lengthOfMonth last-month))
-        formatted-last-day-of-last-month (.format date-formatter-fi
-                                                  last-day-of-last-month)]
+        formatted-last-day-of-last-month (->> (.lengthOfMonth last-month)
+                                              (.withDayOfMonth last-month)
+                                              (.format date-formatter-xml))]
     (->> [["MyyntiOrganisaatioKoodi" "7010"]
           ["JakelutieKoodi" "13"]
           ["SektoriKoodi" "01"]
           ["TilausLajiKoodi" "Z001"]
-          ["LaskuPvm" (.format date-formatter-fi today)]
           ["PalveluLuontiPvm" formatted-last-day-of-last-month]
           ["HinnoitteluPvm" formatted-last-day-of-last-month]
           ["TilausAsiakasTyyppi"
@@ -210,7 +219,8 @@
                                                 (mapcat :energiatodistukset)
                                                 count)]
                         ["NimikeNro" "RA0001"]]
-                       (mapcat #(tilausrivit-for-laatija % laskutuskieli) (vals laatijat))))]
+                       (mapcat #(tilausrivit-for-laatija % laskutuskieli)
+                               (->> laatijat vals (sort-by :nimi)))))]
          xml/simple-elements
          (apply (fn [& elements]
                   (xml/element (xml/qname laskutustieto-ns "Myyntitilaus")
@@ -225,14 +235,16 @@
                                                                 :nimi nimi})))
                          {}
                          laskutus)
+        row-data-count (count row-data)
         laskutus-count (count laskutus)]
     (concat [["ETP" nil nil nil nil (.format time-formatter-fi now)]
              ["ARA" nil (str "Myyntilaskut " (.format date-formatter-fi
                                                       (.minus now 1 ChronoUnit/DAYS)))]
              []
-             ["Asiakkaiden lukumäärä yhteensä" nil {:v (count row-data) :align :left}]
-             ["Myyntitilausten lukumäärä yhteensä" nil {:v laskutus-count :align :left}]
-             ["Velotusmyyntitilausten lukumäärä yhteensä" nil {:v laskutus-count :align :left}]
+             ["Asiakkaiden lukumäärä yhteensä" nil {:v row-data-count :align :left}]
+             ["Myyntitilausten lukumäärä yhteensä" nil {:v row-data-count :align :left}]
+             ["Velotusmyyntitilausten lukumäärä yhteensä" nil {:v row-data-count :align :left}]
+             ["Energiatodistusten lukumäärä yhteensä" nil {:v laskutus-count :align :left}]
              ["Hyvitystilausten lukumäärä yhteensä" nil {:v 0 :align :left}]
              ["Siirrettyjen liitetiedostojen lukumäärä" nil {:v 0 :align :left}]
              []
@@ -342,13 +354,12 @@
           tasmaytysraportti-file (write-tasmaytysraportti-file!
                                   (tasmaytysraportti laskutus now)
                                   now)
+          all-files (concat asiakastieto-xml-files
+                            laskutustieto-xml-files
+                            [tasmaytysraportti-file])
           file-key-prefix (file-key-prefix now)]
       (log/info "Laskutus related files created.")
-      (store-files! aws-s3-client
-                    file-key-prefix
-                    (concat asiakastieto-xml-files
-                            laskutustieto-xml-files
-                            [tasmaytysraportti-file]))
+      (store-files! aws-s3-client file-key-prefix all-files)
       (log/info "Laskutus related files stored.")
       (if (every? #(-> % str/blank? not) [config/laskutus-sftp-host
                                           config/laskutus-sftp-username])
@@ -370,9 +381,7 @@
             ;; TODO send täsmätytysraportti with SMTP.
             )
         (log/warn "SFTP configuration missing. Skipping actual integration."))
-      (delete-files! asiakastieto-xml-files)
-      (delete-files! laskutustieto-xml-files)
-      (io/delete-file (.getPath tasmaytysraportti-file))
+      (delete-files! all-files)
       (log/info "Laskutus related temporary files deleted.")
       {:started-at now
        :stopped-at (Instant/now)})
