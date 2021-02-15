@@ -53,10 +53,12 @@
                                    from-name
                                    to
                                    subject
-                                   multipart)]
-    (doto (transport session)
-      (.connect host username password)
-      (.sendMessage mime-message (.getAllRecipients mime-message))
-      (.close))
-    (log/info "Email sent " {:to to :subject subject})
+                                   multipart)
+        transport (transport session)]
+    (.connect transport host username password)
+    (try
+      (.sendMessage transport mime-message (.getAllRecipients mime-message))
+      (log/info "Email sent " {:to to :subject subject})
+      (finally
+        (.close transport)))
     nil))
