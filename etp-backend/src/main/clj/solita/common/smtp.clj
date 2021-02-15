@@ -6,12 +6,16 @@
                                 MimeBodyPart
                                 MimeMultipart)))
 
+(def timeout "5000")
+
 (defn mail-properties [port]
   (doto (System/getProperties)
     (.put "mail.transport.protocol" "smtp")
     (.put "mail.smtp.port" port)
     (.put "mail.smtp.starttls.enable" "true")
-    (.put "mail.smtp.auth" "true")))
+    (.put "mail.smtp.auth" "true")
+    (.put "mail.smtp.connectiontimeout" "5000")
+    (.put "mail.smtp.timeout" "5000")))
 
 (defn session [properties]
   (Session/getDefaultInstance properties))
