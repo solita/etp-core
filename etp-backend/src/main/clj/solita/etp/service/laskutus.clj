@@ -7,6 +7,7 @@
             [solita.common.xlsx :as xlsx]
             [solita.common.libreoffice :as libreoffice]
             [solita.common.sftp :as sftp]
+            [solita.common.smtp :as smtp]
             [solita.etp.config :as config]
             [solita.etp.db :as db]
             [solita.etp.service.file :as file-service])
@@ -293,6 +294,19 @@
                                :xlsx (.getName xlsx-file)
                                :pdf-result? pdf-exists?)))))))
 
+(defn send-tasmaytysraportti-email! [tasmaytysraportti-file]
+  (smtp/send-email! config/smtp-host
+                    config/smtp-port
+                    config/smtp-username
+                    config/smtp-password
+                    config/email-from-email
+                    config/email-from-name
+                    config/laskutus-tasmaytysraportti-email-to
+                    "ARA ETP täsmätysraportti"
+                    "Liitteenä täsmäytysraportti."
+                    "text/plain"
+                    [tasmaytysraportti-file]))
+
 (defn xml-filename [now filename-prefix idx]
   (str filename-prefix
        (.format time-formatter-file now)
@@ -377,9 +391,8 @@
                                        laskutustieto-xml-files
                                        laskutustieto-destination-dir)
               (log/info "Laskutustieto xmls uploaded with SFTP."))
-
-            ;; TODO send täsmätytysraportti with SMTP.
-            )
+            (send-tasmaytysraportti-email! tasmaytysraportti-file)
+            (log/info "Täsmätysraportti sent as an email"))
         (log/warn "SFTP configuration missing. Skipping actual integration."))
       (delete-files! all-files)
       (log/info "Laskutus related temporary files deleted.")
