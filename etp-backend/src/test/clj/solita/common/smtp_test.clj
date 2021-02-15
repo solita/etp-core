@@ -1,0 +1,89 @@
+(ns solita.common.smtp-test
+  (:require [clojure.test :as t]
+            [clojure.string :as str]
+            [clojure.java.io :as io]
+            [solita.etp.config :as config]
+            [solita.common.smtp :as smtp]))
+
+(def sender-email "sender@example.com")
+(def sender-name "Sender")
+(def to "recipient@example.com")
+(def subject "Subject")
+(def body "This is body!")
+(def content-type "text/plain; charset=UTF-8")
+(def attachments [(io/file "deps.edn") (io/file "start.sh")])
+
+(def result-email-from-and-to
+  (format "From: %s <%s>
+To: "
+          sender-name
+          sender-email
+          to))
+
+(def result-email-subject-and-mime
+  (format "Subject: %s
+MIME-Version: 1.0
+Content-Type: multipart/mixed;"
+          subject))
+
+(def result-email-body-part
+  (format "Content-Type: %s
+Content-Transfer-Encoding: 7bit
+
+%s"
+          content-type
+          body))
+
+(def result-email-attachment-1-part
+  "Content-Type: application/octet-stream; name=deps.edn
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=deps.edn
+
+{:paths ")
+
+(def result-email-attachment-2-part
+  "Content-Type: application/octet-stream; name=start.sh
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=start.sh
+
+#!/bin/bash")
+
+(def email-directory (io/file "../docker/smtp/received-emails"))
+
+(defn email-directory-files []
+  (sort (.listFiles email-directory)))
+
+(defn empty-email-directory! []
+  (doseq [file (email-directory-files)]
+    (io/delete-file file)))
+
+(defn send-email! [attachments]
+  (smtp/send-email! config/smtp-host
+                    config/smtp-port
+                    config/smtp-username
+                    config/smtp-password
+                    sender-email
+                    sender-name
+                    to
+                    subject
+                    body
+                    content-type
+                    attachments))
+
+(t/deftest ^:eftest/synchronized send-email!-test
+  (empty-email-directory!)
+  (t/is (= 0 (count (email-directory-files))))
+  (send-email! nil)
+  (send-email! attachments)
+  (let [email-files (email-directory-files)
+        first-email-content (-> email-files first slurp)
+        second-email-content (-> email-files second slurp)]
+    (t/is (= 2 (count email-files)))
+    (doseq [email-content [first-email-content second-email-content]]
+      (t/is (str/includes? first-email-content result-email-from-and-to))
+      (t/is (str/includes? first-email-content result-email-subject-and-mime))
+      (t/is (str/includes? first-email-content result-email-body-part)))
+    (t/is (not (str/includes? first-email-content result-email-attachment-1-part)))
+    (t/is (not (str/includes? first-email-content result-email-attachment-2-part)))
+    (t/is (str/includes? second-email-content result-email-attachment-1-part))
+    (t/is (str/includes? second-email-content result-email-attachment-2-part))))
