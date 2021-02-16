@@ -91,3 +91,7 @@
 (def smtp-port (env "SMTP_PORT" "2525"))
 (def smtp-username (env "SMTP_USERNAME" ""))
 (def smtp-password (env "SMTP_PASSWORD" ""))
+
+;; General email
+(def email-from-email (env "EMAIL_FROM_EMAIL" "no-reply@example.com"))
+(def email-from-name (env "EMAIL_FROM_NAME" "Energiatodistusrekisteri [Dev]"))

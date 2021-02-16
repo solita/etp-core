@@ -13,7 +13,8 @@
             [solita.etp.test-data.energiatodistus :as energiatodistus-test-data]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.laskutus :as laskutus-service]
-            [solita.etp.service.file :as file-service])
+            [solita.etp.service.file :as file-service]
+            [solita.common.smtp-test :as smtp-test])
   (:import (java.time Instant)))
 
 (t/use-fixtures :each ts/fixture)
@@ -312,6 +313,7 @@
 
 (t/deftest ^:eftest/synchronized do-kuukauden-laskutus-test
   (test-data-set)
+  (smtp-test/empty-email-directory!)
   (let [{:keys [started-at]} (laskutus-service/do-kuukauden-laskutus
                               ts/*db*
                               ts/*aws-s3-client*)
@@ -327,7 +329,14 @@
                                       laskutus-service/asiakastieto-destination-dir)
               laskutustieto-filenames (sftp/files-in-dir
                                        sftp-connection
-                                       laskutus-service/laskutustieto-destination-dir)]
+                                       laskutus-service/laskutustieto-destination-dir)
+              tasmaytysraportti-filename (str "tasmaytysraportti-"
+                                              (.format laskutus-service/time-formatter-file
+                                                       started-at)
+                                              ".pdf")
+              tasmaytysraportti-email (-> (smtp-test/email-directory-files)
+                                          first
+                                          slurp)]
           (t/is (= 4 (count asiakastieto-filenames)))
           (t/is (= 4 (count laskutustieto-filenames)))
           (t/is (every? #(re-matches #"asiakastieto_etp_ara_.+\.xml" %)
@@ -342,10 +351,9 @@
                              (map #(str file-key-prefix %)))))
           (t/is (file-service/find-file
                  ts/*aws-s3-client*
-                 (str file-key-prefix
-                      "tasmaytysraportti-"
-                      (.format laskutus-service/time-formatter-file started-at)
-                      ".pdf"))))
+                 (str file-key-prefix tasmaytysraportti-filename)))
+          (t/is (str/includes? tasmaytysraportti-email
+                               (str "filename=" tasmaytysraportti-filename))))
         (finally (sftp/delete! sftp-connection
                                (str laskutus-service/asiakastieto-destination-dir "*"))
                  (sftp/delete! sftp-connection
