@@ -47,8 +47,9 @@
   (let [keys (->> (#'aws/invoke client :ListObjectsV2 {:Bucket bucket})
                   :Contents
                   (map #(select-keys % [:Key])))]
-    (#'aws/invoke client :DeleteObjects {:Delete {:Objects keys}
-                                         :Bucket bucket})
+    (when (-> keys empty? not)
+      (#'aws/invoke client :DeleteObjects {:Delete {:Objects keys}
+                                           :Bucket bucket}))
     (#'aws/invoke client :DeleteBucket {:Bucket bucket})))
 
 (defn fixture [f]
