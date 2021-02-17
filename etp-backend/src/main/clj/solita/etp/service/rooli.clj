@@ -18,6 +18,9 @@
 (defn paakayttaja? [{:keys [rooli]}]
   (= rooli 2))
 
+(defn laskuttaja? [{:keys [rooli]}]
+  (= rooli 3))
+
 (defn laatija-maintainer? [{:keys [rooli]}]
   (contains? #{1 2} rooli))
 
