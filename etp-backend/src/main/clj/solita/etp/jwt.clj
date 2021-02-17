@@ -48,7 +48,8 @@
 
 (defn verified-jwt-payload [jwt public-key]
   (if (and jwt public-key)
-    (jwt/unsign jwt public-key {:alg (-> jwt jwe/decode-header :alg)})
+    (jwt/unsign jwt public-key {:alg (-> jwt jwe/decode-header :alg)
+                                :leeway 15})
     (log/warn "JWT verification was not possible due to missing token or public key")))
 
 (defn alb-headers [{:keys [headers]}]
