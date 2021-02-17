@@ -20,9 +20,11 @@
 (t/use-fixtures :each ts/fixture)
 
 ;; There are 10 energiatodistus.
-;; Energiatodistukset 1-7 are signed during last month.
-;; Energiatodistus 8 has been signed three months ago.
-;; Energiatodistukset 7 has laskutuspäivä.
+;; Energiatodistukset 1-6 and 8-9 are signed during last month.
+;; Energiatodistus 7 has been signed three months ago.
+;; Energiatodistukset 8 has laskutuspäivä.
+;; Energiatodistus 9 has replaced energiatodistus 5.
+;; => Energiatodistukset 1-6 should go to laskutus.
 ;; Yritys 1 has laatija 1.
 ;; Yritys 2 has laatija 2.
 ;; Laatija 3 and 4 have no yritys.
@@ -62,16 +64,17 @@
     (doseq [[laatija-id energiatodistus-id] (->> (interleave (cycle laatija-ids)
                                                              energiatodistus-ids)
                                                  (partition 2)
-                                                 (take 8))]
+                                                 (take 9))]
       (energiatodistus-service/start-energiatodistus-signing! ts/*db*
                                                               {:id laatija-id}
                                                               energiatodistus-id)
       (energiatodistus-service/end-energiatodistus-signing! ts/*db*
                                                             {:id laatija-id}
                                                             energiatodistus-id))
-    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = allekirjoitusaika - interval '1 month' WHERE id <= 7"])
-    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = now() - interval '3 month' WHERE id = 8"])
-    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET laskutusaika = now() WHERE id = 7"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = allekirjoitusaika - interval '1 month' WHERE id <= 9"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = now() - interval '3 month' WHERE id = 7"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET laskutusaika = now() WHERE id = 8"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET korvattu_energiatodistus_id = 5 WHERE id = 9"])
     {:laatijat (apply assoc {} (interleave laatija-ids laatijat))
      :yritykset (apply assoc {} (interleave yritys-ids yritykset))
      :energiatodistukset (apply assoc {} (interleave energiatodistus-ids
@@ -208,7 +211,7 @@
 
 (defn tilausrivi-pattern [id allekirjoitusaika]
   (re-pattern (str "<TilausriviTekstiTyyppi><Teksti>"
-                   "(Energiatodistus|Energicertifikat|Energy performance certificate) "
+                   "(Energiatodistus|Energicertifikat|EPC) "
                    id
                    ".*"
                    allekirjoitusaika)))
