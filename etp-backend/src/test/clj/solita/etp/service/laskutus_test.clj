@@ -19,15 +19,17 @@
 
 (t/use-fixtures :each ts/fixture)
 
+;; There are 10 energiatodistus.
+;; Energiatodistukset 1-7 are signed during last month.
+;; Energiatodistus 8 has been signed three months ago.
+;; Energiatodistukset 7 has laskutuspäivä.
 ;; Yritys 1 has laatija 1.
 ;; Yritys 2 has laatija 2.
 ;; Laatija 3 and 4 have no yritys.
-;; Laatija 1 has energiatodistukset 1 and 5, laatija 2 has 2 and 6 etc.
+;; Laatija 1 has energiatodistukset 1, 5 and 9, laatija 2 has 2, 6 and 10 etc.
 ;; Laskut from energiatodistukset 1 and 5 should go to yritys 1.
 ;; Laskut from energiatodistukset 2 and 6 should go to yritys 2.
-;; Laskut energiatodistukset 3, 4, 7 and 8 should go their laatijat.
-;; Energiatodistukset 1-7 are signed.
-;; Energiatodistukset 1-6 are signed during last month.
+;; Laskut from energiatodistukset 3, 4 should go their laatijat.
 
 ;; All of these tests expect asiakastunnus to match id, which is true in this
 ;; test data set but not in other environments.
@@ -42,8 +44,8 @@
                                   {:id (first %)}
                                   [(second %)])))
         energiatodistukset (->> (interleave
-                                 (energiatodistus-test-data/generate 4 2013 true)
-                                 (energiatodistus-test-data/generate 4 2018 true))
+                                 (energiatodistus-test-data/generate 5 2013 true)
+                                 (energiatodistus-test-data/generate 5 2018 true))
                                 (interleave (cycle (concat yritys-ids [nil nil])))
                                 (partition 2)
                                 (map #(assoc (second %)
@@ -60,14 +62,16 @@
     (doseq [[laatija-id energiatodistus-id] (->> (interleave (cycle laatija-ids)
                                                              energiatodistus-ids)
                                                  (partition 2)
-                                                 (take 7))]
+                                                 (take 8))]
       (energiatodistus-service/start-energiatodistus-signing! ts/*db*
                                                               {:id laatija-id}
                                                               energiatodistus-id)
       (energiatodistus-service/end-energiatodistus-signing! ts/*db*
                                                             {:id laatija-id}
                                                             energiatodistus-id))
-    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = allekirjoitusaika - interval '1 month' WHERE id <= 6"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = allekirjoitusaika - interval '1 month' WHERE id <= 7"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = now() - interval '3 month' WHERE id = 8"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET laskutusaika = now() WHERE id = 7"])
     {:laatijat (apply assoc {} (interleave laatija-ids laatijat))
      :yritykset (apply assoc {} (interleave yritys-ids yritykset))
      :energiatodistukset (apply assoc {} (interleave energiatodistus-ids
@@ -138,9 +142,9 @@
              (laskutus-service/energiatodistus-tilausrivi-text 100 instant nil 1)))
     (t/is (= "Energicertifikat 10, datum: 01.01.2021, referens hello"
              (laskutus-service/energiatodistus-tilausrivi-text 10 instant "hello" 1)))
-    (t/is (= "Energy performance certificate 1, date: 01.01.2021"
+    (t/is (= "EPC 1, date: 01.01.2021"
              (laskutus-service/energiatodistus-tilausrivi-text 1 instant nil 2)))
-    (t/is (= "Energy performance certificate 123, date: 01.01.2021, reference ref123"
+    (t/is (= "EPC 123, date: 01.01.2021, reference ref123"
              (laskutus-service/energiatodistus-tilausrivi-text 123 instant "ref123" 2)))
     (t/is (= "Energiatodistus 99, pvm: 01.01.2021"
              (laskutus-service/energiatodistus-tilausrivi-text 99 instant nil 0)))

@@ -44,4 +44,8 @@ SELECT e.id energiatodistus_id, e.allekirjoitusaika, e.laskuriviviite,
   LEFT JOIN yritys y ON e.laskutettava_yritys_id = y.id
   LEFT JOIN verkkolaskuoperaattori v ON y.verkkolaskuoperaattori = v.id
   WHERE allekirjoitusaika IS NOT NULL AND
-        allekirjoitusaika < date_trunc('month', now());
+        allekirjoitusaika < date_trunc('month', now()) AND
+        -- TODO this needs to be changed to after first laskutus to:
+        -- allekirjoitusaika >= date_trunc('month', now()) - interval '1 month' AND
+        allekirjoitusaika >= '2021-01-01' AND
+        laskutusaika IS NULL ;
