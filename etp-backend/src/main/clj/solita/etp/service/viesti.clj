@@ -31,3 +31,5 @@
   (when-not (nil? (find-ketju db id))
     (swap! ketjut #(update-in % [id :viestit] conj (viesti whoami body)))))
 
+(defn find-ryhmat [db] [{:id 0 :label-fi "Valvojat" :label-sv "Valvojat" :valid true}
+                        {:id 1 :label-fi "Laatijat" :label-sv "Laatijat" :valid true}])

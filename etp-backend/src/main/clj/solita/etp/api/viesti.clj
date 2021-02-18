@@ -40,4 +40,9 @@
               :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami parameters]}]
                             (api-response/put-response
                               (viesti-service/add-viesti! db whoami id (:body parameters))
-                              (str "Ketju " id " does not exists.")))}}]]]])
+                              (str "Ketju " id " does not exists.")))}}]]]
+   ["/vastaanottajaryhmat"
+    {:get  {:summary   "Hae kaikki vastaanottajaryhmat."
+             :responses {200 {:body [common-schema/Luokittelu]}}
+             :handler   (fn [{:keys [db]}]
+                          (r/response (viesti-service/find-ryhmat db)))}}]])
