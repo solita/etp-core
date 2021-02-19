@@ -53,6 +53,7 @@
                                 :max-elements 5})
 
    energiatodistus/Rakennustunnus           (g/always "1035150826")
+   energiatodistus/YritysPostinumero        (g/always "33100")
    energiatodistus/OptionalKuukausierittely (test-generators/one-of
                                              [(g/always (vec (repeat 12 kuukausierittely)))
                                               (g/always [])])})
