@@ -8,14 +8,19 @@
             [solita.etp.schema.yritys :as yritys]
             [solita.etp.schema.energiatodistus :as energiatodistus]))
 
-(def unique-henkilotunnukset
-  (->> (range)
-       (map (partial format "%09d"))
-       (map #(str % (common/henkilotunnus-checksum %)))
-       (map #(str (subs % 0 6) "-" (subs % 6 10)))))
+(defn unique-henkilotunnukset-f []
+  (let [state (atom 0)]
+    (fn [n]
+      (let [[start end] (swap-vals! state + n)]
+        (->> (range start end)
+             (map (partial format "%09d"))
+             (map #(str % (common/henkilotunnus-checksum %)))
+             (map #(str (subs % 0 6) "-" (subs % 6 10))))))))
 
-(def unique-emails
-  (repeatedly #(str (java.util.UUID/randomUUID) "@example.com")))
+(def unique-henkilotunnukset (unique-henkilotunnukset-f))
+
+(defn unique-emails [n]
+  (take n (repeatedly #(str (java.util.UUID/randomUUID) "@example.com"))))
 
 (def unique-ytunnukset
   (->> (range)

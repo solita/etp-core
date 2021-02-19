@@ -9,8 +9,8 @@
                                       :email %2
                                       :patevyystaso (rand-nth [1 2])}
                                      laatija-schema/KayttajaLaatijaAdd)
-               generators/unique-henkilotunnukset
-               generators/unique-emails)))
+               (generators/unique-henkilotunnukset n)
+               (generators/unique-emails n))))
 
 (defn insert! [laatijat]
   (kayttaja-laatija-service/upsert-kayttaja-laatijat! ts/*db* laatijat))
