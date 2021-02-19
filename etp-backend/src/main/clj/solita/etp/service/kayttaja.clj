@@ -29,6 +29,7 @@
    (when-let [kayttaja (find-kayttaja db id)]
      (if (or (= id (:id whoami))
              (rooli-service/paakayttaja? whoami)
+             (rooli-service/laskuttaja? whoami)
              (and (rooli-service/patevyydentoteaja? whoami)
                   (rooli-service/laatija? kayttaja)))
        kayttaja
