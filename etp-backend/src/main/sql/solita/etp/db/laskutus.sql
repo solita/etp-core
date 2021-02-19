@@ -53,3 +53,6 @@ SELECT e.id energiatodistus_id, e.allekirjoitusaika, e.laskuriviviite,
         (e.korvattu_energiatodistus_id IS NULL OR
          (date_trunc('day', e.allekirjoitusaika) - interval '7 days' <= korvattu.allekirjoitusaika AND
          korvattu.laatija_id != e.laatija_id));
+
+-- name: mark-as-laskutettu!
+UPDATE energiatodistus SET laskutusaika = now() WHERE id IN (:ids);

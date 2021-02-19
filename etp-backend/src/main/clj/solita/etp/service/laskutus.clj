@@ -49,11 +49,7 @@
   (laskutus-db/select-kuukauden-laskutus db))
 
 (defn mark-as-laskutettu! [db laskutus]
-  (jdbc/execute! db (-> [(str "UPDATE energiatodistus SET laskutusaika = now() WHERE id IN ("
-                              (->> (repeat (count laskutus) "?") (str/join ", "))
-                              ")")]
-                        (concat (map :energiatodistus-id laskutus))
-                        (vec))))
+  (laskutus-db/mark-as-laskutettu! db {:ids (mapv :energiatodistus-id laskutus)}))
 
 (def fields-for-asiakastieto
   #{:laskutus-asiakastunnus :laatija-id :nimi :henkilotunnus :laskutuskieli
