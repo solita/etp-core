@@ -1,6 +1,7 @@
 (ns solita.etp.service.laskutus
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
+            [clojure.java.jdbc :as jdbc]
             [clojure.core.match :as match]
             [clojure.tools.logging :as log]
             [solita.common.xml :as xml]
@@ -46,6 +47,9 @@
 
 (defn find-kuukauden-laskutus [db]
   (laskutus-db/select-kuukauden-laskutus db))
+
+(defn mark-as-laskutettu! [db laskutus]
+  (laskutus-db/mark-as-laskutettu! db {:ids (mapv :energiatodistus-id laskutus)}))
 
 (def fields-for-asiakastieto
   #{:laskutus-asiakastunnus :laatija-id :nimi :henkilotunnus :laskutuskieli
@@ -172,8 +176,8 @@
          (match/match [laskutuskieli laskuriviviite]
                       [1 (_ :guard nil?)] "Energicertifikat %s, datum: %s"
                       [1 _] "Energicertifikat %s, datum: %s, referens %s"
-                      [2 (_ :guard nil?)] "Energy performance certificate %s, date: %s"
-                      [2 _] "Energy performance certificate %s, date: %s, reference %s"
+                      [2 (_ :guard nil?)] "EPC %s, date: %s"
+                      [2 _] "EPC %s, date: %s, reference %s"
                       [_ (_ :guard nil?)] "Energiatodistus %s, pvm: %s"
                       [_ _] "Energiatodistus %s, pvm: %s, viite %s")
          [(str id) (.format date-formatter-fi allekirjoitusaika) laskuriviviite]))
@@ -392,7 +396,9 @@
                                        laskutustieto-destination-dir)
               (log/info "Laskutustieto xmls uploaded with SFTP."))
             (send-tasmaytysraportti-email! tasmaytysraportti-file)
-            (log/info "Täsmätysraportti sent as an email"))
+            (log/info "Täsmätysraportti sent as an email")
+            (mark-as-laskutettu! db laskutus)
+            (log/info "Energiatodistukset marked as laskutettu"))
         (log/warn "SFTP configuration missing. Skipping actual integration."))
       (delete-files! all-files)
       (log/info "Laskutus related temporary files deleted.")

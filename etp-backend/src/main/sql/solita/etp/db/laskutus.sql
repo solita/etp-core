@@ -43,5 +43,16 @@ SELECT e.id energiatodistus_id, e.allekirjoitusaika, e.laskuriviviite,
   LEFT JOIN kayttaja k ON l.id = k.id
   LEFT JOIN yritys y ON e.laskutettava_yritys_id = y.id
   LEFT JOIN verkkolaskuoperaattori v ON y.verkkolaskuoperaattori = v.id
-  WHERE allekirjoitusaika IS NOT NULL AND
-        allekirjoitusaika < date_trunc('month', now());
+  LEFT JOIN energiatodistus korvattu ON e.korvattu_energiatodistus_id = korvattu.id
+  WHERE e.allekirjoitusaika IS NOT NULL AND
+        e.allekirjoitusaika < date_trunc('month', now()) AND
+        -- TODO this needs to be changed to after first laskutus to:
+        -- allekirjoitusaika >= date_trunc('month', now()) - interval '1 month' AND
+        e.allekirjoitusaika >= '2021-01-01' AND
+        e.laskutusaika IS NULL AND
+        (e.korvattu_energiatodistus_id IS NULL OR
+         (date_trunc('day', e.allekirjoitusaika) - interval '7 days' <= korvattu.allekirjoitusaika AND
+         korvattu.laatija_id != e.laatija_id));
+
+-- name: mark-as-laskutettu!
+UPDATE energiatodistus SET laskutusaika = now() WHERE id IN (:ids);

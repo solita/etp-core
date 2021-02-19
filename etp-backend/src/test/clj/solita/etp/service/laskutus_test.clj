@@ -19,31 +19,19 @@
 
 (t/use-fixtures :each ts/fixture)
 
-;; Yritys 1 has laatija 1.
-;; Yritys 2 has laatija 2.
-;; Laatija 3 and 4 have no yritys.
-;; Laatija 1 has energiatodistukset 1 and 5, laatija 2 has 2 and 6 etc.
-;; Laskut from energiatodistukset 1 and 5 should go to yritys 1.
-;; Laskut from energiatodistukset 2 and 6 should go to yritys 2.
-;; Laskut energiatodistukset 3, 4, 7 and 8 should go their laatijat.
-;; Energiatodistukset 1-7 are signed.
-;; Energiatodistukset 1-6 are signed during last month.
-
-;; All of these tests expect asiakastunnus to match id, which is true in this
-;; test data set but not in other environments.
-
-(defn test-data-set []
-  (let [laatijat (laatija-test-data/generate 4)
+(defn insert-test-data! [laatija-count yritys-count energiatodistus-count signed-count]
+  (let [version-count (/ energiatodistus-count 2)
+        laatijat (laatija-test-data/generate laatija-count)
         laatija-ids (laatija-test-data/insert! laatijat)
-        yritykset (yritys-test-data/generate 2)
+        yritykset (yritys-test-data/generate yritys-count)
         yritys-ids (->> (interleave laatija-ids yritykset)
                         (partition 2)
                         (mapcat #(yritys-test-data/insert!
                                   {:id (first %)}
                                   [(second %)])))
         energiatodistukset (->> (interleave
-                                 (energiatodistus-test-data/generate 4 2013 true)
-                                 (energiatodistus-test-data/generate 4 2018 true))
+                                 (energiatodistus-test-data/generate version-count 2013 true)
+                                 (energiatodistus-test-data/generate version-count 2018 true))
                                 (interleave (cycle (concat yritys-ids [nil nil])))
                                 (partition 2)
                                 (map #(assoc (second %)
@@ -60,18 +48,44 @@
     (doseq [[laatija-id energiatodistus-id] (->> (interleave (cycle laatija-ids)
                                                              energiatodistus-ids)
                                                  (partition 2)
-                                                 (take 7))]
+                                                 (take signed-count))]
       (energiatodistus-service/start-energiatodistus-signing! ts/*db*
                                                               {:id laatija-id}
                                                               energiatodistus-id)
       (energiatodistus-service/end-energiatodistus-signing! ts/*db*
                                                             {:id laatija-id}
                                                             energiatodistus-id))
-    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = allekirjoitusaika - interval '1 month' WHERE id <= 6"])
     {:laatijat (apply assoc {} (interleave laatija-ids laatijat))
      :yritykset (apply assoc {} (interleave yritys-ids yritykset))
      :energiatodistukset (apply assoc {} (interleave energiatodistus-ids
                                                      energiatodistukset))}))
+
+;; There are 10 energiatodistus.
+;; Energiatodistukset 1-6 and 8-9 are signed during last month.
+;; Energiatodistus 7 has been signed three months ago.
+;; Energiatodistukset 8 has laskutuspäivä.
+;; Energiatodistus 9 has replaced energiatodistus 5.
+;; => Energiatodistukset 1-6 should go to laskutus.
+;; Yritys 1 has laatija 1.
+;; Yritys 2 has laatija 2.
+;; Laatija 3 and 4 have no yritys.
+;; Laatija 1 has energiatodistukset 1, 5 and 9, laatija 2 has 2, 6 and 10 etc.
+;; Laskut from energiatodistukset 1 and 5 should go to yritys 1.
+;; Laskut from energiatodistukset 2 and 6 should go to yritys 2.
+;; Laskut from energiatodistukset 3, 4 should go their laatijat.
+
+;; All of these tests expect asiakastunnus to match id, which is true in this
+;; test data set but not in other environments.
+
+(defn test-data-set []
+  (let [{:keys [laatijat energiatodistukset] :as test-data-set} (insert-test-data! 4 2 10 9)
+        laatija-ids (-> laatijat keys sort)
+        energiatodistus-ids (-> energiatodistukset keys sort)]
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = allekirjoitusaika - interval '1 month' WHERE id <= 9"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = now() - interval '3 month' WHERE id = 7"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET laskutusaika = now() WHERE id = 8"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET korvattu_energiatodistus_id = 5 WHERE id = 9"])
+    test-data-set))
 
 (t/deftest safe-subs-test
   (t/is (= nil (laskutus-service/safe-subs nil 1 2)))
@@ -138,9 +152,9 @@
              (laskutus-service/energiatodistus-tilausrivi-text 100 instant nil 1)))
     (t/is (= "Energicertifikat 10, datum: 01.01.2021, referens hello"
              (laskutus-service/energiatodistus-tilausrivi-text 10 instant "hello" 1)))
-    (t/is (= "Energy performance certificate 1, date: 01.01.2021"
+    (t/is (= "EPC 1, date: 01.01.2021"
              (laskutus-service/energiatodistus-tilausrivi-text 1 instant nil 2)))
-    (t/is (= "Energy performance certificate 123, date: 01.01.2021, reference ref123"
+    (t/is (= "EPC 123, date: 01.01.2021, reference ref123"
              (laskutus-service/energiatodistus-tilausrivi-text 123 instant "ref123" 2)))
     (t/is (= "Energiatodistus 99, pvm: 01.01.2021"
              (laskutus-service/energiatodistus-tilausrivi-text 99 instant nil 0)))
@@ -204,7 +218,7 @@
 
 (defn tilausrivi-pattern [id allekirjoitusaika]
   (re-pattern (str "<TilausriviTekstiTyyppi><Teksti>"
-                   "(Energiatodistus|Energicertifikat|Energy performance certificate) "
+                   "(Energiatodistus|Energicertifikat|EPC) "
                    id
                    ".*"
                    allekirjoitusaika)))
@@ -318,6 +332,7 @@
                               ts/*db*
                               ts/*aws-s3-client*)
         file-key-prefix (laskutus-service/file-key-prefix started-at)]
+    (t/is (zero? (count (laskutus-service/find-kuukauden-laskutus ts/*db*))))
     (with-open [sftp-connection (sftp/connect! config/laskutus-sftp-host
                                                config/laskutus-sftp-port
                                                config/laskutus-sftp-username
@@ -358,3 +373,36 @@
                                (str laskutus-service/asiakastieto-destination-dir "*"))
                  (sftp/delete! sftp-connection
                                (str laskutus-service/laskutustieto-destination-dir "*")))))))
+
+;; Uncomment to test performance and robustness locally
+#_(t/deftest ^:eftest/synchronized performance-test
+  (smtp-test/empty-email-directory!)
+  (let [laatija-count 1500
+        yritys-count 6
+        energiatodistus-count (* laatija-count yritys-count)
+        {:keys [laatijat energiatodistukset]} (insert-test-data! laatija-count
+                                                                 yritys-count
+                                                                 energiatodistus-count
+                                                                 energiatodistus-count)
+        _ (jdbc/execute!
+           ts/*db*
+           ["UPDATE energiatodistus SET allekirjoitusaika = allekirjoitusaika - interval '1 month'"])
+        start-time (System/currentTimeMillis)
+        _ (laskutus-service/do-kuukauden-laskutus ts/*db* ts/*aws-s3-client*)
+        end-time (System/currentTimeMillis)]
+    (println (format "Laskutusajo took %.3f seconds" (-> (- end-time start-time) (/ 1000.0))))
+    (with-open [sftp-connection (sftp/connect! config/laskutus-sftp-host
+                                               config/laskutus-sftp-port
+                                               config/laskutus-sftp-username
+                                               config/laskutus-sftp-password
+                                               config/known-hosts-path)]
+      (try
+        (t/is (= (+ laatija-count yritys-count)
+                 (count (sftp/files-in-dir
+                         sftp-connection
+                         laskutus-service/asiakastieto-destination-dir))))
+        (t/is (zero? (count (laskutus-service/find-kuukauden-laskutus ts/*db*))))
+
+        (finally
+          (sftp/delete! sftp-connection
+                        (str laskutus-service/asiakastieto-destination-dir "*")))))))
