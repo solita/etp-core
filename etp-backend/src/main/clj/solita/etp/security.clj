@@ -71,11 +71,14 @@
                      :whoami whoami})
           response/forbidden)))))
 
-(defn wrap-db-application-name [handler]
-  (fn [{:keys [whoami] :as req}]
-    (handler (assoc-in
+(defn wrap-db-application-name
+  ([handler]
+   (wrap-db-application-name handler "public"))
+  ([handler default-id-or-name]
+   (fn [{:keys [whoami] :as req}]
+     (handler (assoc-in
                req
                [:db :application-name]
                (format "%s@core.etp%s"
-                       (or (:id whoami) "public")
-                       (:uri req))))))
+                       (or (:id whoami) default-id-or-name)
+                       (:uri req)))))))
