@@ -11,7 +11,8 @@
     (t/is (= fi-labels #{"Järjestelmä"
                          "Laatija"
                          "Pätevyyden toteaja"
-                         "Pääkäyttäjä"}))
+                         "Pääkäyttäjä"
+                         "Laskuttaja"}))
     ;; TODO test swedish labels when they exist
     ))
 
