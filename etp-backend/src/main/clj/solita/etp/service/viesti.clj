@@ -56,9 +56,13 @@
        (map (partial assoc-join-viestit db))
        first))
 
-(defn find-ketjut [db]
+(defn find-ketjut [db whoami]
   (pmap (partial assoc-join-viestit db)
-        (viesti-db/select-all-viestiketjut db)))
+        (cond (rooli-service/paakayttaja? whoami)
+              (viesti-db/select-all-viestiketjut db)
+              (rooli-service/laatija? whoami)
+              (viesti-db/select-viestiketjut-for-laatija db {:laatija-id (:id whoami)})
+              :else [])))
 
 (defn count-ketjut [db] {:count (count @ketjut)})
 

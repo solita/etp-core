@@ -16,10 +16,10 @@
                            (api-response/created
                              uri {:id (viesti-service/add-ketju! db whoami (:body parameters))}))}
 
-      :get  {:summary   "Hae kaikki viestiketjut."
+      :get  {:summary   "Hae kaikki käyttäjän viestiketjut."
              :responses {200 {:body [viesti-schema/Ketju]}}
              :handler   (fn [{:keys [db]}]
-                          (r/response (viesti-service/find-ketjut db)))}}]
+                          (r/response (viesti-service/find-ketjut db whoami)))}}]
     ["/count"
      {:conflicting true
       :get  {:summary   "Hae viestiketjujen lukumäärä."
