@@ -48,7 +48,7 @@
                               (viesti-service/add-viesti! db whoami id (:body parameters))
                               (str "Ketju " id " does not exists.")))}}]]]
    ["/vastaanottajaryhmat"
-    {:get  {:summary   "Hae kaikki vastaanottajaryhmat."
-             :responses {200 {:body [common-schema/Luokittelu]}}
-             :handler   (fn [{:keys [db]}]
-                          (r/response (viesti-service/find-ryhmat db)))}}]])
+    {:get {:summary   "Hae kaikki vastaanottajaryhmat."
+           :responses {200 {:body [common-schema/Luokittelu]}}
+           :handler   (fn [{:keys [db]}]
+                        (r/response (viesti-service/find-vastaanottajaryhmat db)))}}]])
