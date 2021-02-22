@@ -308,7 +308,7 @@
                     config/laskutus-tasmaytysraportti-email-to
                     "ARA ETP täsmätysraportti"
                     "Liitteenä täsmäytysraportti."
-                    "text/plain"
+                    config/email-content-type
                     [tasmaytysraportti-file]))
 
 (defn xml-filename [now filename-prefix idx]

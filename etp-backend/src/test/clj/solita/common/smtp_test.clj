@@ -10,7 +10,7 @@
 (def to "recipient@example.com")
 (def subject "Subject")
 (def body "This is body!")
-(def content-type "text/plain; charset=UTF-8")
+(def content-type config/email-content-type)
 (def attachments [(io/file "deps.edn") (io/file "start.sh")])
 
 (def result-email-from-and-to
