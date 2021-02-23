@@ -4,12 +4,11 @@
 
 (def KetjuAdd
   "Uuden viestiketjun luontitiedot"
-  {:kayttajat          [common-schema/Key]
-   :kayttajarooli-id   (schema/maybe common-schema/Key)
-   :kayttajaryhma-id   (schema/maybe common-schema/Key)
-   :energiatodistus-id (schema/maybe common-schema/Key)
-   :subject            schema/Str
-   :body               schema/Str})
+  {:vastaanottajat        [common-schema/Key]
+   :vastaanottajaryhma-id (schema/maybe common-schema/Key)
+   :energiatodistus-id    (schema/maybe common-schema/Key)
+   :subject               schema/Str
+   :body                  schema/Str})
 
 (def Sender
   {:id       common-schema/Key
@@ -23,10 +22,9 @@
    :body     schema/Str})
 
 (def Ketju
-  {:id                 common-schema/Key
-   :kayttajat          [common-schema/Key]
-   :kayttajarooli-id   (schema/maybe common-schema/Key)
-   :kayttajaryhma-id   (schema/maybe common-schema/Key)
-   :energiatodistus-id (schema/maybe common-schema/Key)
-   :subject            schema/Str
-   :viestit            [Viesti]})
+  {:id                    common-schema/Key
+   :vastaanottajat        [common-schema/Key]
+   :vastaanottajaryhma-id (schema/maybe common-schema/Key)
+   :energiatodistus-id    (schema/maybe common-schema/Key)
+   :subject               schema/Str
+   :viestit               [Viesti]})
