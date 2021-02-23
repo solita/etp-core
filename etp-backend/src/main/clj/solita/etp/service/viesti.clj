@@ -51,9 +51,22 @@
 (defn- assoc-join-viestit [db ketju]
   (assoc ketju :viestit  (find-viestit db (:id ketju))))
 
-(defn find-ketju [db id]
+(defn- visible-for? [whoami ketju]
+  (or (rooli-service/paakayttaja? whoami)
+      (contains? (-> ketju :vastaanottajat set) (:id whoami))
+      (-> ketju :viestit first :from :id (= (:id whoami)))
+      (and (rooli-service/laatija? whoami) (-> ketju :vastaanottajaryhma-id (= 1)))))
+
+(defn- assert-visibility [whoami ketju]
+  (if (visible-for? whoami ketju) ketju
+    (exception/throw-forbidden!
+      (str "Kayttaja " (:id whoami)
+           " is not allowed to see viestiketju " (:id ketju)))))
+
+(defn find-ketju [db whoami id]
   (->> (viesti-db/select-viestiketju db {:id id})
        (map (partial assoc-join-viestit db))
+       (map #(assert-visibility whoami %))
        first))
 
 (defn find-ketjut [db whoami]
@@ -67,7 +80,8 @@
 (defn count-ketjut [db] {:count (count @ketjut)})
 
 (defn add-viesti! [db whoami id body]
-  (insert-viesti! db id body))
+  (when (find-ketju db whoami id)
+    (insert-viesti! db id body)))
 
 (defn find-vastaanottajaryhmat [db]
   (luokittelu-service/find-vastaanottajaryhmat db))

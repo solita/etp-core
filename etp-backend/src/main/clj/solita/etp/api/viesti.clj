@@ -33,9 +33,9 @@
              :parameters {:path {:id common-schema/Key}}
              :responses  {200 {:body viesti-schema/Ketju}
                           404 {:body schema/Str}}
-             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                            (api-response/get-response
-                             (viesti-service/find-ketju db id)
+                             (viesti-service/find-ketju db whoami id)
                              (str "Ketju " id " does not exists.")))}}]
      ["/viestit"
       {:post {:summary    "Lisää ketjuun uusi viesti"
