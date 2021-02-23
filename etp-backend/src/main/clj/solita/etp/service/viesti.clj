@@ -69,13 +69,15 @@
        (map #(assert-visibility whoami %))
        first))
 
-(defn find-ketjut [db whoami]
-  (pmap (partial assoc-join-viestit db)
-        (cond (rooli-service/paakayttaja? whoami)
-              (viesti-db/select-all-viestiketjut db)
-              (rooli-service/laatija? whoami)
-              (viesti-db/select-viestiketjut-for-laatija db {:laatija-id (:id whoami)})
-              :else [])))
+(defn find-ketjut [db whoami q]
+  (let [query (merge {:limit 100 :offset 0} q)]
+    (pmap (partial assoc-join-viestit db)
+          (cond (rooli-service/paakayttaja? whoami)
+                (viesti-db/select-all-viestiketjut db query)
+                (rooli-service/laatija? whoami)
+                (viesti-db/select-viestiketjut-for-laatija
+                  db (assoc query :laatija-id (:id whoami)))
+                :else []))))
 
 (defn count-ketjut [db] {:count (count @ketjut)})
 

@@ -6,7 +6,8 @@ select
   (select array_agg(vastaanottaja_id) from vastaanottaja
   where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
 from viestiketju
-order by viestiketju.id desc;
+order by viestiketju.id desc
+limit :limit offset :offset;
 
 -- name: select-viestiketjut-for-laatija
 select
@@ -21,7 +22,8 @@ where from_id = :laatija-id or vastaanottajaryhma_id = 1 or
         where vastaanottaja.vastaanottaja_id = :laatija-id and
               vastaanottaja.viestiketju_id = viestiketju.id
       )
-order by viestiketju.id desc;
+order by viestiketju.id desc
+limit :limit offset :offset;
 
 -- name: select-viestiketju
 select
