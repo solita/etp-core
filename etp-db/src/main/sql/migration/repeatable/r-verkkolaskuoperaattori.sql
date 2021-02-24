@@ -32,3 +32,5 @@ VALUES
 (29, '003701011385', 'TietoEvry Oyj'),
 (30, '885060259470028', 'Tradeshift Ab'),
 (31, '003722207029', 'Ålands Post Ab')
+ON conflict (id) DO UPDATE
+SET valittajatunnus = excluded.valittajatunnus, nimi = excluded.nimi;
