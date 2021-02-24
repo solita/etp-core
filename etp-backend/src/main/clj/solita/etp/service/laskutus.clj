@@ -175,11 +175,11 @@
   (apply format
          (match/match [laskutuskieli laskuriviviite]
                       [1 (_ :guard nil?)] "Energicertifikat %s, datum: %s"
-                      [1 _] "Energicertifikat %s, datum: %s, referens %s"
+                      [1 _] "Energicertifikat %s, datum: %s, referens: %s"
                       [2 (_ :guard nil?)] "EPC %s, date: %s"
-                      [2 _] "EPC %s, date: %s, reference %s"
+                      [2 _] "EPC %s, date: %s, reference: %s"
                       [_ (_ :guard nil?)] "Energiatodistus %s, pvm: %s"
-                      [_ _] "Energiatodistus %s, pvm: %s, viite %s")
+                      [_ _] "Energiatodistus %s, pvm: %s, viite: %s")
          [(str id) (.format date-formatter-fi allekirjoitusaika) laskuriviviite]))
 
 (defn tilausrivit-for-laatija [{:keys [nimi energiatodistukset]} laskutuskieli]
