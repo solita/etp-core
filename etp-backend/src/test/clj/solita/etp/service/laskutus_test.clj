@@ -328,9 +328,10 @@
 (t/deftest ^:eftest/synchronized do-kuukauden-laskutus-test
   (test-data-set)
   (smtp-test/empty-email-directory!)
-  (let [{:keys [started-at]} (laskutus-service/do-kuukauden-laskutus
-                              ts/*db*
-                              ts/*aws-s3-client*)
+  (let [{:keys [started-at]} (with-redefs [laskutus-service/sleep-between-asiakastiedot-and-laskutustiedot 500]
+                               (laskutus-service/do-kuukauden-laskutus
+                                ts/*db*
+                                ts/*aws-s3-client*))
         file-key-prefix (laskutus-service/file-key-prefix started-at)]
     (t/is (zero? (count (laskutus-service/find-kuukauden-laskutus ts/*db*))))
     (with-open [sftp-connection (sftp/connect! config/laskutus-sftp-host
