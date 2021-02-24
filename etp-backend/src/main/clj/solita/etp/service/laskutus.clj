@@ -40,6 +40,8 @@
 (def time-formatter-file (.withZone (DateTimeFormatter/ofPattern "yyyyMMddHHmmss")
                                     timezone))
 
+(def sleep-between-asiakastiedot-and-laskutustiedot (* 15 60 1000))
+
 (defn safe-subs [s start end]
   (when s
     (let [start (max start 0)]
@@ -175,11 +177,11 @@
   (apply format
          (match/match [laskutuskieli laskuriviviite]
                       [1 (_ :guard nil?)] "Energicertifikat %s, datum: %s"
-                      [1 _] "Energicertifikat %s, datum: %s, referens %s"
+                      [1 _] "Energicertifikat %s, datum: %s, referens: %s"
                       [2 (_ :guard nil?)] "EPC %s, date: %s"
-                      [2 _] "EPC %s, date: %s, reference %s"
+                      [2 _] "EPC %s, date: %s, reference: %s"
                       [_ (_ :guard nil?)] "Energiatodistus %s, pvm: %s"
-                      [_ _] "Energiatodistus %s, pvm: %s, viite %s")
+                      [_ _] "Energiatodistus %s, pvm: %s, viite: %s")
          [(str id) (.format date-formatter-fi allekirjoitusaika) laskuriviviite]))
 
 (defn tilausrivit-for-laatija [{:keys [nimi energiatodistukset]} laskutuskieli]
@@ -351,6 +353,13 @@
   (doseq [file files]
     (io/delete-file (.getPath file))))
 
+(defn connect-sftp! []
+  (sftp/connect! config/laskutus-sftp-host
+                 config/laskutus-sftp-port
+                 config/laskutus-sftp-username
+                 config/laskutus-sftp-password
+                 config/known-hosts-path))
+
 (defn do-kuukauden-laskutus [db aws-s3-client]
   (log/info "Starting kuukauden laskutusajo.")
   (try
@@ -381,16 +390,21 @@
       (log/info "Laskutus related files stored.")
       (if (every? #(-> % str/blank? not) [config/laskutus-sftp-host
                                           config/laskutus-sftp-username])
-        (do (with-open [sftp-connection (sftp/connect! config/laskutus-sftp-host
-                                                       config/laskutus-sftp-port
-                                                       config/laskutus-sftp-username
-                                                       config/laskutus-sftp-password
-                                                       config/known-hosts-path)]
-              (log/info (str "SFTP connection to " config/laskutus-sftp-host " established."))
+        (do (with-open [sftp-connection (connect-sftp!)]
+              (log/info (str "SFTP connection (for uploading asiakastiedot) to "
+                             config/laskutus-sftp-host
+                             " established."))
               (upload-files-with-sftp! sftp-connection
                                        asiakastieto-xml-files
                                        asiakastieto-destination-dir)
-              (log/info "Asiakastieto xmls uploaded with SFTP.")
+              (log/info "Asiakastieto xmls uploaded with SFTP."))
+            (log/info (format "Waiting %.2f minutes before continuing."
+                              (double (/ sleep-between-asiakastiedot-and-laskutustiedot 1000 60))))
+            (Thread/sleep sleep-between-asiakastiedot-and-laskutustiedot)
+            (with-open [sftp-connection (connect-sftp!)]
+              (log/info (str "SFTP connection (for uploadting laskutustiedot) to "
+                             config/laskutus-sftp-host
+                             " established."))
               (upload-files-with-sftp! sftp-connection
                                        laskutustieto-xml-files
                                        laskutustieto-destination-dir)

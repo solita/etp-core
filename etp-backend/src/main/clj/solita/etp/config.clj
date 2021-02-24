@@ -84,7 +84,10 @@
 (def laskutus-sftp-username (env "LASKUTUS_SFTP_USERNAME" "etp"))
 (def laskutus-sftp-password (env "LASKUTUS_SFTP_PASSWORD" "etp"))
 (def known-hosts-path "known_hosts")
-(def laskutus-tasmaytysraportti-email-to (env "LASKUTUS_TASMAYTYSRAPORTTI_EMAIL_TO" "etp@example.com"))
+(def laskutus-tasmaytysraportti-email-to
+  (->> (str/split (env "LASKUTUS_TASMAYTYSRAPORTTI_EMAIL_TO" "etp@example.com") #",")
+       (map str/trim)
+       (remove str/blank?)))
 
 ;; SMTP
 (def smtp-host (env "SMTP_HOST" "localhost"))

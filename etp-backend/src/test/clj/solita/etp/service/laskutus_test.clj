@@ -150,15 +150,15 @@
   (let [instant (Instant/parse "2021-01-01T10:10:10.Z")]
     (t/is (= "Energicertifikat 100, datum: 01.01.2021"
              (laskutus-service/energiatodistus-tilausrivi-text 100 instant nil 1)))
-    (t/is (= "Energicertifikat 10, datum: 01.01.2021, referens hello"
+    (t/is (= "Energicertifikat 10, datum: 01.01.2021, referens: hello"
              (laskutus-service/energiatodistus-tilausrivi-text 10 instant "hello" 1)))
     (t/is (= "EPC 1, date: 01.01.2021"
              (laskutus-service/energiatodistus-tilausrivi-text 1 instant nil 2)))
-    (t/is (= "EPC 123, date: 01.01.2021, reference ref123"
+    (t/is (= "EPC 123, date: 01.01.2021, reference: ref123"
              (laskutus-service/energiatodistus-tilausrivi-text 123 instant "ref123" 2)))
     (t/is (= "Energiatodistus 99, pvm: 01.01.2021"
              (laskutus-service/energiatodistus-tilausrivi-text 99 instant nil 0)))
-    (t/is (= "Energiatodistus 99, pvm: 01.01.2021, viite 1234"
+    (t/is (= "Energiatodistus 99, pvm: 01.01.2021, viite: 1234"
              (laskutus-service/energiatodistus-tilausrivi-text 99 instant "1234" 0)))))
 
 (t/deftest laskutustiedot-test
@@ -328,9 +328,10 @@
 (t/deftest ^:eftest/synchronized do-kuukauden-laskutus-test
   (test-data-set)
   (smtp-test/empty-email-directory!)
-  (let [{:keys [started-at]} (laskutus-service/do-kuukauden-laskutus
-                              ts/*db*
-                              ts/*aws-s3-client*)
+  (let [{:keys [started-at]} (with-redefs [laskutus-service/sleep-between-asiakastiedot-and-laskutustiedot 500]
+                               (laskutus-service/do-kuukauden-laskutus
+                                ts/*db*
+                                ts/*aws-s3-client*))
         file-key-prefix (laskutus-service/file-key-prefix started-at)]
     (t/is (zero? (count (laskutus-service/find-kuukauden-laskutus ts/*db*))))
     (with-open [sftp-connection (sftp/connect! config/laskutus-sftp-host

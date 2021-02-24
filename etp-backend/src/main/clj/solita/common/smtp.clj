@@ -37,8 +37,10 @@
 (defn mime-message [session from-email from-name to subject multipart]
   (doto (MimeMessage. session)
     (.setFrom (InternetAddress. from-email from-name))
-    (.setRecipient Message$RecipientType/TO (InternetAddress. to))
     (.setSubject subject)
+    (.setRecipients Message$RecipientType/TO (->> to
+                                                  (map #(InternetAddress. %))
+                                                  into-array))
     (.setContent multipart)))
 
 (defn transport [session]
