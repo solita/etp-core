@@ -26,8 +26,8 @@
      {:conflicting true
       :get  {:summary   "Hae viestiketjujen lukumäärä."
              :responses {200 {:body {:count schema/Int}}}
-             :handler   (fn [{:keys [db]}]
-                          (r/response (viesti-service/count-ketjut db)))}}]
+             :handler   (fn [{:keys [db whoami]}]
+                          (r/response (viesti-service/count-ketjut db whoami)))}}]
     ["/:id"
      [""
       {:conflicting true

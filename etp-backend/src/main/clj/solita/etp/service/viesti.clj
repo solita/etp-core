@@ -79,7 +79,14 @@
                   db (assoc query :laatija-id (:id whoami)))
                 :else []))))
 
-(defn count-ketjut [db] {:count (count @ketjut)})
+(defn count-ketjut [db whoami]
+  (-> (cond (rooli-service/paakayttaja? whoami)
+            (viesti-db/select-count-all-viestiketjut db)
+            (rooli-service/laatija? whoami)
+            (viesti-db/select-count-viestiketjut-for-laatija
+              db {:laatija-id (:id whoami)})
+            :else [{:count 0}])
+      first))
 
 (defn add-viesti! [db whoami id body]
   (when (find-ketju db whoami id)
