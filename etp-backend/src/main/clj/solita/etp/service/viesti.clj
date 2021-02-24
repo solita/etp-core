@@ -27,6 +27,8 @@
 
 (defn find-ketjut [db] @ketjut)
 
+(defn count-ketjut [db] {:count (count @ketjut)})
+
 (defn add-viesti! [db whoami id body]
   (when-not (nil? (find-ketju db id))
     (swap! ketjut #(update-in % [id :viestit] conj (viesti whoami body)))))

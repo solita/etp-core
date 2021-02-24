@@ -20,10 +20,16 @@
              :responses {200 {:body [viesti-schema/Ketju]}}
              :handler   (fn [{:keys [db]}]
                           (r/response (viesti-service/find-ketjut db)))}}]
-
+    ["/count"
+     {:conflicting true
+      :get  {:summary   "Hae viestiketjujen lukumäärä."
+             :responses {200 {:body {:count schema/Int}}}
+             :handler   (fn [{:keys [db]}]
+                          (r/response (viesti-service/count-ketjut db)))}}]
     ["/:id"
      [""
-      {:get {:summary    "Hae viestiketjun tiedot"
+      {:conflicting true
+       :get {:summary    "Hae viestiketjun tiedot"
              :parameters {:path {:id common-schema/Key}}
              :responses  {200 {:body viesti-schema/Ketju}
                           404 {:body schema/Str}}
