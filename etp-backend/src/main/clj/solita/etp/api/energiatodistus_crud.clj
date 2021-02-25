@@ -30,7 +30,7 @@
              :parameters {:path {:id common-schema/Key}}
              :responses  {200 {:body get-schema}
                           404 {:body schema/Str}}
-             :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
+             :access     rooli-service/energiatodistus-reader?
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                            (api-response/get-response
                              (energiatodistus-service/find-energiatodistus db whoami id)

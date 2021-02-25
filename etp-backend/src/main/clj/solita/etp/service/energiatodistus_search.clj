@@ -170,6 +170,9 @@
         (rooli-service/laskuttaja? whoami))
     ["energiatodistus.tila_id IN (2, 3, 4)"]
 
+    (rooli-service/laskuttaja? whoami)
+    ["energiatodistus.tila_id IN (2, 3, 4)"]
+
     (rooli-service/laatija? whoami)
     ["energiatodistus.laatija_id = ? AND energiatodistus.tila_id <> 5" id]
 
