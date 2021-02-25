@@ -11,6 +11,9 @@
   ([] (-> integrant.repl.state/system :solita.etp/db))
   ([kayttaja-id] (assoc (db) :application-name (str kayttaja-id "@core.etp.test"))))
 
+(defn aws-s3-client []
+  (-> integrant.repl.state/system :solita.etp/aws-s3-client))
+
 (defn run-test [var-name]
   (t/test-vars [var-name]))
 

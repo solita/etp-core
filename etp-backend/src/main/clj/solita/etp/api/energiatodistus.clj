@@ -23,10 +23,6 @@
 (defn valid-pdf-filename? [filename id kieli]
   (= filename (format "energiatodistus-%s-%s.pdf" id kieli)))
 
-
-(defn valid-pdf-filename? [filename id kieli]
-  (= filename (format "energiatodistus-%s-%s.pdf" id kieli)))
-
 (def search-exceptions [{:type :unknown-field :response 400}
                         {:type :unknown-predicate :response 400}
                         {:type :invalid-arguments :response 400}

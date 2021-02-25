@@ -18,3 +18,13 @@
 (defn find-file [aws-s3-client key]
   (some-> (aws/get-object aws-s3-client key)
           (update :content io/input-stream)))
+
+(defn file-exists? [aws-s3-client key]
+  (try
+    (aws/get-object-head aws-s3-client key)
+    true
+    (catch clojure.lang.ExceptionInfo e
+      (let [{:keys [type]} (ex-data e)]
+        (if (= type :resource-not-found)
+          false
+          (throw e))))))

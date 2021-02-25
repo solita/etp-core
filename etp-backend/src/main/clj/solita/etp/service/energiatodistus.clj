@@ -20,7 +20,9 @@
             [schema.core :as schema]
             [solita.common.map :as map]
             [solita.common.logic :as logic]
-            [schema-tools.coerce :as stc]))
+            [schema-tools.coerce :as stc]
+            [solita.etp.service.file :as file-service])
+  (:import   (org.apache.pdfbox.pdmodel PDDocument)))
 
 ; *** Require sql functions ***
 (db/require-queries 'energiatodistus)
@@ -92,6 +94,9 @@
    :h$lammitys$toimenpide              db-toimenpide-type
    :h$ymparys$toimenpide               db-toimenpide-type
    :h$alapohja-ylapohja$toimenpide     db-toimenpide-type})
+
+(defn file-key [id kieli]
+  (when id (format "energiatodistukset/energiatodistus-%s-%s" id kieli)))
 
 (defn convert-db-case [name]
   (-> name
@@ -463,7 +468,29 @@
       :deleted nil
       :already-signed)))
 
-(defn end-energiatodistus-signing! [db whoami id]
+(defn energiatodistus-pdf-signed? [aws-s3-client id language]
+  (let [key (file-key id language)
+        {:keys [content]} (file-service/find-file aws-s3-client key)]
+    (with-open
+      [doc (PDDocument/load content)]
+      (if (.getLastSignatureDictionary doc)
+        true
+        false))))
+
+(defn language->names [language]
+  (get {0 ["fi"]
+        1 ["sv"]
+        2 ["fi" "sv"]} language))
+
+(defn assert-energiatodistus-signed? [db aws-s3-client id]
+  (let [language (-> (find-energiatodistus db id) :perustiedot :kieli)]
+    (when-not (->> (language->names language)
+                   (map #(energiatodistus-pdf-signed? aws-s3-client id %))
+                   (every? true?))
+      (exception/throw-ex-info! :invalid-state (str "Replaceable energiatodistus " id)))))
+
+(defn end-energiatodistus-signing! [db aws-s3-client whoami id]
+  ;(assert-energiatodistus-signed? db aws-s3-client id)
   (jdbc/with-db-transaction [db db]
     (let [result (energiatodistus-db/update-energiatodistus-allekirjoitettu!
                    db {:id id :laatija-id (:id whoami)})]

@@ -34,3 +34,9 @@
                             {:Bucket bucket
                              :Key    key})]
     {:content (:Body result) :filename (-> result :Metadata :filename)}))
+
+(defn get-object-head [{:keys [client bucket]} key]
+  (invoke client
+          :HeadObject
+          {:Bucket bucket
+           :Key    key}))
