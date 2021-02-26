@@ -23,3 +23,7 @@ create table vastaanottaja (
 
   primary key (vastaanottaja_id, viestiketju_id)
 );
+
+-- left room for conversion ids:
+select setval('viestiketju_id_seq', 5000, true);
+select setval('viesti_id_seq', 5000, true);
