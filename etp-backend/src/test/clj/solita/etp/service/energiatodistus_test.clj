@@ -190,7 +190,7 @@
         db (ts/db-user laatija-id)]
     (t/is (= (energiatodistus-tila id) :draft))
     (service/start-energiatodistus-signing! db {:id laatija-id} id)
-    (tu/sign-energiatodistus-pdf db  ts/*aws-s3-client* {:id laatija-id} id)
+    (tu/sign-energiatodistus-pdf db ts/*aws-s3-client* {:id laatija-id} id)
     (t/is (= (service/end-energiatodistus-signing! db ts/*aws-s3-client* {:id laatija-id} id)
              :ok))
     (t/is (= (energiatodistus-tila id) :signed))
@@ -212,7 +212,6 @@
         id (add-energiatodistus! (generate-energiatodistus-2018-complete) laatija-id)
         db (ts/db-user laatija-id)]
     (t/is (= (energiatodistus-tila id) :draft))
-    (tu/sign-energiatodistus-pdf db ts/*aws-s3-client* whoami id)
     (t/is (=  (service/end-energiatodistus-signing! db ts/*aws-s3-client* whoami id)
               :not-in-signing))
     (t/is (= (energiatodistus-tila id) :draft))
