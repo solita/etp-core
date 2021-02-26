@@ -21,8 +21,8 @@
 
 (defn insert-test-data! [laatija-count yritys-count energiatodistus-count signed-count]
   (let [version-count (/ energiatodistus-count 2)
-        laatijat (laatija-test-data/generate laatija-count)
-        laatija-ids (laatija-test-data/insert! laatijat)
+        laatijat (laatija-test-data/generate-and-insert! laatija-count)
+        laatija-ids (-> laatijat keys sort)
         yritykset (yritys-test-data/generate yritys-count)
         yritys-ids (->> (interleave laatija-ids yritykset)
                         (partition 2)
@@ -55,7 +55,7 @@
       (energiatodistus-service/end-energiatodistus-signing! ts/*db*
                                                             {:id laatija-id}
                                                             energiatodistus-id))
-    {:laatijat (apply assoc {} (interleave laatija-ids laatijat))
+    {:laatijat laatijat
      :yritykset (apply assoc {} (interleave yritys-ids yritykset))
      :energiatodistukset (apply assoc {} (interleave energiatodistus-ids
                                                      energiatodistukset))}))
