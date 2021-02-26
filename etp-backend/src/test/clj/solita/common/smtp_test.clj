@@ -7,7 +7,7 @@
 
 (def sender-email "sender@example.com")
 (def sender-name "Sender")
-(def to "recipient@example.com")
+(def to ["recipient1@example.com" "recipient2@example.com"])
 (def subject "Subject")
 (def body "This is body!")
 (def content-type config/email-content-type)
@@ -15,10 +15,10 @@
 
 (def result-email-from-and-to
   (format "From: %s <%s>
-To: "
+To: %s"
           sender-name
           sender-email
-          to))
+          (str/join ", " to)))
 
 (def result-email-subject-and-mime
   (format "Subject: %s
@@ -70,15 +70,16 @@ Content-Disposition: attachment; filename=start.sh
                     content-type
                     attachments))
 
+;; 2 recipients x 2 emails => 4 files.
 (t/deftest ^:eftest/synchronized send-email!-test
   (empty-email-directory!)
   (t/is (= 0 (count (email-directory-files))))
   (send-email! nil)
   (send-email! attachments)
-  (let [email-files (email-directory-files)
-        first-email-content (-> email-files first slurp)
-        second-email-content (-> email-files second slurp)]
-    (t/is (= 2 (count email-files)))
+  (let [[first-email _ second-email :as emails] (email-directory-files)
+        first-email-content (slurp first-email)
+        second-email-content (slurp second-email)]
+    (t/is (= 4 (count emails)))
     (doseq [email-content [first-email-content second-email-content]]
       (t/is (str/includes? first-email-content result-email-from-and-to))
       (t/is (str/includes? first-email-content result-email-subject-and-mime))
