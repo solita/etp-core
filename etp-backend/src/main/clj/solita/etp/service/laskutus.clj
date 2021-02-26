@@ -408,8 +408,11 @@
                                      laskutustieto-xml-files
                                      laskutustieto-destination-dir)
             (log/info "Laskutustieto xmls uploaded with SFTP."))
-          (send-tasmaytysraportti-email! tasmaytysraportti-file)
-          (log/info "Täsmätysraportti sent as an email")
+          (try
+            (send-tasmaytysraportti-email! tasmaytysraportti-file)
+            (log/info "Täsmätysraportti sent as an email")
+            (catch Exception e
+              (log/error "Sending täsmätysraportti as email failed:" e)))
           (mark-as-laskutettu! db laskutus)
           (log/info "Energiatodistukset marked as laskutettu"))
       (log/warn "SFTP configuration missing. Skipping actual integration."))
