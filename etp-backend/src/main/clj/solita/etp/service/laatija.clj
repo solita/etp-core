@@ -32,7 +32,8 @@
     (exception/throw-forbidden! "Laatija can't list all laatijas.")
     (->> (laatija-db/select-laatijat db)
          (keep (fn [laatija]
-                 (cond (rooli-service/paakayttaja? whoami)
+                 (cond (or (rooli-service/paakayttaja? whoami)
+                           (rooli-service/laskuttaja? whoami))
                        laatija
 
                        (rooli-service/patevyydentoteaja? whoami)
@@ -48,7 +49,9 @@
         first))
   ([db whoami id]
    (if (or (= id (:id whoami))
-             (rooli-service/laatija-maintainer? whoami))
+           (rooli-service/patevyydentoteaja? whoami)
+           (rooli-service/paakayttaja? whoami)
+           (rooli-service/laskuttaja? whoami))
      (find-laatija-by-id db id)
      (exception/throw-forbidden!))))
 
@@ -100,7 +103,9 @@
 
 (defn find-laatija-yritykset [db whoami id]
   (if (or (= id (:id whoami))
-          (rooli-service/laatija-maintainer? whoami))
+          (rooli-service/patevyydentoteaja? whoami)
+          (rooli-service/paakayttaja? whoami)
+          (rooli-service/laskuttaja? whoami))
     (laatija-db/select-laatija-yritykset db {:id id})
     (exception/throw-forbidden!)))
 
