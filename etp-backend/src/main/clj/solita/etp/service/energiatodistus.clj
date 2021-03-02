@@ -468,14 +468,17 @@
       :deleted nil
       :already-signed)))
 
+(defn- pdf-signed? [content]
+  (with-open
+    [doc (PDDocument/load content)]
+    (if (.getLastSignatureDictionary doc)
+      true
+      false)))
+
 (defn energiatodistus-pdf-signed? [aws-s3-client id language]
   (let [key (file-key id language)
         {:keys [content]} (file-service/find-file aws-s3-client key)]
-    (with-open
-      [doc (PDDocument/load content)]
-      (if (.getLastSignatureDictionary doc)
-        true
-        false))))
+    (pdf-signed? content)))
 
 (defn language->names [language]
   (get {0 ["fi"]

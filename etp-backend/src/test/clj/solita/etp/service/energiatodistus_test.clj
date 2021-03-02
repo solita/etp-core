@@ -12,7 +12,8 @@
             [solita.etp.schema.geo :as geo-schema]
             [solita.common.schema :as xschema]
             [solita.common.logic :as logic]
-            [solita.etp.test-utils :as tu])
+            [solita.etp.test-utils :as tu]
+            [clojure.java.io :as io])
   (:import [java.time Instant]
            (clojure.lang ExceptionInfo)))
 
@@ -348,3 +349,7 @@
     (service/set-energiatodistus-discarded! db id false)
     (t/is (= (energiatodistus-in-tila energiatodistus id laatija-id 2)
              (-> id find-energiatodistus dissoc-voimassaolo)))))
+
+(t/deftest validate-pdf-signature
+  (t/is (= true (#'service/pdf-signed? (-> "energiatodistukset/signed-with-test-certificate.pdf" io/resource io/input-stream))))
+  (t/is (= false (#'service/pdf-signed? (-> "energiatodistukset/not-signed.pdf" io/resource io/input-stream)))))
