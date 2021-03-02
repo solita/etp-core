@@ -2,7 +2,6 @@
   (:require [clojure.test :as t]
             [schema-generators.complete :as c]
             [schema.core :as schema]
-            [solita.common.map :as xmap]
             [solita.etp.test-system :as ts]
             [solita.etp.test :as etp-test]
             [solita.etp.test-data.kayttaja :as kayttaja-test-data]
@@ -63,9 +62,8 @@
                               whoami
                               yritys-id
                               update)
-      ;; TODO why ytunnus is not updated?
-      (t/is (xmap/submap? (dissoc update :ytunnus)
-                          (service/find-yritys ts/*db* yritys-id))))))
+      (t/is (= (assoc update :id yritys-id)
+               (service/find-yritys ts/*db* yritys-id))))))
 
 (t/deftest update-yritys-no-permissions-test
   (let [{:keys [laskuttajat laatijat yritykset]} (test-data-set)
