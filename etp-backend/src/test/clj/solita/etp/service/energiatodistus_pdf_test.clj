@@ -118,8 +118,6 @@
              :not-in-signing))
     (energiatodistus-service/start-energiatodistus-signing! db whoami id)
 
-    ;; Is it possible to somehow create a valid signature and chain for testing
-    ;; the success case?
     (tu/sign-energiatodistus-pdf db  ts/*aws-s3-client* whoami id)
     (energiatodistus-service/end-energiatodistus-signing! db ts/*aws-s3-client* whoami id)
     (t/is (= (service/sign-energiatodistus-pdf db ts/*aws-s3-client* whoami id "fi" nil)
