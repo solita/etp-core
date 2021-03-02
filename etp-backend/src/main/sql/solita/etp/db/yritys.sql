@@ -4,7 +4,7 @@ VALUES (:ytunnus, :nimi, :verkkolaskuoperaattori, :verkkolaskuosoite, :laskutusk
 RETURNING id
 
 -- name: update-yritys!
-UPDATE yritys SET nimi = :nimi, verkkolaskuoperaattori = :verkkolaskuoperaattori, verkkolaskuosoite = :verkkolaskuosoite, laskutuskieli = :laskutuskieli, jakeluosoite = :jakeluosoite, vastaanottajan_tarkenne = :vastaanottajan-tarkenne, postinumero = :postinumero, postitoimipaikka = :postitoimipaikka, maa = :maa
+UPDATE yritys SET nimi = :nimi, ytunnus = :ytunnus, verkkolaskuoperaattori = :verkkolaskuoperaattori, verkkolaskuosoite = :verkkolaskuosoite, laskutuskieli = :laskutuskieli, jakeluosoite = :jakeluosoite, vastaanottajan_tarkenne = :vastaanottajan-tarkenne, postinumero = :postinumero, postitoimipaikka = :postitoimipaikka, maa = :maa
 WHERE id = :id
 
 -- name: select-yritys
