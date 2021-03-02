@@ -43,15 +43,15 @@
     ["/:id"
      [""
       {:put {:summary "Päivitä laatijan ja laatijaan liittyvän käyttäjän tiedot"
-            :parameters {:path {:id common-schema/Key}
+             :parameters {:path {:id common-schema/Key}
                          :body laatija-schema/KayttajaLaatijaUpdate}
-            :responses {200 {:body nil}
-                        404 {:body schema/Str}}
-            :handler (fn [{{{:keys [id]} :path} :parameters
+             :responses {200 {:body nil}
+                         404 {:body schema/Str}}
+             :handler (fn [{{{:keys [id]} :path} :parameters
                            :keys [db whoami parameters]}]
-                       (api-response/put-response
+                        (api-response/put-response
                          (kayttaja-laatija-service/update-kayttaja-laatija!
-                           db whoami id (:body parameters))
+                          db whoami id (:body parameters))
                          (str "Laatija " id " does not exists.")))}}]
      ["/yritykset"
       [""
