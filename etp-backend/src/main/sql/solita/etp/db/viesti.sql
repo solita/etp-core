@@ -49,7 +49,7 @@ where id = :id;
 
 -- name: select-viestit
 select
-  viesti.senttime, viesti.body,
+  viesti.sent_time, viesti.body,
   kayttaja.id       from$id,
   kayttaja.rooli_id from$rooli_id,
   kayttaja.etunimi  from$etunimi,
@@ -57,4 +57,4 @@ select
 from viesti
   inner join kayttaja on kayttaja.id = viesti.from_id
 where viesti.viestiketju_id = :id
-order by viesti.senttime asc;
+order by viesti.sent_time asc;
