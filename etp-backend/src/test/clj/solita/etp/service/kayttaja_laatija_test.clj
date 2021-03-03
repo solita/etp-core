@@ -1,11 +1,12 @@
 (ns solita.etp.service.kayttaja-laatija-test
   (:require [clojure.test :as t]
             [schema.core :as schema]
-            [schema-generators.generators :as g]
             [schema-tools.core :as st]
+            [solita.common.map :as xmap]
             [solita.etp.test-system :as ts]
-            [solita.etp.test-utils :as tu]
-            [solita.common.map :as map]
+            [solita.etp.test :as etp-test]
+            [solita.etp.test-data.kayttaja :as kayttaja-test-data]
+            [solita.etp.test-data.laatija :as laatija-test-data]
             [solita.etp.service.kayttaja-laatija :as service]
             [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.service.laatija :as laatija-service]
@@ -14,180 +15,110 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(def laatija {:rooli 0})
-(def patevyydentoteaja {:rooli 1})
-(def paakayttaja {:rooli 2})
-(def roolit [laatija patevyydentoteaja paakayttaja])
+(defn test-data-set []
+  (let [paakayttaja-adds (->> (kayttaja-test-data/generate-adds 1)
+                              (map #(assoc % :rooli 2)))
+        paakayttaja-ids (kayttaja-test-data/insert! paakayttaja-adds)
+        laskuttaja-adds (->> (kayttaja-test-data/generate-adds 1)
+                             (map #(assoc % :rooli 3)))
+        laskuttaja-ids (kayttaja-test-data/insert! laskuttaja-adds)
+        laatijat (laatija-test-data/generate-and-insert! 100)]
+    {:paakayttajat (zipmap paakayttaja-ids paakayttaja-adds)
+     :laskuttajat (zipmap laskuttaja-ids laskuttaja-adds)
+     :laatijat laatijat}))
 
-(def LaatijaUpdate (dissoc laatija-schema/LaatijaUpdate :api-key))
-
-(defn generate-KayttajaLaatijaAdds [n]
-  (->> laatija-schema/KayttajaLaatijaAdd
-       (tu/generate-kayttaja n)
-       (map #(assoc % :patevyystaso (rand-nth [1,2])))))
-
-(defn generate-KayttajaLaatijaUpdates [n]
-  (->> laatija-schema/KayttajaLaatijaUpdate
-       (tu/generate-kayttaja n)
-       (map #(assoc % :rooli 0 :toimintaalue 1 :patevyystaso (rand-nth [1,2])))))
-
-(t/deftest upsert-test
-  (doseq [kayttaja-laatija (generate-KayttajaLaatijaAdds 100)
-          :let [upsert-results (service/upsert-kayttaja-laatijat!
-                                ts/*db*
-                                [kayttaja-laatija])
-                id (-> upsert-results first)
-                found-kayttaja (kayttaja-service/find-kayttaja ts/*db* id)
-                found-laatija (laatija-service/find-laatija-by-id
-                               ts/*db*
-                               id)]]
-    (schema/validate kayttaja-schema/Kayttaja found-kayttaja)
-    (schema/validate laatija-schema/Laatija found-laatija)
-    (t/is (map/submap? (st/select-schema kayttaja-laatija
-                                         laatija-schema/KayttajaAdd)
-                       found-kayttaja))
-    (t/is (map/submap? (st/select-schema kayttaja-laatija
-                                         laatija-schema/LaatijaAdd)
-                       found-laatija))))
-
-(def Laatija (dissoc laatija-schema/Laatija
-                     :voimassa :voimassaolo-paattymisaika))
+(t/deftest upsert-new-test
+  (let [{:keys [laatijat]} (test-data-set)]
+    (doseq [id (keys laatijat)
+            :let [add (get laatijat id)
+                  found-kayttaja (kayttaja-service/find-kayttaja ts/*db* id)
+                  found-laatija (laatija-service/find-laatija-by-id ts/*db*
+                                                                    id)]]
+      (schema/validate kayttaja-schema/Kayttaja found-kayttaja)
+      (schema/validate laatija-schema/Laatija found-laatija)
+      (t/is (-> add
+                (st/select-schema laatija-schema/KayttajaAdd)
+                (xmap/submap? found-kayttaja)))
+      (t/is (-> add
+                (st/select-schema laatija-schema/LaatijaAdd)
+                (xmap/submap? found-laatija))))))
 
 (t/deftest upsert-existing-test
-  (let [[original-1 original-2] (generate-KayttajaLaatijaAdds 2)
+  (let [{:keys [laatijat]} (test-data-set)
+        not-updated-id (-> laatijat keys sort last)
+        not-updated-add (get laatijat not-updated-id)]
+    (doseq [id (-> laatijat keys sort butlast)
+            :let [{:keys [henkilotunnus] :as add} (get laatijat id)
 
-        ;; Add schema is used when upserting käyttäjät with laatijat
-        [update-1] (generate-KayttajaLaatijaAdds 1)
-        _ (service/upsert-kayttaja-laatijat! ts/*db* [original-1 original-2])
-        found-original-laatija-1 (laatija-service/find-laatija-with-henkilotunnus
+                  ;; Adds are always used to upsert
+                  update (-> (laatija-test-data/generate-adds 1)
+                             first
+                             (assoc :henkilotunnus henkilotunnus))
+                  found-original (laatija-service/find-laatija-with-henkilotunnus
                                   ts/*db*
-                                  (:henkilotunnus original-1))
-        found-original-laatija-2 (laatija-service/find-laatija-with-henkilotunnus
-                                  ts/*db*
-                                  (:henkilotunnus original-2))
-        found-original-kayttaja-1 (kayttaja-service/find-kayttaja
-                                   ts/*db*
-                                   (:id found-original-laatija-1))
-        found-original-kayttaja-2 (kayttaja-service/find-kayttaja
-                                   ts/*db*
-                                   (:id found-original-laatija-2))
-        _ (service/upsert-kayttaja-laatijat! ts/*db* [original-2 update-1])
-        found-updated-laatija-1 (laatija-service/find-laatija-with-henkilotunnus
-                                  ts/*db*
-                                  (:henkilotunnus original-1))
-        found-updated-laatija-2 (laatija-service/find-laatija-with-henkilotunnus
-                                  ts/*db*
-                                  (:henkilotunnus original-2))
-        found-updated-kayttaja-1 (kayttaja-service/find-kayttaja
-                                   ts/*db*
-                                   (:id found-original-laatija-1))
-        found-updated-kayttaja-2 (kayttaja-service/find-kayttaja
-                                   ts/*db*
-                                   (:id found-original-laatija-2))]
-    (schema/validate Laatija found-original-laatija-1)
-    (schema/validate Laatija found-original-laatija-2)
-    (schema/validate kayttaja-schema/Kayttaja found-original-kayttaja-1)
-    (schema/validate kayttaja-schema/Kayttaja found-original-kayttaja-2)
-    (schema/validate Laatija found-updated-laatija-1)
-    (schema/validate Laatija found-updated-laatija-2)
-    (schema/validate kayttaja-schema/Kayttaja found-updated-kayttaja-1)
-    (schema/validate kayttaja-schema/Kayttaja found-updated-kayttaja-2)
-
-    ;; The first käyttäjä and laatija has been updated
-    (t/is (not= found-original-kayttaja-1 found-updated-kayttaja-1))
-    (t/is (not= found-original-laatija-1 found-updated-laatija-1))
-    (t/is (-> update-1
-              (st/select-keys laatija-schema/KayttajaAdd)
-              (map/submap? found-updated-kayttaja-1)))
-    (t/is (-> update-1
-              (st/select-keys laatija-schema/LaatijaAdd)
-              (map/submap? found-updated-laatija-1)))
-
-    ;; The second käyttäjä and laatija has not changed at all
-    (t/is (= found-original-kayttaja-2 found-updated-kayttaja-2))
-    (t/is (= found-original-laatija-2 found-updated-laatija-2))))
-
-(defn update-kayttaja-laatija! [whoami id kayttaja-laatija]
-  (try
-    (service/update-kayttaja-laatija! ts/*db* whoami id kayttaja-laatija)
-    (catch Exception e (if (not= (-> e ex-data :type) :forbidden)
-                         (throw e)))))
+                                  henkilotunnus)
+                  _ (service/upsert-kayttaja-laatijat! ts/*db* [update])
+                  found-updated (laatija-service/find-laatija-with-henkilotunnus
+                                 ts/*db*
+                                 henkilotunnus)
+                  found-not-updated (laatija-service/find-laatija-with-henkilotunnus
+                                     ts/*db*
+                                     (:henkilotunnus not-updated-add))]]
+      (t/is (not= found-original found-updated))
+      (schema/validate
+       (dissoc laatija-schema/Laatija :voimassa :voimassaolo-paattymisaika)
+       found-updated)
+      (t/is (xmap/submap? (st/select-schema update
+                                            laatija-schema/LaatijaAdd)
+                          found-updated))
+      (t/is (xmap/submap? (st/select-schema not-updated-add
+                                            laatija-schema/LaatijaAdd)
+                          found-not-updated)))))
 
 (t/deftest update-kayttaja-laatija!-test
-  (doseq [[add-1 update-1 add-2 update-2]
-          (partition 4 (interleave (generate-KayttajaLaatijaAdds 100)
-                                   (generate-KayttajaLaatijaUpdates 100)))
-          :let [[id-1 id-2] (->> [add-1 add-2]
-                                 (service/upsert-kayttaja-laatijat! ts/*db*))
-                kayttaja-1 {:id id-1}
-                kayttaja-2 {:id id-2}
-                whoami (rand-nth (concat [kayttaja-1 kayttaja-2] roolit))
-                _ (update-kayttaja-laatija! whoami id-1 update-1)
-                _ (update-kayttaja-laatija! whoami id-2 update-2)
-                found-kayttaja-1 (kayttaja-service/find-kayttaja ts/*db* id-1)
-                found-kayttaja-2 (kayttaja-service/find-kayttaja ts/*db* id-2)
-                found-laatija-1 (laatija-service/find-laatija-by-id
-                                 ts/*db*
-                                 id-1)
-                found-laatija-2 (laatija-service/find-laatija-by-id
-                                 ts/*db*
-                                 id-2)
-                kayttaja-1-updated? (map/submap?
-                                     (st/select-schema
-                                      update-1
-                                      laatija-schema/KayttajaUpdate)
-                                     found-kayttaja-1)
-                kayttaja-2-updated? (map/submap?
-                                     (st/select-schema
-                                      update-2
-                                      laatija-schema/KayttajaUpdate)
-                                     found-kayttaja-2)
-                laatija-1-updated? (map/submap? (st/select-schema
-                                                 update-1
-                                                 LaatijaUpdate)
-                                                found-laatija-1)
-                laatija-2-updated? (map/submap? (st/select-schema
-                                                 update-2
-                                                 LaatijaUpdate)
-                                                found-laatija-2)]]
-    (schema/validate kayttaja-schema/Kayttaja found-kayttaja-1)
-    (schema/validate kayttaja-schema/Kayttaja found-kayttaja-2)
-    (schema/validate laatija-schema/Laatija found-laatija-1)
-    (schema/validate laatija-schema/Laatija found-laatija-2)
+  (let [{:keys [paakayttajat laatijat]} (test-data-set)
+        paakayttaja-id (-> paakayttajat keys sort first)
+        not-updated-id (-> laatijat keys sort last)
+        not-updated-add (get laatijat not-updated-id)]
+    (doseq [id (-> laatijat keys sort butlast)
+            :let [whoami (rand-nth [{:rooli 2 :id paakayttaja-id}
+                                    {:rooli 0 :id id}])
+                  paakayttaja? (= (:rooli whoami) 2)
+                  update (-> (laatija-test-data/generate-updates 1 paakayttaja?)
+                             first)
+                  found-original (laatija-service/find-laatija-by-id ts/*db* id)
+                  _ (service/update-kayttaja-laatija! ts/*db*
+                                                      whoami
+                                                      id
+                                                      update)
+                  found-updated (laatija-service/find-laatija-by-id ts/*db* id)
+                  found-not-updated (laatija-service/find-laatija-by-id
+                                     ts/*db*
+                                     not-updated-id)]]
+      (t/is (not= found-original found-updated))
+      (schema/validate laatija-schema/Laatija found-updated)
+      (t/is (xmap/submap? (-> update
+                              (st/select-schema laatija-schema/LaatijaUpdate)
+                              (dissoc :api-key))
+                          found-updated))
+      (t/is (xmap/submap? (st/select-schema not-updated-add
+                                            laatija-schema/LaatijaAdd)
+                          found-not-updated)))))
 
-    (cond
-      (and (= whoami kayttaja-1)
-           (every? #(not (contains? update-1 %))
-                   (keys laatija-schema/LaatijaAdminUpdate))
-           (every? #(not (contains? update-1 %))
-                   (keys laatija-schema/KayttajaAdminUpdate)))
-      (do
-        (t/is (true? kayttaja-1-updated?))
-        (t/is (true? laatija-1-updated?))
-        (t/is (false? kayttaja-2-updated?))
-        (t/is (false? laatija-2-updated?)))
-
-      (and (= whoami kayttaja-2)
-           (every? #(not (contains? update-2 %))
-                   (keys laatija-schema/LaatijaAdminUpdate))
-           (every? #(not (contains? update-2 %))
-                   (keys laatija-schema/KayttajaAdminUpdate)))
-      (do
-        (t/is (false? kayttaja-1-updated?))
-        (t/is (false? laatija-1-updated?))
-        (t/is (true? kayttaja-2-updated?))
-        (t/is (true? laatija-2-updated?)))
-
-      (= whoami paakayttaja)
-      (do
-        (t/is (true? kayttaja-1-updated?))
-        (t/is (true? laatija-1-updated?))
-        (t/is (true? kayttaja-2-updated?))
-        (t/is (true? laatija-2-updated?)))
-
-      :else
-      (do
-        (t/is (false? kayttaja-1-updated?))
-        (t/is (false? laatija-1-updated?))
-        (t/is (false? kayttaja-2-updated?))
-        (t/is (false? laatija-2-updated?))))))
+(t/deftest update-kayttaja-laatija!-no-permissions-test
+  (let [{:keys [laskuttajat laatijat]} (test-data-set)
+        laskuttaja-id (-> laskuttajat keys sort first)]
+    (doseq [id (-> laatijat keys sort)
+            :let [whoami (rand-nth [{:rooli 3 :id laskuttaja-id}
+                                    {:rooli 0 :id (inc id)}])
+                  update (-> (laatija-test-data/generate-updates 1 false)
+                             first)]]
+      (t/is (= {:type :forbidden}
+               (etp-test/catch-ex-data
+                #(service/update-kayttaja-laatija! ts/*db* whoami id update))))
+      (t/is (-> laatijat
+                (get id)
+                (st/select-schema laatija-schema/LaatijaAdd)
+                (xmap/submap? (laatija-service/find-laatija-by-id
+                               ts/*db*
+                               id)))))))
