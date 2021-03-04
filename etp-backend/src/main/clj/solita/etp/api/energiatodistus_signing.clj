@@ -59,9 +59,9 @@
             :access rooli-service/laatija?
             :responses {200 {:body nil}
                         404 {:body schema/Str}}
-            :handler (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+            :handler (fn [{{{:keys [id]} :path} :parameters :keys [db whoami aws-s3-client]}]
                        (api-response/signature-response
-                         (energiatodistus-service/end-energiatodistus-signing! db whoami id)
+                         (energiatodistus-service/end-energiatodistus-signing! db aws-s3-client whoami id)
                          id))}}]
 
    ["/cancel"

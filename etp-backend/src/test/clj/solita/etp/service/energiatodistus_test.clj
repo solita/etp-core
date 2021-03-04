@@ -11,7 +11,9 @@
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.geo :as geo-schema]
             [solita.common.schema :as xschema]
-            [solita.common.logic :as logic])
+            [solita.common.logic :as logic]
+            [solita.etp.test-utils :as tu]
+            [clojure.java.io :as io])
   (:import [java.time Instant]
            (clojure.lang ExceptionInfo)))
 
@@ -189,7 +191,8 @@
         db (ts/db-user laatija-id)]
     (t/is (= (energiatodistus-tila id) :draft))
     (service/start-energiatodistus-signing! db {:id laatija-id} id)
-    (t/is (= (service/end-energiatodistus-signing! db {:id laatija-id} id)
+    (tu/sign-energiatodistus-pdf db ts/*aws-s3-client* {:id laatija-id} id)
+    (t/is (= (service/end-energiatodistus-signing! db ts/*aws-s3-client* {:id laatija-id} id)
              :ok))
     (t/is (= (energiatodistus-tila id) :signed))
     id))
@@ -210,14 +213,16 @@
         id (add-energiatodistus! (generate-energiatodistus-2018-complete) laatija-id)
         db (ts/db-user laatija-id)]
     (t/is (= (energiatodistus-tila id) :draft))
-    (t/is (=  (service/end-energiatodistus-signing! db whoami id)
+    (t/is (=  (service/end-energiatodistus-signing! db ts/*aws-s3-client* whoami id)
               :not-in-signing))
     (t/is (= (energiatodistus-tila id) :draft))
     (service/start-energiatodistus-signing! db whoami id)
-    (t/is (= (service/end-energiatodistus-signing! db whoami id)
+    (tu/sign-energiatodistus-pdf db ts/*aws-s3-client* whoami id)
+    (t/is (= (service/end-energiatodistus-signing! db ts/*aws-s3-client* whoami id)
              :ok))
     (t/is (= (energiatodistus-tila id) :signed))
-    (t/is (= (service/end-energiatodistus-signing! db whoami id)
+    (tu/sign-energiatodistus-pdf db ts/*aws-s3-client* whoami id)
+    (t/is (= (service/end-energiatodistus-signing! db ts/*aws-s3-client* whoami id)
              :already-signed))))
 
 (t/deftest cancel-energiatodistus-signing!-test
@@ -237,7 +242,8 @@
     (t/is (= (energiatodistus-tila id) :draft))
 
     (service/start-energiatodistus-signing! db whoami id)
-    (service/end-energiatodistus-signing! db whoami id)
+    (tu/sign-energiatodistus-pdf db ts/*aws-s3-client* whoami id)
+    (service/end-energiatodistus-signing! db ts/*aws-s3-client* whoami id)
     (t/is (= (service/cancel-energiatodistus-signing! db whoami id)
              :already-signed))))
 
@@ -251,7 +257,8 @@
 
     (t/is (= (energiatodistus-tila id) :draft))
     (service/start-energiatodistus-signing! db whoami id)
-    (t/is (= (service/end-energiatodistus-signing! db whoami id)
+    (tu/sign-energiatodistus-pdf db  ts/*aws-s3-client* whoami id)
+    (t/is (= (service/end-energiatodistus-signing! db ts/*aws-s3-client* whoami id)
              :ok))
     (t/is (= (energiatodistus-tila id) :signed))
     (service/update-energiatodistus! db whoami id update-energiatodistus)
@@ -342,3 +349,7 @@
     (service/set-energiatodistus-discarded! db id false)
     (t/is (= (energiatodistus-in-tila energiatodistus id laatija-id 2)
              (-> id find-energiatodistus dissoc-voimassaolo)))))
+
+(t/deftest validate-pdf-signature
+  (t/is (= true (#'service/pdf-signed? (-> "energiatodistukset/signed-with-test-certificate.pdf" io/resource io/input-stream))))
+  (t/is (= false (#'service/pdf-signed? (-> "energiatodistukset/not-signed.pdf" io/resource io/input-stream)))))

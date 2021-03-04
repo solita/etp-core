@@ -10,7 +10,8 @@
             [solita.common.formats :as formats]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.energiatodistus-test :as energiatodistus-test]
-            [solita.common.certificates-test :as certificates-test]))
+            [solita.common.certificates-test :as certificates-test]
+            [solita.etp.test-utils :as tu]))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -66,8 +67,8 @@
       (io/delete-file file-path))))
 
 (t/deftest pdf-file-id-test
-  (t/is (nil? (service/file-key nil "fi")))
-  (t/is (= (service/file-key 12345 "fi") "energiatodistukset/energiatodistus-12345-fi")))
+  (t/is (nil? (energiatodistus-service/file-key nil "fi")))
+  (t/is (= (energiatodistus-service/file-key 12345 "fi") "energiatodistukset/energiatodistus-12345-fi")))
 
 (t/deftest do-when-signing-test
   (let [f (constantly true)]
@@ -90,7 +91,8 @@
     (energiatodistus-service/start-energiatodistus-signing! db whoami id)
     (t/is (contains? (service/find-energiatodistus-digest db ts/*aws-s3-client* id "fi")
                      :digest))
-    (energiatodistus-service/end-energiatodistus-signing! db whoami id)
+    (tu/sign-energiatodistus-pdf db  ts/*aws-s3-client* whoami id)
+    (energiatodistus-service/end-energiatodistus-signing! db ts/*aws-s3-client* whoami id)
     (t/is (= (service/find-energiatodistus-digest db ts/*aws-s3-client* id "fi")
              :already-signed))))
 
@@ -116,9 +118,7 @@
              :not-in-signing))
     (energiatodistus-service/start-energiatodistus-signing! db whoami id)
 
-    ;; Is it possible to somehow create a valid signature and chain for testing
-    ;; the success case?
-
-    (energiatodistus-service/end-energiatodistus-signing! db whoami id)
+    (tu/sign-energiatodistus-pdf db  ts/*aws-s3-client* whoami id)
+    (energiatodistus-service/end-energiatodistus-signing! db ts/*aws-s3-client* whoami id)
     (t/is (= (service/sign-energiatodistus-pdf db ts/*aws-s3-client* whoami id "fi" nil)
              :already-signed))))

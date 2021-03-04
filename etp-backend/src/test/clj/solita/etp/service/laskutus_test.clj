@@ -14,7 +14,8 @@
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.laskutus :as laskutus-service]
             [solita.etp.service.file :as file-service]
-            [solita.common.smtp-test :as smtp-test])
+            [solita.common.smtp-test :as smtp-test]
+            [solita.etp.test-utils :as tu])
   (:import (java.time Instant)))
 
 (t/use-fixtures :each ts/fixture)
@@ -52,7 +53,9 @@
       (energiatodistus-service/start-energiatodistus-signing! ts/*db*
                                                               {:id laatija-id}
                                                               energiatodistus-id)
+      (tu/sign-energiatodistus-pdf ts/*db* ts/*aws-s3-client* {:id laatija-id} energiatodistus-id)
       (energiatodistus-service/end-energiatodistus-signing! ts/*db*
+                                                            ts/*aws-s3-client*
                                                             {:id laatija-id}
                                                             energiatodistus-id))
     {:laatijat laatijat

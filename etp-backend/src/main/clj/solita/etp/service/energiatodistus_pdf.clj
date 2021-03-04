@@ -689,11 +689,9 @@
     (io/delete-file pdf-path)
     is))
 
-(defn file-key [id kieli]
-  (when id (format "energiatodistukset/energiatodistus-%s-%s" id kieli)))
-
 (defn find-existing-pdf [aws-s3-client id kieli]
-  (->> (file-key id kieli)
+  (file-service/file-exists? aws-s3-client  (energiatodistus-service/file-key id kieli))
+  (->> (energiatodistus-service/file-key id kieli)
        (file-service/find-file aws-s3-client)
        :content
        io/input-stream))
@@ -743,7 +741,7 @@
                                (case versio 2013 648 2018 666))
             signable-pdf-data (puumerkki/read-file signable-pdf-path)
             digest (puumerkki/compute-base64-pkcs signable-pdf-data)
-            key (file-key id language)]
+            key (energiatodistus-service/file-key id language)]
         (file-service/upsert-file-from-bytes aws-s3-client
                                              key
                                              (str key ".pdf")
@@ -789,7 +787,7 @@
       energiatodistus
       #(do
          (validate-surname! (:sukunimi whoami) (first chain))
-         (let [key (file-key id language)
+         (let [key (energiatodistus-service/file-key id language)
                {:keys [content]} (file-service/find-file aws-s3-client key)
                content-bytes (.readAllBytes content)
                pkcs7 (puumerkki/make-pkcs7 signature-and-chain content-bytes)
