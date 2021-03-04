@@ -508,11 +508,10 @@
 
 (defn find-complete-energiatodistus
   ([db id]
-   (find-complete-energiatodistus db nil id))
+   (complete-energiatodistus
+    (energiatodistus-service/find-energiatodistus db id)
+    (required-luokittelut db)))
   ([db whoami id]
-   (let [luokittelut (required-luokittelut db)]
-     (complete-energiatodistus
-      (if whoami
-        (energiatodistus-service/find-energiatodistus db whoami id)
-        (energiatodistus-service/find-energiatodistus db id))
-      luokittelut))))
+   (complete-energiatodistus
+    (energiatodistus-service/find-energiatodistus db whoami id)
+    (required-luokittelut db))))
