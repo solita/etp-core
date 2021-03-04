@@ -471,9 +471,7 @@
 (defn- pdf-signed? [content]
   (with-open
     [doc (PDDocument/load content)]
-    (if (.getLastSignatureDictionary doc)
-      true
-      false)))
+    (-> (.getLastSignatureDictionary doc) nil? not)))
 
 (defn energiatodistus-pdf-signed? [aws-s3-client id language]
   (try
