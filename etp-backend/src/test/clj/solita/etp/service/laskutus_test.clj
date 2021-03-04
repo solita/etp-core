@@ -29,21 +29,26 @@
                         (mapcat #(yritys-test-data/insert!
                                   [(second %)]
                                    (first %))))
-        energiatodistukset (->> (interleave
-                                 (energiatodistus-test-data/generate version-count 2013 true)
-                                 (energiatodistus-test-data/generate version-count 2018 true))
-                                (interleave (cycle (concat yritys-ids [nil nil])))
-                                (partition 2)
-                                (map #(assoc (second %)
-                                             :laskutettava-yritys-id
-                                             (first %))))
+        energiatodistus-adds (->> (interleave
+                                   (energiatodistus-test-data/generate-adds
+                                    version-count
+                                    2013
+                                    true)
+                                   (energiatodistus-test-data/generate-adds
+                                    version-count
+                                    2018
+                                    true))
+                                  (interleave (cycle (concat yritys-ids [nil nil])))
+                                  (partition 2)
+                                  (map #(assoc (second %)
+                                               :laskutettava-yritys-id
+                                               (first %))))
         energiatodistus-ids (->> (interleave (cycle laatija-ids)
-                                             energiatodistukset)
+                                             energiatodistus-adds)
                                  (partition 2)
                                  (mapcat #(energiatodistus-test-data/insert!
-                                           {:id (first %)}
-                                           [(second %)]))
-                                 (map :id)
+                                           [(second %)]
+                                           (first %)))
                                  doall)]
     (doseq [[laatija-id energiatodistus-id] (->> (interleave (cycle laatija-ids)
                                                              energiatodistus-ids)
@@ -57,8 +62,7 @@
                                                             energiatodistus-id))
     {:laatijat laatijat
      :yritykset (zipmap yritys-ids yritys-adds)
-     :energiatodistukset (apply assoc {} (interleave energiatodistus-ids
-                                                     energiatodistukset))}))
+     :energiatodistukset (zipmap energiatodistus-ids energiatodistus-adds)}))
 
 ;; There are 10 energiatodistus.
 ;; Energiatodistukset 1-6 and 8-9 are signed during last month.
