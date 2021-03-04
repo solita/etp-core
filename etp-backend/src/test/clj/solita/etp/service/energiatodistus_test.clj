@@ -4,9 +4,9 @@
             [schema-generators.generators :as g]
             [flathead.deep :as deep]
             [solita.etp.test-system :as ts]
+            [solita.etp.test-data.laatija :as laatija-test-data]
             [solita.etp.service.energiatodistus :as service]
             [solita.etp.service.kayttaja-laatija :as laatija-service]
-            [solita.etp.service.kayttaja-laatija-test :as laatija-service-test]
             [solita.etp.schema.energiatodistus :as schema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.geo :as geo-schema]
@@ -52,7 +52,7 @@
   ([db]
     (-> (laatija-service/upsert-kayttaja-laatijat!
          db
-         (laatija-service-test/generate-KayttajaLaatijaAdds 1))
+         (laatija-test-data/generate-adds 1))
         first)))
 
 (defn add-energiatodistus!
