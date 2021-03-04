@@ -16,16 +16,18 @@
                            (api-response/created
                              uri {:id (viesti-service/add-ketju! db whoami (:body parameters))}))}
 
-      :get  {:summary   "Hae kaikki viestiketjut."
-             :responses {200 {:body [viesti-schema/Ketju]}}
-             :handler   (fn [{:keys [db]}]
-                          (r/response (viesti-service/find-ketjut db)))}}]
+      :get  {:summary    "Hae kaikki käyttäjän viestiketjut."
+             :parameters {:query {(schema/optional-key :limit)  (common-schema/LimitedInt 1 100)
+                                  (schema/optional-key :offset) schema/Int}}
+             :responses  {200 {:body [viesti-schema/Ketju]}}
+             :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
+                           (r/response (viesti-service/find-ketjut db whoami query)))}}]
     ["/count"
      {:conflicting true
       :get  {:summary   "Hae viestiketjujen lukumäärä."
              :responses {200 {:body {:count schema/Int}}}
-             :handler   (fn [{:keys [db]}]
-                          (r/response (viesti-service/count-ketjut db)))}}]
+             :handler   (fn [{:keys [db whoami]}]
+                          (r/response (viesti-service/count-ketjut db whoami)))}}]
     ["/:id"
      [""
       {:conflicting true
@@ -33,9 +35,9 @@
              :parameters {:path {:id common-schema/Key}}
              :responses  {200 {:body viesti-schema/Ketju}
                           404 {:body schema/Str}}
-             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                            (api-response/get-response
-                             (viesti-service/find-ketju db id)
+                             (viesti-service/find-ketju db whoami id)
                              (str "Ketju " id " does not exists.")))}}]
      ["/viestit"
       {:post {:summary    "Lisää ketjuun uusi viesti"
@@ -48,7 +50,7 @@
                               (viesti-service/add-viesti! db whoami id (:body parameters))
                               (str "Ketju " id " does not exists.")))}}]]]
    ["/vastaanottajaryhmat"
-    {:get  {:summary   "Hae kaikki vastaanottajaryhmat."
-             :responses {200 {:body [common-schema/Luokittelu]}}
-             :handler   (fn [{:keys [db]}]
-                          (r/response (viesti-service/find-ryhmat db)))}}]])
+    {:get {:summary   "Hae kaikki vastaanottajaryhmat."
+           :responses {200 {:body [common-schema/Luokittelu]}}
+           :handler   (fn [{:keys [db]}]
+                        (r/response (viesti-service/find-vastaanottajaryhmat db)))}}]])

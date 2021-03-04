@@ -24,12 +24,12 @@
   (let [version-count (/ energiatodistus-count 2)
         laatijat (laatija-test-data/generate-and-insert! laatija-count)
         laatija-ids (-> laatijat keys sort)
-        yritykset (yritys-test-data/generate yritys-count)
-        yritys-ids (->> (interleave laatija-ids yritykset)
+        yritys-adds (yritys-test-data/generate-adds yritys-count)
+        yritys-ids (->> (interleave laatija-ids yritys-adds)
                         (partition 2)
                         (mapcat #(yritys-test-data/insert!
-                                  {:id (first %)}
-                                  [(second %)])))
+                                  [(second %)]
+                                   (first %))))
         energiatodistukset (->> (interleave
                                  (energiatodistus-test-data/generate version-count 2013 true)
                                  (energiatodistus-test-data/generate version-count 2018 true))
@@ -59,7 +59,7 @@
                                                             {:id laatija-id}
                                                             energiatodistus-id))
     {:laatijat laatijat
-     :yritykset (apply assoc {} (interleave yritys-ids yritykset))
+     :yritykset (zipmap yritys-ids yritys-adds)
      :energiatodistukset (apply assoc {} (interleave energiatodistus-ids
                                                      energiatodistukset))}))
 

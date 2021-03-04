@@ -3,6 +3,7 @@
             [solita.etp.api.response :as api-response]
             [solita.etp.schema.yritys :as yritys-schema]
             [solita.etp.schema.common :as common-schema]
+            [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.yritys :as yritys-service]
             [schema.core :as schema]))
 
@@ -10,6 +11,7 @@
   [["/yritykset"
     [""
      {:post {:summary    "Lisää uuden yrityksen tiedot yritysrekisteriin"
+             :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
              :parameters {:body yritys-schema/YritysSave}
              :responses  {201 {:body common-schema/Id}}
              :handler    (fn [{:keys [db whoami parameters uri]}]
@@ -35,6 +37,7 @@
                              (str "Yritys " id " does not exists.")))}
 
        :put {:summary    "Päivitä yrityksen perustiedot"
+             :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
              :parameters {:path {:id common-schema/Key}
                           :body yritys-schema/YritysSave}
              :responses  {200 {:body nil}
@@ -53,6 +56,7 @@
                               (yritys-service/find-laatijat db id)))}}]
       ["/:laatija-id"
        {:put {:summary    "Liitä laatija yritykseen - hyväksytty"
+              :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
               :parameters {:path {:id         common-schema/Key
                                   :laatija-id common-schema/Key}}
               :responses  {200 {:body nil}

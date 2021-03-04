@@ -16,6 +16,8 @@
 (def find-lammitysmuodot #(select-luokittelu % "lammitysmuoto"))
 (def find-lammonjaot #(select-luokittelu % "lammonjako"))
 
+(def find-vastaanottajaryhmat #(select-luokittelu % "vastaanottajaryhma"))
+
 (defn- path= [value path object]
   (= value (get-in object path)))
 
