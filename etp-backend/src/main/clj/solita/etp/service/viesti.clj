@@ -1,37 +1,96 @@
 (ns solita.etp.service.viesti
-  (:require [clojure.set :as set])
-  (:import (java.time Instant)))
+  (:require [solita.etp.service.luokittelu :as luokittelu-service]
+            [solita.etp.db :as db]
+            [clojure.java.jdbc :as jdbc]
+            [solita.common.map :as map]
+            [solita.etp.service.rooli :as rooli-service]
+            [solita.etp.exception :as exception]
+            [flathead.flatten :as flat]))
 
-(def ^:private ketjut (atom []))
+(db/require-queries 'viesti)
 
-(defn- sender [whoami]
-  (-> whoami
-      (select-keys  [:id :etunimi :sukunimi :rooli])
-      (set/rename-keys {:rooli :rooli-id})))
+(defn- add-vastaanottajat [db viestiketju-id vastaanottajat]
+  (doseq [vastaanottaja-id vastaanottajat]
+    (jdbc/insert! db :vastaanottaja
+                  (map/bindings->map viestiketju-id vastaanottaja-id)
+                  db/default-opts)))
 
-(defn- viesti [whoami body]
-  {:senttime (Instant/now)
-   :from (sender whoami)
-   :body body})
+(defn- insert-ketju! [db ketju]
+  (jdbc/insert! db :viestiketju
+                (select-keys ketju [:vastaanottajaryhma-id :energiatodistus-id :subject])
+                db/default-opts))
+
+(defn- insert-viesti! [db viestiketju-id body]
+  (jdbc/insert! db :viesti
+                (map/bindings->map viestiketju-id body)
+                db/default-opts))
+
+(defn- assert-vastaanottajaryhma! [whoami ketju]
+  (when (and (rooli-service/laatija? whoami)
+             (not= 0 (:vastaanottajaryhma-id ketju)))
+    (exception/throw-forbidden!
+      (str "Laatija " (:id whoami)
+           " is not allowed to use vastaanottajaryhma: "
+           (:vastaanottajaryhma-id ketju)))))
 
 (defn add-ketju! [db whoami ketju]
-  (-> ketjut
-      (swap! #(conj %
-        (-> ketju
-            (assoc :id (count %))
-            (assoc :viestit [(viesti whoami (:body ketju))])
-            (dissoc :body))))
-      count dec))
+  (assert-vastaanottajaryhma! whoami ketju)
+  (db/with-db-exception-translation
+    #(jdbc/with-db-transaction
+       [tx db]
+       (let [[{:keys [id]}] (insert-ketju! tx ketju)]
+         (insert-viesti! tx id (:body ketju))
+         (when (rooli-service/paakayttaja? whoami)
+           (add-vastaanottajat tx id (:vastaanottajat ketju)))
+         id))))
 
-(defn find-ketju [db id] (get @ketjut id))
+(defn- find-viestit [db viestiketju-id]
+  (map #(flat/flat->tree #"\$" %)
+       (viesti-db/select-viestit db {:id viestiketju-id})))
 
-(defn find-ketjut [db] @ketjut)
+(defn- assoc-join-viestit [db ketju]
+  (assoc ketju :viestit  (find-viestit db (:id ketju))))
 
-(defn count-ketjut [db] {:count (count @ketjut)})
+(defn- visible-for? [whoami ketju]
+  (or (rooli-service/paakayttaja? whoami)
+      (contains? (-> ketju :vastaanottajat set) (:id whoami))
+      (-> ketju :viestit first :from :id (= (:id whoami)))
+      (and (rooli-service/laatija? whoami) (-> ketju :vastaanottajaryhma-id (= 1)))))
+
+(defn- assert-visibility [whoami ketju]
+  (if (visible-for? whoami ketju) ketju
+    (exception/throw-forbidden!
+      (str "Kayttaja " (:id whoami)
+           " is not allowed to see viestiketju " (:id ketju)))))
+
+(defn find-ketju [db whoami id]
+  (->> (viesti-db/select-viestiketju db {:id id})
+       (map (partial assoc-join-viestit db))
+       (map #(assert-visibility whoami %))
+       first))
+
+(defn find-ketjut [db whoami q]
+  (let [query (merge {:limit 100 :offset 0} q)]
+    (pmap (partial assoc-join-viestit db)
+          (cond (rooli-service/paakayttaja? whoami)
+                (viesti-db/select-all-viestiketjut db query)
+                (rooli-service/laatija? whoami)
+                (viesti-db/select-viestiketjut-for-laatija
+                  db (assoc query :laatija-id (:id whoami)))
+                :else []))))
+
+(defn count-ketjut [db whoami]
+  (-> (cond (rooli-service/paakayttaja? whoami)
+            (viesti-db/select-count-all-viestiketjut db)
+            (rooli-service/laatija? whoami)
+            (viesti-db/select-count-viestiketjut-for-laatija
+              db {:laatija-id (:id whoami)})
+            :else [{:count 0}])
+      first))
 
 (defn add-viesti! [db whoami id body]
-  (when-not (nil? (find-ketju db id))
-    (swap! ketjut #(update-in % [id :viestit] conj (viesti whoami body)))))
+  (when (find-ketju db whoami id)
+    (insert-viesti! db id body)))
 
-(defn find-ryhmat [db] [{:id 0 :label-fi "Valvojat" :label-sv "Valvojat" :valid true}
-                        {:id 1 :label-fi "Laatijat" :label-sv "Laatijat" :valid true}])
+(defn find-vastaanottajaryhmat [db]
+  (luokittelu-service/find-vastaanottajaryhmat db))

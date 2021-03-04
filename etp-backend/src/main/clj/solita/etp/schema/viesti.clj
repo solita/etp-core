@@ -18,7 +18,7 @@
 
 (def Viesti
   {:from     Sender
-   :senttime common-schema/Instant
+   :sent-time common-schema/Instant
    :body     schema/Str})
 
 (def Ketju
