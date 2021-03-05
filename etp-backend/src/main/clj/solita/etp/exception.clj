@@ -18,6 +18,12 @@
     {:status  409
      :body    error}))
 
+(defn not-signed-exception-handler [exception _request]
+  (let [error (ex-data exception)]
+    (log/info error)
+    {:status  400
+     :body    error}))
+
 (defn throw-forbidden!
   ([] (throw (ex-info "Forbidden" {:type :forbidden})))
   ([reason] (throw (ex-info "Forbidden" {:type :forbidden :reason reason}))))
@@ -49,4 +55,5 @@
     (assoc exception/default-handlers
       ::exception/default default-handler
       :unique-violation unique-exception-handler
+      :not-signed not-signed-exception-handler
       :forbidden forbidden-handler)))
