@@ -18,7 +18,9 @@
 (def coerce-liite (coerce/coercer liite-schema/Liite json/json-coercions))
 
 (defn- insert-liite! [liite db]
-  (db/with-db-exception-translation jdbc/insert! db :liite liite db/default-opts))
+  (-> (db/with-db-exception-translation jdbc/insert! db :liite liite db/default-opts)
+      first
+      :id))
 
 (defn- file-key [liite-id]
   (str "liitteet/" liite-id))
@@ -43,27 +45,25 @@
                 (rooli-service/paakayttaja? whoami))
     (exception/throw-forbidden!)))
 
-(defn add-liite-from-file! [db aws-s3-client whoami energiatodistus-id liite]
+(defn add-liite-from-file! [db aws-s3-client energiatodistus-id liite]
   (jdbc/with-db-transaction [db db]
-    (-> liite
-        (dissoc :tempfile :size)
-        (assoc :energiatodistus-id energiatodistus-id)
-        (insert-liite! db)
-        first
-        :id
-        file-key
-        (insert-file! aws-s3-client (:tempfile liite)))))
+    (let [id (-> liite
+                 (dissoc :tempfile :size)
+                 (assoc :energiatodistus-id energiatodistus-id)
+                 (insert-liite! db))]
+      (-> id file-key (insert-file! aws-s3-client (:tempfile liite)))
+      id)))
 
-(defn add-liitteet-from-files [db aws-s3-client whoami energiatodistus-id files]
+(defn add-liitteet-from-files! [db aws-s3-client whoami energiatodistus-id files]
   (jdbc/with-db-transaction [db db]
     (assert-liite-insert-permission! db whoami energiatodistus-id)
-    (doseq [file files]
-      (add-liite-from-file! db
-                            aws-s3-client
-                            whoami
-                            energiatodistus-id
-                            (set/rename-keys file {:content-type :contenttype
-                                                   :filename :nimi})))))
+    (mapv #(add-liite-from-file!
+            db
+            aws-s3-client
+            energiatodistus-id
+            (set/rename-keys % {:content-type :contenttype
+                                :filename :nimi}))
+          files)))
 
 (defn add-liite-from-link! [db whoami energiatodistus-id liite]
   (jdbc/with-db-transaction [db db]
@@ -88,7 +88,7 @@
        (file-service/find-file aws-s3-client (file-key liite-id))
        liite))))
 
-(defn delete-liite [db whoami liite-id]
+(defn delete-liite! [db whoami liite-id]
   (jdbc/with-db-transaction [db db]
     (let [energiatodistus-id (some->> {:id liite-id}
                                       (liite-db/select-liite db)
