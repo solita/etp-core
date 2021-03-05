@@ -1,55 +1,83 @@
 (ns solita.etp.service.complete-energiatodistus-test
   (:require [clojure.test :as t]
+            [solita.common.formats :as formats]
             [solita.etp.test-system :as ts]
-            [solita.etp.service.energiatodistus :as eservice]
+            [solita.etp.test :as etp-test]
+            [solita.etp.test-data.laatija :as laatija-test-data]
+            [solita.etp.test-data.energiatodistus :as energiatodistus-test-data]
             [solita.etp.service.complete-energiatodistus :as service]
-            [solita.etp.service.energiatodistus-test :as energiatodistus-test]
-            [solita.common.map :as xmap]))
+            [solita.etp.service.energiatodistus :as energiatodistus-service]))
 
 (t/use-fixtures :each ts/fixture)
 
-(def generate-energiatodistus
-  #(->
-    (energiatodistus-test/generate-energiatodistus-2018-complete)
-    (assoc-in [:tulokset
-               :kaytettavat-energiamuodot
-               :kaukolampo]
-              1500)
-    (assoc-in [:lahtotiedot :ilmanvaihto :paaiv :tulo] 15)
-    (assoc-in [:lahtotiedot :ilmanvaihto :paaiv :poisto] 35)
-    (xmap/dissoc-in [:lahtotiedot :ilmanvaihto :erillispoistot :tulo])
-    (assoc-in [:lahtotiedot :ilmanvaihto :erillispoistot :poisto] 12.34)))
+(defn test-data-set []
+  (let [laatijat (laatija-test-data/generate-and-insert! 1)
+        laatija-id (-> laatijat keys sort first)
+        energiatodistukset-2013 (energiatodistus-test-data/generate-and-insert!
+                                 50
+                                 2013
+                                 true
+                                 laatija-id)
+        energiatodistukset-2018 (energiatodistus-test-data/generate-and-insert!
+                                 50
+                                 2018
+                                 false
+                                 laatija-id)]
+    {:laatijat laatijat
+     :energiatodistukset (merge energiatodistukset-2013
+                                energiatodistukset-2018)}))
 
 (defn assert-complete-energiatoditus [complete-energiatodistus]
-  (and (= 750.0M (-> complete-energiatodistus
-                    :tulokset
-                    :kaytettavat-energiamuodot
-                    :kaukolampo-kertoimella))
-       (= "15,000 / 35,000" (-> complete-energiatodistus
-                                :lahtotiedot
-                                :ilmanvaihto
-                                :paaiv
-                                :tulo-poisto))
-       (= " / 12,340" (-> complete-energiatodistus
-                                :lahtotiedot
-                                :ilmanvaihto
-                                :erillispoistot
-                                :tulo-poisto))))
+  (let [{:keys [kaukolampo]
+         :as kaytettavat-energiamuodot} (-> complete-energiatodistus
+                                            :tulokset
+                                            :kaytettavat-energiamuodot)
+        ilmanvaihto (-> complete-energiatodistus :lahtotiedot :ilmanvaihto)
+        paaiv (:paaiv ilmanvaihto)
+        erillispoistot (:erillispoistot ilmanvaihto)]
+    (and
+     (or (nil? kaukolampo)
+      (= (:kaukolampo-kertoimella kaytettavat-energiamuodot)
+         (* (if (= (:versio complete-energiatodistus) 2013) 0.7M 0.5M)
+            kaukolampo)))
+     (= (:tulo-poisto paaiv)
+        (str (formats/format-number (:tulo paaiv) 3 false)
+             " / "
+             (formats/format-number (:poisto paaiv) 3 false)))
+     (= (:tulo-poisto erillispoistot)
+        (str (formats/format-number (:tulo erillispoistot) 3 false)
+             " / "
+             (formats/format-number (:poisto erillispoistot) 3 false))) )))
 
 (t/deftest complete-energiatodistus-test
-  (let [luokittelut (service/required-luokittelut ts/*db*)
-        complete-energiatodistus (service/complete-energiatodistus
-                                  (generate-energiatodistus)
-                                  luokittelut)]
-    (t/is (assert-complete-energiatoditus complete-energiatodistus))))
-
+  (let [{:keys [energiatodistukset]} (test-data-set)
+        luokittelut (service/required-luokittelut ts/*db*)]
+    (doseq [id (keys energiatodistukset)]
+      (t/is (assert-complete-energiatoditus
+             (service/complete-energiatodistus
+              (energiatodistus-service/find-energiatodistus ts/*db* id)
+              luokittelut))))))
 
 (t/deftest find-complete-energiatodistus-test
-  (let [laatija-id (energiatodistus-test/add-laatija!)
-        id (energiatodistus-test/add-energiatodistus! (generate-energiatodistus)
-                                                      laatija-id)
-        whoami {:id laatija-id :rooli 0}
-        complete-energiatodistus (service/find-complete-energiatodistus ts/*db*
-                                                                        whoami
-                                                                        id)]
-    (t/is (assert-complete-energiatoditus complete-energiatodistus))))
+  (let [{:keys [laatijat energiatodistukset]} (test-data-set)
+        id (-> energiatodistukset keys sort first)]
+    (t/is (assert-complete-energiatoditus
+           (service/find-complete-energiatodistus ts/*db* id)))
+    (t/is (assert-complete-energiatoditus
+           (service/find-complete-energiatodistus
+            ts/*db*
+            {:id (-> laatijat keys sort first) :rooli 0}
+            id)))))
+
+(t/deftest find-complete-energiatodistus-no-permissions-test
+  (let [{:keys [energiatodistukset]} (test-data-set)
+        id (-> energiatodistukset keys sort first)]
+    (t/is (= (etp-test/catch-ex-data
+              #(service/find-complete-energiatodistus ts/*db* {:id -100 :rooli 0} id))
+             {:type :forbidden}))
+    (t/is (= (etp-test/catch-ex-data
+              #(service/find-complete-energiatodistus ts/*db* {:rooli 2} id))
+             {:type :forbidden}))
+    (t/is (= (etp-test/catch-ex-data
+              #(service/find-complete-energiatodistus ts/*db* {:rooli 3} id))
+             {:type :forbidden}))))

@@ -27,7 +27,7 @@
       first
       (dissoc :kayttotarkoitusluokka-id)))
 
-(defn generate [n versio ready-for-signing?]
+(defn generate-adds [n versio ready-for-signing?]
   (repeatedly n #(generators/complete
                   {:perustiedot (merge
                                  {:kieli (rand-int 2)
@@ -45,15 +45,18 @@
                                                            ready-for-signing?)
                   generators)))
 
-(defn insert! [whoami energiatodistukset]
-  (mapv #(energiatodistus-service/add-energiatodistus!
-          (ts/db-user (:id whoami))
-          whoami
-          (if (-> % :perustiedot (contains? :uudisrakennus))
-            2013
-            2018)
-          %)
-         energiatodistukset))
+(def generate-updates generate-adds)
 
-(defn generate-and-insert! [whoami n versio]
-  (insert! (generate n versio) whoami))
+(defn insert! [energiatodistus-adds laatija-id]
+  (mapv #(:id (energiatodistus-service/add-energiatodistus!
+               (ts/db-user laatija-id)
+               {:id laatija-id}
+               (if (-> % :perustiedot (contains? :uudisrakennus))
+                 2013
+                 2018)
+               %))
+        energiatodistus-adds))
+
+(defn generate-and-insert! [n versio ready-for-signing? laatija-id]
+  (let [energiatodistus-adds (generate-adds n versio ready-for-signing?)]
+    (zipmap (insert! energiatodistus-adds laatija-id) energiatodistus-adds)))
