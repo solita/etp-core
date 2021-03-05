@@ -55,7 +55,8 @@
   (or (rooli-service/paakayttaja? whoami)
       (contains? (-> ketju :vastaanottajat set) (:id whoami))
       (-> ketju :viestit first :from :id (= (:id whoami)))
-      (and (rooli-service/laatija? whoami) (-> ketju :vastaanottajaryhma-id (= 1)))))
+      (and (rooli-service/laatija? whoami) (-> ketju :vastaanottajaryhma-id (= 1)))
+      (and (rooli-service/laskuttaja? whoami) (-> ketju :vastaanottajaryhma-id (= 2)))))
 
 (defn- assert-visibility [whoami ketju]
   (if (visible-for? whoami ketju) ketju
@@ -77,6 +78,9 @@
                 (rooli-service/laatija? whoami)
                 (viesti-db/select-viestiketjut-for-laatija
                   db (assoc query :laatija-id (:id whoami)))
+                (rooli-service/laskuttaja? whoami)
+                (viesti-db/select-viestiketjut-for-laskuttaja
+                  db (assoc query :laskuttaja-id (:id whoami)))
                 :else []))))
 
 (defn count-ketjut [db whoami]

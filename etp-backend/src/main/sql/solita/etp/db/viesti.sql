@@ -25,6 +25,22 @@ where from_id = :laatija-id or vastaanottajaryhma_id = 1 or
 order by viestiketju.id desc
 limit :limit offset :offset;
 
+-- name: select-viestiketjut-for-laskuttaja
+select
+  viestiketju.id, viestiketju.subject,
+  viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id,
+  (select array_agg(vastaanottaja_id) from vastaanottaja
+   where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
+from viestiketju
+where from_id = :laskuttaja-id or vastaanottajaryhma_id = 2 or
+      exists (
+        select 1 from vastaanottaja
+        where vastaanottaja.vastaanottaja_id = :laskuttaja-id and
+              vastaanottaja.viestiketju_id = viestiketju.id
+      )
+order by viestiketju.id desc
+limit :limit offset :offset;
+
 -- name: select-count-all-viestiketjut
 select count(*) count from viestiketju;
 
