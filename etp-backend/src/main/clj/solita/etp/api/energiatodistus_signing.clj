@@ -60,9 +60,11 @@
             :responses {200 {:body nil}
                         404 {:body schema/Str}}
             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db whoami aws-s3-client]}]
-                       (api-response/signature-response
-                         (energiatodistus-service/end-energiatodistus-signing! db aws-s3-client whoami id)
-                         id))}}]
+                       (api-response/with-exceptions
+                         #(api-response/signature-response
+                            (energiatodistus-service/end-energiatodistus-signing! db aws-s3-client whoami id)
+                            id)
+                         [{:type :not-signed :response 400}]))}}]
 
    ["/cancel"
     {:post {:summary "Keskeytä allekirjoitus ja siirrä energiatodistus takaisin luonnokseksi"

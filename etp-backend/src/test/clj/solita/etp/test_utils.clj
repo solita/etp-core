@@ -30,7 +30,7 @@
        (unique-henkilotunnus-range n)))
 
 (defn sign-energiatodistus-pdf [db aws-s3-client whoami id]
-  (let [language (energiatodistus-service/find-energiatodistus db id)]
+  (let [language (-> (energiatodistus-service/find-energiatodistus db id) :perustiedot :kieli)]
     (doseq [language-code (energiatodistus-service/language-id->codes language)]
       (energiatodistus-pdf-service/find-energiatodistus-digest db aws-s3-client id language-code)
       (energiatodistus-pdf-service/sign-energiatodistus-pdf db aws-s3-client
