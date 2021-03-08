@@ -1,374 +1,317 @@
 (ns solita.etp.service.energiatodistus-search-test
   (:require [clojure.test :as t]
             [schema-tools.core :as st]
+            [solita.common.map :as xmap]
             [solita.etp.test-system :as ts]
-            [solita.etp.service.energiatodistus-test :as energiatodistus-test]
-            [solita.etp.service.energiatodistus-search :as energiatodistus-search-service]
+            [solita.etp.test :as etp-test]
+            [solita.etp.test-data.kayttaja :as kayttaja-test-data]
+            [solita.etp.test-data.laatija :as laatija-test-data]
+            [solita.etp.test-data.energiatodistus :as energiatodistus-test-data]
+            [solita.etp.service.energiatodistus-search :as service]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
-            [solita.etp.schema.public-energiatodistus :as public-energiatodistus-schema])
+            [solita.etp.service.e-luokka :as e-luokka-service])
   (:import (clojure.lang ExceptionInfo)
            (java.time LocalDate Instant ZoneId)))
 
 (t/use-fixtures :each ts/fixture)
 
-(defn add-laatija! []
-  {:id (energiatodistus-test/add-laatija!)
-   :rooli 0})
+(defn test-data-set []
+  (let [laatijat (laatija-test-data/generate-and-insert! 3)
+        laatija-ids (-> laatijat keys sort)
+        energiatodistus-adds (->> (energiatodistus-test-data/generate-adds 4
+                                                                           2018
+                                                                           true)
+                                  (map #(assoc-in %
+                                                  [:perustiedot :postinumero]
+                                                  "33100"))
+                                  (map #(assoc-in %
+                                                  [:perustiedot :yritys :nimi]
+                                                  nil)))
+        energiatodistus-ids (->> (interleave (cycle laatija-ids)
+                                             energiatodistus-adds)
+                                 (partition 2)
+                                 (mapcat #(energiatodistus-test-data/insert!
+                                           [(second %)]
+                                           (first %)))
+                                 sort)]
+    (doseq [[laatija-id energiatodistus-id] (->> (interleave
+                                                  (cycle laatija-ids)
+                                                  (take 2 energiatodistus-ids))
+                                                 (partition 2))]
+      (energiatodistus-service/start-energiatodistus-signing!
+       ts/*db*
+       {:id laatija-id}
+       energiatodistus-id)
+      (energiatodistus-service/end-energiatodistus-signing!
+       ts/*db*
+       {:id laatija-id}
+       energiatodistus-id))
+    (energiatodistus-service/delete-energiatodistus-luonnos!
+     ts/*db*
+     {:id (last laatija-ids)}
+     (last energiatodistus-ids))
+    {:laatijat laatijat
+     :energiatodistukset (zipmap energiatodistus-ids energiatodistus-adds)}))
 
-(def paakayttaja {:rooli 2})
+(defn search [whoami where keyword sort order]
+  (service/public-search ts/*db*
+                         whoami
+                         (cond-> {}
+                           where (assoc :where where)
+                           keyword (assoc :keyword keyword)
+                           sort (assoc :sort sort)
+                           order (assoc :order order))))
 
-(defn search [whoami where keyword]
-  (map #(dissoc % :laatija-fullname)
-       (energiatodistus-search-service/public-search
-        ts/*db*
-        whoami
-        (cond-> {}
-          where (assoc :where where)
-          keyword (assoc :keyword keyword)))))
-
-(defn search-count [whoami where keyword]
-  (:count (energiatodistus-search-service/search-count
-            ts/*db* whoami
-            (cond-> {}
-                    where (assoc :where where)
-                    keyword (assoc :keyword keyword)))))
-
-(defn public-energiatodistus-with-db-fields
-  [energiatodistus id laatija-id versio]
-  (-> energiatodistus
-      (energiatodistus-test/energiatodistus-with-db-fields id
-                                                           laatija-id
-                                                           versio)
-      (assoc :laatija-fullname "")
-      (st/select-schema public-energiatodistus-schema/Energiatodistus)
-      (dissoc :laatija-fullname)))
+(defn search-and-assert
+  ([test-data-set id where]
+   (search-and-assert test-data-set id where nil nil nil))
+  ([test-data-set id where keyword]
+   (search-and-assert test-data-set id where keyword nil nil))
+  ([test-data-set id where keyword sort order]
+   (let [{:keys [laatijat energiatodistukset]} test-data-set
+         laatija-id (-> laatijat keys clojure.core/sort first)
+         add (-> energiatodistukset (get id) (assoc :id id))
+         whoami {:rooli 0 :id laatija-id}
+         found (search whoami where keyword sort order)]
+     (xmap/submap? (-> found first :perustiedot) (:perustiedot add)))))
 
 (t/deftest not-found-test
-  (let [whoami (add-laatija!)]
-    (-> (energiatodistus-test/generate-energiatodistus-2018)
-        (energiatodistus-test/add-energiatodistus! (:id whoami) 2018))
-    (t/is (empty? (search whoami [[["=" "energiatodistus.id" -1]]] nil)))))
+  (let [{:keys [laatijat]} (test-data-set)
+        laatija-id (-> laatijat keys sort first)]
+    (t/is (empty? (search {:rooli 0 :id laatija-id}
+                          [[["=" "energiatodistus.id" -1]]]
+                          nil
+                          nil
+                          nil)))))
 
-(t/deftest add-and-find-by-id-test
-  (let [whoami (add-laatija!)
-        energiatodistus (energiatodistus-test/generate-energiatodistus-2018)
-        id (energiatodistus-test/add-energiatodistus! energiatodistus
-                                                      (:id whoami)
-                                                      2018)
-        where [[["=" "energiatodistus.id" id]]]]
-    (t/is (= (public-energiatodistus-with-db-fields energiatodistus
-                                                    id
-                                                    (:id whoami)
-                                                    2018)
-             (first (search whoami where nil))))
-    (t/is (= 1 (search-count whoami where nil)))
-    (t/is (= 1 (search-count whoami nil nil)))))
+(t/deftest search-by-id-test
+  (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
+        id (-> energiatodistukset keys sort first)]
+    (t/is (not (search-and-assert test-data-set
+                                  id
+                                  [[["=" "energiatodistus.id" (inc id)]]])))
+    (t/is (search-and-assert test-data-set
+                             id
+                             [[["=" "energiatodistus.id" id]]]))))
 
-(t/deftest add-and-find-by-nimi-test
-  (let [whoami (add-laatija!)
-        energiatodistus (-> (energiatodistus-test/generate-energiatodistus-2018)
-                            (assoc-in [:perustiedot :nimi] "test"))
-        id (energiatodistus-test/add-energiatodistus! energiatodistus
-                                                      (:id whoami)
-                                                      2018)
-        where [[["=" "energiatodistus.perustiedot.nimi" "test"]]]]
-    (t/is (= (public-energiatodistus-with-db-fields energiatodistus
-                                                    id
-                                                    (:id whoami)
-                                                    2018)
-             (first (search whoami where nil))))
-    (t/is (= 1 (search-count whoami where nil)))
-    (t/is (= 1 (search-count whoami nil nil)))))
+(t/deftest search-by-nimi-test
+  (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
+        id (-> energiatodistukset keys sort first)
+        nimi (-> energiatodistukset (get id) :perustiedot :nimi)]
+    (t/is (not (search-and-assert
+                test-data-set
+                id
+                [[["=" "energiatodistus.perustiedot.nimi" (str "a" nimi)]]])))
+    (t/is (search-and-assert
+           test-data-set
+           id
+           [[["=" "energiatodistus.perustiedot.nimi" nimi]]]))))
 
-(t/deftest add-and-find-by-toimintaalue-test
-  (let [whoami (add-laatija!)
-        energiatodistus (-> (energiatodistus-test/generate-energiatodistus-2018)
-                            (assoc-in [:perustiedot :postinumero] "33100"))
-        id (energiatodistus-test/add-energiatodistus! energiatodistus
-                                                      (:id whoami)
-                                                      2018)
-        energiatodistus-with-db-fields (public-energiatodistus-with-db-fields
-                                        energiatodistus
-                                        id
-                                        (:id whoami)
-                                        2018)]
-    (t/is (empty? (search whoami
-                          [[["like" "toimintaalue.label-fi" "Kain"]]]
-                          nil)))
-    (t/is (empty? (search whoami nil "Kain")))
-    (t/is (= energiatodistus-with-db-fields
-             (first (search whoami
-                            [[["like" "toimintaalue.label-fi" "Pirkanma%"]]]
-                            nil))))
-    (t/is (= energiatodistus-with-db-fields
-             (first (search whoami
+(t/deftest search-by-id-and-nimi-test
+  (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
+        id (-> energiatodistukset keys sort first)
+        nimi (-> energiatodistukset (get id) :perustiedot :nimi)]
+    (t/is (search-and-assert
+           test-data-set
+           id
+           [[["=" "energiatodistus.id" id]
+             ["=" "energiatodistus.perustiedot.nimi" nimi]]]))))
+
+(t/deftest search-by-havainnointikaynti-test
+  (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
+        id (-> energiatodistukset keys sort first)
+        havainnointikaynti (-> energiatodistukset
+                               (get id)
+                               :perustiedot
+                               :havainnointikaynti)]
+    (t/is (not (search-and-assert
+                test-data-set
+                id
+                [[["="
+                   "energiatodistus.perustiedot.havainnointikaynti"
+                   (.plusDays havainnointikaynti 1)]]])))
+    (t/is (search-and-assert
+           test-data-set
+           id
+           [[["="
+              "energiatodistus.perustiedot.havainnointikaynti"
+              havainnointikaynti]]]))))
+
+(t/deftest search-by-toimintaalue-test
+  (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
+        id (-> energiatodistukset keys sort first)]
+    (t/is (not (search-and-assert
+                test-data-set
+                id
+                [[["like" "toimintaalue.label-fi" "Kain%"]]])))
+    (t/is (not (search-and-assert test-data-set id nil "Kain")))
+    (t/is (search-and-assert
+           test-data-set
+           id
+           [[["like" "toimintaalue.label-fi" "Pirkanma%"]]]))
+    (t/is (search-and-assert test-data-set id nil "Pirkan"))))
+
+(t/deftest search-by-postinumero-test
+  (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
+        id (-> energiatodistukset keys sort first)]
+    (t/is (not (search-and-assert test-data-set id nil "3312")))
+    (t/is (search-and-assert test-data-set id nil "33100"))))
+
+(t/deftest search-by-katuosoite-test
+  (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
+        id (-> energiatodistukset keys sort first)
+        {:keys [katuosoite-fi
+                katuosoite-sv]} (:perustiedot (get energiatodistukset id))]
+    (t/is (not (search-and-assert test-data-set id nil (str "a" katuosoite-fi))))
+    (t/is (not (search-and-assert test-data-set id nil (str "a" katuosoite-sv))))
+    (t/is (search-and-assert test-data-set id nil (str katuosoite-fi)))
+    (t/is (search-and-assert test-data-set id nil (str katuosoite-sv)))))
+
+(t/deftest search-by-nil-test
+  (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
+        id (-> energiatodistukset keys sort first)]
+    (t/is (not (search-and-assert
+                test-data-set
+                id
+                [[["=" "energiatodistus.perustiedot.yritys.nimi" "a"]]])))
+    (t/is (search-and-assert
+           test-data-set
+           id
+           [[["nil?" "energiatodistus.perustiedot.yritys.nimi"]]]))))
+
+(t/deftest search-by-allekirjoitusaika-test
+  (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
+        id (-> energiatodistukset keys sort first)]
+    (t/is (not (search-and-assert
+                test-data-set
+                id
+                [[[">" "energiatodistus.allekirjoitusaika" (Instant/now)]]])))
+    (t/is (search-and-assert
+           test-data-set
+           id
+           [[["<" "energiatodistus.allekirjoitusaika" (Instant/now)]]]))
+    (t/is (= id (-> (search kayttaja-test-data/paakayttaja
+                            [[["<" "energiatodistus.allekirjoitusaika" (Instant/now)]]]
                             nil
-                            "Pirkanm"))))
-    (t/is (= energiatodistus-with-db-fields
-             (first (search whoami
-                            [[["=" "energiatodistus.id" id]]]
-                            "Pirkanm"))))))
+                            "energiatodistus.allekirjoitusaika"
+                            "desc")
+                    second
+                    :id)))))
 
-(t/deftest add-and-find-by-postinumero-test
-  (let [whoami (add-laatija!)
-        energiatodistus (-> (energiatodistus-test/generate-energiatodistus-2018)
-                            (assoc-in [:perustiedot :postinumero] "00100"))
-        id (energiatodistus-test/add-energiatodistus! energiatodistus
-                                                      (:id whoami)
-                                                      2018)
-        energiatodistus-with-db-fields (public-energiatodistus-with-db-fields
-                                         energiatodistus
-                                         id
-                                         (:id whoami)
-                                         2018)]
-    (t/is (= energiatodistus-with-db-fields
-             (first (search whoami nil "000100"))))
+(t/deftest search-by-sahko-painotettu-neliovuosikulutus-test
+  (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
+        id (-> energiatodistukset keys sort first)
+        energiatodistus (get energiatodistukset id)
+        nettoala (-> energiatodistus :lahtotiedot :lammitetty-nettoala)
+        sahko (-> energiatodistus :tulokset :kaytettavat-energiamuodot :sahko)
+        sahko-kertoimella (* sahko (get-in e-luokka-service/energiamuotokerroin
+                                           [2018 :sahko]))]
+    (t/is (search-and-assert
+           test-data-set
+           id
+           [[["="
+              "energiatodistus.tulokset.kaytettavat-energiamuodot.sahko"
+              sahko]
+             ["="
+              "energiatodistus.tulokset.kaytettavat-energiamuodot.sahko-painotettu"
+              sahko-kertoimella]
+             ["="
+              "energiatodistus.tulokset.kaytettavat-energiamuodot.sahko-painotettu-neliovuosikulutus"
+              (/ sahko-kertoimella nettoala)]]]))))
 
-    (t/is (= energiatodistus-with-db-fields
-             (first (search whoami nil "00100"))))
+(t/deftest search-by-uusiutuvat-omavaraisenergiat-aurinkosahko-test
+  (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
+        id (-> energiatodistukset keys sort first)
+        energiatodistus (get energiatodistukset id)
+        nettoala (-> energiatodistus :lahtotiedot :lammitetty-nettoala)
+        aurinkosahko (-> energiatodistus
+                         :tulokset
+                         :uusiutuvat-omavaraisenergiat
+                         :aurinkosahko)]
+    (t/is (search-and-assert
+           test-data-set
+           id
+           [[["="
+              "energiatodistus.tulokset.uusiutuvat-omavaraisenergiat.aurinkosahko"
+              aurinkosahko]
+             ["="
+              "energiatodistus.tulokset.uusiutuvat-omavaraisenergiat.aurinkosahko-neliovuosikulutus"
+              (/ aurinkosahko nettoala)]]]))))
 
-    (t/is (= energiatodistus-with-db-fields
-             (first (search whoami nil "0100"))))
+(t/deftest search-by-rakennusvaippa-ikkunat-osuus-lampohaviosta-test
+  (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
+        id (-> energiatodistukset keys sort first)
+        {:keys [lahtotiedot]} (get energiatodistukset id)
+        {:keys [rakennusvaippa]} lahtotiedot
+        {:keys [ulkoseinat ylapohja alapohja ikkunat ulkoovet kylmasillat-UA]} rakennusvaippa
+        ua-list (conj (->> [ikkunat ulkoseinat ylapohja alapohja ulkoovet]
+                           (mapv #(* (:ala %) (:U %))))
+                      kylmasillat-UA)
+        ikkunat-ua (first ua-list)
+        ua-summa (reduce + ua-list)]
+    (t/is (search-and-assert
+           test-data-set
+           id
+           [[["=" "energiatodistus.lahtotiedot.rakennusvaippa.ikkunat.UA" ikkunat-ua]
+             ["="
+              "energiatodistus.lahtotiedot.rakennusvaippa.ikkunat.osuus-lampohaviosta"
+              (with-precision 20 (/ ikkunat-ua ua-summa))]]]))))
 
-    (t/is (= energiatodistus-with-db-fields
-             (first (search whoami nil "100"))))))
+(t/deftest laatija-cant-find-other-laatija-energiatodistukset-test
+  (let [{:keys [laatijat energiatodistukset] :as test-data-set} (test-data-set)
+        laatija-ids (-> laatijat keys sort)]
+    (t/is (= 1 (count (search {:rooli 0 :id (first laatija-ids)}
+                              nil
+                              nil
+                              nil
+                              nil))))
+    (t/is (= 1 (count (search {:rooli 0 :id (second laatija-ids)}
+                              nil
+                              nil
+                              nil
+                              nil))))))
 
-(t/deftest add-and-find-by-katuosoite-test
-  (let [whoami (add-laatija!)
-        energiatodistus (-> (energiatodistus-test/generate-energiatodistus-2018)
-                            (assoc-in [:perustiedot :katuosoite-fi] "37298365test")
-                            (assoc-in [:perustiedot :katuosoite-sv] "fd323443test"))
-        id (energiatodistus-test/add-energiatodistus! energiatodistus
-                                                      (:id whoami)
-                                                      2018)
-        energiatodistus-with-db-fields (public-energiatodistus-with-db-fields
-                                         energiatodistus
-                                         id
-                                         (:id whoami)
-                                         2018)]
-    (t/is (= energiatodistus-with-db-fields
-             (first (search whoami nil "37298365"))))
-    (t/is (= energiatodistus-with-db-fields
-             (first (search whoami nil "fd323443"))))))
-
-(t/deftest add-and-find-by-nimi-nil-test
-  (let [whoami (add-laatija!)
-        energiatodistus (-> (energiatodistus-test/generate-energiatodistus-2018)
-                            (assoc-in [:perustiedot :nimi] nil))
-        id (energiatodistus-test/add-energiatodistus! energiatodistus
-                                                      (:id whoami)
-                                                      2018)]
-    (t/is (= (public-energiatodistus-with-db-fields energiatodistus
-                                                    id
-                                                    (:id whoami)
-                                                    2018)
-             (first (search whoami
-                            [[["nil?" "energiatodistus.perustiedot.nimi"]]]
-                            nil))))))
-
-(t/deftest add-and-find-by-havainnointikaynti-test
-  (let [whoami (add-laatija!)
-        ^LocalDate date (LocalDate/now)
-        energiatodistus (-> (energiatodistus-test/generate-energiatodistus-2018)
-                            (assoc-in [:perustiedot :havainnointikaynti] date))
-        id (energiatodistus-test/add-energiatodistus! energiatodistus
-                                                      (:id whoami)
-                                                      2018)]
-    (t/is (= (public-energiatodistus-with-db-fields energiatodistus
-                                                    id
-                                                    (:id whoami)
-                                                    2018)
-             (first (search whoami
-                            [[["="
-                               "energiatodistus.perustiedot.havainnointikaynti"
-                               (.toString date)]]]
-                            nil))))))
-
-(defn voimassa-paattymisaika [allekirjoitus-date]
-  (-> allekirjoitus-date
-      (.plusYears 10)
-      (.plusDays 1)
-      (.atStartOfDay (ZoneId/of "Europe/Helsinki"))
-      (.toInstant)))
-
-(t/deftest add-and-find-by-allekirjoisaika-test
-  (let [whoami (add-laatija!)
-        energiatodistus (energiatodistus-test/generate-energiatodistus-2018-complete)
-        id (energiatodistus-test/add-energiatodistus-and-sign!
-             energiatodistus (:id whoami))
-        et (energiatodistus-service/find-energiatodistus ts/*db* id)]
-
-    (t/is (= (assoc (public-energiatodistus-with-db-fields energiatodistus
-                                                    id
-                                                    (:id whoami)
-                                                    2018)
-               :tila-id 2,
-               :allekirjoitusaika (:allekirjoitusaika et)
-               :voimassaolo-paattymisaika
-               (voimassa-paattymisaika (LocalDate/now)))
-             (first (search whoami
-                            [[["<"
-                               "energiatodistus.allekirjoitusaika"
-                               (str (Instant/now))]]]
-                            nil))))))
-
-(t/deftest add-and-sort-by-allekirjoisaika-test
-  (let [whoami (add-laatija!)
-        id1 (energiatodistus-test/add-energiatodistus-and-sign!
-              (energiatodistus-test/generate-energiatodistus-2018-complete)
-              (:id whoami))
-        id2 (energiatodistus-test/add-energiatodistus-and-sign!
-              (energiatodistus-test/generate-energiatodistus-2018-complete)
-              (:id whoami))]
-
-    (t/is (= [id1 id2] (mapv :id (energiatodistus-search-service/public-search
-                         ts/*db* whoami
-                         {:sort "energiatodistus.allekirjoitusaika"}))))
-
-    (t/is (= [id2 id1] (mapv :id (energiatodistus-search-service/public-search
-                                   ts/*db* whoami
-                                   {:sort "energiatodistus.allekirjoitusaika"
-                                    :order "desc" }))))
-    (t/is (= 2 (search-count whoami nil nil)))))
-
-(t/deftest add-and-find-by-nimi-and-id-test
-  (let [whoami (add-laatija!)
-        energiatodistus (-> (energiatodistus-test/generate-energiatodistus-2018)
-                            (assoc-in [:perustiedot :nimi] "test"))
-        id (energiatodistus-test/add-energiatodistus! energiatodistus
-                                                      (:id whoami)
-                                                      2018)]
-    (t/is (= (public-energiatodistus-with-db-fields energiatodistus
-                                                    id
-                                                    (:id whoami)
-                                                    2018)
-             (first (search whoami
-                            [[["=" "energiatodistus.perustiedot.nimi" "test"]
-                              ["=" "energiatodistus.id" id]]]
-                            nil))))))
-
-(t/deftest laatija-cant-find-other-laatijas-energiatodistukset-test
-  (let [adder (add-laatija!)
-        searcher (update adder :id inc)
-        energiatodistus (energiatodistus-test/generate-energiatodistus-2018)
-        id (energiatodistus-test/add-energiatodistus! energiatodistus
-                                                      (:id adder)
-                                                      2018)]
-    (t/is (empty? (search searcher [[["=" "energiatodistus.id" id]]] nil)))))
-
-(t/deftest public-and-paakayttaja-cant-find-luonnokset-test
-  (let [laatija (add-laatija!)
-        energiatodistus (energiatodistus-test/generate-energiatodistus-2018)
-        id (energiatodistus-test/add-energiatodistus! energiatodistus
-                                                      (:id laatija)
-                                                      2018)]
-    (t/is (empty? (search nil [[["=" "energiatodistus.id" id]]] nil)))
-    (t/is (empty? (search paakayttaja [[["=" "energiatodistus.id" id]]] nil)))))
+(t/deftest public-paakayttaja-and-laskuttaja-cant-find-luonnokset-test
+  (let [{:keys [laatijat energiatodistukset] :as test-data-set} (test-data-set)
+        laatija-ids (-> laatijat keys sort)]
+    (t/is (= 2 (count (search kayttaja-test-data/paakayttaja nil nil nil nil))))
+    (t/is (= 2 (count (search kayttaja-test-data/laskuttaja nil nil nil nil))))
+    (t/is (= 0 (count (search nil nil nil nil nil))))))
 
 (t/deftest deleted-are-not-found-test
-  (let [laatija (add-laatija!)
-        db (ts/db-user (:id laatija))
-        energiatodistus (energiatodistus-test/generate-energiatodistus-2018)
-        id (energiatodistus-test/add-energiatodistus! energiatodistus
-                                                      (:id laatija)
-                                                      2018)]
-    (energiatodistus-service/delete-energiatodistus-luonnos! db laatija id)
-    (t/is (empty? (search laatija [[["=" "energiatodistus.id" id]]] nil)))
-    (t/is (empty? (search paakayttaja [[["=" "energiatodistus.id" id]]] nil)))))
-
-(defn catch-ex-data [f]
-  (try (f) (catch ExceptionInfo e (ex-data e))))
+  (let [{:keys [laatijat energiatodistukset] :as test-data-set} (test-data-set)
+        laatija-ids (-> laatijat keys sort)]
+    (t/is (= 1 (count (search {:rooli 0 :id (first laatija-ids)}
+                              nil
+                              nil
+                              nil
+                              nil))))))
 
 (t/deftest invalid-search-expression
-  (t/is (= (:type (catch-ex-data #(search paakayttaja [[[1]]] nil)))
-           :schema.core/error))
-  (t/is (= (:type (catch-ex-data #(search paakayttaja [[[]]] nil)))
-           :schema.core/error))
-  (t/is (= (catch-ex-data #(search paakayttaja [[["="]]] nil))
-           {:type :invalid-arguments
-            :predicate "="
-            :message "Wrong number of arguments: () for predicate: ="}))
-  (t/is (= (catch-ex-data #(search paakayttaja [[["=" "id"]]] nil))
-           {:type :invalid-arguments
-            :predicate "="
-            :message "Wrong number of arguments: (\"id\") for predicate: ="}))
-  (t/is (= (catch-ex-data #(search paakayttaja [[["asdf" "id" 1]]] nil))
-           {:type :unknown-predicate :predicate "asdf"
-            :message "Unknown predicate: asdf"}))
-  (t/is (= (catch-ex-data #(search nil [[["="
-                                          "energiatodistus.perustiedot.tilaaja"
-                                          "test"]]] nil))
-           {:type :unknown-field
-            :field "energiatodistus.perustiedot.tilaaja"
-            :message "Unknown field: energiatodistus.perustiedot.tilaaja"}))
-  (t/is (= (catch-ex-data #(search paakayttaja [[["=" "asdf" "test"]]] nil))
-           {:type :unknown-field
-            :field "asdf"
-            :message "Unknown field: asdf"})))
-
-(t/deftest add-and-find-by-sahko-painotettu-neliovuosikulutus-test
-  (let [whoami (add-laatija!)
-        energiatodistus (-> (energiatodistus-test/generate-energiatodistus-2018)
-                            (assoc-in [:lahtotiedot :lammitetty-nettoala] 2M)
-                            (assoc-in [:tulokset :kaytettavat-energiamuodot :sahko] 2M))
-        id (energiatodistus-test/add-energiatodistus! energiatodistus
-                                                      (:id whoami)
-                                                      2018)]
-    (t/is (= (public-energiatodistus-with-db-fields energiatodistus
-                                                    id
-                                                    (:id whoami)
-                                                    2018)
-             (first (search whoami
-                            [[["="
-                               "energiatodistus.tulokset.kaytettavat-energiamuodot.sahko"
-                               2]
-                              ["="
-                               "energiatodistus.tulokset.kaytettavat-energiamuodot.sahko-painotettu"
-                               2.4]
-                              ["="
-                               "energiatodistus.tulokset.kaytettavat-energiamuodot.sahko-painotettu-neliovuosikulutus"
-                               1.2]]]
-                            nil))))))
-
-(t/deftest add-and-find-by-uusiutuvat-omavaraisenergiat-aurinkosahko-test
-  (let [whoami (add-laatija!)
-        energiatodistus (-> (energiatodistus-test/generate-energiatodistus-2018)
-                            (assoc-in [:lahtotiedot :lammitetty-nettoala] 2M)
-                            (assoc-in [:tulokset :uusiutuvat-omavaraisenergiat :aurinkosahko] 2M))
-        id (energiatodistus-test/add-energiatodistus! energiatodistus
-                                                      (:id whoami)
-                                                      2018)]
-    (t/is (= (public-energiatodistus-with-db-fields energiatodistus
-                                                    id
-                                                    (:id whoami)
-                                                    2018)
-             (first (search whoami
-                            [[["="
-                               "energiatodistus.tulokset.uusiutuvat-omavaraisenergiat.aurinkosahko"
-                               2]
-                              ["="
-                               "energiatodistus.tulokset.uusiutuvat-omavaraisenergiat.aurinkosahko-neliovuosikulutus"
-                               1]]]
-                            nil))))))
-
-(t/deftest add-and-find-by-rakennusvaippa-ikkunat-osuus-lampohaviosta-test
-  (let [whoami (add-laatija!)
-        energiatodistus (-> (energiatodistus-test/generate-energiatodistus-2018-complete)
-                            (assoc-in [:lahtotiedot :rakennusvaippa :ikkunat :ala] 2M)
-                            (assoc-in [:lahtotiedot :rakennusvaippa :ikkunat :U] 2M)
-                            (assoc-in [:lahtotiedot :rakennusvaippa :kylmasillat-UA] 2M))
-        id (energiatodistus-test/add-energiatodistus! energiatodistus
-                                                      (:id whoami)
-                                                      2018)]
-    (t/is (= (public-energiatodistus-with-db-fields energiatodistus
-                                                    id
-                                                    (:id whoami)
-                                                    2018)
-             (first (search whoami
-                            [[["="
-                               "energiatodistus.lahtotiedot.rakennusvaippa.ikkunat.UA"
-                               4]
-                              ["="
-                               "energiatodistus.lahtotiedot.rakennusvaippa.ikkunat.osuus-lampohaviosta"
-                               0.4]]]
-                            nil))))))
+  (let [pk kayttaja-test-data/paakayttaja
+        search #(search %1 %2 nil nil nil)]
+    (t/is (= :schema.core/error
+             (:type (etp-test/catch-ex-data #(search pk [[[1]]])))))
+    (t/is (= :schema.core/error
+           (:type (etp-test/catch-ex-data #(search pk [[[]]])))))
+    (t/is (= {:type :invalid-arguments
+              :predicate "="
+              :message "Wrong number of arguments: () for predicate: ="}
+             (etp-test/catch-ex-data #(search pk [[["="]]]))))
+    (t/is (= {:type :invalid-arguments
+              :predicate "="
+              :message "Wrong number of arguments: (\"id\") for predicate: ="}
+             (etp-test/catch-ex-data #(search pk [[["=" "id"]]]))))
+    (t/is (= {:type :unknown-predicate :predicate "asdf"
+              :message "Unknown predicate: asdf"}
+             (etp-test/catch-ex-data #(search pk [[["asdf" "id" 1]]]))))
+    (t/is (= {:type :unknown-field
+              :field "energiatodistus.perustiedot.tilaaja"
+              :message "Unknown field: energiatodistus.perustiedot.tilaaja"}
+             (etp-test/catch-ex-data #(search nil [[["="
+                                                     "energiatodistus.perustiedot.tilaaja"
+                                                     "test"]]]))))
+    (t/is (= {:type :unknown-field
+              :field "asdf"
+              :message "Unknown field: asdf"}
+             (etp-test/catch-ex-data #(search pk [[["=" "asdf" "test"]]]))))))
