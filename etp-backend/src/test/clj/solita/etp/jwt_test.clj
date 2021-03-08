@@ -59,27 +59,11 @@ zI6qYxXKEuxvD4MQFVc90/nB+nNLVQjDCfY91p/Ty0VjPIenVMV99QIDAQAB
            65537)))
 
 (t/deftest verified-jwt-payload-test
-  (t/is (nil? (jwt/verified-jwt-payload nil public-key)))
-  (t/is (nil? (jwt/verified-jwt-payload ok-jwt nil)))
   (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
                           #"Token is expired \(1583020800\)"
-                          (jwt/verified-jwt-payload expired-jwt public-key)))
+                          (jwt/decode-jwt expired-jwt public-key)))
   (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
                           #"Message seems corrupt or manipulated"
-                          (jwt/verified-jwt-payload ok-jwt wrong-public-key)))
-  (t/is (= (jwt/verified-jwt-payload ok-jwt public-key)
+                          (jwt/decode-jwt ok-jwt wrong-public-key)))
+  (t/is (= (jwt/decode-jwt ok-jwt public-key)
            ok-jwt-payload)))
-
-(t/deftest alb-headers-test
-  (t/is (nil? (jwt/alb-headers
-               {:headers {"x-amzn-oidc-identity" "123"}})))
-  (t/is (nil? (jwt/alb-headers
-               {:headers {"x-amzn-oidc-accesstoken" "abc"}})))
-  (t/is (nil? (jwt/alb-headers
-               {:headers {"x-amzn-oidc-identity" "123"
-                          "x-amzn-oidc-accesstoken" "abc"}})))
-  (t/is (= (jwt/alb-headers
-            {:headers {"x-amzn-oidc-identity" "123"
-                       "x-amzn-oidc-data" "xyz"
-                       "x-amzn-oidc-accesstoken" "abc"}})
-           {:id "123" :data "xyz" :access "abc"})))

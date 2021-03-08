@@ -38,8 +38,13 @@
       (assoc % :tags #{tag}) %)
    routes))
 
-(defn logout-location [{:keys [headers] :as req}]
-  (let [{:keys [data]} (jwt/req->verified-jwt-payloads req)]
+(defn- req->jwt [request]
+  (try
+    (jwt/req->decoded-jwt request)
+    (catch Throwable _)))
+
+(defn logout-location [req]
+  (let [{:keys [data]} (req->jwt req)]
     (if data
       (str config/cognito-logout-url
            "&logout_uri="

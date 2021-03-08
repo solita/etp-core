@@ -1,16 +1,20 @@
 (ns solita.etp.security
   (:require [clojure.tools.logging :as log]
-            [solita.common.jdbc :as common-jdbc]
             [solita.etp.jwt :as jwt]
             [solita.etp.basic-auth :as basic-auth]
             [solita.etp.api.response :as response]
-            [solita.etp.service.whoami :as whoami-service]
-            [solita.etp.service.rooli :as rooli-service]))
+            [solita.etp.service.whoami :as whoami-service]))
+
+(defn- req->jwt [request]
+  (try
+    (jwt/req->decoded-jwt request)
+    (catch Throwable t
+      (log/error t (str "Invalid JWT in request: " (:uri request) ".")))))
 
 (defn wrap-jwt-payloads [handler]
   (fn [req]
-    (if-let [jwt-payloads (jwt/req->verified-jwt-payloads req)]
-      (handler (assoc req :jwt-payloads jwt-payloads))
+    (if-let [jwt (req->jwt req)]
+      (handler (assoc req :jwt-payloads jwt))
       response/forbidden)))
 
 (defn log-safe-henkilotunnus [henkilotunnus]
