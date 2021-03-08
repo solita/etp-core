@@ -7,7 +7,7 @@
 
 (defn- req->jwt [request]
   (try
-    (jwt/req->decoded-jwt request)
+    (jwt/req->verified-jwt-payloads request)
     (catch Throwable t
       (log/error t (str "Invalid JWT in request: " (:uri request) ".")))))
 

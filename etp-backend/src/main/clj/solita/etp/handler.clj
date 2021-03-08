@@ -40,7 +40,7 @@
 
 (defn- req->jwt [request]
   (try
-    (jwt/req->decoded-jwt request)
+    (jwt/req->verified-jwt-payloads request)
     (catch Throwable _)))
 
 (defn logout-location [req]

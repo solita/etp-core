@@ -63,7 +63,7 @@
        (maybe/require-some!
          (str "Missing required AWS header: " name))))
 
-(defn req->decoded-jwt [{:keys [headers]}]
+(defn req->verified-jwt-payloads [{:keys [headers]}]
   (let [[id data access] (mapv #(get-header! % headers)
                                ["x-amzn-oidc-identity"
                                 "x-amzn-oidc-data"
