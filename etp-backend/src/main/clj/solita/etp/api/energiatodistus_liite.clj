@@ -27,8 +27,12 @@
             :handler    (fn [{{{:keys [id]} :path {:keys [files]} :multipart} :parameters
                            :keys [db aws-s3-client whoami]}]
                        (api-response/response-with-exceptions 201
-                         #(liite-service/add-liitteet-from-files
-                            db aws-s3-client whoami id (if (vector? files) files [files]))
+                         #(liite-service/add-liitteet-from-files!
+                           db
+                           aws-s3-client
+                           whoami
+                           id
+                           (if (vector? files) files [files]))
                          [{:constraint :liite-energiatodistus-id-fkey :response 404}]))}}]
 
    ["/link"
@@ -68,7 +72,7 @@
                                :parameters
                                :keys [db whoami]}]
                           (api-response/put-response
-                              (liite-service/delete-liite db whoami liite-id)
+                              (liite-service/delete-liite! db whoami liite-id)
                               (str "Energiatodistuksen " id " liite " liite-id " does not exists.")))}}]
 
    ["/:liite-id/:filename"

@@ -2,7 +2,7 @@
   (:require [solita.etp.service.luokittelu :as luokittelu-service]))
 
 (def ^:private rooli-keys
-  [:laatija :patevyyden-toteaja :paakayttaja])
+  [:laatija :patevyyden-toteaja :paakayttaja :laskuttaja])
 
 (defn find-roolit [db] (luokittelu-service/find-roolit db))
 
