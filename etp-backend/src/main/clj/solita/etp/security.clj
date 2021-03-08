@@ -9,7 +9,7 @@
   (try
     (jwt/req->verified-jwt-payloads request)
     (catch Throwable t
-      (log/error t (str "Invalid JWT in request: " (:uri request) ".")))))
+      (log/error t (str "Invalid JWT(s) in request: " (:uri request) ".")))))
 
 (defn wrap-jwt-payloads [handler]
   (fn [req]
