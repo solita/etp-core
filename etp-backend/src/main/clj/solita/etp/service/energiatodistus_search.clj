@@ -165,7 +165,8 @@
 
 (defn whoami->sql [{:keys [id] :as whoami}]
   (cond
-    (rooli-service/paakayttaja? whoami)
+    (or (rooli-service/paakayttaja? whoami)
+        (rooli-service/laskuttaja? whoami))
     ["energiatodistus.tila_id IN (2, 3, 4)"]
 
     (rooli-service/laatija? whoami)
