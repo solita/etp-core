@@ -51,9 +51,23 @@
 ;; Common
 ;;
 
-(defn decode-jwt [jwt public-key]
-  (jwt/unsign jwt public-key {:alg    (-> jwt jwe/decode-header :alg)
-                              :leeway 15}))
+(defn jwt-error [jwt jwt-class jwt-part cause]
+  {:type :invalid-jwt :part jwt-part :jwt-class jwt-class
+   :message (str "Invalid " (name jwt-class) " JWT " (name jwt-part))
+   :cause cause
+   ;; data jwt contains gdpr information therefore only the header part is logged
+   :jwt (if (= jwt-class :data) (first (str/split jwt #"\.")) jwt)})
+
+(defn decode-jwt-payload [jwt public-key jwt-type]
+  (exception/redefine-exception
+    #(jwt/unsign jwt public-key {:alg    (-> jwt jwe/decode-header :alg)
+                                 :leeway 15})
+    #(jwt-error jwt jwt-type :payload %)))
+
+(defn decode-kid [jwt jwt-type]
+  (exception/redefine-exception
+    #(-> jwt jwe/decode-header :kid)
+    #(jwt-error jwt jwt-type :header %)))
 
 (defn- get-header! [name headers]
   (->> name
@@ -68,17 +82,16 @@
                                ["x-amzn-oidc-identity"
                                 "x-amzn-oidc-data"
                                 "x-amzn-oidc-accesstoken"])
-        data-kid (-> data jwe/decode-header :kid)
+
         data-public-key (get-public-key-for-data-token
                           config/data-jwt-public-key-base-url
-                          data-kid)
-        data-payload (decode-jwt data data-public-key)
+                          (decode-kid data :data))
+        data-payload (decode-jwt-payload data data-public-key :data)
 
-        access-kid (-> access jwe/decode-header :kid)
         access-public-key (get-public-key-for-access-token
                             config/trusted-jwt-iss
-                            access-kid)
-        access-payload (decode-jwt access access-public-key)]
+                            (decode-kid access :access))
+        access-payload (decode-jwt-payload access access-public-key :access)]
 
     (when-not (= id (:sub data-payload) (:sub access-payload))
       (exception/illegal-argument!

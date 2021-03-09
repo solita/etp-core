@@ -61,9 +61,9 @@ zI6qYxXKEuxvD4MQFVc90/nB+nNLVQjDCfY91p/Ty0VjPIenVMV99QIDAQAB
 (t/deftest verified-jwt-payload-test
   (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
                           #"Token is expired \(1583020800\)"
-                          (jwt/decode-jwt expired-jwt public-key)))
+                          (jwt/decode-jwt-payload expired-jwt public-key :data)))
   (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
                           #"Message seems corrupt or manipulated"
-                          (jwt/decode-jwt ok-jwt wrong-public-key)))
-  (t/is (= (jwt/decode-jwt ok-jwt public-key)
+                          (jwt/decode-jwt-payload ok-jwt wrong-public-key :data)))
+  (t/is (= (jwt/decode-jwt-payload ok-jwt public-key :data)
            ok-jwt-payload)))

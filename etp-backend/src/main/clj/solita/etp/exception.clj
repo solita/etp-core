@@ -12,6 +12,13 @@
     (throw (ex-info (:message map) map)))
   ([type message] (throw-ex-info! (map/bindings->map type message))))
 
+(defn redefine-exception [operation exception-resolver]
+  (try
+    (operation)
+    (catch Throwable t
+      (let [ex (exception-resolver (ex-data t))]
+        (throw (ex-info (:message ex) ex t))))))
+
 (defn throw-forbidden!
   ([] (throw (ex-info "Forbidden" {:type :forbidden})))
   ([reason] (throw (ex-info "Forbidden" {:type :forbidden :reason reason}))))

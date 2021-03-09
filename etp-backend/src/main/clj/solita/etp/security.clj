@@ -12,8 +12,8 @@
     (jwt/req->verified-jwt-payloads request)
     (catch Throwable t
       (log/error t
-        (str "Invalid JWT(s) in service request: " (exception/service-name request) ".")
-        (maybe/fold "" #(format "Exception: %s." %) (ex-data t))))))
+        (str "Invalid JWT in service request: " (exception/service-name request) ".")
+        (maybe/fold "" #(format "Exception: %s." %) (dissoc (ex-data t) :message))))))
 
 (defn wrap-jwt-payloads [handler]
   (fn [req]
