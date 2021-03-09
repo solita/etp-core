@@ -3,7 +3,8 @@
             [clojure.java.io :as io]
             [buddy.core.keys :as keys]
             [solita.etp.service.json :as json]
-            [solita.etp.jwt :as jwt]))
+            [solita.etp.jwt :as jwt]
+            [solita.etp.test :as etp-test]))
 
 ;; It would be possible to just create a jwt for tests with buddy. However,
 ;; would that actually test anything really? For this reason the token in
@@ -59,27 +60,26 @@ zI6qYxXKEuxvD4MQFVc90/nB+nNLVQjDCfY91p/Ty0VjPIenVMV99QIDAQAB
            65537)))
 
 (t/deftest verified-jwt-payload-test
-  (t/is (nil? (jwt/verified-jwt-payload nil public-key)))
-  (t/is (nil? (jwt/verified-jwt-payload ok-jwt nil)))
-  (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
-                          #"Token is expired \(1583020800\)"
-                          (jwt/verified-jwt-payload expired-jwt public-key)))
-  (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
-                          #"Message seems corrupt or manipulated"
-                          (jwt/verified-jwt-payload ok-jwt wrong-public-key)))
-  (t/is (= (jwt/verified-jwt-payload ok-jwt public-key)
-           ok-jwt-payload)))
+  (t/is (= (dissoc (etp-test/catch-ex-data
+                     #(jwt/decode-jwt-payload expired-jwt public-key :data))
+                   :jwt)
+           {:type    :invalid-jwt, :part :payload, :jwt-class :data,
+            :message "Invalid data JWT payload",
+            :cause   {:type :validation, :cause :exp}}))
 
-(t/deftest alb-headers-test
-  (t/is (nil? (jwt/alb-headers
-               {:headers {"x-amzn-oidc-identity" "123"}})))
-  (t/is (nil? (jwt/alb-headers
-               {:headers {"x-amzn-oidc-accesstoken" "abc"}})))
-  (t/is (nil? (jwt/alb-headers
-               {:headers {"x-amzn-oidc-identity" "123"
-                          "x-amzn-oidc-accesstoken" "abc"}})))
-  (t/is (= (jwt/alb-headers
-            {:headers {"x-amzn-oidc-identity" "123"
-                       "x-amzn-oidc-data" "xyz"
-                       "x-amzn-oidc-accesstoken" "abc"}})
-           {:id "123" :data "xyz" :access "abc"})))
+  (t/is (= (dissoc (etp-test/catch-ex-data
+                     #(jwt/decode-jwt-payload ok-jwt wrong-public-key :data))
+                   :jwt)
+           {:type    :invalid-jwt, :part :payload, :jwt-class :data,
+            :message "Invalid data JWT payload",
+            :cause   {:type :validation, :cause :signature}}))
+
+  (t/is (= (dissoc (etp-test/catch-ex-data
+                     #(jwt/decode-jwt-payload (str 1 ok-jwt) public-key :data))
+                   :jwt)
+           {:type    :invalid-jwt, :part :payload, :jwt-class :data,
+            :message "Invalid data JWT payload",
+            :cause   {:type :validation, :cause :header}}))
+
+  (t/is (= (jwt/decode-jwt-payload ok-jwt public-key :data)
+           ok-jwt-payload)))
