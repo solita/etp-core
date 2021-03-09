@@ -121,6 +121,7 @@
    ">"  infix-notation
    "<"  infix-notation
    "like"  infix-notation
+   "ilike"  infix-notation
    "between" between-expression
    "nil?" is-null-expression
    "in" in-expression})
