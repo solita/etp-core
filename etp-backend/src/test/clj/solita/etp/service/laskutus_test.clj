@@ -58,11 +58,11 @@
       (energiatodistus-service/start-energiatodistus-signing! ts/*db*
                                                               {:id laatija-id}
                                                               energiatodistus-id)
-      (tu/sign-energiatodistus-pdf ts/*db* ts/*aws-s3-client* {:id laatija-id} energiatodistus-id)
       (energiatodistus-service/end-energiatodistus-signing! ts/*db*
                                                             ts/*aws-s3-client*
                                                             {:id laatija-id}
-                                                            energiatodistus-id))
+                                                            energiatodistus-id
+                                                            {:skip-pdf-signed-assert? true}))
     {:laatijat laatijat
      :yritykset (zipmap yritys-ids yritys-adds)
      :energiatodistukset (zipmap energiatodistus-ids energiatodistus-adds)}))

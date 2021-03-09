@@ -486,7 +486,7 @@
         1 ["sv"]
         2 ["fi" "sv"]} language))
 
-(defn assert-energiatodistus-pdf-signed! [aws-s3-client energiatodistus]
+(defn- assert-energiatodistus-pdf-signed! [aws-s3-client energiatodistus]
   (let [id (:id energiatodistus)
         language (-> energiatodistus :perustiedot :kieli)]
     (doseq [language (language-id->codes language)]
@@ -494,13 +494,14 @@
         (exception/throw-ex-info!
           :not-signed (str "Energiatodistus " id " pdf for language " language " is not signed"))))))
 
-(defn end-energiatodistus-signing! [db aws-s3-client whoami id]
+(defn end-energiatodistus-signing! [db aws-s3-client whoami id & [{:keys [skip-pdf-signed-assert?]}]]
   (jdbc/with-db-transaction [db db]
     (let [result (energiatodistus-db/update-energiatodistus-allekirjoitettu!
                    db {:id id :laatija-id (:id whoami)})]
       (if (= result 1)
         (let [energiatodistus (find-energiatodistus db id)]
-          (assert-energiatodistus-pdf-signed! aws-s3-client energiatodistus)
+          (when-not skip-pdf-signed-assert?
+            (assert-energiatodistus-pdf-signed! aws-s3-client energiatodistus))
           (mark-energiatodistus-korvattu! db (:korvattu-energiatodistus-id energiatodistus))
           :ok)
         (failure-code db whoami id)))))
