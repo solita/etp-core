@@ -3,7 +3,8 @@
             [clojure.java.io :as io]
             [buddy.core.keys :as keys]
             [solita.etp.service.json :as json]
-            [solita.etp.jwt :as jwt]))
+            [solita.etp.jwt :as jwt]
+            [solita.etp.test :as etp-test]))
 
 ;; It would be possible to just create a jwt for tests with buddy. However,
 ;; would that actually test anything really? For this reason the token in
@@ -59,11 +60,26 @@ zI6qYxXKEuxvD4MQFVc90/nB+nNLVQjDCfY91p/Ty0VjPIenVMV99QIDAQAB
            65537)))
 
 (t/deftest verified-jwt-payload-test
-  (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
-                          #"Token is expired \(1583020800\)"
-                          (jwt/decode-jwt-payload expired-jwt public-key :data)))
-  (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
-                          #"Message seems corrupt or manipulated"
-                          (jwt/decode-jwt-payload ok-jwt wrong-public-key :data)))
+  (t/is (= (dissoc (etp-test/catch-ex-data
+                     #(jwt/decode-jwt-payload expired-jwt public-key :data))
+                   :jwt)
+           {:type    :invalid-jwt, :part :payload, :jwt-class :data,
+            :message "Invalid data JWT payload",
+            :cause   {:type :validation, :cause :exp}}))
+
+  (t/is (= (dissoc (etp-test/catch-ex-data
+                     #(jwt/decode-jwt-payload ok-jwt wrong-public-key :data))
+                   :jwt)
+           {:type    :invalid-jwt, :part :payload, :jwt-class :data,
+            :message "Invalid data JWT payload",
+            :cause   {:type :validation, :cause :signature}}))
+
+  (t/is (= (dissoc (etp-test/catch-ex-data
+                     #(jwt/decode-jwt-payload (str 1 ok-jwt) public-key :data))
+                   :jwt)
+           {:type    :invalid-jwt, :part :payload, :jwt-class :data,
+            :message "Invalid data JWT payload",
+            :cause   {:type :validation, :cause :header}}))
+
   (t/is (= (jwt/decode-jwt-payload ok-jwt public-key :data)
            ok-jwt-payload)))
