@@ -486,7 +486,7 @@
         1 ["sv"]
         2 ["fi" "sv"]} language))
 
-(defn assert-energiatodistus-pdf-signed! [aws-s3-client energiatodistus]
+(defn- ^:dynamic assert-energiatodistus-pdf-signed! [aws-s3-client energiatodistus]
   (let [id (:id energiatodistus)
         language (-> energiatodistus :perustiedot :kieli)]
     (doseq [language (language-id->codes language)]
