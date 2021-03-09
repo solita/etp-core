@@ -6,6 +6,9 @@
 (defn filter* [predicate optional]
   (when (and (some? optional) (predicate optional)) optional))
 
+(defn fold [default fn optional]
+  (if (some? optional) (fn optional) default))
+
 (defn require-some!
   ([value] (Objects/requireNonNull value))
   ([^String message value] (Objects/requireNonNull value message)))

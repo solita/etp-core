@@ -72,9 +72,8 @@
         data-public-key (get-public-key-for-data-token
                           config/data-jwt-public-key-base-url
                           data-kid)
-        data-payload (decode-jwt
-                       data
-                       data-public-key)
+        data-payload (decode-jwt data data-public-key)
+
         access-kid (-> access jwe/decode-header :kid)
         access-public-key (get-public-key-for-access-token
                             config/trusted-jwt-iss

@@ -3,13 +3,17 @@
             [solita.etp.jwt :as jwt]
             [solita.etp.basic-auth :as basic-auth]
             [solita.etp.api.response :as response]
-            [solita.etp.service.whoami :as whoami-service]))
+            [solita.etp.service.whoami :as whoami-service]
+            [solita.common.maybe :as maybe]
+            [solita.etp.exception :as exception]))
 
 (defn- req->jwt [request]
   (try
     (jwt/req->verified-jwt-payloads request)
     (catch Throwable t
-      (log/error t (str "Invalid JWT(s) in request: " (:uri request) ".")))))
+      (log/error t
+        (str "Invalid JWT(s) in service request: " (exception/service-name request) ".")
+        (maybe/fold "" #(format "Exception: %s." %) (ex-data t))))))
 
 (defn wrap-jwt-payloads [handler]
   (fn [req]
