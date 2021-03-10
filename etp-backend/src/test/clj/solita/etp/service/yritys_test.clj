@@ -1,6 +1,5 @@
 (ns solita.etp.service.yritys-test
   (:require [clojure.test :as t]
-            [schema-generators.complete :as c]
             [schema.core :as schema]
             [solita.etp.test-system :as ts]
             [solita.etp.test :as etp-test]
