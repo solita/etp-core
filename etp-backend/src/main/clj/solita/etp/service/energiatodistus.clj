@@ -225,7 +225,7 @@
     (-> whoami :rooli rooli-service/rooli-key)
     (= laatija-id (:id whoami))]
    [_ :laatija true] (assoc energiatodistus :kommentti nil)
-   [(:or :signed :discarded :replaced) :paakayttaja _] energiatodistus
+   [(:or :signed :discarded :replaced) (:or :paakayttaja :laskuttaja) _] energiatodistus
    :else (exception/throw-forbidden!)))
 
 (defn find-energiatodistus
@@ -257,7 +257,7 @@
         (throw-invalid-replace! korvattu-energiatodistus-id " is already replaced")
         (not (contains? #{:signed :discarded} (-> korvattava-energiatodistus :tila-id tila-key)))
         (throw-invalid-replace! korvattu-energiatodistus-id " is not in signed or discarded state"))
-      (throw-invalid-replace! korvattu-energiatodistus-id " does not exists"))))
+      (throw-invalid-replace! korvattu-energiatodistus-id " does not exist"))))
 
 (defn validate-sisainen-kuorma!
   [db versio energiatodistus]
@@ -300,29 +300,24 @@
   (match/match
     [(tila-key tila-id) rooli laskutettu?]
     [:draft :laatija false] (dissoc energiatodistus-update :kommentti)
-    [:signed :laatija false]
-    (select-keys energiatodistus-update
-                 [:laskutettava-yritys-id
-                  :laskuriviviite
-                  :pt$rakennustunnus])
-    [:signed :laatija true]
-    (select-keys energiatodistus-update
-                 [:pt$rakennustunnus])
-    [:signed :paakayttaja false]
-    (select-keys energiatodistus-update
-                 [:laskutettava-yritys-id
-                  :laskuriviviite
-                  :pt$rakennustunnus
-                  :korvattu-energiatodistus-id
-                  :kommentti])
-    [:signed :paakayttaja true]
-    (select-keys energiatodistus-update
-                 [:pt$rakennustunnus
-                  :korvattu-energiatodistus-id
-                  :kommentti])
-    [:replaced :paakayttaja _]
-    (select-keys energiatodistus-update
-                 [:kommentti])
+    [:signed :laatija false] (select-keys energiatodistus-update
+                                          [:laskutettava-yritys-id
+                                           :laskuriviviite
+                                           :pt$rakennustunnus])
+    [:signed :laatija true] (select-keys energiatodistus-update
+                                         [:pt$rakennustunnus])
+    [:signed :paakayttaja false] (select-keys energiatodistus-update
+                                              [:laskutettava-yritys-id
+                                               :laskuriviviite
+                                               :pt$rakennustunnus
+                                               :korvattu-energiatodistus-id
+                                               :kommentti])
+    [:signed :paakayttaja true] (select-keys energiatodistus-update
+                                             [:pt$rakennustunnus
+                                              :korvattu-energiatodistus-id
+                                              :kommentti])
+    [:replaced :paakayttaja _] (select-keys energiatodistus-update
+                                            [:kommentti])
     :else (exception/throw-forbidden!
             (str "Role: " rooli
                  " is not allowed to update energiatodistus " id
