@@ -44,8 +44,10 @@
        energiatodistus-id)
       (energiatodistus-service/end-energiatodistus-signing!
        ts/*db*
+       ts/*aws-s3-client*
        {:id laatija-id}
-       energiatodistus-id))
+       energiatodistus-id
+       {:skip-pdf-signed-assert? true}))
     (energiatodistus-service/delete-energiatodistus-luonnos!
      ts/*db*
      {:id (last laatija-ids)}
