@@ -15,4 +15,3 @@
 
   (t/is (= (laatimisvaihe/olemassaoleva-rakennus? (et-2013 false)) true))
   (t/is (= (laatimisvaihe/olemassaoleva-rakennus? (et-2013 true)) false)))
-

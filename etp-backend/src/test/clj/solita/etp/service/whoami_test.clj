@@ -2,9 +2,8 @@
   (:require [clojure.test :as t]
             [clojure.string :as str]
             [schema.core :as schema]
-            [schema-generators.generators :as g]
             [solita.etp.test-system :as ts]
-            [solita.etp.test-utils :as tu]
+            [solita.etp.test-data.kayttaja :as kayttaja-test-data]
             [solita.etp.service.whoami :as service]
             [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
@@ -12,7 +11,8 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(def paakayttaja {:rooli 2})
+(defn test-data-set []
+  {:kayttajat (kayttaja-test-data/generate-and-insert! 100)})
 
 (t/deftest verified-api-key?-test
   (let [api-key "api-key-123"
@@ -26,21 +26,27 @@
                    (str/replace api-key-hash #"7" "0"))))))
 
 (t/deftest update-kayttaja-with-whoami!-test
-  (doseq [kayttaja (tu/generate-kayttaja 100 laatija-schema/KayttajaAdd)
-          :let [id (kayttaja-service/add-kayttaja! ts/*db* kayttaja)
-                found-before (kayttaja-service/find-kayttaja ts/*db* paakayttaja id)
-                cognitoid (str "cognitoid-" (rand-int 1000000))
-                virtulocalid (:email kayttaja)
-                virtuorganisaatio "organisaatio"
-                _ (service/update-kayttaja-with-whoami! ts/*db*
-                                                        {:id id
-                                                         :cognitoid cognitoid})
-                found-after (kayttaja-service/find-kayttaja ts/*db* paakayttaja id)]]
-    (schema/validate kayttaja-schema/Kayttaja found-after)
-    (t/is (-> found-before :login nil?))
-    (t/is (-> found-after :login nil? not))
-    (t/is (-> found-after :email (:email found-before)))
-    (t/is (-> found-before :cognitoid nil?))
-    (t/is (= cognitoid (:cognitoid found-after)))
-    (t/is (-> found-before :virtu :localid nil?))
-    (t/is (-> found-before :virtu :organisaatio nil?))))
+  (let [{:keys [kayttajat]} (test-data-set)]
+    (doseq [id (-> kayttajat keys sort)
+            :let [found-before (kayttaja-service/find-kayttaja
+                                ts/*db*
+                                kayttaja-test-data/paakayttaja
+                                id)
+                  cognitoid (str "cognitoid-" (rand-int 1000000))
+                  virtulocalid (:email found-before)
+                  virtuorganisaatio "organisaatio"
+                  _ (service/update-kayttaja-with-whoami! ts/*db*
+                                                          {:id id
+                                                           :cognitoid cognitoid})
+                  found-after (kayttaja-service/find-kayttaja
+                               ts/*db*
+                               kayttaja-test-data/paakayttaja
+                               id)]]
+      (schema/validate kayttaja-schema/Kayttaja found-after)
+      (t/is (-> found-before :login nil?))
+      (t/is (-> found-after :login nil? not))
+      (t/is (-> found-after :email (:email found-before)))
+      (t/is (-> found-before :cognitoid nil?))
+      (t/is (= cognitoid (:cognitoid found-after)))
+      (t/is (-> found-before :virtu :localid nil?))
+      (t/is (-> found-before :virtu :organisaatio nil?)))))

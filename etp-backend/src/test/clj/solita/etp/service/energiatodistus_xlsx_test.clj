@@ -2,15 +2,22 @@
   (:require [clojure.test :as t]
             [schema-generators.generators :as g]
             [solita.etp.test-system :as ts]
+            [solita.etp.test-data.laatija :as laatija-test-data]
+            [solita.etp.test-data.energiatodistus :as energiatodistus-test-data]
             [solita.etp.schema.energiatodistus :as schema]
-            [solita.etp.service.energiatodistus-xlsx :as service]
-            [solita.etp.service.energiatodistus :as energiatodistus-service]
-            [solita.etp.service.energiatodistus-test :as energiatodistus-test]))
+            [solita.etp.service.energiatodistus-xlsx :as service]))
 
 (t/use-fixtures :each ts/fixture)
 
-(def energiatodistukset
-  (repeatedly 100 energiatodistus-test/generate-energiatodistus-2018))
+(defn test-data-set []
+  (let [laatijat (laatija-test-data/generate-and-insert! 1)
+        energiatodistukset (energiatodistus-test-data/generate-and-insert!
+                            100
+                            2018
+                            false
+                            (-> laatijat keys sort first))]
+    {:laatijat laatijat
+     :energiatodistukset energiatodistukset}))
 
 (t/deftest other-paths-test
   (t/is (empty? (service/other-paths nil)))
@@ -35,9 +42,8 @@
   (t/is (= (service/path->str [:foo "bar" 3 :baz]) "Foo / Bar / 3 / Baz")))
 
 (t/deftest search-completed-energiatodistukset-test
-  (let [laatija-id (energiatodistus-test/add-laatija!)]
-    (doseq [energiatodistus energiatodistukset]
-      (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id))
+  (let [{:keys [laatijat energiatodistukset]} (test-data-set)
+        laatija-id (-> laatijat keys sort first)]
     (let [found-energiatodistukset (service/search-completed-energiatodistukset
                                     ts/*db*
                                     {:id laatija-id :rooli 0}
@@ -51,9 +57,8 @@
                 zero?)))))
 
 (t/deftest find-energiatodistukset-xlsx-test
-  (let [laatija-id (energiatodistus-test/add-laatija!)]
-    (doseq [energiatodistus energiatodistukset]
-      (energiatodistus-test/add-energiatodistus! energiatodistus laatija-id))
+  (let [{:keys [laatijat energiatodistukset]} (test-data-set)
+        laatija-id (-> laatijat keys sort first)]
     (t/is (instance? java.io.InputStream
                      (service/find-energiatodistukset-xlsx
                       ts/*db*
