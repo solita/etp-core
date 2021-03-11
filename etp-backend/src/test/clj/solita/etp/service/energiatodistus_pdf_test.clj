@@ -2,26 +2,33 @@
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
             [clojure.test :as t]
-            [schema-generators.generators :as g]
             [solita.etp.test-system :as ts]
+            [solita.etp.test-data.kayttaja :as kayttaja-test-data]
+            [solita.etp.test-data.laatija :as laatija-test-data]
+            [solita.etp.test-data.energiatodistus :as energiatodistus-test-data]
             [solita.common.xlsx :as xlsx]
-            [solita.etp.schema.energiatodistus :as schema]
             [solita.etp.service.energiatodistus-pdf :as service]
             [solita.common.formats :as formats]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
-            [solita.etp.service.energiatodistus-test :as energiatodistus-test]
-            [solita.common.certificates-test :as certificates-test]
-            [solita.etp.test-utils :as tu]))
+            [solita.common.certificates-test :as certificates-test]))
 
 (t/use-fixtures :each ts/fixture)
 
-(def energiatodistus-2013 #(-> (energiatodistus-test/generate-energiatodistus-2013)
-                               (assoc :versio 2013)))
-
-(def energiatodistus-2018 #(-> (energiatodistus-test/generate-energiatodistus-2018)
-                               (assoc :versio 2018)))
-
-(def energiatodistukset #(pcalls energiatodistus-2018 energiatodistus-2013))
+(defn test-data-set []
+  (let [laatijat (laatija-test-data/generate-and-insert! 1)
+        laatija-id (-> laatijat keys sort first)
+        energiatodistukset (merge (energiatodistus-test-data/generate-and-insert!
+                                   1
+                                   2013
+                                   true
+                                   laatija-id)
+                                  (energiatodistus-test-data/generate-and-insert!
+                                   1
+                                   2018
+                                   true
+                                   laatija-id))]
+    {:laatijat laatijat
+     :energiatodistukset energiatodistukset}))
 
 (def sis-kuorma-data {:henkilot {:kayttoaste 0.2 :lampokuorma 1}
                       :kuluttajalaitteet {:kayttoaste 0.3 :lampokuorma 1}
@@ -40,17 +47,22 @@
   (t/is (= "12,346 %" (formats/format-number 0.1234567 3 true))))
 
 (t/deftest fill-xlsx-template-test
-  (doseq [energiatodistus (energiatodistukset)]
-    (let [path (service/fill-xlsx-template energiatodistus "fi" false)
-          file (-> path io/input-stream)
-          loaded-xlsx (xlsx/load-xlsx file)
-          sheet-0 (xlsx/get-sheet loaded-xlsx 0)]
+  (let [{:keys [energiatodistukset]} (test-data-set)
+        energiatodistus-ids (-> energiatodistukset keys sort)]
+    (doseq [id (-> energiatodistukset keys sort)
+            :let [energiatodistus (energiatodistus-service/find-energiatodistus
+                                   ts/*db*
+                                   id)
+                  path (service/fill-xlsx-template energiatodistus "fi" false)
+                  file (-> path io/input-stream)
+                  loaded-xlsx (xlsx/load-xlsx file)
+                  sheet-0 (xlsx/get-sheet loaded-xlsx 0)]]
       (t/is (str/ends-with? path ".xlsx"))
       (t/is (-> path io/as-file .exists true?))
-      (t/is (= (:id energiatodistus)
+      (t/is (= (str id)
                (xlsx/get-cell-value-at sheet-0 (case (:versio energiatodistus)
                                                  2013 "I17"
-                                                 2018 "K16"))))
+                                                 2018 "J16"))))
       (io/delete-file path))))
 
 (t/deftest xlsx->pdf-test
@@ -61,39 +73,54 @@
     (io/delete-file file-path)))
 
 (t/deftest generate-pdf-as-file-test
-  (doseq [energiatodistus (energiatodistukset)]
-    (let [file-path (service/generate-pdf-as-file energiatodistus "sv" true)]
+  (let [{:keys [energiatodistukset]} (test-data-set)]
+    (doseq [id (-> energiatodistukset keys sort)
+            :let [energiatodistus (energiatodistus-service/find-energiatodistus
+                                   ts/*db*
+                                   id)
+                  file-path (service/generate-pdf-as-file energiatodistus
+                                                          "sv"
+                                                          true)]]
       (t/is (-> file-path io/as-file .exists))
       (io/delete-file file-path))))
 
 (t/deftest pdf-file-id-test
   (t/is (nil? (energiatodistus-service/file-key nil "fi")))
-  (t/is (= (energiatodistus-service/file-key 12345 "fi") "energiatodistukset/energiatodistus-12345-fi")))
+  (t/is (= (energiatodistus-service/file-key 12345 "fi")
+           "energiatodistukset/energiatodistus-12345-fi")))
 
 (t/deftest do-when-signing-test
   (let [f (constantly true)]
     (t/is (= (service/do-when-signing {:tila-id 0 } f)
              :not-in-signing))
     (t/is (true? (service/do-when-signing {:tila-id 1} f)))
-
     (t/is (= (service/do-when-signing {:tila-id 2} f)
              :already-signed))))
 
 (t/deftest find-energiatodistus-digest-test
-  (let [laatija-id (energiatodistus-test/add-laatija!)
+  (let [{:keys [laatijat energiatodistukset]} (test-data-set)
+        laatija-id (-> laatijat keys sort first)
         db (ts/db-user laatija-id)
-        id (energiatodistus-test/add-energiatodistus!
-             (energiatodistus-test/generate-energiatodistus-2018-complete)
-             laatija-id)
+        id (-> energiatodistukset keys sort first)
         whoami {:id laatija-id}]
     (t/is (= (service/find-energiatodistus-digest db ts/*aws-s3-client* id "fi")
              :not-in-signing))
     (energiatodistus-service/start-energiatodistus-signing! db whoami id)
-    (t/is (contains? (service/find-energiatodistus-digest db ts/*aws-s3-client* id "fi")
+    (t/is (contains? (service/find-energiatodistus-digest db
+                                                          ts/*aws-s3-client*
+                                                          id
+                                                          "fi")
                      :digest))
-    (tu/sign-energiatodistus-pdf db  ts/*aws-s3-client* whoami id)
-    (energiatodistus-service/end-energiatodistus-signing! db ts/*aws-s3-client* whoami id)
-    (t/is (= (service/find-energiatodistus-digest db ts/*aws-s3-client* id "fi")
+    (energiatodistus-service/end-energiatodistus-signing!
+     db
+     ts/*aws-s3-client*
+     whoami
+     id
+     {:skip-pdf-signed-assert? true})
+    (t/is (= (service/find-energiatodistus-digest db
+                                                  ts/*aws-s3-client*
+                                                  id
+                                                  "fi")
              :already-signed))))
 
 (t/deftest comparable-name-test
@@ -108,17 +135,23 @@
                                          certificates-test/test-cert-str))))
 
 (t/deftest sign-energiatodistus-test
-  (let [laatija-id (energiatodistus-test/add-laatija!)
+  (let [{:keys [laatijat energiatodistukset]} (test-data-set)
+        laatija-id (-> laatijat keys sort first)
         db (ts/db-user laatija-id)
-        id (energiatodistus-test/add-energiatodistus!
-             (energiatodistus-test/generate-energiatodistus-2018-complete)
-             laatija-id)
+        id (-> energiatodistukset keys sort first)
         whoami {:id laatija-id}]
-    (t/is (= (service/sign-energiatodistus-pdf db ts/*aws-s3-client* whoami id "fi" nil)
+    (t/is (= (service/sign-energiatodistus-pdf db
+                                               ts/*aws-s3-client*
+                                               whoami
+                                               id
+                                               "fi"
+                                               nil)
              :not-in-signing))
-    (energiatodistus-service/start-energiatodistus-signing! db whoami id)
-
-    (tu/sign-energiatodistus-pdf db  ts/*aws-s3-client* whoami id)
-    (energiatodistus-service/end-energiatodistus-signing! db ts/*aws-s3-client* whoami id)
-    (t/is (= (service/sign-energiatodistus-pdf db ts/*aws-s3-client* whoami id "fi" nil)
+    (energiatodistus-test-data/sign! id laatija-id false)
+    (t/is (= (service/sign-energiatodistus-pdf db
+                                               ts/*aws-s3-client*
+                                               whoami
+                                               id
+                                               "fi"
+                                               nil)
              :already-signed))))

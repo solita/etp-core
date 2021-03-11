@@ -19,6 +19,8 @@
     {:laatijat laatijat
      :energiatodistukset energiatodistukset}))
 
+(def energiatodistukset (energiatodistus-test-data/generate-adds 100 2018 true))
+
 (t/deftest other-paths-test
   (t/is (empty? (service/other-paths nil)))
   (t/is (empty? (service/other-paths [])))
