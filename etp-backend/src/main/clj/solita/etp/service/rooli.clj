@@ -21,7 +21,4 @@
 (defn laskuttaja? [{:keys [rooli]}]
   (= rooli 3))
 
-(defn laatija-maintainer? [{:keys [rooli]}]
-  (contains? #{1 2} rooli))
-
 (defn rooli-key [rooli-id] (nth rooli-keys rooli-id))
