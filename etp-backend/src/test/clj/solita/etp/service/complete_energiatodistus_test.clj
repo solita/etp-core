@@ -67,7 +67,8 @@
            (service/find-complete-energiatodistus
             ts/*db*
             {:id (-> laatijat keys sort first) :rooli 0}
-            id)))))
+            id)))
+    (t/is (nil? (service/find-complete-energiatodistus ts/*db* -1)))))
 
 (t/deftest find-complete-energiatodistus-no-permissions-test
   (let [{:keys [energiatodistukset]} (test-data-set)

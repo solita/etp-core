@@ -508,10 +508,10 @@
 
 (defn find-complete-energiatodistus
   ([db id]
-   (complete-energiatodistus
-    (energiatodistus-service/find-energiatodistus db id)
-    (required-luokittelut db)))
+   (some->
+     (energiatodistus-service/find-energiatodistus db id)
+     (complete-energiatodistus (required-luokittelut db))))
   ([db whoami id]
-   (complete-energiatodistus
-    (energiatodistus-service/find-energiatodistus db whoami id)
-    (required-luokittelut db))))
+   (some->
+     (energiatodistus-service/find-energiatodistus db whoami id)
+     (complete-energiatodistus (required-luokittelut db)))))
