@@ -15,7 +15,6 @@
 (defn- valid-postinumero? [postinumero]
   (re-matches #"\d{5}" postinumero))
 
-
 (def PostinumeroFI
   (schema/constrained schema/Str valid-postinumero? "FI postal code"))
 
