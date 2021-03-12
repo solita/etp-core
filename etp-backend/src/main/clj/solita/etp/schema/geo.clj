@@ -11,8 +11,12 @@
                   :postinumero             schema/Str
                   :postitoimipaikka        schema/Str
                   :maa                     Maa})
+
+(defn- valid-postinumero? [postinumero]
+  (re-matches #"^\d{5}$" postinumero))
+
 (def PostinumeroFI
-  (schema/constrained schema/Str #(re-find #"\d{5}" %) "FI postal code"))
+  (schema/constrained schema/Str valid-postinumero? "FI postal code"))
 
 (def Toimintaalue common-schema/Luokittelu)
 
