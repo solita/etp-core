@@ -26,13 +26,16 @@
                         404 common-schema/ConstraintError}
             :handler    (fn [{{{:keys [id]} :path {:keys [files]} :multipart} :parameters
                            :keys [db aws-s3-client whoami]}]
-                       (api-response/response-with-exceptions 201
-                         #(liite-service/add-liitteet-from-files!
-                           db
-                           aws-s3-client
-                           whoami
-                           id
-                           (if (vector? files) files [files]))
+                          (api-response/response-with-exceptions
+                           201
+                           (fn []
+                             (liite-service/add-liitteet-from-files!
+                              db
+                              aws-s3-client
+                              whoami
+                              id
+                              (if (vector? files) files [files]))
+                             nil)
                          [{:constraint :liite-energiatodistus-id-fkey :response 404}]))}}]
 
    ["/link"
@@ -45,8 +48,11 @@
                         404 common-schema/ConstraintError}
             :handler    (fn [{{{:keys [id]} :path :keys [body]} :parameters
                            :keys [db whoami]}]
-                       (api-response/response-with-exceptions 201
-                         #(liite-service/add-liite-from-link! db whoami id body)
+                          (api-response/response-with-exceptions
+                           201
+                           (fn []
+                             (liite-service/add-liite-from-link! db whoami id body)
+                             nil)
                          [{:constraint :liite-energiatodistus-id-fkey :response 404}]))}}]
 
    [""
