@@ -61,7 +61,7 @@
 
 (defn search-completed-energiatodistukset [db whoami query]
   (let [query (update query :limit #(or % 1000))
-        luokittelut (complete-energiatodistus-service/required-luokittelut db)]
+        luokittelut (complete-energiatodistus-service/luokittelut db)]
     (->> (energiatodistus-search-service/private-search db whoami query)
          (map #(complete-energiatodistus-service/complete-energiatodistus
                 % luokittelut)))))

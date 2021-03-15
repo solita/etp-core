@@ -494,7 +494,7 @@
                         [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa-nettoala]
                         [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala])))))
 
-(defn required-luokittelut [db]
+(defn luokittelut [db]
   {:postinumerot          (geo/find-all-postinumerot db)
    :kielisyydet           (kielisyys/find-kielisyys db)
    :laatimisvaiheet       (laatimisvaihe/find-laatimisvaiheet db)
@@ -510,8 +510,8 @@
   ([db id]
    (some->
      (energiatodistus-service/find-energiatodistus db id)
-     (complete-energiatodistus (required-luokittelut db))))
+     (complete-energiatodistus (luokittelut db))))
   ([db whoami id]
    (some->
      (energiatodistus-service/find-energiatodistus db whoami id)
-     (complete-energiatodistus (required-luokittelut db)))))
+     (complete-energiatodistus (luokittelut db)))))

@@ -14,8 +14,7 @@
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.laskutus :as laskutus-service]
             [solita.etp.service.file :as file-service]
-            [solita.common.smtp-test :as smtp-test]
-            [solita.etp.test-utils :as tu])
+            [solita.common.smtp-test :as smtp-test])
   (:import (java.time Instant)))
 
 (t/use-fixtures :each ts/fixture)

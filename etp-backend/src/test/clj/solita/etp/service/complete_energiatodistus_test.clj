@@ -51,7 +51,7 @@
 
 (t/deftest complete-energiatodistus-test
   (let [{:keys [energiatodistukset]} (test-data-set)
-        luokittelut (service/required-luokittelut ts/*db*)]
+        luokittelut (service/luokittelut ts/*db*)]
     (doseq [id (keys energiatodistukset)]
       (t/is (assert-complete-energiatoditus
              (service/complete-energiatodistus
