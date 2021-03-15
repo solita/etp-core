@@ -47,7 +47,7 @@
              (assoc req :whoami)
              handler)
         (do
-          (log/error "Unable to find kayttaja using the following opts data JWT: "
+          (log/error "Unable to find active kayttaja using the following opts data JWT: "
                      (update whoami-opts :henkilotunnus log-safe-henkilotunnus))
           response/forbidden)))))
 
@@ -60,7 +60,7 @@
       (if whoami
         (handler (assoc req :whoami whoami))
         (do
-          (log/error "Unable to find käyttäjä with Basic Auth"
+          (log/error "Unable to find active kayttaja with Basic Auth"
                      {:id id})
           (-> response/unauthorized
               (merge {:headers {"WWW-Authenticate" (format "Basic realm=\"%s\""
