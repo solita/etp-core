@@ -82,7 +82,7 @@ values
 ('LR', 2018, 4, 'Liikerakennukset', 'Affärsbyggnader', true),
 ('TT', 2018, 4, 'Tavaratalot', 'Varuhus', true),
 ('KK', 2018, 4, 'Kauppakeskukset', 'Köpcentrum', true),
-('MYR', 2018, 4, 'Myymälärakennukset (poislukien päivittäistavarakaupan alle 2000m2 yksiköt)', 'Butiksbyggnader (med undantag för livsmedelsaffärer på under 2000m2)', true),
+('MYR', 2018, 4, 'Myymälärakennukset (poislukien päivittäistavarakaupan alle 2000 m² yksiköt)', 'Butiksbyggnader (med undantag för livsmedelsaffärer på under 2000 m²)', true),
 ('MH', 2018, 4, 'Myymälähallit', 'Butikshallar', true),
 ('TOKK', 2018, 4, 'Teatteri-, ooppera-, konsertti- ja kongressitalot', 'Teatrar, opera-, konsert- och kongresshus', true),
 ('E', 2018, 4, 'Elokuvateatterit', 'Biografer', true),
@@ -104,7 +104,7 @@ values
 ('MLR', 2018, 9, 'Liikenteen rakennukset', 'Trafikbyggnader', true),
 ('UH', 2018, 9, 'Uimahallit', 'Simhallar', true),
 ('JH', 2018, 9, 'Jäähallit', 'Ishallar', true),
-('PTK', 2018, 9, 'Päivittäistavarakaupan alle 2000m2 yksiköt', 'Livsmedelsaffärer på under 2000m2', true),
+('PTK', 2018, 9, 'Päivittäistavarakaupan alle 2000 m² yksiköt', 'Livsmedelsaffärer på under 2000 m²', true),
 ('SR', 2018, 9, 'Siirtokelpoiset rakennukset', 'Flyttbara byggnader', true),
 ('MR', 2018, 9, 'Muut rakennukset', 'Övriga byggnader', true)
 on conflict (id, versio) do update
