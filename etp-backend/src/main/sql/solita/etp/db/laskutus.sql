@@ -46,9 +46,7 @@ SELECT e.id energiatodistus_id, e.allekirjoitusaika, e.laskuriviviite,
   LEFT JOIN energiatodistus korvattu ON e.korvattu_energiatodistus_id = korvattu.id
   WHERE e.allekirjoitusaika IS NOT NULL AND
         e.allekirjoitusaika < date_trunc('month', now()) AND
-        -- TODO this needs to be changed to after first laskutus to:
-        -- allekirjoitusaika >= date_trunc('month', now()) - interval '1 month' AND
-        e.allekirjoitusaika >= '2021-01-01' AND
+        e.allekirjoitusaika >= date_trunc('month', now()) - interval '1 month' AND
         e.laskutusaika IS NULL AND
         (e.korvattu_energiatodistus_id IS NULL OR
          (date_trunc('day', e.allekirjoitusaika) - interval '7 days' <= korvattu.allekirjoitusaika AND
