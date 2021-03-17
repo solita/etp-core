@@ -133,6 +133,31 @@
 
       (t/is (= id found-id)))))
 
+(t/deftest search-by-id-zero-ua-test
+  (let [{:keys [energiatodistukset laatijat] :as test-data-set} (test-data-set)
+        id (-> energiatodistukset keys sort first)
+        laatija-id (-> laatijat keys clojure.core/sort first)]
+
+    (jdbc/execute!
+     ts/*db*
+     ["UPDATE energiatodistus SET
+         lt$rakennusvaippa$kylmasillat_ua = 0,
+         lt$rakennusvaippa$alapohja$u = 0,
+         lt$rakennusvaippa$ikkunat$u = 0,
+         lt$rakennusvaippa$ylapohja$u = 0,
+         lt$rakennusvaippa$ulkoseinat$u = 0,
+         lt$rakennusvaippa$ulkoovet$u = 0
+      where id = ?" id])
+
+    (let [found-id (-> (service/private-search
+                        ts/*db*
+                        {:rooli 0 :id laatija-id}
+                        {:where [[["=" "energiatodistus.id" id]
+                                  ["nil?" "energiatodistus.lahtotiedot.rakennusvaippa.kylmasillat-osuus-lampohaviosta"]]]})
+                       first :id)]
+
+      (t/is (= id found-id)))))
+
 (t/deftest search-by-nimi-test
   (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
         id (-> energiatodistukset keys sort first)
