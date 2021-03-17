@@ -9,33 +9,17 @@ from viestiketju
 order by viestiketju.id desc
 limit :limit offset :offset;
 
--- name: select-viestiketjut-for-laatija
+-- name: select-viestiketjut-for-kayttaja
 select
   viestiketju.id, viestiketju.subject,
   viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id,
   (select array_agg(vastaanottaja_id) from vastaanottaja
    where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
 from viestiketju
-where from_id = :laatija-id or vastaanottajaryhma_id = 1 or
+where from_id = :kayttaja-id or vastaanottajaryhma_id = :vastaanottajaryhma-id or
       exists (
         select 1 from vastaanottaja
-        where vastaanottaja.vastaanottaja_id = :laatija-id and
-              vastaanottaja.viestiketju_id = viestiketju.id
-      )
-order by viestiketju.id desc
-limit :limit offset :offset;
-
--- name: select-viestiketjut-for-laskuttaja
-select
-  viestiketju.id, viestiketju.subject,
-  viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id,
-  (select array_agg(vastaanottaja_id) from vastaanottaja
-   where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
-from viestiketju
-where from_id = :laskuttaja-id or vastaanottajaryhma_id = 2 or
-      exists (
-        select 1 from vastaanottaja
-        where vastaanottaja.vastaanottaja_id = :laskuttaja-id and
+        where vastaanottaja.vastaanottaja_id = :kayttaja-id and
               vastaanottaja.viestiketju_id = viestiketju.id
       )
 order by viestiketju.id desc

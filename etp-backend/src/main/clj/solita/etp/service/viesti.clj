@@ -77,12 +77,14 @@
                 (viesti-db/select-all-viestiketjut db query)
 
                 (rooli-service/laatija? whoami)
-                (viesti-db/select-viestiketjut-for-laatija
-                  db (assoc query :laatija-id (:id whoami)))
+                (viesti-db/select-viestiketjut-for-kayttaja
+                 db
+                 (assoc query :kayttaja-id (:id whoami) :vastaanottajaryhma-id 1))
 
                 (rooli-service/laskuttaja? whoami)
-                (viesti-db/select-viestiketjut-for-laskuttaja
-                  db (assoc query :laskuttaja-id (:id whoami)))
+                (viesti-db/select-viestiketjut-for-kayttaja
+                 db
+                 (assoc query :kayttaja-id (:id whoami) :vastaanottajaryhma-id 2))
 
                 :else []))))
 
