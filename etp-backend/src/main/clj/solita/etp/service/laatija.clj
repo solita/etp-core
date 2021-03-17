@@ -36,8 +36,7 @@
                            (rooli-service/laskuttaja? whoami))
                        laatija
 
-                       (or (rooli-service/patevyydentoteaja? whoami)
-                           (rooli-service/laskuttaja? whoami))
+                       (rooli-service/patevyydentoteaja? whoami)
                        (update laatija :henkilotunnus #(subs % 0 6))
 
                        (rooli-service/public? whoami)

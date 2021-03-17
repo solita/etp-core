@@ -75,12 +75,15 @@
     (pmap (partial assoc-join-viestit db)
           (cond (rooli-service/paakayttaja? whoami)
                 (viesti-db/select-all-viestiketjut db query)
+
                 (rooli-service/laatija? whoami)
                 (viesti-db/select-viestiketjut-for-laatija
                   db (assoc query :laatija-id (:id whoami)))
+
                 (rooli-service/laskuttaja? whoami)
                 (viesti-db/select-viestiketjut-for-laskuttaja
                   db (assoc query :laskuttaja-id (:id whoami)))
+
                 :else []))))
 
 (defn count-ketjut [db whoami]
