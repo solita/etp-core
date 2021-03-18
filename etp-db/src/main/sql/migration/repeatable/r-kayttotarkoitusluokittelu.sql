@@ -20,7 +20,7 @@ values
 (5, 2018, '5. Majoitusliikerakennukset', '5. Byggnader för inkvarteringsanläggningar', 5, true),
 (6, 2018, '6. Opetusrakennukset ja päiväkodit', '6. Undervisningsbyggnader och daghem', 6, true),
 (7, 2018, '7. Liikuntahallit, lukuun ottamatta uimahalleja ja jäähalleja', '7. Idrottshallar, med undantag för simhallar och ishallar', 7, true),
-(8, 2018, '8. Sairaalat', ' 8. Sjukhus', 8, true),
+(8, 2018, '8. Sairaalat', '8. Sjukhus', 8, true),
 (9, 2018, '9. Muut rakennukset', '9. Övriga byggnader', 9, true)
 
 on conflict (id, versio) do update
