@@ -1,27 +1,27 @@
 
 insert into kayttotarkoitusluokka (id, versio, label_fi, label_sv, ordinal, valid)
 values
-(1, 2013, 'Erilliset pientalot', 'Fristående småhus', 1, true),
-(2, 2013, 'Rivi- ja ketjutalot', 'Rad- och kedjehus', 2, true),
-(3, 2013, 'Asuinkerrostalot', 'Flervåningsbostadshus', 3, true),
-(4, 2013, 'Toimistorakennukset', 'Kontorsbyggnader', 4, true),
-(5, 2013, 'Liikerakennukset', 'Affärsbyggnader', 5, true),
-(6, 2013, 'Majoitusliikerakennukset', 'Byggnader för inkvarteringsanläggningar', 6, true),
-(7, 2013, 'Opetusrakennukset ja päiväkodit', 'Undervisningsbyggnader och daghem', 7, true),
-(8, 2013, 'Liikuntahallit pois lukien uima- ja jäähallit', 'Idrottshallar (med undantag av simhallar och ishallar)', 8, true),
-(9, 2013, 'Sairaalat', 'Sjukhus', 9, true),
-(10, 2013, 'Liikuntahallit, uimahallit, jäähallit, liikenteen rakennukset', 'Idrottshallar, simhallar, ishallar, byggnader för trafik', 10, true),
-(11, 2013, 'Varastorakennukset ja erilliset moottoriajoneuvosuojat', 'Lagerbyggnader och fristående utrymmen för motorfordon', 11, true),
+(1, 2013, '1. Erilliset pientalot', '1. Fristående småhus', 1, true),
+(2, 2013, '2. Rivi- ja ketjutalot', '2. Rad- och kedjehus', 2, true),
+(3, 2013, '3. Asuinkerrostalot', '3. Flervåningsbostadshus', 3, true),
+(4, 2013, '4. Toimistorakennukset', '4. Kontorsbyggnader', 4, true),
+(5, 2013, '5. Liikerakennukset', '5. Affärsbyggnader', 5, true),
+(6, 2013, '6. Majoitusliikerakennukset', '6. Byggnader för inkvarteringsanläggningar', 6, true),
+(7, 2013, '7. Opetusrakennukset ja päiväkodit', '7. Undervisningsbyggnader och daghem', 7, true),
+(8, 2013, '8. Liikuntahallit pois lukien uima- ja jäähallit', '8. Idrottshallar (med undantag av simhallar och ishallar)', 8, true),
+(9, 2013, '9. Sairaalat', '9. Sjukhus', 9, true),
+(10, 2013, '10. Liikuntahallit, uimahallit, jäähallit, liikenteen rakennukset', '10. Idrottshallar, simhallar, ishallar, byggnader för trafik', 10, true),
+(11, 2013, '11. Varastorakennukset ja erilliset moottoriajoneuvosuojat', '11. Lagerbyggnader och fristående utrymmen för motorfordon', 11, true),
 
-(1, 2018, '1. Pienet asuinrakennukset', 'Små bostadsbyggnader', 1, true),
-(2, 2018, '2. Asuinkerrostalot', 'Flervåningsbostadshus', 2, true),
-(3, 2018, '3. Toimistorakennukset', 'Kontorsbyggnader', 3, true),
-(4, 2018, '4. Liikerakennukset', 'Affärsbyggnader', 4, true),
-(5, 2018, '5. Majoitusliikerakennukset', 'Byggnader för inkvarteringsanläggningar', 5, true),
-(6, 2018, '6. Opetusrakennukset ja päiväkodit', 'Undervisningsbyggnader och daghem', 6, true),
-(7, 2018, '7. Liikuntahallit, lukuun ottamatta uimahalleja ja jäähalleja', 'Idrottshallar, med undantag för simhallar och ishallar', 7, true),
-(8, 2018, '8. Sairaalat', 'Sjukhus', 8, true),
-(9, 2018, '9. Muut rakennukset', 'Övriga byggnader', 9, true)
+(1, 2018, '1. Pienet asuinrakennukset', '1. Små bostadsbyggnader', 1, true),
+(2, 2018, '2. Asuinkerrostalot', '2. Flervåningsbostadshus', 2, true),
+(3, 2018, '3. Toimistorakennukset', '3. Kontorsbyggnader', 3, true),
+(4, 2018, '4. Liikerakennukset', '4. Affärsbyggnader', 4, true),
+(5, 2018, '5. Majoitusliikerakennukset', '5. Byggnader för inkvarteringsanläggningar', 5, true),
+(6, 2018, '6. Opetusrakennukset ja päiväkodit', '6. Undervisningsbyggnader och daghem', 6, true),
+(7, 2018, '7. Liikuntahallit, lukuun ottamatta uimahalleja ja jäähalleja', '7. Idrottshallar, med undantag för simhallar och ishallar', 7, true),
+(8, 2018, '8. Sairaalat', ' 8. Sjukhus', 8, true),
+(9, 2018, '9. Muut rakennukset', '9. Övriga byggnader', 9, true)
 
 on conflict (id, versio) do update
   set label_fi = excluded.label_fi,
