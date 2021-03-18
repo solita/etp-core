@@ -40,7 +40,8 @@
        [tx db]
        (let [[{:keys [id]}] (insert-ketju! tx ketju)]
          (insert-viesti! tx id (:body ketju))
-         (when (rooli-service/paakayttaja? whoami)
+         (when (or (rooli-service/paakayttaja? whoami)
+                   (rooli-service/laskuttaja? whoami))
            (add-vastaanottajat tx id (:vastaanottajat ketju)))
          id))))
 
@@ -55,7 +56,8 @@
   (or (rooli-service/paakayttaja? whoami)
       (contains? (-> ketju :vastaanottajat set) (:id whoami))
       (-> ketju :viestit first :from :id (= (:id whoami)))
-      (and (rooli-service/laatija? whoami) (-> ketju :vastaanottajaryhma-id (= 1)))))
+      (and (rooli-service/laatija? whoami) (-> ketju :vastaanottajaryhma-id (= 1)))
+      (and (rooli-service/laskuttaja? whoami) (-> ketju :vastaanottajaryhma-id (= 2)))))
 
 (defn- assert-visibility [whoami ketju]
   (if (visible-for? whoami ketju) ketju
@@ -74,9 +76,17 @@
     (pmap (partial assoc-join-viestit db)
           (cond (rooli-service/paakayttaja? whoami)
                 (viesti-db/select-all-viestiketjut db query)
+
                 (rooli-service/laatija? whoami)
-                (viesti-db/select-viestiketjut-for-laatija
-                  db (assoc query :laatija-id (:id whoami)))
+                (viesti-db/select-viestiketjut-for-kayttaja
+                 db
+                 (assoc query :kayttaja-id (:id whoami) :vastaanottajaryhma-id 1))
+
+                (rooli-service/laskuttaja? whoami)
+                (viesti-db/select-viestiketjut-for-kayttaja
+                 db
+                 (assoc query :kayttaja-id (:id whoami) :vastaanottajaryhma-id 2))
+
                 :else []))))
 
 (defn count-ketjut [db whoami]

@@ -22,3 +22,5 @@
   (= rooli 3))
 
 (defn rooli-key [rooli-id] (nth rooli-keys rooli-id))
+
+(def energiatodistus-reader? (some-fn laatija? paakayttaja? laskuttaja?))
