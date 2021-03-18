@@ -40,7 +40,8 @@
        [tx db]
        (let [[{:keys [id]}] (insert-ketju! tx ketju)]
          (insert-viesti! tx id (:body ketju))
-         (when (rooli-service/paakayttaja? whoami)
+         (when (or (rooli-service/paakayttaja? whoami)
+                   (rooli-service/laskuttaja? whoami))
            (add-vastaanottajat tx id (:vastaanottajat ketju)))
          id))))
 
