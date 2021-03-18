@@ -152,7 +152,7 @@
         et (-> template
                (assoc-in [:tila-id] draft-id)
                (assoc-in [:lahtotiedot :rakennusvaippa] new-rakennusvaippa))
-        {:keys [id warnings]} (energiatodistus-service/add-energiatodistus! ts/*db* whoami 2018 et)]
+        {:keys [id]} (energiatodistus-service/add-energiatodistus! ts/*db* whoami 2018 et)]
 
     (let [found-et (-> (service/private-search
                         ts/*db*
