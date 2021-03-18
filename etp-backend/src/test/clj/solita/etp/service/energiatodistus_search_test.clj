@@ -135,27 +135,33 @@
 
 (t/deftest search-by-id-zero-ua-test
   (let [{:keys [energiatodistukset laatijat] :as test-data-set} (test-data-set)
-        id (-> energiatodistukset keys sort first)
-        laatija-id (-> laatijat keys clojure.core/sort first)]
+        template-id (-> energiatodistukset keys sort first)
+        template (get energiatodistukset template-id)
+        laatija-id (-> laatijat keys clojure.core/sort first)
+        whoami {:id laatija-id :rooli 0}
+        draft-id 0
+        new-rakennusvaippa {:alapohja {:ala 0M :U 0M}
+                            :ikkunat {:ala 0M :U 0M}
+                            :ylapohja {:ala 0M :U 0M}
+                            :ilmatilavuus 1M
+                            :lampokapasiteetti 1M
+                            :ilmanvuotoluku 1M
+                            :ulkoseinat {:ala 1M :U 0M}
+                            :kylmasillat-UA 0M
+                            :ulkoovet {:ala 0M :U 0M}}
+        et (-> template
+               (assoc-in [:tila-id] draft-id)
+               (assoc-in [:lahtotiedot :rakennusvaippa] new-rakennusvaippa))
+        {:keys [id warnings]} (energiatodistus-service/add-energiatodistus! ts/*db* whoami 2018 et)]
 
-    (jdbc/execute!
-     ts/*db*
-     ["UPDATE energiatodistus SET
-         lt$rakennusvaippa$kylmasillat_ua = 0,
-         lt$rakennusvaippa$alapohja$u = 0,
-         lt$rakennusvaippa$ikkunat$u = 0,
-         lt$rakennusvaippa$ylapohja$u = 0,
-         lt$rakennusvaippa$ulkoseinat$u = 0,
-         lt$rakennusvaippa$ulkoovet$u = 0
-      where id = ?" id])
-
-    (let [found-id (-> (service/private-search
+    (let [found-et (-> (service/private-search
                         ts/*db*
-                        {:rooli 0 :id laatija-id}
+                        whoami
                         {:where [[["=" "energiatodistus.id" id]
                                   ["nil?" "energiatodistus.lahtotiedot.rakennusvaippa.kylmasillat-osuus-lampohaviosta"]]]})
-                       first :id)]
-
+                       first)
+          found-id (:id found-et)]
+      (t/is (= (-> found-et :lahtotiedot :rakennusvaippa) new-rakennusvaippa))
       (t/is (= id found-id)))))
 
 (t/deftest search-by-nimi-test
