@@ -25,7 +25,7 @@
              (str/join "$" $))))
 
 (defn- per-nettoala-sql [value-expression]
-  (str value-expression " / energiatodistus.lt$lammitetty_nettoala"))
+  (str value-expression " / nullif(energiatodistus.lt$lammitetty_nettoala, 0)"))
 
 (defn- per-nettoala-entry [^IPersistentVector path rename]
   (fn [[key schema]]
@@ -83,11 +83,11 @@
 
 (def ^:private osuus-lampohaviosta-fields
   (into {:kylmasillat-osuus-lampohaviosta
-         [(str "energiatodistus.lt$rakennusvaippa$kylmasillat_ua / (" ua-total-sql ")")
+         [(str "energiatodistus.lt$rakennusvaippa$kylmasillat_ua / nullif((" ua-total-sql "), 0)")
           common-schema/NonNegative]}
         (map (fn [[key value]]
                [key {:osuus-lampohaviosta
-                     [(str (-> value :UA first) " / (" ua-total-sql ")")
+                     [(str (-> value :UA first) " / nullif((" ua-total-sql "), 0)")
                       common-schema/NonNegative]}]))
         ua-fields))
 
