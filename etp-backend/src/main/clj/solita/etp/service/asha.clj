@@ -6,6 +6,7 @@
             [solita.common.xml :as xml]
             [schema-tools.coerce :as sc]
             [clojure.tools.logging :as log]
+            [clojure.data.codec.base64 :as b64]
             [solita.etp.config :as config]))
 
 (defn debug-print [info]
@@ -45,11 +46,11 @@
       (log/error "Sending xml failed:" e)
       (throw e))))
 
-(defn- handler [data resource parser-fn schema]
+(defn- request-handler [data resource parser-fn schema]
   (let [request-xml (request-create-xml resource data)
-        response-xml (send-request request-xml)
-        response-parser (parser-fn response-xml)]
-    (read-response response-parser schema)))
+        response-xml (send-request request-xml)]
+    (when-let [response-parser (when parser-fn (parser-fn response-xml))]
+      (read-response response-parser schema))))
 
 (defn response-parser-case-create [response-soap]
   (let [response-xml (read-response->xml response-soap)]
@@ -57,5 +58,19 @@
     {:id          (xml/get-content response-xml [:return :object-identity :id])
      :case-number (xml/get-content response-xml [:return :case-number])}))
 
+(defn response-parser-case-info [response-soap]
+  (let [response-xml (read-response->xml response-soap)]
+    (debug-print response-xml)
+    {:id             (xml/get-content response-xml [:return :case-info-response :object-identity :id])
+     :case-number    (xml/get-content response-xml [:return :case-info-response :case-number])
+     :status         (xml/get-content response-xml [:return :case-info-response :status])
+     :classification (xml/get-content response-xml [:return :case-info-response :classification :code])
+     :name           (xml/get-content response-xml [:return :case-info-response :name])
+     :description    (xml/get-content response-xml [:return :case-info-response :description])
+     :created        (xml/get-content response-xml [:return :case-info-response :created])}))
+
 (defn case-create [case]
-  (handler case "case-create" response-parser-case-create asha-schema/CaseCreateResponse))
+  (request-handler case "case-create" response-parser-case-create asha-schema/CaseCreateResponse))
+
+(defn execute-operation [data & [response-parser schema]]
+  (request-handler data "execute-operation" response-parser schema))
