@@ -32,11 +32,6 @@
                     {{/case}}
                 </ns0:CaseInfoQueryOperation>
                 {{/info}}
-                {{#proceed}}
-                <ns0:ProceedOperation>
-                    <ns0:decision>{{decision}}</ns0:decision>
-                </ns0:ProceedOperation>
-                {{/proceed}}
                 {{#processing-action}}
                 <ns0:CreateProcessingActionOperation>
                     <ns0:name>{{name}}</ns0:name>
