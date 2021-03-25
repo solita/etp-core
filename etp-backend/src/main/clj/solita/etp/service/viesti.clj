@@ -45,6 +45,10 @@
            (add-vastaanottajat tx id (:vastaanottajat ketju)))
          id))))
 
+(defn update-ketju! [db id ketju-edit]
+  (first (db/with-db-exception-translation
+          jdbc/update! db :viestiketju ketju-edit ["id = ?" id] db/default-opts)))
+
 (defn- find-viestit [db viestiketju-id]
   (map #(flat/flat->tree #"\$" %)
        (viesti-db/select-viestit db {:id viestiketju-id})))
