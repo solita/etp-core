@@ -3,7 +3,7 @@
         <ns0:MessageHeader xmlns:ns0="http://vismaconsulting.fi/ebs/1.0">
             <ns0:messageVersion>1.0</ns0:messageVersion>
             <ns0:requestId>{{request-id}}</ns0:requestId>
-            <ns0:senderId>{{handler}}</ns0:senderId>
+            <ns0:senderId>{{sender-id}}</ns0:senderId>
         </ns0:MessageHeader>
     </soap-env:Header>
     <soap-env:Body>
@@ -40,6 +40,7 @@
                 {{#processing-action}}
                 <ns0:CreateProcessingActionOperation>
                     <ns0:name>{{name}}</ns0:name>
+                    <!--TODO: required? <ns0:createFromProcess>{{create-from-process}}</ns0:createFromProcess>-->
                     <ns0:receptionDate>{{reception-date}}</ns0:receptionDate>
                     <ns0:contactingDirection>{{contacting-direction}}</ns0:contactingDirection>
                     <ns0:description>{{description}}</ns0:description>
@@ -49,7 +50,7 @@
                         <ns0:address>{{address}}</ns0:address>
                         <ns0:emailAddress>{{email-address}}</ns0:emailAddress>
                         <ns0:phoneNumber>{{phone-number}}</ns0:phoneNumber>
-                        <ns0:firstName>{{last-name}}</ns0:firstName>
+                        <ns0:firstName>{{first-name}}</ns0:firstName>
                         <ns0:lastName>{{last-name}}</ns0:lastName>
                         <ns0:organizationalUnitName>{{organizational-unit-name}}</ns0:organizationalUnitName>
                         <ns0:businessIdentityCode>{{business-identity-code}}</ns0:businessIdentityCode>
@@ -72,7 +73,7 @@
                         <ns0:address>{{address}}</ns0:address>
                         <ns0:emailAddress>{{email-address}}</ns0:emailAddress>
                         <ns0:phoneNumber>{{phone-number}}</ns0:phoneNumber>
-                        <ns0:firstName>{{last-name}}</ns0:firstName>
+                        <ns0:firstName>{{first-name}}</ns0:firstName>
                         <ns0:lastName>{{last-name}}</ns0:lastName>
                         <ns0:organizationalUnitName>{{organizational-unit-name}}</ns0:organizationalUnitName>
                         <ns0:businessIdentityCode>{{business-identity-code}}</ns0:businessIdentityCode>
@@ -80,6 +81,11 @@
                     {{/contanct}}
                 </ns0:AttachOperation>
                 {{/attach}}
+                {{#proceed-operation}}
+                <ns0:ProceedOperation>
+                    <ns0:decision>{{decision}}</ns0:decision>
+                </ns0:ProceedOperation>
+                {{/proceed-operation}}
             </ns0:operationRequest>
         </ns0:executeOperations>
     </soap-env:Body>

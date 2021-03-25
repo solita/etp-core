@@ -7,7 +7,8 @@
             [schema-tools.coerce :as sc]
             [clojure.tools.logging :as log]
             [clojure.data.codec.base64 :as b64]
-            [solita.etp.config :as config]))
+            [solita.etp.config :as config]
+            [solita.etp.exception :as exception]))
 
 (defn debug-print [info]
   (when config/asha-debug?
@@ -25,26 +26,29 @@
   (let [coercer (sc/coercer schema sc/string-coercion-matcher)]
     (coercer response-parser)))
 
+(defn- make-send-requst [request]
+  (http/post config/asha-endpoint-url
+             (cond-> {:content-type   "application/xop+xml;charset=\"UTF-8\"; type=\"text/xml\""
+                      :SOAPAction     ""
+                      :content-length (count request)
+                      :body           request}
+                     config/asha-proxy? (assoc
+                                          :connection-manager
+                                          (conn-mgr/make-socks-proxied-conn-manager "localhost" 1080)))))
+
 (defn- send-request [request]
   (try
-    (let [response (http/post config/asha-endpoint-url
-                              (cond-> {:content-type   "application/xop+xml;charset=\"UTF-8\"; type=\"text/xml\""
-                                       :SOAPAction     ""
-                                       :content-length (count request)
-                                       :body           request}
-                                      config/asha-proxy? (assoc
-                                                           :connection-manager
-                                                           (conn-mgr/make-socks-proxied-conn-manager "localhost" 1080))))]
+    (let [response (make-send-requst request)]
       (if (= 200 (:status response))
         (do
           (debug-print (:body response))
           (:body response))
         (do
           (log/error "Sending xml failed with status " (:status response) (:body response))
-          (throw (Exception. "Sending xml failed with status " (:status response))))))
+          (exception/throw-ex-info! :asha-request-failed (str "Sending xml failed with status " (:status response) " " (:body response))))))
     (catch Exception e
       (log/error "Sending xml failed:" e)
-      (throw e))))
+      (exception/throw-ex-info! :asha-request-failed (.getMessage e)))))
 
 (defn- request-handler [data resource parser-fn schema]
   (let [request-xml (request-create-xml resource data)
@@ -74,3 +78,17 @@
 
 (defn execute-operation [data & [response-parser schema]]
   (request-handler data "execute-operation" response-parser schema))
+
+(defn case-info [sender-id request-id case-number]
+  (execute-operation {:request-id request-id
+                      :sender-id  sender-id
+                      :info       {:case {:number case-number}}}
+                     response-parser-case-info
+                     asha-schema/CaseInfoResponse))
+
+(defn proceed-operation [sender-id request-id case-number processing-action decision]
+  (execute-operation {:request-id        request-id
+                      :sender-id         sender-id
+                      :identity          {:case              {:number case-number}
+                                          :processing-action {:name-identity processing-action}}
+                      :proceed-operation {:decision decision}}))

@@ -3,7 +3,7 @@
         <ns0:MessageHeader xmlns:ns0="http://vismaconsulting.fi/ebs/1.0">
             <ns0:messageVersion>1.0</ns0:messageVersion>
             <ns0:requestId>{{request-id}}</ns0:requestId>
-            <ns0:senderId>{{handler}}</ns0:senderId>
+            <ns0:senderId>{{sender-id}}</ns0:senderId>
         </ns0:MessageHeader>
     </soap-env:Header>
     <soap-env:Body>
