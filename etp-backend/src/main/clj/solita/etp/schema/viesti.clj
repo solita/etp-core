@@ -28,6 +28,8 @@
 
 (def Ketju
   {:id                    common-schema/Key
+   :kasittelija-id        (schema/maybe common-schema/Key)
+   :kasitelty             schema/Bool
    :vastaanottajat        [Kayttaja]
    :vastaanottajaryhma-id (schema/maybe common-schema/Key)
    :energiatodistus-id    (schema/maybe common-schema/Key)
