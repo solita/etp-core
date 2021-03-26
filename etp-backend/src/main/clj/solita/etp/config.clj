@@ -1,7 +1,8 @@
 (ns solita.etp.config
   (:require [clojure.string :as str]
             [integrant.core :as ig]
-            [cognitect.aws.credentials :as credentials]))
+            [cognitect.aws.credentials :as credentials]
+            [clojure.edn :as edn]))
 
 ; use local evn credentials in codebuild and local env
 ; only ecs use s3
@@ -99,3 +100,9 @@
 (def email-from-email (env "EMAIL_FROM_EMAIL" "no-reply@example.com"))
 (def email-from-name (env "EMAIL_FROM_NAME" "Energiatodistusrekisteri [Dev]"))
 (def email-content-type "text/plain; charset=UTF-8")
+
+;; Asha
+
+(def asha-endpoint-url (env "ASHA_ENDPOINT_URL" nil))
+(def asha-proxy? (edn/read-string (env "ASHA_PROXY" "false")))
+(def asha-debug? (edn/read-string (env "ASHA_DEBUG" "false")))

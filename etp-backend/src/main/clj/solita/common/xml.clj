@@ -26,6 +26,9 @@
 (defn input-stream->xml [is]
   (xml/parse is))
 
+(defn string->xml [string]
+  (xml/parse-str string))
+
 (defn xml? [x]
   (and (associative? x)
        (every? #(contains? x %) [:tag :content])))
