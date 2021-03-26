@@ -47,21 +47,21 @@
     (t/is (= (asha-service/action-info "test@example.com" "ETP-1" "ARA-05.03.02-2021-8" "Vireillepano")
              {:processing-action
                         {:object-class "ProcessingAction",
-                         :id "578877",
-                         :version "8",
+                         :id 578877,
+                         :version 8,
                          :contacting-direction "NONE",
                          :name "Vireillepano",
                          :description "Luodaan uusi asia.",
                          :status "READY",
                          :created "2021-03-25T12:47:08+02:00"},
               :assignee "FFAB23AE-E49F-4E3B-98D9-40C3DE0E4B46",
-              :queue "24",
+              :queue 24,
               :selected-decision
                         {:decision "Siirry käsittelyyn",
                          :next-processing-action
                                    {:object-class "ProcessingAction",
-                                    :id "579176",
-                                    :version "1",
+                                    :id 579176,
+                                    :version 1,
                                     :contacting-direction "NONE",
                                     :name "Käsittely",
                                     :description
@@ -131,3 +131,4 @@
                   "ARA-05.03.02-2021-8"
                   "Vireillepano"
                   "Siirry käsittelyyn")))))
+

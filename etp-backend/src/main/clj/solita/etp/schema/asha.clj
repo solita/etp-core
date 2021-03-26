@@ -13,3 +13,20 @@
    :name schema/Str
    :description schema/Str
    :created schema/Str})
+
+(def ActionInfoAction
+  {:object-class         schema/Str
+   :id                   schema/Int
+   :version              schema/Int
+   :contacting-direction schema/Str
+   :name                 schema/Str
+   :description          schema/Str
+   :status               schema/Str
+   :created              schema/Str})
+
+(def ActionInfoResponse
+  {:processing-action ActionInfoAction
+   :assignee          schema/Str
+   :queue             schema/Int
+   :selected-decision {:decision               schema/Str
+                       :next-processing-action ActionInfoAction}})
