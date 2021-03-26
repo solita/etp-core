@@ -61,3 +61,6 @@ where viesti.viestiketju_id = :id
 
 -- name: select-kayttajat
 select id, etunimi, sukunimi, rooli_id from kayttaja;
+
+-- name: select-kasittelijat
+select id, etunimi, sukunimi, rooli_id from kayttaja WHERE rooli_id IN (2, 3);

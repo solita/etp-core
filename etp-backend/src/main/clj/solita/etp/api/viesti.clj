@@ -64,4 +64,9 @@
     {:get {:summary   "Hae kaikki vastaanottajaryhmat."
            :responses {200 {:body [common-schema/Luokittelu]}}
            :handler   (fn [{:keys [db]}]
-                        (r/response (viesti-service/find-vastaanottajaryhmat db)))}}]])
+                        (r/response (viesti-service/find-vastaanottajaryhmat db)))}}]
+   ["/kasittelijat"
+    {:get {:summary   "Hae kaikki kasittelijat."
+           :responses {200 {:body [viesti-schema/Kayttaja]}}
+           :handler   (fn [{:keys [db]}]
+                        (r/response (viesti-service/find-kasittelijat db)))}}]])

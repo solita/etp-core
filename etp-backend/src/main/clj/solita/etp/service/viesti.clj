@@ -121,3 +121,6 @@
 
 (defn find-vastaanottajaryhmat [db]
   (luokittelu-service/find-vastaanottajaryhmat db))
+
+(defn find-kasittelijat [db]
+  (viesti-db/select-kasittelijat db))
