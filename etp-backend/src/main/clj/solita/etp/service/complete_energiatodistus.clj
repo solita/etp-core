@@ -10,6 +10,10 @@
             [solita.common.map :as map]
             [solita.common.formats :as formats]))
 
+(defn safe-div [x y]
+  (when (and x y (> y 0))
+    (/ x y)))
+
 (defn combine-keys [m f nil-replacement path-new & paths]
   (let [vals (map #(or (get-in m %) nil-replacement) paths)]
     (if (not-any? nil? vals)
@@ -20,7 +24,7 @@
   (let [new-k (-> path last name (str "-nettoala") keyword)
         new-path (-> path pop (conj new-k))]
     (combine-keys energiatodistus
-                  /
+                  safe-div
                   nil
                   new-path
                   path
@@ -296,32 +300,32 @@
                         [:lahtotiedot :rakennusvaippa :ikkunat :UA]
                         [:lahtotiedot :rakennusvaippa :ulkoovet :UA]
                         [:lahtotiedot :rakennusvaippa :kylmasillat-UA])
-          (combine-keys /
+          (combine-keys safe-div
                         nil
                         [:lahtotiedot :rakennusvaippa :ulkoseinat :osuus-lampohaviosta]
                         [:lahtotiedot :rakennusvaippa :ulkoseinat :UA]
                         [:lahtotiedot :rakennusvaippa :UA-summa])
-          (combine-keys /
+          (combine-keys safe-div
                         nil
                         [:lahtotiedot :rakennusvaippa :ylapohja :osuus-lampohaviosta]
                         [:lahtotiedot :rakennusvaippa :ylapohja :UA]
                         [:lahtotiedot :rakennusvaippa :UA-summa])
-          (combine-keys /
+          (combine-keys safe-div
                         nil
                         [:lahtotiedot :rakennusvaippa :alapohja :osuus-lampohaviosta]
                         [:lahtotiedot :rakennusvaippa :alapohja :UA]
                         [:lahtotiedot :rakennusvaippa :UA-summa])
-          (combine-keys /
+          (combine-keys safe-div
                         nil
                         [:lahtotiedot :rakennusvaippa :ikkunat :osuus-lampohaviosta]
                         [:lahtotiedot :rakennusvaippa :ikkunat :UA]
                         [:lahtotiedot :rakennusvaippa :UA-summa])
-          (combine-keys /
+          (combine-keys safe-div
                         nil
                         [:lahtotiedot :rakennusvaippa :ulkoovet :osuus-lampohaviosta]
                         [:lahtotiedot :rakennusvaippa :ulkoovet :UA]
                         [:lahtotiedot :rakennusvaippa :UA-summa])
-          (combine-keys /
+          (combine-keys safe-div
                         nil
                         [:lahtotiedot :rakennusvaippa :kylmasillat-osuus-lampohaviosta]
                         [:lahtotiedot :rakennusvaippa :kylmasillat-UA]
@@ -471,7 +475,7 @@
                          (mapv (fn [{:keys [maara-vuodessa muunnoskerroin] :as vapaa}]
                                  (if (and maara-vuodessa muunnoskerroin)
                                    (let [kwh (* maara-vuodessa muunnoskerroin)]
-                                     (assoc vapaa :kwh kwh :kwh-nettoala (/ kwh nettoala)))
+                                     (assoc vapaa :kwh kwh :kwh-nettoala (safe-div kwh nettoala)))
                                    vapaa))
                                vapaat)
                          vapaat)))

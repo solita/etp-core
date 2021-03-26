@@ -49,6 +49,20 @@
 
 (def generate-updates generate-adds)
 
+(defn generate-adds-with-zeros [n versio]
+  (map #(assoc-in %
+                  [:lahtotiedot :rakennusvaippa]
+                  {:alapohja {:ala 0 :U 0}
+                   :ikkunat {:ala 0 :U 0}
+                   :ylapohja {:ala 0 :U 0}
+                   :ilmatilavuus 1M
+                   :lampokapasiteetti 1M
+                   :ilmanvuotoluku 1M
+                   :ulkoseinat {:ala 1M :U 0}
+                   :kylmasillat-UA 0
+                   :ulkoovet {:ala 0 :U 0}})
+       (generate-adds n versio true)))
+
 (defn insert! [energiatodistus-adds laatija-id]
   (mapv #(:id (energiatodistus-service/add-energiatodistus!
                (ts/db-user laatija-id)
