@@ -45,20 +45,24 @@
            (add-vastaanottajat tx id (:vastaanottajat ketju)))
          id))))
 
+(defn update-ketju! [db id ketju-edit]
+  (first (db/with-db-exception-translation
+          jdbc/update! db :viestiketju ketju-edit ["id = ?" id] db/default-opts)))
+
 (defn- find-viestit [db viestiketju-id]
   (map #(flat/flat->tree #"\$" %)
        (viesti-db/select-viestit db {:id viestiketju-id})))
 
-(defn find-possible-vastaanottajat [db]
-  (->> db viesti-db/select-possible-vastaanottajat (group-by :id) (map/map-values first)))
+(defn find-kayttajat [db]
+  (->> db viesti-db/select-kayttajat (group-by :id) (map/map-values first)))
 
 (defn- assoc-join-viestit [db ketju]
   (assoc ketju :viestit  (find-viestit db (:id ketju))))
 
-(defn assoc-join-vastaanottajat [possible-vastaanottajat ketju]
+(defn- assoc-join-vastaanottajat [kayttajat ketju]
   (->> ketju
        :vastaanottajat
-       (map possible-vastaanottajat (:vastaanottajat ketju))
+       (map kayttajat (:vastaanottajat ketju))
        (assoc ketju :vastaanottajat)))
 
 (defn- visible-for? [whoami ketju]
@@ -75,16 +79,18 @@
            " is not allowed to see viestiketju " (:id ketju)))))
 
 (defn find-ketju [db whoami id]
-  (->> (viesti-db/select-viestiketju db {:id id})
-       (map (comp (partial assoc-join-viestit db)
-               (partial assoc-join-vastaanottajat (find-possible-vastaanottajat db))))
-       (map #(assert-visibility whoami %))
-       first))
+  (let [kayttajat (find-kayttajat db)]
+    (->> (viesti-db/select-viestiketju db {:id id})
+         (map (comp (partial assoc-join-viestit db)
+                 (partial assoc-join-vastaanottajat kayttajat)))
+         (map #(assert-visibility whoami %))
+         first)))
 
 (defn find-ketjut [db whoami q]
-  (let [query (merge {:limit 100 :offset 0} q)]
+  (let [query (merge {:limit 100 :offset 0} q)
+        kayttajat (find-kayttajat db)]
     (pmap (comp (partial assoc-join-viestit db)
-             (partial assoc-join-vastaanottajat (find-possible-vastaanottajat db)))
+             (partial assoc-join-vastaanottajat kayttajat))
           (cond (rooli-service/paakayttaja? whoami)
                 (viesti-db/select-all-viestiketjut db query)
 
@@ -115,3 +121,6 @@
 
 (defn find-vastaanottajaryhmat [db]
   (luokittelu-service/find-vastaanottajaryhmat db))
+
+(defn find-kasittelijat [db]
+  (viesti-db/select-kasittelijat db))

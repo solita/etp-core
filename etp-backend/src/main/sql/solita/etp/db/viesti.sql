@@ -1,7 +1,7 @@
 
 -- name: select-all-viestiketjut
 select
-  viestiketju.id, viestiketju.subject,
+  viestiketju.id, viestiketju.kasittelija_id, viestiketju.kasitelty, viestiketju.subject,
   viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id,
   (select array_agg(vastaanottaja_id) from vastaanottaja
     where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
@@ -11,7 +11,7 @@ limit :limit offset :offset;
 
 -- name: select-viestiketjut-for-kayttaja
 select
-  viestiketju.id, viestiketju.subject,
+  viestiketju.id, viestiketju.kasittelija_id, viestiketju.kasitelty, viestiketju.subject,
   viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id,
   (select array_agg(vastaanottaja_id) from vastaanottaja
     where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
@@ -40,7 +40,7 @@ where from_id = :laatija-id or vastaanottajaryhma_id = 1 or
 
 -- name: select-viestiketju
 select
-  viestiketju.id, viestiketju.subject,
+  viestiketju.id, viestiketju.kasittelija_id, viestiketju.kasitelty, viestiketju.subject,
   viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id,
   (select array_agg(vastaanottaja_id) from vastaanottaja
     where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
@@ -59,5 +59,8 @@ from viesti
 where viesti.viestiketju_id = :id
  order by viesti.sent_time asc;
 
--- name: select-possible-vastaanottajat
+-- name: select-kayttajat
 select id, etunimi, sukunimi, rooli_id from kayttaja;
+
+-- name: select-kasittelijat
+select id, etunimi, sukunimi, rooli_id from kayttaja WHERE rooli_id IN (2, 3);

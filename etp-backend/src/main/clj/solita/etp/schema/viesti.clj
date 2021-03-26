@@ -10,6 +10,10 @@
    :subject               schema/Str
    :body                  schema/Str})
 
+(def KetjuUpdate
+  {(schema/optional-key :kasittelija-id) (schema/maybe common-schema/Key)
+   (schema/optional-key :kasitelty) schema/Bool})
+
 (def Kayttaja
   "Sender or Recipient information only, not the full Kayttaja"
   {:id       common-schema/Key
@@ -24,6 +28,8 @@
 
 (def Ketju
   {:id                    common-schema/Key
+   :kasittelija-id        (schema/maybe common-schema/Key)
+   :kasitelty             schema/Bool
    :vastaanottajat        [Kayttaja]
    :vastaanottajaryhma-id (schema/maybe common-schema/Key)
    :energiatodistus-id    (schema/maybe common-schema/Key)
