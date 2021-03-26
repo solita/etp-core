@@ -23,15 +23,25 @@
                     {{/processing-action}}
                 </ns0:IdentityChain>
                 {{/identity}}
-                {{#info}}
+                {{#case-info}}
                 <ns0:CaseInfoQueryOperation>
-                    {{#case}}
                     <ns0:CaseNumberIdentity>
-                        <ns0:caseNumber>{{number}}</ns0:caseNumber>
+                        <ns0:caseNumber>{{case-number}}</ns0:caseNumber>
                     </ns0:CaseNumberIdentity>
-                    {{/case}}
                 </ns0:CaseInfoQueryOperation>
                 {{/info}}
+                {{#processing-action-info}}
+                <ns0:ActionInfoQueryOperation>
+                    <ns0:IdentityChain>
+                        <ns0:CaseNumberIdentity>
+                            <ns0:caseNumber>{{case-number}}</ns0:caseNumber>
+                        </ns0:CaseNumberIdentity>
+                        <ns0:ProcessingActionNameIdentity>
+                            <ns0:name>{{name-identity}}</ns0:name>
+                        </ns0:ProcessingActionNameIdentity>
+                    </ns0:IdentityChain>
+                </ns0:ActionInfoQueryOperation>
+                {{/processing-action-info}}
                 {{#processing-action}}
                 <ns0:CreateProcessingActionOperation>
                     <ns0:name>{{name}}</ns0:name>

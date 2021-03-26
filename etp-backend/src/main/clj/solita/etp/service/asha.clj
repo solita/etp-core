@@ -72,6 +72,24 @@
      :description    (xml/get-content response-xml [:return :case-info-response :description])
      :created        (xml/get-content response-xml [:return :case-info-response :created])}))
 
+(defn response-parser-action-info [response-soap]
+  (let [response-xml (read-response->xml response-soap)
+        action-info (fn [path]
+                      {:object-class         (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:object-identity :object-class])))
+                       :id                   (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:object-identity :id])))
+                       :version              (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:object-identity :version])))
+                       :contacting-direction (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:contacting-direction])))
+                       :name                 (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:name])))
+                       :description          (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:description])))
+                       :status               (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:status])))
+                       :created              (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:created])))})]
+    (debug-print response-xml)
+    {:processing-action (action-info [:processing-action])
+     :assignee          (xml/get-content response-xml [:return :action-info-response :assignee])
+     :queue             (xml/get-content response-xml [:return :action-info-response :queue])
+     :selected-decision {:decision               (xml/get-content response-xml [:return :action-info-response :selected-decision :decision])
+                         :next-processing-action (action-info [:selected-decision :next-processing-action])}}))
+
 (defn case-create [case]
   (request-handler case "case-create" response-parser-case-create asha-schema/CaseCreateResponse))
 
@@ -81,9 +99,17 @@
 (defn case-info [sender-id request-id case-number]
   (execute-operation {:request-id request-id
                       :sender-id  sender-id
-                      :info       {:case {:number case-number}}}
+                      :case-info  {:case-number case-number}}
                      response-parser-case-info
                      asha-schema/CaseInfoResponse))
+
+(defn action-info [sender-id request-id case-number processing-action-name]
+  (execute-operation {:request-id request-id
+                      :sender-id  sender-id
+                      :processing-action-info {:name-identity processing-action-name
+                                               :case-number case-number}}
+                     response-parser-action-info
+                     asha-schema/ActionInfoResponse))
 
 (defn proceed-operation [sender-id request-id case-number processing-action decision]
   (execute-operation {:request-id        request-id
