@@ -25,10 +25,10 @@
   (let [coercer (sc/coercer schema sc/string-coercion-matcher)]
     (coercer response-parser)))
 
-(defn- make-send-requst [request]
+(defn- ^:dynamic make-send-requst [request]
   (http/post config/asha-endpoint-url
-             (cond-> {:content-type   "application/xop+xml;charset=\"UTF-8\"; type=\"text/xml\""
-                      :body           request}
+             (cond-> {:content-type "application/xop+xml;charset=\"UTF-8\"; type=\"text/xml\""
+                      :body         request}
                      config/asha-proxy? (assoc
                                           :connection-manager
                                           (conn-mgr/make-socks-proxied-conn-manager "localhost" 1080)))))
@@ -41,7 +41,7 @@
           (debug-print (:body response))
           (:body response))
         (do
-          (log/error  (str "Sending xml failed with status " (:status response) " " (:body response)))
+          (log/error (str "Sending xml failed with status " (:status response) " " (:body response)))
           (exception/throw-ex-info! :asha-request-failed
                                     (str "Sending xml failed with status " (:status response) " " (:body response))))))
     (catch Exception e
@@ -103,10 +103,10 @@
                      asha-schema/CaseInfoResponse))
 
 (defn action-info [sender-id request-id case-number processing-action-name]
-  (execute-operation {:request-id request-id
-                      :sender-id  sender-id
+  (execute-operation {:request-id             request-id
+                      :sender-id              sender-id
                       :processing-action-info {:name-identity processing-action-name
-                                               :case-number case-number}}
+                                               :case-number   case-number}}
                      response-parser-action-info
                      asha-schema/ActionInfoResponse))
 

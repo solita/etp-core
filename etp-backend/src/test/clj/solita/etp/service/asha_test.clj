@@ -15,9 +15,9 @@
      :status response-status}))
 
 (t/deftest case-create-test
-  (with-redefs [asha-service/make-send-requst (handle-request "asha/case-create-request.xml"
-                                                              "asha/case-create-response.xml"
-                                                              200)]
+  (binding [asha-service/make-send-requst (handle-request "asha/case-create-request.xml"
+                                                          "asha/case-create-response.xml"
+                                                          200)]
     (t/is (= (asha-service/case-create
                {:sender-id      "test@example.com"
                 :request-id     "ETP-1"
@@ -28,9 +28,9 @@
              {:case-number "ARA-05.03.02-2021-31" :id 38444}))))
 
 (t/deftest case-info-test
-  (with-redefs [asha-service/make-send-requst (handle-request "asha/case-info-request.xml"
-                                                              "asha/case-info-response.xml"
-                                                              200)]
+  (binding [asha-service/make-send-requst (handle-request "asha/case-info-request.xml"
+                                                          "asha/case-info-response.xml"
+                                                          200)]
     (t/is (= (asha-service/case-info "test@example.com" "ETP-1" "ARA-05.03.02-2021-31")
              {:case-number    "ARA-05.03.02-2021-31"
               :id             38444
@@ -41,38 +41,38 @@
               :created        "2021-03-22T10:28:13+02:00"}))))
 
 (t/deftest action-info-test
-  (with-redefs [asha-service/make-send-requst (handle-request "asha/action-info-request.xml"
-                                                              "asha/action-info-response.xml"
-                                                              200)]
+  (binding [asha-service/make-send-requst (handle-request "asha/action-info-request.xml"
+                                                          "asha/action-info-response.xml"
+                                                          200)]
     (t/is (= (asha-service/action-info "test@example.com" "ETP-1" "ARA-05.03.02-2021-8" "Vireillepano")
              {:processing-action
-                        {:object-class "ProcessingAction",
-                         :id 578877,
-                         :version 8,
+                        {:object-class         "ProcessingAction",
+                         :id                   578877,
+                         :version              8,
                          :contacting-direction "NONE",
-                         :name "Vireillepano",
-                         :description "Luodaan uusi asia.",
-                         :status "READY",
-                         :created "2021-03-25T12:47:08+02:00"},
+                         :name                 "Vireillepano",
+                         :description          "Luodaan uusi asia.",
+                         :status               "READY",
+                         :created              "2021-03-25T12:47:08+02:00"},
               :assignee "FFAB23AE-E49F-4E3B-98D9-40C3DE0E4B46",
-              :queue 24,
+              :queue    24,
               :selected-decision
                         {:decision "Siirry käsittelyyn",
                          :next-processing-action
-                                   {:object-class "ProcessingAction",
-                                    :id 579176,
-                                    :version 1,
+                                   {:object-class         "ProcessingAction",
+                                    :id                   579176,
+                                    :version              1,
                                     :contacting-direction "NONE",
-                                    :name "Käsittely",
+                                    :name                 "Käsittely",
                                     :description
-                                    "Asian käsittelyn toimenpiteitä, esim. lausunnon laatiminen, selvityksen tekeminen, päätöksen valmistelu",
-                                    :status "NEW",
-                                    :created "2021-03-25T14:01:07+02:00"}}}))))
+                                                          "Asian käsittelyn toimenpiteitä, esim. lausunnon laatiminen, selvityksen tekeminen, päätöksen valmistelu",
+                                    :status               "NEW",
+                                    :created              "2021-03-25T14:01:07+02:00"}}}))))
 
 (t/deftest case-create-without-sender-id-test
-  (with-redefs [asha-service/make-send-requst (handle-request "asha/case-create-request-without-sender-id.xml"
-                                                              "asha/case-create-response-without-sender-id.xml"
-                                                              500)]
+  (binding [asha-service/make-send-requst (handle-request "asha/case-create-request-without-sender-id.xml"
+                                                          "asha/case-create-response-without-sender-id.xml"
+                                                          500)]
     (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
                             #"Sending xml failed with status 500\.?"
                             (asha-service/case-create
@@ -83,9 +83,9 @@
                                :description    "Helsinki, Katu 1"})))))
 
 (t/deftest execute-operation-attach-contact-test
-  (with-redefs [asha-service/make-send-requst (handle-request "asha/execute-operation-attach-contact-request.xml"
-                                                              "asha/execute-operation-response.xml"
-                                                              200)]
+  (binding [asha-service/make-send-requst (handle-request "asha/execute-operation-attach-contact-request.xml"
+                                                          "asha/execute-operation-response.xml"
+                                                          200)]
     (t/is (nil? (asha-service/execute-operation {:sender-id  "test@example.com"
                                                  :request-id "ETP-1"
                                                  :identity   {:case              {:number "ARA-05.03.02-2021-8"}
@@ -95,9 +95,9 @@
                                                                         :last-name  "Meikäläinen"}}})))))
 
 (t/deftest execute-operation-processing-action-test
-  (with-redefs [asha-service/make-send-requst (handle-request "asha/execute-operation-create-processing-action-request.xml"
-                                                              "asha/execute-operation-response.xml"
-                                                              200)]
+  (binding [asha-service/make-send-requst (handle-request "asha/execute-operation-create-processing-action-request.xml"
+                                                          "asha/execute-operation-response.xml"
+                                                          200)]
     (t/is (nil? (asha-service/execute-operation {:sender-id         "test@example.com"
                                                  :request-id        "ETP-1"
                                                  :identity          {:case              {:number "ARA-05.03.02-2021-8"}
@@ -110,9 +110,9 @@
                                                                                             :last-name  "Meikäläinen"}}})))))
 
 (t/deftest execute-operation-processing-action-test
-  (with-redefs [asha-service/make-send-requst (handle-request "asha/execute-operation-attach-document-request.xml"
-                                                              "asha/execute-operation-response.xml"
-                                                              200)]
+  (binding [asha-service/make-send-requst (handle-request "asha/execute-operation-attach-document-request.xml"
+                                                          "asha/execute-operation-response.xml"
+                                                          200)]
     (t/is (nil? (asha-service/execute-operation {:sender-id  "test@example.com"
                                                  :request-id "ETP-1"
                                                  :identity   {:case              {:number "ARA-05.03.02-2021-8"}
@@ -122,13 +122,12 @@
                                                                           :content (String. (b64/encode (.getBytes "Test")) "UTF-8")}]}})))))
 
 (t/deftest execute-operation-proceed-operation-test
-  (with-redefs [asha-service/make-send-requst (handle-request "asha/execute-operation-proceed-operation-request.xml"
-                                                              "asha/execute-operation-response.xml"
-                                                              200)]
+  (binding [asha-service/make-send-requst (handle-request "asha/execute-operation-proceed-operation-request.xml"
+                                                          "asha/execute-operation-response.xml"
+                                                          200)]
     (t/is (nil? (asha-service/proceed-operation
                   "test@example.com"
                   "ETP-1"
                   "ARA-05.03.02-2021-8"
                   "Vireillepano"
                   "Siirry käsittelyyn")))))
-
