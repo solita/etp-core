@@ -45,8 +45,8 @@
           (exception/throw-ex-info! :asha-request-failed
                                     (str "Sending xml failed with status " (:status response) " " (:body response))))))
     (catch Exception e
-      (log/error (str "Sending xml failed: " (.getMessage e)))
-      (exception/throw-ex-info! :asha-request-failed (.getMessage e)))))
+      (log/error "Sending xml failed: " e)
+      (exception/throw-ex-info! :asha-request-failed (str "Sending xml failed: " (.getMessage e))))))
 
 (defn- request-handler [data resource parser-fn schema]
   (let [request-xml (request-create-xml resource data)

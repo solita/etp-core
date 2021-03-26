@@ -29,7 +29,7 @@
                         <ns0:caseNumber>{{case-number}}</ns0:caseNumber>
                     </ns0:CaseNumberIdentity>
                 </ns0:CaseInfoQueryOperation>
-                {{/info}}
+                {{/case-info}}
                 {{#processing-action-info}}
                 <ns0:ActionInfoQueryOperation>
                     <ns0:IdentityChain>
@@ -60,7 +60,7 @@
                         <ns0:organizationalUnitName>{{organizational-unit-name}}</ns0:organizationalUnitName>
                         <ns0:businessIdentityCode>{{business-identity-code}}</ns0:businessIdentityCode>
                     </ns0:Contact>
-                    {{/contanct}}
+                    {{/contact}}
                 </ns0:CreateProcessingActionOperation>
                 {{/processing-action}}
                 {{#attach}}
@@ -83,7 +83,7 @@
                         <ns0:organizationalUnitName>{{organizational-unit-name}}</ns0:organizationalUnitName>
                         <ns0:businessIdentityCode>{{business-identity-code}}</ns0:businessIdentityCode>
                     </ns0:Contact>
-                    {{/contanct}}
+                    {{/contact}}
                 </ns0:AttachOperation>
                 {{/attach}}
                 {{#proceed-operation}}
