@@ -45,7 +45,7 @@
           (exception/throw-ex-info! :asha-request-failed
                                     (str "Sending xml failed with status " (:status response) " " (:body response))))))
     (catch Exception e
-      (log/error (str "Sending xml failed:" (.getMessage e)))
+      (log/error (str "Sending xml failed: " (.getMessage e)))
       (exception/throw-ex-info! :asha-request-failed (.getMessage e)))))
 
 (defn- request-handler [data resource parser-fn schema]
