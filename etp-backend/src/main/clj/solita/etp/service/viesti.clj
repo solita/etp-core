@@ -49,12 +49,21 @@
   (map #(flat/flat->tree #"\$" %)
        (viesti-db/select-viestit db {:id viestiketju-id})))
 
+(defn find-possible-vastaanottajat [db]
+  (->> db viesti-db/select-possible-vastaanottajat (group-by :id) (map/map-values first)))
+
 (defn- assoc-join-viestit [db ketju]
   (assoc ketju :viestit  (find-viestit db (:id ketju))))
 
+(defn assoc-join-vastaanottajat [possible-vastaanottajat ketju]
+  (->> ketju
+       :vastaanottajat
+       (map possible-vastaanottajat (:vastaanottajat ketju))
+       (assoc ketju :vastaanottajat)))
+
 (defn- visible-for? [whoami ketju]
   (or (rooli-service/paakayttaja? whoami)
-      (contains? (-> ketju :vastaanottajat set) (:id whoami))
+      (contains? (->> ketju :vastaanottajat (map :id) set) (:id whoami))
       (-> ketju :viestit first :from :id (= (:id whoami)))
       (and (rooli-service/laatija? whoami) (-> ketju :vastaanottajaryhma-id (= 1)))
       (and (rooli-service/laskuttaja? whoami) (-> ketju :vastaanottajaryhma-id (= 2)))))
@@ -67,13 +76,15 @@
 
 (defn find-ketju [db whoami id]
   (->> (viesti-db/select-viestiketju db {:id id})
-       (map (partial assoc-join-viestit db))
+       (map (comp (partial assoc-join-viestit db)
+               (partial assoc-join-vastaanottajat (find-possible-vastaanottajat db))))
        (map #(assert-visibility whoami %))
        first))
 
 (defn find-ketjut [db whoami q]
   (let [query (merge {:limit 100 :offset 0} q)]
-    (pmap (partial assoc-join-viestit db)
+    (pmap (comp (partial assoc-join-viestit db)
+             (partial assoc-join-vastaanottajat (find-possible-vastaanottajat db)))
           (cond (rooli-service/paakayttaja? whoami)
                 (viesti-db/select-all-viestiketjut db query)
 

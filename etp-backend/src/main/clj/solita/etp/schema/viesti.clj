@@ -10,20 +10,21 @@
    :subject               schema/Str
    :body                  schema/Str})
 
-(def Sender
+(def Kayttaja
+  "Sender or Recipient information only, not the full Kayttaja"
   {:id       common-schema/Key
    :rooli-id common-schema/Key
    :sukunimi schema/Str
    :etunimi  schema/Str})
 
 (def Viesti
-  {:from     Sender
+  {:from      Kayttaja
    :sent-time common-schema/Instant
-   :body     schema/Str})
+   :body      schema/Str})
 
 (def Ketju
   {:id                    common-schema/Key
-   :vastaanottajat        [common-schema/Key]
+   :vastaanottajat        [Kayttaja]
    :vastaanottajaryhma-id (schema/maybe common-schema/Key)
    :energiatodistus-id    (schema/maybe common-schema/Key)
    :subject               schema/Str

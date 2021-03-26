@@ -4,8 +4,8 @@ select
   viestiketju.id, viestiketju.subject,
   viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id,
   (select array_agg(vastaanottaja_id) from vastaanottaja
-  where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
-from viestiketju
+    where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
+  from viestiketju
 order by (select max(sent_time) from viesti where viestiketju_id = viestiketju.id) desc
 limit :limit offset :offset;
 
@@ -14,7 +14,7 @@ select
   viestiketju.id, viestiketju.subject,
   viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id,
   (select array_agg(vastaanottaja_id) from vastaanottaja
-   where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
+    where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
 from viestiketju
 where from_id = :kayttaja-id or vastaanottajaryhma_id = :vastaanottajaryhma-id or
       exists (
@@ -43,7 +43,7 @@ select
   viestiketju.id, viestiketju.subject,
   viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id,
   (select array_agg(vastaanottaja_id) from vastaanottaja
-   where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
+    where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
 from viestiketju
 where id = :id;
 
@@ -57,4 +57,7 @@ select
 from viesti
   inner join kayttaja on kayttaja.id = viesti.from_id
 where viesti.viestiketju_id = :id
-order by viesti.sent_time asc;
+ order by viesti.sent_time asc;
+
+-- name: select-possible-vastaanottajat
+select id, etunimi, sukunimi, rooli_id from kayttaja;
