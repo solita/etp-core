@@ -41,11 +41,11 @@
           (debug-print (:body response))
           (:body response))
         (do
-          (log/error "Sending xml failed with status " (:status response) (:body response))
+          (log/error  (str "Sending xml failed with status " (:status response) " " (:body response)))
           (exception/throw-ex-info! :asha-request-failed
                                     (str "Sending xml failed with status " (:status response) " " (:body response))))))
     (catch Exception e
-      (log/error "Sending xml failed:" e)
+      (log/error (str "Sending xml failed:" (.getMessage e)))
       (exception/throw-ex-info! :asha-request-failed (.getMessage e)))))
 
 (defn- request-handler [data resource parser-fn schema]
