@@ -8,7 +8,8 @@
 
 (def routes
   [["/valvonta/:id"
-   {:get {:summary    "Hae energiatodistuksen valvonnan tila"
+   {:conflicting true
+    :get {:summary    "Hae energiatodistuksen valvonnan tila"
           :parameters {:path {:id common-schema/Key}}
           :responses  {200 {:body valvonta-schema/Valvonta}
                        404 {:body schema/Str}}
