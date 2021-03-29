@@ -14,8 +14,12 @@
              :parameters {:body viesti-schema/KetjuAdd}
              :responses  {201 {:body common-schema/Id}}
              :handler    (fn [{:keys [db whoami parameters uri]}]
-                           (api-response/created
-                             uri {:id (viesti-service/add-ketju! db whoami (:body parameters))}))}
+                           (api-response/with-exceptions
+                             #(api-response/created
+                               uri
+                               {:id (viesti-service/add-ketju! db whoami (:body parameters))})
+                             [{:type :missing-vastaanottaja-or-vastaanottajaryhma-id
+                               :response 400}]))}
 
       :get  {:summary    "Hae kaikki käyttäjän viestiketjut."
              :parameters {:query {(schema/optional-key :limit)  (common-schema/LimitedInt 1 100)

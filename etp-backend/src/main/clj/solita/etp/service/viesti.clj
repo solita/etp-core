@@ -1,11 +1,11 @@
 (ns solita.etp.service.viesti
-  (:require [solita.etp.service.luokittelu :as luokittelu-service]
-            [solita.etp.db :as db]
-            [clojure.java.jdbc :as jdbc]
+  (:require [clojure.java.jdbc :as jdbc]
+            [flathead.flatten :as flat]
             [solita.common.map :as map]
-            [solita.etp.service.rooli :as rooli-service]
+            [solita.etp.db :as db]
             [solita.etp.exception :as exception]
-            [flathead.flatten :as flat]))
+            [solita.etp.service.luokittelu :as luokittelu-service]
+            [solita.etp.service.rooli :as rooli-service]))
 
 (db/require-queries 'viesti)
 
@@ -33,8 +33,16 @@
            " is not allowed to use vastaanottajaryhma: "
            (:vastaanottajaryhma-id ketju)))))
 
+(defn- assert-vastaanottajaryhma-or-vastaanottaja-exists! [ketju]
+  (when (and (-> ketju :vastaanottajat empty?)
+             (-> ketju :vastaanottajaryhma-id nil?))
+    (exception/throw-ex-info!
+     {:type :missing-vastaanottaja-or-vastaanottajaryhma-id
+      :message "Missing either vastaanottaja or vastaanottajaryhma-id"})))
+
 (defn add-ketju! [db whoami ketju]
   (assert-vastaanottajaryhma! whoami ketju)
+  (assert-vastaanottajaryhma-or-vastaanottaja-exists! ketju)
   (db/with-db-exception-translation
     #(jdbc/with-db-transaction
        [tx db]
