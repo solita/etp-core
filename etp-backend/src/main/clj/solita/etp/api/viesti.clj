@@ -19,6 +19,10 @@
                                uri
                                {:id (viesti-service/add-ketju! db whoami (:body parameters))})
                              [{:type :missing-vastaanottaja-or-vastaanottajaryhma-id
+                               :response 400}
+                              {:type :viestiketju-vastaanottajaryhma-id-fkey
+                               :response 400}
+                              {:type :viestiketju-vastaanottaja-id-fkey
                                :response 400}]))}
 
       :get  {:summary    "Hae kaikki käyttäjän viestiketjut."
