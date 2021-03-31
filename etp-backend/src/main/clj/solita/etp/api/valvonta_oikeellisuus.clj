@@ -4,7 +4,8 @@
             [solita.etp.schema.valvonta-oikeellisuus :as valvonta-schema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.api.response :as api-response]
-            [ring.util.response :as r]))
+            [ring.util.response :as r]
+            [schema.core :as schema]))
 
 (def routes
   [["/valvonta/oikeellisuus"
@@ -21,6 +22,13 @@
                     :access    rooli-service/paakayttaja?
                     :handler   (fn [{:keys [db whoami]}]
                                  (r/response (valvonta-service/find-valvonnat db)))}}]
+
+    ["/count"
+     {:conflicting true
+      :get         {:summary   "Hae viestiketjujen lukumäärä."
+                    :responses {200 {:body {:count schema/Int}}}
+                    :handler   (fn [{:keys [db whoami]}]
+                                 (r/response (valvonta-service/count-valvonnat db)))}}]
 
     ["/:id/toimenpiteet"
      [""

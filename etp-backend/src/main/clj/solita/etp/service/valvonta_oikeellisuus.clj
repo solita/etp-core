@@ -10,6 +10,8 @@
        (map (comp last second))
        (pmap #(assoc % :energiatodistus (energiatodistus-service/find-energiatodistus db (:energiatodistus-id %))))))
 
+(defn count-valvonnat [db] {:count (count @toimenpiteet)})
+
 (defn- new-toimenpide [whoami id toimenpide toimenpiteet]
   (conj (or toimenpiteet [])
         (assoc toimenpide
