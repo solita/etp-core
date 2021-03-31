@@ -168,7 +168,9 @@
   (cond
     (or (rooli-service/paakayttaja? whoami)
         (rooli-service/laskuttaja? whoami))
-    ["energiatodistus.tila_id IN (2, 3, 4)"]
+    ["(energiatodistus.tila_id IN (2, 3, 4) OR
+       (energiatodistus.draft_visible_to_paakayttaja AND
+        energiatodistus.tila_id <> 5))"]
 
     (rooli-service/laatija? whoami)
     ["energiatodistus.laatija_id = ? AND energiatodistus.tila_id <> 5" id]
