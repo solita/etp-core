@@ -167,14 +167,8 @@
 
 (def external-routes
   [["/energiatodistukset"
-    ["/2013" (crud-api/post 2013
-                            (-> energiatodistus-schema/EnergiatodistusSave2013
-                                (dissoc :kommentti)
-                                xschema/optional-key-for-maybe))]
-    ["/2018" (crud-api/post 2018
-                            (-> energiatodistus-schema/EnergiatodistusSave2018
-                                (dissoc :kommentti)
-                                xschema/optional-key-for-maybe))]
+    ["/2013" (crud-api/post 2013 energiatodistus-schema/EnergiatodistusSave2013External)]
+    ["/2018" (crud-api/post 2018 energiatodistus-schema/EnergiatodistusSave2018External)]
     ["/legacy"
      ["/2013" (xml-api/post 2013)]
      ["/2018" (xml-api/post 2018)]]]])

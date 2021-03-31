@@ -17,7 +17,8 @@
                 :tulokset :toteutunut-ostoenergiankulutus :huomiot
                 :lisamerkintoja-fi :lisamerkintoja-sv])
 
-(def omitted-cols [:kommentti])
+(def omitted-cols [:kommentti :draft-visible-to-paakayttaja
+                   :bypass-validation-limits])
 
 (defn paths-for-k [energiatodistukset k]
   (->> energiatodistukset
