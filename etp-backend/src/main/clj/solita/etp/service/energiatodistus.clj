@@ -270,10 +270,9 @@
   (assert-korvaavuus-draft! db nil energiatodistus)
   (validate-sisainen-kuorma! db versio energiatodistus)
   (let [energiatodistus-db-row (-> energiatodistus
-                                   (assoc :versio versio
-                                          :laatija-id (:id whoami))
+                                   (assoc :versio versio :laatija-id (:id whoami))
                                    (assoc-e-tehokkuus db versio)
-                                   (dissoc :kommentti)
+                                   (dissoc :kommentti :bypass-validation-limits)
                                    energiatodistus->db-row)
         warnings (validate-db-row! db energiatodistus-db-row versio)]
     {:id (-> (db/with-db-exception-translation jdbc/insert!
@@ -294,12 +293,12 @@
            (:id energiatodistus)))))
 
 (defn- select-energiatodistus-for-update
-  [energiatodistus-update
-   id tila-id rooli laskutettu?]
-
+  [energiatodistus-update id tila-id rooli laskutettu?]
   (match/match
     [(tila-key tila-id) rooli laskutettu?]
-    [:draft :laatija false] (dissoc energiatodistus-update :kommentti)
+    [:draft :laatija false] (dissoc energiatodistus-update
+                                    :kommentti
+                                    :bypass-validation-limits)
     [:signed :laatija false] (select-keys energiatodistus-update
                                           [:laskutettava-yritys-id
                                            :laskuriviviite

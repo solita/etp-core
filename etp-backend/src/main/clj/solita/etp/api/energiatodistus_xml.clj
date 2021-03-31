@@ -11,6 +11,9 @@
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.energiatodistus :as energiatodistus-service]))
 
+;; XML API does not use External-version of schema, because energiatodistus is
+;; created internally and fields not available in the XML schema are
+;; initialized manually.
 (def coercer (sc/coercer energiatodistus-schema/EnergiatodistusSave2018 sc/string-coercion-matcher))
 
 (def xsd-path "legacy-api/energiatodistus-2018.xsd")
@@ -266,6 +269,8 @@
          :laskutettava-yritys-id         nil
          :laskuriviviite                 nil
          :kommentti                      nil
+         :draft-visible-to-paakayttaja   false
+         :bypass-validation-limits       false
          :perustiedot                    (perustiedot (f :perustiedot))
          :lahtotiedot                    (lahtotiedot (f :lahtotiedot))
          :tulokset                       (tulokset (f :tulokset))

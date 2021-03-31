@@ -277,6 +277,8 @@
      :laskutettava-yritys-id         common-schema/Key
      :laskuriviviite                 common-schema/String6300
      :kommentti                      common-schema/String6300
+     :draft-visible-to-paakayttaja   schema/Bool
+     :bypass-validation-limits       schema/Bool
      :perustiedot                    Perustiedot
      :lahtotiedot                    Lahtotiedot
      :tulokset                       Tulokset
@@ -311,6 +313,18 @@
                 [(optional-properties UserDefinedEnergia)])
       (assoc-in [:toteutunut-ostoenergiankulutus :ostettu-energia :muu]
                 [(optional-properties UserDefinedEnergia)])))
+
+(defn ->EnergiatodistusSaveExternal [schema]
+  (-> schema
+      (dissoc :kommentti
+              :draft-visible-to-paakayttaja
+              :bypass-validation-limits)
+      xschema/optional-key-for-maybe))
+
+(def EnergiatodistusSave2013External
+  (->EnergiatodistusSaveExternal EnergiatodistusSave2013))
+(def EnergiatodistusSave2018External
+  (->EnergiatodistusSaveExternal EnergiatodistusSave2018))
 
 (def Energiatehokkuus
   {:e-luku (schema/maybe schema/Num)

@@ -42,7 +42,9 @@
                                             :lammonjako {:id (rand-int 13)}}
                                  :sis-kuorma (sisainen-kuorma versio 1)}
                    :laskutettava-yritys-id nil
-                   :korvattu-energiatodistus-id nil}
+                   :korvattu-energiatodistus-id nil
+                   :draft-visible-to-paakayttaja false
+                   :bypass-validation-limits false}
                   (schema-by-version-and-ready-for-signing versio
                                                            ready-for-signing?)
                   generators)))
