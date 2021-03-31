@@ -219,13 +219,15 @@
     #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] (partial assoc {} :muu)))))
 
 (defn- select-energiatodistus-for-find
-  [{:keys [tila-id laatija-id] :as energiatodistus} whoami]
+  [{:keys [tila-id laatija-id draft-visible-to-paakayttaja] :as energiatodistus} whoami]
   (match/match
    [(tila-key tila-id)
     (-> whoami :rooli rooli-service/rooli-key)
-    (= laatija-id (:id whoami))]
-   [_ :laatija true] (assoc energiatodistus :kommentti nil)
-   [(:or :signed :discarded :replaced) (:or :paakayttaja :laskuttaja) _] energiatodistus
+    (= laatija-id (:id whoami))
+    draft-visible-to-paakayttaja]
+   [_ :laatija true _] (assoc energiatodistus :kommentti nil)
+   [(:or :signed :discarded :replaced) (:or :paakayttaja :laskuttaja) _ _] energiatodistus
+   [_ (:or :paakayttaja :laskuttaja) _ true] energiatodistus
    :else (exception/throw-forbidden!)))
 
 (defn find-energiatodistus
