@@ -56,6 +56,20 @@
                 #(service/find-energiatodistus ts/*db* rooli id))
                {:type :forbidden})))))
 
+(t/deftest draft-visible-to-paakayttaja-test
+  (let [{:keys [laatijat energiatodistukset]} (test-data-set)
+        laatija-id (-> laatijat keys sort first)
+        id (-> energiatodistukset keys first)
+        update (-> (energiatodistus-test-data/generate-updates 1 2013 false)
+                   first
+                   (assoc :draft-visible-to-paakayttaja true))]
+    (service/update-energiatodistus! ts/*db* {:id laatija-id :rooli 0} id update)
+    (doseq [rooli [kayttaja-test-data/laatija
+                   kayttaja-test-data/paakayttaja
+                   kayttaja-test-data/laskuttaja]]
+      (t/is (add-eq-found? update
+                           (service/find-energiatodistus ts/*db* id))))))
+
 (t/deftest validation-test
   (let [{:keys [laatijat]} (test-data-set)
         laatija-id (-> laatijat keys sort first)
