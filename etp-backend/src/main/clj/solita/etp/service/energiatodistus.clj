@@ -274,7 +274,9 @@
   (let [energiatodistus-db-row (-> energiatodistus
                                    (assoc :versio versio :laatija-id (:id whoami))
                                    (assoc-e-tehokkuus db versio)
-                                   (dissoc :kommentti :bypass-validation-limits)
+                                   (dissoc :kommentti
+                                           :bypass-validation-limits
+                                           :bypass-validation-limits-reason)
                                    energiatodistus->db-row)
         warnings (validate-db-row! db energiatodistus-db-row versio)]
     {:id (-> (db/with-db-exception-translation jdbc/insert!
@@ -300,7 +302,11 @@
     [(tila-key tila-id) rooli laskutettu?]
     [:draft :laatija false] (dissoc energiatodistus-update
                                     :kommentti
-                                    :bypass-validation-limits)
+                                    :bypass-validation-limits
+                                    :bypass-validation-limits-reason)
+    [:draft :paakayttaja false] (select-keys energiatodistus-update
+                                             [:bypass-validation-limits
+                                              :bypass-validation-limits-reason])
     [:signed :laatija false] (select-keys energiatodistus-update
                                           [:laskutettava-yritys-id
                                            :laskuriviviite

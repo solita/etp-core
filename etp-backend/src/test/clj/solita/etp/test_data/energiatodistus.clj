@@ -44,7 +44,8 @@
                    :laskutettava-yritys-id nil
                    :korvattu-energiatodistus-id nil
                    :draft-visible-to-paakayttaja false
-                   :bypass-validation-limits false}
+                   :bypass-validation-limits false
+                   :bypass-validation-limits-reason nil}
                   (schema-by-version-and-ready-for-signing versio
                                                            ready-for-signing?)
                   generators)))

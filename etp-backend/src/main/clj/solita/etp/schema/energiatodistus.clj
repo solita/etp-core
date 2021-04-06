@@ -273,19 +273,20 @@
   add-energiatodistus and update-energiatodistus
   services for 2018 version"
   (optional-properties
-    {:korvattu-energiatodistus-id    common-schema/Key
-     :laskutettava-yritys-id         common-schema/Key
-     :laskuriviviite                 common-schema/String6300
-     :kommentti                      common-schema/String6300
-     :draft-visible-to-paakayttaja   schema/Bool
-     :bypass-validation-limits       schema/Bool
-     :perustiedot                    Perustiedot
-     :lahtotiedot                    Lahtotiedot
-     :tulokset                       Tulokset
-     :toteutunut-ostoenergiankulutus ToteutunutOstoenergiankulutus
-     :huomiot                        Huomiot
-     :lisamerkintoja-fi              common-schema/String6300
-     :lisamerkintoja-sv              common-schema/String6300}))
+    {:korvattu-energiatodistus-id     common-schema/Key
+     :laskutettava-yritys-id          common-schema/Key
+     :laskuriviviite                  common-schema/String6300
+     :kommentti                       common-schema/String6300
+     :draft-visible-to-paakayttaja    schema/Bool
+     :bypass-validation-limits        schema/Bool
+     :bypass-validation-limits-reason schema/Str
+     :perustiedot                     Perustiedot
+     :lahtotiedot                     Lahtotiedot
+     :tulokset                        Tulokset
+     :toteutunut-ostoenergiankulutus  ToteutunutOstoenergiankulutus
+     :huomiot                         Huomiot
+     :lisamerkintoja-fi               common-schema/String6300
+     :lisamerkintoja-sv               common-schema/String6300}))
 
 (defn dissoc-not-in-2013 [schema2018]
   (-> schema2018
@@ -318,7 +319,8 @@
   (-> schema
       (dissoc :kommentti
               :draft-visible-to-paakayttaja
-              :bypass-validation-limits)
+              :bypass-validation-limits
+              :bypass-validation-limits-reason)
       xschema/optional-key-for-maybe))
 
 (def EnergiatodistusSave2013External

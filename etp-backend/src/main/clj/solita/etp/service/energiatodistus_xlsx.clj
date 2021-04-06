@@ -18,7 +18,7 @@
                 :lisamerkintoja-fi :lisamerkintoja-sv])
 
 (def omitted-cols [:kommentti :draft-visible-to-paakayttaja
-                   :bypass-validation-limits])
+                   :bypass-validation-limits :bypass-validation-limits-reason])
 
 (defn paths-for-k [energiatodistukset k]
   (->> energiatodistukset
