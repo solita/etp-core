@@ -14,7 +14,10 @@
 (t/use-fixtures :each ts/fixture)
 
 (defn test-data-set []
-  (let [laatijat (laatija-test-data/generate-and-insert! 1)
+  (let [paakayttaja-adds (->> (kayttaja-test-data/generate-adds 1)
+                              (map #(assoc % :rooli 2)))
+        paakayttaja-ids (kayttaja-test-data/insert! paakayttaja-adds)
+        laatijat (laatija-test-data/generate-and-insert! 1)
         laatija-id (-> laatijat keys sort first)
         energiatodistukset (merge (energiatodistus-test-data/generate-and-insert!
                                    1
@@ -26,7 +29,8 @@
                                    2018
                                    true
                                    laatija-id))]
-    {:laatijat laatijat
+    {:paakayttajat (zipmap paakayttaja-ids paakayttaja-adds)
+     :laatijat laatijat
      :energiatodistukset energiatodistukset}))
 
 (defn add-eq-found? [add found]
@@ -77,7 +81,7 @@
                                                                      2018
                                                                      false)
                             first
-                            (assoc-in [:lahtotiedot :ikkunat :etela :U] 99))]
+                            (assoc-in [:lahtotiedot :ikkunat :etela :U] 99M))]
     (t/is (= (etp-test/catch-ex-data
               #(service/add-energiatodistus! (ts/db-user laatija-id)
                                              {:id laatija-id}
@@ -93,6 +97,38 @@
         update (first (energiatodistus-test-data/generate-updates 1 2013 false))]
     (service/update-energiatodistus! ts/*db* {:id laatija-id :rooli 0} id update)
     (t/is (add-eq-found? update
+                         (service/find-energiatodistus ts/*db* id)))))
+
+(t/deftest bypass-validation-limits-test
+  (let [{:keys [paakayttajat laatijat energiatodistukset]} (test-data-set)
+        paakayttaja-id (-> paakayttajat keys sort first)
+        laatija-id (-> laatijat keys sort first)
+        id (-> energiatodistukset keys sort first)
+        add (get energiatodistukset id)
+        update-f #(assoc-in % [:lahtotiedot :ikkunat :etela :U] 99M)
+        update-without-bypass (update-f add)
+        paakayttaja-update (assoc add :bypass-validation-limits true)
+        update-with-bypass (update-f paakayttaja-update)]
+    (t/is (= (etp-test/catch-ex-data
+              #(service/update-energiatodistus! (ts/db-user laatija-id)
+                                                {:id laatija-id :rooli 0}
+                                                id
+                                                update-without-bypass))
+             {:type :invalid-value
+              :message "Property: lahtotiedot.ikkunat.etela.U has an invalid value: 99"}))
+    (t/is (not (add-eq-found? update-without-bypass
+                              (service/find-energiatodistus ts/*db* id))))
+    (t/is (not (add-eq-found? update-with-bypass
+                              (service/find-energiatodistus ts/*db* id))))
+    (service/update-energiatodistus! (ts/db-user paakayttaja-id)
+                                     kayttaja-test-data/paakayttaja
+                                     id
+                                     paakayttaja-update)
+    (service/update-energiatodistus! (ts/db-user laatija-id)
+                                     {:id laatija-id :rooli 0}
+                                     id
+                                     update-with-bypass)
+    (t/is (add-eq-found? update-with-bypass
                          (service/find-energiatodistus ts/*db* id)))))
 
 (t/deftest delete-test

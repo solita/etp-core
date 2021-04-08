@@ -265,23 +265,24 @@
 (defn xml->energiatodistus [xml]
   (let [xml (xml/with-kebab-case-tags xml)
         f #(xml/get-in-xml xml [:energiatodistus %])]
-    (-> {:korvattu-energiatodistus-id    nil
-         :laskutettava-yritys-id         nil
-         :laskuriviviite                 nil
-         :kommentti                      nil
-         :draft-visible-to-paakayttaja   false
-         :bypass-validation-limits       false
-         :perustiedot                    (perustiedot (f :perustiedot))
-         :lahtotiedot                    (lahtotiedot (f :lahtotiedot))
-         :tulokset                       (tulokset (f :tulokset))
-         :toteutunut-ostoenergiankulutus (toteutunut-ostoenergiankulutus (f :toteutunut-ostoenergiankulutus))
-         :huomiot                        (huomiot (f :huomiot))
-         :lisamerkintoja-fi              (xml/get-content
-                                          xml
-                                          [:energiatodistus :lisamerkintoja-fi])
-         :lisamerkintoja-sv              (xml/get-content
-                                          xml
-                                          [:energiatodistus :lisamerkintoja-sv])}
+    (-> {:korvattu-energiatodistus-id     nil
+         :laskutettava-yritys-id          nil
+         :laskuriviviite                  nil
+         :kommentti                       nil
+         :draft-visible-to-paakayttaja    false
+         :bypass-validation-limits        false
+         :bypass-validation-limits-reason nil
+         :perustiedot                     (perustiedot (f :perustiedot))
+         :lahtotiedot                     (lahtotiedot (f :lahtotiedot))
+         :tulokset                        (tulokset (f :tulokset))
+         :toteutunut-ostoenergiankulutus  (toteutunut-ostoenergiankulutus (f :toteutunut-ostoenergiankulutus))
+         :huomiot                         (huomiot (f :huomiot))
+         :lisamerkintoja-fi               (xml/get-content
+                                           xml
+                                           [:energiatodistus :lisamerkintoja-fi])
+         :lisamerkintoja-sv               (xml/get-content
+                                           xml
+                                           [:energiatodistus :lisamerkintoja-sv])}
         coercer)))
 
 (defn soap-body [content]
