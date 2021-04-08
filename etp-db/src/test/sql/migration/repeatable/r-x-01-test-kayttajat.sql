@@ -25,7 +25,7 @@ on conflict (email) do update
 INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli_id, virtu$localid, virtu$organisaatio) VALUES
 ('Päivi', 'Pääkäyttäjä', 'paakayttaja@solita.fi', '0501234567', 2, 'vvirkamies', 'testivirasto.fi'),
 ('Paavo', 'Pääkäyttäjä', 'paakayttaja2@solita.fi', '0501234567', 2, 'vvirkamies3', 'testivirasto.fi'),
-('Lasse', 'Laskuttaja', 'laskuttaja@solita.fi', '0501234567', 3, 'vvirkamies2', 'testivirasto.fi')
+('Lasse', 'Laskuttaja', 'laskuttaja@solita.fi', '0501234567', 3, 'vvirkamies2', 'testausvirasto.fi')
 on conflict (email) do update
   set etunimi = excluded.etunimi,
       sukunimi = excluded.sukunimi,
