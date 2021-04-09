@@ -34,7 +34,9 @@
 
 (t/deftest find-sivu
   (let [ds (test-data-set)
-        sivut-by-id (reduce #(assoc %1 (:id %2) %2) {} (:sivut ds))
+        sivut-by-id (->> (:sivut ds)
+                         (group-by :id)
+                         (xmap/map-values first))
         laatija {:rooli 0}
         paakayttaja {:rooli 2}
         unpub-id (-> ds :unpublished-sivut first :id)]
