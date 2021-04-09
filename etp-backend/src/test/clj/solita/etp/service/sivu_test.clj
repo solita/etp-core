@@ -37,30 +37,28 @@
         sivut-by-id (->> (:sivut ds)
                          (group-by :id)
                          (xmap/map-values first))
-        laatija {:rooli 0}
-        paakayttaja {:rooli 2}
         unpub-id (-> ds :unpublished-sivut first :id)]
     (t/is (nil? (service/find-sivu ts/*db*
-                                   laatija
+                                   kayttaja-test-data/laatija
                                    unpub-id)))
 
     (t/is (= (get sivut-by-id unpub-id)
              (service/find-sivu ts/*db*
-                                paakayttaja
+                                kayttaja-test-data/paakayttaja
                                 unpub-id)))))
 
 (t/deftest find-all
-  (let [ds (test-data-set)
-        laatija {:rooli 0}
-        paakayttaja {:rooli 2}]
+  (let [ds (test-data-set)]
     ;; laatija sees only published sivut
-    (t/is (= (->> (service/find-all-sivut ts/*db* laatija)
+    (t/is (= (->> (service/find-all-sivut ts/*db*
+                                          kayttaja-test-data/laatija)
                  (map :id) set)
              (->> (:published-sivut ds)
                   (map :id) set)))
 
     ;; paakayttaja sees every page
-    (t/is (= (->> (service/find-all-sivut ts/*db* paakayttaja)
+    (t/is (= (->> (service/find-all-sivut ts/*db*
+                                          kayttaja-test-data/paakayttaja)
                  (map :id) set)
              (->> (:sivut ds)
                   (map :id) set)))))
@@ -69,36 +67,44 @@
   (let [ds (test-data-set)
         sivu (-> ds :sivut first)
         sivu-id (:id sivu)
-        new-body "Lorem ipsum"
-        paakayttaja {:rooli 2}]
-    (t/is (= sivu (service/find-sivu ts/*db* paakayttaja sivu-id)))
+        new-body "Lorem ipsum"]
+    (t/is (= sivu (service/find-sivu ts/*db*
+                                     kayttaja-test-data/paakayttaja
+                                     sivu-id)))
     (service/update-sivu! ts/*db* sivu-id {:body new-body})
     (t/is (= (assoc sivu :body new-body)
-             (service/find-sivu ts/*db* paakayttaja sivu-id)))))
+             (service/find-sivu ts/*db*
+                                kayttaja-test-data/paakayttaja
+                                sivu-id)))))
 
 (t/deftest update-title
   (let [ds (test-data-set)
         sivu (-> ds :sivut first)
         sivu-id (:id sivu)
-        new-title "Hello"
-        paakayttaja {:rooli 2}]
-    (t/is (= sivu (service/find-sivu ts/*db* paakayttaja sivu-id)))
+        new-title "Hello"]
+    (t/is (= sivu (service/find-sivu ts/*db*
+                                     kayttaja-test-data/paakayttaja
+                                     sivu-id)))
     (service/update-sivu! ts/*db* sivu-id {:title new-title})
     (t/is (= (assoc sivu :title new-title)
-             (service/find-sivu ts/*db* paakayttaja sivu-id)))))
+             (service/find-sivu ts/*db*
+                                kayttaja-test-data/paakayttaja
+                                sivu-id)))))
 
 (t/deftest find-empty
-  (t/is (empty? (service/find-all-sivut ts/*db* {:rooli 2 :id 1}))))
+  (t/is (empty? (service/find-all-sivut ts/*db*
+                                        kayttaja-test-data/paakayttaja))))
 
 (t/deftest find-one-after-add
-  (let [whoami {:rooli 2 :id 1}
-        sivu-in {:title "Pääsääntö"
+  (let [sivu-in {:title "Pääsääntö"
                  :body "Äläpä tee virheitä"
                  :published true
                  :ordinal 4
                  :parent-id nil}
         added-sivu-id (:id (service/add-sivu! ts/*db* sivu-in))
-        sivu-out (service/find-sivu ts/*db* whoami added-sivu-id)]
+        sivu-out (service/find-sivu ts/*db*
+                                    kayttaja-test-data/paakayttaja
+                                    added-sivu-id)]
     (t/is (not (nil? added-sivu-id)))
     (t/is (not (nil? sivu-out)))
     (t/is (= (:id    sivu-out) added-sivu-id))
@@ -107,7 +113,7 @@
     (t/is (:published sivu-out))))
 
 (t/deftest simple-hierarchy
-  (let [whoami {:rooli 2 :id 1}
+  (let [whoami kayttaja-test-data/paakayttaja
         defaults {:published false
                   :ordinal 1
                   :parent-id nil}
