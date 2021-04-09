@@ -1,6 +1,7 @@
 (ns user
   (:require [integrant.repl :refer [clear go halt prep init reset reset-all]]
-            [clojure.test :as t]))
+            [clojure.test :as t]
+            [clj-async-profiler.core :as prof]))
 
 (integrant.repl/set-prep!
  (fn []
@@ -25,3 +26,17 @@
 (defn run-tests-and-exit! []
   (let [{:keys [fail error]} (run-tests)]
     (System/exit (if (and (zero? fail) (zero? error)) 0 1))))
+
+(intern 'user
+        (with-meta 'profile {:macro true})
+        @#'prof/profile)
+
+(def start-profiling prof/start)
+(def stop-profiling prof/stop)
+(def clear-profiling-results prof/clear-results)
+
+(defn serve-flamegraphs
+  ([] (serve-flamegraphs 8080))
+  ([port]
+   (println (str "Serving flamegraphs in http://localhost:" port))
+   (prof/serve-files port)))
