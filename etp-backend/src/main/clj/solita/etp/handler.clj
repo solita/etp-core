@@ -25,6 +25,7 @@
             [solita.etp.api.valvonta :as valvonta-api]
             [solita.etp.api.laskutus :as laskutus-api]
             [solita.etp.api.viesti :as viesti-api]
+            [solita.etp.api.sivu :as sivu-api]
             [solita.etp.config :as config]
             [solita.etp.security :as security]
             [solita.etp.jwt :as jwt]
@@ -117,7 +118,8 @@
             (tag "Geo Private API" geo-api/routes)
             (tag "Energiatodistus API" energiatodistus-api/private-routes)
             (tag "Valvonta API" valvonta-api/routes)
-            (tag "Viesti API" viesti-api/routes))]
+            (tag "Viesti API" viesti-api/routes)
+            (tag "Sivu API" sivu-api/routes))]
    ["/external" {:middleware [[security/wrap-whoami-from-basic-auth
                                "Access to external API"]
                               [security/wrap-access]
