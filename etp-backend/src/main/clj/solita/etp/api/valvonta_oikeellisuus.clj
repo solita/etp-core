@@ -10,11 +10,26 @@
 (def routes
   [["/valvonta/oikeellisuus"
     ["/toimenpidetyypit"
-     {:get {:summary   "Hae energiatodistusten oikeellisuuden valvonnan toimenpidetyypit."
+     {:conflicting true
+      :get {:summary   "Hae energiatodistusten oikeellisuuden valvonnan toimenpidetyypit."
             :responses {200 {:body [common-schema/Luokittelu]}}
             :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
             :handler   (fn [{:keys [db]}]
                          (r/response (valvonta-service/find-toimenpidetyypit db)))}}]
+    ["/valvojat"
+     {:conflicting true
+      :get {:summary   "Hae kaikki kasittelijat."
+            :responses {200 {:body [common-schema/Kayttaja]}}
+            :handler   (fn [{:keys [db]}]
+                         (r/response (valvonta-service/find-valvojat db)))}}]
+
+    ["/count"
+     {:conflicting true
+      :get         {:summary   "Hae viestiketjujen lukumäärä."
+                    :responses {200 {:body {:count schema/Int}}}
+                    :handler   (fn [{:keys [db whoami]}]
+                                 (r/response (valvonta-service/count-valvonnat db)))}}]
+
     [""
      {:conflicting true
       :get         {:summary   "Hae energiatodistusten oikeellisuuden valvonnat (työjono)."
@@ -23,12 +38,14 @@
                     :handler   (fn [{:keys [db whoami]}]
                                  (r/response (valvonta-service/find-valvonnat db)))}}]
 
-    ["/count"
+    ["/:id"
      {:conflicting true
-      :get         {:summary   "Hae viestiketjujen lukumäärä."
-                    :responses {200 {:body {:count schema/Int}}}
-                    :handler   (fn [{:keys [db whoami]}]
-                                 (r/response (valvonta-service/count-valvonnat db)))}}]
+      :get         {:summary    "Hae yksittäisen valvonnan yleiset tiedot."
+                    :parameters {:path {:id common-schema/Key}}
+                    :responses  {200 {:body valvonta-schema/ValvontaState}}
+                    :access     rooli-service/paakayttaja?
+                    :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+                                  (r/response (valvonta-service/find-valvonta db id)))}}]
 
     ["/:id/toimenpiteet"
      [""

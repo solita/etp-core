@@ -4,10 +4,10 @@
             [schema-tools.core :as schema-tools]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]))
 
-(def ValvontaSave
+(def ValvontaState
   {:active       schema/Bool
    :liitteet     schema/Bool
-   :valvoja-id   common-schema/Key})
+   :valvoja-id   (schema/maybe common-schema/Key)})
 
 (def ToimenpideUpdate
   (schema-tools/optional-keys

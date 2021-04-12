@@ -1,6 +1,10 @@
 (ns solita.etp.service.valvonta-oikeellisuus
-  (:require [solita.etp.service.energiatodistus :as energiatodistus-service])
+  (:require
+    [solita.etp.db :as db]
+    [solita.etp.service.energiatodistus :as energiatodistus-service])
   (:import (java.time Instant)))
+
+(db/require-queries 'valvonta-oikeellisuus)
 
 (def toimenpiteet (atom {}))
 (def valvonta (atom {}))
@@ -11,6 +15,13 @@
        (pmap #(assoc % :energiatodistus (energiatodistus-service/find-energiatodistus db (:energiatodistus-id %))))))
 
 (defn count-valvonnat [db] {:count (count @toimenpiteet)})
+
+(defn find-valvonta [db id]
+  (or
+    (get @valvonta id)
+    {:active       false
+     :liitteet     false
+     :valvoja-id   nil}))
 
 (defn- new-toimenpide [whoami id toimenpide toimenpiteet]
   (conj (or toimenpiteet [])
@@ -46,17 +57,19 @@
 (def toimenpidetyypit
   (map-indexed
     #(assoc %2 :id %1 :valid true)
-    [{:label-fi "Poikkeama" :label-sv "TODO"}
-     {:label-fi "Katsottu" :label-sv "TODO"}
-     {:label-fi "Valvonnan vireilletulo" :label-sv "TODO"}
-     {:label-fi "Tietopyyntö / Lähetetty" :label-sv "TODO"}
+    [{:label-fi "Katsottu" :label-sv "TODO"}
+     {:label-fi "Poikkeama" :label-sv "TODO"}
+     {:label-fi "Valvonnan aloitus" :label-sv "TODO"}
+     {:label-fi "Tietopyyntö" :label-sv "TODO"}
      {:label-fi "Tietopyyntö / Vastaus" :label-sv "TODO"}
      {:label-fi "Tietopyyntö / Kehotus" :label-sv "TODO"}
      {:label-fi "Tietopyyntö / Varoitus" :label-sv "TODO"}
-     {:label-fi "Valvontamuistio / Lähetetty" :label-sv "TODO"}
+     {:label-fi "Valvontamuistio" :label-sv "TODO"}
      {:label-fi "Valvontamuistio / Vastaus" :label-sv "TODO"}
      {:label-fi "Valvontamuistio / Kehotus" :label-sv "TODO"}
      {:label-fi "Valvontamuistio / Varoitus" :label-sv "TODO"}
-     {:label-fi "Valvonta päätetty" :label-sv "TODO"}]))
+     {:label-fi "Valvonnan lopetus" :label-sv "TODO"}]))
 
 (defn find-toimenpidetyypit [db] toimenpidetyypit)
+
+(defn find-valvojat [db] (valvonta-oikeellisuus-db/select-valvojat db))
