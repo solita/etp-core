@@ -18,7 +18,8 @@
 
 (defn find-valvonta [db id]
   (merge
-    {:active       false
+    {:id id
+     :active       false
      :liitteet     false
      :valvoja-id   nil}
     (get @valvonnat id)))

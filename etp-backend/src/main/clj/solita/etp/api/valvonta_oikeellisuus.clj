@@ -34,7 +34,7 @@
     [""
      {:conflicting true
       :get         {:summary   "Hae energiatodistusten oikeellisuuden valvonnat (työjono)."
-                    :responses {200 {:body [valvonta-schema/Valvonta]}}
+                    :responses {200 {:body [valvonta-schema/ValvontaStatus]}}
                     :access    rooli-service/paakayttaja?
                     :handler   (fn [{:keys [db whoami]}]
                                  (r/response (valvonta-service/find-valvonnat db)))}}]
@@ -43,7 +43,7 @@
      {:conflicting true
       :get         {:summary    "Hae yksittäisen valvonnan yleiset tiedot."
                     :parameters {:path {:id common-schema/Key}}
-                    :responses  {200 {:body valvonta-schema/ValvontaState}}
+                    :responses  {200 {:body valvonta-schema/Valvonta}}
                     :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                     :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                                   (r/response (valvonta-service/find-valvonta db id)))}
@@ -51,7 +51,7 @@
       :put         {:summary    "Muuta valvonnan yleisiä tietoja."
                     :access     rooli-service/paakayttaja?
                     :parameters {:path {:id common-schema/Key}
-                                 :body (schema-tools/optional-keys-schema valvonta-schema/ValvontaState)}
+                                 :body (schema-tools/optional-keys-schema valvonta-schema/ValvontaSave)}
                     :responses  {200 {:body nil}}
                     :handler    (fn [{{{:keys [id]} :path :keys [body]}
                                       :parameters :keys [db whoami]}]
