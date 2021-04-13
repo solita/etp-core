@@ -5,23 +5,24 @@
             [solita.etp.schema.common :as common-schema]
             [solita.etp.api.response :as api-response]
             [ring.util.response :as r]
-            [schema.core :as schema]))
+            [schema.core :as schema]
+            [schema-tools.core :as schema-tools]))
 
 (def routes
   [["/valvonta/oikeellisuus"
     ["/toimenpidetyypit"
      {:conflicting true
-      :get {:summary   "Hae energiatodistusten oikeellisuuden valvonnan toimenpidetyypit."
-            :responses {200 {:body [common-schema/Luokittelu]}}
-            :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
-            :handler   (fn [{:keys [db]}]
-                         (r/response (valvonta-service/find-toimenpidetyypit db)))}}]
+      :get         {:summary   "Hae energiatodistusten oikeellisuuden valvonnan toimenpidetyypit."
+                    :responses {200 {:body [common-schema/Luokittelu]}}
+                    :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+                    :handler   (fn [{:keys [db]}]
+                                 (r/response (valvonta-service/find-toimenpidetyypit db)))}}]
     ["/valvojat"
      {:conflicting true
-      :get {:summary   "Hae kaikki kasittelijat."
-            :responses {200 {:body [common-schema/Kayttaja]}}
-            :handler   (fn [{:keys [db]}]
-                         (r/response (valvonta-service/find-valvojat db)))}}]
+      :get         {:summary   "Hae kaikki kasittelijat."
+                    :responses {200 {:body [common-schema/Kayttaja]}}
+                    :handler   (fn [{:keys [db]}]
+                                 (r/response (valvonta-service/find-valvojat db)))}}]
 
     ["/count"
      {:conflicting true
@@ -43,9 +44,18 @@
       :get         {:summary    "Hae yksittäisen valvonnan yleiset tiedot."
                     :parameters {:path {:id common-schema/Key}}
                     :responses  {200 {:body valvonta-schema/ValvontaState}}
-                    :access     rooli-service/paakayttaja?
+                    :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                     :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
-                                  (r/response (valvonta-service/find-valvonta db id)))}}]
+                                  (r/response (valvonta-service/find-valvonta db id)))}
+
+      :put         {:summary    "Muuta valvonnan yleisiä tietoja."
+                    :access     rooli-service/paakayttaja?
+                    :parameters {:path {:id common-schema/Key}
+                                 :body (schema-tools/optional-keys-schema valvonta-schema/ValvontaState)}
+                    :responses  {200 {:body nil}}
+                    :handler    (fn [{{{:keys [id]} :path :keys [body]}
+                                      :parameters :keys [db whoami]}]
+                                  (r/response (valvonta-service/save-valvonta! db id body)))}}]
 
     ["/:id/toimenpiteet"
      [""
@@ -75,11 +85,11 @@
      ["/:toimenpide-id"
       {:put {:summary    "Muuta toimenpiteen tietoja."
              :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
-             :parameters {:path {:id common-schema/Key
+             :parameters {:path {:id            common-schema/Key
                                  :toimenpide-id common-schema/Key}
                           :body valvonta-schema/ToimenpideUpdate}
-             :responses  {201 {:body nil}
-                          404 common-schema/ConstraintError}
+             :responses  {200 {:body nil}
+                          404 schema/Str}
              :handler    (fn [{{{:keys [id toimenpide-id]} :path :keys [body]}
                                :parameters :keys [db whoami]}]
                            (api-response/put-response

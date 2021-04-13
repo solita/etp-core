@@ -7,7 +7,7 @@
 (db/require-queries 'valvonta-oikeellisuus)
 
 (def toimenpiteet (atom {}))
-(def valvonta (atom {}))
+(def valvonnat (atom {}))
 
 (defn find-valvonnat [db]
   (->> @toimenpiteet
@@ -17,11 +17,14 @@
 (defn count-valvonnat [db] {:count (count @toimenpiteet)})
 
 (defn find-valvonta [db id]
-  (or
-    (get @valvonta id)
+  (merge
     {:active       false
      :liitteet     false
-     :valvoja-id   nil}))
+     :valvoja-id   nil}
+    (get @valvonnat id)))
+
+(defn save-valvonta! [db id valvonta]
+  (swap! valvonnat #(assoc % id valvonta)))
 
 (defn- new-toimenpide [whoami id toimenpide toimenpiteet]
   (conj (or toimenpiteet [])
