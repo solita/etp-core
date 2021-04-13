@@ -42,7 +42,7 @@
           :cognitoid         (schema/maybe schema/Str)
           :virtu             (schema/maybe VirtuId)
           :henkilotunnus     (schema/maybe common-schema/Henkilotunnus)
-          :rooli             (schema/enum 0 1 2)
+          :rooli             (schema/enum 0 1 2 3)
           :ensitallennus     schema/Bool
           :passivoitu        schema/Bool
           :etunimi           schema/Str
