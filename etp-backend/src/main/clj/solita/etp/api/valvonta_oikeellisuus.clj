@@ -40,59 +40,60 @@
                                  (r/response (valvonta-service/find-valvonnat db)))}}]
 
     ["/:id"
-     {:conflicting true
-      :get         {:summary    "Hae yksittäisen valvonnan yleiset tiedot."
-                    :parameters {:path {:id common-schema/Key}}
-                    :responses  {200 {:body valvonta-schema/Valvonta}}
-                    :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
-                    :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
-                                  (r/response (valvonta-service/find-valvonta db id)))}
-
-      :put         {:summary    "Muuta valvonnan yleisiä tietoja."
-                    :access     rooli-service/paakayttaja?
-                    :parameters {:path {:id common-schema/Key}
-                                 :body (schema-tools/optional-keys-schema valvonta-schema/ValvontaSave)}
-                    :responses  {200 {:body nil}}
-                    :handler    (fn [{{{:keys [id]} :path :keys [body]}
-                                      :parameters :keys [db whoami]}]
-                                  (r/response (valvonta-service/save-valvonta! db id body)))}}]
-
-    ["/:id/toimenpiteet"
      [""
-      {:get  {:summary    "Hae energiatodistuksen valvontatoimenpiteet."
-              :parameters {:path {:id common-schema/Key}}
-              :responses  {200 {:body [valvonta-schema/Toimenpide]}}
-              :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
-              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
-                            (api-response/get-response
-                              (valvonta-service/find-toimenpiteet db whoami id)
-                              (str "Energiatodistus " id " does not exists.")))}
+      {:conflicting true
+       :get         {:summary    "Hae yksittäisen valvonnan yleiset tiedot."
+                     :parameters {:path {:id common-schema/Key}}
+                     :responses  {200 {:body valvonta-schema/Valvonta}}
+                     :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+                     :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+                                   (r/response (valvonta-service/find-valvonta db id)))}
 
-       :post {:summary    "Lisää energiatodistuksen valvontatoimenpide."
+       :put         {:summary    "Muuta valvonnan yleisiä tietoja."
+                     :access     rooli-service/paakayttaja?
+                     :parameters {:path {:id common-schema/Key}
+                                  :body (schema-tools/optional-keys-schema valvonta-schema/ValvontaSave)}
+                     :responses  {200 {:body nil}}
+                     :handler    (fn [{{{:keys [id]} :path :keys [body]}
+                                       :parameters :keys [db whoami]}]
+                                   (r/response (valvonta-service/save-valvonta! db id body)))}}]
+
+     ["/toimenpiteet"
+      [""
+       {:get  {:summary    "Hae energiatodistuksen valvontatoimenpiteet."
+               :parameters {:path {:id common-schema/Key}}
+               :responses  {200 {:body [valvonta-schema/Toimenpide]}}
+               :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+               :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+                             (api-response/get-response
+                               (valvonta-service/find-toimenpiteet db whoami id)
+                               (str "Energiatodistus " id " does not exists.")))}
+
+        :post {:summary    "Lisää energiatodistuksen valvontatoimenpide."
+               :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+               :parameters {:path {:id common-schema/Key}
+                            :body valvonta-schema/ToimenpideAdd}
+               :responses  {201 {:body common-schema/Id}
+                            404 common-schema/ConstraintError}
+               :handler    (fn [{{{:keys [id]} :path :keys [body]}
+                                 :parameters :keys [db whoami]}]
+                             (api-response/with-exceptions
+                               #(api-response/created
+                                  (str "/valvonta/oikeellisuus/" id "/toimenpiteet")
+                                  (valvonta-service/add-toimenpide! db whoami id body))
+                               [{:constraint :toimenpide-energiatodistus-id-fkey
+                                 :response   404}]))}}]
+      ["/:toimenpide-id"
+       {:put {:summary    "Muuta toimenpiteen tietoja."
               :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
-              :parameters {:path {:id common-schema/Key}
-                           :body valvonta-schema/ToimenpideAdd}
-              :responses  {201 {:body common-schema/Id}
-                           404 common-schema/ConstraintError}
-              :handler    (fn [{{{:keys [id]} :path :keys [body]}
+              :parameters {:path {:id            common-schema/Key
+                                  :toimenpide-id common-schema/Key}
+                           :body valvonta-schema/ToimenpideUpdate}
+              :responses  {200 {:body nil}
+                           404 schema/Str}
+              :handler    (fn [{{{:keys [id toimenpide-id]} :path :keys [body]}
                                 :parameters :keys [db whoami]}]
-                            (api-response/with-exceptions
-                              #(api-response/created
-                                 (str "/valvonta/oikeellisuus/" id "/toimenpiteet")
-                                 (valvonta-service/add-toimenpide! db whoami id body))
-                              [{:constraint :toimenpide-energiatodistus-id-fkey
-                                :response   404}]))}}]
-     ["/:toimenpide-id"
-      {:put {:summary    "Muuta toimenpiteen tietoja."
-             :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
-             :parameters {:path {:id            common-schema/Key
-                                 :toimenpide-id common-schema/Key}
-                          :body valvonta-schema/ToimenpideUpdate}
-             :responses  {200 {:body nil}
-                          404 schema/Str}
-             :handler    (fn [{{{:keys [id toimenpide-id]} :path :keys [body]}
-                               :parameters :keys [db whoami]}]
-                           (api-response/put-response
-                             (valvonta-service/update-toimenpide!
-                               db whoami id toimenpide-id body)
-                             (str "Toimenpide " toimenpide-id " does not exists.")))}}]]]])
+                            (api-response/put-response
+                              (valvonta-service/update-toimenpide!
+                                db whoami id toimenpide-id body)
+                              (str "Toimenpide " toimenpide-id " does not exists.")))}}]]]]])
