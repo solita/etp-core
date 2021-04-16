@@ -6,26 +6,29 @@
 
 (db/require-queries 'valvonta-oikeellisuus)
 
-(def toimenpiteet (atom {}))
 (def valvonnat (atom {}))
 
-(defn find-valvonnat [db]
-  (->> @toimenpiteet
-       (map (comp last second))
-       (pmap #(assoc % :energiatodistus (energiatodistus-service/find-energiatodistus db (:energiatodistus-id %))))))
+(def default-valvonta
+  {:active     false
+   :liitteet   false
+   :valvoja-id nil})
 
-(defn count-valvonnat [db] {:count (count @toimenpiteet)})
+(defn find-valvonnat [db]
+  (->> @valvonnat
+       (map second)
+       (map #(assoc % :last-toimenpide (-> % :toimenpiteet last)))
+       (map #(dissoc % :toimenpiteet))
+       (pmap #(assoc % :energiatodistus (energiatodistus-service/find-energiatodistus db (:id %))))))
+
+(defn count-valvonnat [db] {:count (count @valvonnat)})
 
 (defn find-valvonta [db id]
   (merge
-    {:id id
-     :active       false
-     :liitteet     false
-     :valvoja-id   nil}
-    (get @valvonnat id)))
+    (assoc default-valvonta :id id)
+    (-> @valvonnat (get id) (dissoc :toimenpiteet))))
 
 (defn save-valvonta! [db id valvonta]
-  (swap! valvonnat #(assoc % id valvonta)))
+  (swap! valvonnat #(update % id (fn [current] (merge current (assoc valvonta :id id))))))
 
 (defn- new-toimenpide [whoami id toimenpide toimenpiteet]
   (conj (or toimenpiteet [])
@@ -37,10 +40,13 @@
           :create-time (Instant/now)
           :publish-time (Instant/now))))
 
+(defn default-to [default] #(or % default))
+
 (defn add-toimenpide! [db whoami id toimenpide]
-  (-> toimenpiteet
-      (swap! #(update % id (partial new-toimenpide whoami id toimenpide)))
-      (get id)
+  (swap! valvonnat #(update % id (default-to (assoc default-valvonta :id id))))
+  (-> valvonnat
+      (swap! #(update-in % [id :toimenpiteet] (partial new-toimenpide whoami id toimenpide)))
+      (get id) :toimenpiteet
       last
       (select-keys [:id])))
 
@@ -48,15 +54,16 @@
   (update toimenpiteet id #(merge % (assoc toimenpide :author-id (:id whoami)))))
 
 (defn update-toimenpide! [db whoami id toimenpide-id toimenpide]
-  (when (get-in @toimenpiteet [id toimenpide-id])
-    (swap! toimenpiteet
-           #(update % id (partial update-toimenpide
-                                  whoami toimenpide-id toimenpide)))))
+  (when (get-in @valvonnat [id :toimenpiteet toimenpide-id])
+    (swap! @valvonnat
+           #(update-in % [id :toimenpiteet]
+                       (partial update-toimenpide
+                                whoami toimenpide-id toimenpide)))))
 
 (defn find-toimenpiteet [db whoami id]
   (when-not
     (nil? (energiatodistus-service/find-energiatodistus db whoami id))
-    (or (@toimenpiteet id) [])))
+    (or (-> @valvonnat (get id) :toimenpiteet) [])))
 
 (def toimenpidetyypit
   (map-indexed

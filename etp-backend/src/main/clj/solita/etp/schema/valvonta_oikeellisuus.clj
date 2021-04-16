@@ -31,4 +31,6 @@
     :publish-time (schema/maybe common-schema/Instant)))
 
 (def ValvontaStatus
-  (assoc Toimenpide :energiatodistus energiatodistus-schema/Energiatodistus))
+  (assoc Valvonta
+    :last-toimenpide Toimenpide
+    :energiatodistus energiatodistus-schema/Energiatodistus))
