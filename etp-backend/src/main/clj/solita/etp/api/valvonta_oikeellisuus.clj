@@ -17,16 +17,10 @@
                     :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                     :handler   (fn [{:keys [db]}]
                                  (r/response (valvonta-service/find-toimenpidetyypit db)))}}]
-    ["/valvojat"
-     {:conflicting true
-      :get         {:summary   "Hae kaikki kasittelijat."
-                    :responses {200 {:body [common-schema/Kayttaja]}}
-                    :handler   (fn [{:keys [db]}]
-                                 (r/response (valvonta-service/find-valvojat db)))}}]
 
     ["/count"
      {:conflicting true
-      :get         {:summary   "Hae viestiketjujen lukumäärä."
+      :get         {:summary   "Hae energiatodistusten oikeellisuuden valvontojen lukumäärä."
                     :responses {200 {:body {:count schema/Int}}}
                     :handler   (fn [{:keys [db whoami]}]
                                  (r/response (valvonta-service/count-valvonnat db)))}}]
@@ -84,7 +78,7 @@
                                [{:constraint :toimenpide-energiatodistus-id-fkey
                                  :response   404}]))}}]
       ["/:toimenpide-id"
-       {:put {:summary    "Muuta toimenpiteen tietoja."
+       {:put {:summary    "Muuta valvontatoimenpiteen tietoja."
               :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
               :parameters {:path {:id            common-schema/Key
                                   :toimenpide-id common-schema/Key}

@@ -4,7 +4,7 @@
     [solita.etp.service.energiatodistus :as energiatodistus-service])
   (:import (java.time Instant)))
 
-(db/require-queries 'valvonta-oikeellisuus)
+#_(db/require-queries 'valvonta-oikeellisuus)
 
 (def valvonnat (atom {}))
 
@@ -82,5 +82,3 @@
      {:label-fi "Valvonnan lopetus" :label-sv "TODO"}]))
 
 (defn find-toimenpidetyypit [db] toimenpidetyypit)
-
-(defn find-valvojat [db] (valvonta-oikeellisuus-db/select-valvojat db))
