@@ -23,6 +23,7 @@
             [solita.etp.api.geo :as geo-api]
             [solita.etp.api.energiatodistus :as energiatodistus-api]
             [solita.etp.api.valvonta :as valvonta-api]
+            [solita.etp.api.valvonta-oikeellisuus :as valvonta-oikeellisuus-api]
             [solita.etp.api.laskutus :as laskutus-api]
             [solita.etp.api.viesti :as viesti-api]
             [solita.etp.api.sivu :as sivu-api]
@@ -117,6 +118,7 @@
             (tag "Laatijat Private API" laatija-api/private-routes)
             (tag "Geo Private API" geo-api/routes)
             (tag "Energiatodistus API" energiatodistus-api/private-routes)
+            (tag "Oikeellisuuden valvonta API" valvonta-oikeellisuus-api/routes)
             (tag "Valvonta API" valvonta-api/routes)
             (tag "Viesti API" viesti-api/routes)
             (tag "Sivu API" sivu-api/routes))]

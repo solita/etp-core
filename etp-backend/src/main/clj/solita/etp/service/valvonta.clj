@@ -3,6 +3,8 @@
 
 (db/require-queries 'valvonta)
 
+(defn find-valvojat [db] (valvonta-db/select-valvojat db))
+
 (defn find-valvonta [db id]
   (first (valvonta-db/select-valvonta db {:id id})))
 

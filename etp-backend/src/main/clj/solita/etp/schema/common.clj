@@ -155,3 +155,10 @@
               s))
 
 (def Url (schema/constrained schema/Str valid-url?))
+
+(def Kayttaja
+  "Any kayttaja"
+  {:id       Key
+   :rooli-id Key
+   :sukunimi schema/Str
+   :etunimi  schema/Str})
