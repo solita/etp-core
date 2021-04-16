@@ -7,7 +7,8 @@
             [schema-tools.coerce :as sc]
             [clojure.tools.logging :as log]
             [solita.etp.config :as config]
-            [solita.etp.exception :as exception]))
+            [solita.etp.exception :as exception]
+            [clojure.data.codec.base64 :as b64]))
 
 (defn debug-print [info]
   (when config/asha-debug?
