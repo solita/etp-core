@@ -116,3 +116,35 @@
                       :identity          {:case              {:number case-number}
                                           :processing-action {:name-identity processing-action}}
                       :proceed-operation {:decision decision}}))
+
+(defn bytes->base64-string [bytes]
+  (String. (b64/encode bytes) "UTF-8"))
+
+(defn add-documents-to-processing-action [sender-id request-id case-number processing-action documents]
+  (execute-operation {:sender-id  sender-id
+                      :request-id request-id
+                      :identity   {:case              {:number case-number}
+                                   :processing-action {:name-identity processing-action}}
+                      :attach     {:document (map (fn [document]
+                                                    (update document :content bytes->base64-string))
+                                                  documents)}}))
+
+(defn move-processing-action->kasittely [sender-id request-id case-number]
+  (proceed-operation sender-id request-id case-number "Vireillepano" "Siirry käsittelyyn"))
+
+(defn move-processing-action->paatoksenteko [sender-id request-id case-number]
+  (proceed-operation sender-id request-id case-number "Käsittely" "Siirry päätöksentekoon"))
+
+(defn take-processing-action [sender-id request-id case-number processing-action]
+  (execute-operation {:sender-id        sender-id
+                      :request-id       request-id
+                      :identity         {:case              {:number case-number}
+                                         :processing-action {:name-identity processing-action}}
+                      :start-processing {:assignee sender-id}}))
+
+(defn kayttaja->contact [kayttaja]
+  {:type          "ORGANIZATION"                            ;No enum constant fi.ys.eservice.entity.ContactType.PERSON
+   :first-name    (:etunimi kayttaja)
+   :last-name     (:sukunimi kayttaja)
+   :phone-number  (:puhelin kayttaja)
+   :email-address (:email kayttaja)})
