@@ -328,12 +328,13 @@
              (xml/emit xml file)
              (io/file path)))))
 
-(defn file-key-prefix [now]
+(defn file-key-prefix [now dry-run?]
   (let [today (LocalDate/ofInstant now timezone)]
     (str "laskutus/"
          (.getYear today)
          "/"
          (.format time-formatter-file now)
+         (when dry-run? "-dry-run")
          "/")))
 
 (defn store-files! [aws-s3-client file-key-prefix files]
@@ -360,8 +361,8 @@
                  config/laskutus-sftp-password
                  config/known-hosts-path))
 
-(defn do-kuukauden-laskutus [db aws-s3-client]
-  (log/info "Starting kuukauden laskutusajo.")
+(defn do-kuukauden-laskutus [db aws-s3-client dry-run?]
+  (log/info "Starting kuukauden laskutusajo." {:dry-run? dry-run?})
   (io/make-parents (str tmp-dir "/example.txt"))
   (let [now (Instant/now)
         laskutus (find-kuukauden-laskutus db)
@@ -383,7 +384,7 @@
         all-files (concat asiakastieto-xml-files
                           laskutustieto-xml-files
                           [tasmaytysraportti-file])
-        file-key-prefix (file-key-prefix now)]
+        file-key-prefix (file-key-prefix now dry-run?)]
     (log/info "Laskutus related files created.")
     (store-files! aws-s3-client file-key-prefix all-files)
     (log/info "Laskutus related files stored.")
@@ -393,28 +394,40 @@
             (log/info (str "SFTP connection (for uploading asiakastiedot) to "
                            config/laskutus-sftp-host
                            " established."))
-            (upload-files-with-sftp! sftp-connection
-                                     asiakastieto-xml-files
-                                     asiakastieto-destination-dir)
-            (log/info "Asiakastieto xmls uploaded with SFTP."))
+
+            (if dry-run?
+              (log/info "Skipping uploading asiakastieto xmls because this is a dry run.")
+              (do
+                (upload-files-with-sftp! sftp-connection
+                                         asiakastieto-xml-files
+                                         asiakastieto-destination-dir)
+                (log/info "Asiakastieto xmls uploaded with SFTP."))))
           (log/info (format "Waiting %.2f minutes before continuing."
                             (double (/ sleep-between-asiakastiedot-and-laskutustiedot 1000 60))))
           (Thread/sleep sleep-between-asiakastiedot-and-laskutustiedot)
           (with-open [sftp-connection (connect-sftp!)]
-            (log/info (str "SFTP connection (for uploadting laskutustiedot) to "
+            (log/info (str "SFTP connection (for uploading laskutustiedot) to "
                            config/laskutus-sftp-host
                            " established."))
-            (upload-files-with-sftp! sftp-connection
-                                     laskutustieto-xml-files
-                                     laskutustieto-destination-dir)
-            (log/info "Laskutustieto xmls uploaded with SFTP."))
-          (try
-            (send-tasmaytysraportti-email! tasmaytysraportti-file)
-            (log/info "Täsmätysraportti sent as an email")
-            (catch Exception e
-              (log/error "Sending täsmätysraportti as email failed:" e)))
-          (mark-as-laskutettu! db laskutus)
-          (log/info "Energiatodistukset marked as laskutettu"))
+            (if dry-run?
+              (log/info "Skipping uploading laskutustieto xmls because this is a dry run.")
+              (do
+                (upload-files-with-sftp! sftp-connection
+                                         laskutustieto-xml-files
+                                         laskutustieto-destination-dir)
+                (log/info "Laskutustieto xmls uploaded with SFTP."))))
+          (if dry-run?
+            (log/info "Skipping sending täsmätysraportti because this is a dry run.")
+            (try
+              (send-tasmaytysraportti-email! tasmaytysraportti-file)
+              (log/info "Täsmätysraportti sent as an email")
+              (catch Exception e
+                (log/error "Sending täsmätysraportti as email failed:" e))))
+          (if dry-run?
+            (log/info "Skipping marking energiatodistukset as laskutettu because this is a dry run.")
+            (do
+              (mark-as-laskutettu! db laskutus)
+              (log/info "Energiatodistukset marked as laskutettu"))))
       (log/warn "SFTP configuration missing. Skipping actual integration."))
     (delete-files! all-files)
     (log/info "Laskutus related temporary files deleted.")
