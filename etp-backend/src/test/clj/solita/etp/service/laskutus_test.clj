@@ -329,7 +329,7 @@
 
 (t/deftest file-key-prefix-test
   (t/is (= "laskutus/2021/20211101121530/"
-           (laskutus-service/file-key-prefix (Instant/parse "2021-11-01T10:15:30.00Z")))))
+           (laskutus-service/file-key-prefix (Instant/parse "2021-11-01T10:15:30.00Z") false))))
 
 (t/deftest ^:eftest/synchronized do-kuukauden-laskutus-test
   (test-data-set)
