@@ -65,6 +65,9 @@
     (nil? (energiatodistus-service/find-energiatodistus db whoami id))
     (or (-> @valvonnat (get id) :toimenpiteet) [])))
 
+(defn find-toimenpide [db whoami id toimenpide-id]
+  (get (find-toimenpiteet db whoami id) toimenpide-id))
+
 (def toimenpidetyypit
   (map-indexed
     #(assoc %2 :id %1 :valid true)
@@ -79,6 +82,7 @@
      {:label-fi "Valvontamuistio / Vastaus" :label-sv "TODO"}
      {:label-fi "Valvontamuistio / Kehotus" :label-sv "TODO"}
      {:label-fi "Valvontamuistio / Varoitus" :label-sv "TODO"}
+     {:label-fi "Kieltopäätös" :label-sv "TODO"}
      {:label-fi "Valvonnan lopetus" :label-sv "TODO"}]))
 
 (defn find-toimenpidetyypit [db] toimenpidetyypit)
