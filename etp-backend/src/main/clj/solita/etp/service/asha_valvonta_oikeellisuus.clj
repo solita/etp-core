@@ -1,14 +1,19 @@
 (ns solita.etp.service.asha-valvonta-oikeellisuus
-  (:require [solita.etp.service.asha :as asha]))
+  (:require [solita.etp.service.asha :as asha]
+            [solita.etp.service.energiatodistus :as energiatodistus-service]
+            [solita.etp.service.kayttaja :as kayttaja-service]
+            [clojure.string :as str]))
 
-(defn create-case [sender-id request-id name description users]
-  (asha/case-create {:request-id     request-id
-                     :sender-id      sender-id
-                     :classification "05.03.02"
-                     :service        "general"              ; Yleinen menettely
-                     :name           name
-                     :description    description
-                     :attach         {:contact (asha/kayttaja->contact users)}}))
+(defn create-case [whoami db toimenpide]
+  (when-let [energiatodistus (energiatodistus-service/find-energiatodistus-any-laatija db (:energiatodistus-id toimenpide))]
+    (let [laatija (kayttaja-service/find-kayttaja db (:laatija-id energiatodistus))]
+      (asha/case-create {:request-id     (:email whoami)
+                         :sender-id      (str (:id energiatodistus) "/" (:id toimenpide))
+                         :classification "05.03.02"
+                         :service        "general"          ; Yleinen menettely
+                         :name           (str/join ", " [(-> energiatodistus :perustiedot :katuosoite-fi) (:laatija-fullname energiatodistus)])
+                         :description    (-> energiatodistus :perustiedot :rakennustunnus)
+                         :attach         {:contact (asha/kayttaja->contact laatija)}}))))
 
 (defn create-tietopyynto [sender-id request-id case-number users document]
   (asha/execute-operation {:sender-id         sender-id

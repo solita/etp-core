@@ -91,7 +91,7 @@
                          :next-processing-action (action-info [:selected-decision :next-processing-action])}}))
 
 (defn case-create [case]
-  (request-handler case "case-create" response-parser-case-create asha-schema/CaseCreateResponse))
+  (-> (request-handler case "case-create" response-parser-case-create asha-schema/CaseCreateResponse) :case-number))
 
 (defn execute-operation [data & [response-parser schema]]
   (request-handler data "execute-operation" response-parser schema))
