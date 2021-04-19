@@ -9,11 +9,15 @@
   [["/laskutus"
     {:middleware [[security/wrap-db-application-name -2]]
      :post {:summary    "Käynnistä laskutusajo"
-           :responses  {200 {:body nil}}
-           :handler    (fn [{:keys [db aws-s3-client]}]
-                         (future
-                           (try
-                             (laskutus-service/do-kuukauden-laskutus db aws-s3-client)
+            :parameters {:query {(schema/optional-key :dryrun) schema/Bool}}
+            :responses  {200 {:body nil}}
+            :handler    (fn [{{:keys [query]} :parameters :keys [db aws-s3-client]}]
+                          (future
+                            (try
+                              (laskutus-service/do-kuukauden-laskutus
+                               db
+                               aws-s3-client
+                               (:dryrun query))
                              (catch Exception e
                                (log/error "Exception inside laskutus future." e))))
                          (r/response {}))}}]])
