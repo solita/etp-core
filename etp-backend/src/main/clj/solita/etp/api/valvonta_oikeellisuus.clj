@@ -78,16 +78,29 @@
                                [{:constraint :toimenpide-energiatodistus-id-fkey
                                  :response   404}]))}}]
       ["/:toimenpide-id"
-       {:put {:summary    "Muuta valvontatoimenpiteen tietoja."
+       {:get {:summary    "Hae yksittäisen toimenpiteen tiedot."
+              :parameters {:path {:id            common-schema/Key
+                                  :toimenpide-id common-schema/Key}}
+              :responses  {200 {:body valvonta-schema/Toimenpide}
+                           404 {:body schema/Str}}
+              :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+              :handler    (fn [{{{:keys [id toimenpide-id]} :path}
+                                :parameters :keys [db whoami]}]
+                            (api-response/get-response
+                              (valvonta-service/find-toimenpide
+                                db whoami id toimenpide-id)
+                              (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}
+
+        :put {:summary    "Muuta valvontatoimenpiteen tietoja."
               :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
               :parameters {:path {:id            common-schema/Key
                                   :toimenpide-id common-schema/Key}
                            :body valvonta-schema/ToimenpideUpdate}
               :responses  {200 {:body nil}
-                           404 schema/Str}
+                           404 {:body schema/Str}}
               :handler    (fn [{{{:keys [id toimenpide-id]} :path :keys [body]}
                                 :parameters :keys [db whoami]}]
                             (api-response/put-response
                               (valvonta-service/update-toimenpide!
                                 db whoami id toimenpide-id body)
-                              (str "Toimenpide " toimenpide-id " does not exists.")))}}]]]]])
+                              (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}}]]]]])

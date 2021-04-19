@@ -65,6 +65,9 @@
     (nil? (energiatodistus-service/find-energiatodistus db whoami id))
     (or (-> @valvonnat (get id) :toimenpiteet) [])))
 
+(defn find-toimenpide [db whoami id toimenpide-id]
+  (get (find-toimenpiteet db whoami id) toimenpide-id))
+
 (def toimenpidetyypit
   (map-indexed
     #(assoc %2 :id %1 :valid true)
