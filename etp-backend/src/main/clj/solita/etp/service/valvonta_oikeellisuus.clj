@@ -88,9 +88,9 @@
   (get (find-toimenpiteet db whoami id) toimenpide-id))
 
 (defn publish-toimenpide! [db whoami id toimenpide-id]
+  (log-toimenpide! db whoami id (find-toimenpide db whoami id toimenpide-id))
   (update-toimenpide! db whoami id toimenpide-id
-                      { :publish-time (Instant/now) })
-  (log-toimenpide! db whoami id (find-toimenpide db whoami id toimenpide-id)))
+                      { :publish-time (Instant/now) }))
 
 (def toimenpidetyypit
   (map-indexed
