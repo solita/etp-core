@@ -78,6 +78,7 @@
                                [{:constraint :toimenpide-energiatodistus-id-fkey
                                  :response   404}]))}}]
       ["/:toimenpide-id"
+       [""
        {:get {:summary    "Hae yksittäisen toimenpiteen tiedot."
               :parameters {:path {:id            common-schema/Key
                                   :toimenpide-id common-schema/Key}}
@@ -91,7 +92,7 @@
                                 db whoami id toimenpide-id)
                               (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}
 
-        :put {:summary    "Muuta valvontatoimenpiteen tietoja."
+        :put {:summary    "Muuta toimenpiteen tietoja."
               :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
               :parameters {:path {:id            common-schema/Key
                                   :toimenpide-id common-schema/Key}
@@ -103,4 +104,15 @@
                             (api-response/put-response
                               (valvonta-service/update-toimenpide!
                                 db whoami id toimenpide-id body)
-                              (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}}]]]]])
+                              (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}}]
+       ["/publish"
+        {:post {:summary "Tarkista ja julkaise toimenpideluonnos"
+                :parameters {:path {:id common-schema/Key
+                                    :toimenpide-id common-schema/Key}}
+                :access (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+                :responses {200 {:body nil}
+                            404 {:body schema/Str}}
+                :handler (fn [{{{:keys [id toimenpide-id]} :path} :parameters :keys [db whoami]}]
+                           (api-response/put-response
+                             (valvonta-service/publish-toimenpide! db whoami id toimenpide-id)
+                             (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}}]]]]]])
