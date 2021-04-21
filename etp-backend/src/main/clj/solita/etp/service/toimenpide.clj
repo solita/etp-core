@@ -24,3 +24,11 @@
 (def draft-support? (partial type? :audit-report))
 
 (def case-open? (partial type? :case))
+
+(defn asha-toimenpide? [toimenpide]
+  (contains?
+    #{:rfi-request :rfi-order :rfi-warning
+      :audit-report :audit-order :audit-warning}
+    (-> toimenpide :type-id type-key)))
+
+(def published? #(-> % :publish-time some?))
