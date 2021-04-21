@@ -1,7 +1,7 @@
 FROM alpine:latest
 
 RUN apk add --upgrade openjdk11 curl \
-    && curl -L -O http://nilhcem.github.com/FakeSMTP/downloads/fakeSMTP-latest.zip \
+    && curl -L -O https://github.com/Nilhcem/FakeSMTP/raw/gh-pages/downloads/fakeSMTP-latest.zip \
     && unzip fakeSMTP-latest.zip
 
 EXPOSE 25

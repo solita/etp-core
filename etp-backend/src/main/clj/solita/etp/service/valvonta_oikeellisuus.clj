@@ -1,8 +1,8 @@
 (ns solita.etp.service.valvonta-oikeellisuus
   (:require
     [solita.etp.db :as db]
-    [solita.etp.service.asha-valvonta-oikeellisuus :as asha-valvonta-oikeellisuus]
-    [solita.etp.service.energiatodistus :as energiatodistus-service])
+    [solita.etp.service.energiatodistus :as energiatodistus-service]
+    [solita.etp.service.toimenpide :as toimenpide])
   (:import (java.time Instant)))
 
 #_(db/require-queries 'valvonta-oikeellisuus)
@@ -31,17 +31,43 @@
 (defn save-valvonta! [db id valvonta]
   (swap! valvonnat #(update % id (fn [current] (merge current (assoc valvonta :id id))))))
 
-(defn- new-toimenpide [whoami id toimenpide toimenpiteet]
+(defn- new-toimenpide [whoami id diaarinumero toimenpide toimenpiteet]
   (conj (or toimenpiteet [])
         (assoc toimenpide
           :id (count toimenpiteet)
           :energiatodistus-id id
           :author-id (:id whoami)
-          :diaarinumero nil
+          :diaarinumero (or diaarinumero
+                            (-> toimenpiteet last :diaarinumero))
           :create-time (Instant/now)
-          :publish-time (Instant/now))))
+          :publish-time (when-not
+                          (toimenpide/draft-support? toimenpide)
+                          (Instant/now)))))
 
 (defn default-to [default] #(or % default))
+
+(defn insert-toimenpide! [db whoami id diaarinumero toimenpide]
+  (-> valvonnat
+      (swap! #(update-in % [id :toimenpiteet] (partial new-toimenpide whoami id diaarinumero toimenpide)))
+      (get id) :toimenpiteet
+      last))
+
+;; asiahallinta integration
+;; open case returns case number (diaarinumero)
+(defn open-case! [db whoami id])
+(defn log-toimenpide! [db whoami id toimenpide])
+(defn close-case! [db whoami id toimenpide])
+
+(defn add-toimenpide! [db whoami id toimenpide-add]
+  (swap! valvonnat #(update % id (default-to (assoc default-valvonta :id id))))
+  (let [diaarinumero (when (toimenpide/case-open? toimenpide-add)
+                       (open-case! db whoami id))
+        toimenpide (insert-toimenpide! db whoami id diaarinumero toimenpide-add)]
+    (case (-> toimenpide :type-id toimenpide/type-key)
+      :closed (close-case! db whoami id toimenpide)
+      (when-not (toimenpide/draft-support? toimenpide)
+        (log-toimenpide! db whoami id toimenpide)))
+    (select-keys toimenpide [:id])))
 
 (defn update-toimenpide [whoami id toimenpide toimenpiteet]
   (update toimenpiteet id #(merge % (assoc toimenpide :author-id (:id whoami)))))
@@ -53,24 +79,18 @@
                        (partial update-toimenpide
                                 whoami toimenpide-id toimenpide)))))
 
-(defn asha-action! [db whoami id toimenpide]
-  (case (:type-id toimenpide)
-    2 (let [diaarinumero (asha-valvonta-oikeellisuus/create-case whoami db toimenpide)]
-        (update-toimenpide! db whoami id (:id toimenpide) (assoc toimenpide :diaarinumero diaarinumero)))))
-
-(defn add-toimenpide! [db whoami id toimenpide]
-  (swap! valvonnat #(update % id (default-to (assoc default-valvonta :id id))))
-  (let [toimenpide (-> valvonnat
-                       (swap! #(update-in % [id :toimenpiteet] (partial new-toimenpide whoami id toimenpide)))
-                       (get id) :toimenpiteet
-                       last)]
-    (asha-action! db whoami id toimenpide)
-    (select-keys toimenpide [:id])))
-
 (defn find-toimenpiteet [db whoami id]
   (when-not
     (nil? (energiatodistus-service/find-energiatodistus db whoami id))
     (or (-> @valvonnat (get id) :toimenpiteet) [])))
+
+(defn find-toimenpide [db whoami id toimenpide-id]
+  (get (find-toimenpiteet db whoami id) toimenpide-id))
+
+(defn publish-toimenpide! [db whoami id toimenpide-id]
+  (log-toimenpide! db whoami id (find-toimenpide db whoami id toimenpide-id))
+  (update-toimenpide! db whoami id toimenpide-id
+                      { :publish-time (Instant/now) }))
 
 (def toimenpidetyypit
   (map-indexed
@@ -86,6 +106,7 @@
      {:label-fi "Valvontamuistio / Vastaus" :label-sv "TODO"}
      {:label-fi "Valvontamuistio / Kehotus" :label-sv "TODO"}
      {:label-fi "Valvontamuistio / Varoitus" :label-sv "TODO"}
+     {:label-fi "Kieltopäätös" :label-sv "TODO"}
      {:label-fi "Valvonnan lopetus" :label-sv "TODO"}]))
 
 (defn find-toimenpidetyypit [db] toimenpidetyypit)

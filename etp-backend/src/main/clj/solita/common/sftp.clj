@@ -1,6 +1,7 @@
 (ns solita.common.sftp
   (:require [clojure.string :as str]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [clojure.tools.logging :as log])
   (:import (com.jcraft.jsch JSch ChannelSftp SftpException)))
 
 (def default-port 22)
@@ -21,8 +22,13 @@
   ([host username password known-hosts-path]
    (connect! host default-port username password known-hosts-path))
   ([host port username password known-hosts-path]
-   (let [jsch (doto (JSch.)
-                (.setKnownHosts (-> known-hosts-path io/resource io/input-stream)))
+   (let [known-hosts-resource (io/resource known-hosts-path)
+         _ (log/info "Connecting with SFTP: " {:host host
+                                               :port port
+                                               :username username
+                                               :known-hosts known-hosts-resource})
+         jsch (doto (JSch.)
+                (.setKnownHosts (io/input-stream known-hosts-resource)))
          session (doto (.getSession jsch username host port)
                    (.setPassword password)
                    (.connect timeout))]
