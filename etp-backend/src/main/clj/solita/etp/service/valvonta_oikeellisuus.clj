@@ -1,7 +1,8 @@
 (ns solita.etp.service.valvonta-oikeellisuus
   (:require
     [solita.etp.db :as db]
-    [solita.etp.service.energiatodistus :as energiatodistus-service])
+    [solita.etp.service.energiatodistus :as energiatodistus-service]
+    [solita.etp.service.toimenpide :as toimenpide])
   (:import (java.time Instant)))
 
 #_(db/require-queries 'valvonta-oikeellisuus)
@@ -30,32 +31,50 @@
 (defn save-valvonta! [db id valvonta]
   (swap! valvonnat #(update % id (fn [current] (merge current (assoc valvonta :id id))))))
 
-(defn- new-toimenpide [whoami id toimenpide toimenpiteet]
+(defn- new-toimenpide [whoami id diaarinumero toimenpide toimenpiteet]
   (conj (or toimenpiteet [])
         (assoc toimenpide
           :id (count toimenpiteet)
           :energiatodistus-id id
           :author-id (:id whoami)
-          :diaarinumero nil
+          :diaarinumero (or diaarinumero
+                            (-> toimenpiteet last :diaarinumero))
           :create-time (Instant/now)
-          :publish-time (Instant/now))))
+          :publish-time (when-not
+                          (toimenpide/draft-support? toimenpide)
+                          (Instant/now)))))
 
 (defn default-to [default] #(or % default))
 
-(defn add-toimenpide! [db whoami id toimenpide]
-  (swap! valvonnat #(update % id (default-to (assoc default-valvonta :id id))))
+(defn insert-toimenpide! [db whoami id diaarinumero toimenpide]
   (-> valvonnat
-      (swap! #(update-in % [id :toimenpiteet] (partial new-toimenpide whoami id toimenpide)))
+      (swap! #(update-in % [id :toimenpiteet] (partial new-toimenpide whoami id diaarinumero toimenpide)))
       (get id) :toimenpiteet
-      last
-      (select-keys [:id])))
+      last))
+
+;; asiahallinta integration
+;; open case returns case number (diaarinumero)
+(defn open-case! [db whoami id])
+(defn log-toimenpide! [db whoami id toimenpide])
+(defn close-case! [db whoami id toimenpide])
+
+(defn add-toimenpide! [db whoami id toimenpide-add]
+  (swap! valvonnat #(update % id (default-to (assoc default-valvonta :id id))))
+  (let [diaarinumero (when (toimenpide/case-open? toimenpide-add)
+                       (open-case! db whoami id))
+        toimenpide (insert-toimenpide! db whoami id diaarinumero toimenpide-add)]
+    (case (-> toimenpide :type-id toimenpide/type-key)
+      :closed (close-case! db whoami id toimenpide)
+      (when-not (toimenpide/draft-support? toimenpide)
+        (log-toimenpide! db whoami id toimenpide)))
+    (select-keys toimenpide [:id])))
 
 (defn update-toimenpide [whoami id toimenpide toimenpiteet]
   (update toimenpiteet id #(merge % (assoc toimenpide :author-id (:id whoami)))))
 
 (defn update-toimenpide! [db whoami id toimenpide-id toimenpide]
   (when (get-in @valvonnat [id :toimenpiteet toimenpide-id])
-    (swap! @valvonnat
+    (swap! valvonnat
            #(update-in % [id :toimenpiteet]
                        (partial update-toimenpide
                                 whoami toimenpide-id toimenpide)))))
@@ -67,6 +86,11 @@
 
 (defn find-toimenpide [db whoami id toimenpide-id]
   (get (find-toimenpiteet db whoami id) toimenpide-id))
+
+(defn publish-toimenpide! [db whoami id toimenpide-id]
+  (log-toimenpide! db whoami id (find-toimenpide db whoami id toimenpide-id))
+  (update-toimenpide! db whoami id toimenpide-id
+                      { :publish-time (Instant/now) }))
 
 (def toimenpidetyypit
   (map-indexed
