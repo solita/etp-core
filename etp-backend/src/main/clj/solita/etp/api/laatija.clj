@@ -24,7 +24,7 @@
   [["/laatijat"
     [""
      {:get get-laatijat}]]
-   ["/patevyydet/"
+   ["/patevyydet"
     {:get get-patevyydet}]])
 
 (def private-routes
@@ -82,5 +82,5 @@
                                (api-response/put-response
                                  (laatija-service/detach-laatija-yritys! db whoami id yritys-id)
                                  (str "Laatija and yritys liitos " id "/" yritys-id " does not exist.")))}}]]]]
-   ["/patevyydet/"
+   ["/patevyydet"
     {:get get-patevyydet}]])
