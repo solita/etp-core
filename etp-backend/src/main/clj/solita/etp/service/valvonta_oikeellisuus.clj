@@ -89,7 +89,9 @@
   (get (find-toimenpiteet db whoami id) toimenpide-id))
 
 (defn publish-toimenpide! [db whoami id toimenpide-id]
-  (log-toimenpide! db whoami id (find-toimenpide db whoami id toimenpide-id))
+  (let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
+    (when (toimenpide/asha-toimenpide? toimenpide)
+      (log-toimenpide! db whoami id toimenpide)))
   (update-toimenpide! db whoami id toimenpide-id
                       { :publish-time (Instant/now) }))
 
