@@ -21,6 +21,11 @@
                         <ns0:name>{{name-identity}}</ns0:name>
                     </ns0:ProcessingActionNameIdentity>
                     {{/processing-action}}
+                    {{#latest-processing-action}}
+                    <ns0:LatestProcessingActionIdentity>
+                        <ns0:ready>{{ready}}</ns0:ready>
+                    </ns0:LatestProcessingActionIdentity>
+                    {{/latest-processing-action}}
                 </ns0:IdentityChain>
                 {{/identity}}
                 {{#case-info}}

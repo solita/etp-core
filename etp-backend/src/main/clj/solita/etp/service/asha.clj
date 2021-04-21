@@ -90,7 +90,7 @@
      :selected-decision {:decision               (xml/get-content response-xml [:return :action-info-response :selected-decision :decision])
                          :next-processing-action (action-info [:selected-decision :next-processing-action])}}))
 
-(defn case-create [case]
+(defn open-case [case]
   (-> (request-handler case "case-create" response-parser-case-create asha-schema/CaseCreateResponse) :case-number))
 
 (defn execute-operation [data & [response-parser schema]]
@@ -111,11 +111,13 @@
                      response-parser-action-info
                      asha-schema/ActionInfoResponse))
 
-(defn proceed-operation [sender-id request-id case-number processing-action decision]
+(defn proceed-operation [sender-id request-id case-number processing-action ready? decision]
   (execute-operation {:request-id        request-id
                       :sender-id         sender-id
-                      :identity          {:case              {:number case-number}
-                                          :processing-action {:name-identity processing-action}}
+                      :identity          (cond->
+                                           {:case {:number case-number}}
+                                           processing-action (assoc :processing-action {:name-identity processing-action})
+                                           (boolean? ready?) (assoc :latest-processing-action {:ready ready?}))
                       :proceed-operation {:decision decision}}))
 
 (defn bytes->base64-string [bytes]
@@ -131,10 +133,13 @@
                                                   documents)}}))
 
 (defn move-processing-action->kasittely [sender-id request-id case-number]
-  (proceed-operation sender-id request-id case-number "Vireillepano" "Siirry käsittelyyn"))
+  (proceed-operation sender-id request-id case-number "Vireillepano" nil "Siirry käsittelyyn"))
 
 (defn move-processing-action->paatoksenteko [sender-id request-id case-number]
-  (proceed-operation sender-id request-id case-number "Käsittely" "Siirry päätöksentekoon"))
+  (proceed-operation sender-id request-id case-number "Käsittely" nil "Siirry päätöksentekoon"))
+
+(defn close-case [sender-id request-id case-number]
+  (proceed-operation sender-id request-id case-number nil false "Sulje asia"))
 
 (defn take-processing-action [sender-id request-id case-number processing-action]
   (execute-operation {:sender-id        sender-id
