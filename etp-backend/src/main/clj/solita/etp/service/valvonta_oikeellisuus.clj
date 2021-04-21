@@ -65,7 +65,8 @@
         toimenpide (insert-toimenpide! db whoami id diaarinumero toimenpide-add)]
     (case (-> toimenpide :type-id toimenpide/type-key)
       :closed (close-case! db whoami id toimenpide)
-      (when-not (toimenpide/draft-support? toimenpide)
+      (when (and (toimenpide/published? toimenpide)
+                 (toimenpide/asha-toimenpide? toimenpide))
         (log-toimenpide! db whoami id toimenpide)))
     (select-keys toimenpide [:id])))
 
@@ -110,3 +111,14 @@
      {:label-fi "Valvonnan lopetus" :label-sv "TODO"}]))
 
 (defn find-toimenpidetyypit [db] toimenpidetyypit)
+
+(defn- templates-for [toimenpidetype-id]
+  [{:label-fi "Energiatodistus 2018" :label-sv "TODO" :language "fi" :toimenpidetype-id toimenpidetype-id}
+   {:label-fi "Energiatodistus 2018" :label-sv "TODO" :language "sv" :toimenpidetype-id toimenpidetype-id}
+   {:label-fi "Energiatodistus 2013" :label-sv "TODO" :language "fi" :toimenpidetype-id toimenpidetype-id}
+   {:label-fi "Energiatodistus 2013" :label-sv "TODO" :language "sv" :toimenpidetype-id toimenpidetype-id}])
+
+(defn find-templates [db]
+  (map-indexed
+    #(assoc %2 :id %1 :valid true)
+    (flatten (map (comp templates-for :id) toimenpidetyypit))))

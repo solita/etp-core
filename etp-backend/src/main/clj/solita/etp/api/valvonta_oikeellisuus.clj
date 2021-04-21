@@ -1,7 +1,8 @@
 (ns solita.etp.api.valvonta-oikeellisuus
   (:require [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.valvonta-oikeellisuus :as valvonta-service]
-            [solita.etp.schema.valvonta-oikeellisuus :as valvonta-schema]
+            [solita.etp.schema.valvonta-oikeellisuus :as oikeellisuus-schema]
+            [solita.etp.schema.valvonta :as valvonta-schema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.api.response :as api-response]
             [ring.util.response :as r]
@@ -18,6 +19,14 @@
                     :handler   (fn [{:keys [db]}]
                                  (r/response (valvonta-service/find-toimenpidetyypit db)))}}]
 
+    ["/templates"
+     {:conflicting true
+      :get         {:summary   "Hae energiatodistusten oikeellisuuden valvonnan asiakirjapohjat."
+                    :responses {200 {:body [valvonta-schema/Template]}}
+                    :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+                    :handler   (fn [{:keys [db]}]
+                                 (r/response (valvonta-service/find-templates db)))}}]
+
     ["/count"
      {:conflicting true
       :get         {:summary   "Hae energiatodistusten oikeellisuuden valvontojen lukumäärä."
@@ -28,7 +37,7 @@
     [""
      {:conflicting true
       :get         {:summary   "Hae energiatodistusten oikeellisuuden valvonnat (työjono)."
-                    :responses {200 {:body [valvonta-schema/ValvontaStatus]}}
+                    :responses {200 {:body [oikeellisuus-schema/ValvontaStatus]}}
                     :access    rooli-service/paakayttaja?
                     :handler   (fn [{:keys [db whoami]}]
                                  (r/response (valvonta-service/find-valvonnat db)))}}]
@@ -38,7 +47,7 @@
       {:conflicting true
        :get         {:summary    "Hae yksittäisen valvonnan yleiset tiedot."
                      :parameters {:path {:id common-schema/Key}}
-                     :responses  {200 {:body valvonta-schema/Valvonta}}
+                     :responses  {200 {:body oikeellisuus-schema/Valvonta}}
                      :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                      :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                                    (r/response (valvonta-service/find-valvonta db id)))}
@@ -46,7 +55,7 @@
        :put         {:summary    "Muuta valvonnan yleisiä tietoja."
                      :access     rooli-service/paakayttaja?
                      :parameters {:path {:id common-schema/Key}
-                                  :body (schema-tools/optional-keys-schema valvonta-schema/ValvontaSave)}
+                                  :body (schema-tools/optional-keys-schema oikeellisuus-schema/ValvontaSave)}
                      :responses  {200 {:body nil}}
                      :handler    (fn [{{{:keys [id]} :path :keys [body]}
                                        :parameters :keys [db whoami]}]
@@ -56,7 +65,7 @@
       [""
        {:get  {:summary    "Hae energiatodistuksen valvontatoimenpiteet."
                :parameters {:path {:id common-schema/Key}}
-               :responses  {200 {:body [valvonta-schema/Toimenpide]}}
+               :responses  {200 {:body [oikeellisuus-schema/Toimenpide]}}
                :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                              (api-response/get-response
@@ -66,7 +75,7 @@
         :post {:summary    "Lisää energiatodistuksen valvontatoimenpide."
                :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                :parameters {:path {:id common-schema/Key}
-                            :body valvonta-schema/ToimenpideAdd}
+                            :body oikeellisuus-schema/ToimenpideAdd}
                :responses  {201 {:body common-schema/Id}
                             404 common-schema/ConstraintError}
                :handler    (fn [{{{:keys [id]} :path :keys [body]}
@@ -82,7 +91,7 @@
        {:get {:summary    "Hae yksittäisen toimenpiteen tiedot."
               :parameters {:path {:id            common-schema/Key
                                   :toimenpide-id common-schema/Key}}
-              :responses  {200 {:body valvonta-schema/Toimenpide}
+              :responses  {200 {:body oikeellisuus-schema/Toimenpide}
                            404 {:body schema/Str}}
               :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
               :handler    (fn [{{{:keys [id toimenpide-id]} :path}
@@ -96,7 +105,7 @@
               :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
               :parameters {:path {:id            common-schema/Key
                                   :toimenpide-id common-schema/Key}
-                           :body valvonta-schema/ToimenpideUpdate}
+                           :body oikeellisuus-schema/ToimenpideUpdate}
               :responses  {200 {:body nil}
                            404 {:body schema/Str}}
               :handler    (fn [{{{:keys [id toimenpide-id]} :path :keys [body]}
