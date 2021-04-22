@@ -26,7 +26,7 @@
   (let [coercer (sc/coercer schema sc/string-coercion-matcher)]
     (coercer response-parser)))
 
-(defn- ^:dynamic make-send-requst [request]
+(defn- ^:dynamic make-send-requst! [request]
   (http/post config/asha-endpoint-url
              (cond-> {:content-type "application/xop+xml;charset=\"UTF-8\"; type=\"text/xml\""
                       :body         request}
@@ -34,9 +34,9 @@
                                           :connection-manager
                                           (conn-mgr/make-socks-proxied-conn-manager "localhost" 1080)))))
 
-(defn- send-request [request]
+(defn- send-request! [request]
   (try
-    (let [response (make-send-requst request)]
+    (let [response (make-send-requst! request)]
       (if (= 200 (:status response))
         (do
           (debug-print (:body response))
@@ -51,7 +51,7 @@
 
 (defn- request-handler [data resource parser-fn schema]
   (let [request-xml (request-create-xml resource data)
-        response-xml (send-request request-xml)]
+        response-xml (send-request! request-xml)]
     (when-let [response-parser (when parser-fn (parser-fn response-xml))]
       (read-response response-parser schema))))
 
@@ -90,29 +90,29 @@
      :selected-decision {:decision               (xml/get-content response-xml [:return :action-info-response :selected-decision :decision])
                          :next-processing-action (action-info [:selected-decision :next-processing-action])}}))
 
-(defn open-case [case]
+(defn open-case! [case]
   (-> (request-handler case "case-create" response-parser-case-create asha-schema/CaseCreateResponse) :case-number))
 
-(defn execute-operation [data & [response-parser schema]]
+(defn execute-operation! [data & [response-parser schema]]
   (request-handler data "execute-operation" response-parser schema))
 
 (defn case-info [sender-id request-id case-number]
-  (execute-operation {:request-id request-id
-                      :sender-id  sender-id
-                      :case-info  {:case-number case-number}}
-                     response-parser-case-info
-                     asha-schema/CaseInfoResponse))
+  (execute-operation! {:request-id request-id
+                      :sender-id   sender-id
+                      :case-info   {:case-number case-number}}
+                      response-parser-case-info
+                      asha-schema/CaseInfoResponse))
 
 (defn action-info [sender-id request-id case-number processing-action-name]
-  (execute-operation {:request-id             request-id
+  (execute-operation! {:request-id            request-id
                       :sender-id              sender-id
                       :processing-action-info {:name-identity processing-action-name
                                                :case-number   case-number}}
-                     response-parser-action-info
-                     asha-schema/ActionInfoResponse))
+                      response-parser-action-info
+                      asha-schema/ActionInfoResponse))
 
-(defn proceed-operation [sender-id request-id case-number processing-action ready? decision]
-  (execute-operation {:request-id        request-id
+(defn proceed-operation! [sender-id request-id case-number processing-action ready? decision]
+  (execute-operation! {:request-id       request-id
                       :sender-id         sender-id
                       :identity          (cond->
                                            {:case {:number case-number}}
@@ -123,8 +123,8 @@
 (defn bytes->base64-string [bytes]
   (String. (b64/encode bytes) "UTF-8"))
 
-(defn add-documents-to-processing-action [sender-id request-id case-number processing-action documents]
-  (execute-operation {:sender-id  sender-id
+(defn add-documents-to-processing-action! [sender-id request-id case-number processing-action documents]
+  (execute-operation! {:sender-id sender-id
                       :request-id request-id
                       :identity   {:case              {:number case-number}
                                    :processing-action {:name-identity processing-action}}
@@ -132,17 +132,17 @@
                                                     (update document :content bytes->base64-string))
                                                   documents)}}))
 
-(defn move-processing-action->kasittely [sender-id request-id case-number]
-  (proceed-operation sender-id request-id case-number "Vireillepano" nil "Siirry käsittelyyn"))
+(defn move-processing-action->kasittely! [sender-id request-id case-number]
+  (proceed-operation! sender-id request-id case-number "Vireillepano" nil "Siirry käsittelyyn"))
 
-(defn move-processing-action->paatoksenteko [sender-id request-id case-number]
-  (proceed-operation sender-id request-id case-number "Käsittely" nil "Siirry päätöksentekoon"))
+(defn move-processing-action->paatoksenteko! [sender-id request-id case-number]
+  (proceed-operation! sender-id request-id case-number "Käsittely" nil "Siirry päätöksentekoon"))
 
-(defn close-case [sender-id request-id case-number]
-  (proceed-operation sender-id request-id case-number nil false "Sulje asia"))
+(defn close-case! [sender-id request-id case-number]
+  (proceed-operation! sender-id request-id case-number nil false "Sulje asia"))
 
-(defn take-processing-action [sender-id request-id case-number processing-action]
-  (execute-operation {:sender-id        sender-id
+(defn take-processing-action! [sender-id request-id case-number processing-action]
+  (execute-operation! {:sender-id       sender-id
                       :request-id       request-id
                       :identity         {:case              {:number case-number}
                                          :processing-action {:name-identity processing-action}}
