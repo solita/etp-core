@@ -21,6 +21,9 @@ where
   id = :id and
   (:paakayttaja or published);
 
+-- name: delete-sivu!
+delete from sivu where id = :id;
+
 -- name: insert-sivu<!
 insert into sivu (title, body, parent_id, ordinal, published)
 values (:title, :body, :parent-id, :ordinal, :published)

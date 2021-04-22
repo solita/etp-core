@@ -15,6 +15,9 @@
 (defn add-sivu! [db sivu]
   (sivu-db/insert-sivu<! db sivu))
 
+(defn delete-sivu! [db id]
+  (sivu-db/delete-sivu! db {:id id}))
+
 (defn update-sivu! [db id sivu]
   (first (db/with-db-exception-translation
            jdbc/update! db :sivu sivu ["id = ?" id] db/default-opts)))
