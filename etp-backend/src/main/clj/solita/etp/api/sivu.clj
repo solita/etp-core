@@ -47,4 +47,15 @@
                            #(api-response/put-response
                              (sivu-service/update-sivu! db id (:body parameters))
                              (str "Sivu " id " does not exist."))
-                           sivu-exceptions))}}]]]])
+                           sivu-exceptions))}
+       :delete {:summary "Poista sivu"
+                :access  rooli-service/paakayttaja?
+                :parameters {:path {:id common-schema/Key}}
+                :responses {200 {:body nil}
+                            404 {:body schema/Str}}
+                :handler (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                           (api-response/with-exceptions
+                             #(api-response/put-response
+                               (sivu-service/delete-sivu! db id)
+                               (str "Sivu " id " does not exist."))
+                             sivu-exceptions))}}]]]])

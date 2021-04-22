@@ -77,6 +77,19 @@
                                 kayttaja-test-data/paakayttaja
                                 sivu-id)))))
 
+(t/deftest delete-leaf-sivu
+  (let [ds (test-data-set)
+        parent-ids (->> ds :sivut (map :parent-id) set)
+        sivu (->> ds :sivut (filter #(not (contains? parent-ids (:id %))))  first)
+        sivu-id (:id sivu)]
+    (t/is (not (nil? (service/find-sivu ts/*db*
+                                     kayttaja-test-data/paakayttaja
+                                     sivu-id))))
+    (service/delete-sivu! ts/*db* sivu-id)
+    (t/is (nil? (service/find-sivu ts/*db*
+                                   kayttaja-test-data/paakayttaja
+                                   sivu-id)))))
+
 (t/deftest update-title
   (let [ds (test-data-set)
         sivu (-> ds :sivut first)
