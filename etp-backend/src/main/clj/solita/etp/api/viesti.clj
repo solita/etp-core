@@ -55,7 +55,7 @@
              :responses  {200 {:body nil}
                           404 {:body schema/Str}}
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
-                           (api-response/put-response
+                           (api-response/ok|not-found
                             (viesti-service/update-ketju! db id (:body parameters))
                             (str "Ketju " id " does not exists.")))}}]
      ["/viestit"
@@ -65,7 +65,7 @@
               :responses  {200 {:body nil}
                            404 {:body schema/Str}}
               :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami parameters]}]
-                            (api-response/put-response
+                            (api-response/ok|not-found
                               (viesti-service/add-viesti! db whoami id (:body parameters))
                               (str "Ketju " id " does not exists.")))}}]]]
    ["/vastaanottajaryhmat"

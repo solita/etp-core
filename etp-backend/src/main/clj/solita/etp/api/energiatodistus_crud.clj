@@ -61,7 +61,7 @@
              :responses  {200 {:body nil}
                           404 {:body schema/Str}}
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
-                           (api-response/put-response
+                           (api-response/ok|not-found
                              (energiatodistus-service/delete-energiatodistus-luonnos!
                                db whoami id)
                              (str "Energiatodistus luonnos " id " does not exists.")))}}])
@@ -76,7 +76,7 @@
            :responses  {200 {:body nil}
                         404 {:body schema/Str}}
            :handler    (fn [{{{:keys [id]} :path :keys [body]} :parameters :keys [db]}]
-                         (api-response/put-response
+                         (api-response/ok|not-found
                            (energiatodistus-service/set-energiatodistus-discarded! db id body)
                            (str (if body "Signed" "Discarded")
                                 " energiatodistus " id " does not exists.")))}}])

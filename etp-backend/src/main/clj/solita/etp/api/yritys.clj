@@ -43,7 +43,7 @@
              :responses  {200 {:body nil}
                           404 {:body schema/Str}}
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami parameters]}]
-                           (api-response/put-response
+                           (api-response/ok|not-found
                              (yritys-service/update-yritys! db whoami id (:body parameters))
                              (str "Yritys " id " does not exists.")))}}]
      ["/laatijat"

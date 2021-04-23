@@ -77,7 +77,7 @@
               :handler    (fn [{{{:keys [id liite-id]} :path}
                                :parameters
                                :keys [db whoami]}]
-                          (api-response/put-response
+                          (api-response/ok|not-found
                               (liite-service/delete-liite! db whoami liite-id)
                               (str "Energiatodistuksen " id " liite " liite-id " does not exists.")))}}]
 

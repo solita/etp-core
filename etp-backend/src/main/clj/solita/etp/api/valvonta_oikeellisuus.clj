@@ -110,7 +110,7 @@
                            404 {:body schema/Str}}
               :handler    (fn [{{{:keys [id toimenpide-id]} :path :keys [body]}
                                 :parameters :keys [db whoami]}]
-                            (api-response/put-response
+                            (api-response/ok|not-found
                               (valvonta-service/update-toimenpide!
                                 db whoami id toimenpide-id body)
                               (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}}]
@@ -122,6 +122,6 @@
                 :responses {200 {:body nil}
                             404 {:body schema/Str}}
                 :handler (fn [{{{:keys [id toimenpide-id]} :path} :parameters :keys [db whoami]}]
-                           (api-response/put-response
+                           (api-response/ok|not-found
                              (valvonta-service/publish-toimenpide! db whoami id toimenpide-id)
                              (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}}]]]]]])

@@ -44,7 +44,7 @@
                           404 {:body schema/Str}}
              :handler  (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
                          (api-response/with-exceptions
-                           #(api-response/put-response
+                           #(api-response/ok|not-found
                              (sivu-service/update-sivu! db id (:body parameters))
                              (str "Sivu " id " does not exist."))
                            sivu-exceptions))}
@@ -55,7 +55,7 @@
                             404 {:body schema/Str}}
                 :handler (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                            (api-response/with-exceptions
-                             #(api-response/put-response
+                             #(api-response/ok|not-found
                                (sivu-service/delete-sivu! db id)
                                (str "Sivu " id " does not exist."))
                              sivu-exceptions))}}]]]])
