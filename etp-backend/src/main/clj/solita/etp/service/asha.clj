@@ -132,21 +132,25 @@
                                                     (update document :content bytes->base64-string))
                                                   documents)}}))
 
-(defn move-processing-action->kasittely! [sender-id request-id case-number]
-  (proceed-operation! sender-id request-id case-number "Vireillepano" nil "Siirry käsittelyyn"))
+(defn move-processing-action [sender-id request-id case-number processing-action]
+  (when-let [decision (cond
+                        (= processing-action "Käsittely") "Siirry käsittelyyn"
+                        (= processing-action "Päätöksenteko") "Siirry päätöksentekoon")]
+    (proceed-operation! sender-id request-id case-number  nil false decision)))
 
-(defn move-processing-action->paatoksenteko! [sender-id request-id case-number]
-  (proceed-operation! sender-id request-id case-number "Käsittely" nil "Siirry päätöksentekoon"))
+(defn mark-latest-processing-action-as-ready [sender-id request-id case-number]
+  (proceed-operation! sender-id request-id case-number nil false "Valmis"))
 
 (defn close-case! [sender-id request-id case-number]
-  (proceed-operation! sender-id request-id case-number nil false "Sulje asia"))
+  (proceed-operation! sender-id request-id case-number nil true "Sulje asia"))
 
 (defn take-processing-action! [sender-id request-id case-number processing-action]
-  (execute-operation! {:sender-id       sender-id
-                      :request-id       request-id
-                      :identity         {:case              {:number case-number}
-                                         :processing-action {:name-identity processing-action}}
-                      :start-processing {:assignee sender-id}}))
+  (execute-operation! {:sender-id        sender-id
+                       :request-id       request-id
+                       :identity         (cond-> {:case {:number case-number}}
+                                                 (nil? processing-action) (assoc :latest-processing-action {:ready false})
+                                                 processing-action (assoc :processing-action {:name-identity processing-action}))
+                       :start-processing {:assignee sender-id}}))
 
 (defn kayttaja->contact [kayttaja]
   {:type          "ORGANIZATION"                            ;No enum constant fi.ys.eservice.entity.ContactType.PERSON

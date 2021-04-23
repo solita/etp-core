@@ -32,15 +32,43 @@
                      :attach         {:contact (asha/kayttaja->contact laatija)}})))
 
 (defn- available-processing-actions [toimenpide laatija]
-  {:rfi-request {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                     :processing-action {:name-identity "Vireillepano"}}
-                 :processing-action {:name                 "Tietopyyntö"
-                                     :reception-date       (java.time.Instant/now)
-                                     :expected-end-date    (or (:deadline-date toimenpide)
-                                                               (.plus (java.time.Instant/now) 30 java.time.temporal.ChronoUnit/DAYS))
-                                     :contacting-direction "SENT"
-                                     :contact              (asha/kayttaja->contact laatija)}
-                 :document          {:type "Päätös" :name "Tietopyyntö.txt"}}})
+  {:rfi-request  {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                      :processing-action {:name-identity "Vireillepano"}}
+                  :processing-action {:name                 "Tietopyyntö"
+                                      :reception-date       (java.time.Instant/now)
+                                      :expected-end-date    (or (:deadline-date toimenpide)
+                                                                (.plus (java.time.Instant/now) 30 java.time.temporal.ChronoUnit/DAYS))
+                                      :contacting-direction "SENT"
+                                      :contact              (asha/kayttaja->contact laatija)}
+                  :document          {:type "Päätös" :name "Tietopyyntö.txt"}}
+   :rfi-order    {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                      :processing-action {:name-identity "Käsittely"}}
+                  :processing-action {:name                 "Kehotuksen antaminen"
+                                      :reception-date       (java.time.Instant/now)
+                                      :expected-end-date    (or (:deadline-date toimenpide)
+                                                                (.plus (java.time.Instant/now) 30 java.time.temporal.ChronoUnit/DAYS))
+                                      :contacting-direction "SENT"
+                                      :contact              (asha/kayttaja->contact laatija)}
+                  :document          {:type "Kirje" :name "Tietopyyntö.txt"}}
+   :rfi-warning  {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                      :processing-action {:name-identity "Käsittely"}}
+                  :processing-action {:name                 "Varoituksen antaminen"
+                                      :reception-date       (java.time.Instant/now)
+                                      :expected-end-date    (or (:deadline-date toimenpide)
+                                                                (.plus (java.time.Instant/now) 30 java.time.temporal.ChronoUnit/DAYS))
+                                      :contacting-direction "SENT"
+                                      :contact              (asha/kayttaja->contact laatija)}
+                  :document          {:type "Kirje" :name "Kirje.txt"}}
+   :audit-report {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                      :processing-action {:name-identity "Päätöksenteko"}}
+                  :processing-action {:name                 "Valvontamuistion laatiminen"
+                                      :reception-date       (java.time.Instant/now)
+                                      :expected-end-date    (or (:deadline-date toimenpide)
+                                                                (.plus (java.time.Instant/now) 30 java.time.temporal.ChronoUnit/DAYS))
+                                      :contacting-direction "SENT"
+                                      :contact              (asha/kayttaja->contact laatija)}
+                  :document          {:type "Muistio" :name "Muistio.txt"}}
+   #_#_:audit-order :audit-warning})
 
 (defn log-toimenpide! [db whoami id toimenpide]
   (let [{:keys [energiatodistus laatija]} (resolve-energiatodistus-laatija db id)
@@ -48,7 +76,12 @@
         request-id (request-id energiatodistus id)
         sender-id (:email whoami)
         case-number (:diaarinumero toimenpide)
-        document (:document toimenpide)]
+        document "Testi" #_(:document toimenpide)]
+
+    (asha/take-processing-action! sender-id request-id case-number nil #_(-> processing-action :identity :processing-action :name-identity))
+    (when (not= (-> (asha/action-info sender-id request-id case-number nil) :processing-action :name) (-> processing-action :identity :processing-action :name-identity))
+      (asha/mark-latest-processing-action-as-ready sender-id request-id case-number))
+    (asha/move-processing-action  sender-id request-id case-number (-> processing-action :identity :processing-action :name-identity))
     (asha/execute-operation! {:request-id       request-id
                              :sender-id         sender-id
                              :identity          (:identity processing-action)
