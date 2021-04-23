@@ -7,6 +7,8 @@
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.sivu :as sivu-service]))
 
+(def sivu-exceptions [{:type :foreign-key-violation :response 400}])
+
 (def routes
   [["/sivut"
     ["" {:get {:summary "Hae kaikki sivut"
@@ -19,9 +21,11 @@
                 :responses  {201 {:body common-schema/Id}}
                 :parameters {:body sivu-schema/SivuSave}
                 :handler    (fn [{:keys [db parameters uri]}]
-                              (api-response/created
-                               uri
-                               (sivu-service/add-sivu! db (:body parameters))))}}]
+                              (api-response/with-exceptions
+                                #(api-response/created
+                                  uri
+                                  (sivu-service/add-sivu! db (:body parameters)))
+                                sivu-exceptions))}}]
     ["/:id"
      [""
       {:get {:summary "Hae sivu"
@@ -39,6 +43,8 @@
              :responses  {200 {:body nil}
                           404 {:body schema/Str}}
              :handler  (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
-                        (api-response/put-response
-                         (sivu-service/update-sivu! db id (:body parameters))
-                         (str "Sivu " id " does not exist.")))}}]]]])
+                         (api-response/with-exceptions
+                           #(api-response/put-response
+                             (sivu-service/update-sivu! db id (:body parameters))
+                             (str "Sivu " id " does not exist."))
+                           sivu-exceptions))}}]]]])
