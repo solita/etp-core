@@ -34,7 +34,7 @@
                     :responses  {200 {:body nil}
                                  404 {:body schema/Str}}
                     :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
-                                  (api-response/put-response
+                                  (api-response/ok|not-found
                                     (valvonta-service/update-valvonta!
                                       db id (-> parameters :body :active))
                                     (str "Energiatodistus " id " does not exists.")))}}]]])
