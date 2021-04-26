@@ -115,10 +115,10 @@
 (defn find-toimenpidetyypit [db] toimenpidetyypit)
 
 (defn- templates-for [toimenpidetype-id]
-  [{:label-fi "Energiatodistus 2018" :label-sv "TODO" :language "fi" :toimenpidetype-id toimenpidetype-id}
-   {:label-fi "Energiatodistus 2018" :label-sv "TODO" :language "sv" :toimenpidetype-id toimenpidetype-id}
-   {:label-fi "Energiatodistus 2013" :label-sv "TODO" :language "fi" :toimenpidetype-id toimenpidetype-id}
-   {:label-fi "Energiatodistus 2013" :label-sv "TODO" :language "sv" :toimenpidetype-id toimenpidetype-id}])
+  [{:label-fi "Energiatodistus 2018/fi" :label-sv "TODO" :language "fi" :toimenpidetype-id toimenpidetype-id}
+   {:label-fi "Energiatodistus 2018/sv" :label-sv "TODO" :language "sv" :toimenpidetype-id toimenpidetype-id}
+   {:label-fi "Energiatodistus 2013/fi" :label-sv "TODO" :language "fi" :toimenpidetype-id toimenpidetype-id}
+   {:label-fi "Energiatodistus 2013/sv" :label-sv "TODO" :language "sv" :toimenpidetype-id toimenpidetype-id}])
 
 (defn find-templates [db]
   (filter
