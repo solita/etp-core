@@ -29,7 +29,7 @@
     (-> @valvonnat (get id) (dissoc :toimenpiteet))))
 
 (defn save-valvonta! [db id valvonta]
-  (swap! valvonnat #(update % id (fn [current] (merge current (assoc valvonta :id id))))))
+  (swap! valvonnat #(update % id (fn [current] (merge default-valvonta current (assoc valvonta :id id))))))
 
 (defn- new-toimenpide [whoami id diaarinumero toimenpide toimenpiteet]
   (conj (or toimenpiteet [])
