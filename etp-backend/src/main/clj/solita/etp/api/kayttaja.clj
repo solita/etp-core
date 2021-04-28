@@ -39,7 +39,7 @@
                          404 {:body schema/Str}}
              :handler (fn [{{{:keys [id]} :path} :parameters
                             :keys [db whoami parameters]}]
-                        (api-response/put-response
+                        (api-response/ok|not-found
                          (kayttaja-service/update-kayttaja!
                           db whoami id (:body parameters))
                          (str "Käyttäjä " id " does not exists or käyttäjä is laatija.")))}}]

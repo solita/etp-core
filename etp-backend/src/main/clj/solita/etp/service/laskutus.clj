@@ -11,8 +11,7 @@
             [solita.common.smtp :as smtp]
             [solita.etp.config :as config]
             [solita.etp.db :as db]
-            [solita.etp.service.file :as file-service]
-            [clj-http.client :as http-client])
+            [solita.etp.service.file :as file-service])
   (:import (java.time Instant LocalDate ZoneId)
            (java.time.temporal ChronoUnit)
            (java.time.format DateTimeFormatter)))
@@ -365,10 +364,6 @@
 (defn do-kuukauden-laskutus [db aws-s3-client dry-run?]
   (log/info "Starting kuukauden laskutusajo." {:dry-run? dry-run?})
   (io/make-parents (str tmp-dir "/example.txt"))
-
-  ;; Temporary print of external IP
-  (log/info "EXTERNAL IP: " {:ip (http-client/get " https://ifconfig.me/" {})})
-
   (let [now (Instant/now)
         laskutus (find-kuukauden-laskutus db)
         asiakastieto-xmls (->> laskutus

@@ -21,14 +21,17 @@
 (defn type? [type toimenpide]
   (= (-> toimenpide :type-id type-key) type))
 
-(def draft-support? (partial type? :audit-report))
+(defn some-type? [type-key-set toimenpide]
+  (contains? type-key-set (-> toimenpide :type-id type-key)))
+
+(def draft-support?
+  (partial some-type? #{:rfi-reply :audit-report :audit-reply}))
 
 (def case-open? (partial type? :case))
 
-(defn asha-toimenpide? [toimenpide]
-  (contains?
-    #{:rfi-request :rfi-order :rfi-warning
-      :audit-report :audit-order :audit-warning}
-    (-> toimenpide :type-id type-key)))
+(def asha-toimenpide?
+  (partial some-type?
+           #{:rfi-request :rfi-order :rfi-warning
+             :audit-report :audit-order :audit-warning}))
 
 (def published? #(-> % :publish-time some?))

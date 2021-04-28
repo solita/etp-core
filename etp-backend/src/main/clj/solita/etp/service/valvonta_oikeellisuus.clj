@@ -29,7 +29,7 @@
     (-> @valvonnat (get id) (dissoc :toimenpiteet))))
 
 (defn save-valvonta! [db id valvonta]
-  (swap! valvonnat #(update % id (fn [current] (merge current (assoc valvonta :id id))))))
+  (swap! valvonnat #(update % id (fn [current] (merge default-valvonta current (assoc valvonta :id id))))))
 
 (defn- new-toimenpide [whoami id diaarinumero toimenpide toimenpiteet]
   (conj (or toimenpiteet [])
@@ -115,12 +115,14 @@
 (defn find-toimenpidetyypit [db] toimenpidetyypit)
 
 (defn- templates-for [toimenpidetype-id]
-  [{:label-fi "Energiatodistus 2018" :label-sv "TODO" :language "fi" :toimenpidetype-id toimenpidetype-id}
-   {:label-fi "Energiatodistus 2018" :label-sv "TODO" :language "sv" :toimenpidetype-id toimenpidetype-id}
-   {:label-fi "Energiatodistus 2013" :label-sv "TODO" :language "fi" :toimenpidetype-id toimenpidetype-id}
-   {:label-fi "Energiatodistus 2013" :label-sv "TODO" :language "sv" :toimenpidetype-id toimenpidetype-id}])
+  [{:label-fi "Energiatodistus 2018/fi" :label-sv "TODO" :language "fi" :toimenpidetype-id toimenpidetype-id}
+   {:label-fi "Energiatodistus 2018/sv" :label-sv "TODO" :language "sv" :toimenpidetype-id toimenpidetype-id}
+   {:label-fi "Energiatodistus 2013/fi" :label-sv "TODO" :language "fi" :toimenpidetype-id toimenpidetype-id}
+   {:label-fi "Energiatodistus 2013/sv" :label-sv "TODO" :language "sv" :toimenpidetype-id toimenpidetype-id}])
 
 (defn find-templates [db]
-  (map-indexed
-    #(assoc %2 :id %1 :valid true)
-    (flatten (map (comp templates-for :id) toimenpidetyypit))))
+  (filter
+    #(contains? #{3, 5, 6, 7, 9, 10} (:toimenpidetype-id %))
+    (map-indexed
+      #(assoc %2 :id %1 :valid true)
+      (flatten (map (comp templates-for :id) toimenpidetyypit)))))

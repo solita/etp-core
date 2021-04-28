@@ -7,7 +7,7 @@
     (r/not-found not-found)
     (r/response body)))
 
-(defn put-response [updated not-found]
+(defn ok|not-found [updated not-found]
   (if (or (nil? updated) (= updated 0))
     (r/not-found not-found)
     (r/response nil)))

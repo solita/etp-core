@@ -24,7 +24,7 @@
   [["/laatijat"
     [""
      {:get get-laatijat}]]
-   ["/patevyydet/"
+   ["/patevyydet"
     {:get get-patevyydet}]])
 
 (def private-routes
@@ -49,7 +49,7 @@
                          404 {:body schema/Str}}
              :handler (fn [{{{:keys [id]} :path} :parameters
                            :keys [db whoami parameters]}]
-                        (api-response/put-response
+                        (api-response/ok|not-found
                          (kayttaja-laatija-service/update-kayttaja-laatija!
                           db whoami id (:body parameters))
                          (str "Laatija " id " does not exists.")))}}]
@@ -79,8 +79,8 @@
                                      :yritys-id common-schema/Key}}
                  :responses  {200 {:body nil}}
                  :handler    (fn [{{{:keys [id yritys-id]} :path} :parameters :keys [db whoami]}]
-                               (api-response/put-response
+                               (api-response/ok|not-found
                                  (laatija-service/detach-laatija-yritys! db whoami id yritys-id)
                                  (str "Laatija and yritys liitos " id "/" yritys-id " does not exist.")))}}]]]]
-   ["/patevyydet/"
+   ["/patevyydet"
     {:get get-patevyydet}]])
