@@ -95,14 +95,16 @@
         case-number (:diaarinumero toimenpide)
         document "Testi" #_(:document toimenpide)]
 
-    (asha/take-processing-action! sender-id request-id case-number nil #_(-> processing-action :identity :processing-action :name-identity))
-    (when (not= (-> (asha/action-info sender-id request-id case-number nil) :processing-action :name) (-> processing-action :identity :processing-action :name-identity))
-      (asha/mark-latest-processing-action-as-ready sender-id request-id case-number))
-    (asha/move-processing-action  sender-id request-id case-number (-> processing-action :identity :processing-action :name-identity))
+    (asha/move-processing-action
+      sender-id
+      request-id
+      case-number
+      (-> processing-action :identity :processing-action :name-identity))
+
     (asha/execute-operation! {:request-id       request-id
-                             :sender-id         sender-id
-                             :identity          (:identity processing-action)
-                             :processing-action (:processing-action processing-action)})
+                              :sender-id         sender-id
+                              :identity          (:identity processing-action)
+                              :processing-action (:processing-action processing-action)})
     (when document
       (asha/add-documents-to-processing-action!
         sender-id
@@ -112,7 +114,12 @@
         [{:content (.getBytes document)
           :type    (-> processing-action :document :type)
           :name    (-> processing-action :document :name)}]))
-    (asha/take-processing-action! sender-id request-id case-number (-> processing-action :processing-action :name))))
+    (asha/take-processing-action! sender-id request-id case-number (-> processing-action :processing-action :name))
+    (asha/mark-processing-action-as-ready
+      sender-id
+      request-id
+      case-number
+      (-> processing-action :processing-action :name))))
 
 (defn close-case! [db whoami id toimenpide]
   (let [{:keys [energiatodistus]} (resolve-energiatodistus-laatija db (:energiatodistus-id toimenpide))]

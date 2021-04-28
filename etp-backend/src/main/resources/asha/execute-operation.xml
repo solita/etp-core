@@ -21,11 +21,6 @@
                         <ns0:name>{{name-identity}}</ns0:name>
                     </ns0:ProcessingActionNameIdentity>
                     {{/processing-action}}
-                    {{#latest-processing-action}}
-                    <ns0:LatestProcessingActionIdentity>
-                        <ns0:ready>{{ready}}</ns0:ready>
-                    </ns0:LatestProcessingActionIdentity>
-                    {{/latest-processing-action}}
                 </ns0:IdentityChain>
                 {{/identity}}
                 {{#case-info}}
@@ -41,9 +36,9 @@
                         <ns0:CaseNumberIdentity>
                             <ns0:caseNumber>{{case-number}}</ns0:caseNumber>
                         </ns0:CaseNumberIdentity>
-                        <ns0:LatestProcessingActionIdentity>
-                            <ns0:ready>false</ns0:ready>
-                        </ns0:LatestProcessingActionIdentity>
+                        <ns0:ProcessingActionNameIdentity>
+                            <ns0:name>{{processing-action-name-identity}}</ns0:name>
+                        </ns0:ProcessingActionNameIdentity>
                     </ns0:IdentityChain>
                 </ns0:ActionInfoQueryOperation>
                 {{/processing-action-info}}

@@ -106,19 +106,17 @@
 (defn action-info [sender-id request-id case-number processing-action-name]
   (execute-operation! {:request-id            request-id
                       :sender-id              sender-id
-                      :processing-action-info {:name-identity processing-action-name
-                                               :case-number   case-number}}
+                      :processing-action-info {:case-number   case-number
+                                               :processing-action-name-identity processing-action-name}}
                       response-parser-action-info
                       asha-schema/ActionInfoResponse))
 
-(defn proceed-operation! [sender-id request-id case-number processing-action ready? decision]
-  (execute-operation! {:request-id       request-id
-                      :sender-id         sender-id
-                      :identity          (cond->
-                                           {:case {:number case-number}}
-                                           processing-action (assoc :processing-action {:name-identity processing-action})
-                                           (boolean? ready?) (assoc :latest-processing-action {:ready ready?}))
-                      :proceed-operation {:decision decision}}))
+(defn proceed-operation! [sender-id request-id case-number processing-action decision]
+  (execute-operation! {:request-id request-id
+                       :sender-id  sender-id
+                       :identity   (cond-> {:case {:number case-number}}
+                                           processing-action (assoc :processing-action {:name-identity processing-action}))
+                       :proceed-operation {:decision decision}}))
 
 (defn bytes->base64-string [bytes]
   (String. (b64/encode bytes) "UTF-8"))
@@ -132,24 +130,37 @@
                                                     (update document :content bytes->base64-string))
                                                   documents)}}))
 
-(defn move-processing-action [sender-id request-id case-number processing-action]
-  (when-let [decision (cond
-                        (= processing-action "Käsittely") "Siirry käsittelyyn"
-                        (= processing-action "Päätöksenteko") "Siirry päätöksentekoon")]
-    (proceed-operation! sender-id request-id case-number  nil false decision)))
+(defn resolve-case-processing-action-state [sender-id request-id case-number]
+  (->>  ["Vireillepano" "Käsittely" "Päätöksenteko"]
+       (map (fn [processing-action]
+              (try
+                {processing-action (-> (action-info sender-id request-id case-number processing-action) :processing-action :status)}
+                (catch Exception _e))))
+        (into (array-map))))
 
-(defn mark-latest-processing-action-as-ready [sender-id request-id case-number]
-  (proceed-operation! sender-id request-id case-number nil false "Valmis"))
+(defn move-processing-action [sender-id request-id case-number processing-action]
+  (when-let [action (cond
+                        (= processing-action "Käsittely") {:processing-action "Vireillepano"
+                                                           :decision          "Siirry käsittelyyn"}
+                        (= processing-action "Päätöksenteko") {:processing-action "Käsittely"
+                                                               :decision          "Siirry päätöksentekoon"})]
+    (when (not (get (resolve-case-processing-action-state sender-id request-id case-number) processing-action))
+      (proceed-operation! sender-id request-id case-number (:processing-action action) (:decision action)))))
+
+(defn mark-processing-action-as-ready [sender-id request-id case-number processing-action]
+  (proceed-operation! sender-id request-id case-number processing-action "Valmis"))
 
 (defn close-case! [sender-id request-id case-number]
-  (proceed-operation! sender-id request-id case-number nil true "Sulje asia"))
+  (let [latest-prosessing-action (->> (resolve-case-processing-action-state sender-id request-id case-number)
+                                      keys
+                                      last)]
+    (proceed-operation! sender-id request-id case-number latest-prosessing-action "Sulje asia")))
 
 (defn take-processing-action! [sender-id request-id case-number processing-action]
   (execute-operation! {:sender-id        sender-id
                        :request-id       request-id
-                       :identity         (cond-> {:case {:number case-number}}
-                                                 (nil? processing-action) (assoc :latest-processing-action {:ready false})
-                                                 processing-action (assoc :processing-action {:name-identity processing-action}))
+                       :identity         {:case {:number case-number}
+                                          :processing-action {:name-identity processing-action}}
                        :start-processing {:assignee sender-id}}))
 
 (defn kayttaja->contact [kayttaja]
