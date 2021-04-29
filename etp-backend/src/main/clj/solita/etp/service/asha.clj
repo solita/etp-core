@@ -27,12 +27,16 @@
     (coercer response-parser)))
 
 (defn- ^:dynamic make-send-requst! [request]
-  (http/post config/asha-endpoint-url
-             (cond-> {:content-type "application/xop+xml;charset=\"UTF-8\"; type=\"text/xml\""
-                      :body         request}
-                     config/asha-proxy? (assoc
-                                          :connection-manager
-                                          (conn-mgr/make-socks-proxied-conn-manager "localhost" 1080)))))
+  (if config/asha-endpoint-url
+    (http/post config/asha-endpoint-url
+               (cond-> {:content-type "application/xop+xml;charset=\"UTF-8\"; type=\"text/xml\""
+                        :body         request}
+                       config/asha-proxy? (assoc
+                                            :connection-manager
+                                            (conn-mgr/make-socks-proxied-conn-manager "localhost" 1080))))
+    (do
+      (log/info "Missing asha endpoint url. Skip request to asha...")
+      {:status 200})))
 
 (defn- send-request! [request]
   (try
@@ -50,12 +54,11 @@
       (exception/throw-ex-info! :asha-request-failed (str "Sending xml failed: " (.getMessage e))))))
 
 (defn- request-handler! [data resource parser-fn schema]
-  (if config/asha-endpoint-url
-    (let [request-xml (request-create-xml resource data)
-          response-xml (send-request! request-xml)]
-      (when-let [response-parser (when parser-fn (parser-fn response-xml))]
-        (read-response response-parser schema)))
-    (log/info "Missing asha endpoint url. Skip request to asha...")))
+  (let [request-xml (request-create-xml resource data)
+        response-xml (send-request! request-xml)]
+    (when-let [response-parser (when (and response-xml parser-fn)
+                                 (parser-fn response-xml))]
+      (read-response response-parser schema))))
 
 (defn response-parser-case-create [response-soap]
   (let [response-xml (read-response->xml response-soap)]
