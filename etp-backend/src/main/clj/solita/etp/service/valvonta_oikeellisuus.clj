@@ -2,6 +2,7 @@
   (:require
     [solita.etp.db :as db]
     [solita.etp.service.energiatodistus :as energiatodistus-service]
+    [solita.etp.service.asha-valvonta-oikeellisuus :as asha-valvonta-oikeellisuus]
     [solita.etp.service.toimenpide :as toimenpide])
   (:import (java.time Instant)))
 
@@ -52,22 +53,16 @@
       (get id) :toimenpiteet
       last))
 
-;; asiahallinta integration
-;; open case returns case number (diaarinumero)
-(defn open-case! [db whoami id])
-(defn log-toimenpide! [db whoami id toimenpide])
-(defn close-case! [db whoami id toimenpide])
-
 (defn add-toimenpide! [db whoami id toimenpide-add]
   (swap! valvonnat #(update % id (default-to (assoc default-valvonta :id id))))
   (let [diaarinumero (when (toimenpide/case-open? toimenpide-add)
-                       (open-case! db whoami id))
+                       (asha-valvonta-oikeellisuus/open-case! db whoami id))
         toimenpide (insert-toimenpide! db whoami id diaarinumero toimenpide-add)]
     (case (-> toimenpide :type-id toimenpide/type-key)
-      :closed (close-case! db whoami id toimenpide)
+      :closed (asha-valvonta-oikeellisuus/close-case! db whoami id toimenpide)
       (when (and (toimenpide/published? toimenpide)
                  (toimenpide/asha-toimenpide? toimenpide))
-        (log-toimenpide! db whoami id toimenpide)))
+        (asha-valvonta-oikeellisuus/log-toimenpide! db whoami id toimenpide)))
     (select-keys toimenpide [:id])))
 
 (defn update-toimenpide [whoami id toimenpide toimenpiteet]
@@ -91,7 +86,7 @@
 (defn publish-toimenpide! [db whoami id toimenpide-id]
   (let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
     (when (toimenpide/asha-toimenpide? toimenpide)
-      (log-toimenpide! db whoami id toimenpide)))
+      (asha-valvonta-oikeellisuus/log-toimenpide! db whoami id toimenpide)))
   (update-toimenpide! db whoami id toimenpide-id
                       { :publish-time (Instant/now) }))
 

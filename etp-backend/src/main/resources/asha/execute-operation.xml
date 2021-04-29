@@ -37,7 +37,7 @@
                             <ns0:caseNumber>{{case-number}}</ns0:caseNumber>
                         </ns0:CaseNumberIdentity>
                         <ns0:ProcessingActionNameIdentity>
-                            <ns0:name>{{name-identity}}</ns0:name>
+                            <ns0:name>{{processing-action-name-identity}}</ns0:name>
                         </ns0:ProcessingActionNameIdentity>
                     </ns0:IdentityChain>
                 </ns0:ActionInfoQueryOperation>
@@ -52,13 +52,9 @@
                     {{#contact}}
                     <ns0:Contact>
                         <ns0:type>{{type}}</ns0:type>
-                        <ns0:address>{{address}}</ns0:address>
                         <ns0:emailAddress>{{email-address}}</ns0:emailAddress>
-                        <ns0:phoneNumber>{{phone-number}}</ns0:phoneNumber>
                         <ns0:firstName>{{first-name}}</ns0:firstName>
                         <ns0:lastName>{{last-name}}</ns0:lastName>
-                        <ns0:organizationalUnitName>{{organizational-unit-name}}</ns0:organizationalUnitName>
-                        <ns0:businessIdentityCode>{{business-identity-code}}</ns0:businessIdentityCode>
                     </ns0:Contact>
                     {{/contact}}
                 </ns0:CreateProcessingActionOperation>
@@ -75,13 +71,9 @@
                     {{#contact}}
                     <ns0:Contact>
                         <ns0:type>{{type}}</ns0:type>
-                        <ns0:address>{{address}}</ns0:address>
                         <ns0:emailAddress>{{email-address}}</ns0:emailAddress>
-                        <ns0:phoneNumber>{{phone-number}}</ns0:phoneNumber>
                         <ns0:firstName>{{first-name}}</ns0:firstName>
                         <ns0:lastName>{{last-name}}</ns0:lastName>
-                        <ns0:organizationalUnitName>{{organizational-unit-name}}</ns0:organizationalUnitName>
-                        <ns0:businessIdentityCode>{{business-identity-code}}</ns0:businessIdentityCode>
                     </ns0:Contact>
                     {{/contact}}
                 </ns0:AttachOperation>
@@ -91,6 +83,11 @@
                     <ns0:decision>{{decision}}</ns0:decision>
                 </ns0:ProceedOperation>
                 {{/proceed-operation}}
+                {{#start-processing}}
+                <ns0:StartProcessingOperation>
+                    <ns0:assignee>{{assignee}}</ns0:assignee>
+                </ns0:StartProcessingOperation>
+                {{/start-processing}}
             </ns0:operationRequest>
         </ns0:executeOperations>
     </soap-env:Body>
