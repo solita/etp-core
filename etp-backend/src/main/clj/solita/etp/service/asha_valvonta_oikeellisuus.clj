@@ -79,10 +79,12 @@
 
 (defn log-toimenpide! [db whoami id toimenpide]
   (let [{:keys [energiatodistus laatija]} (resolve-energiatodistus-laatija db id)
-        processing-action (get (available-processing-actions toimenpide laatija) (toimenpide/type-key (:type-id toimenpide)))
+        processing-action (get (available-processing-actions toimenpide laatija)
+                               (toimenpide/type-key (:type-id toimenpide)))
         request-id (request-id energiatodistus id)
         sender-id (:email whoami)
         case-number (:diaarinumero toimenpide)
+        ; TODO: get document from toimenpide
         document "Testi" #_(:document toimenpide)]
 
     (asha/move-processing-action!

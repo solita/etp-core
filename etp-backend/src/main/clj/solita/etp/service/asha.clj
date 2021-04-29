@@ -50,10 +50,12 @@
       (exception/throw-ex-info! :asha-request-failed (str "Sending xml failed: " (.getMessage e))))))
 
 (defn- request-handler! [data resource parser-fn schema]
-  (let [request-xml (request-create-xml resource data)
-        response-xml (send-request! request-xml)]
-    (when-let [response-parser (when parser-fn (parser-fn response-xml))]
-      (read-response response-parser schema))))
+  (if config/asha-endpoint-url
+    (let [request-xml (request-create-xml resource data)
+          response-xml (send-request! request-xml)]
+      (when-let [response-parser (when parser-fn (parser-fn response-xml))]
+        (read-response response-parser schema)))
+    (log/info "Missing asha endpoint url. Skip request to asha...")))
 
 (defn response-parser-case-create [response-soap]
   (let [response-xml (read-response->xml response-soap)]
@@ -98,28 +100,28 @@
 
 (defn case-info [sender-id request-id case-number]
   (execute-operation! {:request-id request-id
-                      :sender-id   sender-id
-                      :case-info   {:case-number case-number}}
+                       :sender-id  sender-id
+                       :case-info  {:case-number case-number}}
                       response-parser-case-info
                       asha-schema/CaseInfoResponse))
 
 (defn action-info [sender-id request-id case-number processing-action-name]
-  (execute-operation! {:request-id            request-id
-                      :sender-id              sender-id
-                      :processing-action-info {:case-number   case-number
-                                               :processing-action-name-identity processing-action-name}}
+  (execute-operation! {:request-id             request-id
+                       :sender-id              sender-id
+                       :processing-action-info {:case-number                     case-number
+                                                :processing-action-name-identity processing-action-name}}
                       response-parser-action-info
                       asha-schema/ActionInfoResponse))
 
 (defn proceed-operation! [sender-id request-id case-number processing-action decision]
-  (execute-operation! {:request-id request-id
-                       :sender-id  sender-id
-                       :identity   (cond-> {:case {:number case-number}}
-                                           processing-action (assoc :processing-action {:name-identity processing-action}))
+  (execute-operation! {:request-id        request-id
+                       :sender-id         sender-id
+                       :identity          (cond-> {:case {:number case-number}}
+                                                  processing-action (assoc :processing-action {:name-identity processing-action}))
                        :proceed-operation {:decision decision}}))
 
 (defn attach-contact-to-processing-action! [sender-id request-id case-number processing-action contact]
-  (execute-operation! {:sender-id sender-id
+  (execute-operation! {:sender-id  sender-id
                        :request-id request-id
                        :identity   {:case              {:number case-number}
                                     :processing-action {:name-identity processing-action}}
@@ -129,28 +131,28 @@
   (String. (b64/encode bytes) "UTF-8"))
 
 (defn add-documents-to-processing-action! [sender-id request-id case-number processing-action documents]
-  (execute-operation! {:sender-id sender-id
-                      :request-id request-id
-                      :identity   {:case              {:number case-number}
-                                   :processing-action {:name-identity processing-action}}
-                      :attach     {:document (map (fn [document]
-                                                    (update document :content bytes->base64-string))
-                                                  documents)}}))
+  (execute-operation! {:sender-id  sender-id
+                       :request-id request-id
+                       :identity   {:case              {:number case-number}
+                                    :processing-action {:name-identity processing-action}}
+                       :attach     {:document (map (fn [document]
+                                                     (update document :content bytes->base64-string))
+                                                   documents)}}))
 
 (defn resolve-case-processing-action-state [sender-id request-id case-number]
-  (->>  ["Vireillepano" "Käsittely" "Päätöksenteko"]
+  (->> ["Vireillepano" "Käsittely" "Päätöksenteko"]
        (map (fn [processing-action]
               (try
                 {processing-action (-> (action-info sender-id request-id case-number processing-action) :processing-action :status)}
                 (catch Exception _e))))
-        (into (array-map))))
+       (into (array-map))))
 
 (defn move-processing-action! [sender-id request-id case-number processing-action]
   (when-let [action (cond
-                        (= processing-action "Käsittely") {:processing-action "Vireillepano"
-                                                           :decision          "Siirry käsittelyyn"}
-                        (= processing-action "Päätöksenteko") {:processing-action "Käsittely"
-                                                               :decision          "Siirry päätöksentekoon"})]
+                      (= processing-action "Käsittely") {:processing-action "Vireillepano"
+                                                         :decision          "Siirry käsittelyyn"}
+                      (= processing-action "Päätöksenteko") {:processing-action "Käsittely"
+                                                             :decision          "Siirry päätöksentekoon"})]
     (when (not (get (resolve-case-processing-action-state sender-id request-id case-number) processing-action))
       (proceed-operation! sender-id request-id case-number (:processing-action action) (:decision action)))))
 
@@ -166,7 +168,7 @@
 (defn take-processing-action! [sender-id request-id case-number processing-action]
   (execute-operation! {:sender-id        sender-id
                        :request-id       request-id
-                       :identity         {:case {:number case-number}
+                       :identity         {:case              {:number case-number}
                                           :processing-action {:name-identity processing-action}}
                        :start-processing {:assignee sender-id}}))
 
