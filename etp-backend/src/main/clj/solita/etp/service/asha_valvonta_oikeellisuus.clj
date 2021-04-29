@@ -85,7 +85,7 @@
         case-number (:diaarinumero toimenpide)
         document "Testi" #_(:document toimenpide)]
 
-    (asha/move-processing-action
+    (asha/move-processing-action!
       sender-id
       request-id
       case-number
@@ -110,7 +110,7 @@
           :type    (-> processing-action :document :type)
           :name    (-> processing-action :document :name)}]))
     (asha/take-processing-action! sender-id request-id case-number (-> processing-action :processing-action :name))
-    (asha/mark-processing-action-as-ready
+    (asha/mark-processing-action-as-ready!
       sender-id
       request-id
       case-number

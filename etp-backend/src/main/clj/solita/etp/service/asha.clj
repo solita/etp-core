@@ -49,7 +49,7 @@
       (log/error "Sending xml failed: " e)
       (exception/throw-ex-info! :asha-request-failed (str "Sending xml failed: " (.getMessage e))))))
 
-(defn- request-handler [data resource parser-fn schema]
+(defn- request-handler! [data resource parser-fn schema]
   (let [request-xml (request-create-xml resource data)
         response-xml (send-request! request-xml)]
     (when-let [response-parser (when parser-fn (parser-fn response-xml))]
@@ -91,10 +91,10 @@
                          :next-processing-action (action-info [:selected-decision :next-processing-action])}}))
 
 (defn open-case! [case]
-  (-> (request-handler case "case-create" response-parser-case-create asha-schema/CaseCreateResponse) :case-number))
+  (-> (request-handler! case "case-create" response-parser-case-create asha-schema/CaseCreateResponse) :case-number))
 
 (defn execute-operation! [data & [response-parser schema]]
-  (request-handler data "execute-operation" response-parser schema))
+  (request-handler! data "execute-operation" response-parser schema))
 
 (defn case-info [sender-id request-id case-number]
   (execute-operation! {:request-id request-id
@@ -145,7 +145,7 @@
                 (catch Exception _e))))
         (into (array-map))))
 
-(defn move-processing-action [sender-id request-id case-number processing-action]
+(defn move-processing-action! [sender-id request-id case-number processing-action]
   (when-let [action (cond
                         (= processing-action "Käsittely") {:processing-action "Vireillepano"
                                                            :decision          "Siirry käsittelyyn"}
@@ -154,7 +154,7 @@
     (when (not (get (resolve-case-processing-action-state sender-id request-id case-number) processing-action))
       (proceed-operation! sender-id request-id case-number (:processing-action action) (:decision action)))))
 
-(defn mark-processing-action-as-ready [sender-id request-id case-number processing-action]
+(defn mark-processing-action-as-ready! [sender-id request-id case-number processing-action]
   (proceed-operation! sender-id request-id case-number processing-action "Valmis"))
 
 (defn close-case! [sender-id request-id case-number]

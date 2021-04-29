@@ -25,7 +25,7 @@
                 :service        "general"
                 :name           "Asunnot Oy"
                 :description    "Helsinki, Katu 1"})
-             {:case-number "ARA-05.03.02-2021-31" :id 38444}))))
+             "ARA-05.03.02-2021-31"))))
 
 (t/deftest case-info-test
   (binding [asha-service/make-send-requst! (handle-request "asha/case-info-request.xml"
@@ -130,5 +130,4 @@
                   "ETP-1"
                   "ARA-05.03.02-2021-8"
                   "Vireillepano"
-                  nil
                   "Siirry käsittelyyn")))))

@@ -20,13 +20,9 @@
                 <ns0:AttachOperation>
                     <ns0:Contact>
                         <ns0:type>ORGANIZATION</ns0:type>
-                        <ns0:address></ns0:address>
                         <ns0:emailAddress></ns0:emailAddress>
-                        <ns0:phoneNumber></ns0:phoneNumber>
                         <ns0:firstName>Liisa</ns0:firstName>
                         <ns0:lastName>Meikäläinen</ns0:lastName>
-                        <ns0:organizationalUnitName></ns0:organizationalUnitName>
-                        <ns0:businessIdentityCode></ns0:businessIdentityCode>
                     </ns0:Contact>
                 </ns0:AttachOperation>
             </ns0:operationRequest>
