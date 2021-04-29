@@ -68,14 +68,14 @@
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
                                        :contact              (asha/kayttaja->contact laatija)}
-                   :document          {:type "Muistio" :name "valvontamuistio_tietopyyntö.txt"}}
+                   :document          {:type "Muistio" :name "kehotus_valvontamuistio.txt"}}
    :audit-warning {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Varoituksen antaminen valvontamuistion perusteella"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
                                        :contact              (asha/kayttaja->contact laatija)}
-                   :document          {:type "Muistio" :name "valvontamuistio_varoitus.txt"}}})
+                   :document          {:type "Muistio" :name "varoitus_valvontamuistio.txt"}}})
 
 (defn log-toimenpide! [db whoami id toimenpide]
   (let [{:keys [energiatodistus laatija]} (resolve-energiatodistus-laatija db id)
