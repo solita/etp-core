@@ -118,6 +118,13 @@
                                            processing-action (assoc :processing-action {:name-identity processing-action}))
                        :proceed-operation {:decision decision}}))
 
+(defn attach-contact-to-processing-action! [sender-id request-id case-number processing-action contact]
+  (execute-operation! {:sender-id sender-id
+                       :request-id request-id
+                       :identity   {:case              {:number case-number}
+                                    :processing-action {:name-identity processing-action}}
+                       :attach     {:contact contact}}))
+
 (defn bytes->base64-string [bytes]
   (String. (b64/encode bytes) "UTF-8"))
 
@@ -167,5 +174,4 @@
   {:type          "ORGANIZATION"                            ;No enum constant fi.ys.eservice.entity.ContactType.PERSON
    :first-name    (:etunimi kayttaja)
    :last-name     (:sukunimi kayttaja)
-   :phone-number  (:puhelin kayttaja)
    :email-address (:email kayttaja)})
