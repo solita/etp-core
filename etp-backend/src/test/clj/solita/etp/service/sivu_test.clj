@@ -10,6 +10,8 @@
 
 (t/use-fixtures :each ts/fixture)
 
+(defn no-ordinal [sivu] (dissoc sivu :ordinal))
+
 (defn test-data-set []
   (let [paakayttaja-adds (->> (kayttaja-test-data/generate-adds 2)
                               (map #(assoc % :rooli 2)))
@@ -42,24 +44,24 @@
                                    kayttaja-test-data/laatija
                                    unpub-id)))
 
-    (t/is (= (get sivut-by-id unpub-id)
-             (service/find-sivu ts/*db*
-                                kayttaja-test-data/paakayttaja
-                                unpub-id)))))
+    (t/is (= (no-ordinal (get sivut-by-id unpub-id))
+             (no-ordinal (service/find-sivu ts/*db*
+                                            kayttaja-test-data/paakayttaja
+                                            unpub-id))))))
 
 (t/deftest find-all
   (let [ds (test-data-set)]
     ;; laatija sees only published sivut
     (t/is (= (->> (service/find-all-sivut ts/*db*
                                           kayttaja-test-data/laatija)
-                 (map :id) set)
+                  (map :id) set)
              (->> (:published-sivut ds)
                   (map :id) set)))
 
     ;; paakayttaja sees every page
     (t/is (= (->> (service/find-all-sivut ts/*db*
                                           kayttaja-test-data/paakayttaja)
-                 (map :id) set)
+                  (map :id) set)
              (->> (:sivut ds)
                   (map :id) set)))))
 
@@ -68,14 +70,15 @@
         sivu (-> ds :sivut first)
         sivu-id (:id sivu)
         new-body "Lorem ipsum"]
-    (t/is (= sivu (service/find-sivu ts/*db*
-                                     kayttaja-test-data/paakayttaja
-                                     sivu-id)))
+    (t/is (= (no-ordinal sivu)
+             (no-ordinal (service/find-sivu ts/*db*
+                                            kayttaja-test-data/paakayttaja
+                                            sivu-id))))
     (service/update-sivu! ts/*db* sivu-id {:body new-body})
-    (t/is (= (assoc sivu :body new-body)
-             (service/find-sivu ts/*db*
-                                kayttaja-test-data/paakayttaja
-                                sivu-id)))))
+    (t/is (= (no-ordinal (assoc sivu :body new-body))
+             (no-ordinal (service/find-sivu ts/*db*
+                                            kayttaja-test-data/paakayttaja
+                                            sivu-id))))))
 
 (t/deftest delete-leaf-sivu
   (let [ds (test-data-set)
@@ -95,14 +98,15 @@
         sivu (-> ds :sivut first)
         sivu-id (:id sivu)
         new-title "Hello"]
-    (t/is (= sivu (service/find-sivu ts/*db*
-                                     kayttaja-test-data/paakayttaja
-                                     sivu-id)))
+    (t/is (= (no-ordinal sivu)
+             (no-ordinal (service/find-sivu ts/*db*
+                                            kayttaja-test-data/paakayttaja
+                                            sivu-id))))
     (service/update-sivu! ts/*db* sivu-id {:title new-title})
-    (t/is (= (assoc sivu :title new-title)
-             (service/find-sivu ts/*db*
-                                kayttaja-test-data/paakayttaja
-                                sivu-id)))))
+    (t/is (= (no-ordinal (assoc sivu :title new-title))
+             (no-ordinal (service/find-sivu ts/*db*
+                                            kayttaja-test-data/paakayttaja
+                                            sivu-id))))))
 
 (t/deftest find-empty
   (t/is (empty? (service/find-all-sivut ts/*db*
