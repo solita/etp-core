@@ -4,13 +4,13 @@
 
 (def SivuSave
   {:parent-id (schema/maybe common-schema/Key)
-   :ordinal schema/Int
+   :ordinal (schema/maybe schema/Int)
    :published schema/Bool
    :title schema/Str
    :body schema/Str})
 
 (def Sivu
   (merge common-schema/Id
-         SivuSave))
+         (assoc SivuSave :ordinal schema/Int)))
 
 (def SivuBrief (dissoc Sivu :body))
