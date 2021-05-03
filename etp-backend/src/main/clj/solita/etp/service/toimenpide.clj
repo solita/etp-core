@@ -11,6 +11,8 @@
    :rfi-request :rfi-reply :rfi-order :rfi-warning
    ;; valvonnan toimenpidetyypit
    :audit-report :audit-reply :audit-order :audit-warning
+   ;; lisäselvityspyynnön toimenpidetyypit
+   :rfc-request :rfc-reply
    ;; päätös
    :decision-prohibition
    ;; raskaan valvonnan sulkeminen (case closed)
@@ -32,6 +34,7 @@
 (def asha-toimenpide?
   (partial some-type?
            #{:rfi-request :rfi-order :rfi-warning
-             :audit-report :audit-order :audit-warning}))
+             :audit-report :audit-order :audit-warning
+             :rfc-request}))
 
 (def published? #(-> % :publish-time some?))

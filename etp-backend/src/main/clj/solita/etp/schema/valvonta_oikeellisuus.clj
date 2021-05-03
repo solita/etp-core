@@ -15,12 +15,14 @@
   (schema-tools/optional-keys
     {:deadline-date (schema/maybe common-schema/Date)
      :template-id   (schema/maybe common-schema/Key)
+     :description   (schema/maybe schema/Str)
      :document      (schema/maybe schema/Str)}))
 
 (def ToimenpideAdd
   {:type-id       common-schema/Key
    :deadline-date (schema/maybe common-schema/Date)
    :template-id   (schema/maybe common-schema/Key)
+   :description   (schema/maybe schema/Str)
    :document      (schema/maybe schema/Str)})
 
 (def Toimenpide
