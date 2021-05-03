@@ -34,6 +34,37 @@
      :published-sivut published-sivut
      :unpublished-sivut unpublished-sivut}))
 
+(defn ordinal-test-data-set []
+  (let [whoami kayttaja-test-data/paakayttaja
+        defaults {:published true
+                  :ordinal nil
+                  :parent-id nil
+                  :body ""}
+        root-0-id (:id (service/add-sivu! ts/*db* (assoc defaults
+                                                         :title "Pääsivu 0")))
+        root-1-id (:id (service/add-sivu! ts/*db* (assoc defaults
+                                                         :title "Pääsivu 1")))
+        sub-0-0-id (:id (service/add-sivu! ts/*db* (assoc defaults
+                                                          :title "Alisivu 0 0"
+                                                          :parent-id root-0-id)))
+        sub-0-1-id (:id (service/add-sivu! ts/*db* (assoc defaults
+                                                          :title "Alisivu 0 1"
+                                                          :parent-id root-0-id)))
+        sub-1-0-id (:id (service/add-sivu! ts/*db* (assoc defaults
+                                                          :title "Alisivu 1 0"
+                                                          :parent-id root-1-id)))
+        sub-1-1-id (:id (service/add-sivu! ts/*db* (assoc defaults
+                                                          :title "Alisivu 1 1"
+                                                          :parent-id root-1-id)))]
+    {:defaults defaults
+     :root-0-id root-0-id
+     :root-1-id root-1-id
+     :sub-0-0-id sub-0-0-id
+     :sub-0-1-id sub-0-1-id
+     :sub-1-0-id sub-1-0-id
+     :sub-1-1-id sub-1-1-id
+     :whoami whoami}))
+
 (t/deftest find-sivu
   (let [ds (test-data-set)
         sivut-by-id (->> (:sivut ds)
@@ -88,10 +119,23 @@
     (t/is (not (nil? (service/find-sivu ts/*db*
                                      kayttaja-test-data/paakayttaja
                                      sivu-id))))
-    (service/delete-sivu! ts/*db* sivu-id)
+    (t/is (= 1 (service/delete-sivu! ts/*db* sivu-id)))
     (t/is (nil? (service/find-sivu ts/*db*
                                    kayttaja-test-data/paakayttaja
                                    sivu-id)))))
+
+(t/deftest delete-missing
+  (let [{:keys [sivut]} (test-data-set)
+        missing-id (->> (map :id sivut)
+                        (reduce max)
+                        inc)]
+    (t/is (nil? (service/find-sivu ts/*db*
+                                   kayttaja-test-data/paakayttaja
+                                   missing-id)))
+    (t/is (= 0 (service/delete-sivu! ts/*db* missing-id)))
+    (t/is (nil? (service/find-sivu ts/*db*
+                                   kayttaja-test-data/paakayttaja
+                                   missing-id)))))
 
 (t/deftest update-title
   (let [ds (test-data-set)
@@ -102,11 +146,19 @@
              (no-ordinal (service/find-sivu ts/*db*
                                             kayttaja-test-data/paakayttaja
                                             sivu-id))))
-    (service/update-sivu! ts/*db* sivu-id {:title new-title})
+    (t/is (= 1 (service/update-sivu! ts/*db* sivu-id {:title new-title})))
     (t/is (= (no-ordinal (assoc sivu :title new-title))
              (no-ordinal (service/find-sivu ts/*db*
                                             kayttaja-test-data/paakayttaja
                                             sivu-id))))))
+
+(t/deftest update-missing
+  (let [{:keys [sivut]} (test-data-set)
+        missing-id (->> (map :id sivut)
+                        (reduce max)
+                        inc)
+        new-title "Hello"]
+    (t/is (= 0 (service/update-sivu! ts/*db* missing-id {:title new-title})))))
 
 (t/deftest find-empty
   (t/is (empty? (service/find-all-sivut ts/*db*
@@ -128,6 +180,126 @@
     (t/is (= (:title sivu-out) (:title sivu-in)))
     (t/is (= (:body  sivu-out) (:body  sivu-in)))
     (t/is (:published sivu-out))))
+
+(t/deftest ordinal-new-root-prepend
+  (let [{:keys [defaults
+                root-0-id
+                root-1-id
+                whoami]} (ordinal-test-data-set)
+        sivu-id (:id (service/add-sivu! ts/*db* (assoc defaults
+                                                       :title "Päätason sivu"
+                                                       :parent-id nil
+                                                       :ordinal 0)))]
+    (t/is (= 0 (-> (service/find-sivu ts/*db* whoami sivu-id)
+                   :ordinal)))
+    (t/is (= 1 (-> (service/find-sivu ts/*db* whoami root-0-id)
+                   :ordinal)))
+    (t/is (= 2 (-> (service/find-sivu ts/*db* whoami root-1-id)
+                   :ordinal)))))
+
+(t/deftest ordinal-delete
+  (let [{:keys [defaults
+                root-1-id
+                sub-1-0-id
+                sub-1-1-id
+                whoami]} (ordinal-test-data-set)]
+    (service/delete-sivu! ts/*db* sub-1-0-id)
+    (t/is (= (-> (service/find-sivu ts/*db* whoami sub-1-1-id)
+                 (select-keys [:ordinal :parent-id]))
+             {:ordinal 0 :parent-id root-1-id}))))
+
+(t/deftest ordinal-new-root-append
+  (let [{:keys [defaults
+                root-0-id
+                root-1-id
+                whoami]} (ordinal-test-data-set)
+        sivu-id (:id (service/add-sivu! ts/*db* (assoc defaults
+                                                       :title "Päätason sivu"
+                                                       :parent-id nil
+                                                       :ordinal nil)))]
+    (t/is (= 0 (-> (service/find-sivu ts/*db* whoami root-0-id)
+                   :ordinal)))
+    (t/is (= 1 (-> (service/find-sivu ts/*db* whoami root-1-id)
+                   :ordinal)))
+    (t/is (= 2 (-> (service/find-sivu ts/*db* whoami sivu-id)
+                   :ordinal)))))
+
+(t/deftest ordinal-new-root-append
+  (let [{:keys [defaults
+                root-0-id
+                root-1-id
+                whoami]} (ordinal-test-data-set)
+        sivu-id (:id (service/add-sivu! ts/*db* (assoc defaults
+                                                       :title "Päätason sivu"
+                                                       :parent-id nil
+                                                       :ordinal nil)))]
+    (t/is (= 0 (-> (service/find-sivu ts/*db* whoami root-0-id)
+                   :ordinal)))
+    (t/is (= 1 (-> (service/find-sivu ts/*db* whoami root-1-id)
+                   :ordinal)))
+    (t/is (= 2 (-> (service/find-sivu ts/*db* whoami sivu-id)
+                   :ordinal)))))
+
+
+(t/deftest ordinal-reroot
+  (let [{:keys [defaults
+                root-0-id
+                root-1-id
+                sub-0-0-id
+                sub-0-1-id
+                sub-1-0-id
+                sub-1-1-id
+                whoami]} (ordinal-test-data-set)]
+    (service/update-sivu! ts/*db* sub-1-1-id {:parent-id root-0-id
+                                              :ordinal 1})
+    (t/is (= (-> (service/find-sivu ts/*db* whoami sub-0-0-id)
+                 (select-keys [:ordinal :parent-id]))
+             {:ordinal 0 :parent-id root-0-id}))
+
+    ;; The moved sivu should be here as the second sub-page of the
+    ;; first root.
+    (t/is (= (-> (service/find-sivu ts/*db* whoami sub-1-1-id)
+                 (select-keys [:ordinal :parent-id]))
+             {:ordinal 1 :parent-id root-0-id}))
+
+    (t/is (= (-> (service/find-sivu ts/*db* whoami sub-0-1-id)
+                 (select-keys [:ordinal :parent-id]))
+             {:ordinal 2 :parent-id root-0-id}))
+
+    (t/is (= (-> (service/find-sivu ts/*db* whoami sub-1-0-id)
+                 (select-keys [:ordinal :parent-id]))
+             {:ordinal 0 :parent-id root-1-id}))))
+
+
+(t/deftest ordinal-reroot-last
+  (let [{:keys [defaults
+                root-0-id
+                root-1-id
+                sub-0-0-id
+                sub-0-1-id
+                sub-1-0-id
+                sub-1-1-id
+                whoami]} (ordinal-test-data-set)]
+    (service/update-sivu! ts/*db* sub-1-0-id {:parent-id root-0-id})
+
+    (t/is (= (-> (service/find-sivu ts/*db* whoami sub-0-0-id)
+                 (select-keys [:ordinal :parent-id]))
+             {:ordinal 0 :parent-id root-0-id}))
+
+    (t/is (= (-> (service/find-sivu ts/*db* whoami sub-0-1-id)
+                 (select-keys [:ordinal :parent-id]))
+             {:ordinal 1 :parent-id root-0-id}))
+
+    ;; The ordinal was not specified, so it is expected that the first
+    ;; available ordinal is assigned.
+    (t/is (= (-> (service/find-sivu ts/*db* whoami sub-1-0-id)
+                 (select-keys [:ordinal :parent-id]))
+             {:ordinal 2 :parent-id root-0-id}))
+
+    (t/is (= (-> (service/find-sivu ts/*db* whoami sub-1-1-id)
+                 (select-keys [:ordinal :parent-id]))
+             {:ordinal 0 :parent-id root-1-id}))))
+
 
 (t/deftest simple-hierarchy
   (let [whoami kayttaja-test-data/paakayttaja
