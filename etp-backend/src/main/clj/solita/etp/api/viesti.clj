@@ -46,7 +46,7 @@
                           404 {:body schema/Str}}
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                            (api-response/get-response
-                             (viesti-service/find-ketju db whoami id)
+                             (viesti-service/find-ketju! db whoami id)
                              (str "Ketju " id " does not exists.")))}
        :put {:summary    "Päivitä viestiketjun tiedot"
              :access     (some-fn rooli-service/paakayttaja? rooli-service/laskuttaja?)
