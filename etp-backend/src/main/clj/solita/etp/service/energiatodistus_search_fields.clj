@@ -39,6 +39,13 @@
     (into {} (map (per-nettoala-entry (map name path) rename-key))
           (get-in schema path))))
 
+(defn- ostettu-polttoaine-entry
+  [path factor schema]
+  (let [item-schema (get-in schema path)
+        field-parts (concat ["energiatodistus"] (map name path))
+        ]
+    [(per-nettoala-sql (str factor " * " (field->db-column field-parts))) item-schema]))
+
 (defn- painotettu-kulutus-sql [path key]
   (str (field->db-column (conj path (name key))) " * (case energiatodistus.versio"
        " when 2013 then "
@@ -124,9 +131,27 @@
        #(str/replace % "vuosikulutus" "neliovuosikulutus")
        energiatodistus-schema/Energiatodistus2018)
      :ostetut-polttoaineet
-     (dissoc
-       (per-nettoala-for-schema
-         [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet]
-         #(str % "-neliovuosikulutus")
-         energiatodistus-schema/Energiatodistus2018)
-       :muu-neliovuosikulutus)}}})
+     {:kevyt-polttooljy-neliovuosikulutus
+      (ostettu-polttoaine-entry [:toteutunut-ostoenergiankulutus
+                                 :ostetut-polttoaineet
+                                 :kevyt-polttooljy]
+                                10
+                                energiatodistus-schema/Energiatodistus2018)
+      :pilkkeet-havu-sekapuu-neliovuosikulutus
+      (ostettu-polttoaine-entry [:toteutunut-ostoenergiankulutus
+                                 :ostetut-polttoaineet
+                                 :pilkkeet-havu-sekapuu]
+                                1300
+                                energiatodistus-schema/Energiatodistus2018)
+      :pilkkeet-koivu-neliovuosikulutus
+      (ostettu-polttoaine-entry [:toteutunut-ostoenergiankulutus
+                                 :ostetut-polttoaineet
+                                 :pilkkeet-koivu]
+                                1700
+                                energiatodistus-schema/Energiatodistus2018)
+      :puupelletit-neliovuosikulutus
+      (ostettu-polttoaine-entry [:toteutunut-ostoenergiankulutus
+                                 :ostetut-polttoaineet
+                                 :puupelletit]
+                                4.7
+                                energiatodistus-schema/Energiatodistus2018)}}}})
