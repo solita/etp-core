@@ -29,26 +29,29 @@
       first
       (dissoc :kayttotarkoitusluokka-id)))
 
+(defn generate-add [versio ready-for-signing?]
+  (generators/complete
+   {:perustiedot (merge
+                  {:kieli (rand-int 2)
+                   :kayttotarkoitus "YAT"}
+                  (if (= versio 2018)
+                    {:laatimisvaihe (rand-int 2)}))
+    :lahtotiedot {:ilmanvaihto {:tyyppi-id (rand-int 7)}
+                  :lammitys {:lammitysmuoto-1 {:id (rand-int 10)}
+                             :lammitysmuoto-2 {:id (rand-int 10)}
+                             :lammonjako {:id (rand-int 13)}}
+                  :sis-kuorma (sisainen-kuorma versio 1)}
+    :laskutettava-yritys-id nil
+    :korvattu-energiatodistus-id nil
+    :draft-visible-to-paakayttaja false
+    :bypass-validation-limits false
+    :bypass-validation-limits-reason nil}
+   (schema-by-version-and-ready-for-signing versio
+                                            ready-for-signing?)
+   generators))
+
 (defn generate-adds [n versio ready-for-signing?]
-  (repeatedly n #(generators/complete
-                  {:perustiedot (merge
-                                 {:kieli (rand-int 2)
-                                  :kayttotarkoitus "YAT"}
-                                 (if (= versio 2018)
-                                   {:laatimisvaihe (rand-int 2)}))
-                   :lahtotiedot {:ilmanvaihto {:tyyppi-id (rand-int 7)}
-                                 :lammitys {:lammitysmuoto-1 {:id (rand-int 10)}
-                                            :lammitysmuoto-2 {:id (rand-int 10)}
-                                            :lammonjako {:id (rand-int 13)}}
-                                 :sis-kuorma (sisainen-kuorma versio 1)}
-                   :laskutettava-yritys-id nil
-                   :korvattu-energiatodistus-id nil
-                   :draft-visible-to-paakayttaja false
-                   :bypass-validation-limits false
-                   :bypass-validation-limits-reason nil}
-                  (schema-by-version-and-ready-for-signing versio
-                                                           ready-for-signing?)
-                  generators)))
+  (repeatedly n #(generate-add versio ready-for-signing?)))
 
 (def generate-updates generate-adds)
 
