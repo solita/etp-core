@@ -28,13 +28,13 @@ limit :limit offset :offset;
 -- name: select-count-all-viestiketjut
 select count(*) count from viestiketju;
 
--- name: select-count-viestiketjut-for-laatija
+-- name: select-count-viestiketjut-for-kayttaja
 select count(*) count
 from viestiketju
-where from_id = :laatija-id or vastaanottajaryhma_id = 1 or
+where from_id = :kayttaja-id or vastaanottajaryhma_id = :vastaanottajaryhma-id or
   exists (
     select 1 from vastaanottaja
-    where vastaanottaja.vastaanottaja_id = :laatija-id and
+    where vastaanottaja.vastaanottaja_id = :kayttaja-id and
         vastaanottaja.viestiketju_id = viestiketju.id
   );
 
@@ -73,3 +73,26 @@ select id, etunimi, sukunimi, rooli_id from kayttaja WHERE rooli_id IN (2, 3);
 insert into viesti_reader (viesti_id)
 select viesti.id from viesti where viesti.viestiketju_id = :viestiketju-id
 on conflict (viesti_id, reader_id) do nothing
+
+-- name: select-count-unread-for-kasittelija
+select count(*)
+from viestiketju
+where (kasittelija_id is null or kasittelija_id = :kayttaja-id) and exists(
+  select from viesti where viesti.viestiketju_id = viestiketju.id and not exists(
+    select from viesti_reader where viesti_reader.viesti_id = viesti.id and
+                                    viesti_reader.reader_id = :kayttaja-id
+));
+
+-- name: select-count-unread-for-kayttaja
+select count(*)
+from viestiketju
+where (from_id = :kayttaja-id or vastaanottajaryhma_id = :vastaanottajaryhma-id or
+  exists (
+    select 1 from vastaanottaja
+    where vastaanottaja.vastaanottaja_id = :kayttaja-id and
+        vastaanottaja.viestiketju_id = viestiketju.id
+    )) and exists(
+  select from viesti where viesti.viestiketju_id = viestiketju.id and not exists(
+    select from viesti_reader where viesti_reader.viesti_id = viesti.id and
+        viesti_reader.reader_id = :kayttaja-id
+    ));
