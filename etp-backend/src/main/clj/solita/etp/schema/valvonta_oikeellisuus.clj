@@ -5,11 +5,12 @@
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]))
 
 (def ValvontaSave
-  {:active     schema/Bool
-   :liitteet   schema/Bool
+  {:pending    schema/Bool
    :valvoja-id (schema/maybe common-schema/Key)})
 
-(def Valvonta (assoc ValvontaSave :id common-schema/Key))
+(def Valvonta (assoc ValvontaSave
+                :id common-schema/Key
+                :ongoing schema/Bool))
 
 (def ToimenpideUpdate
   (schema-tools/optional-keys
