@@ -27,7 +27,7 @@
   (contains? type-key-set (-> toimenpide :type-id type-key)))
 
 (def draft-support?
-  (partial some-type? #{:rfi-reply :audit-report :audit-reply}))
+  (partial some-type? #{:rfi-reply :audit-report :audit-reply :rfc-reply}))
 
 (def case-open? (partial type? :case))
 

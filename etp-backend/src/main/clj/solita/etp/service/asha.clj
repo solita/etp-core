@@ -175,7 +175,7 @@
                        :start-processing {:assignee sender-id}}))
 
 (defn log-toimenpide! [sender-id request-id case-number processing-action]
-  (let [; TODO: get document from toimenpide
+  (let [; TODO: get document from template-id
         document (when (:document processing-action)
                    "Testi") #_(:document toimenpide)]
     (move-processing-action!
