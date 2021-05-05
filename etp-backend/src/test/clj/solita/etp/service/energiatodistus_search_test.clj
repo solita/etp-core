@@ -322,6 +322,52 @@
               "energiatodistus.lahtotiedot.rakennusvaippa.ikkunat.osuus-lampohaviosta"
               (with-precision 20 (/ ikkunat-ua ua-summa))]]]))))
 
+(t/deftest search-by-ostetut-polttoaineet
+  (let [nettoala 100M
+        kevyt-polttooljy-litres 2000M
+        expected-kwh-per-year-m2 (/ (* kevyt-polttooljy-litres 10) nettoala)
+        laatija-id (first (keys (laatija-test-data/generate-and-insert! 1)))
+        other-ets (energiatodistus-test-data/generate-adds 5 2018 true)
+        other-et-ids (energiatodistus-test-data/insert! other-ets laatija-id)
+        target-et (-> (energiatodistus-test-data/generate-add 2018 true)
+                      (assoc :draft-visible-to-paakayttaja true)
+                      (assoc-in [:lahtotiedot
+                                 :lammitetty-nettoala]
+                                nettoala)
+                      (assoc-in [:toteutunut-ostoenergiankulutus
+                                 :ostetut-polttoaineet
+                                 :kevyt-polttooljy]
+                                kevyt-polttooljy-litres))
+        target-et-id (-> (energiatodistus-test-data/insert! [target-et] laatija-id)
+                         first)]
+    (t/is (contains? (->> (service/search
+                           ts/*db*
+                           kayttaja-test-data/paakayttaja
+                           {:where [[["=" "energiatodistus.toteutunut-ostoenergiankulutus.ostetut-polttoaineet.kevyt-polttooljy-neliovuosikulutus"
+                                      expected-kwh-per-year-m2
+                                      ]]]})
+                          (map :id)
+                          set)
+                     target-et-id))
+    (t/is (not (contains? (->> (service/search
+                                ts/*db*
+                                kayttaja-test-data/paakayttaja
+                                {:where [[["<" "energiatodistus.toteutunut-ostoenergiankulutus.ostetut-polttoaineet.kevyt-polttooljy-neliovuosikulutus"
+                                           (dec expected-kwh-per-year-m2)
+                                           ]]]})
+                               (map :id)
+                               set)
+                         target-et-id)))
+    (t/is (not (contains? (->> (service/search
+                                ts/*db*
+                                kayttaja-test-data/paakayttaja
+                                {:where [[[">" "energiatodistus.toteutunut-ostoenergiankulutus.ostetut-polttoaineet.kevyt-polttooljy-neliovuosikulutus"
+                                           (inc expected-kwh-per-year-m2)
+                                           ]]]})
+                               (map :id)
+                               set)
+                         target-et-id)))))
+
 (t/deftest laatija-cant-find-other-laatija-energiatodistukset-test
   (let [{:keys [laatijat energiatodistukset] :as test-data-set} (test-data-set)
         laatija-ids (-> laatijat keys sort)]
