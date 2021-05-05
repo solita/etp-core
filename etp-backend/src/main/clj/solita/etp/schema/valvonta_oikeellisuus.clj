@@ -34,5 +34,5 @@
 
 (def ValvontaStatus
   (assoc Valvonta
-    :last-toimenpide Toimenpide
+    :last-toimenpide (schema/maybe Toimenpide)
     :energiatodistus energiatodistus-schema/Energiatodistus))
