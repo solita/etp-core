@@ -11,8 +11,8 @@
 (def valvonnat (atom {}))
 
 (def default-valvonta
-  {:active     false
-   :liitteet   false
+  {:pending    false
+   :ongoing    false
    :valvoja-id nil})
 
 (defn find-valvonnat [db]
