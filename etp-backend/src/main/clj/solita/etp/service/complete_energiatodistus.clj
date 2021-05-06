@@ -7,6 +7,7 @@
             [solita.etp.service.e-luokka :as e-luokka-service]
             [solita.etp.service.kielisyys :as kielisyys]
             [solita.etp.service.luokittelu :as luokittelu]
+            [solita.etp.service.polttoaine :as polttoaine]
             [solita.common.map :as map]
             [solita.common.formats :as formats]))
 
@@ -441,10 +442,9 @@
           (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 2 :vuosikulutus])
           (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 3 :vuosikulutus])
           (assoc-div-nettoala [:toteutunut-ostoenergiankulutus :ostettu-energia :muu 4 :vuosikulutus])
-          (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kerroin] 10)
-          (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-havu-sekapuu-kerroin] 1300)
-          (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :pilkkeet-koivu-kerroin] 1700)
-          (assoc-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :puupelletit-kerroin] 4.7)
+          (update-in [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet]
+                     (partial merge (map/map-keys #(keyword (str (name %) "-kerroin"))
+                                                  polttoaine/muunnoskertoimet)))
           (combine-keys *
                         nil
                         [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :kevyt-polttooljy-kwh]
