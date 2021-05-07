@@ -66,11 +66,14 @@
      :yritykset (zipmap yritys-ids yritys-adds)
      :energiatodistukset (zipmap energiatodistus-ids energiatodistus-adds)}))
 
-;; There are 10 energiatodistus.
+;; There are 11 energiatodistus.
 ;; Energiatodistukset 1-6 and 8-9 are signed during last month.
 ;; Energiatodistus 7 has been signed three months ago.
-;; Energiatodistukset 8 has laskutuspäivä.
+;; Energiatodistukset 8 has laskutusaika.
 ;; Energiatodistus 9 has replaced energiatodistus 5.
+;; Energiatodistus 10 has been signed 2 years before energiatodistus 1.
+;; Energiatodistus 1 has replaced energiatodistus 10.
+;; Energiatodistus 11 has not been signed at all.
 ;; => Energiatodistukset 1-6 should go to laskutus.
 ;; Yritys 1 has laatija 1.
 ;; Yritys 2 has laatija 2.
@@ -84,12 +87,14 @@
 ;; test data set but not in other environments.
 
 (defn test-data-set []
-  (let [{:keys [laatijat energiatodistukset] :as test-data-set} (insert-test-data! 4 2 10 9)
+  (let [{:keys [laatijat energiatodistukset] :as test-data-set} (insert-test-data! 4 2 11 9)
         laatija-ids (-> laatijat keys sort)
         energiatodistus-ids (-> energiatodistukset keys sort)]
     (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = allekirjoitusaika - interval '1 month' WHERE id <= 9"])
     (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = now() - interval '3 month' WHERE id = 7"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = now() - interval '2 years' WHERE id = 10"])
     (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET laskutusaika = now() WHERE id = 8"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET korvattu_energiatodistus_id = 10 WHERE id = 1"])
     (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET korvattu_energiatodistus_id = 5 WHERE id = 9"])
     test-data-set))
 
