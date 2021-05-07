@@ -53,9 +53,13 @@ select
   kayttaja.id       from$id,
   kayttaja.rooli_id from$rooli_id,
   kayttaja.etunimi  from$etunimi,
-  kayttaja.sukunimi from$sukunimi
+  kayttaja.sukunimi from$sukunimi,
+  viesti_reader.read_time
 from viesti
   inner join kayttaja on kayttaja.id = viesti.from_id
+  left join viesti_reader
+    on viesti_reader.viesti_id = viesti.id and
+       viesti_reader.reader_id = :reader-id
 where viesti.viestiketju_id = :id
  order by viesti.sent_time asc;
 
@@ -64,3 +68,8 @@ select id, etunimi, sukunimi, rooli_id from kayttaja;
 
 -- name: select-kasittelijat
 select id, etunimi, sukunimi, rooli_id from kayttaja WHERE rooli_id IN (2, 3);
+
+--name: read-ketju!
+insert into viesti_reader (viesti_id)
+select viesti.id from viesti where viesti.viestiketju_id = :viestiketju-id
+on conflict (viesti_id, reader_id) do nothing

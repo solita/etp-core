@@ -24,6 +24,7 @@
 (def Viesti
   {:from      Kayttaja
    :sent-time common-schema/Instant
+   :read-time (schema/maybe common-schema/Instant)
    :body      schema/Str})
 
 (def Ketju
