@@ -32,11 +32,18 @@
              :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
                            (r/response (viesti-service/find-ketjut db whoami query)))}}]
     ["/count"
-     {:conflicting true
-      :get  {:summary   "Hae viestiketjujen lukumäärä."
-             :responses {200 {:body {:count schema/Int}}}
-             :handler   (fn [{:keys [db whoami]}]
-                          (r/response (viesti-service/count-ketjut db whoami)))}}]
+     [""
+      {:conflicting true
+       :get  {:summary   "Hae viestiketjujen lukumäärä."
+              :responses {200 {:body {:count schema/Int}}}
+              :handler   (fn [{:keys [db whoami]}]
+                           (r/response (viesti-service/count-ketjut db whoami)))}}]
+     ["/unread"
+      {:conflicting true
+       :get  {:summary   "Hae lukemattomien viestiketjujen lukumäärä."
+              :responses {200 {:body {:count schema/Int}}}
+              :handler   (fn [{:keys [db whoami]}]
+                           (r/response (viesti-service/count-unread-ketjut db whoami)))}}]]
     ["/:id"
      [""
       {:conflicting true

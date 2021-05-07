@@ -99,33 +99,41 @@
   (viesti-db/read-ketju! db {:viestiketju-id id})
   (find-ketju db whoami id))
 
+(defn builtin-vastaanottajaryhma-id [whoami]
+  (case (:rooli whoami)
+    0 1            ;; laatija
+    2 0            ;; paakayttaja
+    3 2))          ;; laskuttaja
+
+(defn- query-for-other-users [whoami]
+  {:kayttaja-id           (:id whoami)
+   :vastaanottajaryhma-id (builtin-vastaanottajaryhma-id whoami)})
+
 (defn find-ketjut [db whoami q]
   (let [query (merge {:limit 100 :offset 0} q)
         kayttajat (find-kayttajat db)]
     (pmap (comp (partial assoc-join-viestit db whoami)
-             (partial assoc-join-vastaanottajat kayttajat))
-          (cond (rooli-service/paakayttaja? whoami)
-                (viesti-db/select-all-viestiketjut db query)
-
-                (rooli-service/laatija? whoami)
-                (viesti-db/select-viestiketjut-for-kayttaja
-                 db
-                 (assoc query :kayttaja-id (:id whoami) :vastaanottajaryhma-id 1))
-
-                (rooli-service/laskuttaja? whoami)
-                (viesti-db/select-viestiketjut-for-kayttaja
-                 db
-                 (assoc query :kayttaja-id (:id whoami) :vastaanottajaryhma-id 2))
-
-                :else []))))
+                (partial assoc-join-vastaanottajat kayttajat))
+          (if (rooli-service/paakayttaja? whoami)
+            (viesti-db/select-all-viestiketjut db query)
+            (viesti-db/select-viestiketjut-for-kayttaja
+              db (merge query (query-for-other-users whoami)))))))
 
 (defn count-ketjut [db whoami]
-  (-> (cond (rooli-service/paakayttaja? whoami)
-            (viesti-db/select-count-all-viestiketjut db)
-            (rooli-service/laatija? whoami)
-            (viesti-db/select-count-viestiketjut-for-laatija
-              db {:laatija-id (:id whoami)})
-            :else [{:count 0}])
+  (-> (if (rooli-service/paakayttaja? whoami)
+        (viesti-db/select-count-all-viestiketjut db)
+        (viesti-db/select-count-viestiketjut-for-kayttaja
+          db (query-for-other-users whoami)))
+      first))
+
+(def kasittelija? (some-fn rooli-service/paakayttaja? rooli-service/laskuttaja?))
+
+(defn count-unread-ketjut [db whoami]
+  (-> (if (kasittelija? whoami)
+        (viesti-db/select-count-unread-for-kasittelija
+          db {:kayttaja-id (:id whoami)})
+        (viesti-db/select-count-unread-for-kayttaja
+          db (query-for-other-users whoami)))
       first))
 
 (defn add-viesti! [db whoami id body]
