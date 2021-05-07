@@ -13,7 +13,7 @@
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.energiatodistus-search :as energiatodistus-search-service]
             [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf-service]
-            [solita.etp.service.energiatodistus-xlsx :as energiatodistus-xlsx-service]
+            [solita.etp.service.energiatodistus-csv :as energiatodistus-csv-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.api.response :as api-response]
             [solita.etp.service.json :as json]
@@ -64,7 +64,7 @@
           :access     rooli-service/energiatodistus-reader?
           :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
                         (api-response/response-with-exceptions
-                         #(energiatodistus-search-service/public-search
+                         #(energiatodistus-search-service/search
                            db
                            whoami
                            (update query :where parse-where))
@@ -92,20 +92,21 @@
 (def private-routes
   (concat
     [["/energiatodistukset"
-      search-route search-count-route
-      ["/xlsx/energiatodistukset.xlsx"
-       {:get {:summary    "Hae energiatodistusten tiedot XLSX-tiedostona"
+      search-route
+      search-count-route
+      ["/csv/energiatodistukset.csv"
+       {:get {:summary    "Hae energiatodistusten tiedot CSV-tiedostona"
               :parameters {:query energiatodistus-schema/EnergiatodistusSearch}
               :responses  {200 {:body nil}}
               :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
               :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
                             (api-response/with-exceptions
-                              #(api-response/xlsx-response
-                                 (energiatodistus-xlsx-service/find-energiatodistukset-xlsx
+                              #(api-response/csv-response
+                                 (energiatodistus-csv-service/find-energiatodistukset-csv
                                    db
                                    whoami
                                    (update query :where json/read-value))
-                                 "energiatodistukset.xlsx"
+                                 "energiatodistukset.csv"
                                  "Not found.")
                               search-exceptions))}}]
       ["/all"

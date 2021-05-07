@@ -62,13 +62,13 @@
      :energiatodistukset (zipmap energiatodistus-ids energiatodistus-adds)}))
 
 (defn search [whoami where keyword sort order]
-  (service/public-search ts/*db*
-                         whoami
-                         (cond-> {}
-                           where (assoc :where where)
-                           keyword (assoc :keyword keyword)
-                           sort (assoc :sort sort)
-                           order (assoc :order order))))
+  (service/search ts/*db*
+                  whoami
+                  (cond-> {}
+                    where (assoc :where where)
+                    keyword (assoc :keyword keyword)
+                    sort (assoc :sort sort)
+                    order (assoc :order order))))
 
 (defn search-and-assert
   ([test-data-set id where]
@@ -109,7 +109,7 @@
     (jdbc/execute!
      ts/*db*
      ["UPDATE energiatodistus SET lt$lammitetty_nettoala = NULL where id = ?" id])
-    (let [found-id (-> (service/private-search
+    (let [found-id (-> (service/search
                         ts/*db*
                         {:rooli 0 :id laatija-id}
                         {:where [[["=" "energiatodistus.id" id]
@@ -127,7 +127,7 @@
      ts/*db*
      ["UPDATE energiatodistus SET lt$lammitetty_nettoala = 0 where id = ?" id])
 
-    (let [found-id (-> (service/private-search
+    (let [found-id (-> (service/search
                         ts/*db*
                         {:rooli 0 :id laatija-id}
                         {:where [[["=" "energiatodistus.id" id]

@@ -205,7 +205,7 @@
                     (format " and (%s) " keyword-sql))
                   (when-not (str/blank? sort)
                     (str \newline "order by " (field->sql sort search-schema) " " (or order "asc")))
-                  (str \newline "limit " (or limit 100))
+                  (when limit (str \newline "limit " limit))
                   (when-not (nil? offset) (str \newline "offset " offset)))]
             visibility-params
             where-params
@@ -219,14 +219,21 @@
   (energiatodistus-service/schema->db-row->energiatodistus
    energiatodistus-schema/Energiatodistus))
 
-(defn- search-db-rows [db whoami query]
-  (jdbc/query db (sql-query select-all whoami query) nil))
+(defn search
+  "Energiatodistus search for APIs. Returns only public data and makes sure that
+   there's a sensible limit for results. Coerces results with
+   db-row->public-energiatodistus."
+  [db whoami query]
+  (let [query (update query :limit #(min 1000 (or % 1000)))]
+    (->> (jdbc/query db (sql-query select-all whoami query) nil)
+         (map db-row->public-energiatodistus))))
 
-(defn public-search [db whoami query]
-  (map db-row->public-energiatodistus (search-db-rows db whoami query)))
-
-(defn private-search [db whoami query]
-  (map db-row->energiatodistus (search-db-rows db whoami query)))
+(defn reducible-search
+  "Energiatodistus search for other services. Does reducibly-query meaning that
+   there are certain limitations of how results can be handled. Does not coerce
+   with db-row->energiatodistus, so that must be done manually if needed."
+  [db whoami query raw?]
+  (jdbc/reducible-query db (sql-query select-all whoami query) {:raw raw?}))
 
 (defn search-count [db whoami query]
   (first (jdbc/query db (sql-query "select count(*) count" whoami query) nil)))
