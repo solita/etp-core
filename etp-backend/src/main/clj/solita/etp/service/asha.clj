@@ -150,6 +150,11 @@
                 (catch Exception _e))))
        (into (array-map))))
 
+(defn resolve-latest-case-processing-action-state [sender-id request-id case-number]
+  (->> (resolve-case-processing-action-state sender-id request-id case-number)
+       keys
+       last))
+
 (defn move-processing-action! [sender-id request-id case-number processing-action]
   (when-let [action (cond
                       (= processing-action "Käsittely") {:processing-action "Vireillepano"
@@ -162,18 +167,61 @@
 (defn mark-processing-action-as-ready! [sender-id request-id case-number processing-action]
   (proceed-operation! sender-id request-id case-number processing-action "Valmis"))
 
-(defn close-case! [sender-id request-id case-number]
-  (let [latest-prosessing-action (->> (resolve-case-processing-action-state sender-id request-id case-number)
-                                      keys
-                                      last)]
-    (proceed-operation! sender-id request-id case-number latest-prosessing-action "Sulje asia")))
-
 (defn take-processing-action! [sender-id request-id case-number processing-action]
   (execute-operation! {:sender-id        sender-id
                        :request-id       request-id
                        :identity         {:case              {:number case-number}
                                           :processing-action {:name-identity processing-action}}
                        :start-processing {:assignee sender-id}}))
+
+(defn log-toimenpide! [sender-id request-id case-number processing-action]
+  (let [; TODO: get document from template-id
+        document (when (:document processing-action)
+                   "Testi") #_(:document toimenpide)]
+    (move-processing-action!
+      sender-id
+      request-id
+      case-number
+      (-> processing-action :identity :processing-action :name-identity))
+    (take-processing-action!
+      sender-id
+      request-id
+      case-number
+      (-> processing-action :identity :processing-action :name-identity))
+
+    (execute-operation! {:request-id        request-id
+                         :sender-id         sender-id
+                         :identity          (:identity processing-action)
+                         :processing-action (:processing-action processing-action)})
+    (when document
+      (add-documents-to-processing-action!
+        sender-id
+        request-id
+        case-number
+        (-> processing-action :processing-action :name)
+        [{:content (.getBytes document)
+          :type    (-> processing-action :document :type)
+          :name    (-> processing-action :document :name)}]))
+    (take-processing-action! sender-id request-id case-number (-> processing-action :processing-action :name))
+    (mark-processing-action-as-ready!
+      sender-id
+      request-id
+      case-number
+      (-> processing-action :processing-action :name))))
+
+(defn close-case! [sender-id request-id case-number description]
+  (let [latest-prosessing-action (resolve-latest-case-processing-action-state sender-id request-id case-number)]
+    (when description
+      (log-toimenpide!
+        sender-id
+        request-id
+        case-number
+        {:identity          {:case              {:number case-number}
+                             :processing-action {:name-identity latest-prosessing-action}}
+         :processing-action {:name           "Asian sulkeminen"
+                             :reception-date (java.time.Instant/now)
+                             :description    description}}))
+    (proceed-operation! sender-id request-id case-number latest-prosessing-action "Sulje asia")))
 
 (defn kayttaja->contact [kayttaja]
   {:type          "ORGANIZATION"                            ;No enum constant fi.ys.eservice.entity.ContactType.PERSON

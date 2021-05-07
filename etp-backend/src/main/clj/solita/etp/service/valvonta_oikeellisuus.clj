@@ -104,6 +104,8 @@
      {:label-fi "Valvontamuistio / Vastaus" :label-sv "TODO"}
      {:label-fi "Valvontamuistio / Kehotus" :label-sv "TODO"}
      {:label-fi "Valvontamuistio / Varoitus" :label-sv "TODO"}
+     {:label-fi "Lisäselvityspyyntö" :label-sv "TODO"}
+     {:label-fi "Lisäselvityspyyntö / Vastaus" :label-sv "TODO"}
      {:label-fi "Kieltopäätös" :label-sv "TODO"}
      {:label-fi "Valvonnan lopetus" :label-sv "TODO"}]))
 
