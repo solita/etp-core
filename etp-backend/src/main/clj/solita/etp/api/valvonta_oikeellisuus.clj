@@ -30,6 +30,7 @@
     ["/count"
      {:conflicting true
       :get         {:summary   "Hae energiatodistusten oikeellisuuden valvontojen lukumäärä."
+                    :parameters {:query {(schema/optional-key :own) schema/Bool}}
                     :responses {200 {:body {:count schema/Int}}}
                     :handler   (fn [{:keys [db whoami]}]
                                  (r/response (valvonta-service/count-valvonnat db)))}}]
@@ -37,6 +38,7 @@
     [""
      {:conflicting true
       :get         {:summary   "Hae energiatodistusten oikeellisuuden valvonnat (työjono)."
+                    :parameters {:query {(schema/optional-key :own) schema/Bool}}
                     :responses {200 {:body [oikeellisuus-schema/ValvontaStatus]}}
                     :access    rooli-service/paakayttaja?
                     :handler   (fn [{:keys [db whoami]}]
