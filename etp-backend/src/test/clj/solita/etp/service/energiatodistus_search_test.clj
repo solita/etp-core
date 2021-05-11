@@ -244,6 +244,52 @@
            id
            [[["nil?" "energiatodistus.perustiedot.yritys.nimi"]]]))))
 
+(t/deftest search-by-ostettu-energia
+  (let [nettoala 100M
+        ostettu-kaukolampo 20000M
+        expected-kwh-per-year-m2 (/ ostettu-kaukolampo nettoala)
+        laatija-id (first (keys (laatija-test-data/generate-and-insert! 1)))
+        other-ets (energiatodistus-test-data/generate-adds 5 2018 true)
+        other-et-ids (energiatodistus-test-data/insert! other-ets laatija-id)
+        target-et (-> (energiatodistus-test-data/generate-add 2018 true)
+                      (assoc :draft-visible-to-paakayttaja true)
+                      (assoc-in [:lahtotiedot
+                                 :lammitetty-nettoala]
+                                nettoala)
+                      (assoc-in [:toteutunut-ostoenergiankulutus
+                                 :ostettu-energia
+                                 :kaukolampo-vuosikulutus]
+                                ostettu-kaukolampo))
+        target-et-id (-> (energiatodistus-test-data/insert! [target-et] laatija-id)
+                         first)]
+    (t/is (contains? (->> (service/search
+                           ts/*db*
+                           kayttaja-test-data/paakayttaja
+                           {:where [[["=" "energiatodistus.toteutunut-ostoenergiankulutus.ostettu-energia.kaukolampo-neliovuosikulutus"
+                                      expected-kwh-per-year-m2
+                                      ]]]})
+                          (map :id)
+                          set)
+                     target-et-id))
+    (t/is (not (contains? (->> (service/search
+                                ts/*db*
+                                kayttaja-test-data/paakayttaja
+                                {:where [[["<" "energiatodistus.toteutunut-ostoenergiankulutus.ostettu-energia.kaukolampo-neliovuosikulutus"
+                                           (dec expected-kwh-per-year-m2)
+                                           ]]]})
+                               (map :id)
+                               set)
+                         target-et-id)))
+    (t/is (not (contains? (->> (service/search
+                                ts/*db*
+                                kayttaja-test-data/paakayttaja
+                                {:where [[[">" "energiatodistus.toteutunut-ostoenergiankulutus.ostettu-energia.kaukolampo-neliovuosikulutus"
+                                           (inc expected-kwh-per-year-m2)
+                                           ]]]})
+                               (map :id)
+                               set)
+                         target-et-id)))))
+
 (t/deftest search-by-allekirjoitusaika-test
   (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
         id (-> energiatodistukset keys sort first)]
