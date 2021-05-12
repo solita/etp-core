@@ -19,41 +19,76 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(defn insert-test-data! [laatija-count yritys-count energiatodistus-count signed-count]
-  (let [version-count (/ energiatodistus-count 2)
-        laatijat (laatija-test-data/generate-and-insert! laatija-count)
+;; There are 2 yritys.
+;; There are 5 laatijat.
+;; Laatija 1 belongs to yritys 1.
+;; Laatija 2 belongs to yritys 2.
+;; Laatijat 3, 4 and 5 have no yritys.
+
+;; Energiatodistus 1 is signed by laatija 1 during last month => laskutettava.
+;; Energiatodistus 2 is signed by laatija 1 during last month and has replaced
+;; energiatodistus 1 in more than 7 days => laskutettava.
+;; Energiatodistus 3 is signed by laatija 1 during last month => laskutettava.
+;; Energiatodistus 4 is signed by laatija 1 during last month and has replaced
+;; energiatodistus 3 in less than 7 days => not laskutettava.
+;; Energiatodistus 5 is signed by laatija 1 during last month => laskutettava.
+;; Energiatodistus 6 is signed by laatija 1 three months ago but has already
+;; been laskutettu => not laskutettava.
+;; Energiatodistus 7 is signed by laatija 1 three months ago => not
+;; laskuttettava.
+;; Energiatodistus 8 is signed by laatija 2 during last month and has replaced
+;; energiatodistus 5 (by laatija 1) in less than 7 days => laskutettava.
+;; Energiatodistus 9 is signed by laatija 3 during last month => laskutettava.
+;; Energiatodistus 10 is signed by laatija 4 during last month => laskutettava.
+;; Energiatodistus 11 is not signed. => not laskutettava.
+
+;; Laatija 5 gets all extra energiatodistukset, which are signed during last
+;; month => laskutettava.
+
+;; All of these tests expect asiakastunnus to match id, which is true in this
+;; test data set but not in other environments.
+
+(defn test-data-set [extra-count]
+  (let [laatijat (laatija-test-data/generate-and-insert! 5)
         laatija-ids (-> laatijat keys sort)
-        yritys-adds (yritys-test-data/generate-adds yritys-count)
+        yritys-adds (yritys-test-data/generate-adds 2)
         yritys-ids (->> (interleave laatija-ids yritys-adds)
                         (partition 2)
                         (mapcat #(yritys-test-data/insert!
                                   [(second %)]
-                                   (first %))))
+                                  (first %))))
         energiatodistus-adds (->> (interleave
                                    (energiatodistus-test-data/generate-adds
-                                    version-count
+                                    5
                                     2013
                                     true)
                                    (energiatodistus-test-data/generate-adds
-                                    version-count
+                                    (+ 6 extra-count)
                                     2018
                                     true))
-                                  (interleave (cycle (concat yritys-ids [nil nil])))
+                                  (interleave (concat (repeat 7 (first yritys-ids))
+                                                      [(second yritys-ids)]
+                                                      (repeat nil)))
                                   (partition 2)
                                   (map #(assoc (second %)
                                                :laskutettava-yritys-id
                                                (first %))))
-        energiatodistus-ids (->> (interleave (cycle laatija-ids)
+        energiatodistus-laatija-ids (concat (repeat 7 (first laatija-ids))
+                                            [(second laatija-ids)
+                                             (nth laatija-ids 2)
+                                             (nth laatija-ids 3)]
+                                            (repeat (nth laatija-ids 4)))
+        energiatodistus-ids (->> (interleave energiatodistus-laatija-ids
                                              energiatodistus-adds)
                                  (partition 2)
                                  (mapcat #(energiatodistus-test-data/insert!
                                            [(second %)]
                                            (first %)))
                                  doall)]
-    (doseq [[laatija-id energiatodistus-id] (->> (interleave (cycle laatija-ids)
+    (doseq [[laatija-id energiatodistus-id] (->> (interleave energiatodistus-laatija-ids
                                                              energiatodistus-ids)
                                                  (partition 2)
-                                                 (take signed-count))]
+                                                 (take 10))]
       (energiatodistus-service/start-energiatodistus-signing! ts/*db*
                                                               {:id laatija-id}
                                                               energiatodistus-id)
@@ -62,38 +97,24 @@
                                                             {:id laatija-id}
                                                             energiatodistus-id
                                                             {:skip-pdf-signed-assert? true}))
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = date_trunc('month', now()) - interval '1 month' WHERE id IN (1, 3, 4, 5, 6, 8, 9, 10)"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = date_trunc('month', now()) - interval '10 days' WHERE id = 2"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = now() - interval '3 month' WHERE id = 7"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = now() - interval '1 month' WHERE id >= 12"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET laskutusaika = now() WHERE id = 6"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET korvattu_energiatodistus_id = 1 WHERE id = 2"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET korvattu_energiatodistus_id = 3 WHERE id = 4"])
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET korvattu_energiatodistus_id = 5 WHERE id = 8"])
+
     {:laatijat laatijat
      :yritykset (zipmap yritys-ids yritys-adds)
      :energiatodistukset (zipmap energiatodistus-ids energiatodistus-adds)}))
 
-;; There are 11 energiatodistus.
-;; Energiatodistukset 1-6 and 8-9 are signed during last month.
-;; Energiatodistus 7 has been signed three months ago.
-;; Energiatodistukset 8 has laskutusaika.
-;; Energiatodistus 9 has replaced energiatodistus 5.
-;; Energiatodistus 10 has been signed 2 years before energiatodistus 1.
-;; Energiatodistus 1 has replaced energiatodistus 10.
-;; Energiatodistus 11 has not been signed at all.
-;; => Energiatodistukset 1-6 should go to laskutus.
-;; Yritys 1 has laatija 1.
-;; Yritys 2 has laatija 2.
-;; Laatija 3 and 4 have no yritys.
-;; Laatija 1 has energiatodistukset 1, 5 and 9, laatija 2 has 2, 6 and 10 etc.
-;; Laskut from energiatodistukset 1 and 5 should go to yritys 1.
-;; Laskut from energiatodistukset 2 and 6 should go to yritys 2.
-;; Laskut from energiatodistukset 3, 4 should go their laatijat.
 
-;; All of these tests expect asiakastunnus to match id, which is true in this
-;; test data set but not in other environments.
-
-(defn test-data-set []
-  (let [{:keys [laatijat energiatodistukset] :as test-data-set} (insert-test-data! 4 2 11 9)
+#_(defn test-data-set []
+  (let [{:keys [laatijat energiatodistukset] :as test-data-set} (insert-test-data! 0)
         laatija-ids (-> laatijat keys sort)
         energiatodistus-ids (-> energiatodistukset keys sort)]
-    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = allekirjoitusaika - interval '1 month' WHERE id <= 9"])
-    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = now() - interval '3 month' WHERE id = 7"])
-    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET allekirjoitusaika = now() - interval '2 years' WHERE id = 10"])
-    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET laskutusaika = now() WHERE id = 8"])
     (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET korvattu_energiatodistus_id = 10 WHERE id = 1"])
     (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET korvattu_energiatodistus_id = 5 WHERE id = 9"])
     test-data-set))
@@ -107,21 +128,17 @@
   (t/is (= "" (laskutus-service/safe-subs "hello" 1 0))))
 
 (t/deftest find-kuukauden-laskutus-test
-  (let [_ (test-data-set)
+  (let [_ (test-data-set 0)
         laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)]
-    (t/is (= 6 (count laskutus)))))
+    (t/is (= #{1 2 3 5 8 9 10} (->> laskutus (map :energiatodistus-id) set)))))
 
 (t/deftest asiakastiedot-test
-  (let [{:keys [yritykset laatijat]} (test-data-set)
+  (let [{:keys [yritykset laatijat]} (test-data-set 0)
         laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)
         asiakastiedot (laskutus-service/asiakastiedot laskutus)]
     (t/is (= 4 (count asiakastiedot)))
     (t/is (= (set (concat
-                   (->> laatijat
-                        keys
-                        sort
-                        (take 2)
-                        (apply dissoc laatijat)
+                   (->> (select-keys laatijat [3 4])
                         (map (fn [[id {:keys [etunimi sukunimi henkilotunnus]}]]
                                {:laskutus-asiakastunnus (format "L0%08d" id)
                                 :nimi (str etunimi " " sukunimi)
@@ -136,7 +153,7 @@
                   set)))))
 
 (t/deftest asiakastiedot-xml-test
-  (let [{:keys [yritykset]} (test-data-set)
+  (let [{:keys [yritykset]} (test-data-set 0)
         laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)
         asiakastiedot (laskutus-service/asiakastiedot laskutus)
         yritys-id (-> yritykset keys sort first)
@@ -173,14 +190,12 @@
              (laskutus-service/energiatodistus-tilausrivi-text 99 instant "1234" 0)))))
 
 (t/deftest laskutustiedot-test
-  (let [{:keys [yritykset laatijat energiatodistukset]} (test-data-set)
+  (let [{:keys [yritykset laatijat energiatodistukset]} (test-data-set 0)
         laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)
         laskutustiedot (laskutus-service/laskutustiedot laskutus)
         yritys-id (-> yritykset keys sort first)
-        yritys (get yritykset yritys-id)
         yritys-laatija-id (-> laatijat keys sort first)
         yritys-laatija (get laatijat yritys-laatija-id)
-
         yritys-laskutus-asiakastunnus (format "L1%08d" yritys-id)
         yritys-laskutustieto (->> laskutustiedot
                                   (filter #(= (:laskutus-asiakastunnus %)
@@ -190,7 +205,7 @@
                                                   [:laatijat
                                                    yritys-laatija-id
                                                    :energiatodistukset])
-        laatija-id (-> laatijat keys sort last)
+        laatija-id (-> laatijat keys sort (nth 3))
         laatija (get laatijat laatija-id)
         laatija-laskutus-asiakastunnus (format "L0%08d" laatija-id)
         laatija-laskutustieto (->> laskutustiedot
@@ -213,7 +228,7 @@
                  (xmap/dissoc-in [:laatijat
                                   yritys-laatija-id
                                   :energiatodistukset]))))
-    (t/is (= #{(first energiatodistus-ids) (nth energiatodistus-ids 4)}
+    (t/is (= #{1 2 3 5}
              (set (map :id yritys-laatija-energiatodistukset))))
     (t/is (= {:laskutus-asiakastunnus laatija-laskutus-asiakastunnus
               :laatijat {laatija-id {:nimi (str (:etunimi laatija)
@@ -224,7 +239,7 @@
                  (xmap/dissoc-in [:laatijat
                                   laatija-id
                                   :energiatodistukset]))))
-    (t/is (= #{(nth energiatodistus-ids 3)}
+    (t/is (= #{10}
              (set (map :id laatija-energiatodistukset))))))
 
 (defn tilausrivi-pattern [id allekirjoitusaika]
@@ -235,11 +250,10 @@
                    allekirjoitusaika)))
 
 (t/deftest laskutustiedot-xml-test
-  (let [{:keys [yritykset]} (test-data-set)
+  (let [{:keys [yritykset]} (test-data-set 0)
         laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)
         laskutustiedot (laskutus-service/laskutustiedot laskutus)
         yritys-id (-> yritykset keys sort first)
-        yritys (get yritykset yritys-id)
         laskutus-asiakastunnus (format "L1%08d" yritys-id)
         laskutustieto (->> laskutustiedot
                            (filter #(= (:laskutus-asiakastunnus %)
@@ -256,7 +270,7 @@
     (t/is (str/includes? xml-str (str "<AsiakasNro>"
                                       laskutus-asiakastunnus
                                       "</AsiakasNro")))
-    (t/is (str/includes? xml-str "<TilausMaaraArvo>2</TilausMaaraArvo>"))
+    (t/is (str/includes? xml-str "<TilausMaaraArvo>4</TilausMaaraArvo>"))
     (t/is (re-find (tilausrivi-pattern (-> laskutustieto-energiatodistukset
                                            first
                                            :id)
@@ -276,22 +290,22 @@
     (t/is (str/includes? xml-str "<KumppaniNro>ETP</KumppaniNro>"))))
 
 (t/deftest tasmaytysraportti-test
-  (let [{:keys [yritykset laatijat]} (test-data-set)
+  (let [{:keys [yritykset laatijat]} (test-data-set 0)
+        laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)
+        tasmaytysraportti (laskutus-service/tasmaytysraportti laskutus (Instant/now))
         yritys-id (-> yritykset keys sort first)
         yritys (get yritykset yritys-id)
         yritys-laskutus-asiakastunnus (format "L1%08d" yritys-id)
-        laatija-id (-> laatijat keys sort last)
+        laatija-id (-> laatijat keys sort (nth 3))
         laatija (get laatijat laatija-id)
-        laatija-laskutus-asiakastunnus (format "L0%08d" laatija-id)
-        laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)
-        tasmaytysraportti (laskutus-service/tasmaytysraportti laskutus (Instant/now))]
+        laatija-laskutus-asiakastunnus (format "L0%08d" laatija-id)]
     (t/is (= 16 (count tasmaytysraportti)))
     (t/is (= "ETP" (ffirst tasmaytysraportti)))
     (t/is (= "ARA" (-> tasmaytysraportti second first)))
     (t/is (= [["Asiakkaiden lukumäärä yhteensä" nil {:v 4 :align :left}]
               ["Myyntitilausten lukumäärä yhteensä" nil {:v 4 :align :left}]
               ["Velotusmyyntitilausten lukumäärä yhteensä" nil {:v 4 :align :left}]
-              ["Energiatodistusten lukumäärä yhteensä" nil {:v 6 :align :left}]
+              ["Energiatodistusten lukumäärä yhteensä" nil {:v 7 :align :left}]
               ["Hyvitystilausten lukumäärä yhteensä" nil {:v 0 :align :left}]
               ["Siirrettyjen liitetiedostojen lukumäärä" nil {:v 0 :align :left}]]
              (->> tasmaytysraportti
@@ -314,10 +328,10 @@
 
     (t/is (= yritys-laskutus-asiakastunnus (-> tasmaytysraportti (nth 14) second :v)))
     (t/is (= (:nimi yritys) (-> tasmaytysraportti (nth 14) (nth 2) :v)))
-    (t/is (= 2 (-> tasmaytysraportti (nth 15) last :v)))))
+    (t/is (= 1 (-> tasmaytysraportti (nth 15) last :v)))))
 
 (t/deftest write-tasmaytysraportti-file!-test
-  (test-data-set)
+  (test-data-set 0)
   (let [now (Instant/now)
         laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)
         tasmaytysraportti-file (-> laskutus
@@ -337,7 +351,7 @@
            (laskutus-service/file-key-prefix (Instant/parse "2021-11-01T10:15:30.00Z") false))))
 
 (t/deftest ^:eftest/synchronized do-kuukauden-laskutus-test
-  (test-data-set)
+  (test-data-set 0)
   (smtp-test/empty-email-directory!)
   (let [{:keys [started-at]} (with-redefs [laskutus-service/sleep-between-asiakastiedot-and-laskutustiedot 500]
                                (laskutus-service/do-kuukauden-laskutus
@@ -390,18 +404,14 @@
 ;; Uncomment to test performance and robustness locally
 #_(t/deftest ^:eftest/synchronized performance-test
   (smtp-test/empty-email-directory!)
-  (let [laatija-count 1500
-        yritys-count 6
-        energiatodistus-count (* laatija-count yritys-count)
-        {:keys [laatijat energiatodistukset]} (insert-test-data! laatija-count
-                                                                 yritys-count
-                                                                 energiatodistus-count
-                                                                 energiatodistus-count)
-        _ (jdbc/execute!
-           ts/*db*
-           ["UPDATE energiatodistus SET allekirjoitusaika = allekirjoitusaika - interval '1 month'"])
+  (let [extra-count 100000
+        {:keys [laatijat energiatodistukset]} (test-data-set extra-count)
         start-time (System/currentTimeMillis)
-        _ (laskutus-service/do-kuukauden-laskutus ts/*db* ts/*aws-s3-client*)
+        _ (with-redefs [laskutus-service/sleep-between-asiakastiedot-and-laskutustiedot 0]
+            (laskutus-service/do-kuukauden-laskutus
+             ts/*db*
+             ts/*aws-s3-client*
+             false))
         end-time (System/currentTimeMillis)]
     (println (format "Laskutusajo took %.3f seconds" (-> (- end-time start-time) (/ 1000.0))))
     (with-open [sftp-connection (sftp/connect! config/laskutus-sftp-host
@@ -410,7 +420,7 @@
                                                config/laskutus-sftp-password
                                                config/known-hosts-path)]
       (try
-        (t/is (= (+ laatija-count yritys-count)
+        (t/is (= 4
                  (count (sftp/files-in-dir
                          sftp-connection
                          laskutus-service/asiakastieto-destination-dir))))
