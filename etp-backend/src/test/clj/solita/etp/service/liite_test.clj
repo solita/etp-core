@@ -83,7 +83,12 @@
                                whoami
                                energiatodistus-id)]]
       (t/is (= (-> found-before count dec) (count found-after)))
-      (t/is (-> (map :id found-after) set (contains? id) not)))))
+      (t/is (-> (map :id found-after) set (contains? id) not))
+      (t/is (nil? (-> (service/find-energiatodistus-liite-content
+                        ts/*db*
+                        {:id laatija-id :rooli 0}
+                        ts/*aws-s3-client*
+                        id)))))))
 
 (t/deftest delete-liite-not-in-valvonta-test
   (let [{:keys [laatijat energiatodistukset

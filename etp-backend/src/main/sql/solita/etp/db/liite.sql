@@ -5,7 +5,7 @@ returning id
 
 -- name: select-liite
 select liite.nimi, liite.energiatodistus_id, liite.contenttype from liite
-where id = :id
+where id = :id and deleted = false
 
 -- name: select-liite-by-energiatodistus-id
 select distinct on (l.id) l.id, a.modifytime createtime,
