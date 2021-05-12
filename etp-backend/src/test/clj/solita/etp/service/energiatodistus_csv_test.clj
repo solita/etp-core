@@ -52,8 +52,8 @@
 
 (t/deftest csv-line-test
   (t/is (= "\n" (service/csv-line [])))
-  (t/is (= "\"test\",1,2\n" (service/csv-line
-                             ["test" 1 2]))))
+  (t/is (= "\"test\";1,235;2\n" (service/csv-line
+                             ["test" 1.23456 2]))))
 
 (t/deftest find-energiatodistukset-csv-test
   (let [{:keys [laatijat energiatodistukset]} (test-data-set)

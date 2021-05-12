@@ -5,9 +5,16 @@
             [solita.etp.service.energiatodistus-search :as
              energiatodistus-search-service]
             [solita.etp.service.complete-energiatodistus
-             :as complete-energiatodistus-service]))
+             :as complete-energiatodistus-service])
+  (:import (java.util Locale)
+           (java.text DecimalFormat DecimalFormatSymbols)))
 
 (def tmp-dir "tmp-csv/")
+(def column-separator ";")
+(def locale (Locale. "fi" "FI"))
+(def decimal-format-symbol (DecimalFormatSymbols. locale))
+(def decimal-format (doto (DecimalFormat. "#.###")
+                      (.setDecimalFormatSymbols decimal-format-symbol)))
 
 (def columns
   (concat
@@ -183,10 +190,16 @@
        (map str/capitalize)
        (str/join #" / ")))
 
+(defn format-value [v]
+  (cond
+    (string? v) (format "\"%s\"" v)
+    (number? v) (.format decimal-format v)
+    :else (str v)))
+
 (defn csv-line [coll]
   (as-> coll $
-    (map #(if (string? %) (format "\"%s\"" %) %) $)
-    (str/join #"," $)
+    (map format-value $)
+    (str/join column-separator $)
     (str $ "\n")))
 
 (defn write-to-csv! [path append? coll]
