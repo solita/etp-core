@@ -18,6 +18,21 @@
                     :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                     :handler   (fn [{:keys [db]}]
                                  (r/response (valvonta-service/find-toimenpidetyypit db)))}}]
+    ["/virhetyypit"
+     {:conflicting true
+      :get         {:summary   "Hae energiatodistusten virhetyypit."
+                    :responses {200 {:body [oikeellisuus-schema/Virhetyyppi]}}
+                    :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+                    :handler   (fn [{:keys [db]}]
+                                 (r/response (valvonta-service/find-virhetyypit db)))}}]
+
+    ["/severities"
+     {:conflicting true
+      :get         {:summary   "Hae energiatodistusten virheiden vakavuustaso."
+                    :responses {200 {:body [common-schema/Luokittelu]}}
+                    :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+                    :handler   (fn [{:keys [db]}]
+                                 (r/response (valvonta-service/find-severities db)))}}]
 
     ["/templates"
      {:conflicting true
