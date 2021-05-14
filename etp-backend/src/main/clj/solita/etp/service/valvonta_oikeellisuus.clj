@@ -123,3 +123,21 @@
     (map-indexed
       #(assoc %2 :id %1 :valid true)
       (flatten (map (comp templates-for :id) toimenpidetyypit)))))
+
+(def virhetyypit
+  (map-indexed
+    #(assoc %2 :id %1 :valid true)
+    [{:label-fi "Todistus tehty vääärän lain mukaan"
+      :description-fi "Laki rakennuksen energiatodistuksesta annetun lain muuttamisesta (755/2017) mukaan käyttöönottovaiheen energiatodistus tulee päivittää saman lain mukaiseksi kuin lupavaiheen energiatodistus on ollut."
+      :label-sv "TODO" :description-sv "TODO"}
+     {:label-fi "V2" :description-fi "V2" :label-sv "TODO" :description-sv "TODO"}]))
+
+(defn find-virhetyypit [db] virhetyypit)
+
+(def severities
+  (map-indexed
+    #(assoc %2 :id %1 :valid true)
+    [{:label-fi "V1" :label-sv "TODO"}
+     {:label-fi "V2" :label-sv "TODO"}]))
+
+(defn find-severities [db] severities)
