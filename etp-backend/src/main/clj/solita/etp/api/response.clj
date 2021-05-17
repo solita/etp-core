@@ -66,6 +66,13 @@
 (defn csv-response [body filename not-found]
   (file-response body filename "text/csv" false not-found))
 
+(defn xlsx-response [body filename not-found]
+  (file-response body
+                 filename
+                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                 false
+                 not-found))
+
 (defn conflict [body]
   {:status 409
    :body body})
