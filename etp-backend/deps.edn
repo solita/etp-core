@@ -41,6 +41,9 @@
         com.cognitect.aws/s3 {:mvn/version "809.2.734.0"}
         de.ubercode.clostache/clostache {:mvn/version "1.4.0"}
 
+        com.openhtmltopdf/openhtmltopdf-pdfbox {:mvn/version "1.0.8"}
+        com.openhtmltopdf/openhtmltopdf-svg-support {:mvn/version "1.0.8"}
+
         ;; Non-alpha version does not support xml namespaces
         org.clojure/data.xml {:mvn/version "0.2.0-alpha6"}
         camel-snake-kebab {:mvn/version "0.4.1"}
