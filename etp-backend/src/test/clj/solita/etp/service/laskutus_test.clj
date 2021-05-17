@@ -110,15 +110,6 @@
      :yritykset (zipmap yritys-ids yritys-adds)
      :energiatodistukset (zipmap energiatodistus-ids energiatodistus-adds)}))
 
-
-#_(defn test-data-set []
-  (let [{:keys [laatijat energiatodistukset] :as test-data-set} (insert-test-data! 0)
-        laatija-ids (-> laatijat keys sort)
-        energiatodistus-ids (-> energiatodistukset keys sort)]
-    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET korvattu_energiatodistus_id = 10 WHERE id = 1"])
-    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET korvattu_energiatodistus_id = 5 WHERE id = 9"])
-    test-data-set))
-
 (t/deftest safe-subs-test
   (t/is (= nil (laskutus-service/safe-subs nil 1 2)))
   (t/is (= "e" (laskutus-service/safe-subs "hello" 1 2)))
@@ -130,7 +121,7 @@
 (t/deftest find-kuukauden-laskutus-test
   (let [_ (test-data-set 0)
         laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)]
-    (t/is (= #{1 2 3 5 8 9 10} (->> laskutus (map :energiatodistus-id) set)))))
+    (t/is (= #{1 2 3 5 7 8 9 10} (->> laskutus (map :energiatodistus-id) set)))))
 
 (t/deftest asiakastiedot-test
   (let [{:keys [yritykset laatijat]} (test-data-set 0)
@@ -228,7 +219,7 @@
                  (xmap/dissoc-in [:laatijat
                                   yritys-laatija-id
                                   :energiatodistukset]))))
-    (t/is (= #{1 2 3 5}
+    (t/is (= #{1 2 3 7 5}
              (set (map :id yritys-laatija-energiatodistukset))))
     (t/is (= {:laskutus-asiakastunnus laatija-laskutus-asiakastunnus
               :laatijat {laatija-id {:nimi (str (:etunimi laatija)
@@ -270,7 +261,7 @@
     (t/is (str/includes? xml-str (str "<AsiakasNro>"
                                       laskutus-asiakastunnus
                                       "</AsiakasNro")))
-    (t/is (str/includes? xml-str "<TilausMaaraArvo>4</TilausMaaraArvo>"))
+    (t/is (str/includes? xml-str "<TilausMaaraArvo>5</TilausMaaraArvo>"))
     (t/is (re-find (tilausrivi-pattern (-> laskutustieto-energiatodistukset
                                            first
                                            :id)
@@ -305,7 +296,7 @@
     (t/is (= [["Asiakkaiden lukumäärä yhteensä" nil {:v 4 :align :left}]
               ["Myyntitilausten lukumäärä yhteensä" nil {:v 4 :align :left}]
               ["Velotusmyyntitilausten lukumäärä yhteensä" nil {:v 4 :align :left}]
-              ["Energiatodistusten lukumäärä yhteensä" nil {:v 7 :align :left}]
+              ["Energiatodistusten lukumäärä yhteensä" nil {:v 8 :align :left}]
               ["Hyvitystilausten lukumäärä yhteensä" nil {:v 0 :align :left}]
               ["Siirrettyjen liitetiedostojen lukumäärä" nil {:v 0 :align :left}]]
              (->> tasmaytysraportti
