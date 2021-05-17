@@ -49,7 +49,7 @@ SELECT e.id energiatodistus_id, e.allekirjoitusaika, e.laskuriviviite,
         e.allekirjoitusaika >= date_trunc('month', now()) - interval '1 month' AND
         e.laskutusaika IS NULL AND
         (e.korvattu_energiatodistus_id IS NULL OR
-         (date_trunc('day', e.allekirjoitusaika) - interval '7 days' <= korvattu.allekirjoitusaika AND
+         (date_trunc('day', e.allekirjoitusaika) - interval '7 days' > korvattu.allekirjoitusaika OR
          korvattu.laatija_id != e.laatija_id));
 
 -- name: mark-as-laskutettu!
