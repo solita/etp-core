@@ -1,5 +1,6 @@
 (ns solita.etp.api.energiatodistus
   (:require [ring.util.response :as r]
+            [ring.util.io :as ring-io]
             [schema.core :as schema]
             [solita.common.schema :as xschema]
             [solita.etp.schema.common :as common-schema]
@@ -103,10 +104,11 @@
               :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
                             (api-response/with-exceptions
                               #(api-response/csv-response
-                                 (energiatodistus-csv-service/find-energiatodistukset-csv
-                                   db
-                                   whoami
-                                   (update query :where json/read-value))
+                                (ring-io/piped-input-stream
+                                 (partial energiatodistus-csv-service/write-energiatodistukset-csv!
+                                    db
+                                    whoami
+                                    (update query :where json/read-value)))
                                  "energiatodistukset.csv"
                                  "Not found.")
                               search-exceptions))}}]
