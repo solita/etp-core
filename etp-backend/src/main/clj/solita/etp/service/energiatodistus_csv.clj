@@ -7,7 +7,9 @@
             [solita.etp.service.complete-energiatodistus
              :as complete-energiatodistus-service])
   (:import (java.util Locale)
-           (java.text DecimalFormat DecimalFormatSymbols)))
+           (java.text DecimalFormat DecimalFormatSymbols)
+           (java.io OutputStreamWriter)
+           (java.nio.charset Charset)))
 
 (def tmp-dir "tmp-csv/")
 (def column-separator ";")
@@ -15,6 +17,7 @@
 (def decimal-format-symbol (DecimalFormatSymbols. locale))
 (def decimal-format (doto (DecimalFormat. "#.###")
                       (.setDecimalFormatSymbols decimal-format-symbol)))
+(def charset (Charset/forName "UTF-8"))
 
 (def columns
   (concat
@@ -202,35 +205,28 @@
     (str/join column-separator $)
     (str $ "\n")))
 
-(defn write-to-csv! [path append? coll]
-  (spit path (csv-line coll) :append :append?))
-
-(defn create-csv! [path]
+(defn write-headers! [writer]
   (->> columns
        (map column-ks->str)
-       (write-to-csv! path false)))
+       csv-line
+       (.write writer)))
 
-(defn append-energiatodistus-to-csv! [path energiatodistus]
+(defn write-energiatodistus! [writer energiatodistus]
   (->> columns
        (map #(get-in energiatodistus %))
-       (write-to-csv! path true)))
+       csv-line
+       (.write writer)))
 
-(defn find-energiatodistukset-csv [db whoami query]
-  (let [path (->> (java.util.UUID/randomUUID)
-                  .toString
-                  (format "%senergiatodistukset-%s.csv" tmp-dir))
-        luokittelut (complete-energiatodistus-service/luokittelut db)]
-    (io/make-parents path)
-    (create-csv! path)
-    (run! (comp #(append-energiatodistus-to-csv! path %)
-             #(complete-energiatodistus-service/complete-energiatodistus
-               %
-               luokittelut)
-             energiatodistus-search-service/db-row->energiatodistus)
-          (energiatodistus-search-service/reducible-search db
-                                                           whoami
-                                                           query
-                                                           false))
-    (let [is (io/input-stream path)]
-      (io/delete-file path)
-      is)))
+(defn write-energiatodistukset-csv! [db whoami query ostream]
+  (let [luokittelut (complete-energiatodistus-service/luokittelut db)]
+    (with-open [writer (OutputStreamWriter. ostream charset)]
+      (write-headers! writer)
+      (run! (comp #(write-energiatodistus! writer %)
+               #(complete-energiatodistus-service/complete-energiatodistus
+                 %
+                 luokittelut)
+               energiatodistus-search-service/db-row->energiatodistus)
+            (energiatodistus-search-service/reducible-search db
+                                                             whoami
+                                                             query
+                                                             false)))))
