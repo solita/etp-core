@@ -4,7 +4,8 @@
             [solita.etp.service.kayttaja :as kayttaja-service]
             [clojure.string :as str]
             [solita.etp.exception :as exception]
-            [solita.etp.service.toimenpide :as toimenpide]))
+            [solita.etp.service.toimenpide :as toimenpide]
+            [solita.etp.service.pdf :as pdf]))
 
 (defn- resolve-energiatodistus-laatija [db energiatodistus-id]
   (let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db energiatodistus-id)
@@ -106,12 +107,16 @@
         request-id (request-id energiatodistus id)
         sender-id (:email whoami)
         case-number (:diaarinumero toimenpide)
-        processing-action (resolve-processing-action sender-id request-id case-number toimenpide laatija)]
+        processing-action (resolve-processing-action sender-id request-id case-number toimenpide laatija)
+        document (with-open [baos (java.io.ByteArrayOutputStream.)]
+                   (pdf/html->pdf "base" {} baos)
+                   (.toByteArray baos))]
     (asha/log-toimenpide!
       sender-id
       request-id
       case-number
-      processing-action)))
+      processing-action
+      document)))
 
 (defn close-case! [db whoami id toimenpide]
   (let [{:keys [energiatodistus]} (resolve-energiatodistus-laatija db (:energiatodistus-id toimenpide))]

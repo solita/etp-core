@@ -5,34 +5,40 @@
             position: running(document-header);
         }
 
-        .document-header > logo {
-            width: 100px;
-        }
-
         .document-footer {
             position: running(document-footer);
             font-size: 8px;
         }
 
         .document-footer > table {
-            width: 100%;
+            width: 90%;
+            margin-left: 10px;
         }
 
         .document-footer > table td {
-            padding-left: 10px;
+            padding: 10px 0px 10px 10px;
             border-left: 1px solid black;
+
         }
 
         .header {
             margin-left: 50%;
         }
 
-        .header > title {
+        .header > .title {
             text-transform: uppercase;
         }
 
+        .content > h2 {
+            font-size: 12px;
+        }
+
+        .content > p {
+             margin-left: 50px;
+        }
+
         @page {
-            margin: 10%;
+            margin: 15% 10% 15% 10%;
             size: A4 portrait;
             @top-left {
                 font-family: roboto;
@@ -40,6 +46,7 @@
             }
             @top-right {
                 font-family: roboto;
+                font-size: 11px;
                 content: counter(page) " / " counter(pages);
             }
 
@@ -51,6 +58,7 @@
 
         body {
             font-family: roboto;
+            font-size: 11px;
         }
 
         b {
@@ -163,24 +171,7 @@
     </table>
 </div>
 
-{{#header}}
-<div class="header">
-    <b class="title">{{title}}</b> <br/>
-    <b>{{date}}</b> <br/>
-    {{case-number}}
-</div>
-{{/header}}
-
-{{#contact}}
-<div>
-    {{name}} <br/>
-    {{address}} <br/>
-    {{zip-code}}
-</div>
-{{/contact}}
-
 {{&content}}
-
 
 </body>
 </html>

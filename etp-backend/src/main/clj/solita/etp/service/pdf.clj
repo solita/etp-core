@@ -10,9 +10,14 @@
 (defn- add-font [builder font-resource font-weight font-style]
   (.useFont builder (-> font-resource io/resource io/file) "roboto" (Integer/valueOf font-weight) font-style true))
 
+(defn render-template-with-content [template data]
+  (let [content (clostache/render-resource (str "pdf/content-" template ".html") data)]
+    (clostache/render-resource "pdf/template.html" {:content content})))
+
+
 (defn html->pdf
-  [data output-stream]
-  (let [html-doc (clostache/render-resource "pdf/base.html" data)
+  [template data output-stream]
+  (let [html-doc (render-template-with-content template data)
         builder (PdfRendererBuilder.)]
     (.useFastMode builder)
     (.withHtmlContent builder html-doc nil)
