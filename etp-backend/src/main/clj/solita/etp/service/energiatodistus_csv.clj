@@ -30,8 +30,7 @@
             :korvaava-energiatodistus-id ;; TODO is this valid?
             :laskutettava-yritys-id :laskuriviviite]]
      [k])
-   (for [child [:nimi :katuosoite :postinumero :postitoimipaikka]]
-     [:perustiedot :yritys child])
+   [[:perustiedot :yritys :nimi]]
    (for [child [:tilaaja :kieli :kieli-fi :kieli-sv :laatimisvaihe
                 :laatimisvaihe-fi :laatimisvaihe-sv :havainnointikaynti
                 :uudisrakennus]]
@@ -68,17 +67,23 @@
          child [:tulo :poisto :tulo-poisto :sfp]]
      [:lahtotiedot :ilmanvaihto parent child])
    [[:lahtotiedot :ilmanvaihto :lto-vuosihyotysuhde]
-    [:lahtotiedot :ilmanvaihto :tuloilma-lampotila]]
-   (for [parent [:lammitysmuoto-1 :lammitysmuoto-2 :lammonjako]
-         child [:id :kuvaus-fi :kuvaus-sv]]
-     [:lahtotiedot :lammitys parent child])
-   [[:lahtotiedot :lammitys :lammitysmuoto-label-fi]
+    [:lahtotiedot :ilmanvaihto :tuloilma-lampotila]
+    [:lahtotiedot :lammitys :lammitysmuoto-1 :id]
+    [:lahtotiedot :lammitys :lammitysmuoto-2 :id]
+    [:lahtotiedot :lammitys :lammitysmuoto-label-fi]
     [:lahtotiedot :lammitys :lammitysmuoto-label-sv]
+    [:lahtotiedot :lammitys :lammitysmuoto-1 :kuvaus-fi]
+    [:lahtotiedot :lammitys :lammitysmuoto-1 :kuvaus-sv]
+    [:lahtotiedot :lammitys :lammitysmuoto-2 :kuvaus-fi]
+    [:lahtotiedot :lammitys :lammitysmuoto-2 :kuvaus-sv]
+    [:lahtotiedot :lammitys :lammonjako :id]
     [:lahtotiedot :lammitys :lammonjako-label-fi]
-    [:lahtotiedot :lammitys :lammonjako-label-sv]]
+    [:lahtotiedot :lammitys :lammonjako-label-sv]
+    [:lahtotiedot :lammitys :lammonjako :kuvaus-fi]
+    [:lahtotiedot :lammitys :lammonjako :kuvaus-sv]]
    (for [parent [:tilat-ja-iv :lammin-kayttovesi]
          child [:tuoton-hyotysuhde :jaon-hyotysuhde :lampokerroin :apulaitteet
-                :lampohavio-lammittamaton-tila :lampopumppu-tuotto-osuus]]
+                :lampopumppu-tuotto-osuus :lampohavio-lammittamaton-tila]]
      [:lahtotiedot :lammitys parent child])
    (for [parent [:takka :ilmalampopumppu]
          child [:maara :tuotto]]
@@ -105,7 +110,7 @@
                 :kaukojaahdytys-nettoala-kertoimella
                 :valaistus-kuluttaja-sahko :valaistus-kuluttaja-sahko-nettoala]]
      [:tulokset :kaytettavat-energiamuodot child])
-   (for [child [:nimi :muotokerroin :ostoenergia :ostoenergia-nettoala
+   (for [child [:nimi :ostoenergia :muotokerroin :ostoenergia-nettoala
                 :ostoenergia-kertoimella :ostoenergia-nettoala-kertoimella]]
      [:tulokset :kaytettavat-energiamuodot :muu 0 child])
    [[:tulokset :kaytettavat-energiamuodot :summa]
@@ -160,8 +165,8 @@
                 :puupelletit-kwh :puupelletit-kwh-nettoala]]
      [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet child])
    (for [idx (range 3)
-         child [:nimi :yksikko :muunnoskerroin :maara-vuodessa :kwh
-                :kwn-nettoala]]
+         child [:nimi :maara-vuodessa :yksikko :muunnoskerroin :kwh
+                :kwh-nettoala]]
      [:toteutunut-ostoenergiankulutus :ostetut-polttoaineet :muu idx child])
    (for [child [:sahko-vuosikulutus-yhteensa
                 :sahko-vuosikulutus-yhteensa-nettoala
@@ -173,12 +178,9 @@
                 :kaukojaahdytys-vuosikulutus-yhteensa-nettoala
                 :summa :summa-nettoala]]
      [:toteutunut-ostoenergiankulutus child])
-   (for [child [:suositukset-fi :suositukset-sv :lisatietoja-fi
-                :lisatietoja-sv]]
-     [:huomiot child])
    (apply concat
-          (for [parent [:iv-ilmastointi :valaistus-muut :lammitys :ymparys
-                        :alapohja-ylapohja]]
+          (for [parent [:ymparys :alapohja-ylapohja :lammitys :iv-ilmastointi
+                        :valaistus-muut]]
             (concat
              [[:huomiot parent :teksti-fi]
               [:huomiot parent :teksti-sv]]
@@ -186,6 +188,9 @@
                    child [:nimi-fi :nimi-sv :lampo :sahko :jaahdytys
                           :eluvun-muutos]]
                [:huomiot parent :toimenpide idx child]))))
+   (for [child [:suositukset-fi :suositukset-sv :lisatietoja-fi
+                :lisatietoja-sv]]
+     [:huomiot child])
    [[:lisamerkintoja-fi]
     [:lisamerkintoja-sv]]))
 

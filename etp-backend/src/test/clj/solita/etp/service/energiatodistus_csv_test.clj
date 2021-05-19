@@ -42,6 +42,9 @@
                        (map #(xmap/dissoc-in % [:tulokset :kuukausierittely]))
                        (map #(xmap/dissoc-in % [:tulokset
                                                 :kuukausierittely-summat]))
+                       (map #(xmap/dissoc-in % [:perustiedot :yritys :katuosoite]))
+                       (map #(xmap/dissoc-in % [:perustiedot :yritys :postinumero]))
+                       (map #(xmap/dissoc-in % [:perustiedot :yritys :postitoimipaikka]))
                        (map #(xmap/dissoc-in % [:tulokset :e-luokka-rajat]))
                        (map xmap/paths)
                        (apply concat)
