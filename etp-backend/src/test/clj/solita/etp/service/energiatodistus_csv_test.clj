@@ -1,5 +1,6 @@
 (ns solita.etp.service.energiatodistus-csv-test
   (:require [clojure.test :as t]
+            [clojure.string :as str]
             [solita.common.map :as xmap]
             [solita.etp.test-system :as ts]
             [solita.etp.test-data.laatija :as laatija-test-data]
@@ -7,7 +8,8 @@
             [solita.etp.schema.energiatodistus :as schema]
             [solita.etp.service.complete-energiatodistus
              :as complete-energiatodistus-service]
-            [solita.etp.service.energiatodistus-csv :as service]))
+            [solita.etp.service.energiatodistus-csv :as service])
+  (:import (java.io ByteArrayOutputStream)))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -55,11 +57,13 @@
   (t/is (= "\"test\";1,235;2\n" (service/csv-line
                              ["test" 1.23456 2]))))
 
-(t/deftest find-energiatodistukset-csv-test
+(t/deftest write-energiatodistukset-csv-test
   (let [{:keys [laatijat energiatodistukset]} (test-data-set)
         laatija-id (-> laatijat keys sort first)]
-    (t/is (instance? java.io.InputStream
-                     (service/find-energiatodistukset-csv
-                      ts/*db*
-                      {:id laatija-id :rooli 0}
-                      {})))))
+    (with-open [ostream (ByteArrayOutputStream.)]
+      (service/write-energiatodistukset-csv! ts/*db*
+                                             {:id laatija-id :rooli 0}
+                                             {}
+                                             ostream)
+      (t/is (str/starts-with? (-> ostream .toByteArray (String.))
+                              "\"Id\";\"Versio\";")))))

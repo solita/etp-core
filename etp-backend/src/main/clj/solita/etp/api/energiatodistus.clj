@@ -1,5 +1,6 @@
 (ns solita.etp.api.energiatodistus
   (:require [ring.util.response :as r]
+            [ring.util.io :as ring-io]
             [schema.core :as schema]
             [solita.common.schema :as xschema]
             [solita.etp.schema.common :as common-schema]
@@ -14,6 +15,7 @@
             [solita.etp.service.energiatodistus-search :as energiatodistus-search-service]
             [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf-service]
             [solita.etp.service.energiatodistus-csv :as energiatodistus-csv-service]
+            [solita.etp.service.energiatodistus-xlsx :as energiatodistus-xlsx-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.api.response :as api-response]
             [solita.etp.service.json :as json]
@@ -102,12 +104,28 @@
               :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
                             (api-response/with-exceptions
                               #(api-response/csv-response
-                                 (energiatodistus-csv-service/find-energiatodistukset-csv
-                                   db
-                                   whoami
-                                   (update query :where json/read-value))
+                                (ring-io/piped-input-stream
+                                 (partial energiatodistus-csv-service/write-energiatodistukset-csv!
+                                    db
+                                    whoami
+                                    (update query :where json/read-value)))
                                  "energiatodistukset.csv"
                                  "Not found.")
+                              search-exceptions))}}]
+      ["/xlsx/energiatodistukset.xlsx"
+       {:get {:summary    "Hae energiatodistusten tiedot XLSX-tiedostona"
+              :parameters {:query energiatodistus-schema/EnergiatodistusSearch}
+              :responses  {200 {:body nil}}
+              :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
+              :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
+                            (api-response/with-exceptions
+                              #(api-response/xlsx-response
+                                (energiatodistus-xlsx-service/find-energiatodistukset-xlsx
+                                 db
+                                 whoami
+                                 (update query :where json/read-value))
+                                "energiatodistukset.xlsx"
+                                "Not found.")
                               search-exceptions))}}]
       ["/all"
        ["/:id"
