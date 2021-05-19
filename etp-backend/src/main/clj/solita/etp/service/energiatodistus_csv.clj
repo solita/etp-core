@@ -9,7 +9,8 @@
   (:import (java.util Locale)
            (java.text DecimalFormat DecimalFormatSymbols)
            (java.io OutputStreamWriter)
-           (java.nio.charset Charset)))
+           (java.nio.charset Charset)
+           (java.time Instant LocalDateTime ZoneId)))
 
 (def tmp-dir "tmp-csv/")
 (def column-separator ";")
@@ -18,6 +19,7 @@
 (def decimal-format (doto (DecimalFormat. "#.###")
                       (.setDecimalFormatSymbols decimal-format-symbol)))
 (def charset (Charset/forName "UTF-8"))
+(def timezone (ZoneId/of "Europe/Helsinki"))
 
 (def columns
   (concat
@@ -197,6 +199,7 @@
   (cond
     (string? v) (format "\"%s\"" v)
     (number? v) (.format decimal-format v)
+    (= Instant (type v)) (str (LocalDateTime/ofInstant v timezone))
     :else (str v)))
 
 (defn csv-line [coll]
