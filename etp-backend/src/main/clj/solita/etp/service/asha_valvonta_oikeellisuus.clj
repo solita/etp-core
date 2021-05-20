@@ -5,7 +5,9 @@
             [clojure.string :as str]
             [solita.etp.exception :as exception]
             [solita.etp.service.toimenpide :as toimenpide]
-            [solita.etp.service.pdf :as pdf]))
+            [solita.etp.service.pdf :as pdf]
+            [clojure.data.codec.base64 :as b64]
+            [clojure.java.io :as io]))
 
 (defn- resolve-energiatodistus-laatija [db energiatodistus-id]
   (let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db energiatodistus-id)
@@ -27,42 +29,42 @@
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
                                        :contact              (asha/kayttaja->contact laatija)}
-                   :document          {:type "Pyyntö" :name "tietopyyntö.txt"}}
+                   :document          {:type "Pyyntö" :name "tietopyyntö.pdf" :template-id (:template-id toimenpide)}}
    :rfi-order     {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Kehotuksen antaminen"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
                                        :contact              (asha/kayttaja->contact laatija)}
-                   :document          {:type "Kirje" :name "kehotus_tietopyyntö.txt"}}
+                   :document          {:type "Kirje" :name "kehotus_tietopyyntö.pdf" :template-id (:template-id toimenpide)}}
    :rfi-warning   {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Varoituksen antaminen"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
                                        :contact              (asha/kayttaja->contact laatija)}
-                   :document          {:type "Kirje" :name "varoitus_tietopyyntö.txt"}}
+                   :document          {:type "Kirje" :name "varoitus_tietopyyntö.pdf" :template-id (:template-id toimenpide)}}
    :audit-report  {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Valvontamuistion laatiminen"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
                                        :contact              (asha/kayttaja->contact laatija)}
-                   :document          {:type "Muistio" :name "valvontamuistio.txt"}}
+                   :document          {:type "Muistio" :name "valvontamuistio.pdf" :template-id (:template-id toimenpide)}}
    :audit-order   {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Kehotuksen antaminen valvontamuistion perusteella"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
                                        :contact              (asha/kayttaja->contact laatija)}
-                   :document          {:type "Kirje" :name "kehotus_valvontamuistio.txt"}}
+                   :document          {:type "Kirje" :name "kehotus_valvontamuistio.pdf" :template-id (:template-id toimenpide)}}
    :audit-warning {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Varoituksen antaminen valvontamuistion perusteella"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
                                        :contact              (asha/kayttaja->contact laatija)}
-                   :document          {:type "Kirje" :name "varoitus_valvontamuistio.txt"}}
+                   :document          {:type "Kirje" :name "varoitus_valvontamuistio.pdf" :template-id (:template-id toimenpide)}}
    :rfc-request   {:identity          {:case {:number (:diaarinumero toimenpide)}}
                    :processing-action {:name           "Lisäselvityspyyntö"
                                        :reception-date (java.time.Instant/now)
@@ -108,9 +110,8 @@
         sender-id (:email whoami)
         case-number (:diaarinumero toimenpide)
         processing-action (resolve-processing-action sender-id request-id case-number toimenpide laatija)
-        document (with-open [baos (java.io.ByteArrayOutputStream.)]
-                   (pdf/html->pdf "base" {} baos)
-                   (.toByteArray baos))]
+        document (when (:document processing-action)
+                   (asha/generate-pdf whoami toimenpide laatija energiatodistus))]
     (asha/log-toimenpide!
       sender-id
       request-id

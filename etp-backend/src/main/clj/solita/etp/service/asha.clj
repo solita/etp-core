@@ -8,11 +8,21 @@
             [clojure.tools.logging :as log]
             [solita.etp.config :as config]
             [solita.etp.exception :as exception]
-            [clojure.data.codec.base64 :as b64]))
+            [clojure.data.codec.base64 :as b64]
+            [solita.etp.service.pdf :as pdf]
+            [clojure.java.io :as io])
+  (:import (java.io ByteArrayOutputStream)
+           (java.time ZoneId LocalDate)
+           (java.time.format DateTimeFormatter)))
 
 (defn debug-print [info]
   (when config/asha-debug?
     (println info)))
+
+(def timezone (ZoneId/of "Europe/Helsinki"))
+(def date-formatter (.withZone (DateTimeFormatter/ofPattern "dd.MM.yyyy") timezone))
+(defn today []
+  (.format date-formatter (LocalDate/now)))
 
 (defn- request-create-xml [resource data]
   (let [xml (clostache/render-resource (str "asha/" resource ".xml") data)]
@@ -130,17 +140,12 @@
                                     :processing-action {:name-identity processing-action}}
                        :attach     {:contact contact}}))
 
-(defn bytes->base64-string [bytes]
-  (String. (b64/encode bytes) "UTF-8"))
-
 (defn add-documents-to-processing-action! [sender-id request-id case-number processing-action documents]
   (execute-operation! {:sender-id  sender-id
                        :request-id request-id
                        :identity   {:case              {:number case-number}
                                     :processing-action {:name-identity processing-action}}
-                       :attach     {:document (map (fn [document]
-                                                     (update document :content bytes->base64-string))
-                                                   documents)}}))
+                       :attach     {:document documents}}))
 
 (defn resolve-case-processing-action-state [sender-id request-id case-number]
   (->> ["Vireillepano" "Käsittely" "Päätöksenteko"]
@@ -173,6 +178,28 @@
                        :identity         {:case              {:number case-number}
                                           :processing-action {:name-identity processing-action}}
                        :start-processing {:assignee sender-id}}))
+
+(defn template-data [whoami toimenpide & [laatija energiatodistus]]
+  (cond-> {:päivä   (today)
+           :asha    {:diaarinumero (:diaarinumero toimenpide)}
+           :valvoja (select-keys whoami [:etunimi :sukunimi :email])}
+          laatija (assoc :laatija (select-keys laatija [:etunimi :sukunimi :henkilotunnus :email :puhelin]))
+          energiatodistus (assoc :energiatodistus {:tunnus              (str "ET-" (:id energiatodistus))
+                                                   :rakennustunnus      (-> energiatodistus :perustiedot :rakennustunnus)
+                                                   :nimi                (-> energiatodistus :perustiedot :nimi)
+                                                   :katuosoite-fi       (-> energiatodistus :perustiedot :katuosoite-fi)
+                                                   :katuosoite-sv       (-> energiatodistus :perustiedot :katuosoite-sv)
+                                                   :postinumero         (-> energiatodistus :perustiedot :postinumero)
+                                                   :postitoimipaikka-fi (-> energiatodistus :perustiedot :postitoimipaikka-fi)
+                                                   :postitoimipaikka-sv (-> energiatodistus :perustiedot :postitoimipaikka-sv)})))
+
+(defn generate-pdf [whami toimepide & [laatija energiatodistus]]
+  (let [template (slurp (io/resource "pdf/content-rfi-request-fi.html")) #_ (:content toimepide)
+        template-data (template-data whami toimepide laatija energiatodistus)]
+    (with-open [baos (ByteArrayOutputStream.)]
+      (pdf/html->pdf template template-data baos)
+      (let [bytes (.toByteArray baos)]
+        (String. (b64/encode bytes) "UTF-8")))))
 
 (defn log-toimenpide! [sender-id request-id case-number processing-action & document]
   (move-processing-action!

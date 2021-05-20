@@ -21,20 +21,13 @@
 
         }
 
-        .header {
+        .otsikko {
             margin-left: 50%;
         }
 
-        .header > .title {
+        .otsikko > h1 {
+            font-size: 11px;
             text-transform: uppercase;
-        }
-
-        .content > h2 {
-            font-size: 12px;
-        }
-
-        .content > p {
-             margin-left: 50px;
         }
 
         @page {
@@ -64,6 +57,16 @@
         b {
             font-family: roboto;
             font-weight: bold;
+        }
+
+        li:before {
+            content: '— ';
+            margin-left: -20px;
+        }
+
+        li {
+            margin-left: 20px;
+            list-style: none;
         }
 
     </style>
