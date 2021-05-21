@@ -7,22 +7,11 @@
             [schema-tools.coerce :as sc]
             [clojure.tools.logging :as log]
             [solita.etp.config :as config]
-            [solita.etp.exception :as exception]
-            [clojure.data.codec.base64 :as b64]
-            [solita.etp.service.pdf :as pdf]
-            [clojure.java.io :as io])
-  (:import (java.io ByteArrayOutputStream)
-           (java.time ZoneId LocalDate)
-           (java.time.format DateTimeFormatter)))
+            [solita.etp.exception :as exception]))
 
 (defn debug-print [info]
   (when config/asha-debug?
     (println info)))
-
-(def timezone (ZoneId/of "Europe/Helsinki"))
-(def date-formatter (.withZone (DateTimeFormatter/ofPattern "dd.MM.yyyy") timezone))
-(defn today []
-  (.format date-formatter (LocalDate/now)))
 
 (defn- request-create-xml [resource data]
   (let [xml (clostache/render-resource (str "asha/" resource ".xml") data)]
@@ -178,28 +167,6 @@
                        :identity         {:case              {:number case-number}
                                           :processing-action {:name-identity processing-action}}
                        :start-processing {:assignee sender-id}}))
-
-(defn template-data [whoami toimenpide & [laatija energiatodistus]]
-  (cond-> {:päivä   (today)
-           :asha    {:diaarinumero (:diaarinumero toimenpide)}
-           :valvoja (select-keys whoami [:etunimi :sukunimi :email])}
-          laatija (assoc :laatija (select-keys laatija [:etunimi :sukunimi :henkilotunnus :email :puhelin]))
-          energiatodistus (assoc :energiatodistus {:tunnus              (str "ET-" (:id energiatodistus))
-                                                   :rakennustunnus      (-> energiatodistus :perustiedot :rakennustunnus)
-                                                   :nimi                (-> energiatodistus :perustiedot :nimi)
-                                                   :katuosoite-fi       (-> energiatodistus :perustiedot :katuosoite-fi)
-                                                   :katuosoite-sv       (-> energiatodistus :perustiedot :katuosoite-sv)
-                                                   :postinumero         (-> energiatodistus :perustiedot :postinumero)
-                                                   :postitoimipaikka-fi (-> energiatodistus :perustiedot :postitoimipaikka-fi)
-                                                   :postitoimipaikka-sv (-> energiatodistus :perustiedot :postitoimipaikka-sv)})))
-
-(defn generate-pdf [whami toimepide & [laatija energiatodistus]]
-  (let [template (slurp (io/resource "pdf/content-rfi-request-fi.html")) #_ (:content toimepide)
-        template-data (template-data whami toimepide laatija energiatodistus)]
-    (with-open [baos (ByteArrayOutputStream.)]
-      (pdf/html->pdf template template-data baos)
-      (let [bytes (.toByteArray baos)]
-        (String. (b64/encode bytes) "UTF-8")))))
 
 (defn log-toimenpide! [sender-id request-id case-number processing-action & document]
   (move-processing-action!

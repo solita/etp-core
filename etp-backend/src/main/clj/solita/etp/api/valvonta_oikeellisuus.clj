@@ -7,7 +7,8 @@
             [solita.etp.api.response :as api-response]
             [ring.util.response :as r]
             [schema.core :as schema]
-            [schema-tools.core :as schema-tools]))
+            [schema-tools.core :as schema-tools]
+            [ring.util.io :as ring-io]))
 
 (def routes
   [["/valvonta/oikeellisuus"
@@ -103,6 +104,21 @@
                                   (valvonta-service/add-toimenpide! db whoami id body))
                                [{:constraint :toimenpide-energiatodistus-id-fkey
                                  :response   404}]))}}]
+      ["/preview"
+       {:post {:summary    "Esikatsele toimepide"
+               :parameters {:path {:id common-schema/Key}
+                            :body oikeellisuus-schema/ToimenpideAdd}
+               :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+               :responses  {200 {:body nil}
+                            404 {:body schema/Str}}
+               :handler    (fn [{{:keys [body]}
+                                 :parameters :keys [db whoami]}]
+                             (api-response/pdf-response
+                               (ring-io/piped-input-stream
+                                 (partial valvonta-service/preview-toimenpide
+                                          db whoami body))
+                               "preview.pdf"
+                               "Not found."))}}]
       ["/:toimenpide-id"
        [""
        {:get {:summary    "Hae yksittäisen toimenpiteen tiedot."

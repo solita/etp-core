@@ -3,7 +3,8 @@
     [solita.etp.db :as db]
     [solita.etp.service.energiatodistus :as energiatodistus-service]
     [solita.etp.service.asha-valvonta-oikeellisuus :as asha-valvonta-oikeellisuus]
-    [solita.etp.service.toimenpide :as toimenpide])
+    [solita.etp.service.toimenpide :as toimenpide]
+    [clojure.java.io :as io])
   (:import (java.time Instant)))
 
 #_(db/require-queries 'valvonta-oikeellisuus)
@@ -89,6 +90,10 @@
       (asha-valvonta-oikeellisuus/log-toimenpide! db whoami id toimenpide)))
   (update-toimenpide! db whoami id toimenpide-id
                       { :publish-time (Instant/now) }))
+
+(defn preview-toimenpide [db whoami toimenpide ostream]
+  (with-open [output (io/output-stream ostream)]
+    (asha-valvonta-oikeellisuus/generate-pdf->output-stream db whoami toimenpide output)))
 
 (def toimenpidetyypit
   (map-indexed
