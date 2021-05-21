@@ -27,6 +27,7 @@
             [solita.etp.api.laskutus :as laskutus-api]
             [solita.etp.api.viesti :as viesti-api]
             [solita.etp.api.sivu :as sivu-api]
+            [solita.etp.api.statistics :as statistics-api]
             [solita.etp.config :as config]
             [solita.etp.security :as security]
             [solita.etp.jwt :as jwt]
@@ -108,7 +109,9 @@
     (concat (tag "Laatijat Public API" laatija-api/public-routes)
             (tag "Geo Public API" geo-api/routes)
             (tag "Energiatodistus Public API"
-                 energiatodistus-api/public-routes))]
+                 energiatodistus-api/public-routes)
+            (tag "Tilastointi Public API"
+                 statistics-api/routes))]
    ["/private" {:middleware [[security/wrap-jwt-payloads]
                              [security/wrap-whoami-from-jwt-payloads]
                              [security/wrap-access]
