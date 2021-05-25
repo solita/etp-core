@@ -28,13 +28,27 @@
 (defn find-common-averages [db query]
   (first (statistics-db/select-common-averages db query)))
 
+(defn find-luokittelu-counts [db query versio]
+  (reduce (fn [acc {:keys [lammitysmuoto-id ilmanvaihtotyyppi-id count]}]
+            (cond-> acc
+              lammitysmuoto-id
+              (assoc-in [:lammitysmuoto lammitysmuoto-id] count)
+
+              ilmanvaihtotyyppi-id
+              (assoc-in [:ilmanvaihto ilmanvaihtotyyppi-id] count)))
+          {}
+          (statistics-db/select-luokittelu-counts db (assoc query
+                                                            :versio
+                                                            versio))))
+
 (defn find-statistics [db query]
   (let [query (merge default-query query)]
     {:e-luokka-counts {2013 (find-e-luokka-counts db query 2013)
                        2018 (find-e-luokka-counts db query 2018)}
      :e-luku-statistics {2013 (find-e-luku-statistics db query 2013)
                          2018 (find-e-luku-statistics db query 2018)}
-     :common-averages (find-common-averages db query)}))
+     :common-averages (find-common-averages db query)
+     :luokittelu-counts {2018 (find-luokittelu-counts db query 2018)}}))
 
 (comment
   (find-statistics (user/db) {:postinumero nil

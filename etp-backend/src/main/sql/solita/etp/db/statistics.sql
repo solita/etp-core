@@ -55,3 +55,21 @@ AND (:valmistumisvuosi-min::numeric IS NULL OR e.pt$valmistumisvuosi >= :valmist
 AND (:valmistumisvuosi-max::numeric IS NULL OR e.pt$valmistumisvuosi <= :valmistumisvuosi-max)
 AND (:lammitetty-nettoala-min::numeric IS NULL OR e.lt$lammitetty_nettoala >= :lammitetty-nettoala-min)
 AND (:lammitetty-nettoala-max::numeric IS NULL OR e.lt$lammitetty_nettoala <= :lammitetty-nettoala-max);
+
+-- name: select-luokittelu-counts
+SELECT e.lt$lammitys$lammitysmuoto_1$id lammitysmuoto_id,
+       e.lt$ilmanvaihto$tyyppi_id ilmanvaihtotyyppi_id,
+       count(1)
+FROM energiatodistus e
+LEFT JOIN postinumero p ON e.pt$postinumero = p.id
+LEFT JOIN kunta k ON p.kunta_id = k.id
+WHERE e.versio = :versio
+AND e.tila_id = 2
+AND (:postinumero::int IS NULL OR e.pt$postinumero::text = ltrim(:postinumero, '0'))
+AND (:kunta::text IS NULL OR k.label_fi ILIKE :kunta OR k.label_sv ILIKE :kunta)
+AND ((:alakayttotarkoitus-ids) IS NULL OR e.pt$kayttotarkoitus IN (:alakayttotarkoitus-ids))
+AND (:valmistumisvuosi-min::numeric IS NULL OR e.pt$valmistumisvuosi >= :valmistumisvuosi-min)
+AND (:valmistumisvuosi-max::numeric IS NULL OR e.pt$valmistumisvuosi <= :valmistumisvuosi-max)
+AND (:lammitetty-nettoala-min::numeric IS NULL OR e.lt$lammitetty_nettoala >= :lammitetty-nettoala-min)
+AND (:lammitetty-nettoala-max::numeric IS NULL OR e.lt$lammitetty_nettoala <= :lammitetty-nettoala-max)
+GROUP BY GROUPING SETS (e.lt$lammitys$lammitysmuoto_1$id, e.lt$ilmanvaihto$tyyppi_id);

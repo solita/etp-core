@@ -31,4 +31,9 @@
                      :tilat-ja-iv-lampokerroin common-schema/NonNegative
                      :lammin-kayttovesi-lampokerroin common-schema/NonNegative
                      :lto-vuosihyotysuhde common-schema/NonNegative
-                     :ivjarjestelma-sfp common-schema/NonNegative}})
+                     :ivjarjestelma-sfp common-schema/NonNegative}
+   :luokittelu-counts {Versio
+                       {:lammitysmuoto
+                        {common-schema/Key common-schema/NonNegative}
+                        :ilmanvaihto
+                        {common-schema/Key common-schema/NonNegative}}}})
