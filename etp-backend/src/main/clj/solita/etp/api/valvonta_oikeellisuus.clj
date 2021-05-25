@@ -45,20 +45,20 @@
 
     ["/count"
      {:conflicting true
-      :get         {:summary   "Hae energiatodistusten oikeellisuuden valvontojen lukumäärä."
+      :get         {:summary    "Hae energiatodistusten oikeellisuuden valvontojen lukumäärä."
                     :parameters {:query {(schema/optional-key :own) schema/Bool}}
-                    :responses {200 {:body {:count schema/Int}}}
-                    :handler   (fn [{:keys [db whoami]}]
-                                 (r/response (valvonta-service/count-valvonnat db)))}}]
+                    :responses  {200 {:body {:count schema/Int}}}
+                    :handler    (fn [{:keys [db whoami]}]
+                                  (r/response (valvonta-service/count-valvonnat db)))}}]
 
     [""
      {:conflicting true
-      :get         {:summary   "Hae energiatodistusten oikeellisuuden valvonnat (työjono)."
+      :get         {:summary    "Hae energiatodistusten oikeellisuuden valvonnat (työjono)."
                     :parameters {:query {(schema/optional-key :own) schema/Bool}}
-                    :responses {200 {:body [oikeellisuus-schema/ValvontaStatus]}}
-                    :access    rooli-service/paakayttaja?
-                    :handler   (fn [{:keys [db whoami]}]
-                                 (r/response (valvonta-service/find-valvonnat db)))}}]
+                    :responses  {200 {:body [oikeellisuus-schema/ValvontaStatus]}}
+                    :access     rooli-service/paakayttaja?
+                    :handler    (fn [{:keys [db whoami]}]
+                                  (r/response (valvonta-service/find-valvonnat db)))}}]
 
     ["/:id"
      [""
@@ -97,64 +97,81 @@
                :responses  {201 {:body common-schema/Id}
                             404 common-schema/ConstraintError}
                :handler    (fn [{{{:keys [id]} :path :keys [body]}
-                                 :parameters :keys [db whoami]}]
+                                 :parameters :keys [db whoami aws-s3-client]}]
                              (api-response/with-exceptions
                                #(api-response/created
                                   (str "/valvonta/oikeellisuus/" id "/toimenpiteet")
-                                  (valvonta-service/add-toimenpide! db whoami id body))
+                                  (valvonta-service/add-toimenpide! db aws-s3-client whoami id body))
                                [{:constraint :toimenpide-energiatodistus-id-fkey
                                  :response   404}]))}}]
       ["/preview"
-       {:post {:summary    "Esikatsele toimepide"
-               :parameters {:path {:id common-schema/Key}
-                            :body oikeellisuus-schema/ToimenpideAdd}
+       {:conflicting true
+        :post        {:summary    "Esikatsele toimepide"
+                      :parameters {:path {:id common-schema/Key}
+                                   :body oikeellisuus-schema/ToimenpideAdd}
+                      :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+                      :responses  {200 {:body nil}
+                                   404 {:body schema/Str}}
+                      :handler    (fn [{{:keys [body]}
+                                        :parameters :keys [db whoami]}]
+                                    (api-response/pdf-response
+                                      (ring-io/piped-input-stream
+                                        (partial valvonta-service/preview-toimenpide
+                                                 db whoami body))
+                                      "preview.pdf"
+                                      "Not found."))}}]
+      ["/:toimenpide-id"
+       [""
+        {:conflicting true
+         :get         {:summary    "Hae yksittäisen toimenpiteen tiedot."
+                       :parameters {:path {:id            common-schema/Key
+                                           :toimenpide-id common-schema/Key}}
+                       :responses  {200 {:body oikeellisuus-schema/Toimenpide}
+                                    404 {:body schema/Str}}
+                       :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+                       :handler    (fn [{{{:keys [id toimenpide-id]} :path}
+                                         :parameters :keys [db whoami]}]
+                                     (api-response/get-response
+                                       (valvonta-service/find-toimenpide
+                                         db whoami id toimenpide-id)
+                                       (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}
+
+         :put         {:summary    "Muuta toimenpiteen tietoja."
+                       :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+                       :parameters {:path {:id            common-schema/Key
+                                           :toimenpide-id common-schema/Key}
+                                    :body oikeellisuus-schema/ToimenpideUpdate}
+                       :responses  {200 {:body nil}
+                                    404 {:body schema/Str}}
+                       :handler    (fn [{{{:keys [id toimenpide-id]} :path :keys [body]}
+                                         :parameters :keys [db whoami]}]
+                                     (api-response/ok|not-found
+                                       (valvonta-service/update-toimenpide!
+                                         db whoami id toimenpide-id body)
+                                       (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}}]
+       ["/publish"
+        {:post {:summary    "Tarkista ja julkaise toimenpideluonnos"
+                :parameters {:path {:id            common-schema/Key
+                                    :toimenpide-id common-schema/Key}}
+                :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+                :responses  {200 {:body nil}
+                             404 {:body schema/Str}}
+                :handler    (fn [{{{:keys [id toimenpide-id]} :path} :parameters :keys [db whoami aws-s3-client]}]
+                              (api-response/ok|not-found
+                                (valvonta-service/publish-toimenpide! db aws-s3-client whoami id toimenpide-id)
+                                (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}}]
+       ["/document"
+        {:get {:summary    "Esikatsele tai lataa toimenpiteen dokumentti"
+               :parameters {:path {:id            common-schema/Key
+                                   :toimenpide-id common-schema/Key}}
                :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                :responses  {200 {:body nil}
                             404 {:body schema/Str}}
-               :handler    (fn [{{:keys [body]}
-                                 :parameters :keys [db whoami]}]
+               :handler    (fn [{{{:keys [id toimenpide-id]} :path}
+                                 :parameters :keys [db whoami aws-s3-client]}]
                              (api-response/pdf-response
                                (ring-io/piped-input-stream
-                                 (partial valvonta-service/preview-toimenpide
-                                          db whoami body))
-                               "preview.pdf"
-                               "Not found."))}}]
-      ["/:toimenpide-id"
-       [""
-       {:get {:summary    "Hae yksittäisen toimenpiteen tiedot."
-              :parameters {:path {:id            common-schema/Key
-                                  :toimenpide-id common-schema/Key}}
-              :responses  {200 {:body oikeellisuus-schema/Toimenpide}
-                           404 {:body schema/Str}}
-              :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
-              :handler    (fn [{{{:keys [id toimenpide-id]} :path}
-                                :parameters :keys [db whoami]}]
-                            (api-response/get-response
-                              (valvonta-service/find-toimenpide
-                                db whoami id toimenpide-id)
-                              (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}
-
-        :put {:summary    "Muuta toimenpiteen tietoja."
-              :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
-              :parameters {:path {:id            common-schema/Key
-                                  :toimenpide-id common-schema/Key}
-                           :body oikeellisuus-schema/ToimenpideUpdate}
-              :responses  {200 {:body nil}
-                           404 {:body schema/Str}}
-              :handler    (fn [{{{:keys [id toimenpide-id]} :path :keys [body]}
-                                :parameters :keys [db whoami]}]
-                            (api-response/ok|not-found
-                              (valvonta-service/update-toimenpide!
-                                db whoami id toimenpide-id body)
-                              (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}}]
-       ["/publish"
-        {:post {:summary "Tarkista ja julkaise toimenpideluonnos"
-                :parameters {:path {:id common-schema/Key
-                                    :toimenpide-id common-schema/Key}}
-                :access (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
-                :responses {200 {:body nil}
-                            404 {:body schema/Str}}
-                :handler (fn [{{{:keys [id toimenpide-id]} :path} :parameters :keys [db whoami]}]
-                           (api-response/ok|not-found
-                             (valvonta-service/publish-toimenpide! db whoami id toimenpide-id)
-                             (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}}]]]]]])
+                                 (partial valvonta-service/get-document
+                                          db aws-s3-client whoami id toimenpide-id))
+                               "document.pdf"
+                               "Not found."))}}]]]]]])

@@ -5,7 +5,8 @@
   (:import
     [com.openhtmltopdf.pdfboxout PdfRendererBuilder PdfRendererBuilder$PdfAConformance]
     [com.openhtmltopdf.svgsupport BatikSVGDrawer]
-    (com.openhtmltopdf.outputdevice.helper BaseRendererBuilder$FontStyle)))
+    (com.openhtmltopdf.outputdevice.helper BaseRendererBuilder$FontStyle)
+    (java.io ByteArrayOutputStream)))
 
 (defn- add-font [builder font-resource font-weight font-style]
   (.useFont builder (-> font-resource io/resource io/file) "roboto" (Integer/valueOf font-weight) font-style true))
@@ -33,3 +34,8 @@
 
     (.toStream builder output-stream)
     (.run builder)))
+
+(defn generate-pdf->bytes [template template-data]
+  (with-open [baos (ByteArrayOutputStream.)]
+    (html->pdf template template-data baos)
+    (.toByteArray baos)))

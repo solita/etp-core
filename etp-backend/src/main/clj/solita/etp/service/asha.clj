@@ -7,11 +7,16 @@
             [schema-tools.coerce :as sc]
             [clojure.tools.logging :as log]
             [solita.etp.config :as config]
-            [solita.etp.exception :as exception]))
+            [solita.etp.exception :as exception]
+            [solita.etp.service.pdf :as pdf]
+            [clojure.data.codec.base64 :as b64]))
 
 (defn debug-print [info]
   (when config/asha-debug?
     (println info)))
+
+(defn bytes->base64 [bytes]
+  (String. (b64/encode bytes) "UTF-8"))
 
 (defn- request-create-xml [resource data]
   (let [xml (clostache/render-resource (str "asha/" resource ".xml") data)]
@@ -168,7 +173,7 @@
                                           :processing-action {:name-identity processing-action}}
                        :start-processing {:assignee sender-id}}))
 
-(defn log-toimenpide! [sender-id request-id case-number processing-action & document]
+(defn log-toimenpide! [sender-id request-id case-number processing-action & [document]]
   (move-processing-action!
     sender-id
     request-id
@@ -190,7 +195,7 @@
       request-id
       case-number
       (-> processing-action :processing-action :name)
-      [{:content document
+      [{:content (bytes->base64 document)
         :type    (-> processing-action :document :type)
         :name    (-> processing-action :document :name)}]))
   (take-processing-action! sender-id request-id case-number (-> processing-action :processing-action :name))

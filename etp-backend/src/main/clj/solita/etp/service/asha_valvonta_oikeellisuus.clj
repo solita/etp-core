@@ -7,15 +7,23 @@
             [solita.etp.service.toimenpide :as toimenpide]
             [solita.etp.service.pdf :as pdf]
             [clojure.data.codec.base64 :as b64]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [solita.etp.service.file :as file-service])
   (:import (java.time ZoneId LocalDate)
-           (java.time.format DateTimeFormatter)
-           (java.io ByteArrayOutputStream)))
+           (java.time.format DateTimeFormatter)))
 
 (def timezone (ZoneId/of "Europe/Helsinki"))
 (def date-formatter (.withZone (DateTimeFormatter/ofPattern "dd.MM.yyyy") timezone))
 (defn- today []
   (.format date-formatter (LocalDate/now)))
+
+(def file-key-prefix "valvonta/oikeellisuus/")
+
+(defn put-document [aws-s3-client id document]
+  (file-service/upsert-file-from-bytes aws-s3-client (str file-key-prefix id)  "" document))
+
+(defn get-document [aws-s3-client id]
+  (:content (file-service/find-file aws-s3-client (str file-key-prefix id))))
 
 (defn- template-data [whoami toimenpide laatija energiatodistus]
   (cond-> {:päivä           (today)
@@ -31,7 +39,7 @@
                              :postitoimipaikka-fi (-> energiatodistus :perustiedot :postitoimipaikka-fi)
                              :postitoimipaikka-sv (-> energiatodistus :perustiedot :postitoimipaikka-sv)}}))
 
-(defn- resolve-energiatodistus-laatija [db toimenpide]
+(defn resolve-energiatodistus-laatija [db toimenpide]
   (when-let [energiatodistus-id (:energiatodistus-id toimenpide)]
     (let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db energiatodistus-id)
           laatija (kayttaja-service/find-kayttaja db (:laatija-id energiatodistus))]
@@ -42,23 +50,11 @@
           :failed-to-resolve-energiatodistus-or-laatija-from-toimenpide
           "Failed to resolve energiatodistus or laatija from toimenpide")))))
 
-(defn- generate-template [db whoami toimepide]
+(defn generate-template [whoami toimepide energiatodistus laatija]
   (let [template (slurp (io/resource "pdf/content-rfi-request-fi.html")) #_(:content toimepide)
-        {:keys [laatija energiatodistus]} (resolve-energiatodistus-laatija db toimepide)
         template-data (template-data whoami toimepide laatija energiatodistus)]
     {:template      template
      :template-data template-data}))
-
-(defn generate-pdf->byte64 [db whoami toimepide]
-  (let [{:keys [template template-data]} (generate-template db whoami toimepide)]
-    (with-open [baos (ByteArrayOutputStream.)]
-      (pdf/html->pdf template template-data baos)
-      (let [bytes (.toByteArray baos)]
-        (String. (b64/encode bytes) "UTF-8")))))
-
-(defn generate-pdf->output-stream [db whoami toimepide output]
-  (let [{:keys [template template-data]} (generate-template db whoami toimepide)]
-    (pdf/html->pdf template template-data output)))
 
 (defn- request-id [energiatodistus id]
   (str (:id energiatodistus) "/" id))
@@ -145,14 +141,17 @@
                                                          (-> energiatodistus :perustiedot :rakennustunnus)])
                       :attach         {:contact (asha/kayttaja->contact laatija)}})))
 
-(defn log-toimenpide! [db whoami id toimenpide]
+(defn log-toimenpide! [db aws-s3-client whoami id toimenpide]
   (let [{:keys [energiatodistus laatija]} (resolve-energiatodistus-laatija db toimenpide)
         request-id (request-id energiatodistus id)
         sender-id (:email whoami)
         case-number (:diaarinumero toimenpide)
         processing-action (resolve-processing-action sender-id request-id case-number toimenpide laatija)
         document (when (:document processing-action)
-                   (generate-pdf->byte64 db whoami toimenpide))]
+                   (let [{:keys [template template-data]} (generate-template whoami toimenpide energiatodistus laatija)
+                         bytes (pdf/generate-pdf->bytes template template-data)]
+                     (put-document aws-s3-client (:id toimenpide) bytes)
+                     bytes))]
     (asha/log-toimenpide!
       sender-id
       request-id

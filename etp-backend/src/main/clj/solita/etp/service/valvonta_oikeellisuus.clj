@@ -4,7 +4,8 @@
     [solita.etp.service.energiatodistus :as energiatodistus-service]
     [solita.etp.service.asha-valvonta-oikeellisuus :as asha-valvonta-oikeellisuus]
     [solita.etp.service.toimenpide :as toimenpide]
-    [clojure.java.io :as io])
+    [clojure.java.io :as io]
+    [solita.etp.service.pdf :as pdf])
   (:import (java.time Instant)))
 
 #_(db/require-queries 'valvonta-oikeellisuus)
@@ -54,7 +55,7 @@
       (get id) :toimenpiteet
       last))
 
-(defn add-toimenpide! [db whoami id toimenpide-add]
+(defn add-toimenpide! [db aws-s3-client whoami id toimenpide-add]
   (swap! valvonnat #(update % id (default-to (assoc default-valvonta :id id))))
   (let [diaarinumero (when (toimenpide/case-open? toimenpide-add)
                        (asha-valvonta-oikeellisuus/open-case! db whoami id))
@@ -63,7 +64,7 @@
       :closed (asha-valvonta-oikeellisuus/close-case! db whoami id toimenpide)
       (when (and (toimenpide/published? toimenpide)
                  (toimenpide/asha-toimenpide? toimenpide))
-        (asha-valvonta-oikeellisuus/log-toimenpide! db whoami id toimenpide)))
+        (asha-valvonta-oikeellisuus/log-toimenpide! db aws-s3-client whoami id toimenpide)))
     (select-keys toimenpide [:id])))
 
 (defn update-toimenpide [whoami id toimenpide toimenpiteet]
@@ -84,16 +85,26 @@
 (defn find-toimenpide [db whoami id toimenpide-id]
   (get (find-toimenpiteet db whoami id) toimenpide-id))
 
-(defn publish-toimenpide! [db whoami id toimenpide-id]
+(defn publish-toimenpide! [db aws-s3-client whoami id toimenpide-id]
   (let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
     (when (toimenpide/asha-toimenpide? toimenpide)
-      (asha-valvonta-oikeellisuus/log-toimenpide! db whoami id toimenpide)))
+      (asha-valvonta-oikeellisuus/log-toimenpide! db aws-s3-client whoami id toimenpide)))
+
   (update-toimenpide! db whoami id toimenpide-id
                       { :publish-time (Instant/now) }))
 
 (defn preview-toimenpide [db whoami toimenpide ostream]
-  (with-open [output (io/output-stream ostream)]
-    (asha-valvonta-oikeellisuus/generate-pdf->output-stream db whoami toimenpide output)))
+  (when-let [{:keys [template template-data]} (let [{:keys [energiatodistus laatija]} (asha-valvonta-oikeellisuus/resolve-energiatodistus-laatija db toimenpide)]
+                                                (asha-valvonta-oikeellisuus/generate-template whoami toimenpide energiatodistus laatija))]
+    (with-open [output (io/output-stream ostream)]
+      (pdf/html->pdf template template-data output))))
+
+(defn get-document [db aws-s3-client whoami id toimenpide-id ostream]
+  (let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
+    (if (:publish-time toimenpide)
+      (with-open [output (io/output-stream ostream)]
+        (io/copy (asha-valvonta-oikeellisuus/get-document aws-s3-client toimenpide-id) output))
+      (preview-toimenpide db whoami toimenpide ostream))))
 
 (def toimenpidetyypit
   (map-indexed
