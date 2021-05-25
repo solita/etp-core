@@ -9,7 +9,8 @@
             [solita.etp.service.complete-energiatodistus
              :as complete-energiatodistus-service]
             [solita.etp.service.energiatodistus-csv :as service])
-  (:import (java.io ByteArrayOutputStream)))
+  (:import (java.io ByteArrayOutputStream)
+           (java.time Instant)))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -42,6 +43,9 @@
                        (map #(xmap/dissoc-in % [:tulokset :kuukausierittely]))
                        (map #(xmap/dissoc-in % [:tulokset
                                                 :kuukausierittely-summat]))
+                       (map #(xmap/dissoc-in % [:perustiedot :yritys :katuosoite]))
+                       (map #(xmap/dissoc-in % [:perustiedot :yritys :postinumero]))
+                       (map #(xmap/dissoc-in % [:perustiedot :yritys :postitoimipaikka]))
                        (map #(xmap/dissoc-in % [:tulokset :e-luokka-rajat]))
                        (map xmap/paths)
                        (apply concat)
@@ -54,8 +58,11 @@
 
 (t/deftest csv-line-test
   (t/is (= "\n" (service/csv-line [])))
-  (t/is (= "\"test\";1,235;2\n" (service/csv-line
-                             ["test" 1.23456 2]))))
+  (t/is (= "\"test\";1,235;-15;2021-01-01T14:15\n"
+           (service/csv-line ["test"
+                              1.23456
+                              -15
+                              (Instant/parse "2021-01-01T12:15:00.000Z")]))))
 
 (t/deftest write-energiatodistukset-csv-test
   (let [{:keys [laatijat energiatodistukset]} (test-data-set)
