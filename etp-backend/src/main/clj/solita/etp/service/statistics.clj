@@ -20,12 +20,18 @@
                                                           :versio
                                                           versio))))
 
+(defn find-e-luku-statistics [db query versio]
+  (first (statistics-db/select-e-luku-statistics db (assoc query
+                                                           :versio
+                                                           versio))))
 
 
 (defn find-statistics [db query]
   (let [query (merge default-query query)]
     {:e-luokka-counts {2013 (find-e-luokka-counts db query 2013)
-                       2018 (find-e-luokka-counts db query 2018)}}))
+                       2018 (find-e-luokka-counts db query 2018)}
+     :e-luku-statistics {2013 (find-e-luku-statistics db query 2013)
+                         2018 (find-e-luku-statistics db query 2018)}}))
 
 (comment
   (find-statistics (user/db) {:postinumero nil

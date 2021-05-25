@@ -16,4 +16,7 @@
 (def Versio (schema/enum 2013 2018))
 
 (def StatisticsResponse
-  {:e-luokka-counts {Versio {schema/Str common-schema/NonNegative}}})
+  {:e-luokka-counts {Versio {schema/Str common-schema/NonNegative}}
+   :e-luku-statistics {Versio {:avg common-schema/NonNegative
+                               :min common-schema/NonNegative
+                               :percentile-15 common-schema/NonNegative}}})
