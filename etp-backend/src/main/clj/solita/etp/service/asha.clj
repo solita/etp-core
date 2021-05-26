@@ -8,7 +8,6 @@
             [clojure.tools.logging :as log]
             [solita.etp.config :as config]
             [solita.etp.exception :as exception]
-            [solita.etp.service.pdf :as pdf]
             [clojure.data.codec.base64 :as b64]))
 
 (defn debug-print [info]

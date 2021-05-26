@@ -106,7 +106,7 @@
                                  :response   404}]))}}]
       ["/preview"
        {:conflicting true
-        :post        {:summary    "Esikatsele toimepide"
+        :post        {:summary    "Esikatsele toimenpiteen dokumentti"
                       :parameters {:path {:id common-schema/Key}
                                    :body oikeellisuus-schema/ToimenpideAdd}
                       :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
@@ -171,7 +171,7 @@
                                  :parameters :keys [db whoami aws-s3-client]}]
                              (api-response/pdf-response
                                (ring-io/piped-input-stream
-                                 (partial valvonta-service/get-document
+                                 (partial valvonta-service/get-toimenpide-document
                                           db aws-s3-client whoami id toimenpide-id))
                                "document.pdf"
                                "Not found."))}}]]]]]])
