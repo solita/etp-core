@@ -41,6 +41,11 @@
                                                             :versio
                                                             versio))))
 
+(defn find-uusiutuvat-omavaraisenergiat-counts [db query versio]
+  (first (statistics-db/select-uusiutuvat-omavaraisenergiat-counts
+          db
+          (assoc query :versio versio))))
+
 (defn find-statistics [db query]
   (let [query (merge default-query query)]
     {:e-luokka-counts {2013 (find-e-luokka-counts db query 2013)
@@ -48,7 +53,9 @@
      :e-luku-statistics {2013 (find-e-luku-statistics db query 2013)
                          2018 (find-e-luku-statistics db query 2018)}
      :common-averages (find-common-averages db query)
-     :luokittelu-counts {2018 (find-luokittelu-counts db query 2018)}}))
+     :luokittelu-counts {2018 (find-luokittelu-counts db query 2018)}
+     :uusiutuvat-omavaraisenergiat-counts
+     {2018 (find-uusiutuvat-omavaraisenergiat-counts db query 2018)}}))
 
 (comment
   (find-statistics (user/db) {:postinumero nil

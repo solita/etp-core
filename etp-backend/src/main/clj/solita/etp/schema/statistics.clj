@@ -36,4 +36,11 @@
                        {:lammitysmuoto
                         {common-schema/Key common-schema/NonNegative}
                         :ilmanvaihto
-                        {common-schema/Key common-schema/NonNegative}}}})
+                        {common-schema/Key common-schema/NonNegative}}}
+   :uusiutuvat-omavaraisenergiat-counts
+   {Versio {:aurinkosahko common-schema/NonNegative
+            :aurinkolampo common-schema/NonNegative
+            :tuulisahko common-schema/NonNegative
+            :lampopumppu common-schema/NonNegative
+            :muusahko common-schema/NonNegative
+            :muulampo common-schema/NonNegative}}})
