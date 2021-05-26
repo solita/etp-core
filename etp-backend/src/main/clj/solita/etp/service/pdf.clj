@@ -15,7 +15,6 @@
   (let [content (clostache/render template data)]
     (clostache/render-resource "pdf/template.html" {:content content})))
 
-
 (defn html->pdf
   [template data output-stream]
   (let [html-doc (render-template-with-content template data)
