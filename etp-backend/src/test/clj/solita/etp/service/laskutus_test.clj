@@ -121,7 +121,7 @@
 (t/deftest find-kuukauden-laskutus-test
   (let [_ (test-data-set 0)
         laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)]
-    (t/is (= #{1 2 3 5 7 8 9 10} (->> laskutus (map :energiatodistus-id) set)))))
+    (t/is (= #{1 2 3 5 8 9 10} (->> laskutus (map :energiatodistus-id) set)))))
 
 (t/deftest asiakastiedot-test
   (let [{:keys [yritykset laatijat]} (test-data-set 0)
@@ -219,7 +219,7 @@
                  (xmap/dissoc-in [:laatijat
                                   yritys-laatija-id
                                   :energiatodistukset]))))
-    (t/is (= #{1 2 3 7 5}
+    (t/is (= #{1 2 3 5}
              (set (map :id yritys-laatija-energiatodistukset))))
     (t/is (= {:laskutus-asiakastunnus laatija-laskutus-asiakastunnus
               :laatijat {laatija-id {:nimi (str (:etunimi laatija)
@@ -261,7 +261,7 @@
     (t/is (str/includes? xml-str (str "<AsiakasNro>"
                                       laskutus-asiakastunnus
                                       "</AsiakasNro")))
-    (t/is (str/includes? xml-str "<TilausMaaraArvo>5</TilausMaaraArvo>"))
+    (t/is (str/includes? xml-str "<TilausMaaraArvo>4</TilausMaaraArvo>"))
     (t/is (re-find (tilausrivi-pattern (-> laskutustieto-energiatodistukset
                                            first
                                            :id)
@@ -296,7 +296,7 @@
     (t/is (= [["Asiakkaiden lukumäärä yhteensä" nil {:v 4 :align :left}]
               ["Myyntitilausten lukumäärä yhteensä" nil {:v 4 :align :left}]
               ["Velotusmyyntitilausten lukumäärä yhteensä" nil {:v 4 :align :left}]
-              ["Energiatodistusten lukumäärä yhteensä" nil {:v 8 :align :left}]
+              ["Energiatodistusten lukumäärä yhteensä" nil {:v 7 :align :left}]
               ["Hyvitystilausten lukumäärä yhteensä" nil {:v 0 :align :left}]
               ["Siirrettyjen liitetiedostojen lukumäärä" nil {:v 0 :align :left}]]
              (->> tasmaytysraportti
