@@ -99,7 +99,7 @@
     (with-open [output (io/output-stream ostream)]
       (pdf/html->pdf template template-data output))))
 
-(defn get-document [db aws-s3-client whoami id toimenpide-id ostream]
+(defn get-toimenpide-document [db aws-s3-client whoami id toimenpide-id ostream]
   (let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
     (if (:publish-time toimenpide)
       (with-open [output (io/output-stream ostream)]
