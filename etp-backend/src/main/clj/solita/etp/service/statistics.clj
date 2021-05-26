@@ -12,6 +12,11 @@
                     :lammitetty-nettoala-min nil
                     :lammitetty-nettoala-max nil})
 
+(def min-sample-size 1)
+
+(defn sufficient-sample-size? [e-luokka-counts]
+  (->> e-luokka-counts vals (reduce +) (<= min-sample-size)))
+
 (defn find-e-luokka-counts [db query versio]
   (reduce (fn [acc {:keys [e-luokka count]}]
             (assoc acc e-luokka count))
@@ -47,15 +52,19 @@
           (assoc query :versio versio))))
 
 (defn find-statistics [db query]
-  (let [query (merge default-query query)]
-    {:e-luokka-counts {2013 (find-e-luokka-counts db query 2013)
-                       2018 (find-e-luokka-counts db query 2018)}
-     :e-luku-statistics {2013 (find-e-luku-statistics db query 2013)
-                         2018 (find-e-luku-statistics db query 2018)}
-     :common-averages (find-common-averages db query)
-     :luokittelu-counts {2018 (find-luokittelu-counts db query 2018)}
-     :uusiutuvat-omavaraisenergiat-counts
-     {2018 (find-uusiutuvat-omavaraisenergiat-counts db query 2018)}}))
+  (let [query (merge default-query query)
+        e-luokka-counts-2013 (find-e-luokka-counts db query 2013)
+        e-luokka-counts-2018 (find-e-luokka-counts db query 2018)]
+    (when (and (sufficient-sample-size? e-luokka-counts-2013)
+               (sufficient-sample-size? e-luokka-counts-2018))
+      {:e-luokka-counts {2013 e-luokka-counts-2013
+                         2018 e-luokka-counts-2018}
+       :e-luku-statistics {2013 (find-e-luku-statistics db query 2013)
+                           2018 (find-e-luku-statistics db query 2018)}
+       :common-averages (find-common-averages db query)
+       :luokittelu-counts {2018 (find-luokittelu-counts db query 2018)}
+       :uusiutuvat-omavaraisenergiat-counts
+       {2018 (find-uusiutuvat-omavaraisenergiat-counts db query 2018)}})))
 
 (comment
   (find-statistics (user/db) {:postinumero nil
