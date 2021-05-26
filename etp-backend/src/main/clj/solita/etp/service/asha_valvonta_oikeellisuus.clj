@@ -1,32 +1,28 @@
 (ns solita.etp.service.asha-valvonta-oikeellisuus
-  (:require [solita.etp.service.asha :as asha]
+  (:require [solita.common.time :as time]
+            [solita.etp.service.asha :as asha]
             [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]
             [solita.etp.service.kayttaja :as kayttaja-service]
             [clojure.string :as str]
             [solita.etp.exception :as exception]
             [solita.etp.service.toimenpide :as toimenpide]
             [solita.etp.service.pdf :as pdf]
-            [clojure.data.codec.base64 :as b64]
             [clojure.java.io :as io]
-            [solita.etp.service.file :as file-service])
-  (:import (java.time ZoneId LocalDate)
-           (java.time.format DateTimeFormatter)))
+            [solita.etp.service.file :as file-service]))
 
-(def timezone (ZoneId/of "Europe/Helsinki"))
-(def date-formatter (.withZone (DateTimeFormatter/ofPattern "dd.MM.yyyy") timezone))
-(defn- today []
-  (.format date-formatter (LocalDate/now)))
+(def file-key-prefix "valvonta/oikeellisuus")
 
-(def file-key-prefix "valvonta/oikeellisuus/")
+(defn- file-path [energiatodistus-id toimenpide-id]
+  (str file-key-prefix "/" energiatodistus-id "/" toimenpide-id))
 
-(defn put-document [aws-s3-client id document]
-  (file-service/upsert-file-from-bytes aws-s3-client (str file-key-prefix id)  "" document))
+(defn put-document [aws-s3-client energiatodistus-id toimenpide-id document]
+  (file-service/upsert-file-from-bytes aws-s3-client (file-path energiatodistus-id toimenpide-id) nil document))
 
-(defn get-document [aws-s3-client id]
-  (:content (file-service/find-file aws-s3-client (str file-key-prefix id))))
+(defn get-document [aws-s3-client energiatodistus-id toimenpide-id]
+  (:content (file-service/find-file aws-s3-client (file-path energiatodistus-id toimenpide-id))))
 
 (defn- template-data [whoami toimenpide laatija energiatodistus]
-  (cond-> {:päivä           (today)
+  (cond-> {:päivä           (time/today)
            :asha            {:diaarinumero (:diaarinumero toimenpide)}
            :valvoja         (select-keys whoami [:etunimi :sukunimi :email])
            :laatija         (select-keys laatija [:etunimi :sukunimi :henkilotunnus :email :puhelin])
@@ -150,7 +146,7 @@
         document (when (:document processing-action)
                    (let [{:keys [template template-data]} (generate-template whoami toimenpide energiatodistus laatija)
                          bytes (pdf/generate-pdf->bytes template template-data)]
-                     (put-document aws-s3-client (:id toimenpide) bytes)
+                     (put-document aws-s3-client (:energiatodistus-id toimenpide) (:id toimenpide) bytes)
                      bytes))]
     (asha/log-toimenpide!
       sender-id

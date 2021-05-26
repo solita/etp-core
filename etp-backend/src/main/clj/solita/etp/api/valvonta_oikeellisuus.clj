@@ -112,12 +112,12 @@
                       :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                       :responses  {200 {:body nil}
                                    404 {:body schema/Str}}
-                      :handler    (fn [{{:keys [body]}
+                      :handler    (fn [{{{:keys [id]} :path :keys [body]}
                                         :parameters :keys [db whoami]}]
                                     (api-response/pdf-response
                                       (ring-io/piped-input-stream
                                         (partial valvonta-service/preview-toimenpide
-                                                 db whoami body))
+                                                 db whoami id body))
                                       "preview.pdf"
                                       "Not found."))}}]
       ["/:toimenpide-id"

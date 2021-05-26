@@ -23,10 +23,10 @@
 (defn put-object [{:keys [client bucket]} key filename content]
   (invoke client
           :PutObject
-          {:Bucket   bucket
-           :Key      key
-           :Body     content
-           :Metadata {:filename filename}}))
+          (cond-> {:Bucket bucket
+                   :Key    key
+                   :Body   content}
+                  filename (assoc-in [:Metadata :filename] filename))))
 
 (defn get-object [{:keys [client bucket]} key]
   (when-let [result (invoke client

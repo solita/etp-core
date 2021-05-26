@@ -93,18 +93,18 @@
   (update-toimenpide! db whoami id toimenpide-id
                       { :publish-time (Instant/now) }))
 
-(defn preview-toimenpide [db whoami toimenpide ostream]
-  (when-let [{:keys [template template-data]} (let [{:keys [energiatodistus laatija]} (asha-valvonta-oikeellisuus/resolve-energiatodistus-laatija db toimenpide)]
+(defn preview-toimenpide [db whoami energiatodistus-id toimenpide ostream]
+  (when-let [{:keys [template template-data]} (let [{:keys [energiatodistus laatija]} (asha-valvonta-oikeellisuus/resolve-energiatodistus-laatija db {:energiatodistus-id energiatodistus-id})]
                                                 (asha-valvonta-oikeellisuus/generate-template whoami toimenpide energiatodistus laatija))]
     (with-open [output (io/output-stream ostream)]
       (pdf/html->pdf template template-data output))))
 
-(defn get-toimenpide-document [db aws-s3-client whoami id toimenpide-id ostream]
-  (let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
+(defn get-toimenpide-document [db aws-s3-client whoami energiatodistus-id toimenpide-id ostream]
+  (let [toimenpide (find-toimenpide db whoami energiatodistus-id toimenpide-id)]
     (if (:publish-time toimenpide)
       (with-open [output (io/output-stream ostream)]
-        (io/copy (asha-valvonta-oikeellisuus/get-document aws-s3-client toimenpide-id) output))
-      (preview-toimenpide db whoami toimenpide ostream))))
+        (io/copy (asha-valvonta-oikeellisuus/get-document aws-s3-client energiatodistus-id toimenpide-id) output))
+      (preview-toimenpide db whoami energiatodistus-id toimenpide ostream))))
 
 (def toimenpidetyypit
   (map-indexed
