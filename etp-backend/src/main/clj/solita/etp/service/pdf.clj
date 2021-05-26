@@ -11,7 +11,7 @@
 (defn- add-font [builder font-resource font-weight font-style]
   (.useFont builder (-> font-resource io/resource io/file) "roboto" (Integer/valueOf font-weight) font-style true))
 
-(defn render-template-with-content [template data]
+(defn- render-template-with-content [template data]
   (let [content (clostache/render template data)]
     (clostache/render-resource "pdf/template.html" {:content content})))
 

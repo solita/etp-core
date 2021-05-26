@@ -154,9 +154,9 @@
       processing-action
       document)))
 
-(defn close-case! [whoami id toimenpide]
+(defn close-case! [whoami energiatodistus-id toimenpide]
   (asha/close-case!
     (:email whoami)
-    (request-id id (:id toimenpide))
+    (request-id energiatodistus-id (:id toimenpide))
     (:diaarinumero toimenpide)
     (:description toimenpide)))
