@@ -35,16 +35,15 @@
                              :postitoimipaikka-fi (-> energiatodistus :perustiedot :postitoimipaikka-fi)
                              :postitoimipaikka-sv (-> energiatodistus :perustiedot :postitoimipaikka-sv)}}))
 
-(defn resolve-energiatodistus-laatija [db toimenpide]
-  (when-let [energiatodistus-id (:energiatodistus-id toimenpide)]
-    (let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db energiatodistus-id)
-          laatija (kayttaja-service/find-kayttaja db (:laatija-id energiatodistus))]
-      (if (and energiatodistus laatija)
-        {:energiatodistus energiatodistus
-         :laatija         laatija}
-        (exception/throw-ex-info!
-          :failed-to-resolve-energiatodistus-or-laatija-from-toimenpide
-          "Failed to resolve energiatodistus or laatija from toimenpide")))))
+(defn resolve-energiatodistus-laatija [db energiatodistus-id]
+  (let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db energiatodistus-id)
+        laatija (kayttaja-service/find-kayttaja db (:laatija-id energiatodistus))]
+    (if (and energiatodistus laatija)
+      {:energiatodistus energiatodistus
+       :laatija         laatija}
+      (exception/throw-ex-info!
+        :failed-to-resolve-energiatodistus-or-laatija-from-toimenpide
+        "Failed to resolve energiatodistus or laatija from toimenpide"))))
 
 (defn generate-template [whoami toimepide energiatodistus laatija]
   (let [template (slurp (io/resource "pdf/content-rfi-request-fi.html")) #_(:content toimepide)
@@ -121,9 +120,9 @@
                            (map str)
                            (remove empty?))))
 
-(defn open-case! [db whoami id]
-  (let [{:keys [energiatodistus laatija]} (resolve-energiatodistus-laatija db {:energiatodistus-id id})]
-    (asha/open-case! {:request-id     (request-id id 1)
+(defn open-case! [db whoami energiatodistus-id]
+  (let [{:keys [energiatodistus laatija]} (resolve-energiatodistus-laatija db energiatodistus-id)]
+    (asha/open-case! {:request-id     (request-id energiatodistus-id 1)
                       :sender-id      (:email whoami)
                       :classification "05.03.02"
                       :service        "general"             ; Yleinen menettely
@@ -137,9 +136,9 @@
                                                          (-> energiatodistus :perustiedot :rakennustunnus)])
                       :attach         {:contact (asha/kayttaja->contact laatija)}})))
 
-(defn log-toimenpide! [db aws-s3-client whoami id toimenpide]
-  (let [{:keys [energiatodistus laatija]} (resolve-energiatodistus-laatija db toimenpide)
-        request-id (request-id id (:id toimenpide))
+(defn log-toimenpide! [db aws-s3-client whoami toimenpide]
+  (let [{:keys [energiatodistus laatija]} (resolve-energiatodistus-laatija db (:energiatodistus-id toimenpide))
+        request-id (request-id (:energiatodistus-id toimenpide) (:id toimenpide))
         sender-id (:email whoami)
         case-number (:diaarinumero toimenpide)
         processing-action (resolve-processing-action sender-id request-id case-number toimenpide laatija)
