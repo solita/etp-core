@@ -99,11 +99,11 @@
     (with-open [output (io/output-stream ostream)]
       (pdf/html->pdf template template-data output))))
 
-(defn get-toimenpide-document [db aws-s3-client whoami energiatodistus-id toimenpide-id ostream]
-  (let [toimenpide (find-toimenpide db whoami energiatodistus-id toimenpide-id)]
+(defn find-toimenpide-document [db aws-s3-client whoami energiatodistus-id toimenpide-id ostream]
+  (when-let [toimenpide (find-toimenpide db whoami energiatodistus-id toimenpide-id)]
     (if (:publish-time toimenpide)
       (with-open [output (io/output-stream ostream)]
-        (io/copy (asha-valvonta-oikeellisuus/get-document aws-s3-client energiatodistus-id toimenpide-id) output))
+        (io/copy (asha-valvonta-oikeellisuus/find-document aws-s3-client energiatodistus-id toimenpide-id) output))
       (preview-toimenpide db whoami energiatodistus-id toimenpide ostream))))
 
 (def toimenpidetyypit

@@ -171,7 +171,7 @@
                                  :parameters :keys [db whoami aws-s3-client]}]
                              (api-response/pdf-response
                                (ring-io/piped-input-stream
-                                 (partial valvonta-service/get-toimenpide-document
+                                 (partial valvonta-service/find-toimenpide-document
                                           db aws-s3-client whoami id toimenpide-id))
                                "document.pdf"
                                "Not found."))}}]]]]]])

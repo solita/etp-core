@@ -15,10 +15,10 @@
 (defn- file-path [energiatodistus-id toimenpide-id]
   (str file-key-prefix "/" energiatodistus-id "/" toimenpide-id))
 
-(defn put-document [aws-s3-client energiatodistus-id toimenpide-id document]
+(defn store-document [aws-s3-client energiatodistus-id toimenpide-id document]
   (file-service/upsert-file-from-bytes aws-s3-client (file-path energiatodistus-id toimenpide-id) nil document))
 
-(defn get-document [aws-s3-client energiatodistus-id toimenpide-id]
+(defn find-document [aws-s3-client energiatodistus-id toimenpide-id]
   (:content (file-service/find-file aws-s3-client (file-path energiatodistus-id toimenpide-id))))
 
 (defn- template-data [whoami toimenpide laatija energiatodistus]
@@ -146,7 +146,7 @@
         document (when (:document processing-action)
                    (let [{:keys [template template-data]} (generate-template whoami toimenpide energiatodistus laatija)
                          bytes (pdf/generate-pdf->bytes template template-data)]
-                     (put-document aws-s3-client (:energiatodistus-id toimenpide) (:id toimenpide) bytes)
+                     (store-document aws-s3-client (:energiatodistus-id toimenpide) (:id toimenpide) bytes)
                      bytes))]
     (asha/log-toimenpide!
       sender-id
