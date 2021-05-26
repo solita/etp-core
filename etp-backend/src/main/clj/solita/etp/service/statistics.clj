@@ -53,18 +53,30 @@
 
 (defn find-statistics [db query]
   (let [query (merge default-query query)
-        e-luokka-counts-2013 (find-e-luokka-counts db query 2013)
-        e-luokka-counts-2018 (find-e-luokka-counts db query 2018)]
-    (when (and (sufficient-sample-size? e-luokka-counts-2013)
-               (sufficient-sample-size? e-luokka-counts-2018))
-      {:e-luokka-counts {2013 e-luokka-counts-2013
-                         2018 e-luokka-counts-2018}
-       :e-luku-statistics {2013 (find-e-luku-statistics db query 2013)
-                           2018 (find-e-luku-statistics db query 2018)}
-       :common-averages (find-common-averages db query)
-       :luokittelu-counts {2018 (find-luokittelu-counts db query 2018)}
-       :uusiutuvat-omavaraisenergiat-counts
-       {2018 (find-uusiutuvat-omavaraisenergiat-counts db query 2018)}})))
+        e-luokka-counts-2013 (future
+                               (find-e-luokka-counts db query 2013))
+        e-luokka-counts-2018 (future
+                               (find-e-luokka-counts db query 2018))]
+    (when (and (sufficient-sample-size? @e-luokka-counts-2013)
+               (sufficient-sample-size? @e-luokka-counts-2018))
+      (let [e-luku-statistics-2013 (future
+                                     (find-e-luku-statistics db query 2013))
+            e-luku-statistics-2018 (future
+                                     (find-e-luku-statistics db query 2018))
+            common-averages (future (find-common-averages db query))
+            luokittelu-counts-2018 (future
+                                     (find-luokittelu-counts db query 2018))
+            uusiutuvat-omavaraisenergiat-counts-2018
+            (future
+              (find-uusiutuvat-omavaraisenergiat-counts db query 2018))]
+        {:e-luokka-counts {2013 @e-luokka-counts-2013
+                           2018 @e-luokka-counts-2018}
+         :e-luku-statistics {2013 @e-luku-statistics-2013
+                             2018 @e-luku-statistics-2018}
+         :common-averages @common-averages
+         :luokittelu-counts {2018 @luokittelu-counts-2018}
+         :uusiutuvat-omavaraisenergiat-counts
+         {2018 @uusiutuvat-omavaraisenergiat-counts-2018}}))))
 
 (comment
   (find-statistics (user/db) {:postinumero nil

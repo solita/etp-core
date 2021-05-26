@@ -18,6 +18,6 @@
                                db
                                aws-s3-client
                                (:dryrun query))
-                             (catch Exception e
-                               (log/error "Exception inside laskutus future." e))))
-                         (r/response {}))}}]])
+                              (catch Exception e
+                                (log/error "Exception inside laskutus future." e))))
+                          (r/response {}))}}]])
