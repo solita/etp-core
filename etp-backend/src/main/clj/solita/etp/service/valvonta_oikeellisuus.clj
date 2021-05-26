@@ -61,7 +61,7 @@
                        (asha-valvonta-oikeellisuus/open-case! db whoami id))
         toimenpide (insert-toimenpide! db whoami id diaarinumero toimenpide-add)]
     (case (-> toimenpide :type-id toimenpide/type-key)
-      :closed (asha-valvonta-oikeellisuus/close-case! db whoami id toimenpide)
+      :closed (asha-valvonta-oikeellisuus/close-case! whoami id toimenpide)
       (when (and (toimenpide/published? toimenpide)
                  (toimenpide/asha-toimenpide? toimenpide))
         (asha-valvonta-oikeellisuus/log-toimenpide! db aws-s3-client whoami id toimenpide)))

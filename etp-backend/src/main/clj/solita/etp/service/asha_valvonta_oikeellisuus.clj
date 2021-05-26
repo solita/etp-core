@@ -52,8 +52,8 @@
     {:template      template
      :template-data template-data}))
 
-(defn- request-id [energiatodistus id]
-  (str (:id energiatodistus) "/" id))
+(defn- request-id [energiatodistus-id toimenpide-id]
+  (str energiatodistus-id "/" toimenpide-id))
 
 (defn- available-processing-actions [toimenpide laatija]
   {:rfi-request   {:identity          {:case              {:number (:diaarinumero toimenpide)}
@@ -123,7 +123,7 @@
 
 (defn open-case! [db whoami id]
   (let [{:keys [energiatodistus laatija]} (resolve-energiatodistus-laatija db {:energiatodistus-id id})]
-    (asha/open-case! {:request-id     (request-id energiatodistus id)
+    (asha/open-case! {:request-id     (request-id id 1)
                       :sender-id      (:email whoami)
                       :classification "05.03.02"
                       :service        "general"             ; Yleinen menettely
@@ -139,7 +139,7 @@
 
 (defn log-toimenpide! [db aws-s3-client whoami id toimenpide]
   (let [{:keys [energiatodistus laatija]} (resolve-energiatodistus-laatija db toimenpide)
-        request-id (request-id energiatodistus id)
+        request-id (request-id id (:id toimenpide))
         sender-id (:email whoami)
         case-number (:diaarinumero toimenpide)
         processing-action (resolve-processing-action sender-id request-id case-number toimenpide laatija)
@@ -155,10 +155,9 @@
       processing-action
       document)))
 
-(defn close-case! [db whoami id toimenpide]
-  (let [{:keys [energiatodistus]} (resolve-energiatodistus-laatija db toimenpide)]
-    (asha/close-case!
-      (:email whoami)
-      (request-id energiatodistus id)
-      (:diaarinumero toimenpide)
-      (:description toimenpide))))
+(defn close-case! [whoami id toimenpide]
+  (asha/close-case!
+    (:email whoami)
+    (request-id id (:id toimenpide))
+    (:diaarinumero toimenpide)
+    (:description toimenpide)))
