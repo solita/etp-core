@@ -88,12 +88,3 @@
      :luokittelu-counts {2018 @luokittelu-counts-2018}
      :uusiutuvat-omavaraisenergiat-counts
      {2018 @uusiutuvat-omavaraisenergiat-counts-2018}}))
-
-(comment
-  (find-statistics (user/db) {:postinumero nil
-                              :kunta "Tampere"
-                              :alakayttotarkoitus-ids ["TT" "RK" "YAT" "T"]
-                              :valmistumisvuosi-min 2010
-                              :valmistumisvuosi-max 2021
-                              :lammitetty-nettoala-max 15000})
-  )
