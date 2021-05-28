@@ -12,7 +12,7 @@
                     :lammitetty-nettoala-min nil
                     :lammitetty-nettoala-max nil})
 
-(def min-sample-size 1)
+(def min-sample-size 5)
 
 (defn sufficient-sample-size? [e-luokka-counts]
   (->> e-luokka-counts vals (reduce +) (<= min-sample-size)))
@@ -51,32 +51,43 @@
           db
           (assoc query :versio versio))))
 
+(defn future-when [f pred]
+  (future (when pred (f))))
+
 (defn find-statistics [db query]
   (let [query (merge default-query query)
-        e-luokka-counts-2013 (future
-                               (find-e-luokka-counts db query 2013))
-        e-luokka-counts-2018 (future
-                               (find-e-luokka-counts db query 2018))]
-    (when (and (sufficient-sample-size? @e-luokka-counts-2013)
-               (sufficient-sample-size? @e-luokka-counts-2018))
-      (let [e-luku-statistics-2013 (future
-                                     (find-e-luku-statistics db query 2013))
-            e-luku-statistics-2018 (future
-                                     (find-e-luku-statistics db query 2018))
-            common-averages (future (find-common-averages db query))
-            luokittelu-counts-2018 (future
-                                     (find-luokittelu-counts db query 2018))
-            uusiutuvat-omavaraisenergiat-counts-2018
-            (future
-              (find-uusiutuvat-omavaraisenergiat-counts db query 2018))]
-        {:e-luokka-counts {2013 @e-luokka-counts-2013
-                           2018 @e-luokka-counts-2018}
-         :e-luku-statistics {2013 @e-luku-statistics-2013
-                             2018 @e-luku-statistics-2018}
-         :common-averages @common-averages
-         :luokittelu-counts {2018 @luokittelu-counts-2018}
-         :uusiutuvat-omavaraisenergiat-counts
-         {2018 @uusiutuvat-omavaraisenergiat-counts-2018}}))))
+        e-luokka-counts-2013 (future-when
+                              #(find-e-luokka-counts db query 2013)
+                              true)
+        e-luokka-counts-2018 (future-when
+                              #(find-e-luokka-counts db query 2018)
+                              true)
+        return-2013? (sufficient-sample-size? @e-luokka-counts-2013)
+        return-2018? (sufficient-sample-size? @e-luokka-counts-2018)
+        e-luku-statistics-2013 (future-when
+                                #(find-e-luku-statistics db query 2013)
+                                return-2013?)
+        e-luku-statistics-2018 (future-when
+                                #(find-e-luku-statistics db query 2018)
+                                return-2018?)
+        common-averages (future-when
+                         #(find-common-averages db query)
+                         (or return-2013? return-2018?))
+        luokittelu-counts-2018 (future-when
+                                #(find-luokittelu-counts db query 2018)
+                                return-2018?)
+        uusiutuvat-omavaraisenergiat-counts-2018
+        (future-when
+         #(find-uusiutuvat-omavaraisenergiat-counts db query 2018)
+         return-2018?)]
+    {:e-luokka-counts {2013 (when return-2013? @e-luokka-counts-2013)
+                       2018 (when return-2018? @e-luokka-counts-2018)}
+     :e-luku-statistics {2013 @e-luku-statistics-2013
+                         2018 @e-luku-statistics-2018}
+     :common-averages @common-averages
+     :luokittelu-counts {2018 @luokittelu-counts-2018}
+     :uusiutuvat-omavaraisenergiat-counts
+     {2018 @uusiutuvat-omavaraisenergiat-counts-2018}}))
 
 (comment
   (find-statistics (user/db) {:postinumero nil
