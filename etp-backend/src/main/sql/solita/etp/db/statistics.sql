@@ -6,6 +6,7 @@ LEFT JOIN kunta k ON p.kunta_id = k.id
 WHERE e.t$e_luokka IS NOT NULL
 AND e.versio = :versio
 AND e.tila_id = 2
+AND e.voimassaolo_paattymisaika > now()
 AND (:postinumero::int IS NULL OR e.pt$postinumero::text = ltrim(:postinumero, '0'))
 AND (:kunta::text IS NULL OR k.label_fi ILIKE :kunta OR k.label_sv ILIKE :kunta)
 AND ((:alakayttotarkoitus-ids) IS NULL OR e.pt$kayttotarkoitus IN (:alakayttotarkoitus-ids))
@@ -23,6 +24,7 @@ LEFT JOIN postinumero p ON e.pt$postinumero = p.id
 LEFT JOIN kunta k ON p.kunta_id = k.id
 WHERE e.versio = :versio
 AND e.tila_id = 2
+AND e.voimassaolo_paattymisaika > now()
 AND (:postinumero::int IS NULL OR e.pt$postinumero::text = ltrim(:postinumero, '0'))
 AND (:kunta::text IS NULL OR k.label_fi ILIKE :kunta OR k.label_sv ILIKE :kunta)
 AND ((:alakayttotarkoitus-ids) IS NULL OR e.pt$kayttotarkoitus IN (:alakayttotarkoitus-ids))
@@ -48,6 +50,7 @@ FROM energiatodistus e
 LEFT JOIN postinumero p ON e.pt$postinumero = p.id
 LEFT JOIN kunta k ON p.kunta_id = k.id
 WHERE e.tila_id = 2
+AND e.voimassaolo_paattymisaika > now()
 AND (:postinumero::int IS NULL OR e.pt$postinumero::text = ltrim(:postinumero, '0'))
 AND (:kunta::text IS NULL OR k.label_fi ILIKE :kunta OR k.label_sv ILIKE :kunta)
 AND ((:alakayttotarkoitus-ids) IS NULL OR e.pt$kayttotarkoitus IN (:alakayttotarkoitus-ids))
@@ -65,6 +68,7 @@ LEFT JOIN postinumero p ON e.pt$postinumero = p.id
 LEFT JOIN kunta k ON p.kunta_id = k.id
 WHERE e.versio = :versio
 AND e.tila_id = 2
+AND e.voimassaolo_paattymisaika > now()
 AND (:postinumero::int IS NULL OR e.pt$postinumero::text = ltrim(:postinumero, '0'))
 AND (:kunta::text IS NULL OR k.label_fi ILIKE :kunta OR k.label_sv ILIKE :kunta)
 AND ((:alakayttotarkoitus-ids) IS NULL OR e.pt$kayttotarkoitus IN (:alakayttotarkoitus-ids))
@@ -86,6 +90,7 @@ LEFT JOIN postinumero p ON e.pt$postinumero = p.id
 LEFT JOIN kunta k ON p.kunta_id = k.id
 WHERE e.versio = :versio
 AND e.tila_id = 2
+AND e.voimassaolo_paattymisaika > now()
 AND (:postinumero::int IS NULL OR e.pt$postinumero::text = ltrim(:postinumero, '0'))
 AND (:kunta::text IS NULL OR k.label_fi ILIKE :kunta OR k.label_sv ILIKE :kunta)
 AND ((:alakayttotarkoitus-ids) IS NULL OR e.pt$kayttotarkoitus IN (:alakayttotarkoitus-ids))
