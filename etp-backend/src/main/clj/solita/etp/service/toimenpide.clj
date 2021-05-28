@@ -38,3 +38,5 @@
              :rfc-request}))
 
 (def published? #(-> % :publish-time some?))
+
+(def audit-report? (partial type? :audit-report))
