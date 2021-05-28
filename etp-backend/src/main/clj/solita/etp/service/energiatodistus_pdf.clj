@@ -146,7 +146,7 @@
       {:f #(str "D: " (some-> (find-raja % "C") inc) " ... " (find-raja % "D"))}
       {:f #(str "E: " (some-> (find-raja % "D") inc) " ... " (find-raja % "E"))}
       {:f #(str "F: " (some-> (find-raja % "E") inc) " ... " (find-raja % "F"))}
-      {:f #(str "G: " (some-> (find-raja % "F") inc))}
+      {:f #(str "G: " (some-> (find-raja % "F") inc) " ...")}
       {:path [:tulokset :e-luokka]}
       {:path [:perustiedot :keskeiset-suositukset-fi]}
       {:path [:perustiedot :keskeiset-suositukset-sv]}]
