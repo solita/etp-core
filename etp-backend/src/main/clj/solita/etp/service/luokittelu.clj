@@ -19,7 +19,7 @@
 (def find-vastaanottajaryhmat #(select-luokittelu % "vastaanottajaryhma"))
 
 (def find-toimenpidetypes #(select-luokittelu % "vo_toimenpidetype"))
-(def find-severities #(select-luokittelu % "vo_toimenpidetype"))
+(def find-severities #(select-luokittelu % "vo_severity"))
 
 (defn- path= [value path object]
   (= value (get-in object path)))
