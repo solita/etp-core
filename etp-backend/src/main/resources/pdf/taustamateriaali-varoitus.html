@@ -1,16 +1,18 @@
 <div class="otsikko">
-    <b>Toimituspyyntö</b> <br />
-    <b>{{päivä}}</b> <br />
-    {{#asha}} {{diaarinumero}} {{/asha}}
+    <b>VAROITUS</b> <br/>
+    <b>{{päivä}}</b> <br/>
+    {{diaarinumero}}
 </div>
 
 <p>
-<span class="upper-case">{{#laatija}} {{etunimi}} {{sukunimi}} {{/laatija}}</span>  <br/>
+    <span class="upper-case">{{#laatija}} {{etunimi}} {{sukunimi}} {{/laatija}}</span> <br/>
 
-{{#energiatodistus}}
+    {{#energiatodistus}}
     Kohde: {{nimi}} <br/>
     Todistustunnus: {{tunnus}} <br/>
-{{/energiatodistus}}
+    Toimituspyynnön päivämäärä: {{toimituspyyntö-päivämäärä}} <br />
+    Kehotuksen päivämäärä: {{kehotuksen-päivämäärä}}
+    {{/energiatodistus}}
 </p>
 
 
@@ -18,8 +20,11 @@
     Oikeellisuustarkastukset kohdistuvat energiatodistusten lähtötietoihin, energiatehokkuusluvun laskentaan sekä
     säästösuositusten oikeellisuuteen.</p>
 
-<p><b>ARA tulee tarkastamaan tämän todistuksen oikeellisuuden.</b> Pyydämme, että toimitatte seuraavat todistuksen
-    laadinnassa käytetyt taustamateriaalit ARAn energiatodistusrekisteriin xx.xx.2021 mennessä:</p>
+<p>ARA on lähettänyt teille tästä energiatodistuksesta taustamateriaalin toimituspyynnön ja kehotuksen. ARA antaa
+    varoituksen ja vaatii toimittamaan taustamateriaalin kuukauden kuluessa tämän varoituksen päiväyksestä.
+    <b>ARA tulee tarkastamaan todistuksen oikeellisuuden tämän materiaalin pohjalta.</b> Pyydämme, että toimitatte
+    seuraavat todistuksen laadinnassa käytetyt taustamateriaalit ARAn energiatodistusrekisteriin {{määräpäivä}}
+    mennessä:</p>
 
 <ul>
     <li>Pääpiirustukset (asema-, pohja-, julkisivu- ja leikkauspiirustukset sekä U-arvot).</li>
@@ -42,19 +47,23 @@
 
 <p>Jos energiatodistuksen laatija ei täytä säädettyjä velvollisuuksia, ARA kehottaa korjaamaan asian ja antaa määräajan
     korjaukselle. Jos asiaa ei korjata määräajassa, ARA antaa laatijalle varoituksen ja uuden määräajan. Jos asiaa ei
-    edelleenkään korjata, ARA voi antaa laatijalle velvoittavan käskypäätöksen/käyttökieltopäätöksen, jota voidaan
+    edelleenkään korjata, ARA voi antaa laatijalle velvoittavan käskypäätöksen /käyttökieltopäätöksen, jota voidaan
     tehostaa uhkasakolla. ARAlla on myös mahdollisuus antaa laatijalle laatimiskielto, jos laatija on toiminut
     olennaisella tai merkittävällä tavalla säännösten vastaisesti.</p>
 
 <p>
-{{#valvoja}}
-{{etunimi}} {{sukunimi}}
-{{/valvoja}}<br/>
-energia-asiantuntija
-<br/>
-<br/>
+    {{#valvoja}}
+    {{etunimi}} {{sukunimi}}
+    {{/valvoja}}<br/>
+    energia-asiantuntija
 </p>
 <p>
-    <b>Sovelletut säännökset:</b>    Laki rakennuksen energiatodistuksesta (50/2013)<br />
-    <b>Lisätietoja:</b>  <a href="https://www.energiatodistusrekisteri.fi">www.energiatodistusrekisteri.fi</a>
+<div class="sarake">
+    <span class="sarake-otsikko"><b>Sovelletut säännökset:</b></span>
+    <span> Laki rakennuksen energiatodistuksesta (50/2013)</span>
+</div>
+<div class="sarake">
+    <span class="sarake-otsikko"><b>Lisätietoja:</b></span>
+    <span><a href="https://www.energiatodistusrekisteri.fi">www.energiatodistusrekisteri.fi</a></span>
+</div>
 </p>

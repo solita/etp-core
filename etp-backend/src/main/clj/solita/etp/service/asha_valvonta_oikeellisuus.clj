@@ -23,7 +23,8 @@
 
 (defn- template-data [whoami toimenpide laatija energiatodistus]
   (cond-> {:päivä           (time/today)
-           :asha            {:diaarinumero (:diaarinumero toimenpide)}
+           :määräpäivä      (time/format-date (:deadline-date toimenpide))
+           :diaarinumero    (:diaarinumero toimenpide)
            :valvoja         (select-keys whoami [:etunimi :sukunimi :email])
            :laatija         (select-keys laatija [:etunimi :sukunimi :henkilotunnus :email :puhelin])
            :energiatodistus {:tunnus              (str "ET-" (:id energiatodistus))
@@ -33,7 +34,13 @@
                              :katuosoite-sv       (-> energiatodistus :perustiedot :katuosoite-sv)
                              :postinumero         (-> energiatodistus :perustiedot :postinumero)
                              :postitoimipaikka-fi (-> energiatodistus :perustiedot :postitoimipaikka-fi)
-                             :postitoimipaikka-sv (-> energiatodistus :perustiedot :postitoimipaikka-sv)}}))
+                             :postitoimipaikka-sv (-> energiatodistus :perustiedot :postitoimipaikka-sv)}
+           :virheet         (:virheet toimenpide)
+           :vakavuus        (when-let [luokka (:severity-id toimenpide)]
+                              (case luokka
+                                0 {:ei-huomioitavaa true}
+                                1 {:ei-toimenpiteitä true}
+                                2 {:virheellinen true}))}))
 
 (defn resolve-energiatodistus-laatija [db energiatodistus-id]
   (let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db energiatodistus-id)
@@ -45,9 +52,20 @@
         :failed-to-resolve-energiatodistus-or-laatija-from-toimenpide
         "Failed to resolve energiatodistus or laatija from toimenpide"))))
 
-(defn generate-template [whoami toimepide energiatodistus laatija]
-  (let [template (slurp (io/resource "pdf/content-rfi-request-fi.html")) #_(:content toimepide)
-        template-data (template-data whoami toimepide laatija energiatodistus)]
+(defn template-id->template [template-id]
+  (let [file (case template-id
+               1 "pdf/taustamateriaali-toimityspyyntö.html"
+               2 "pdf/taustamateriaali-kehotus.html"
+               3 "pdf/taustamateriaali-varoitus.html"
+               4 "pdf/valvontamuistio.html"
+               5 "pdf/valvontamuistio-kehotus.html"
+               6 "pdf/valvontamuistio-varoitus.html"
+               "pdf/taustamateriaali-toimityspyyntö.html")]
+    (-> file io/resource slurp)))
+
+(defn generate-template [whoami toimenpide energiatodistus laatija]
+  (let [template (template-id->template (:template-id toimenpide)) #_(:content toimenpide)
+        template-data (template-data whoami toimenpide laatija energiatodistus)]
     {:template      template
      :template-data template-data}))
 
