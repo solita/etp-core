@@ -56,7 +56,8 @@
     (doseq [[energiatodistus-id e-luokka] (->> (interleave energiatodistus-ids
                                                            (cycle ["A" "B"]))
                                                (partition 2))]
-      (energiatodistus-test-data/sign! energiatodistus-id laatija-id true)
+      (when sign?
+        (energiatodistus-test-data/sign! energiatodistus-id laatija-id true))
       (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET t$e_luku = 100 * id, t$e_luokka = ? WHERE id = ?"
                               e-luokka
                               energiatodistus-id]))
@@ -182,3 +183,26 @@
               :luokittelu-counts {2018 nil}
               :uusiutuvat-omavaraisenergiat-counts {2018 nil}}
              (service/find-statistics ts/*db* query-exact)))))
+
+(t/deftest find-statistics-not-signed-test
+  (let [{:keys [energiatodistukset]} (test-data-set 12 false)]
+    (t/is (= {:e-luokka-counts {2013 nil
+                                2018 nil}
+              :e-luku-statistics {2013 nil
+                                  2018 nil}
+              :common-averages nil
+              :luokittelu-counts {2018 nil}
+              :uusiutuvat-omavaraisenergiat-counts {2018 nil}}
+             (service/find-statistics ts/*db* query-all)))))
+
+(t/deftest find-statistics-expired-test
+  (let [{:keys [energiatodistukset]} (test-data-set 12 true)]
+    (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET voimassaolo_paattymisaika = now()"])
+    (t/is (= {:e-luokka-counts {2013 nil
+                                2018 nil}
+              :e-luku-statistics {2013 nil
+                                  2018 nil}
+              :common-averages nil
+              :luokittelu-counts {2018 nil}
+              :uusiutuvat-omavaraisenergiat-counts {2018 nil}}
+             (service/find-statistics ts/*db* query-all)))))
