@@ -4,8 +4,7 @@
 ;; *** Require sql functions ***
 (db/require-queries 'statistics)
 
-(def default-query {:postinumero nil
-                    :kunta nil
+(def default-query {:keyword nil
                     :alakayttotarkoitus-ids []
                     :valmistumisvuosi-min nil
                     :valmistumisvuosi-max nil

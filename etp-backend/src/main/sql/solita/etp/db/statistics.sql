@@ -3,12 +3,17 @@ SELECT e.t$e_luokka e_luokka, count(1)
 FROM energiatodistus e
 LEFT JOIN postinumero p ON e.pt$postinumero = p.id
 LEFT JOIN kunta k ON p.kunta_id = k.id
+LEFT JOIN toimintaalue t ON k.toimintaalue_id = t.id
 WHERE e.t$e_luokka IS NOT NULL
 AND e.versio = :versio
 AND e.tila_id = 2
 AND e.voimassaolo_paattymisaika > now()
-AND (:postinumero::int IS NULL OR e.pt$postinumero::text = ltrim(:postinumero, '0'))
-AND (:kunta::text IS NULL OR k.label_fi ILIKE :kunta OR k.label_sv ILIKE :kunta)
+AND (:keyword::text IS NULL
+     OR e.pt$postinumero::text = ltrim(:keyword, '0')
+     OR k.label_fi ILIKE :keyword
+     OR k.label_sv ILIKE :keyword
+     OR t.label_fi ILIKE :keyword
+     OR t.label_sv ILIKE :keyword)
 AND ((:alakayttotarkoitus-ids) IS NULL OR e.pt$kayttotarkoitus IN (:alakayttotarkoitus-ids))
 AND (:valmistumisvuosi-min::numeric IS NULL OR e.pt$valmistumisvuosi >= :valmistumisvuosi-min)
 AND (:valmistumisvuosi-max::numeric IS NULL OR e.pt$valmistumisvuosi <= :valmistumisvuosi-max)
@@ -22,11 +27,16 @@ SELECT round(avg(e.t$e_luku), 2) avg, min(e.t$e_luku),
 FROM energiatodistus e
 LEFT JOIN postinumero p ON e.pt$postinumero = p.id
 LEFT JOIN kunta k ON p.kunta_id = k.id
+LEFT JOIN toimintaalue t ON k.toimintaalue_id = t.id
 WHERE e.versio = :versio
 AND e.tila_id = 2
 AND e.voimassaolo_paattymisaika > now()
-AND (:postinumero::int IS NULL OR e.pt$postinumero::text = ltrim(:postinumero, '0'))
-AND (:kunta::text IS NULL OR k.label_fi ILIKE :kunta OR k.label_sv ILIKE :kunta)
+AND (:keyword::text IS NULL
+     OR e.pt$postinumero::text = ltrim(:keyword, '0')
+     OR k.label_fi ILIKE :keyword
+     OR k.label_sv ILIKE :keyword
+     OR t.label_fi ILIKE :keyword
+     OR t.label_sv ILIKE :keyword)
 AND ((:alakayttotarkoitus-ids) IS NULL OR e.pt$kayttotarkoitus IN (:alakayttotarkoitus-ids))
 AND (:valmistumisvuosi-min::numeric IS NULL OR e.pt$valmistumisvuosi >= :valmistumisvuosi-min)
 AND (:valmistumisvuosi-max::numeric IS NULL OR e.pt$valmistumisvuosi <= :valmistumisvuosi-max)
@@ -49,10 +59,15 @@ SELECT round(avg(e.lt$rakennusvaippa$ilmanvuotoluku), 1) ilmanvuotoluku,
 FROM energiatodistus e
 LEFT JOIN postinumero p ON e.pt$postinumero = p.id
 LEFT JOIN kunta k ON p.kunta_id = k.id
+LEFT JOIN toimintaalue t ON k.toimintaalue_id = t.id
 WHERE e.tila_id = 2
 AND e.voimassaolo_paattymisaika > now()
-AND (:postinumero::int IS NULL OR e.pt$postinumero::text = ltrim(:postinumero, '0'))
-AND (:kunta::text IS NULL OR k.label_fi ILIKE :kunta OR k.label_sv ILIKE :kunta)
+AND (:keyword::text IS NULL
+     OR e.pt$postinumero::text = ltrim(:keyword, '0')
+     OR k.label_fi ILIKE :keyword
+     OR k.label_sv ILIKE :keyword
+     OR t.label_fi ILIKE :keyword
+     OR t.label_sv ILIKE :keyword)
 AND ((:alakayttotarkoitus-ids) IS NULL OR e.pt$kayttotarkoitus IN (:alakayttotarkoitus-ids))
 AND (:valmistumisvuosi-min::numeric IS NULL OR e.pt$valmistumisvuosi >= :valmistumisvuosi-min)
 AND (:valmistumisvuosi-max::numeric IS NULL OR e.pt$valmistumisvuosi <= :valmistumisvuosi-max)
@@ -66,11 +81,16 @@ SELECT e.lt$lammitys$lammitysmuoto_1$id lammitysmuoto_id,
 FROM energiatodistus e
 LEFT JOIN postinumero p ON e.pt$postinumero = p.id
 LEFT JOIN kunta k ON p.kunta_id = k.id
+LEFT JOIN toimintaalue t ON k.toimintaalue_id = t.id
 WHERE e.versio = :versio
 AND e.tila_id = 2
 AND e.voimassaolo_paattymisaika > now()
-AND (:postinumero::int IS NULL OR e.pt$postinumero::text = ltrim(:postinumero, '0'))
-AND (:kunta::text IS NULL OR k.label_fi ILIKE :kunta OR k.label_sv ILIKE :kunta)
+AND (:keyword::text IS NULL
+     OR e.pt$postinumero::text = ltrim(:keyword, '0')
+     OR k.label_fi ILIKE :keyword
+     OR k.label_sv ILIKE :keyword
+     OR t.label_fi ILIKE :keyword
+     OR t.label_sv ILIKE :keyword)
 AND ((:alakayttotarkoitus-ids) IS NULL OR e.pt$kayttotarkoitus IN (:alakayttotarkoitus-ids))
 AND (:valmistumisvuosi-min::numeric IS NULL OR e.pt$valmistumisvuosi >= :valmistumisvuosi-min)
 AND (:valmistumisvuosi-max::numeric IS NULL OR e.pt$valmistumisvuosi <= :valmistumisvuosi-max)
@@ -88,11 +108,16 @@ SELECT count(t$uusiutuvat_omavaraisenergiat$aurinkolampo) FILTER (WHERE t$uusiut
 FROM energiatodistus e
 LEFT JOIN postinumero p ON e.pt$postinumero = p.id
 LEFT JOIN kunta k ON p.kunta_id = k.id
+LEFT JOIN toimintaalue t ON k.toimintaalue_id = t.id
 WHERE e.versio = :versio
 AND e.tila_id = 2
 AND e.voimassaolo_paattymisaika > now()
-AND (:postinumero::int IS NULL OR e.pt$postinumero::text = ltrim(:postinumero, '0'))
-AND (:kunta::text IS NULL OR k.label_fi ILIKE :kunta OR k.label_sv ILIKE :kunta)
+AND (:keyword::text IS NULL
+     OR e.pt$postinumero::text = ltrim(:keyword, '0')
+     OR k.label_fi ILIKE :keyword
+     OR k.label_sv ILIKE :keyword
+     OR t.label_fi ILIKE :keyword
+     OR t.label_sv ILIKE :keyword)
 AND ((:alakayttotarkoitus-ids) IS NULL OR e.pt$kayttotarkoitus IN (:alakayttotarkoitus-ids))
 AND (:valmistumisvuosi-min::numeric IS NULL OR e.pt$valmistumisvuosi >= :valmistumisvuosi-min)
 AND (:valmistumisvuosi-max::numeric IS NULL OR e.pt$valmistumisvuosi <= :valmistumisvuosi-max)

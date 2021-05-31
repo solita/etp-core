@@ -65,8 +65,8 @@
 
 (def query-all service/default-query)
 (def query-exact (assoc service/default-query
-                        :postinumero
-                        "00100"
+                        :keyword
+                        "Uusimaa"
                         :alakayttotarkoitus-ids
                         ["YAT"]
                         :valmistumisvuosi-max

@@ -5,8 +5,7 @@
 
 (def StatisticsQuery
   (st/optional-keys
-   {:postinumero schema/Str
-    :kunta schema/Str
+   {:keyword schema/Str
     :alakayttotarkoitus-ids [schema/Str]
     :valmistumisvuosi-min common-schema/Year
     :valmistumisvuosi-max common-schema/Year
