@@ -68,11 +68,12 @@
         toimenpide-id (:id toimenpide)]
     (jdbc/with-db-transaction [db db]
       (insert-virheet! db toimenpide-id (:virheet toimenpide-add))
-      (case (-> toimenpide :type-id toimenpide/type-key)
-        :closed (asha-valvonta-oikeellisuus/close-case! db whoami id toimenpide)
-        (when (and (toimenpide/published? toimenpide)
-                   (toimenpide/asha-toimenpide? toimenpide))
-          (asha-valvonta-oikeellisuus/log-toimenpide! db whoami id toimenpide)))
+      (when-not (toimenpide/draft-support? toimenpide)
+        (valvonta-oikeellisuus-db/update-toimenpide-published! db {:id toimenpide-id})
+        (case (-> toimenpide :type-id toimenpide/type-key)
+          :closed (asha-valvonta-oikeellisuus/close-case! db whoami id toimenpide)
+          (when (toimenpide/asha-toimenpide? toimenpide)
+            (asha-valvonta-oikeellisuus/log-toimenpide! db whoami id toimenpide))))
       {:id toimenpide-id})))
 
 (defn- assoc-virheet [db toimenpide]
