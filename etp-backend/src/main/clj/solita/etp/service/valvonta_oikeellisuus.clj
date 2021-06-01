@@ -61,9 +61,16 @@
       (map #(vector toimenpide-id (:type-id %) (:description %)) virheet)
       db/default-opts)))
 
+(defn find-diaarinumero [db id toimenpide]
+  (when (or (toimenpide/asha-toimenpide? toimenpide)
+            (toimenpide/case-closed? toimenpide))
+    (-> (valvonta-oikeellisuus-db/select-last-diaarinumero db {:id id})
+        first :diaarinumero)))
+
 (defn add-toimenpide! [db whoami id toimenpide-add]
-  (let [diaarinumero (when (toimenpide/case-open? toimenpide-add)
-                       (asha-valvonta-oikeellisuus/open-case! db whoami id))
+  (let [diaarinumero (if (toimenpide/case-open? toimenpide-add)
+                       (asha-valvonta-oikeellisuus/open-case! db whoami id)
+                       (find-diaarinumero db id toimenpide-add))
         toimenpide (insert-toimenpide! db id diaarinumero (dissoc toimenpide-add :virheet))
         toimenpide-id (:id toimenpide)]
     (jdbc/with-db-transaction [db db]

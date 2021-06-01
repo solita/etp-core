@@ -30,6 +30,7 @@
   (partial some-type? #{:rfi-reply :audit-report :audit-reply :rfc-reply}))
 
 (def case-open? (partial type? :case))
+(def case-closed? (partial type? :closed))
 
 (def asha-toimenpide?
   (partial some-type?
