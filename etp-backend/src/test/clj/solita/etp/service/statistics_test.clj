@@ -76,20 +76,26 @@
 
 (t/deftest sufficient-sample-size?-test
   (t/is (false? (service/sufficient-sample-size? {})))
-  (t/is (false? (service/sufficient-sample-size? {"A" 1})))
-  (t/is (false? (service/sufficient-sample-size? {"A" 1 "C" 3})))
-  (t/is (true? (service/sufficient-sample-size? {"A" 1 "B" 2 "F" 2}))))
+  (t/is (false? (service/sufficient-sample-size? {:e-luokka {"A" 1}})))
+  (t/is (false? (service/sufficient-sample-size? {:e-luokka {"A" 1 "C" 3}})))
+  (t/is (true? (service/sufficient-sample-size? {:e-luokka {"A" 1
+                                                            "B" 2
+                                                            "F" 2}}))))
 
-(t/deftest find-e-luokka-counts-test
+(t/deftest find-counts-test
   (let [{:keys [energiatodistukset]} (test-data-set 12 true)]
-    (t/is (= {"A" 3 "B" 3} (service/find-e-luokka-counts ts/*db*
-                                                         query-all
-                                                         2013)))
-    (t/is (= {"A" 3 "B" 3} (service/find-e-luokka-counts ts/*db*
-                                                         query-all
-                                                         2018)))
-    (t/is (= {"A" 3} (service/find-e-luokka-counts ts/*db* query-exact 2013)))
-    (t/is (= {"A" 3} (service/find-e-luokka-counts ts/*db* query-exact 2018)))))
+    (t/is (= {:e-luokka {"A" 3 "B" 3}
+              :lammitysmuoto {2 3 4 3}
+              :ilmanvaihto {2 3 4 3}}
+             (service/find-counts ts/*db* query-all 2013)))
+    (t/is (= {:e-luokka {"A" 3 "B" 3}
+              :lammitysmuoto {2 3 4 3}
+              :ilmanvaihto {2 3 4 3}}
+             (service/find-counts ts/*db* query-all 2018)))
+    (t/is (= {:e-luokka {"A" 3} :lammitysmuoto {2 3} :ilmanvaihto {2 3}}
+             (service/find-counts ts/*db* query-exact 2013)))
+    (t/is (= {:e-luokka {"A" 3} :lammitysmuoto {2 3} :ilmanvaihto {2 3}}
+             (service/find-counts ts/*db* query-exact 2018)))))
 
 (t/deftest find-e-luku-statistics-test
   (let [{:keys [energiatodistukset]} (test-data-set 12 true)]
@@ -118,13 +124,6 @@
     (t/is (= 0.8M (:lto-vuosihyotysuhde common-averages-for-all)))
     (t/is (= 0.5M (:lto-vuosihyotysuhde common-averages-for-exact)))))
 
-(t/deftest find-luokittelu-counts
-  (let [{:keys [energiatodistukset]} (test-data-set 12 true)]
-    (t/is (= {:lammitysmuoto {2 3 4 3} :ilmanvaihto {2 3 4 3}}
-             (service/find-luokittelu-counts ts/*db* query-all 2013)))
-    (t/is (= {:lammitysmuoto {2 3} :ilmanvaihto {2 3}}
-             (service/find-luokittelu-counts ts/*db* query-exact 2018)))))
-
 (defn uusiutuvat-omavaraisenergiat-counts-result [n]
   {:aurinkolampo n
    :aurinkosahko n
@@ -144,10 +143,19 @@
                                                                query-exact
                                                                2018)))))
 
+(def empty-results {:counts {2013 nil 2018 nil}
+                    :e-luku-statistics {2013 nil 2018 nil}
+                    :common-averages nil
+                    :uusiutuvat-omavaraisenergiat-counts {2018 nil}})
+
 (t/deftest find-statistics-test
   (let [{:keys [energiatodistukset]} (test-data-set 12 true)]
-    (t/is (= {:e-luokka-counts {2013 {"A" 3 "B" 3}
-                                2018 {"A" 3 "B" 3}}
+    (t/is (= {:counts {2013 {:e-luokka {"A" 3 "B" 3}
+                             :lammitysmuoto {4 3 2 3}
+                             :ilmanvaihto {4 3 2 3}}
+                       2018 {:e-luokka {"A" 3 "B" 3}
+                             :lammitysmuoto {4 3 2 3}
+                             :ilmanvaihto {4 3 2 3}}}
               :e-luku-statistics {2013 {:avg 350.00M
                                         :min 100
                                         :percentile-15 175.0}
@@ -166,8 +174,6 @@
                                 :takka 1.0M
                                 :lammin-kayttovesi-lampokerroin 1.0M
                                 :lto-vuosihyotysuhde 0.8M}
-              :luokittelu-counts {2018 {:lammitysmuoto {4 3 2 3}
-                                        :ilmanvaihto {4 3 2 3}}}
               :uusiutuvat-omavaraisenergiat-counts {2018 {:aurinkolampo 6
                                                           :aurinkosahko 6
                                                           :tuulisahko 6
@@ -175,34 +181,13 @@
                                                           :muusahko 6
                                                           :muulampo 6}}}
              (service/find-statistics ts/*db* query-all)))
-    (t/is (= {:e-luokka-counts {2013 nil
-                                2018 nil}
-              :e-luku-statistics {2013 nil
-                                  2018 nil}
-              :common-averages nil
-              :luokittelu-counts {2018 nil}
-              :uusiutuvat-omavaraisenergiat-counts {2018 nil}}
-             (service/find-statistics ts/*db* query-exact)))))
+    (t/is (= empty-results (service/find-statistics ts/*db* query-exact)))))
 
 (t/deftest find-statistics-not-signed-test
   (let [{:keys [energiatodistukset]} (test-data-set 12 false)]
-    (t/is (= {:e-luokka-counts {2013 nil
-                                2018 nil}
-              :e-luku-statistics {2013 nil
-                                  2018 nil}
-              :common-averages nil
-              :luokittelu-counts {2018 nil}
-              :uusiutuvat-omavaraisenergiat-counts {2018 nil}}
-             (service/find-statistics ts/*db* query-all)))))
+    (t/is (= empty-results (service/find-statistics ts/*db* query-all)))))
 
 (t/deftest find-statistics-expired-test
   (let [{:keys [energiatodistukset]} (test-data-set 12 true)]
     (jdbc/execute! ts/*db* ["UPDATE energiatodistus SET voimassaolo_paattymisaika = now()"])
-    (t/is (= {:e-luokka-counts {2013 nil
-                                2018 nil}
-              :e-luku-statistics {2013 nil
-                                  2018 nil}
-              :common-averages nil
-              :luokittelu-counts {2018 nil}
-              :uusiutuvat-omavaraisenergiat-counts {2018 nil}}
-             (service/find-statistics ts/*db* query-all)))))
+    (t/is (= empty-results (service/find-statistics ts/*db* query-all)))))

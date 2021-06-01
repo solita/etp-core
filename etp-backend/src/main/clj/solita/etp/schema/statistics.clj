@@ -16,8 +16,12 @@
 
 (def StatisticsResponse
   (schema/maybe
-   {:e-luokka-counts {Versio (schema/maybe
-                              {schema/Str common-schema/NonNegative})}
+   {:counts {Versio (schema/maybe
+                     {:e-luokka {schema/Str common-schema/NonNegative}
+                      (schema/optional-key :lammitysmuoto)
+                      {common-schema/Key common-schema/NonNegative}
+                      (schema/optional-key :ilmanvaihto)
+                      {common-schema/Key common-schema/NonNegative}})}
     :e-luku-statistics {Versio (schema/maybe
                                 {:avg common-schema/NonNegative
                                  :min common-schema/NonNegative
@@ -35,11 +39,6 @@
                        :lammin-kayttovesi-lampokerroin common-schema/NonNegative
                        :lto-vuosihyotysuhde common-schema/NonNegative
                        :ivjarjestelma-sfp common-schema/NonNegative})
-    :luokittelu-counts
-    {Versio (schema/maybe {:lammitysmuoto
-                           {common-schema/Key common-schema/NonNegative}
-                           :ilmanvaihto
-                           {common-schema/Key common-schema/NonNegative}})}
     :uusiutuvat-omavaraisenergiat-counts
     {Versio (schema/maybe {:aurinkosahko common-schema/NonNegative
                            :aurinkolampo common-schema/NonNegative

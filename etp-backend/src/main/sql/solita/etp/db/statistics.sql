@@ -1,11 +1,13 @@
--- name: select-e-luokka-counts
-SELECT e.t$e_luokka e_luokka, count(1)
+-- name: select-counts
+SELECT e.t$e_luokka e_luokka,
+       e.lt$lammitys$lammitysmuoto_1$id lammitysmuoto_id,
+       e.lt$ilmanvaihto$tyyppi_id ilmanvaihtotyyppi_id,
+       count(1)
 FROM energiatodistus e
 LEFT JOIN postinumero p ON e.pt$postinumero = p.id
 LEFT JOIN kunta k ON p.kunta_id = k.id
 LEFT JOIN toimintaalue t ON k.toimintaalue_id = t.id
-WHERE e.t$e_luokka IS NOT NULL
-AND e.versio = :versio
+WHERE e.versio = :versio
 AND e.tila_id = 2
 AND e.voimassaolo_paattymisaika > now()
 AND (:keyword::text IS NULL
@@ -19,7 +21,7 @@ AND (:valmistumisvuosi-min::numeric IS NULL OR e.pt$valmistumisvuosi >= :valmist
 AND (:valmistumisvuosi-max::numeric IS NULL OR e.pt$valmistumisvuosi <= :valmistumisvuosi-max)
 AND (:lammitetty-nettoala-min::numeric IS NULL OR e.lt$lammitetty_nettoala >= :lammitetty-nettoala-min)
 AND (:lammitetty-nettoala-max::numeric IS NULL OR e.lt$lammitetty_nettoala <= :lammitetty-nettoala-max)
-GROUP BY 1 ORDER BY 1;
+GROUP BY GROUPING SETS (e.t$e_luokka, e.lt$lammitys$lammitysmuoto_1$id, e.lt$ilmanvaihto$tyyppi_id);
 
 -- name: select-e-luku-statistics
 SELECT round(avg(e.t$e_luku), 2) avg, min(e.t$e_luku),
@@ -73,30 +75,6 @@ AND (:valmistumisvuosi-min::numeric IS NULL OR e.pt$valmistumisvuosi >= :valmist
 AND (:valmistumisvuosi-max::numeric IS NULL OR e.pt$valmistumisvuosi <= :valmistumisvuosi-max)
 AND (:lammitetty-nettoala-min::numeric IS NULL OR e.lt$lammitetty_nettoala >= :lammitetty-nettoala-min)
 AND (:lammitetty-nettoala-max::numeric IS NULL OR e.lt$lammitetty_nettoala <= :lammitetty-nettoala-max);
-
--- name: select-luokittelu-counts
-SELECT e.lt$lammitys$lammitysmuoto_1$id lammitysmuoto_id,
-       e.lt$ilmanvaihto$tyyppi_id ilmanvaihtotyyppi_id,
-       count(1)
-FROM energiatodistus e
-LEFT JOIN postinumero p ON e.pt$postinumero = p.id
-LEFT JOIN kunta k ON p.kunta_id = k.id
-LEFT JOIN toimintaalue t ON k.toimintaalue_id = t.id
-WHERE e.versio = :versio
-AND e.tila_id = 2
-AND e.voimassaolo_paattymisaika > now()
-AND (:keyword::text IS NULL
-     OR e.pt$postinumero::text = ltrim(:keyword, '0')
-     OR k.label_fi ILIKE :keyword
-     OR k.label_sv ILIKE :keyword
-     OR t.label_fi ILIKE :keyword
-     OR t.label_sv ILIKE :keyword)
-AND ((:alakayttotarkoitus-ids) IS NULL OR e.pt$kayttotarkoitus IN (:alakayttotarkoitus-ids))
-AND (:valmistumisvuosi-min::numeric IS NULL OR e.pt$valmistumisvuosi >= :valmistumisvuosi-min)
-AND (:valmistumisvuosi-max::numeric IS NULL OR e.pt$valmistumisvuosi <= :valmistumisvuosi-max)
-AND (:lammitetty-nettoala-min::numeric IS NULL OR e.lt$lammitetty_nettoala >= :lammitetty-nettoala-min)
-AND (:lammitetty-nettoala-max::numeric IS NULL OR e.lt$lammitetty_nettoala <= :lammitetty-nettoala-max)
-GROUP BY GROUPING SETS (e.lt$lammitys$lammitysmuoto_1$id, e.lt$ilmanvaihto$tyyppi_id);
 
 -- name: select-uusiutuvat-omavaraisenergiat-counts
 SELECT count(t$uusiutuvat_omavaraisenergiat$aurinkolampo) FILTER (WHERE t$uusiutuvat_omavaraisenergiat$aurinkolampo > 0) as aurinkolampo,
