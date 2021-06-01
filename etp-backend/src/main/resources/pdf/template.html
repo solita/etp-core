@@ -3,7 +3,8 @@
     <style>
         .document-header {
             position: running(document-header);
-            margin-left: -0.5cm;
+            margin-left: -1.2cm;
+            margin-top: 1cm;
         }
 
         .document-footer {
@@ -12,15 +13,16 @@
         }
 
         .document-footer > table {
-            width: 100%;
+            letter-spacing: 0px;
         }
 
         .document-footer > table td {
-            padding: 10px 0px 10px 10px;
+            padding: 10px 10px 10px 10px;
             border-left: 1px solid black;
-
+            white-space: nowrap;
+            vertical-align: top;
         }
-
+        
         .otsikko {
             margin-left: 7.8cm;
             margin-bottom: 1.75cm;
@@ -28,7 +30,7 @@
         }
 
         @page {
-            margin: 3.5cm 1.4cm 3cm 2.5cm;
+            margin: 3.1cm 1.6cm 4.5cm 2.5cm;
             size: A4 portrait;
             @top-left {
                 content: element(document-header);
@@ -176,32 +178,40 @@
     <table>
         <tr>
             <td>
-                <b>Osoite</b> <br/>
-                PL 30 <br/>
-                Vesijärvenkatu 11 A <br/>
-                15141 Lahti <br/>
+                <div>
+                    <div><b>Osoite</b></div>
+                    <div>PL 30</div>
+                    <div>Vesijärvenkatu 11 A</div>
+                    <div>15141 Lahti</div>
+                </div>
             </td>
             <td>
-                <b>Adress</b> <br/>
-                PB 30 <br/>
-                Vesijärvenkatu 11 A <br/>
-                15141 Lahtis <br/>
+                <div>
+                    <div><b>Adress</b></div>
+                    <div>PB 30</div>
+                    <div>Vesijärvenkatu 11 A</div>
+                    <div>15141 Lahtis</div>
+                </div>
             </td>
             <td>
-                <b>Puhelin . Telefon</b> <br/>
-                029 525 0800
-                <br/><br/><br/>
+                <div>
+                    <div><b>Puhelin . Telefon</b></div>
+                    <div>029 525 0800</div>
+                </div>
             </td>
             <td>
-                <b>E-mail</b> <br/>
-                kirjaamo.ara@ara.fi <br/>
-                etunimi.sukunimi@ara.fi <br/>
-                förnamn.släktnamn@ara.fi <br/>
+                <div>
+                    <div><b>E-mail</b></div>
+                    <div>kirjaamo.ara@ara.fi</div>
+                    <div>etunimi.sukunimi@ara.fi</div>
+                    <div>förnamn.släktnamn@ara.fi</div>
+                </div>
             </td>
             <td>
-                <b>Web</b> <br/>
-                <b>www.ara.fi</b>
-                <br/><br/><br/>
+                <div>
+                    <div><b>Web</b></div>
+                    <div><b>www.ara.fi</b></div>
+                </div>
             </td>
         </tr>
     </table>
