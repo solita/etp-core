@@ -15,7 +15,7 @@
 (defn- file-path [energiatodistus-id toimenpide-id]
   (str file-key-prefix "/" energiatodistus-id "/" toimenpide-id))
 
-(defn store-document [aws-s3-client energiatodistus-id toimenpide-id document]
+(defn- store-document [aws-s3-client energiatodistus-id toimenpide-id document]
   (file-service/upsert-file-from-bytes aws-s3-client (file-path energiatodistus-id toimenpide-id) nil document))
 
 (defn find-document [aws-s3-client energiatodistus-id toimenpide-id]
@@ -154,16 +154,16 @@
                                                          (-> energiatodistus :perustiedot :rakennustunnus)])
                       :attach         {:contact (asha/kayttaja->contact laatija)}})))
 
-(defn log-toimenpide! [db aws-s3-client whoami toimenpide]
-  (let [{:keys [energiatodistus laatija]} (resolve-energiatodistus-laatija db (:energiatodistus-id toimenpide))
-        request-id (request-id (:energiatodistus-id toimenpide) (:id toimenpide))
+(defn log-toimenpide! [db aws-s3-client whoami energiatodistus-id toimenpide]
+  (let [{:keys [energiatodistus laatija]} (resolve-energiatodistus-laatija db energiatodistus-id)
+        request-id (request-id energiatodistus-id (:id toimenpide))
         sender-id (:email whoami)
         case-number (:diaarinumero toimenpide)
         processing-action (resolve-processing-action sender-id request-id case-number toimenpide laatija)
         document (when (:document processing-action)
                    (let [{:keys [template template-data]} (generate-template whoami toimenpide energiatodistus laatija)
                          bytes (pdf/generate-pdf->bytes template template-data)]
-                     (store-document aws-s3-client (:energiatodistus-id toimenpide) (:id toimenpide) bytes)
+                     (store-document aws-s3-client energiatodistus-id (:id toimenpide) bytes)
                      bytes))]
     (asha/log-toimenpide!
       sender-id

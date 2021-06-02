@@ -53,12 +53,14 @@
 
     [""
      {:conflicting true
-      :get         {:summary    "Hae energiatodistusten oikeellisuuden valvonnat (työjono)."
-                    :parameters {:query {(schema/optional-key :own) schema/Bool}}
-                    :responses  {200 {:body [oikeellisuus-schema/ValvontaStatus]}}
-                    :access     rooli-service/paakayttaja?
-                    :handler    (fn [{:keys [db whoami]}]
-                                  (r/response (valvonta-service/find-valvonnat db)))}}]
+      :get         {:summary   "Hae energiatodistusten oikeellisuuden valvonnat (työjono)."
+                    :parameters {:query {(schema/optional-key :own) schema/Bool
+                                         (schema/optional-key :limit) schema/Int
+                                         (schema/optional-key :offset) schema/Int}}
+                    :responses {200 {:body [oikeellisuus-schema/ValvontaStatus]}}
+                    :access    rooli-service/paakayttaja?
+                    :handler   (fn [{{:keys [query]} :parameters :keys [db]}]
+                                 (r/response (valvonta-service/find-valvonnat db query)))}}]
 
     ["/:id"
      [""
@@ -67,8 +69,10 @@
                      :parameters {:path {:id common-schema/Key}}
                      :responses  {200 {:body oikeellisuus-schema/Valvonta}}
                      :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
-                     :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
-                                   (r/response (valvonta-service/find-valvonta db id)))}
+                     :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                                   (api-response/get-response
+                                     (valvonta-service/find-valvonta db id)
+                                     (str "Energiatodistus " id " does not exists.")))}
 
        :put         {:summary    "Muuta valvonnan yleisiä tietoja."
                      :access     rooli-service/paakayttaja?
@@ -76,14 +80,16 @@
                                   :body (schema-tools/optional-keys-schema oikeellisuus-schema/ValvontaSave)}
                      :responses  {200 {:body nil}}
                      :handler    (fn [{{{:keys [id]} :path :keys [body]}
-                                       :parameters :keys [db whoami]}]
-                                   (r/response (valvonta-service/save-valvonta! db id body)))}}]
+                                       :parameters :keys [db]}]
+                                   (api-response/ok|not-found
+                                     (valvonta-service/save-valvonta! db id body)
+                                     (str "Energiatodistus " id " does not exists.")))}}]
 
      ["/toimenpiteet"
       [""
        {:get  {:summary    "Hae energiatodistuksen valvontatoimenpiteet."
                :parameters {:path {:id common-schema/Key}}
-               :responses  {200 {:body [oikeellisuus-schema/Toimenpide]}}
+               :responses  {200 {:body [(dissoc oikeellisuus-schema/Toimenpide :virheet)]}}
                :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                              (api-response/get-response

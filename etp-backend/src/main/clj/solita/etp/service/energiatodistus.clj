@@ -178,9 +178,10 @@
        doall))
 
 (defn flat->tree [energiatodistus]
-  (->> energiatodistus
-    (map/map-values (logic/when* vector? (partial mapv flat->tree)))
-    (flat/flat->tree #"\$")))
+  (as-> energiatodistus %
+       (map/map-values (logic/when* vector? (partial mapv flat->tree)) %)
+       (dissoc % :valvonta)
+       (flat/flat->tree #"\$" %)))
 
 (defn find-sisaiset-kuormat [db versio]
   (map (comp flat->tree db/kebab-case-keys)
