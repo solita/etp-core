@@ -84,18 +84,16 @@
 
 (t/deftest find-counts-test
   (let [{:keys [energiatodistukset]} (test-data-set 12 true)]
-    (t/is (= {:e-luokka {"A" 3 "B" 3}
-              :lammitysmuoto {2 3 4 3}
-              :ilmanvaihto {2 3 4 3}}
-             (service/find-counts ts/*db* query-all 2013)))
-    (t/is (= {:e-luokka {"A" 3 "B" 3}
-              :lammitysmuoto {2 3 4 3}
-              :ilmanvaihto {2 3 4 3}}
-             (service/find-counts ts/*db* query-all 2018)))
-    (t/is (= {:e-luokka {"A" 3} :lammitysmuoto {2 3} :ilmanvaihto {2 3}}
-             (service/find-counts ts/*db* query-exact 2013)))
-    (t/is (= {:e-luokka {"A" 3} :lammitysmuoto {2 3} :ilmanvaihto {2 3}}
-             (service/find-counts ts/*db* query-exact 2018)))))
+    (t/is (= {2013 {:e-luokka {"A" 3 "B" 3}
+                    :lammitysmuoto {2 3 4 3}
+                    :ilmanvaihto {2 3 4 3}}
+              2018 {:e-luokka {"A" 3 "B" 3}
+                    :lammitysmuoto {2 3 4 3}
+                    :ilmanvaihto {2 3 4 3}}}
+             (service/find-counts ts/*db* query-all)))
+    (t/is (= {2013 {:e-luokka {"A" 3} :lammitysmuoto {2 3} :ilmanvaihto {2 3}}
+              2018 {:e-luokka {"A" 3} :lammitysmuoto {2 3} :ilmanvaihto {2 3}}}
+             (service/find-counts ts/*db* query-exact)))))
 
 (t/deftest find-e-luku-statistics-test
   (let [{:keys [energiatodistukset]} (test-data-set 12 true)]
