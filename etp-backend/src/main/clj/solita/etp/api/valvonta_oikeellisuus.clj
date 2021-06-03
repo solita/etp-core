@@ -7,7 +7,9 @@
             [solita.etp.api.response :as api-response]
             [ring.util.response :as r]
             [schema.core :as schema]
-            [schema-tools.core :as schema-tools]))
+            [schema-tools.core :as schema-tools]
+            [reitit.ring.schema :as reitit-schema]
+            [solita.etp.schema.liite :as liite-schema]))
 
 (def routes
   [["/valvonta/oikeellisuus"
@@ -137,6 +139,72 @@
                               (valvonta-service/update-toimenpide!
                                 db whoami id toimenpide-id body)
                               (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}}]
+       ["/liitteet"
+        [""
+        {:get {:summary    "Hae toimenpiteen liitteet."
+               :parameters {:path {:id            common-schema/Key
+                                   :toimenpide-id common-schema/Key}}
+               :responses  {200 {:body [liite-schema/Liite]}
+                            404 {:body schema/Str}}
+               :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+               :handler    (fn [{{{:keys [id toimenpide-id]} :path}
+                                 :parameters :keys [db whoami]}]
+                             (api-response/get-response
+                               (valvonta-service/find-toimenpide-liitteet db whoami id toimenpide-id)
+                               (str "Energiatodistus " id " does not exists.")))}}]
+        ["/files"
+         {:conflicting true
+          :post {:summary    "Toimenpiteen liitteiden lisäys tiedostoista."
+                 :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+                 :parameters {:path      {:id            common-schema/Key
+                                          :toimenpide-id common-schema/Key}
+                              :multipart {:files (schema/conditional
+                                                   vector? [reitit-schema/TempFilePart]
+                                                   :else reitit-schema/TempFilePart)}}
+                 :responses  {201 {:body [common-schema/Key]}
+                              404 common-schema/ConstraintError}
+                 :handler    (fn [{{{:keys [id toimenpide-id]} :path {:keys [files]} :multipart} :parameters
+                                   :keys [db aws-s3-client whoami]}]
+                               (api-response/response-with-exceptions
+                                 201
+                                 #(valvonta-service/add-liitteet-from-files!
+                                     db aws-s3-client whoami id toimenpide-id
+                                     (if (vector? files) files [files]))
+                                 [{:constraint :liite-energiatodistus-id-fkey :response 404}
+                                  {:constraint :liite-vo-toimenpide-id-fkey :response 404}]))}}]
+
+        ["/link"
+         {:conflicting true
+          :post {:summary    "Liite linkin lisäys toimenpiteesee."
+                 :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+                 :parameters {:path      {:id            common-schema/Key
+                                          :toimenpide-id common-schema/Key}
+                              :body liite-schema/LiiteLinkAdd}
+                 :responses  {201 {:body common-schema/Id}
+                              404 common-schema/ConstraintError}
+                 :handler    (fn [{{{:keys [id toimenpide-id]} :path :keys [body]} :parameters :keys [db whoami]}]
+                               (api-response/with-exceptions
+                                 #(api-response/created
+                                    (str "valvonta/oikeellisuus/" id "/toimenpiteet/" toimenpide-id "/liitteet")
+                                    {:id (valvonta-service/add-liite-from-link! db whoami id toimenpide-id body)})
+                                 [{:constraint :liite-energiatodistus-id-fkey :response 404}
+                                  {:constraint :liite-vo-toimenpide-id-fkey :response 404}]))}}]
+
+        ["/:liite-id"
+         {:conflicting true
+          :delete {:summary    "Poista toimenpiteen liite."
+                   :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+                   :parameters {:path {:id common-schema/Key
+                                       :toimenpide-id common-schema/Key
+                                       :liite-id common-schema/Key}}
+                   :responses  {200 {:body nil}
+                                404 {:body schema/Str}}
+                   :handler    (fn [{{{:keys [id toimenpide-id liite-id]} :path}
+                                           :parameters
+                                     :keys [db whoami]}]
+                                 (api-response/ok|not-found
+                                   (valvonta-service/delete-liite! db whoami id toimenpide-id liite-id)
+                                   (str "Toimenpiteen " id "/"toimenpide-id " liite " liite-id " does not exists.")))}}]]
        ["/publish"
         {:post {:summary "Tarkista ja julkaise toimenpideluonnos"
                 :parameters {:path {:id common-schema/Key
