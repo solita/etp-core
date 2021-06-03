@@ -53,9 +53,7 @@
     [""
      {:conflicting true
       :get         {:summary   "Hae energiatodistusten oikeellisuuden valvonnat (työjono)."
-                    :parameters {:query {(schema/optional-key :own) schema/Bool
-                                         (schema/optional-key :limit) schema/Int
-                                         (schema/optional-key :offset) schema/Int}}
+                    :parameters {:query valvonta-schema/ValvontaQuery}
                     :responses {200 {:body [oikeellisuus-schema/ValvontaStatus]}}
                     :access    rooli-service/paakayttaja?
                     :handler   (fn [{{:keys [query]} :parameters :keys [db whoami]}]
