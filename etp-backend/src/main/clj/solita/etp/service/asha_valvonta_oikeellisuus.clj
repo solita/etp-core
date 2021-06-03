@@ -8,7 +8,10 @@
             [solita.etp.service.toimenpide :as toimenpide]
             [solita.etp.service.pdf :as pdf]
             [clojure.java.io :as io]
-            [solita.etp.service.file :as file-service]))
+            [solita.etp.service.file :as file-service]
+            [solita.etp.db :as db]))
+
+(db/require-queries 'valvonta-oikeellisuus)
 
 (def file-key-prefix "valvonta/oikeellisuus")
 
@@ -21,7 +24,14 @@
 (defn find-document [aws-s3-client energiatodistus-id toimenpide-id]
   (:content (file-service/find-file aws-s3-client (file-path energiatodistus-id toimenpide-id))))
 
-(defn- template-data [whoami toimenpide laatija energiatodistus]
+(defn find-valvontamuistio-publish-time-by-type [db id]
+  (->> (valvonta-oikeellisuus-db/select-toimenpiteen-valvontamuistiot db {:energiatodistus-id id})
+       (map (fn [toimenpide]
+              (let [type (toimenpide/type-key (:type-id toimenpide))]
+                {type (:publish-time toimenpide)})))
+       (into {})))
+
+(defn- template-data [whoami toimenpide laatija energiatodistus valvontamuistiot]
   (cond-> {:päivä           (time/today)
            :määräpäivä      (time/format-date (:deadline-date toimenpide))
            :diaarinumero    (:diaarinumero toimenpide)
@@ -40,7 +50,9 @@
                               (case luokka
                                 0 {:ei-huomioitavaa true}
                                 1 {:ei-toimenpiteitä true}
-                                2 {:virheellinen true}))}))
+                                2 {:virheellinen true}))
+           :valvontamuistio  {:valvontamuistio-pvm (time/format-date (:audit-report valvontamuistiot))
+                              :valvontamuistio-kehotus-pvm (time/format-date (:audit-order valvontamuistiot))}}))
 
 (defn resolve-energiatodistus-laatija [db energiatodistus-id]
   (let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db energiatodistus-id)
@@ -63,9 +75,10 @@
                "pdf/taustamateriaali-toimityspyyntö.html")]
     (-> file io/resource slurp)))
 
-(defn generate-template [whoami toimenpide energiatodistus laatija]
+(defn generate-template [db whoami toimenpide energiatodistus laatija]
   (let [template (template-id->template (:template-id toimenpide)) #_(:content toimenpide)
-        template-data (template-data whoami toimenpide laatija energiatodistus)]
+        valvontamuistiot (find-valvontamuistio-publish-time-by-type db (:id energiatodistus))
+        template-data (template-data whoami toimenpide laatija energiatodistus valvontamuistiot)]
     {:template      template
      :template-data template-data}))
 
@@ -171,7 +184,7 @@
         case-number (:diaarinumero toimenpide)
         processing-action (resolve-processing-action sender-id request-id case-number toimenpide laatija)
         document (when (:document processing-action)
-                   (let [{:keys [template template-data]} (generate-template whoami toimenpide energiatodistus laatija)
+                   (let [{:keys [template template-data]} (generate-template db whoami toimenpide energiatodistus laatija)
                          bytes (pdf/generate-pdf->bytes template template-data)]
                      (store-document aws-s3-client energiatodistus-id (:id toimenpide) bytes)
                      bytes))]

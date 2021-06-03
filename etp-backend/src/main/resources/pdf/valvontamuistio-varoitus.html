@@ -10,8 +10,8 @@
     {{#energiatodistus}}
     Kohde: {{nimi}} <br/>
     Todistustunnus: {{tunnus}} <br/>
-    Valvontamuistion päivämäärä: {{valvontamuistion-päivämäärä}} <br />
-    Kehotuksen päivämäärä: {{kehotuksen-päivämäärä}}
+    Valvontamuistion päivämäärä: {{#valvontamuistio}} {{valvontamuistio-pvm}} {{/valvontamuistio}} <br />
+    Kehotuksen päivämäärä: {{#valvontamuistio}} {{valvontamuistio-kehotus-pvm}} {{/valvontamuistio}}
     {{/energiatodistus}}
 </p>
 

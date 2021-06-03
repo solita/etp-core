@@ -89,7 +89,7 @@
   (assoc toimenpide :virheet (valvonta-oikeellisuus-db/select-toimenpide-virheet
                                db {:toimenpide-id (:id toimenpide)})))
 
-(defn- ->toimenpide-filename [toimenpide]
+(defn- db-row->toimenpide [toimenpide]
   (let [{:keys [filename]} (and (:template-id toimenpide) (asha-valvonta-oikeellisuus/toimenpide-type->document (:type-id toimenpide)))]
     (assoc toimenpide :filename filename)))
 
@@ -98,14 +98,14 @@
     ;; assert privileges to view et information and check that it exists
     (nil? (energiatodistus-service/find-energiatodistus db whoami id))
     (->> (valvonta-oikeellisuus-db/select-toimenpiteet db {:energiatodistus-id id})
-         (map (partial ->toimenpide-filename)))))
+         (map (partial db-row->toimenpide)))))
 
 (defn find-toimenpide [db whoami id toimenpide-id]
   ;; assert privileges to view et information:
   (energiatodistus-service/find-energiatodistus db whoami id)
   (->> (valvonta-oikeellisuus-db/select-toimenpide db {:id toimenpide-id})
        (map (partial assoc-virheet db))
-       (map (partial ->toimenpide-filename))
+       (map (partial db-row->toimenpide))
        first))
 
 (defn- update-toimenpide-row! [db toimenpide-id toimenpide]
@@ -139,7 +139,7 @@
   (let [{:keys [energiatodistus laatija]} (asha-valvonta-oikeellisuus/resolve-energiatodistus-laatija db id)
         diaarinumero (find-diaarinumero db id toimenpide)
         toimenpide-with-diaarinumero (assoc toimenpide :diaarinumero diaarinumero)]
-    (asha-valvonta-oikeellisuus/generate-template whoami toimenpide-with-diaarinumero energiatodistus laatija)))
+    (asha-valvonta-oikeellisuus/generate-template db whoami toimenpide-with-diaarinumero energiatodistus laatija)))
 
 (defn preview-toimenpide [db whoami id toimenpide ostream]
   (when-let [{:keys [template template-data]} (generate-template db whoami id toimenpide)]
