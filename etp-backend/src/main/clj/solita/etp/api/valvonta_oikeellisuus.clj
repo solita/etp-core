@@ -1,6 +1,7 @@
 (ns solita.etp.api.valvonta-oikeellisuus
   (:require [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.valvonta-oikeellisuus :as valvonta-service]
+            [solita.etp.service.asha-valvonta-oikeellisuus :as asha-valvonta-service]
             [solita.etp.schema.valvonta-oikeellisuus :as oikeellisuus-schema]
             [solita.etp.schema.valvonta :as valvonta-schema]
             [solita.etp.schema.common :as common-schema]
@@ -120,12 +121,13 @@
                                    404 {:body schema/Str}}
                       :handler    (fn [{{{:keys [id]} :path :keys [body]}
                                         :parameters :keys [db whoami]}]
-                                    (api-response/pdf-response
-                                      (ring-io/piped-input-stream
-                                        (partial valvonta-service/preview-toimenpide
-                                                 db whoami id body))
-                                      "preview.pdf"
-                                      "Not found."))}}]
+                                    (let [{:keys [filename]} (asha-valvonta-service/toimenpide-type->document (:type-id body))]
+                                      (api-response/pdf-response
+                                        (ring-io/piped-input-stream
+                                          (partial valvonta-service/preview-toimenpide
+                                                   db whoami id body))
+                                        filename
+                                        "Not found.")))}}]
       ["/:toimenpide-id"
        [""
         {:conflicting true
@@ -166,18 +168,20 @@
                               (api-response/ok|not-found
                                 (valvonta-service/publish-toimenpide! db aws-s3-client whoami id toimenpide-id)
                                 (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}}]
-       ["/document"
+       ["/document/:type-id"
         {:get {:summary    "Esikatsele tai lataa toimenpiteen dokumentti"
                :parameters {:path {:id            common-schema/Key
-                                   :toimenpide-id common-schema/Key}}
+                                   :toimenpide-id common-schema/Key
+                                   :type-id       common-schema/Key}}
                :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                :responses  {200 {:body nil}
                             404 {:body schema/Str}}
-               :handler    (fn [{{{:keys [id toimenpide-id]} :path}
+               :handler    (fn [{{{:keys [id toimenpide-id type-id]} :path}
                                  :parameters :keys [db whoami aws-s3-client]}]
-                             (api-response/pdf-response
-                               (ring-io/piped-input-stream
-                                 (partial valvonta-service/find-toimenpide-document
-                                          db aws-s3-client whoami id toimenpide-id))
-                               "document.pdf"
-                               "Not found."))}}]]]]]])
+                             (let [{:keys [filename]} (asha-valvonta-service/toimenpide-type->document type-id)]
+                               (api-response/pdf-response
+                                 (ring-io/piped-input-stream
+                                   (partial valvonta-service/find-toimenpide-document
+                                            db aws-s3-client whoami id toimenpide-id))
+                                 filename
+                                 "Not found.")))}}]]]]]])

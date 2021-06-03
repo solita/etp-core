@@ -196,7 +196,7 @@
       (-> processing-action :processing-action :name)
       [{:content (bytes->base64 document)
         :type    (-> processing-action :document :type)
-        :name    (-> processing-action :document :name)}]))
+        :name    (-> processing-action :document :filename)}]))
   (take-processing-action! sender-id request-id case-number (-> processing-action :processing-action :name))
   (mark-processing-action-as-ready!
     sender-id

@@ -89,17 +89,23 @@
   (assoc toimenpide :virheet (valvonta-oikeellisuus-db/select-toimenpide-virheet
                                db {:toimenpide-id (:id toimenpide)})))
 
+(defn- ->toimenpide-filename [toimenpide]
+  (let [{:keys [filename]} (and (:template-id toimenpide) (asha-valvonta-oikeellisuus/toimenpide-type->document (:type-id toimenpide)))]
+    (assoc toimenpide :filename filename)))
+
 (defn find-toimenpiteet [db whoami id]
   (when-not
     ;; assert privileges to view et information and check that it exists
     (nil? (energiatodistus-service/find-energiatodistus db whoami id))
-    (valvonta-oikeellisuus-db/select-toimenpiteet db {:energiatodistus-id id})))
+    (->> (valvonta-oikeellisuus-db/select-toimenpiteet db {:energiatodistus-id id})
+         (map (partial ->toimenpide-filename)))))
 
 (defn find-toimenpide [db whoami id toimenpide-id]
   ;; assert privileges to view et information:
   (energiatodistus-service/find-energiatodistus db whoami id)
   (->> (valvonta-oikeellisuus-db/select-toimenpide db {:id toimenpide-id})
        (map (partial assoc-virheet db))
+       (map (partial ->toimenpide-filename))
        first))
 
 (defn- update-toimenpide-row! [db toimenpide-id toimenpide]

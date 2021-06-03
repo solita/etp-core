@@ -72,6 +72,16 @@
 (defn- request-id [energiatodistus-id toimenpide-id]
   (str energiatodistus-id "/" toimenpide-id))
 
+(defn toimenpide-type->document [type-id]
+  (let [type-key (toimenpide/type-key type-id )
+        documents {:rfi-request {:type "Pyyntö" :filename "tietopyyntö.pdf"}
+                   :rfi-order {:type "Kirje" :filename "kehotus_tietopyyntö.pdf"}
+                   :rfi-warning {:type "Kirje" :filename "varoitus_tietopyyntö.pdf"}
+                   :audit-report {:type "Muistio" :filename "valvontamuistio.pdf"}
+                   :audit-order {:type "Kirje" :filename "kehotus_valvontamuistio.pdf"}
+                   :audit-warning  {:type "Kirje" :filename "varoitus_valvontamuistio.pdf"}}]
+    (get documents type-key)))
+
 (defn- available-processing-actions [toimenpide laatija]
   {:rfi-request   {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Vireillepano"}}
@@ -79,42 +89,42 @@
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
                                        :contact              (asha/kayttaja->contact laatija)}
-                   :document          {:type "Pyyntö" :name "tietopyyntö.pdf"}}
+                   :document          (toimenpide-type->document (:type-id toimenpide))}
    :rfi-order     {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Kehotuksen antaminen"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
                                        :contact              (asha/kayttaja->contact laatija)}
-                   :document          {:type "Kirje" :name "kehotus_tietopyyntö.pdf"}}
+                   :document          (toimenpide-type->document (:type-id toimenpide))}
    :rfi-warning   {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Varoituksen antaminen"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
                                        :contact              (asha/kayttaja->contact laatija)}
-                   :document          {:type "Kirje" :name "varoitus_tietopyyntö.pdf"}}
+                   :document          (toimenpide-type->document (:type-id toimenpide))}
    :audit-report  {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Valvontamuistion laatiminen"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
                                        :contact              (asha/kayttaja->contact laatija)}
-                   :document          {:type "Muistio" :name "valvontamuistio.pdf"}}
+                   :document          (toimenpide-type->document (:type-id toimenpide))}
    :audit-order   {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Kehotuksen antaminen valvontamuistion perusteella"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
                                        :contact              (asha/kayttaja->contact laatija)}
-                   :document          {:type "Kirje" :name "kehotus_valvontamuistio.pdf"}}
+                   :document          (toimenpide-type->document (:type-id toimenpide))}
    :audit-warning {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Varoituksen antaminen valvontamuistion perusteella"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
                                        :contact              (asha/kayttaja->contact laatija)}
-                   :document          {:type "Kirje" :name "varoitus_valvontamuistio.pdf"}}
+                   :document          (toimenpide-type->document (:type-id toimenpide))}
    :rfc-request   {:identity          {:case {:number (:diaarinumero toimenpide)}}
                    :processing-action {:name           "Lisäselvityspyyntö"
                                        :reception-date (java.time.Instant/now)
