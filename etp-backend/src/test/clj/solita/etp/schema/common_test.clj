@@ -63,3 +63,11 @@
   (t/is (some? (schema/check common/Verkkolaskuosoite "FI1410093000123459")))
   (t/is (some? (schema/check common/Verkkolaskuosoite "")))
   (t/is (some? (schema/check common/Verkkolaskuosoite nil))))
+
+(t/deftest valid-rakennustunnus?-test
+  (t/is (nil? (schema/check common/Rakennustunnus "1035150826")))
+  (t/is (nil? (schema/check common/Rakennustunnus "103515074X")))
+
+  (t/is (some? (schema/check common/Rakennustunnus "103515074x")))
+  (t/is (some? (schema/check common/Rakennustunnus "100012345A")))
+  (t/is (some? (schema/check common/Rakennustunnus nil))))
