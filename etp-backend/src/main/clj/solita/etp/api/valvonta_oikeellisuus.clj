@@ -104,10 +104,9 @@
                :responses  {201 {:body common-schema/Id}
                             404 common-schema/ConstraintError}
                :handler    (fn [{{{:keys [id]} :path :keys [body]}
-                                 :parameters :keys [db whoami]}]
+                                 :parameters :keys [db whoami uri]}]
                              (api-response/with-exceptions
-                               #(api-response/created
-                                  (str "/valvonta/oikeellisuus/" id "/toimenpiteet")
+                               #(api-response/created uri
                                   (valvonta-service/add-toimenpide! db whoami id body))
                                [{:constraint :toimenpide-energiatodistus-id-fkey
                                  :response   404}]))}}]
@@ -175,17 +174,16 @@
 
         ["/link"
          {:conflicting true
-          :post {:summary    "Liite linkin lisäys toimenpiteesee."
+          :post {:summary    "Liite linkin lisäys toimenpiteeseen."
                  :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                  :parameters {:path      {:id            common-schema/Key
                                           :toimenpide-id common-schema/Key}
                               :body liite-schema/LiiteLinkAdd}
                  :responses  {201 {:body common-schema/Id}
                               404 common-schema/ConstraintError}
-                 :handler    (fn [{{{:keys [id toimenpide-id]} :path :keys [body]} :parameters :keys [db whoami]}]
+                 :handler    (fn [{{{:keys [id toimenpide-id]} :path :keys [body]} :parameters :keys [db whoami uri]}]
                                (api-response/with-exceptions
-                                 #(api-response/created
-                                    (str "valvonta/oikeellisuus/" id "/toimenpiteet/" toimenpide-id "/liitteet")
+                                 #(api-response/created uri
                                     {:id (valvonta-service/add-liite-from-link! db whoami id toimenpide-id body)})
                                  [{:constraint :liite-energiatodistus-id-fkey :response 404}
                                   {:constraint :liite-vo-toimenpide-id-fkey :response 404}]))}}]
