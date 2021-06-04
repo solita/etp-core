@@ -2,6 +2,7 @@
 alter table etp.energiatodistus
   add column valvonta$pending boolean not null default false,
   add column valvonta$valvoja_id int references etp.kayttaja (id);
+call audit.create_audit_procedure('energiatodistus'::name);
 
 call create_classification('vo_toimenpidetype'::name);
 
