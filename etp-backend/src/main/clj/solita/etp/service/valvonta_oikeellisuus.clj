@@ -10,7 +10,9 @@
     [solita.common.map :as map]
     [solita.etp.service.luokittelu :as luokittelu]
     [clojure.string :as str]
-    [clojure.java.io :as io]))
+    [clojure.java.io :as io]
+    [solita.etp.service.liite :as liite-service]
+    [clojure.set :as set]))
 
 (db/require-queries 'valvonta-oikeellisuus)
 
@@ -107,6 +109,29 @@
        (map (partial assoc-virheet db))
        (map (partial db-row->toimenpide))
        first))
+
+(defn find-toimenpide-liitteet [db whoami id toimenpide-id]
+  ;; assert privileges to view et information:
+  (when-not (nil? (energiatodistus-service/find-energiatodistus db whoami id))
+    (valvonta-oikeellisuus-db/select-toimenpide-liitteet db {:toimenpide-id toimenpide-id})))
+
+(defn add-liitteet-from-files! [db aws-s3-client whoami id toimenpide-id files]
+  (jdbc/with-db-transaction
+    [db db]
+    (mapv #(liite-service/add-liite-from-file!
+             db aws-s3-client id
+             (-> %
+                 (assoc :vo-toimenpide-id toimenpide-id)
+                 (set/rename-keys {:content-type :contenttype
+                                   :filename     :nimi})))
+          files)))
+
+(defn add-liite-from-link! [db whoami id toimenpide-id liite]
+  (liite-service/add-liite-from-link!
+    db id (assoc liite :vo-toimenpide-id toimenpide-id)))
+
+(defn delete-liite! [db whoami id toimenpide-id liite-id]
+  (liite-service/delete-liite! db liite-id))
 
 (defn- update-toimenpide-row! [db toimenpide-id toimenpide]
   (first (db/with-db-exception-translation

@@ -29,18 +29,6 @@
       (coll? schema) (map optional-properties schema)
       :else (exception/illegal-argument! (str "Unsupported schema: " schema)))))
 
-(defn valid-rakennustunnus? [s]
-  (try
-    (let [number-part (subs s 0 9)
-          checksum    (last s)]
-      (and (= 10 (count s))
-           (= checksum (common-schema/henkilotunnus-checksum number-part))))
-    (catch StringIndexOutOfBoundsException _ false)))
-
-(def Rakennustunnus
-  (schema/constrained schema/Str valid-rakennustunnus?
-                      "rakennustunnus"))
-
 (def YritysPostinumero common-schema/String8)
 
 (def Yritys
@@ -55,7 +43,7 @@
    :valmistumisvuosi         common-schema/Year
    :julkinen-rakennus        schema/Bool
    :havainnointikaynti       common-schema/Date
-   :rakennustunnus           Rakennustunnus
+   :rakennustunnus           common-schema/Rakennustunnus
    :postinumero              geo-schema/PostinumeroFI
    :keskeiset-suositukset-fi common-schema/String2500
    :keskeiset-suositukset-sv common-schema/String2500
