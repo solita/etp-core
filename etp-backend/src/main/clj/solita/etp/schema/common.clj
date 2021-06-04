@@ -162,3 +162,15 @@
    :rooli-id Key
    :sukunimi schema/Str
    :etunimi  schema/Str})
+
+(defn valid-rakennustunnus? [s]
+  (try
+    (let [number-part (subs s 0 9)
+          checksum    (last s)]
+      (and (= 10 (count s))
+           (= checksum (henkilotunnus-checksum number-part))))
+    (catch StringIndexOutOfBoundsException _ false)))
+
+(def Rakennustunnus
+  (schema/constrained schema/Str valid-rakennustunnus?
+                      "rakennustunnus"))
