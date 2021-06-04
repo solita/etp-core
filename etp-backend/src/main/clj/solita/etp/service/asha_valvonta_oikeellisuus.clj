@@ -18,8 +18,22 @@
 (defn- file-path [energiatodistus-id toimenpide-id]
   (str file-key-prefix "/" energiatodistus-id "/" toimenpide-id))
 
+(defn toimenpide-type->document [type-id]
+  (let [type-key (toimenpide/type-key type-id )
+        documents {:rfi-request {:type "Pyyntö" :filename "tietopyyntö.pdf"}
+                   :rfi-order {:type "Kirje" :filename "kehotus_tietopyyntö.pdf"}
+                   :rfi-warning {:type "Kirje" :filename "varoitus_tietopyyntö.pdf"}
+                   :audit-report {:type "Muistio" :filename "valvontamuistio.pdf"}
+                   :audit-order {:type "Kirje" :filename "kehotus_valvontamuistio.pdf"}
+                   :audit-warning  {:type "Kirje" :filename "varoitus_valvontamuistio.pdf"}}]
+    (get documents type-key)))
+
 (defn- store-document [aws-s3-client energiatodistus-id toimenpide-id document]
-  (file-service/upsert-file-from-bytes aws-s3-client (file-path energiatodistus-id toimenpide-id) nil document))
+  (file-service/upsert-file-from-bytes
+    aws-s3-client
+    (file-path energiatodistus-id toimenpide-id)
+    (-> toimenpide-id toimenpide-type->document :filename)
+    document))
 
 (defn find-document [aws-s3-client energiatodistus-id toimenpide-id]
   (:content (file-service/find-file aws-s3-client (file-path energiatodistus-id toimenpide-id))))
@@ -86,16 +100,6 @@
 
 (defn- request-id [energiatodistus-id toimenpide-id]
   (str energiatodistus-id "/" toimenpide-id))
-
-(defn toimenpide-type->document [type-id]
-  (let [type-key (toimenpide/type-key type-id )
-        documents {:rfi-request {:type "Pyyntö" :filename "tietopyyntö.pdf"}
-                   :rfi-order {:type "Kirje" :filename "kehotus_tietopyyntö.pdf"}
-                   :rfi-warning {:type "Kirje" :filename "varoitus_tietopyyntö.pdf"}
-                   :audit-report {:type "Muistio" :filename "valvontamuistio.pdf"}
-                   :audit-order {:type "Kirje" :filename "kehotus_valvontamuistio.pdf"}
-                   :audit-warning  {:type "Kirje" :filename "varoitus_valvontamuistio.pdf"}}]
-    (get documents type-key)))
 
 (defn- available-processing-actions [toimenpide laatija]
   {:rfi-request   {:identity          {:case              {:number (:diaarinumero toimenpide)}
