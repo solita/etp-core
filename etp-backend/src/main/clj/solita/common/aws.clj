@@ -24,7 +24,7 @@
   (invoke client
           :PutObject
           {:Bucket   bucket
-                   :Key    key
+           :Key    key
            :Body     content
            :Metadata {:filename filename}}))
 
