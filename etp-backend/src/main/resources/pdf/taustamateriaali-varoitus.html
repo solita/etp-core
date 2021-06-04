@@ -10,8 +10,8 @@
     {{#energiatodistus}}
     Kohde: {{nimi}} <br/>
     Todistustunnus: {{tunnus}} <br/>
-    Toimituspyynnön päivämäärä: {{toimituspyyntö-päivämäärä}} <br />
-    Kehotuksen päivämäärä: {{kehotuksen-päivämäärä}}
+    Toimituspyynnön päivämäärä: {{#taustamateriaali}} {{taustamateriaali-pvm}} {{/taustamateriaali}} <br />
+    Kehotuksen päivämäärä: {{#taustamateriaali}} {{taustamateriaali-kehotus-pvm}} {{/taustamateriaali}}
     {{/energiatodistus}}
 </p>
 
@@ -37,8 +37,6 @@
     <li>Havainnointipöytäkirja ja muu materiaali paikan päällä käynnistä (olemassa olevat rakennukset)</li>
 </ul>
 
-<div class="page-break"></div>
-
 <p>ARAlla on oikeus saada valvontaa varten tarvittavat tiedot ja asiakirjat, mukaan lukien toimeksiantoja koskevat
     tiedot. Laatijan on säilytettävä valmisteluasiakirjat, laskelmat ja muut tiedot, jotka laatija on tehnyt tai
     hankkinut todistuksen laatimista varten sekä tiedot todistuksen kohteessa tehdystä havainnoinnista. Laatijan on
@@ -47,7 +45,7 @@
 
 <p>Jos energiatodistuksen laatija ei täytä säädettyjä velvollisuuksia, ARA kehottaa korjaamaan asian ja antaa määräajan
     korjaukselle. Jos asiaa ei korjata määräajassa, ARA antaa laatijalle varoituksen ja uuden määräajan. Jos asiaa ei
-    edelleenkään korjata, ARA voi antaa laatijalle velvoittavan käskypäätöksen /käyttökieltopäätöksen, jota voidaan
+    edelleenkään korjata, ARA voi antaa laatijalle velvoittavan käskypäätöksen/käyttökieltopäätöksen, jota voidaan
     tehostaa uhkasakolla. ARAlla on myös mahdollisuus antaa laatijalle laatimiskielto, jos laatija on toiminut
     olennaisella tai merkittävällä tavalla säännösten vastaisesti.</p>
 
@@ -57,13 +55,14 @@
     {{/valvoja}}<br/>
     energia-asiantuntija
 </p>
-<p>
-<div class="sarake">
-    <span class="sarake-otsikko"><b>Sovelletut säännökset:</b></span>
-    <span> Laki rakennuksen energiatodistuksesta (50/2013)</span>
-</div>
-<div class="sarake">
-    <span class="sarake-otsikko"><b>Lisätietoja:</b></span>
-    <span><a href="https://www.energiatodistusrekisteri.fi">www.energiatodistusrekisteri.fi</a></span>
-</div>
-</p>
+
+<table class="sarake">
+    <tr>
+        <td class="sarake-otsikko"><b>Sovelletut säännökset:</b></td>
+        <td class="sarake-sisalto">Laki rakennuksen energiatodistuksesta (50/2013)</td>
+    </tr>
+    <tr>
+        <td class="sarake-otsikko"><b>Lisätietoja:</b></td>
+        <td class="sarake-sisalto"><a href="https://www.energiatodistusrekisteri.fi">www.energiatodistusrekisteri.fi</a></td>
+    </tr>
+</table>

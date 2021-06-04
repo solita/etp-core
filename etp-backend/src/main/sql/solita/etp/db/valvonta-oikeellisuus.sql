@@ -60,10 +60,10 @@ select * from vo_toimenpide where id = :id;
 -- name: select-toimenpiteet
 select * from vo_toimenpide where energiatodistus_id = :energiatodistus-id;
 
--- name: select-toimenpiteen-valvontamuistiot
+-- name: select-valvonta-toimenpiteet-publish-time-by-type
 select distinct on (type_id) *
 from vo_toimenpide
-where energiatodistus_id = :energiatodistus-id and type_id in (7,9)
+where energiatodistus_id = :energiatodistus-id and type_id in (3, 5, 7, 9)
 order by type_id, publish_time desc;
 
 -- name: select-templates

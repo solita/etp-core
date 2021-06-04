@@ -9,9 +9,9 @@
             [ring.util.response :as r]
             [schema.core :as schema]
             [schema-tools.core :as schema-tools]
-            [ring.util.io :as ring-io])
+            [ring.util.io :as ring-io]
             [reitit.ring.schema :as reitit-schema]
-            [solita.etp.schema.liite :as liite-schema])
+            [solita.etp.schema.liite :as liite-schema]))
 
 
 (def routes
@@ -105,7 +105,7 @@
                :responses  {201 {:body common-schema/Id}
                             404 common-schema/ConstraintError}
                :handler    (fn [{{{:keys [id]} :path :keys [body]}
-                                 :parameters :keys [db whoami uri]}]
+                                 :parameters :keys [db aws-s3-client whoami uri]}]
                              (api-response/with-exceptions
                                #(api-response/created uri
                                                       (valvonta-service/add-toimenpide! db aws-s3-client whoami id body))
@@ -232,20 +232,19 @@
                               (api-response/ok|not-found
                                 (valvonta-service/publish-toimenpide! db aws-s3-client whoami id toimenpide-id)
                                 (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}}]
-       ["/document/:type-id"
+       ["/document/:filename"
         {:get {:summary    "Esikatsele tai lataa toimenpiteen dokumentti"
                :parameters {:path {:id            common-schema/Key
                                    :toimenpide-id common-schema/Key
-                                   :type-id       common-schema/Key}}
+                                   :filename      schema/Str}}
                :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                :responses  {200 {:body nil}
                             404 {:body schema/Str}}
-               :handler    (fn [{{{:keys [id toimenpide-id type-id]} :path}
+               :handler    (fn [{{{:keys [id toimenpide-id filename]} :path}
                                  :parameters :keys [db whoami aws-s3-client]}]
-                             (let [{:keys [filename]} (asha-valvonta-service/toimenpide-type->document type-id)]
-                               (api-response/pdf-response
-                                 (ring-io/piped-input-stream
-                                   (partial valvonta-service/find-toimenpide-document
-                                            db aws-s3-client whoami id toimenpide-id))
-                                 filename
-                                 "Not found.")))}}]]]]]])
+                             (api-response/pdf-response
+                               (ring-io/piped-input-stream
+                                 (partial valvonta-service/find-toimenpide-document
+                                          db aws-s3-client whoami id toimenpide-id))
+                               filename
+                               "Not found."))}}]]]]]])

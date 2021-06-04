@@ -24,35 +24,37 @@
 (defn find-document [aws-s3-client energiatodistus-id toimenpide-id]
   (:content (file-service/find-file aws-s3-client (file-path energiatodistus-id toimenpide-id))))
 
-(defn find-valvontamuistio-publish-time-by-type [db id]
-  (->> (valvonta-oikeellisuus-db/select-toimenpiteen-valvontamuistiot db {:energiatodistus-id id})
+(defn find-valvonta-toimenpiteet-publish-time-by-type [db id]
+  (->> (valvonta-oikeellisuus-db/select-valvonta-toimenpiteet-publish-time-by-type db {:energiatodistus-id id})
        (map (fn [toimenpide]
               (let [type (toimenpide/type-key (:type-id toimenpide))]
                 {type (:publish-time toimenpide)})))
        (into {})))
 
-(defn- template-data [whoami toimenpide laatija energiatodistus valvontamuistiot]
-  (cond-> {:päivä           (time/today)
-           :määräpäivä      (time/format-date (:deadline-date toimenpide))
-           :diaarinumero    (:diaarinumero toimenpide)
-           :valvoja         (select-keys whoami [:etunimi :sukunimi :email])
-           :laatija         (select-keys laatija [:etunimi :sukunimi :henkilotunnus :email :puhelin])
-           :energiatodistus {:tunnus              (str "ET-" (:id energiatodistus))
-                             :rakennustunnus      (-> energiatodistus :perustiedot :rakennustunnus)
-                             :nimi                (-> energiatodistus :perustiedot :nimi)
-                             :katuosoite-fi       (-> energiatodistus :perustiedot :katuosoite-fi)
-                             :katuosoite-sv       (-> energiatodistus :perustiedot :katuosoite-sv)
-                             :postinumero         (-> energiatodistus :perustiedot :postinumero)
-                             :postitoimipaikka-fi (-> energiatodistus :perustiedot :postitoimipaikka-fi)
-                             :postitoimipaikka-sv (-> energiatodistus :perustiedot :postitoimipaikka-sv)}
-           :virheet         (:virheet toimenpide)
-           :vakavuus        (when-let [luokka (:severity-id toimenpide)]
-                              (case luokka
-                                0 {:ei-huomioitavaa true}
-                                1 {:ei-toimenpiteitä true}
-                                2 {:virheellinen true}))
-           :valvontamuistio  {:valvontamuistio-pvm (time/format-date (:audit-report valvontamuistiot))
-                              :valvontamuistio-kehotus-pvm (time/format-date (:audit-order valvontamuistiot))}}))
+(defn- template-data [whoami toimenpide laatija energiatodistus toimenpiteet]
+  {:päivä            (time/today)
+   :määräpäivä       (time/format-date (:deadline-date toimenpide))
+   :diaarinumero     (:diaarinumero toimenpide)
+   :valvoja          (select-keys whoami [:etunimi :sukunimi :email])
+   :laatija          (select-keys laatija [:etunimi :sukunimi :henkilotunnus :email :puhelin])
+   :energiatodistus  {:tunnus              (str "ET-" (:id energiatodistus))
+                      :rakennustunnus      (-> energiatodistus :perustiedot :rakennustunnus)
+                      :nimi                (-> energiatodistus :perustiedot :nimi)
+                      :katuosoite-fi       (-> energiatodistus :perustiedot :katuosoite-fi)
+                      :katuosoite-sv       (-> energiatodistus :perustiedot :katuosoite-sv)
+                      :postinumero         (-> energiatodistus :perustiedot :postinumero)
+                      :postitoimipaikka-fi (-> energiatodistus :perustiedot :postitoimipaikka-fi)
+                      :postitoimipaikka-sv (-> energiatodistus :perustiedot :postitoimipaikka-sv)}
+   :virheet          (:virheet toimenpide)
+   :vakavuus         (when-let [luokka (:severity-id toimenpide)]
+                       (case luokka
+                         0 {:ei-huomioitavaa true}
+                         1 {:ei-toimenpiteitä true}
+                         2 {:virheellinen true}))
+   :taustamateriaali {:taustamateriaali-pvm         (time/format-date (:rfi-request toimenpiteet))
+                      :taustamateriaali-kehotus-pvm (time/format-date (:rfi-order toimenpiteet))}
+   :valvontamuistio  {:valvontamuistio-pvm         (time/format-date (:audit-report toimenpiteet))
+                      :valvontamuistio-kehotus-pvm (time/format-date (:audit-order toimenpiteet))}})
 
 (defn resolve-energiatodistus-laatija [db energiatodistus-id]
   (let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db energiatodistus-id)
@@ -77,8 +79,8 @@
 
 (defn generate-template [db whoami toimenpide energiatodistus laatija]
   (let [template (template-id->template (:template-id toimenpide)) #_(:content toimenpide)
-        valvontamuistiot (find-valvontamuistio-publish-time-by-type db (:id energiatodistus))
-        template-data (template-data whoami toimenpide laatija energiatodistus valvontamuistiot)]
+        toimenpiteet (find-valvonta-toimenpiteet-publish-time-by-type db (:id energiatodistus))
+        template-data (template-data whoami toimenpide laatija energiatodistus toimenpiteet)]
     {:template      template
      :template-data template-data}))
 

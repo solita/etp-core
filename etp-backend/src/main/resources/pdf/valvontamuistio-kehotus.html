@@ -46,19 +46,20 @@
     {{/valvoja}}<br/>
     energia-asiantuntija
 </p>
-<p>
-<div class="sarake">
-    <span class="sarake-otsikko"><b>Sovelletut säännökset:</b></span>
-    <span> Laki rakennuksen energiatodistuksesta (50/2013)</span>
-</div>
 
-<div class="sarake">
-    <span class="sarake-otsikko"><b>Tiedoksi:</b></span>
-    {{#tiedoksi}}<span>{{.}}</span>{{/tiedoksi}}
-</div>
-
-<div class="sarake">
-    <span class="sarake-otsikko"><b>Lisätietoja:</b></span>
-    <span><a href="https://www.energiatodistusrekisteri.fi">www.energiatodistusrekisteri.fi</a></span>
-</div>
-</p>
+<table class="sarake">
+    <tr>
+        <td class="sarake-otsikko"><b>Sovelletut säännökset:</b></td>
+        <td class="sarake-sisalto">Laki rakennuksen energiatodistuksesta (50/2013)</td>
+    </tr>
+    <tr>
+        <td class="sarake-otsikko"><b>Tiedoksi:</b></td>
+        <td class="sarake-sisalto"><div>{{#tiedoksi}}{{.}}<br />{{/tiedoksi}}</div></td>
+    </tr>
+</table>
+<table class="sarake">
+    <tr>
+        <td class="sarake-otsikko"><b>Lisätietoja:</b></td>
+        <td class="sarake-sisalto"><a href="https://www.energiatodistusrekisteri.fi">www.energiatodistusrekisteri.fi</a></td>
+    </tr>
+</table>
