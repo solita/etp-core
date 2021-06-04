@@ -38,14 +38,14 @@
 (defn find-document [aws-s3-client energiatodistus-id toimenpide-id]
   (:content (file-service/find-file aws-s3-client (file-path energiatodistus-id toimenpide-id))))
 
-(defn find-valvonta-toimenpiteet-publish-time-by-type [db id]
-  (->> (valvonta-oikeellisuus-db/select-valvonta-toimenpiteet-publish-time-by-type db {:energiatodistus-id id})
+(defn find-energiatodistus-valvonta-documents [db id]
+  (->> (valvonta-oikeellisuus-db/select-energiatodistus-valvonta-documents db {:energiatodistus-id id})
        (map (fn [toimenpide]
               (let [type (toimenpide/type-key (:type-id toimenpide))]
                 {type (:publish-time toimenpide)})))
        (into {})))
 
-(defn- template-data [whoami toimenpide laatija energiatodistus toimenpiteet]
+(defn- template-data [whoami toimenpide laatija energiatodistus dokumentit]
   {:päivä            (time/today)
    :määräpäivä       (time/format-date (:deadline-date toimenpide))
    :diaarinumero     (:diaarinumero toimenpide)
@@ -65,10 +65,10 @@
                          0 {:ei-huomioitavaa true}
                          1 {:ei-toimenpiteitä true}
                          2 {:virheellinen true}))
-   :taustamateriaali {:taustamateriaali-pvm         (time/format-date (:rfi-request toimenpiteet))
-                      :taustamateriaali-kehotus-pvm (time/format-date (:rfi-order toimenpiteet))}
-   :valvontamuistio  {:valvontamuistio-pvm         (time/format-date (:audit-report toimenpiteet))
-                      :valvontamuistio-kehotus-pvm (time/format-date (:audit-order toimenpiteet))}})
+   :taustamateriaali {:taustamateriaali-pvm         (time/format-date (:rfi-request dokumentit))
+                      :taustamateriaali-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
+   :valvontamuistio  {:valvontamuistio-pvm         (time/format-date (:audit-report dokumentit))
+                      :valvontamuistio-kehotus-pvm (time/format-date (:audit-order dokumentit))}})
 
 (defn resolve-energiatodistus-laatija [db energiatodistus-id]
   (let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db energiatodistus-id)
@@ -93,8 +93,8 @@
 
 (defn generate-template [db whoami toimenpide energiatodistus laatija]
   (let [template (template-id->template (:template-id toimenpide)) #_(:content toimenpide)
-        toimenpiteet (find-valvonta-toimenpiteet-publish-time-by-type db (:id energiatodistus))
-        template-data (template-data whoami toimenpide laatija energiatodistus toimenpiteet)]
+        dokumentit (find-energiatodistus-valvonta-documents db (:id energiatodistus))
+        template-data (template-data whoami toimenpide laatija energiatodistus dokumentit)]
     {:template      template
      :template-data template-data}))
 
