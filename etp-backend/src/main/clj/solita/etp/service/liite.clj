@@ -65,13 +65,15 @@
                                 :filename :nimi}))
           files)))
 
-(defn add-liite-from-link! [db whoami energiatodistus-id liite]
-  (jdbc/with-db-transaction [db db]
-    (assert-liite-insert-permission! db whoami energiatodistus-id)
+(defn add-liite-from-link!
+  ([db energiatodistus-id liite]
     (-> liite
         (assoc :energiatodistus-id energiatodistus-id)
         (assoc :contenttype "text/uri-list")
-        (insert-liite! db))))
+        (insert-liite! db)))
+  ([db whoami energiatodistus-id liite]
+   (assert-liite-insert-permission! db whoami energiatodistus-id)
+   (add-liite-from-link! db energiatodistus-id liite)))
 
 (defn find-energiatodistus-liitteet [db whoami energiatodistus-id]
   (jdbc/with-db-transaction [db db]
@@ -88,11 +90,13 @@
        (file-service/find-file aws-s3-client (file-key liite-id))
        liite))))
 
-(defn delete-liite! [db whoami liite-id]
-  (jdbc/with-db-transaction [db db]
+(defn delete-liite!
+  ([db liite-id]
+   (liite-db/delete-liite! db {:id liite-id}))
+  ([db whoami liite-id]
     (let [energiatodistus-id (some->> {:id liite-id}
                                       (liite-db/select-liite db)
                                       first
                                       :energiatodistus-id)]
       (assert-liite-delete-permission! db whoami energiatodistus-id)
-      (liite-db/delete-liite! db {:id liite-id}))))
+      (delete-liite! db {:id liite-id}))))
