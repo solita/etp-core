@@ -39,7 +39,8 @@
     :diaarinumero (schema/maybe schema/Str)
     :author-id common-schema/Key
     :create-time common-schema/Instant
-    :publish-time (schema/maybe common-schema/Instant)))
+    :publish-time (schema/maybe common-schema/Instant)
+    :filename (schema/maybe schema/Str)))
 
 (def ValvontaStatus
   (assoc Valvonta

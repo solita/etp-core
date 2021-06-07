@@ -5,10 +5,12 @@
     [solita.etp.service.energiatodistus :as energiatodistus-service]
     [solita.etp.service.asha-valvonta-oikeellisuus :as asha-valvonta-oikeellisuus]
     [solita.etp.service.toimenpide :as toimenpide]
+    [solita.etp.service.pdf :as pdf]
     [clojure.java.jdbc :as jdbc]
     [solita.common.map :as map]
     [solita.etp.service.luokittelu :as luokittelu]
     [clojure.string :as str]
+    [clojure.java.io :as io]
     [solita.etp.service.liite :as liite-service]
     [clojure.set :as set]))
 
@@ -69,7 +71,7 @@
     (-> (valvonta-oikeellisuus-db/select-last-diaarinumero db {:id id})
         first :diaarinumero)))
 
-(defn add-toimenpide! [db whoami id toimenpide-add]
+(defn add-toimenpide! [db aws-s3-client whoami id toimenpide-add]
   (let [diaarinumero (if (toimenpide/case-open? toimenpide-add)
                        (asha-valvonta-oikeellisuus/open-case! db whoami id)
                        (find-diaarinumero db id toimenpide-add))
@@ -80,26 +82,32 @@
       (when-not (toimenpide/draft-support? toimenpide)
         (valvonta-oikeellisuus-db/update-toimenpide-published! db {:id toimenpide-id})
         (case (-> toimenpide :type-id toimenpide/type-key)
-          :closed (asha-valvonta-oikeellisuus/close-case! db whoami id toimenpide)
+          :closed (asha-valvonta-oikeellisuus/close-case! whoami id toimenpide)
           (when (toimenpide/asha-toimenpide? toimenpide)
-            (asha-valvonta-oikeellisuus/log-toimenpide! db whoami id toimenpide))))
+            (asha-valvonta-oikeellisuus/log-toimenpide! db aws-s3-client whoami id toimenpide))))
       {:id toimenpide-id})))
 
 (defn- assoc-virheet [db toimenpide]
   (assoc toimenpide :virheet (valvonta-oikeellisuus-db/select-toimenpide-virheet
                                db {:toimenpide-id (:id toimenpide)})))
 
+(defn- db-row->toimenpide [toimenpide]
+  (let [{:keys [filename]} (and (:template-id toimenpide) (asha-valvonta-oikeellisuus/toimenpide-type->document (:type-id toimenpide)))]
+    (assoc toimenpide :filename filename)))
+
 (defn find-toimenpiteet [db whoami id]
   (when-not
     ;; assert privileges to view et information and check that it exists
     (nil? (energiatodistus-service/find-energiatodistus db whoami id))
-    (valvonta-oikeellisuus-db/select-toimenpiteet db {:energiatodistus-id id})))
+    (->> (valvonta-oikeellisuus-db/select-toimenpiteet db {:energiatodistus-id id})
+         (map (partial db-row->toimenpide)))))
 
 (defn find-toimenpide [db whoami id toimenpide-id]
   ;; assert privileges to view et information:
   (energiatodistus-service/find-energiatodistus db whoami id)
   (->> (valvonta-oikeellisuus-db/select-toimenpide db {:id toimenpide-id})
        (map (partial assoc-virheet db))
+       (map (partial db-row->toimenpide))
        first))
 
 (defn find-toimenpide-liitteet [db whoami id toimenpide-id]
@@ -138,10 +146,10 @@
       (insert-virheet! db toimenpide-id (:virheet toimenpide-update)))
     (update-toimenpide-row! db toimenpide-id (dissoc toimenpide-update :virheet))))
 
-(defn publish-toimenpide! [db whoami id toimenpide-id]
+(defn publish-toimenpide! [db aws-s3-client whoami id toimenpide-id]
   (let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
     (when (toimenpide/asha-toimenpide? toimenpide)
-      (asha-valvonta-oikeellisuus/log-toimenpide! db whoami id toimenpide)))
+      (asha-valvonta-oikeellisuus/log-toimenpide! db aws-s3-client whoami id toimenpide)))
   (valvonta-oikeellisuus-db/update-toimenpide-published! db {:id toimenpide-id}))
 
 (defn find-toimenpidetyypit [db] (luokittelu/find-toimenpidetypes db))
@@ -151,3 +159,21 @@
 (defn find-virhetyypit [db] (valvonta-oikeellisuus-db/select-virhetypes db))
 
 (defn find-severities [db] (luokittelu/find-severities db))
+
+(defn generate-template [db whoami id toimenpide]
+  (let [{:keys [energiatodistus laatija]} (asha-valvonta-oikeellisuus/resolve-energiatodistus-laatija db id)
+        diaarinumero (find-diaarinumero db id toimenpide)
+        toimenpide-with-diaarinumero (assoc toimenpide :diaarinumero diaarinumero)]
+    (asha-valvonta-oikeellisuus/generate-template db whoami toimenpide-with-diaarinumero energiatodistus laatija)))
+
+(defn preview-toimenpide [db whoami id toimenpide ostream]
+  (when-let [{:keys [template template-data]} (generate-template db whoami id toimenpide)]
+    (with-open [output (io/output-stream ostream)]
+      (pdf/html->pdf template template-data output))))
+
+(defn find-toimenpide-document [db aws-s3-client whoami id toimenpide-id ostream]
+  (when-let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
+    (if (:publish-time toimenpide)
+      (with-open [output (io/output-stream ostream)]
+        (io/copy (asha-valvonta-oikeellisuus/find-document aws-s3-client id toimenpide-id) output))
+      (preview-toimenpide db whoami id toimenpide ostream))))

@@ -14,6 +14,9 @@
   (when config/asha-debug?
     (println info)))
 
+(defn bytes->base64 [bytes]
+  (String. (b64/encode bytes) "UTF-8"))
+
 (defn- request-create-xml [resource data]
   (let [xml (clostache/render-resource (str "asha/" resource ".xml") data)]
     (debug-print xml)
@@ -130,17 +133,12 @@
                                     :processing-action {:name-identity processing-action}}
                        :attach     {:contact contact}}))
 
-(defn bytes->base64-string [bytes]
-  (String. (b64/encode bytes) "UTF-8"))
-
 (defn add-documents-to-processing-action! [sender-id request-id case-number processing-action documents]
   (execute-operation! {:sender-id  sender-id
                        :request-id request-id
                        :identity   {:case              {:number case-number}
                                     :processing-action {:name-identity processing-action}}
-                       :attach     {:document (map (fn [document]
-                                                     (update document :content bytes->base64-string))
-                                                   documents)}}))
+                       :attach     {:document documents}}))
 
 (defn resolve-case-processing-action-state [sender-id request-id case-number]
   (->> ["Vireillepano" "Käsittely" "Päätöksenteko"]
@@ -174,40 +172,37 @@
                                           :processing-action {:name-identity processing-action}}
                        :start-processing {:assignee sender-id}}))
 
-(defn log-toimenpide! [sender-id request-id case-number processing-action]
-  (let [; TODO: get document from template-id
-        document (when (:document processing-action)
-                   "Testi") #_(:document toimenpide)]
-    (move-processing-action!
-      sender-id
-      request-id
-      case-number
-      (-> processing-action :identity :processing-action :name-identity))
-    (take-processing-action!
-      sender-id
-      request-id
-      case-number
-      (-> processing-action :identity :processing-action :name-identity))
+(defn log-toimenpide! [sender-id request-id case-number processing-action & [document]]
+  (move-processing-action!
+    sender-id
+    request-id
+    case-number
+    (-> processing-action :identity :processing-action :name-identity))
+  (take-processing-action!
+    sender-id
+    request-id
+    case-number
+    (-> processing-action :identity :processing-action :name-identity))
 
-    (execute-operation! {:request-id        request-id
-                         :sender-id         sender-id
-                         :identity          (:identity processing-action)
-                         :processing-action (:processing-action processing-action)})
-    (when document
-      (add-documents-to-processing-action!
-        sender-id
-        request-id
-        case-number
-        (-> processing-action :processing-action :name)
-        [{:content (.getBytes document)
-          :type    (-> processing-action :document :type)
-          :name    (-> processing-action :document :name)}]))
-    (take-processing-action! sender-id request-id case-number (-> processing-action :processing-action :name))
-    (mark-processing-action-as-ready!
+  (execute-operation! {:request-id        request-id
+                       :sender-id         sender-id
+                       :identity          (:identity processing-action)
+                       :processing-action (:processing-action processing-action)})
+  (when document
+    (add-documents-to-processing-action!
       sender-id
       request-id
       case-number
-      (-> processing-action :processing-action :name))))
+      (-> processing-action :processing-action :name)
+      [{:content (bytes->base64 document)
+        :type    (-> processing-action :document :type)
+        :name    (-> processing-action :document :filename)}]))
+  (take-processing-action! sender-id request-id case-number (-> processing-action :processing-action :name))
+  (mark-processing-action-as-ready!
+    sender-id
+    request-id
+    case-number
+    (-> processing-action :processing-action :name)))
 
 (defn close-case! [sender-id request-id case-number description]
   (let [latest-prosessing-action (resolve-latest-case-processing-action-state sender-id request-id case-number)]
