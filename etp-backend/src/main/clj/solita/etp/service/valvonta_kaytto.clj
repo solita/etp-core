@@ -33,3 +33,10 @@
 
 (defn delete-valvonta! [_ id]
   (swap! state dissoc id))
+
+(defn find-ilmoituspaikat [_]
+  (for [[idx label] (map-indexed vector ["Etuovi" "Oikotie" "Muu, mikä?"])]
+    {:id idx
+     :label-fi label
+     :label-sv (str label " SV?")
+     :valid true}))

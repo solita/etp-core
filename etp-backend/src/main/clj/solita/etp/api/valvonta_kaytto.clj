@@ -11,6 +11,13 @@
 
 (def routes
   [["/valvonta/kaytto"
+    ["/ilmoituspaikat"
+     {:conflicting true
+      :get         {:summary   "Hae käytönvalvonnan ilmoituspaikat"
+                    :responses {200 {:body [common-schema/Luokittelu]}}
+                    :access    rooli-service/paakayttaja?
+                    :handler   (fn [{:keys [db]}]
+                                 (r/response (valvonta-service/find-ilmoituspaikat db)))}}]
     [""
      {:conflicting true
       :get         {:summary    "Hae käytönvalvonnat (työjono)."
