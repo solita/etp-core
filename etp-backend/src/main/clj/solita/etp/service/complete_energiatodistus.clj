@@ -103,15 +103,15 @@
     e-luokka-service/energiamuotokerroin))
 
 (defn complete-energiatodistus
-  [energiatodistus {:keys [postinumerot kielisyydet laatimisvaiheet
+  [energiatodistus {:keys [postinumerot-by-id kielisyydet laatimisvaiheet
                            kayttotarkoitukset alakayttotarkoitukset
                            ilmanvaihtotyypit lammitysmuodot lammonjaot]}]
   (with-precision 20
     (let [{:keys [versio]} energiatodistus
-          postinumero (find-by-id postinumerot (-> energiatodistus
-                                                   :perustiedot
-                                                   :postinumero
-                                                   string->int))
+          postinumero (get postinumerot-by-id (-> energiatodistus
+                                                  :perustiedot
+                                                  :postinumero
+                                                  string->int))
           kielisyys (find-by-id kielisyydet (-> energiatodistus
                                                 :perustiedot
                                                 :kieli))
@@ -499,16 +499,19 @@
                         [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala])))))
 
 (defn luokittelut [db]
-  {:postinumerot          (geo/find-all-postinumerot db)
-   :kielisyydet           (kielisyys/find-kielisyys db)
-   :laatimisvaiheet       (laatimisvaihe/find-laatimisvaiheet db)
-   :kayttotarkoitukset    (into {} (map #(vector % (kayttotarkoitus-service/find-kayttotarkoitukset db %)))
-                                [2013 2018])
-   :alakayttotarkoitukset (into {} (map #(vector % (kayttotarkoitus-service/find-alakayttotarkoitukset db %)))
-                                [2013 2018])
-   :ilmanvaihtotyypit     (luokittelu/find-ilmanvaihtotyypit db)
-   :lammitysmuodot        (luokittelu/find-lammitysmuodot db)
-   :lammonjaot            (luokittelu/find-lammonjaot db)})
+  (let [postinumerot (geo/find-all-postinumerot db)
+        postinumerot-by-id (zipmap (map :id postinumerot) postinumerot)]
+    {:postinumerot          postinumerot
+     :postinumerot-by-id    postinumerot-by-id
+     :kielisyydet           (kielisyys/find-kielisyys db)
+     :laatimisvaiheet       (laatimisvaihe/find-laatimisvaiheet db)
+     :kayttotarkoitukset    (into {} (map #(vector % (kayttotarkoitus-service/find-kayttotarkoitukset db %)))
+                                  [2013 2018])
+     :alakayttotarkoitukset (into {} (map #(vector % (kayttotarkoitus-service/find-alakayttotarkoitukset db %)))
+                                  [2013 2018])
+     :ilmanvaihtotyypit     (luokittelu/find-ilmanvaihtotyypit db)
+     :lammitysmuodot        (luokittelu/find-lammitysmuodot db)
+     :lammonjaot            (luokittelu/find-lammonjaot db)}))
 
 (defn find-complete-energiatodistus
   ([db id]
