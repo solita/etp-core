@@ -1,13 +1,42 @@
 (ns solita.etp.service.valvonta-kaytto)
 
-(defn find-valvonnat [_ _]
-  [])
+(defonce state (atom (sorted-map)))
 
-(defn find-valvonta [_ _]
-  nil)
+(defn find-valvonnat [_ {:keys [valvoja-id limit offset]}]
+  (cond->> @state
+    valvoja-id (filter #(= valvoja-id (-> % second :valvoja-id)))
+    offset (drop offset)
+    limit (take limit)
+    true (reduce (fn [acc [id valvonta]]
+                   (conj acc (assoc valvonta :id id)))
+                 [])))
 
-(defn add-valvonta! [_ _]
-  nil)
+(defn find-valvonta [_ id]
+  (some-> @state (get id) (assoc :id id)))
 
-(defn update-valvonta! [_ _ _]
-  nil)
+(defn add-valvonta! [_ valvonta]
+  (-> (swap! state (fn [valvonnat]
+                     (assoc valvonnat
+                            (-> valvonnat keys last (or 0) inc)
+                            valvonta)))
+      keys
+      last))
+
+(defn update-valvonta! [_ id body]
+  (let [new-valvonnat (swap! state (fn [valvonnat]
+                                     (if (contains? valvonnat id)
+                                       (assoc valvonnat id body)
+                                       valvonnat)))]
+    (if (contains? new-valvonnat id)
+      1
+      0)))
+
+(defn delete-valvonta! [_ id]
+  (swap! state dissoc id))
+
+(defn find-ilmoituspaikat [_]
+  (for [[idx label] (map-indexed vector ["Etuovi" "Oikotie" "Muu, mikä?"])]
+    {:id idx
+     :label-fi label
+     :label-sv (str label " SV?")
+     :valid true}))

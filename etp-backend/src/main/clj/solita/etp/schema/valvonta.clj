@@ -5,7 +5,7 @@
 (def Valvonta {:active schema/Bool})
 
 (def ValvontaQuery
-  {(schema/optional-key :own) schema/Bool
+  {(schema/optional-key :valvoja-id) common-schema/Key
    (schema/optional-key :limit) schema/Int
    (schema/optional-key :offset) schema/Int})
 
