@@ -8,6 +8,7 @@
    :katuosoite common-schema/String200
    :postinumero (schema/maybe geo-schema/PostinumeroFI)
    :ilmoituspaikka-id (schema/maybe common-schema/Key)
+   :ilmoituspaikka-description (schema/maybe common-schema/String100)
    :ilmoitustunnus (schema/maybe common-schema/String100)
    :havaintopaiva (schema/maybe common-schema/Date)
    :valvoja-id (schema/maybe common-schema/Key)})
