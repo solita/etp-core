@@ -99,4 +99,4 @@
                                       first
                                       :energiatodistus-id)]
       (assert-liite-delete-permission! db whoami energiatodistus-id)
-      (delete-liite! db {:id liite-id}))))
+      (delete-liite! db liite-id))))
