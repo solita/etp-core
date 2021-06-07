@@ -5,7 +5,8 @@
             [solita.etp.db :as db]
             [solita.etp.exception :as exception]
             [solita.etp.service.luokittelu :as luokittelu-service]
-            [solita.etp.service.rooli :as rooli-service]))
+            [solita.etp.service.rooli :as rooli-service]
+            [solita.etp.service.energiatodistus :as energiatodistus-service]))
 
 (db/require-queries 'viesti)
 
@@ -147,3 +148,12 @@
 
 (defn find-kasittelijat [db]
   (viesti-db/select-kasittelijat db))
+
+(defn find-energiatodistus-ketjut [db whoami energiatodistus-id]
+  (when-not (nil? (energiatodistus-service/find-energiatodistus
+                    db whoami energiatodistus-id))
+    (let [kayttajat (find-kayttajat db)]
+      (pmap (comp (partial assoc-join-viestit db whoami)
+                  (partial assoc-join-vastaanottajat kayttajat))
+            (viesti-db/select-energiatodistus-viestiketjut
+              db {:energiatodistus-id energiatodistus-id})))))

@@ -96,3 +96,13 @@ where (from_id = :kayttaja-id or vastaanottajaryhma_id = :vastaanottajaryhma-id 
     select from viesti_reader where viesti_reader.viesti_id = viesti.id and
         viesti_reader.reader_id = :kayttaja-id
     ));
+
+-- name: select-energiatodistus-viestiketjut
+select
+  viestiketju.id, viestiketju.kasittelija_id, viestiketju.kasitelty, viestiketju.subject,
+  viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id,
+  (select array_agg(vastaanottaja_id) from vastaanottaja
+   where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
+from viestiketju
+where viestiketju.energiatodistus_id = :energiatodistus-id
+order by (select max(sent_time) from viesti where viestiketju_id = viestiketju.id) desc
