@@ -63,7 +63,7 @@ select * from vo_toimenpide where energiatodistus_id = :energiatodistus-id;
 -- name: select-energiatodistus-valvonta-documents
 select distinct on (type_id) *
 from vo_toimenpide
-where energiatodistus_id = :energiatodistus-id and type_id in (3, 5, 7, 9)
+where energiatodistus_id = :energiatodistus-id and type_id in (3, 5, 7, 9) and publish_time is not null
 order by type_id, publish_time desc;
 
 -- name: select-templates

@@ -17,26 +17,29 @@
 <p>Asumisen rahoitus- ja kehittämiskeskus (ARA) on energiatodistuslain (50/2013) 18 §:n nojalla tarkastanut laatimanne energiatodistuksen. Oikeellisuustarkastus on kohdistunut energiatodistuksen lähtötietoihin, energiatehokkuusluvun laskentaan sekä säästösuositusten oikeellisuuteen. Tarkastuksen perusteella kiinnitettiin huomiota seuraaviin asioihin:</p>
 
 <ul>
-    {{#virheet}}
-        <li>{{description}}</li>
-    {{/virheet}}
+    {{#valvontamuistio}}
+        {{#virheet}}
+            <li>{{description}}</li>
+        {{/virheet}}
+    {{/valvontamuistio}}
 </ul>
 
-
-{{#vakavuus}}
-    {{#ei-huomioitavaa}}
-        <p>ARA toteaa, että energiatodistuksessa ei ole havaittu huomautettavaa.</p>
-    {{/ei-huomioitavaa}}
-    {{#ei-toimenpiteitä}}
-        <p>ARA toteaa, että energiatodistuksessa ei ole havaittu muuta huomautettavaa kuin edellä mainitut. <u>Havainnot eivät
-           edellytä laatijalta toimenpiteitä.</u></p>
-    {{/ei-toimenpiteitä}}
-    {{#virheellinen}}
-      <p>ARA toteaa, että energiatodistus voi edellä luetelluin perustein olla olennaisesti virheellinen eikä todistuksen
-         sisältöä käyty muilta osin lävitse. ARA pyytää esittämään omat perustelunne tarkastuksessa tehdyistä havainnoista ja
-         toimittamaan ne ARAn energiatodistusrekisteriin {{määräpäivä}} mennessä.</p>
-    {{/virheellinen}}
-{{/vakavuus}}
+{{#valvontamuistio}}
+    {{#vakavuus}}
+        {{#ei-huomioitavaa}}
+            <p>ARA toteaa, että energiatodistuksessa ei ole havaittu huomautettavaa.</p>
+        {{/ei-huomioitavaa}}
+        {{#ei-toimenpiteitä}}
+            <p>ARA toteaa, että energiatodistuksessa ei ole havaittu muuta huomautettavaa kuin edellä mainitut. <u>Havainnot eivät
+               edellytä laatijalta toimenpiteitä.</u></p>
+        {{/ei-toimenpiteitä}}
+        {{#virheellinen}}
+          <p>ARA toteaa, että energiatodistus voi edellä luetelluin perustein olla olennaisesti virheellinen eikä todistuksen
+             sisältöä käyty muilta osin lävitse. ARA pyytää esittämään omat perustelunne tarkastuksessa tehdyistä havainnoista ja
+             toimittamaan ne ARAn energiatodistusrekisteriin {{määräpäivä}} mennessä.</p>
+        {{/virheellinen}}
+    {{/vakavuus}}
+{{/valvontamuistio}}
 
 
 <p>Jos energiatodistuksen laatija ei täytä säädettyjä velvollisuuksia, ARA kehottaa korjaamaan asian ja antaa määräajan korjaukselle. Jos asiaa ei korjata määräajassa, ARA antaa laatijalle varoituksen ja uuden määräajan. Jos asiaa ei edelleenkään korjata, ARA laittaa todistuksen käyttökieltoon ja velvoittaa energiatodistuksen laatijan korvaamaan virheellisen todistuksen uudella todistuksella. Energiatodistus voidaan tarvittaessa teettää myös toisella energiatodistuksen laatijalla. Uuden todistuksen kustannuksista vastaa virheellisen todistuksen laatinut energiatodistuksen laatija. </p>

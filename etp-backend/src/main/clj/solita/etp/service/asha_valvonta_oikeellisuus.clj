@@ -59,16 +59,16 @@
                       :postinumero         (-> energiatodistus :perustiedot :postinumero)
                       :postitoimipaikka-fi (-> energiatodistus :perustiedot :postitoimipaikka-fi)
                       :postitoimipaikka-sv (-> energiatodistus :perustiedot :postitoimipaikka-sv)}
-   :virheet          (:virheet toimenpide)
-   :vakavuus         (when-let [luokka (:severity-id toimenpide)]
-                       (case luokka
-                         0 {:ei-huomioitavaa true}
-                         1 {:ei-toimenpiteitä true}
-                         2 {:virheellinen true}))
    :taustamateriaali {:taustamateriaali-pvm         (time/format-date (:rfi-request dokumentit))
                       :taustamateriaali-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
    :valvontamuistio  {:valvontamuistio-pvm         (time/format-date (:audit-report dokumentit))
-                      :valvontamuistio-kehotus-pvm (time/format-date (:audit-order dokumentit))}})
+                      :valvontamuistio-kehotus-pvm (time/format-date (:audit-order dokumentit))
+                      :virheet                     (:virheet toimenpide)
+                      :vakavuus                    (when-let [luokka (:severity-id toimenpide)]
+                                                     (case luokka
+                                                       0 {:ei-huomioitavaa true}
+                                                       1 {:ei-toimenpiteitä true}
+                                                       2 {:virheellinen true}))}})
 
 (defn resolve-energiatodistus-laatija [db energiatodistus-id]
   (let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db energiatodistus-id)
