@@ -17,7 +17,7 @@
 (def locale (Locale. "fi" "FI"))
 (def decimal-format-symbol (doto (DecimalFormatSymbols. locale)
                              (.setMinusSign \-)))
-(def decimal-format (doto (DecimalFormat. "#.###")
+(def ^DecimalFormat decimal-format (doto (DecimalFormat. "#.###")
                       (.setDecimalFormatSymbols decimal-format-symbol)))
 (def charset (Charset/forName "UTF-8"))
 (def timezone (ZoneId/of "Europe/Helsinki"))
