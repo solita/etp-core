@@ -2,7 +2,8 @@
 
 (defonce state (atom {:valvonnat (sorted-map)
                       :henkilot (sorted-map)
-                      :yritykset (sorted-map)}))
+                      :yritykset (sorted-map)
+                      :liitteet (sorted-map)}))
 
 (defn find! [k id]
   (let [found (some-> @state (get-in [k id]) (assoc :id id))]
@@ -120,5 +121,27 @@
 (defn update-yritys! [_ yritys-id yritys]
   (update! :yritykset yritys-id yritys))
 
-(defn delete-yritys! [db yritys-id]
+(defn delete-yritys! [_ yritys-id]
   (delete! :yritykset yritys-id))
+
+(defn find-liitteet [_ valvonta-id]
+  (->> (:liitteet @state)
+       (filter #(-> % second :deleted? not))
+       (filter #(= valvonta-id (-> % second :valvonta-id)))
+       (reduce (fn [acc [id liite]]
+                 (conj acc (-> liite
+                               (dissoc :valvonta-id)
+                               (assoc :id id
+                                      :createtime (java.time.Instant/now)
+                                      :author-fullname "Liisa Specimen-Potex"
+                                      :contenttype "application/pdf"))))
+               [])))
+
+(defn add-liitteet-from-files! [_ valvonta-id liite]
+  (add! :liitteet (assoc liite :valvonta-id valvonta-id)))
+
+(defn add-liite-from-link! [db valvonta-id liite]
+  (add! :liitteet (assoc liite :valvonta-id valvonta-id)))
+
+(defn delete-liite! [_ liite-id]
+  (delete! :liitteet liite-id))
