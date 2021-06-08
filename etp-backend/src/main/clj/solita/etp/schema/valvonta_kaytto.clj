@@ -36,3 +36,22 @@
                     common-schema/Key))
 
 (def HenkiloStatus Henkilo)
+
+(def YritysSave
+  (st/merge {:nimi common-schema/String100
+             :ytunnus common-schema/Ytunnus
+             :rooli common-schema/Key
+             :rooli-description common-schema/String200
+             :email common-schema/String200
+             :puhelin common-schema/String100
+             :toimitustapa common-schema/Key
+             :toimitustapa-description common-schema/String200}
+            geo-schema/Postiosoite))
+
+(def Yritys (assoc YritysSave
+                   :id
+                   common-schema/Key
+                   :valvonta-id
+                   common-schema/Key))
+
+(def YritysStatus Yritys)

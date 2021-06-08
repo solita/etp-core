@@ -1,7 +1,8 @@
 (ns solita.etp.service.valvonta-kaytto)
 
 (defonce state (atom {:valvonnat (sorted-map)
-                      :henkilot (sorted-map)}))
+                      :henkilot (sorted-map)
+                      :yritykset (sorted-map)}))
 
 (defn find! [k id]
   (let [found (some-> @state (get-in [k id]) (assoc :id id))]
@@ -101,3 +102,23 @@
      :label-fi label
      :label-sv (str label " SV?")
      :valid true}))
+
+(defn find-yritykset [_ valvonta-id]
+  (->> (:yritykset @state)
+       (filter #(-> % second :deleted? not))
+       (filter #(= valvonta-id (-> % second :valvonta-id)))
+       (reduce (fn [acc [id yritys]]
+                 (conj acc (assoc yritys :id id)))
+               [])))
+
+(defn find-yritys [_ yritys-id]
+  (find! :yritykset yritys-id))
+
+(defn add-yritys! [_ valvonta-id yritys]
+  (add! :yritykset (assoc yritys :valvonta-id valvonta-id)))
+
+(defn update-yritys! [_ yritys-id yritys]
+  (update! :yritykset yritys-id yritys))
+
+(defn delete-yritys! [db yritys-id]
+  (delete! :yritykset yritys-id))
