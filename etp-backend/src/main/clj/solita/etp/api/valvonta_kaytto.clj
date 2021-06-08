@@ -13,11 +13,25 @@
   [["/valvonta/kaytto"
     ["/ilmoituspaikat"
      {:conflicting true
-      :get         {:summary   "Hae käytönvalvonnan ilmoituspaikat"
+      :get         {:summary   "Hae käytönvalvonnan ilmoituspaikat."
                     :responses {200 {:body [common-schema/Luokittelu]}}
                     :access    rooli-service/paakayttaja?
                     :handler   (fn [{:keys [db]}]
                                  (r/response (valvonta-service/find-ilmoituspaikat db)))}}]
+    ["/roolit"
+     {:conflicting true
+      :get         {:summary   "Hae käytönvalvonnan roolit."
+                    :responses {200 {:body [common-schema/Luokittelu]}}
+                    :access    rooli-service/paakayttaja?
+                    :handler   (fn [{:keys [db]}]
+                                 (r/response (valvonta-service/find-roolit db)))}}]
+    ["/toimitustavat"
+     {:conflicting true
+      :get         {:summary   "Hae käytönvalvonnan toimitustavat."
+                    :responses {200 {:body [common-schema/Luokittelu]}}
+                    :access    rooli-service/paakayttaja?
+                    :handler   (fn [{:keys [db]}]
+                                 (r/response (valvonta-service/find-toimitustavat db)))}}]
     [""
      {:conflicting true
       :get         {:summary    "Hae käytönvalvonnat (työjono)."

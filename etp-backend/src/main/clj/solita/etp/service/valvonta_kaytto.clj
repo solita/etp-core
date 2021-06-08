@@ -83,3 +83,21 @@
 
 (defn delete-henkilo! [db henkilo-id]
   (delete! :henkilot henkilo-id))
+
+(defn find-roolit [_]
+  (for [[idx label] (map-indexed vector ["Omistaja"
+                                         "Kiinteistövälittäjä"
+                                         "Muu, mikä?"])]
+    {:id idx
+     :label-fi label
+     :label-sv (str label " SV?")
+     :valid true}))
+
+(defn find-toimitustavat [_]
+  (for [[idx label] (map-indexed vector ["Suomi.fi"
+                                         "Sähköposti"
+                                         "Muu, mikä?"])]
+    {:id idx
+     :label-fi label
+     :label-sv (str label " SV?")
+     :valid true}))
