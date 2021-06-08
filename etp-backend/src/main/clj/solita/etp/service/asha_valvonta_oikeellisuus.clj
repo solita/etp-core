@@ -20,19 +20,19 @@
 
 (defn toimenpide-type->document [type-id]
   (let [type-key (toimenpide/type-key type-id )
-        documents {:rfi-request {:type "Pyyntö" :filename "tietopyyntö.pdf"}
-                   :rfi-order {:type "Kirje" :filename "kehotus_tietopyyntö.pdf"}
-                   :rfi-warning {:type "Kirje" :filename "varoitus_tietopyyntö.pdf"}
+        documents {:rfi-request {:type "Pyyntö" :filename "toimituspyynto.pdf"}
+                   :rfi-order {:type "Kirje" :filename "kehotus_toimituspyynto.pdf"}
+                   :rfi-warning {:type "Kirje" :filename "varoitus_toimituspyynto.pdf"}
                    :audit-report {:type "Muistio" :filename "valvontamuistio.pdf"}
                    :audit-order {:type "Kirje" :filename "kehotus_valvontamuistio.pdf"}
                    :audit-warning  {:type "Kirje" :filename "varoitus_valvontamuistio.pdf"}}]
     (get documents type-key)))
 
-(defn- store-document [aws-s3-client energiatodistus-id toimenpide-id document]
+(defn- store-document [aws-s3-client energiatodistus-id toimenpide-id toimenpide-type document]
   (file-service/upsert-file-from-bytes
     aws-s3-client
     (file-path energiatodistus-id toimenpide-id)
-    (-> toimenpide-id toimenpide-type->document :filename)
+    (-> toimenpide-type toimenpide-type->document :filename)
     document))
 
 (defn find-document [aws-s3-client energiatodistus-id toimenpide-id]
@@ -192,7 +192,7 @@
         document (when (:document processing-action)
                    (let [{:keys [template template-data]} (generate-template db whoami toimenpide energiatodistus laatija)
                          bytes (pdf/generate-pdf->bytes template template-data)]
-                     (store-document aws-s3-client energiatodistus-id (:id toimenpide) bytes)
+                     (store-document aws-s3-client energiatodistus-id (:id toimenpide) (:type-id toimenpide) bytes)
                      bytes))]
     (asha/log-toimenpide!
       sender-id
