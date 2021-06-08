@@ -19,7 +19,9 @@
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.api.response :as api-response]
             [solita.etp.service.json :as json]
-            [solita.etp.exception :as exception])
+            [solita.etp.exception :as exception]
+            [solita.etp.schema.viesti :as viesti-schema]
+            [solita.etp.service.viesti :as viesti-service])
   (:import (com.fasterxml.jackson.core JsonParseException)))
 
 (defn valid-pdf-filename? [filename id kieli]
@@ -129,15 +131,26 @@
                               search-exceptions))}}]
       ["/all"
        ["/:id"
-        {:get {:summary    "Hae mikä tahansa yksittäinen energiatodistus tunnisteella (id)"
-               :parameters {:path {:id common-schema/Key}}
-               :responses  {200 {:body energiatodistus-schema/EnergiatodistusForAnyLaatija}
-                            404 {:body schema/Str}}
-               :access     rooli-service/energiatodistus-reader?
-               :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
-                             (api-response/get-response
-                               (energiatodistus-service/find-energiatodistus-any-laatija db id)
-                               (str "Energiatodistus " id " does not exists.")))}}]]
+        [""
+         {:get {:summary    "Hae mikä tahansa yksittäinen energiatodistus tunnisteella (id)"
+                :parameters {:path {:id common-schema/Key}}
+                :responses  {200 {:body energiatodistus-schema/EnergiatodistusForAnyLaatija}
+                             404 {:body schema/Str}}
+                :access     rooli-service/energiatodistus-reader?
+                :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                              (api-response/get-response
+                                (energiatodistus-service/find-energiatodistus-any-laatija db id)
+                                (str "Energiatodistus " id " does not exists.")))}}]
+        ["/viestit"
+         {:get {:summary    "Hae energiatodistuksen viestit"
+                :parameters {:path {:id common-schema/Key}}
+                :responses  {200 {:body [viesti-schema/Ketju]}
+                             404 {:body schema/Str}}
+                :access     rooli-service/energiatodistus-reader?
+                :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+                              (api-response/get-response
+                                (viesti-service/find-energiatodistus-ketjut db whoami id)
+                                (str "Energiatodistus " id " does not exists.")))}}]]]
       ["/2013"
        ["" (crud-api/post 2013 energiatodistus-schema/EnergiatodistusSave2013)]
        ["/:id"
