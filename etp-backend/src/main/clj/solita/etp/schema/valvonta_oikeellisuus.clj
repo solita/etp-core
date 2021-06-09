@@ -44,7 +44,7 @@
 
 (def ValvontaStatus
   (assoc Valvonta
-    :last-toimenpide (schema/maybe (dissoc Toimenpide :description :virheet :severity-id))
+    :last-toimenpide (schema/maybe (dissoc Toimenpide :description :virheet :severity-id :filename))
     :energiatodistus energiatodistus-schema/Energiatodistus))
 
 (def Virhetyyppi
