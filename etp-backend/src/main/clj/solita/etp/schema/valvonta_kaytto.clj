@@ -1,8 +1,20 @@
 (ns solita.etp.schema.valvonta-kaytto
   (:require [schema.core :as schema]
             [schema-tools.core :as st]
+            [schema-tools.walk :as walk]
+            [solita.common.schema :as xschema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.geo :as geo-schema]))
+
+(defn with-maybe-vals [schema]
+  (walk/prewalk (fn [x]
+                  (if (and (map-entry? x) (-> x second xschema/maybe? not))
+                    (clojure.lang.MapEntry. (first x) (schema/maybe (second x)))
+                    x))
+                geo-schema/Postiosoite))
+
+(defn complete-valvonta-schema [schema]
+  (assoc schema :id common-schema/Key :valvonta-id common-schema/Key))
 
 (def ValvontaSave
   {:rakennustunnus (schema/maybe common-schema/Rakennustunnus)
@@ -18,40 +30,20 @@
 
 (def ValvontaStatus Valvonta)
 
-(def HenkiloSave
+(def OsapuoliBase
   (st/merge {:nimi common-schema/String100
-             :henkilotunnus common-schema/Henkilotunnus
-             :rooli-id common-schema/Key
-             :rooli-description common-schema/String200
-             :email common-schema/String200
-             :puhelin common-schema/String100
-             :toimitustapa-id common-schema/Key
-             :toimitustapa-description common-schema/String200}
-            geo-schema/Postiosoite))
+             :rooli-id (schema/maybe common-schema/Key)
+             :rooli-description (schema/maybe common-schema/String200)
+             :email (schema/maybe common-schema/String200)
+             :puhelin (schema/maybe common-schema/String100)
+             :toimitustapa-id (schema/maybe common-schema/Key)
+             :toimitustapa-description (schema/maybe common-schema/String200)}
+            (with-maybe-vals geo-schema/Postiosoite)))
 
-(def Henkilo (assoc HenkiloSave
-                    :id
-                    common-schema/Key
-                    :valvonta-id
-                    common-schema/Key))
-
+(def HenkiloSave (assoc OsapuoliBase :henkilotunnus common-schema/Henkilotunnus))
+(def Henkilo (complete-valvonta-schema HenkiloSave))
 (def HenkiloStatus Henkilo)
 
-(def YritysSave
-  (st/merge {:nimi common-schema/String100
-             :ytunnus common-schema/Ytunnus
-             :rooli-id common-schema/Key
-             :rooli-description common-schema/String200
-             :email common-schema/String200
-             :puhelin common-schema/String100
-             :toimitustapa-id common-schema/Key
-             :toimitustapa-description common-schema/String200}
-            geo-schema/Postiosoite))
-
-(def Yritys (assoc YritysSave
-                   :id
-                   common-schema/Key
-                   :valvonta-id
-                   common-schema/Key))
-
+(def YritysSave (assoc OsapuoliBase :ytunnus common-schema/Ytunnus))
+(def Yritys (complete-valvonta-schema YritysSave))
 (def YritysStatus Yritys)
