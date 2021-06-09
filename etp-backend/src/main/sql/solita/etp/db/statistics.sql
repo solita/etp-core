@@ -24,8 +24,9 @@ AND (:lammitetty-nettoala-max::numeric IS NULL OR e.lt$lammitetty_nettoala <= :l
 GROUP BY GROUPING SETS ((e.versio, e.t$e_luokka), (e.versio, e.lt$lammitys$lammitysmuoto_1$id), (e.versio, e.lt$ilmanvaihto$tyyppi_id));
 
 -- name: select-e-luku-statistics
-SELECT round(avg(e.t$e_luku), 2) avg, min(e.t$e_luku),
-       percentile_cont(0.15) WITHIN GROUP (ORDER BY e.t$e_luku) percentile_15
+SELECT round(avg(e.t$e_luku), 2) avg,
+       percentile_cont(0.15) WITHIN GROUP (ORDER BY e.t$e_luku) percentile_15,
+       percentile_cont(0.75) WITHIN GROUP (ORDER BY e.t$e_luku) percentile_75
 FROM energiatodistus e
 LEFT JOIN postinumero p ON e.pt$postinumero = p.id
 LEFT JOIN kunta k ON p.kunta_id = k.id

@@ -11,7 +11,7 @@
                     :lammitetty-nettoala-min nil
                     :lammitetty-nettoala-max nil})
 
-(def min-sample-size 5)
+(def min-sample-size 4)
 
 (defn sufficient-sample-size? [versio-counts]
   (->> versio-counts :e-luokka vals (reduce +) (<= min-sample-size)))
