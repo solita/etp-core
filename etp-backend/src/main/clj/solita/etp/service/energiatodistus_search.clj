@@ -53,6 +53,7 @@
      {:perustiedot
       {:postinumero schema/Int}}}
     {:laatija
+     {:patevyystaso common-schema/Key}
      {:toteamispaivamaara common-schema/Date}}
     (deep/map-values second search-fields/computed-fields)
     geo-schema/Search))
