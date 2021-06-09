@@ -57,7 +57,7 @@
                                            {:id laatija-id :rooli 0}
                                            ts/*aws-s3-client*
                                            id)]]
-      (t/is (= (:nimi add) nimi))
+      (t/is (= nimi (:nimi add)))
       (t/is (= (-> content .readAllBytes vec)
                (-> add :tempfile file-service/file->byte-array vec))))))
 
