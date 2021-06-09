@@ -477,7 +477,7 @@
 (defn energiatodistus-pdf-signed? [aws-s3-client id language]
   (try
     (let [key (file-key id language)
-          {:keys [content]} (file-service/find-file aws-s3-client key)]
+          content (file-service/find-file aws-s3-client key)]
       (pdf-signed? content))
     (catch Exception _e
       false)))
