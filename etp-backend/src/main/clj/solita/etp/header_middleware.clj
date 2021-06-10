@@ -35,3 +35,11 @@
         (not (contains-header? resp cache-control))
         (-> (with-default-header cache-control no-store)
             (with-default-header pragma no-cache))))))
+
+(defn wrap-cache-control [handler seconds]
+  (fn [req]
+    (let [resp (handler req)]
+      (cond-> resp
+        (not (contains-header? resp cache-control))
+        (-> (with-default-header cache-control (str "max-age=" seconds))
+            (with-default-header pragma nil))))))
