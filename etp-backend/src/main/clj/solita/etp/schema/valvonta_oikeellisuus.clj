@@ -51,3 +51,9 @@
   (assoc common-schema/Luokittelu
     :description-fi schema/Str
     :description-sv schema/Str))
+
+(def Note
+  {:id          common-schema/Key
+   :author-id   common-schema/Key
+   :create-time common-schema/Instant
+   :description schema/Str})

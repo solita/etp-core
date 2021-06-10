@@ -89,3 +89,11 @@ from liite l
      inner join kayttaja k on a.modifiedby_id = k.id
 where l.vo_toimenpide_id = :toimenpide-id and l.deleted = false
 order by l.id, a.modifytime asc, a.event_id desc
+
+-- name: select-valvonta-notes
+select distinct on (note.id) note.id,
+  a.modifytime create_time, a.modifiedby_id author_id,
+  note.description
+from etp.vo_note note inner join audit.vo_note a on note.id = a.id
+where note.energiatodistus_id = :energiatodistus-id and note.deleted = false
+order by note.id, a.modifytime asc, a.event_id desc
