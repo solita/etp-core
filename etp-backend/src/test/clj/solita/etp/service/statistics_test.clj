@@ -77,7 +77,8 @@
 (t/deftest sufficient-sample-size?-test
   (t/is (false? (service/sufficient-sample-size? {})))
   (t/is (false? (service/sufficient-sample-size? {:e-luokka {"A" 1}})))
-  (t/is (false? (service/sufficient-sample-size? {:e-luokka {"A" 1 "C" 3}})))
+  (t/is (false? (service/sufficient-sample-size? {:e-luokka {"A" 1 "C" 2}})))
+  (t/is (true? (service/sufficient-sample-size? {:e-luokka {"A" 1 "C" 3}})))
   (t/is (true? (service/sufficient-sample-size? {:e-luokka {"A" 1
                                                             "B" 2
                                                             "F" 2}}))))
