@@ -100,13 +100,13 @@
   (let [{:keys [energiatodistukset]} (test-data-set 12 true)]
 
     ;; TODO are percentiles meaninful? They are interpolated values.
-    (t/is (= {:avg 350.00M :percentile-15 175.0 :percentile-75 475.0}
+    (t/is (= {:avg 350.00M :percentile-15 175.0 :percentile-85 525.0}
              (service/find-e-luku-statistics ts/*db* query-all 2013)))
-    (t/is (= {:avg 300.00M :percentile-15 160.0 :percentile-75 400.0}
+    (t/is (= {:avg 300.00M :percentile-15 160.0 :percentile-85 440.0}
              (service/find-e-luku-statistics ts/*db* query-exact 2013)))
-    (t/is (= {:avg 950.00M :percentile-15 775.0 :percentile-75 1075.0}
+    (t/is (= {:avg 950.00M :percentile-15 775.0 :percentile-85 1125.0}
              (service/find-e-luku-statistics ts/*db* query-all 2018)))
-    (t/is (= {:avg 900.00M :percentile-15 760.0 :percentile-75 1000.0}
+    (t/is (= {:avg 900.00M :percentile-15 760.0 :percentile-85 1040.0}
              (service/find-e-luku-statistics ts/*db* query-exact 2018)))))
 
 (t/deftest find-common-averages-test
@@ -157,10 +157,10 @@
                              :ilmanvaihto {4 3 2 3}}}
               :e-luku-statistics {2013 {:avg 350.00M
                                         :percentile-15 175.0
-                                        :percentile-75 475.0}
+                                        :percentile-85 525.0}
                                   2018 {:avg 950.00M
                                         :percentile-15 775.0
-                                        :percentile-75 1075.0}}
+                                        :percentile-85 1125.0}}
               :common-averages {:alapohja-u 0.75M
                                 :ulkoovet-u 1.00M
                                 :ylapohja-u 1.00M
