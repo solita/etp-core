@@ -110,19 +110,23 @@
   {:kayttaja-id           (:id whoami)
    :vastaanottajaryhma-id (builtin-vastaanottajaryhma-id whoami)})
 
+(def ^:private default-filters
+  {:has-kasittelija nil :kasittelija-id nil
+   :include-kasitelty false})
+
 (defn find-ketjut [db whoami q]
   (let [query (merge {:limit 100 :offset 0} q)
         kayttajat (find-kayttajat db)]
     (pmap (comp (partial assoc-join-viestit db whoami)
                 (partial assoc-join-vastaanottajat kayttajat))
           (if (rooli-service/paakayttaja? whoami)
-            (viesti-db/select-all-viestiketjut db query)
+            (viesti-db/select-all-viestiketjut db (merge default-filters query))
             (viesti-db/select-viestiketjut-for-kayttaja
               db (merge query (query-for-other-users whoami)))))))
 
-(defn count-ketjut [db whoami]
+(defn count-ketjut [db whoami query]
   (-> (if (rooli-service/paakayttaja? whoami)
-        (viesti-db/select-count-all-viestiketjut db)
+        (viesti-db/select-count-all-viestiketjut db (merge default-filters query))
         (viesti-db/select-count-viestiketjut-for-kayttaja
           db (query-for-other-users whoami)))
       first))
