@@ -55,10 +55,26 @@ order by coalesce(publish_time, create_time) desc
 limit 1;
 
 -- name: select-toimenpide
-select * from vo_toimenpide where id = :id;
+select
+  toimenpide.id, toimenpide.type_id, toimenpide.energiatodistus_id,
+  toimenpide.create_time, toimenpide.publish_time, toimenpide.deadline_date,
+  toimenpide.template_id, toimenpide.diaarinumero, toimenpide.description, toimenpide.severity_id,
+  toimenpide.author_id author$id, author.rooli_id author$rooli_id,
+  author.etunimi author$etunimi, author.sukunimi author$sukunimi
+from vo_toimenpide toimenpide
+  inner join kayttaja author on author.id = toimenpide.author_id
+where toimenpide.id = :id;
 
 -- name: select-toimenpiteet
-select * from vo_toimenpide where energiatodistus_id = :energiatodistus-id;
+select
+  toimenpide.id, toimenpide.type_id, toimenpide.energiatodistus_id,
+  toimenpide.create_time, toimenpide.publish_time, toimenpide.deadline_date,
+  toimenpide.template_id, toimenpide.diaarinumero, toimenpide.description, toimenpide.severity_id,
+  toimenpide.author_id author$id, author.rooli_id author$rooli_id,
+  author.etunimi author$etunimi, author.sukunimi author$sukunimi
+  from vo_toimenpide toimenpide
+    inner join kayttaja author on author.id = toimenpide.author_id
+where toimenpide.energiatodistus_id = :energiatodistus-id;
 
 -- name: select-energiatodistus-valvonta-documents
 select distinct on (type_id) *

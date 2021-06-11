@@ -12,7 +12,8 @@
     [clojure.string :as str]
     [clojure.java.io :as io]
     [solita.etp.service.liite :as liite-service]
-    [clojure.set :as set]))
+    [clojure.set :as set]
+    [flathead.flatten :as flat]))
 
 (db/require-queries 'valvonta-oikeellisuus)
 
@@ -91,23 +92,29 @@
   (assoc toimenpide :virheet (valvonta-oikeellisuus-db/select-toimenpide-virheet
                                db {:toimenpide-id (:id toimenpide)})))
 
-(defn- db-row->toimenpide [toimenpide]
-  (let [{:keys [filename]} (and (:template-id toimenpide) (asha-valvonta-oikeellisuus/toimenpide-type->document (:type-id toimenpide)))]
-    (assoc toimenpide :filename filename)))
+(defn toimenpide-filename [{:keys [type-id]}]
+  (-> type-id
+      asha-valvonta-oikeellisuus/toimenpide-type->document
+      :filename))
+
+(defn- db-row->toimenpide [db-row]
+  (as-> db-row %
+      (flat/flat->tree #"\$" %)
+      (assoc % :filename (toimenpide-filename %))))
 
 (defn find-toimenpiteet [db whoami id]
   (when-not
     ;; assert privileges to view et information and check that it exists
     (nil? (energiatodistus-service/find-energiatodistus db whoami id))
-    (->> (valvonta-oikeellisuus-db/select-toimenpiteet db {:energiatodistus-id id})
-         (map (partial db-row->toimenpide)))))
+    (map db-row->toimenpide
+         (valvonta-oikeellisuus-db/select-toimenpiteet db {:energiatodistus-id id}))))
 
 (defn find-toimenpide [db whoami id toimenpide-id]
   ;; assert privileges to view et information:
   (energiatodistus-service/find-energiatodistus db whoami id)
   (->> (valvonta-oikeellisuus-db/select-toimenpide db {:id toimenpide-id})
        (map (partial assoc-virheet db))
-       (map (partial db-row->toimenpide))
+       (map db-row->toimenpide)
        first))
 
 (defn find-toimenpide-liitteet [db whoami id toimenpide-id]
