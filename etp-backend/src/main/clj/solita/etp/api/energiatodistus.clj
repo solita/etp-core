@@ -10,6 +10,7 @@
             [solita.etp.api.energiatodistus-xml :as xml-api]
             [solita.etp.api.energiatodistus-liite :as liite-api]
             [solita.etp.api.energiatodistus-signing :as signing-api]
+            [solita.etp.api.energiatodistus-history :as history-api]
             [solita.etp.api.energiatodistus-luokittelut :as luokittelut-api]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.energiatodistus-search :as energiatodistus-search-service]
@@ -150,7 +151,8 @@
                 :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                               (api-response/get-response
                                 (viesti-service/find-energiatodistus-ketjut db whoami id)
-                                (str "Energiatodistus " id " does not exists.")))}}]]]
+                                (str "Energiatodistus " id " does not exists.")))}}]
+        history-api/routes]]
       ["/2013"
        ["" (crud-api/post 2013 energiatodistus-schema/EnergiatodistusSave2013)]
        ["/:id"
