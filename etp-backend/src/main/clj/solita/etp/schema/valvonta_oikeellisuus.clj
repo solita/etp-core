@@ -37,14 +37,17 @@
     :id common-schema/Key
     :energiatodistus-id common-schema/Key
     :diaarinumero (schema/maybe schema/Str)
-    :author-id common-schema/Key
+    :author common-schema/Kayttaja
     :create-time common-schema/Instant
     :publish-time (schema/maybe common-schema/Instant)
     :filename (schema/maybe schema/Str)))
 
 (def ValvontaStatus
   (assoc Valvonta
-    :last-toimenpide (schema/maybe (dissoc Toimenpide :description :virheet :severity-id :filename))
+    :last-toimenpide
+    (schema/maybe (dissoc Toimenpide
+                          :author :description :virheet
+                          :severity-id :filename))
     :energiatodistus energiatodistus-schema/Energiatodistus))
 
 (def Virhetyyppi
