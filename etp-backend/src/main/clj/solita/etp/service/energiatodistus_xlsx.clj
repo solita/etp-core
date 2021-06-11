@@ -3,6 +3,7 @@
             [clojure.java.io :as io]
             [solita.common.map :as solita-map]
             [solita.common.xlsx :as xlsx]
+            [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.energiatodistus-search :as
              energiatodistus-search-service]
             [solita.etp.service.complete-energiatodistus
@@ -66,7 +67,7 @@
      (reduce (fn [acc energiatodistus-db-row]
                (conj acc
                      (-> energiatodistus-db-row
-                         energiatodistus-search-service/db-row->energiatodistus
+                         energiatodistus-service/db-row->energiatodistus
                          (complete-energiatodistus-service/complete-energiatodistus
                           luokittelut))))
              []

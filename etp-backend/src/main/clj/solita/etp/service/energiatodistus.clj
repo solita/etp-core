@@ -198,7 +198,7 @@
         (partial map/map-keys convert-db-key-case)
         db/kebab-case-keys))
 
-(def ^:private db-row->energiatodistus
+(def db-row->energiatodistus
   (schema->db-row->energiatodistus energiatodistus-schema/Energiatodistus))
 
 (defn tree->flat [energiatodistus]
