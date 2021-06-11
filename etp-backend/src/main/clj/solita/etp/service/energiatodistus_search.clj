@@ -215,10 +215,6 @@
   (energiatodistus-service/schema->db-row->energiatodistus
     public-energiatodistus-schema/Energiatodistus))
 
-(def db-row->energiatodistus
-  (energiatodistus-service/schema->db-row->energiatodistus
-   energiatodistus-schema/Energiatodistus))
-
 (defn search
   "Energiatodistus search for APIs. Returns only public data and makes sure that
    there's a sensible limit for results. Coerces results with

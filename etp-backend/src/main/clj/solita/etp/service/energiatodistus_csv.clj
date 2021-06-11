@@ -2,6 +2,7 @@
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
             [clojure.java.jdbc :as jdbc]
+            [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.energiatodistus-search :as
              energiatodistus-search-service]
             [solita.etp.service.complete-energiatodistus
@@ -234,7 +235,7 @@
                #(complete-energiatodistus-service/complete-energiatodistus
                  %
                  luokittelut)
-               energiatodistus-search-service/db-row->energiatodistus)
+               energiatodistus-service/db-row->energiatodistus)
             (energiatodistus-search-service/reducible-search db
                                                              whoami
                                                              query

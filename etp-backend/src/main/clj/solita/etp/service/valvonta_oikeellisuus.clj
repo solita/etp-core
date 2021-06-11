@@ -17,10 +17,6 @@
 
 (db/require-queries 'valvonta-oikeellisuus)
 
-(def ^:private db-row->energiatodistus
-  (energiatodistus-service/schema->db-row->energiatodistus
-    energiatodistus-schema/Energiatodistus))
-
 (defn- select-keys-prefix [prefix m]
   (into {} (filter (fn [[key _]] (-> key name (str/starts-with? prefix))) m)))
 
@@ -30,7 +26,7 @@
 
 (defn- db-row->valvonta [row]
   (let [valvonta (->> row (select-keys-prefix "valvonta$") remove-prefix)
-        energiatodistus (db-row->energiatodistus row)
+        energiatodistus (energiatodistus-service/db-row->energiatodistus row)
         last-toimenpide  (->> row (select-keys-prefix "last-toimenpide$") remove-prefix)]
     (-> valvonta
         (assoc :id (:id energiatodistus))
