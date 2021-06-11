@@ -1,7 +1,6 @@
 (ns solita.etp.api.valvonta-oikeellisuus
   (:require [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.valvonta-oikeellisuus :as valvonta-service]
-            [solita.etp.service.asha-valvonta-oikeellisuus :as asha-valvonta-service]
             [solita.etp.schema.valvonta-oikeellisuus :as oikeellisuus-schema]
             [solita.etp.schema.valvonta :as valvonta-schema]
             [solita.etp.schema.common :as common-schema]
@@ -121,13 +120,12 @@
                                    404 {:body schema/Str}}
                       :handler    (fn [{{{:keys [id]} :path :keys [body]}
                                         :parameters :keys [db whoami]}]
-                                    (let [{:keys [filename]} (asha-valvonta-service/toimenpide-type->document (:type-id body))]
-                                      (api-response/pdf-response
-                                        (ring-io/piped-input-stream
-                                          (partial valvonta-service/preview-toimenpide
-                                                   db whoami id body))
-                                        filename
-                                        "Not found.")))}}]
+                                    (api-response/pdf-response
+                                      (ring-io/piped-input-stream
+                                        (partial valvonta-service/preview-toimenpide
+                                                 db whoami id body))
+                                      (valvonta-service/toimenpide-filename body)
+                                      "Not found."))}}]
       ["/:toimenpide-id"
        [""
         {:conflicting true

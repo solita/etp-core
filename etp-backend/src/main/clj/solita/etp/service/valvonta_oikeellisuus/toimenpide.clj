@@ -1,4 +1,4 @@
-(ns solita.etp.service.toimenpide)
+(ns solita.etp.service.valvonta-oikeellisuus.toimenpide)
 
 (def ^:private type-keys
   [;; kevyt valvontamenettely
