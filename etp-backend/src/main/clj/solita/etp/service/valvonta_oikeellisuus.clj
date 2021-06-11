@@ -177,3 +177,21 @@
       (with-open [output (io/output-stream ostream)]
         (io/copy (asha-valvonta-oikeellisuus/find-document aws-s3-client id toimenpide-id) output))
       (preview-toimenpide db whoami id toimenpide ostream))))
+
+(defn find-notes [db id] (valvonta-oikeellisuus-db/select-valvonta-notes
+                           db {:energiatodistus-id id}))
+
+(defn add-note! [db id description]
+  (-> (db/with-db-exception-translation
+        jdbc/insert! db :vo-note
+        {:energiatodistus-id id
+         :description        description}
+        db/default-opts)
+      first
+      (select-keys [:id])))
+
+(defn update-note! [db id description]
+  (first (db/with-db-exception-translation
+           jdbc/update! db :vo-note
+           {:description description} ["id = ?" id]
+           db/default-opts)))

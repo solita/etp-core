@@ -247,4 +247,40 @@
                                  (partial valvonta-service/find-toimenpide-document
                                           db aws-s3-client whoami id toimenpide-id))
                                filename
-                               "Not found."))}}]]]]]])
+                               "Not found."))}}]]]
+     ["/notes"
+      [""
+       {:get  {:summary    "Hae energiatodistuksen valvonnan muistiinpanot."
+               :parameters {:path {:id common-schema/Key}}
+               :responses  {200 {:body [oikeellisuus-schema/Note]}}
+               :access     rooli-service/paakayttaja?
+               :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                             (r/response (valvonta-service/find-notes db id)))}
+
+        :post {:summary    "Lisää energiatodistuksen valvontamuistiinpano."
+               :access     rooli-service/paakayttaja?
+               :parameters {:path {:id common-schema/Key}
+                            :body schema/Str}
+               :responses  {201 {:body common-schema/Id}
+                            404 common-schema/ConstraintError}
+               :handler    (fn [{{{:keys [id]} :path :keys [body]}
+                                 :parameters :keys [db uri]}]
+                             (api-response/with-exceptions
+                               #(api-response/created
+                                  uri (valvonta-service/add-note! db id body))
+                               [{:constraint :vo-note-energiatodistus-id-fkey
+                                 :response   404}]))}}]
+      ["/:note-id"
+       [""
+        {:put {:summary    "Muuta muistiinpanoa."
+               :access     rooli-service/paakayttaja?
+               :parameters {:path {:id      common-schema/Key
+                                   :note-id common-schema/Key}
+                            :body schema/Str}
+               :responses  {200 {:body nil}
+                            404 {:body schema/Str}}
+               :handler    (fn [{{{:keys [id note-id]} :path :keys [body]}
+                                 :parameters :keys [db]}]
+                             (api-response/ok|not-found
+                               (valvonta-service/update-note! db note-id body)
+                               (str "Muistiinpano " id "/" note-id " does not exists.")))}}]]]]]])
