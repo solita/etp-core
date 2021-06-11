@@ -48,19 +48,17 @@
       (t/is (= (:url add) url)))))
 
 (t/deftest find-liite-content-test
-  (let [{:keys [laatijat energiatodistukset file-liitteet]} (test-data-set)
-        laatija-id (-> laatijat keys sort first)
-        energiatodistus-id (-> energiatodistukset keys sort first)]
+  (let [{:keys [laatijat file-liitteet]} (test-data-set)
+        laatija-id (-> laatijat keys sort first)]
     (doseq [id (keys file-liitteet)
-            :let [add (get file-liitteet id)]]
-      (t/is (= (-> (service/find-energiatodistus-liite-content
-                    ts/*db*
-                    {:id laatija-id :rooli 0}
-                    ts/*aws-s3-client*
-                    id)
-                   :content
-                   .readAllBytes
-                   vec)
+            :let [add (get file-liitteet id)
+                  {:keys [nimi content]} (service/find-energiatodistus-liite-content
+                                           ts/*db*
+                                           {:id laatija-id :rooli 0}
+                                           ts/*aws-s3-client*
+                                           id)]]
+      (t/is (= nimi (:nimi add)))
+      (t/is (= (-> content .readAllBytes vec)
                (-> add :tempfile file-service/file->byte-array vec))))))
 
 (t/deftest delete-liite!-test

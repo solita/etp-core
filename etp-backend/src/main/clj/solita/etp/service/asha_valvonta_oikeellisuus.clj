@@ -28,15 +28,14 @@
                    :audit-warning  {:type "Kirje" :filename "varoitus_valvontamuistio.pdf"}}]
     (get documents type-key)))
 
-(defn- store-document [aws-s3-client energiatodistus-id toimenpide-id toimenpide-type document]
+(defn- store-document [aws-s3-client energiatodistus-id toimenpide-id document]
   (file-service/upsert-file-from-bytes
     aws-s3-client
     (file-path energiatodistus-id toimenpide-id)
-    (-> toimenpide-type toimenpide-type->document :filename)
     document))
 
 (defn find-document [aws-s3-client energiatodistus-id toimenpide-id]
-  (:content (file-service/find-file aws-s3-client (file-path energiatodistus-id toimenpide-id))))
+  (file-service/find-file aws-s3-client (file-path energiatodistus-id toimenpide-id)))
 
 (defn find-energiatodistus-valvonta-documents [db id]
   (->> (valvonta-oikeellisuus-db/select-energiatodistus-valvonta-documents db {:energiatodistus-id id})
@@ -192,7 +191,7 @@
         document (when (:document processing-action)
                    (let [{:keys [template template-data]} (generate-template db whoami toimenpide energiatodistus laatija)
                          bytes (pdf/generate-pdf->bytes template template-data)]
-                     (store-document aws-s3-client energiatodistus-id (:id toimenpide) (:type-id toimenpide) bytes)
+                     (store-document aws-s3-client energiatodistus-id (:id toimenpide) bytes)
                      bytes))]
     (asha/log-toimenpide!
       sender-id

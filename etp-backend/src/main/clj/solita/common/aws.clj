@@ -20,20 +20,19 @@
                                   (or (-> result :Error :Message) (:cognitect.anomalies/message result))))
       result)))
 
-(defn put-object [{:keys [client bucket]} key filename content]
+(defn put-object [{:keys [client bucket]} key content]
   (invoke client
           :PutObject
           {:Bucket   bucket
            :Key      key
-           :Body     content
-           :Metadata {:filename filename}}))
+           :Body     content}))
 
 (defn get-object [{:keys [client bucket]} key]
   (when-let [result (invoke client
                             :GetObject
                             {:Bucket bucket
                              :Key    key})]
-    {:content (:Body result) :filename (-> result :Metadata :filename)}))
+    (:Body result)))
 
 (defn get-object-head [{:keys [client bucket]} key]
   (invoke client

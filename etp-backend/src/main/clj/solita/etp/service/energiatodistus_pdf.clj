@@ -693,7 +693,6 @@
   (file-service/file-exists? aws-s3-client  (energiatodistus-service/file-key id kieli))
   (->> (energiatodistus-service/file-key id kieli)
        (file-service/find-file aws-s3-client)
-       :content
        io/input-stream))
 
 (defn find-energiatodistus-pdf [db aws-s3-client whoami id kieli]
@@ -744,7 +743,6 @@
             key (energiatodistus-service/file-key id language)]
         (file-service/upsert-file-from-bytes aws-s3-client
                                              key
-                                             (str key ".pdf")
                                              signable-pdf-data)
         (io/delete-file pdf-path)
         (io/delete-file signable-pdf-path)
@@ -788,12 +786,11 @@
       #(do
          (validate-surname! (:sukunimi whoami) (first chain))
          (let [key (energiatodistus-service/file-key id language)
-               {:keys [content]} (file-service/find-file aws-s3-client key)
+               content (file-service/find-file aws-s3-client key)
                content-bytes (.readAllBytes content)
                pkcs7 (puumerkki/make-pkcs7 signature-and-chain content-bytes)
                filename (str key ".pdf")]
            (->> (write-signature! id language content-bytes pkcs7)
                 (file-service/upsert-file-from-bytes aws-s3-client
-                                                     key
-                                                     filename))
+                                                     key))
            filename)))))
