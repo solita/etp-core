@@ -7,7 +7,6 @@ select
   coalesce(last_toimenpide.type_id not in (0, 1, 15), false) valvonta$ongoing,
   last_toimenpide.id      last_toimenpide$id,
   last_toimenpide.type_id last_toimenpide$type_id,
-  last_toimenpide.author_id last_toimenpide$author_id,
   last_toimenpide.energiatodistus_id last_toimenpide$energiatodistus_id,
   last_toimenpide.create_time last_toimenpide$create_time,
   last_toimenpide.publish_time last_toimenpide$publish_time,
@@ -48,7 +47,7 @@ from energiatodistus left join lateral (
   limit 1) last_toimenpide on true
 where energiatodistus.id = :id;
 
---name: select-last-diaarinumero
+--name: select-last-diaarinumerotoimenpide
 select diaarinumero from vo_toimenpide
 where energiatodistus_id = :id and diaarinumero is not null
 order by coalesce(publish_time, create_time) desc
