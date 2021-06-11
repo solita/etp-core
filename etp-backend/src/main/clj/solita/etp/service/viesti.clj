@@ -111,7 +111,8 @@
    :vastaanottajaryhma-id (builtin-vastaanottajaryhma-id whoami)})
 
 (def ^:private default-filters
-  {:has-kasittelija nil :kasittelija-id nil
+  {:has-kasittelija   nil
+   :kasittelija-id    nil
    :include-kasitelty false})
 
 (defn find-ketjut [db whoami q]
