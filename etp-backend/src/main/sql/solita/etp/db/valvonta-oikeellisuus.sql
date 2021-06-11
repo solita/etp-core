@@ -47,7 +47,7 @@ from energiatodistus left join lateral (
   limit 1) last_toimenpide on true
 where energiatodistus.id = :id;
 
---name: select-last-diaarinumerotoimenpide
+--name: select-last-diaarinumero
 select diaarinumero from vo_toimenpide
 where energiatodistus_id = :id and diaarinumero is not null
 order by coalesce(publish_time, create_time) desc
