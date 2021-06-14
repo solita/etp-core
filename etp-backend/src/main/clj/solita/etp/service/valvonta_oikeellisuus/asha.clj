@@ -1,11 +1,11 @@
-(ns solita.etp.service.asha-valvonta-oikeellisuus
+(ns solita.etp.service.valvonta-oikeellisuus.asha
   (:require [solita.common.time :as time]
             [solita.etp.service.asha :as asha]
             [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]
             [solita.etp.service.kayttaja :as kayttaja-service]
             [clojure.string :as str]
             [solita.etp.exception :as exception]
-            [solita.etp.service.toimenpide :as toimenpide]
+            [solita.etp.service.valvonta-oikeellisuus.toimenpide :as toimenpide]
             [solita.etp.service.pdf :as pdf]
             [clojure.java.io :as io]
             [solita.etp.service.file :as file-service]
