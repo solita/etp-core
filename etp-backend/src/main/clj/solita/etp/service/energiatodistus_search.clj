@@ -8,6 +8,7 @@
             [solita.common.map :as m]
             [solita.common.schema :as xschema]
             [flathead.deep :as deep]
+            [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.schema.public-energiatodistus :as public-energiatodistus-schema]
             [solita.etp.schema.geo :as geo-schema]
@@ -51,6 +52,8 @@
     {:energiatodistus
      {:perustiedot
       {:postinumero schema/Int}}}
+    {:laatija
+     {:toteamispaivamaara common-schema/Date}}
     (deep/map-values second search-fields/computed-fields)
     geo-schema/Search))
 
@@ -71,6 +74,7 @@
 (def relation
   "FROM energiatodistus
    INNER JOIN kayttaja ON kayttaja.id = energiatodistus.laatija_id
+   INNER JOIN laatija ON laatija.id = energiatodistus.laatija_id
    LEFT JOIN energiatodistus korvaava_energiatodistus
      ON korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
    LEFT JOIN postinumero ON postinumero.id = energiatodistus.pt$postinumero
