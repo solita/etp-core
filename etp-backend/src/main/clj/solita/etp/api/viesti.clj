@@ -26,8 +26,8 @@
                                :response 400}]))}
 
       :get  {:summary    "Hae kaikki käyttäjän viestiketjut."
-             :parameters {:query {(schema/optional-key :limit)  (common-schema/LimitedInt 1 100)
-                                  (schema/optional-key :offset) schema/Int}}
+             :parameters {:query (merge viesti-schema/KetjuQuery
+                                        viesti-schema/KetjuQueryWindow)}
              :responses  {200 {:body [viesti-schema/Ketju]}}
              :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
                            (r/response (viesti-service/find-ketjut db whoami query)))}}]
@@ -35,9 +35,10 @@
      [""
       {:conflicting true
        :get  {:summary   "Hae viestiketjujen lukumäärä."
+              :parameters {:query viesti-schema/KetjuQuery}
               :responses {200 {:body {:count schema/Int}}}
-              :handler   (fn [{:keys [db whoami]}]
-                           (r/response (viesti-service/count-ketjut db whoami)))}}]
+              :handler   (fn [{{:keys [query]} :parameters :keys [db whoami]}]
+                           (r/response (viesti-service/count-ketjut db whoami query)))}}]
      ["/unread"
       {:conflicting true
        :get  {:summary   "Hae lukemattomien viestiketjujen lukumäärä."

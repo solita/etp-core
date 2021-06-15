@@ -36,3 +36,12 @@
    :energiatodistus-id    (schema/maybe common-schema/Key)
    :subject               schema/Str
    :viestit               [Viesti]})
+
+(def KetjuQueryWindow
+  {(schema/optional-key :limit)  (common-schema/LimitedInt 1 100)
+   (schema/optional-key :offset) schema/Int})
+
+(def KetjuQuery
+  {(schema/optional-key :kasittelija-id)    common-schema/Key
+   (schema/optional-key :has-kasittelija)   schema/Bool
+   (schema/optional-key :include-kasitelty) schema/Bool})
