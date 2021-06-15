@@ -10,6 +10,7 @@
             [solita.etp.test-data.energiatodistus :as energiatodistus-test-data]
             [solita.etp.service.energiatodistus-search :as service]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
+            [solita.etp.service.laatija :as laatija-service]
             [solita.etp.service.e-luokka :as e-luokka-service])
   (:import (clojure.lang ExceptionInfo)
            (java.time LocalDate Instant ZoneId)))
@@ -101,6 +102,38 @@
     (t/is (search-and-assert test-data-set
                              id
                              [[["=" "energiatodistus.id" id]]]))))
+
+(t/deftest search-by-laatija-voimassaolo-paattymisaika-test
+  (let [{:keys [energiatodistukset laatijat] :as test-data-set} (test-data-set)
+        id (-> energiatodistukset keys sort first)
+        laatija-id (-> laatijat keys clojure.core/sort first)
+        {:keys [voimassaolo-paattymisaika] :as laatija} (laatija-service/find-laatija-by-id ts/*db* laatija-id)
+        one-day (. java.time.Duration (ofDays 1))
+        two-days (. java.time.Duration (ofDays 2))]
+    (t/is (nil? (-> (service/search
+                     ts/*db*
+                     {:rooli 0 :id laatija-id}
+                     {:where [[["=" "energiatodistus.id" id]
+                               ["between" "laatija.voimassaolo-paattymisaika"
+                                (.minus voimassaolo-paattymisaika two-days)
+                                (.minus voimassaolo-paattymisaika one-day)]]]})
+                    first :id)))
+    (t/is (= id (-> (service/search
+                     ts/*db*
+                     {:rooli 0 :id laatija-id}
+                     {:where [[["=" "energiatodistus.id" id]
+                               ["between" "laatija.voimassaolo-paattymisaika"
+                                (.minus voimassaolo-paattymisaika one-day)
+                                (.plus voimassaolo-paattymisaika one-day)]]]})
+                    first :id)))
+    (t/is (nil? (-> (service/search
+                     ts/*db*
+                     {:rooli 0 :id laatija-id}
+                     {:where [[["=" "energiatodistus.id" id]
+                               ["between" "laatija.voimassaolo-paattymisaika"
+                                (.plus voimassaolo-paattymisaika one-day)
+                                (.plus voimassaolo-paattymisaika two-days)]]]})
+                    first :id)))))
 
 (t/deftest search-by-id-null-nettoala-test
   (let [{:keys [energiatodistukset laatijat] :as test-data-set} (test-data-set)

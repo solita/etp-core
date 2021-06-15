@@ -54,7 +54,8 @@
       {:postinumero schema/Int}}}
     {:laatija
      {:patevyystaso common-schema/Key
-      :toteamispaivamaara common-schema/Date}}
+      :toteamispaivamaara common-schema/Date
+      :voimassaolo-paattymisaika common-schema/Instant}}
     (deep/map-values second search-fields/computed-fields)
     geo-schema/Search))
 

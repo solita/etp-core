@@ -4,6 +4,7 @@
             [solita.etp.service.polttoaine :as polttoaine]
             [solita.etp.db :as db]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
+            [solita.etp.schema.laatija :as laatija-schema]
             [clojure.string :as str]
             [schema.core :as schema]
             [flathead.deep :as deep]
@@ -134,4 +135,7 @@
                            field-value (per-nettoala-sql (str factor " * " (field->db-column field-parts)))
                            field-schema (get-in energiatodistus-schema/Energiatodistus2018 path)]
                        [field-name [field-value field-schema]]))
-                polttoaine/muunnoskertoimet))}}})
+                polttoaine/muunnoskertoimet))}}
+   :laatija
+   {:voimassaolo-paattymisaika ["patevyys_paattymisaika(laatija)"
+                                (get-in laatija-schema/Laatija [:voimassaolo-paattymisaika])]}})
