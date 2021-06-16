@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 (ns solita.etp.service.valvonta-kaytto.asha
   (:require [solita.common.time :as time]
             [solita.etp.service.asha :as asha]
@@ -6,9 +5,12 @@
             [solita.etp.service.valvonta-oikeellisuus.toimenpide :as toimenpide]
             [solita.etp.service.pdf :as pdf]
             [clojure.java.io :as io]
-            [solita.etp.db :as db]))
+            [solita.etp.db :as db]
+            [solita.etp.service.geo :as geo]
+            [solita.common.formats :as formats]))
 
 #_(db/require-queries 'valvonta-kaytto)
+(db/require-queries 'geo)
 
 (def file-key-prefix "valvonta/kaytto")
 
@@ -21,7 +23,7 @@
 
 (defn find-document [aws-s3-client valvonta-id toimenpide-id]
   (asha/find-document aws-s3-client file-key-prefix valvonta-id toimenpide-id))
-
+#_
 (defn find-kaytto-valvonta-documents [db id]
   (->> (valvonta-oikeellisuus-db/select-kaytto-valvonta-documents db {:valvonta-id id})
        (map (fn [toimenpide]
@@ -29,13 +31,27 @@
                 {type (:publish-time toimenpide)})))
        (into {})))
 
-(defn- template-data [whoami toimenpide dokumentit]
+(defn- find-ilmoituspaikka [ilmoituspaikat ilmoituspaikka-id]
+  (->> ilmoituspaikat (filter #(= (:id %) ilmoituspaikka-id)) first :label-fi))
+
+(defn- find-postitoimipaikka [db postinumero]
+  (-> (geo-db/select-postinumero-by-id db {:id (formats/string->int postinumero)}) first :label-fi ))
+
+(defn- template-data [db whoami toimenpide valvonta henkilo dokumentit ilmoituspaikat]
   {:päivä          (time/today)
    :määräpäivä     (time/format-date (:deadline-date toimenpide))
    :diaarinumero   (:diaarinumero toimenpide)
    :valvoja        (select-keys whoami [:etunimi :sukunimi :email])
-   :omistaja       (:omistaja toimenpide)
-   :kohde          (update (:kohde toimenpide) :havaintopäivä time/format-date)
+   :omistaja       (let [[etunimi sukunimi] (str/split (:nimi henkilo) #" ")] ; TODO: split nimi to etunimi and sukunimi
+                     {:etunimi          etunimi
+                      :sukunimi         sukunimi
+                      :katuosoite       (:katuosoite henkilo)
+                      :postinumero      (:postunumero henkilo)
+                      :postitoimipaikka (find-postitoimipaikka db (:postinumero henkilo))})
+   :kohde          {:nimi           (:rakennustunnus valvonta)
+                    :ilmoituspaikka (find-ilmoituspaikka ilmoituspaikat (:ilmoituspaikka-id valvonta))
+                    :ilmoitustunnus (:ilmoitustunnus valvonta)
+                    :havaintopäivä  (-> valvonta :havaintopaiva time/format-date)}
    :toimituspyyntö {:toimituspyyntö-pvm         (time/format-date (:rfi-request dokumentit))
                     :toimituspyyntö-kehotus-pvm (time/format-date (:rfi-order dokumentit))}})
 
@@ -47,15 +63,22 @@
                "pdf/tietopyynto.html")]
     (-> file io/resource slurp)))
 
-(defn generate-template [db whoami toimenpide]
+(defn generate-template [db whoami toimenpide valvonta henkilo ilmoituspaikat]
   (let [template (template-id->template (:template-id toimenpide)) #_(:content toimenpide)
         dokumentit {} #_(find-kaytto-valvonta-documents db valvonta-id)
-        template-data (template-data whoami toimenpide dokumentit)]
+        template-data (template-data db whoami toimenpide valvonta henkilo dokumentit ilmoituspaikat)]
     {:template      template
      :template-data template-data}))
 
 (defn- request-id [valvonta-id toimenpide-id]
   (str valvonta-id "/" toimenpide-id))
+
+(defn- henkilo->contact [henkilo]
+  (let [[etunimi sukunimi] (str/split (:nimi henkilo) #" ")]   ; TODO: split nimi to etunimi and sukunimi
+    {:type          "ORGANIZATION"                          ;No enum constant fi.ys.eservice.entity.ContactType.PERSON
+     :first-name    etunimi
+     :last-name     sukunimi
+     :email-address (:email henkilo)}))
 
 (defn- available-processing-actions [toimenpide]
   {:rfi-request   {:identity          {:case              {:number (:diaarinumero toimenpide)}
@@ -63,21 +86,21 @@
                    :processing-action {:name                 "Tietopyyntö"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
-                                       :contact              (asha/kayttaja->contact (:omistaja toimenpide))}
+                                       :contact              (henkilo->contact (:omistaja toimenpide))}
                    :document          (toimenpide-type->document (:type-id toimenpide))}
    :rfi-order     {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Kehotuksen antaminen"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
-                                       :contact              (asha/kayttaja->contact (:omistaja toimenpide))}
+                                       :contact              (henkilo->contact (:omistaja toimenpide))}
                    :document          (toimenpide-type->document (:type-id toimenpide))}
    :rfi-warning   {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Varoituksen antaminen"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
-                                       :contact              (asha/kayttaja->contact (:omistaja toimenpide))}
+                                       :contact              (henkilo->contact (:omistaja toimenpide))}
                    :document          (toimenpide-type->document (:type-id toimenpide))}})
 
 (defn- resolve-processing-action [toimenpide]
@@ -85,34 +108,29 @@
         type-key (toimenpide/type-key (:type-id toimenpide))]
     (get processing-actions type-key)))
 
-(defn- string-join [separator coll]
-  (str/join separator (->> coll
-                           (map str)
-                           (remove empty?))))
-
-(defn open-case! [whoami valvonta-id omistajat kohde]
-  (asha/open-case! {:request-id     (request-id valvonta-id 1)
+(defn open-case! [db whoami valvonta henkilot ilmoituspaikat]
+  (asha/open-case! {:request-id     (request-id (:id valvonta) 1)
                     :sender-id      (:email whoami)
                     :classification "05.03.01"
-                    :service        "general"             ; Yleinen menettely
-                    :name           (string-join ", " [(-> kohde :rakennustunnus)
-                                                       (-> kohde :katuosoite-fi)
-                                                       (string-join " " [(-> kohde :postinumero)
-                                                                         (-> kohde :postitoimipaikka-fi)])])
+                    :service        "general"               ; Yleinen menettely
+                    :name           (asha/string-join ", " [(:rakennustunnus valvonta)
+                                                            (:katuosoite valvonta)
+                                                            (asha/string-join " " [(:postinumero valvonta)
+                                                                                   (find-postitoimipaikka db (:postinumero valvonta))])])
 
-                    :description    (string-join "\r" [(:ilmoituspaikka kohde)
-                                                       (:kohdenumero kohde)])
-                    :attach         {:contact (map #(asha/kayttaja->contact %) omistajat)}}))
+                    :description    (asha/string-join "\r" [(find-ilmoituspaikka ilmoituspaikat (:ilmoituspaikka-id valvonta))
+                                                            (:ilmoitustunnus valvonta)])
+                    :attach         {:contact (map henkilo->contact henkilot)}}))
 
-(defn log-toimenpide! [db aws-s3-client whoami valvonta-id toimenpide]
-  (let [request-id (request-id valvonta-id (:id toimenpide))
+(defn log-toimenpide! [db aws-s3-client whoami valvonta toimenpide henkilot ilmoituspaikat]
+  (let [request-id (request-id (:id valvonta) (:id toimenpide))
         sender-id (:email whoami)
         case-number (:diaarinumero toimenpide)
         processing-action (resolve-processing-action toimenpide)
         document (when (:document processing-action)
-                   (let [{:keys [template template-data]} (generate-template db whoami toimenpide)
+                   (let [{:keys [template template-data]} (generate-template db whoami valvonta toimenpide (first henkilot) ilmoituspaikat) ; TODO: fix to get all henkilot
                          bytes (pdf/generate-pdf->bytes template template-data)]
-                     (asha/store-document aws-s3-client file-key-prefix valvonta-id (:id toimenpide) bytes)
+                     (asha/store-document aws-s3-client file-key-prefix (:id valvonta) (:id toimenpide) bytes)
                      bytes))]
     (asha/log-toimenpide!
       sender-id

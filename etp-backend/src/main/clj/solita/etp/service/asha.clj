@@ -9,7 +9,8 @@
             [solita.etp.config :as config]
             [solita.etp.exception :as exception]
             [clojure.data.codec.base64 :as b64]
-            [solita.etp.service.file :as file-service]))
+            [solita.etp.service.file :as file-service]
+            [clojure.string :as str]))
 
 (defn debug-print [info]
   (when config/asha-debug?
@@ -219,12 +220,6 @@
                              :description    description}}))
     (proceed-operation! sender-id request-id case-number latest-prosessing-action "Sulje asia")))
 
-(defn kayttaja->contact [kayttaja]
-  {:type          "ORGANIZATION"                            ;No enum constant fi.ys.eservice.entity.ContactType.PERSON
-   :first-name    (:etunimi kayttaja)
-   :last-name     (:sukunimi kayttaja)
-   :email-address (:email kayttaja)})
-
 (defn- file-path [file-key-prefix valvonta-id toimenpide-id]
   (str file-key-prefix "/" valvonta-id "/" toimenpide-id))
 
@@ -236,3 +231,8 @@
 
 (defn find-document [aws-s3-client file-key-prefix valvonta-id toimenpide-id]
   (file-service/find-file aws-s3-client (file-path file-key-prefix valvonta-id toimenpide-id)))
+
+(defn string-join [separator coll]
+  (str/join separator (->> coll
+                           (map str)
+                           (remove empty?))))

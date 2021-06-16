@@ -204,14 +204,21 @@
 
 (defn add-toimenpide! [db aws-s3-client whoami valvonta-id toimenpide-add]
   (let [diaarinumero (if (toimenpide/case-open? toimenpide-add)
-                       (asha/open-case! db whoami valvonta-id)
+                       (asha/open-case!
+                         db
+                         whoami
+                         (find-valvonta db valvonta-id)
+                         (find-henkilot db valvonta-id)
+                         (find-ilmoituspaikat db))
                        (find-diaarinumero db valvonta-id toimenpide-add))
         toimenpide (insert-toimenpide! db whoami valvonta-id diaarinumero toimenpide-add)
         toimenpide-id (:id toimenpide)]
     (case (-> toimenpide :type-id toimenpide/type-key)
       :closed (asha/close-case! whoami valvonta-id toimenpide)
       (when (toimenpide/asha-toimenpide? toimenpide)
-        (asha/log-toimenpide! db aws-s3-client whoami valvonta-id toimenpide)))
+        (let [valvonta (find-valvonta db valvonta-id)
+              henkilot (find-henkilot db valvonta-id)]
+          (asha/log-toimenpide! db aws-s3-client whoami valvonta-id valvonta toimenpide henkilot))))
     {:id toimenpide-id}))
 
 (defn update-toimenpide! [db valvonta-id toimenpide-id toimenpide-update]
@@ -222,9 +229,11 @@
 (defn toimenpide-filename [toimenpide] "test.pdf")
 
 (defn preview-toimenpide [db whoami id toimenpide ostream]
-  (when-let [{:keys [template template-data]} (asha/generate-template db whoami id toimenpide)]
-    (with-open [output (io/output-stream ostream)]
-      (pdf/html->pdf template template-data output))))
+  (let [valvonta (find-valvonta db id)
+        ilmoituspaikat (find-ilmoituspaikat db)]
+    (when-let [{:keys [template template-data]} (asha/generate-template db whoami id valvonta toimenpide ilmoituspaikat)]
+      (with-open [output (io/output-stream ostream)]
+        (pdf/html->pdf template template-data output)))))
 
 (defn find-toimenpide-document [aws-s3-client valvonta-id toimenpide-id ostream]
   (when-let [document (asha/find-document aws-s3-client valvonta-id toimenpide-id)]

@@ -9,5 +9,8 @@ select id, label_fi, label_sv, valid from toimintaalue
 -- name: select-postinumerot
 select id, label_fi, label_sv, valid, kunta_id from postinumero
 
+-- name: select-postinumero-by-id
+select id, label_fi, label_sv, valid, kunta_id from postinumero where id = :id
+
 -- name: select-kunnat
 select id, label_fi, label_sv, valid, toimintaalue_id from kunta

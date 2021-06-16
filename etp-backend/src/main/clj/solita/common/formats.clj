@@ -1,4 +1,5 @@
 (ns solita.common.formats
+  (:require [clojure.string :as str])
   (:import (java.util Locale)
            (java.text DecimalFormatSymbols)
            (java.math RoundingMode)))
@@ -14,3 +15,10 @@
                           (.setMaximumFractionDigits (if dp dp Integer/MAX_VALUE))
                           (.setRoundingMode RoundingMode/HALF_UP))]
       (.format number-format (bigdec x)))))
+
+
+(defn string->int [s]
+  (when (-> s str/blank? not)
+    (try (Integer/parseInt s)
+         (catch NumberFormatException e
+           nil))))

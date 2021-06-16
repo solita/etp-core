@@ -91,12 +91,6 @@
 (defn join-strings [& strs]
   (->> strs (remove str/blank?) (str/join ", ")))
 
-(defn string->int [s]
-  (when (-> s str/blank? not)
-    (try (Integer/parseInt s)
-         (catch NumberFormatException e
-           nil))))
-
 (def ^:private energiamuotokertoimet
   (map/map-values
     (partial map/map-keys #(-> % name (str "-kerroin") keyword))
@@ -111,7 +105,7 @@
           postinumero (find-by-id postinumerot (-> energiatodistus
                                                    :perustiedot
                                                    :postinumero
-                                                   string->int))
+                                                   formats/string->int))
           kielisyys (find-by-id kielisyydet (-> energiatodistus
                                                 :perustiedot
                                                 :kieli))
