@@ -1,4 +1,10 @@
-(ns solita.etp.service.valvonta-kaytto)
+(ns solita.etp.service.valvonta-kaytto
+  (:require [solita.etp.service.valvonta-kaytto.asha :as asha]
+            [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
+            [clojure.java.io :as io]
+            [solita.etp.service.pdf :as pdf]
+            [clojure.set :as set])
+  (:import (java.time Instant)))
 
 (defonce state (atom {:valvonnat (sorted-map)
                       :henkilot (sorted-map)
@@ -145,3 +151,82 @@
 
 (defn delete-liite! [_ liite-id]
   (delete! :liitteet liite-id))
+
+(defn find-toimenpidetyypit [db]
+  (for [[idx label] (map-indexed vector ["Valvonnan aloitus"
+                                         "Tietopyyntö" "Tietopyyntö / Kehotus" "Tietopyyntö / Varoitus"
+                                         "Käskypäätös"
+                                         "Valvonnan lopetus"])]
+    {:id idx
+     :label-fi label
+     :label-sv (str label " SV?")
+     :valid true}))
+
+(defn find-templates [db]
+  (for [[idx label] (map-indexed vector ["Tietopyyntö" "Tietopyyntö / Kehotus" "Tietopyyntö / Varoitus"])]
+    {:id idx
+     :label-fi label
+     :label-sv (str label " SV?")
+     :toimenpidetype-id (inc idx)
+     :language "fi"
+     :valid true}))
+
+(def valvonta-toimenpiteet (atom {}))
+
+(defn find-toimenpiteet [db valvonta-id]
+  (when-not (nil? (find-valvonta db valvonta-id))
+    (or (@valvonta-toimenpiteet valvonta-id) [])))
+
+(defn find-toimenpide [db valvonta-id toimenpide-id]
+  (get-in @valvonta-toimenpiteet [valvonta-id toimenpide-id]))
+
+(defn- insert-toimenpide! [db whoami valvonta-id diaarinumero toimenpide-add]
+  (-> valvonta-toimenpiteet
+      (swap! #(update % valvonta-id
+                      (fn [toimenpiteet]
+                        (conj (or toimenpiteet [])
+                              (assoc toimenpide-add
+                                :id (count toimenpiteet)
+                                :publish-time (Instant/now)
+                                :create-time (Instant/now)
+                                :author (-> whoami
+                                            (select-keys [:id :etunimi :sukunimi :rooli])
+                                            (set/rename-keys {:rooli :rooli-id}))
+                                :filename "test.pdf"
+                                :diaarinumero diaarinumero)))))
+      (get valvonta-id)
+      last))
+
+(defn- find-diaarinumero [db valvonta-id toimenpide]
+  (-> (find-toimenpiteet db valvonta-id)
+      last
+      :diaarinumero))
+
+(defn add-toimenpide! [db aws-s3-client whoami valvonta-id toimenpide-add]
+  (let [diaarinumero (if (toimenpide/case-open? toimenpide-add)
+                       (asha/open-case! db whoami valvonta-id)
+                       (find-diaarinumero db valvonta-id toimenpide-add))
+        toimenpide (insert-toimenpide! db whoami valvonta-id diaarinumero toimenpide-add)
+        toimenpide-id (:id toimenpide)]
+    (case (-> toimenpide :type-id toimenpide/type-key)
+      :closed (asha/close-case! whoami valvonta-id toimenpide)
+      (when (toimenpide/asha-toimenpide? toimenpide)
+        (asha/log-toimenpide! db aws-s3-client whoami valvonta-id toimenpide)))
+    {:id toimenpide-id}))
+
+(defn update-toimenpide! [db valvonta-id toimenpide-id toimenpide-update]
+  (swap! valvonta-toimenpiteet
+         #(update-in % [valvonta-id toimenpide-id]
+                     (fn [toimenpide] (merge toimenpide toimenpide-update)))))
+
+(defn toimenpide-filename [toimenpide] "test.pdf")
+
+(defn preview-toimenpide [db whoami id toimenpide ostream]
+  (when-let [{:keys [template template-data]} (asha/generate-template db whoami id toimenpide)]
+    (with-open [output (io/output-stream ostream)]
+      (pdf/html->pdf template template-data output))))
+
+(defn find-toimenpide-document [aws-s3-client valvonta-id toimenpide-id ostream]
+  (when-let [document (asha/find-document aws-s3-client valvonta-id toimenpide-id)]
+    (with-open [output (io/output-stream ostream)]
+      (io/copy document output))))
