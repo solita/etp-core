@@ -4,6 +4,7 @@
             [schema-tools.core :as schema-tools]
             [reitit.ring.schema :as reitit-schema]
             [solita.etp.api.response :as api-response]
+            [solita.etp.api.valvonta-kaytto-toimenpiteet :as toimenpiteet-api]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.valvonta-kaytto :as valvonta-service]
@@ -34,6 +35,20 @@
                     :access    rooli-service/paakayttaja?
                     :handler   (fn [{:keys [db]}]
                                  (r/response (valvonta-service/find-toimitustavat db)))}}]
+    ["/toimenpidetyypit"
+     {:conflicting true
+      :get         {:summary   "Hae käytönvalvonnan toimenpidetyypit."
+                    :responses {200 {:body [common-schema/Luokittelu]}}
+                    :access    rooli-service/paakayttaja?
+                    :handler   (fn [{:keys [db]}]
+                                 (r/response (valvonta-service/find-toimenpidetyypit db)))}}]
+    ["/templates"
+     {:conflicting true
+      :get         {:summary   "Hae käytönvalvonnan asiakirjapohjat."
+                    :responses {200 {:body [valvonta-schema/Template]}}
+                    :access    rooli-service/paakayttaja?
+                    :handler   (fn [{:keys [db]}]
+                                 (r/response (valvonta-service/find-templates db)))}}]
     [""
      {:conflicting true
       :get         {:summary    "Hae käytönvalvonnat (työjono)."
@@ -190,6 +205,7 @@
                                 (api-response/ok|not-found
                                  (valvonta-service/delete-yritys! db yritys-id)
                                  (str "Yritys " id "/" yritys-id " does not exist.")))}}]]]
+     toimenpiteet-api/routes
      ["/liitteet"
       [""
        {:get {:summary    "Hae käytönvalvonnan liitteet."
