@@ -4,7 +4,8 @@
             [schema-tools.walk :as walk]
             [solita.common.schema :as xschema]
             [solita.etp.schema.common :as common-schema]
-            [solita.etp.schema.geo :as geo-schema]))
+            [solita.etp.schema.geo :as geo-schema]
+            [schema-tools.core :as schema-tools]))
 
 (defn with-maybe-vals [schema]
   (walk/prewalk (fn [x]
@@ -47,3 +48,24 @@
 (def YritysSave (assoc OsapuoliBase :ytunnus common-schema/Ytunnus))
 (def Yritys (complete-valvonta-schema YritysSave))
 (def YritysStatus Yritys)
+
+(def ToimenpideUpdate
+  (schema-tools/optional-keys
+    {:deadline-date (schema/maybe common-schema/Date)
+     :template-id   (schema/maybe common-schema/Key)
+     :description   (schema/maybe schema/Str)}))
+
+(def ToimenpideAdd
+  {:type-id       common-schema/Key
+   :deadline-date (schema/maybe common-schema/Date)
+   :template-id   (schema/maybe common-schema/Key)
+   :description   (schema/maybe schema/Str)})
+
+(def Toimenpide
+  (assoc ToimenpideAdd
+    :id common-schema/Key
+    :diaarinumero (schema/maybe schema/Str)
+    :author common-schema/Kayttaja
+    :create-time common-schema/Instant
+    :publish-time common-schema/Instant
+    :filename schema/Str))
