@@ -217,8 +217,9 @@
       :closed (asha/close-case! whoami valvonta-id toimenpide)
       (when (toimenpide/asha-toimenpide? toimenpide)
         (let [valvonta (find-valvonta db valvonta-id)
-              henkilot (find-henkilot db valvonta-id)]
-          (asha/log-toimenpide! db aws-s3-client whoami valvonta-id valvonta toimenpide henkilot))))
+              henkilot (find-henkilot db valvonta-id)
+              ilmoituspaikat (find-ilmoituspaikat db)]
+          (asha/log-toimenpide! db aws-s3-client whoami valvonta toimenpide henkilot ilmoituspaikat))))
     {:id toimenpide-id}))
 
 (defn update-toimenpide! [db valvonta-id toimenpide-id toimenpide-update]
