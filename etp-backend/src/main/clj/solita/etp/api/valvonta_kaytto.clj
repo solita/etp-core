@@ -49,10 +49,19 @@
                     :access    rooli-service/paakayttaja?
                     :handler   (fn [{:keys [db]}]
                                  (r/response (valvonta-service/find-templates db)))}}]
+    ["/count"
+     {:conflicting true
+      :get         {:summary    "Hae käytönvalvontojen lukumäärä."
+                    :parameters {:query valvonta-schema/ValvontaQuery}
+                    :responses  {200 {:body {:count schema/Int}}}
+                    :access     rooli-service/paakayttaja?
+                    :handler    (fn [{{:keys [query]} :parameters :keys [db]}]
+                                  (r/response (valvonta-service/count-valvonnat db query)))}}]
     [""
      {:conflicting true
       :get         {:summary    "Hae käytönvalvonnat (työjono)."
-                    :parameters {:query valvonta-schema/ValvontaQuery}
+                    :parameters {:query (merge valvonta-schema/ValvontaQuery
+                                               valvonta-schema/ValvontaQueryWindow)}
                     :responses  {200 {:body [valvonta-kaytto-schema/ValvontaStatus]}}
                     :access     rooli-service/paakayttaja?
                     :handler    (fn [{{:keys [query]} :parameters :keys [db]}]

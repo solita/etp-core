@@ -4,10 +4,10 @@
 
 (def Valvonta {:active schema/Bool})
 
+(def ValvontaQueryWindow (common-schema/QueryWindow 100))
+
 (def ValvontaQuery
-  {(schema/optional-key :valvoja-id) common-schema/Key
-   (schema/optional-key :limit) schema/Int
-   (schema/optional-key :offset) schema/Int})
+  {(schema/optional-key :valvoja-id) common-schema/Key})
 
 (def Template
   (assoc common-schema/Luokittelu
