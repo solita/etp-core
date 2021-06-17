@@ -174,3 +174,7 @@
 (def Rakennustunnus
   (schema/constrained schema/Str valid-rakennustunnus?
                       "rakennustunnus"))
+
+(defn QueryWindow [max-limit]
+  {(schema/optional-key :limit)  (LimitedInt 1 max-limit)
+   (schema/optional-key :offset) schema/Int})
