@@ -174,7 +174,7 @@
                                           :processing-action {:name-identity processing-action}}
                        :start-processing {:assignee sender-id}}))
 
-(defn log-toimenpide! [sender-id request-id case-number processing-action & [document]]
+(defn log-toimenpide! [sender-id request-id case-number processing-action & [documents]]
   (move-processing-action!
     sender-id
     request-id
@@ -190,15 +190,16 @@
                        :sender-id         sender-id
                        :identity          (:identity processing-action)
                        :processing-action (:processing-action processing-action)})
-  (when document
-    (add-documents-to-processing-action!
-      sender-id
-      request-id
-      case-number
-      (-> processing-action :processing-action :name)
-      [{:content (bytes->base64 document)
-        :type    (-> processing-action :document :type)
-        :name    (-> processing-action :document :filename)}]))
+
+   (doseq [document documents]
+     (add-documents-to-processing-action!
+        sender-id
+        request-id
+        case-number
+        (-> processing-action :processing-action :name)
+        [{:content (bytes->base64 document)
+          :type    (-> processing-action :document :type)
+          :name    (-> processing-action :document :filename)}]))
   (take-processing-action! sender-id request-id case-number (-> processing-action :processing-action :name))
   (mark-processing-action-as-ready!
     sender-id
@@ -219,18 +220,6 @@
                              :reception-date (java.time.Instant/now)
                              :description    description}}))
     (proceed-operation! sender-id request-id case-number latest-prosessing-action "Sulje asia")))
-
-(defn- file-path [file-key-prefix valvonta-id toimenpide-id]
-  (str file-key-prefix "/" valvonta-id "/" toimenpide-id))
-
-(defn store-document [aws-s3-client file-key-prefix valvonta-id toimenpide-id document]
-  (file-service/upsert-file-from-bytes
-    aws-s3-client
-    (file-path file-key-prefix valvonta-id toimenpide-id)
-    document))
-
-(defn find-document [aws-s3-client file-key-prefix valvonta-id toimenpide-id]
-  (file-service/find-file aws-s3-client (file-path file-key-prefix valvonta-id toimenpide-id)))
 
 (defn string-join [separator coll]
   (str/join separator (->> coll

@@ -8,11 +8,15 @@
             [solita.etp.service.valvonta-oikeellisuus.toimenpide :as toimenpide]
             [solita.etp.service.pdf :as pdf]
             [clojure.java.io :as io]
-            [solita.etp.db :as db]))
+            [solita.etp.db :as db]
+            [solita.etp.service.file :as file-service]))
 
 (db/require-queries 'valvonta-oikeellisuus)
 
 (def file-key-prefix "valvonta/oikeellisuus")
+
+(defn- file-path [energiatodistus-id toimenpide-id]
+  (str file-key-prefix "/" energiatodistus-id "/" toimenpide-id))
 
 (defn toimenpide-type->document [type-id]
   (let [type-key (toimenpide/type-key type-id )
@@ -24,8 +28,14 @@
                    :audit-warning  {:type "Kirje" :filename "varoitus_valvontamuistio.pdf"}}]
     (get documents type-key)))
 
-(defn find-document [aws-s3-client valvonta-id toimenpide-id]
-  (asha/find-document aws-s3-client file-key-prefix valvonta-id toimenpide-id))
+(defn- store-document [aws-s3-client energiatodistus-id toimenpide-id document]
+  (file-service/upsert-file-from-bytes
+    aws-s3-client
+    (file-path energiatodistus-id toimenpide-id)
+    document))
+
+(defn find-document [aws-s3-client energiatodistus-id toimenpide-id]
+  (file-service/find-file aws-s3-client (file-path energiatodistus-id toimenpide-id)))
 
 (defn find-energiatodistus-valvonta-documents [db id]
   (->> (valvonta-oikeellisuus-db/select-energiatodistus-valvonta-documents db {:energiatodistus-id id})
@@ -179,17 +189,17 @@
         sender-id (:email whoami)
         case-number (:diaarinumero toimenpide)
         processing-action (resolve-processing-action sender-id request-id case-number toimenpide laatija)
-        document (when (:document processing-action)
-                   (let [{:keys [template template-data]} (generate-template db whoami toimenpide energiatodistus laatija)
-                         bytes (pdf/generate-pdf->bytes template template-data)]
-                     (asha/store-document aws-s3-client file-key-prefix energiatodistus-id (:id toimenpide) bytes)
-                     bytes))]
+        documents (when (:document processing-action)
+                    (let [{:keys [template template-data]} (generate-template db whoami toimenpide energiatodistus laatija)
+                          bytes (pdf/generate-pdf->bytes template template-data)]
+                      (store-document aws-s3-client energiatodistus-id (:id toimenpide) bytes)
+                      [bytes]))]
     (asha/log-toimenpide!
       sender-id
       request-id
       case-number
       processing-action
-      document)))
+      documents)))
 
 (defn close-case! [whoami energiatodistus-id toimenpide]
   (asha/close-case!

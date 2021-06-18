@@ -216,10 +216,16 @@
     (case (-> toimenpide :type-id toimenpide/type-key)
       :closed (asha/close-case! whoami valvonta-id toimenpide)
       (when (toimenpide/asha-toimenpide? toimenpide)
-        (let [valvonta (find-valvonta db valvonta-id)
-              henkilot (find-henkilot db valvonta-id)
-              ilmoituspaikat (find-ilmoituspaikat db)]
-          (asha/log-toimenpide! db aws-s3-client whoami valvonta toimenpide henkilot ilmoituspaikat))))
+        (asha/log-toimenpide!
+          db
+          aws-s3-client
+          whoami
+          (find-valvonta db valvonta-id)
+          toimenpide
+          (concat
+            (find-henkilot db valvonta-id)
+            (find-yritykset db valvonta-id))
+          (find-ilmoituspaikat db))))
     {:id toimenpide-id}))
 
 (defn update-toimenpide! [db valvonta-id toimenpide-id toimenpide-update]
@@ -229,14 +235,23 @@
 
 (defn toimenpide-filename [toimenpide] "test.pdf")
 
-(defn preview-toimenpide [db whoami id toimenpide ostream]
-  (let [valvonta (find-valvonta db id)
-        ilmoituspaikat (find-ilmoituspaikat db)]
-    (when-let [{:keys [template template-data]} (asha/generate-template db whoami id valvonta toimenpide ilmoituspaikat)]
-      (with-open [output (io/output-stream ostream)]
-        (pdf/html->pdf template template-data output)))))
+(defn- find-osapuoli [db osapuoli-type osapuoli-id]
+  (cond
+    (= osapuoli-type :henkilo) (find-henkilo db osapuoli-id)
+    (= osapuoli-type :yritys) (find-yritys db osapuoli-id)))
 
-(defn find-toimenpide-document [aws-s3-client valvonta-id toimenpide-id ostream]
-  (when-let [document (asha/find-document aws-s3-client valvonta-id toimenpide-id)]
+(defn preview-toimenpide [db whoami id toimenpide osapuoli ostream]
+  (when-let [{:keys [template template-data]} (asha/generate-template
+                                                db
+                                                whoami
+                                                (find-valvonta db id)
+                                                toimenpide
+                                                osapuoli
+                                                (find-ilmoituspaikat db))]
+    (with-open [output (io/output-stream ostream)]
+      (pdf/html->pdf template template-data output))))
+
+(defn find-toimenpide-document [aws-s3-client valvonta-id toimenpide-id osapuoli ostream]
+  (when-let [document (asha/find-document aws-s3-client valvonta-id toimenpide-id osapuoli)]
     (with-open [output (io/output-stream ostream)]
       (io/copy document output))))

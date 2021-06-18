@@ -6,11 +6,16 @@
 </div>
 
 <div class="kaytto-omistaja">
-    {{#omistaja}}
+    {{#omistaja-henkilo}}
         {{etunimi}} {{sukunimi}} <br />
-    {{katuosoite}}  <br />
-    {{postinumero}} {{postitoimipaikka}}
-    {{/omistaja}}
+        {{katuosoite}}  <br />
+        {{postinumero}} {{postitoimipaikka}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-organisaatio}}
+        {{nimi}} {{ytunnus}} <br />
+        {{katuosoite}}  <br />
+        {{postinumero}} {{postitoimipaikka}}
+    {{/omistaja-organisaatio}}
 </div>
 <div class="kaytto-kohde">
     {{#kohde}}

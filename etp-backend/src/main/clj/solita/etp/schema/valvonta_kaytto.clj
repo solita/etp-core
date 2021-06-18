@@ -51,6 +51,9 @@
 (def Yritys (complete-valvonta-schema YritysSave))
 (def YritysStatus Yritys)
 
+(def henkilo? #(contains? % :henkilotunnus))
+(def yritys? #(contains? % :nimi))
+
 (def ToimenpideUpdate
   (schema-tools/optional-keys
     {:deadline-date (schema/maybe common-schema/Date)

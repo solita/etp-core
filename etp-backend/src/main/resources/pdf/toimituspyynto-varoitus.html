@@ -5,11 +5,16 @@
 </div>
 
 <div class="kaytto-omistaja">
-    {{#omistaja}}
-    {{etunimi}} {{sukunimi}} <br/>
-    {{katuosoite}} <br/>
-    {{postinumero}} {{postitoimipaikka}}
-    {{/omistaja}}
+    {{#omistaja-henkilo}}
+        {{etunimi}} {{sukunimi}} <br />
+        {{katuosoite}}  <br />
+        {{postinumero}} {{postitoimipaikka}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-organisaatio}}
+        {{nimi}} {{ytunnus}} <br />
+        {{katuosoite}}  <br />
+        {{postinumero}} {{postitoimipaikka}}
+    {{/omistaja-organisaatio}}
 </div>
 <div class="kaytto-kohde">
     {{#kohde}}
