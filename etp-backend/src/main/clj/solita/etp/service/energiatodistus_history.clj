@@ -17,22 +17,21 @@
        flat/sequence->map
        (flat/tree->flat ".")))
 
-
-
-(defn audit-event [modifiedby-fullname modifytime k v external-api?]
+(defn audit-event [modifiedby-fullname modifytime k init-v new-v external-api?]
   (let [type (cond
-               (string? v) :str
-               (number? v) :number
-               (boolean? v) :bool
-               (instance? Instant v) :date
+               (string? new-v) :str
+               (number? new-v) :number
+               (boolean? new-v) :bool
+               (instance? Instant new-v) :date
                :default :other)]
     {:modifiedby-fullname modifiedby-fullname
      :modifytime (if (and (contains? state-fields k)
                           (= type :date))
-                   v
+                   new-v
                    modifytime)
      :k k
-     :v v
+     :init-v init-v
+     :new-v new-v
      :type type
      :external-api external-api?}))
 
@@ -49,6 +48,7 @@
                                             (audit-event modifiedby-fullname
                                                          modifytime
                                                          k
+                                                         (get init k)
                                                          v
                                                          false)))
                                {}
@@ -65,6 +65,7 @@
        :state-history [(audit-event modifiedby-fullname
                                     modifytime
                                     :tila-id
+                                    nil
                                     0
                                     (str/includes? service-uri
                                                    "/api/external/"))]
