@@ -6,7 +6,8 @@
                  :modifytime common-schema/Instant
                  :k schema/Keyword
                  :v schema/Any
-                 :type schema/Keyword})
+                 :type schema/Keyword
+                 :external-api schema/Bool})
 
 (def HistoryResponse
   {:state-history [AuditEvent]

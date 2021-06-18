@@ -1,5 +1,6 @@
 (ns solita.etp.service.energiatodistus-history
-  (:require [clojure.data :as data]
+  (:require [clojure.string :as str]
+            [clojure.data :as data]
             [flathead.flatten :as flat]
             [solita.etp.db :as db]
             [solita.etp.service.energiatodistus :as energiatodistus-service])
@@ -16,7 +17,9 @@
        flat/sequence->map
        (flat/tree->flat ".")))
 
-(defn audit-event [modifiedby-fullname modifytime k v]
+
+
+(defn audit-event [modifiedby-fullname modifytime k v external-api?]
   (let [type (cond
                (string? v) :str
                (number? v) :number
@@ -30,10 +33,12 @@
                    modifytime)
      :k k
      :v v
-     :type type}))
+     :type type
+     :external-api external-api?}))
 
 (defn audit-history [{:keys [init prev] :as acc}
-                      {:keys [modifiedby-fullname modifytime] :as audit-row}]
+                     {:keys [modifiedby-fullname modifytime service-uri]
+                      :as audit-row}]
   (let [flat-et (audit-row->flat-energiatodistus audit-row)]
     (if init
       (let [[_ diff-to-prev _] (data/diff prev flat-et)
@@ -44,7 +49,8 @@
                                             (audit-event modifiedby-fullname
                                                          modifytime
                                                          k
-                                                         v)))
+                                                         v
+                                                         false)))
                                {}
                                diff-to-prev)]
         (-> acc
@@ -56,7 +62,12 @@
             (update :form-history #(apply dissoc % reverted-keys))))
       {:init flat-et
        :prev flat-et
-       :state-history [(audit-event modifiedby-fullname modifytime :tila-id 0)]
+       :state-history [(audit-event modifiedby-fullname
+                                    modifytime
+                                    :tila-id
+                                    0
+                                    (str/includes? service-uri
+                                                   "/api/external/"))]
        :form-history {}})))
 
 (defn find-audit-rows [db id]
