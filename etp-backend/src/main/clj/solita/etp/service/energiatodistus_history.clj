@@ -14,7 +14,7 @@
   (->> audit-row
        energiatodistus-service/db-row->energiatodistus
        flat/sequence->map
-       (flat/tree->flat "$")))
+       (flat/tree->flat ".")))
 
 (defn audit-event [modifiedby-fullname modifytime k v]
   {:modifiedby-fullname modifiedby-fullname

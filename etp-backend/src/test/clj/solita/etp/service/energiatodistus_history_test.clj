@@ -76,7 +76,7 @@
                                      (map service/audit-row->flat-energiatodistus))]
     (doseq [flat-energiatodistus flats]
       (t/is (contains? flat-energiatodistus :id))
-      (t/is (contains? flat-energiatodistus :lahtotiedot$lammitetty-nettoala)))))
+      (t/is (contains? flat-energiatodistus :lahtotiedot.lammitetty-nettoala)))))
 
 (t/deftest audit-event-test
   (let [now (Instant/now)]
@@ -170,12 +170,12 @@
 
     ;; Energiatodistus 1 form history
     (t/is (= [{:modifiedby-fullname laatija-1-fullname
-               :k :tulokset$e-luku
-               :v 1
+               :k :lahtotiedot.lammitetty-nettoala
+               :v 123.45M
                :type :number}
               {:modifiedby-fullname laatija-1-fullname
-               :k :lahtotiedot$lammitetty-nettoala
-               :v 123.45M
+               :k :tulokset.e-luku
+               :v 1
                :type :number}]
              (->> history-1 :form-history (map #(dissoc % :modifytime)))))
 
