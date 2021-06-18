@@ -5,7 +5,8 @@
             [solita.etp.test-data.energiatodistus :as energiatodistus-test-data]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.energiatodistus-history :as service])
-  (:import (java.time Instant)))
+  (:import (java.time Instant)
+           (java.time.temporal ChronoUnit)))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -79,7 +80,8 @@
       (t/is (contains? flat-energiatodistus :lahtotiedot.lammitetty-nettoala)))))
 
 (t/deftest audit-event-test
-  (let [now (Instant/now)]
+  (let [now (Instant/now)
+        yesterday (.minus now 1 ChronoUnit/DAYS)]
     (t/is (= {:modifiedby-fullname "Cooper, Dale"
               :modifytime now
               :k :foo
@@ -95,9 +97,15 @@
     (t/is (= {:modifiedby-fullname "Mike"
               :modifytime now
               :k :foo
-              :v now
+              :v yesterday
               :type :date}
-             (service/audit-event "Mike" now :foo now)))
+             (service/audit-event "Mike" now :foo yesterday)))
+    (t/is (= {:modifiedby-fullname "Judy"
+              :modifytime yesterday
+              :k :allekirjoitusaika
+              :v yesterday
+              :type :date}
+             (service/audit-event "Judy" now :allekirjoitusaika yesterday)))
     (t/is (= {:modifiedby-fullname "Palmer, Laura"
               :modifytime now
               :k :foo
@@ -149,24 +157,24 @@
               :v 1
               :type :number}
             (-> history-1 :state-history second (dissoc :modifytime))))
-    (t/is (= :voimassaolo-paattymisaika
-             (-> history-1 :state-history (nth 2) :k)))
     (t/is (= {:modifiedby-fullname laatija-1-fullname
               :k :tila-id
               :v 2
               :type :number}
-             (-> history-1 :state-history (nth 3) (dissoc :modifytime))))
-    (t/is (= :allekirjoitusaika (-> history-1 :state-history (nth 4) :k)))
+             (-> history-1 :state-history (nth 2) (dissoc :modifytime))))
+    (t/is (= :allekirjoitusaika (-> history-1 :state-history (nth 3) :k)))
     (t/is (= {:modifiedby-fullname laatija-2-fullname
               :k :tila-id
               :v 4
               :type :number}
-             (-> history-1 :state-history (nth 5) (dissoc :modifytime))))
+             (-> history-1 :state-history (nth 4) (dissoc :modifytime))))
     (t/is (= {:modifiedby-fullname laatija-2-fullname
               :k :korvaava-energiatodistus-id
               :v energiatodistus-id-2
               :type :number}
-             (-> history-1 :state-history last (dissoc :modifytime))))
+             (-> history-1 :state-history (nth 5) (dissoc :modifytime))))
+    (t/is (= :voimassaolo-paattymisaika
+             (-> history-1 :state-history last :k)))
 
     ;; Energiatodistus 1 form history
     (t/is (= [{:modifiedby-fullname laatija-1-fullname
@@ -191,15 +199,14 @@
               :v 1
               :type :number}
              (-> history-2 :state-history second (dissoc :modifytime))))
-    (t/is (= :voimassaolo-paattymisaika
-             (-> history-2 :state-history (nth 2) :k)))
     (t/is (= {:modifiedby-fullname laatija-2-fullname
               :k :tila-id
               :v 2
               :type :number}
-             (-> history-2 :state-history (nth 3) (dissoc :modifytime))))
-    (t/is (= :allekirjoitusaika (-> history-2 :state-history last :k)))
-
+             (-> history-2 :state-history (nth 2) (dissoc :modifytime))))
+    (t/is (= :allekirjoitusaika (-> history-2 :state-history (nth 3) :k)))
+    (t/is (= :voimassaolo-paattymisaika
+             (-> history-2 :state-history last :k)))
 
     ;; Energiatodistus 2 form history
     (t/is (= [{:modifiedby-fullname laatija-2-fullname

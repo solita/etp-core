@@ -17,16 +17,20 @@
        (flat/tree->flat ".")))
 
 (defn audit-event [modifiedby-fullname modifytime k v]
-  {:modifiedby-fullname modifiedby-fullname
-   :modifytime modifytime
-   :k k
-   :v v
-   :type (cond
-           (string? v) :str
-           (number? v) :number
-           (boolean? v) :bool
-           (instance? Instant v) :date
-           :default :other)})
+  (let [type (cond
+               (string? v) :str
+               (number? v) :number
+               (boolean? v) :bool
+               (instance? Instant v) :date
+               :default :other)]
+    {:modifiedby-fullname modifiedby-fullname
+     :modifytime (if (and (contains? state-fields k)
+                          (= type :date))
+                   v
+                   modifytime)
+     :k k
+     :v v
+     :type type}))
 
 (defn audit-history [{:keys [init prev] :as acc}
                       {:keys [modifiedby-fullname modifytime] :as audit-row}]
