@@ -2,7 +2,8 @@
   (:require [clojure.data :as data]
             [flathead.flatten :as flat]
             [solita.etp.db :as db]
-            [solita.etp.service.energiatodistus :as energiatodistus-service]))
+            [solita.etp.service.energiatodistus :as energiatodistus-service])
+  (:import (java.time Instant)))
 
 (db/require-queries 'energiatodistus-history)
 
@@ -19,7 +20,13 @@
   {:modifiedby-fullname modifiedby-fullname
    :modifytime modifytime
    :k k
-   :v v})
+   :v v
+   :type (cond
+           (string? v) :str
+           (number? v) :number
+           (boolean? v) :bool
+           (instance? Instant v) :date
+           :default :other)})
 
 (defn audit-history [{:keys [init prev] :as acc}
                       {:keys [modifiedby-fullname modifytime] :as audit-row}]

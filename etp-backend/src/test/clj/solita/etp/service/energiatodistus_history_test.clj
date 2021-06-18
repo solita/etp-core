@@ -83,8 +83,27 @@
     (t/is (= {:modifiedby-fullname "Cooper, Dale"
               :modifytime now
               :k :foo
-              :v 123}
-             (service/audit-event "Cooper, Dale" now :foo 123)))))
+              :v "bar"
+              :type :str}
+             (service/audit-event "Cooper, Dale" now :foo "bar")))
+    (t/is (= {:modifiedby-fullname "Bob"
+              :modifytime now
+              :k :foo
+              :v 123
+              :type :number}
+             (service/audit-event "Bob" now :foo 123)))
+    (t/is (= {:modifiedby-fullname "Mike"
+              :modifytime now
+              :k :foo
+              :v now
+              :type :date}
+             (service/audit-event "Mike" now :foo now)))
+    (t/is (= {:modifiedby-fullname "Palmer, Laura"
+              :modifytime now
+              :k :foo
+              :v [1 2 3]
+              :type :other}
+             (service/audit-event "Palmer, Laura" now :foo [1 2 3])))))
 
 (t/deftest find-audit-rows-test
   (let [{:keys [energiatodistukset]} (test-data-set)
@@ -120,39 +139,64 @@
 
     ;; Energiatodistus 1 state history
     (t/is (= 7 (-> history-1 :state-history count)))
-    (t/is (= {:modifiedby-fullname laatija-1-fullname :k :tila-id :v 0}
+    (t/is (= {:modifiedby-fullname laatija-1-fullname
+              :k :tila-id
+              :v 0
+              :type :number}
              (-> history-1 :state-history first (dissoc :modifytime))))
-    (t/is (= {:modifiedby-fullname laatija-1-fullname :k :tila-id :v 1}
+    (t/is (= {:modifiedby-fullname laatija-1-fullname
+              :k :tila-id
+              :v 1
+              :type :number}
             (-> history-1 :state-history second (dissoc :modifytime))))
     (t/is (= :voimassaolo-paattymisaika
              (-> history-1 :state-history (nth 2) :k)))
-    (t/is (= {:modifiedby-fullname laatija-1-fullname :k :tila-id :v 2}
+    (t/is (= {:modifiedby-fullname laatija-1-fullname
+              :k :tila-id
+              :v 2
+              :type :number}
              (-> history-1 :state-history (nth 3) (dissoc :modifytime))))
     (t/is (= :allekirjoitusaika (-> history-1 :state-history (nth 4) :k)))
-    (t/is (= {:modifiedby-fullname laatija-2-fullname :k :tila-id :v 4}
+    (t/is (= {:modifiedby-fullname laatija-2-fullname
+              :k :tila-id
+              :v 4
+              :type :number}
              (-> history-1 :state-history (nth 5) (dissoc :modifytime))))
     (t/is (= {:modifiedby-fullname laatija-2-fullname
-              :k :korvaava-energiatodistus-id :v energiatodistus-id-2}
+              :k :korvaava-energiatodistus-id
+              :v energiatodistus-id-2
+              :type :number}
              (-> history-1 :state-history last (dissoc :modifytime))))
 
     ;; Energiatodistus 1 form history
     (t/is (= [{:modifiedby-fullname laatija-1-fullname
                :k :tulokset$e-luku
-               :v 1}
+               :v 1
+               :type :number}
               {:modifiedby-fullname laatija-1-fullname
                :k :lahtotiedot$lammitetty-nettoala
-               :v 123.45M}]
+               :v 123.45M
+               :type :number}]
              (->> history-1 :form-history (map #(dissoc % :modifytime)))))
 
     ;; Energiatodistus 2 state history
     (t/is (= 5 (-> history-2 :state-history count)))
-    (t/is (= {:modifiedby-fullname laatija-2-fullname :k :tila-id :v 0}
+    (t/is (= {:modifiedby-fullname laatija-2-fullname
+              :k :tila-id
+              :v 0
+              :type :number}
              (-> history-2 :state-history first (dissoc :modifytime))))
-    (t/is (= {:modifiedby-fullname laatija-2-fullname :k :tila-id :v 1}
+    (t/is (= {:modifiedby-fullname laatija-2-fullname
+              :k :tila-id
+              :v 1
+              :type :number}
              (-> history-2 :state-history second (dissoc :modifytime))))
     (t/is (= :voimassaolo-paattymisaika
              (-> history-2 :state-history (nth 2) :k)))
-    (t/is (= {:modifiedby-fullname laatija-2-fullname :k :tila-id :v 2}
+    (t/is (= {:modifiedby-fullname laatija-2-fullname
+              :k :tila-id
+              :v 2
+              :type :number}
              (-> history-2 :state-history (nth 3) (dissoc :modifytime))))
     (t/is (= :allekirjoitusaika (-> history-2 :state-history last :k)))
 
@@ -160,8 +204,10 @@
     ;; Energiatodistus 2 form history
     (t/is (= [{:modifiedby-fullname laatija-2-fullname
                :k :korvattu-energiatodistus-id
-               :v energiatodistus-id-1}
+               :v energiatodistus-id-1
+               :type :number}
               {:modifiedby-fullname laatija-2-fullname
                :k :laskuriviviite
-               :v "laskuriviviite"}]
+               :v "laskuriviviite"
+               :type :str}]
              (->> history-2 :form-history (map #(dissoc % :modifytime)))))))

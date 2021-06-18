@@ -5,7 +5,8 @@
 (def AuditEvent {:modifiedby-fullname schema/Str
                  :modifytime common-schema/Instant
                  :k schema/Keyword
-                 :v schema/Any})
+                 :v schema/Any
+                 :type schema/Keyword})
 
 (def HistoryResponse
   {:state-history [AuditEvent]
