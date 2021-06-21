@@ -53,6 +53,8 @@
                    (conj acc (assoc valvonta :id id)))
                  [])))
 
+(defn count-valvonnat [db _] {:count 1})
+
 (defn find-valvonta [_ valvonta-id]
   (find! :valvonnat valvonta-id))
 
