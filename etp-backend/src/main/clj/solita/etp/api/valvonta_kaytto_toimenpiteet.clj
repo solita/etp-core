@@ -49,13 +49,13 @@
                                 404 {:body schema/Str}}
                    :handler    (fn [{{{:keys [id henkilo-id]} :path :keys [body]}
                                      :parameters :keys [db whoami]}]
-                                 (api-response/pdf-response
-                                   (ring-io/piped-input-stream
-                                     (partial valvonta-service/preview-toimenpide
-                                              db whoami id body
-                                              (valvonta-service/find-osapuoli db :henkilo henkilo-id)))
-                                   (valvonta-service/toimenpide-filename body)
-                                   (str "Käytönvalvonta " id " does not exists.")))}}]
+                                 (let [osapuoli (valvonta-service/find-osapuoli db :henkilo henkilo-id)]
+                                   (api-response/pdf-response
+                                     (ring-io/piped-input-stream
+                                       (partial valvonta-service/preview-toimenpide
+                                                db whoami id body osapuoli))
+                                     (valvonta-service/toimenpide-filename body)
+                                     (str "Käytönvalvonta " id " does not exists."))))}}]
    ["/yritykset/:yritys-id/preview"
     {:conflicting true
      :post        {:summary    "Yritys-osapuolen esikatsele toimenpiteen dokumentti"
@@ -67,13 +67,13 @@
                                 404 {:body schema/Str}}
                    :handler    (fn [{{{:keys [id yritys-id]} :path :keys [body]}
                                      :parameters :keys [db whoami]}]
-                                 (api-response/pdf-response
-                                   (ring-io/piped-input-stream
-                                     (partial valvonta-service/preview-toimenpide
-                                              db whoami id body
-                                              (valvonta-service/find-osapuoli db :yritys yritys-id)))
-                                   (valvonta-service/toimenpide-filename body)
-                                   (str "Käytönvalvonta " id " does not exists.")))}}]
+                                 (let [osapuoli (valvonta-service/find-osapuoli db :yritys yritys-id)]
+                                   (api-response/pdf-response
+                                     (ring-io/piped-input-stream
+                                       (partial valvonta-service/preview-toimenpide
+                                                db whoami id body osapuoli))
+                                     (valvonta-service/toimenpide-filename body)
+                                     (str "Käytönvalvonta " id " does not exists."))))}}]
    ["/:toimenpide-id"
     [""
      {:conflicting true
@@ -113,14 +113,14 @@
             :responses  {200 {:body nil}
                          404 {:body schema/Str}}
             :handler    (fn [{{{:keys [id toimenpide-id henkilo-id filename]} :path}
-                              :parameters :keys [db whoami aws-s3-client]}]
-                          (api-response/pdf-response
-                            (ring-io/piped-input-stream
-                              (partial valvonta-service/find-toimenpide-document
-                                       db aws-s3-client whoami id toimenpide-id
-                                       (valvonta-service/find-osapuoli db :henkilo henkilo-id)))
-                            filename
-                            (toimenpide-404-msg id toimenpide-id)))}}]
+                              :parameters :keys [db aws-s3-client]}]
+                          (let [osapuoli (valvonta-service/find-osapuoli db :henkilo henkilo-id)]
+                            (api-response/pdf-response
+                              (ring-io/piped-input-stream
+                                (partial valvonta-service/find-toimenpide-document
+                                         aws-s3-client id toimenpide-id osapuoli))
+                              filename
+                              (toimenpide-404-msg id toimenpide-id))))}}]
     ["/yritykset/:yritys-id/document/:filename"
      {:get {:summary    "Yritys-osapuolen esikatsele tai lataa toimenpiteen dokumentti"
             :parameters {:path {:id            common-schema/Key
@@ -131,11 +131,11 @@
             :responses  {200 {:body nil}
                          404 {:body schema/Str}}
             :handler    (fn [{{{:keys [id toimenpide-id yritys-id filename]} :path}
-                              :parameters :keys [db whoami aws-s3-client]}]
-                          (api-response/pdf-response
-                            (ring-io/piped-input-stream
-                              (partial valvonta-service/find-toimenpide-document
-                                       db aws-s3-client whoami id toimenpide-id
-                                       (valvonta-service/find-osapuoli db :yritys yritys-id)))
-                            filename
-                            (toimenpide-404-msg id toimenpide-id)))}}]]])
+                              :parameters :keys [db aws-s3-client]}]
+                          (let [osapuoli (valvonta-service/find-osapuoli db :yritys yritys-id)]
+                            (api-response/pdf-response
+                              (ring-io/piped-input-stream
+                                (partial valvonta-service/find-toimenpide-document
+                                         aws-s3-client id toimenpide-id osapuoli))
+                              filename
+                              (toimenpide-404-msg id toimenpide-id))))}}]]])

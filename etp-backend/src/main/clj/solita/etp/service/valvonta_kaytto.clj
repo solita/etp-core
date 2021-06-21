@@ -237,7 +237,7 @@
 
 (defn toimenpide-filename [toimenpide] "test.pdf")
 
-(defn- find-osapuoli [db osapuoli-type osapuoli-id]
+(defn find-osapuoli [db osapuoli-type osapuoli-id]
   (cond
     (= osapuoli-type :henkilo) (find-henkilo db osapuoli-id)
     (= osapuoli-type :yritys) (find-yritys db osapuoli-id)))

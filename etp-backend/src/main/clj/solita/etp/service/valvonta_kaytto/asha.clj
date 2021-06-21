@@ -28,14 +28,14 @@
     (kaytto-schema/henkilo? osapuoli) (str file-key-prefix "/" valvonta-id "/" toimenpide-id "/henkilo/" (:id osapuoli))
     (kaytto-schema/yritys? osapuoli) (str file-key-prefix "/" valvonta-id "/" toimenpide-id "/yritys/" (:id osapuoli))))
 
-(defn store-document [aws-s3-client file-key-prefix valvonta-id toimenpide-id osapuoli document]
+(defn store-document [aws-s3-client valvonta-id toimenpide-id osapuoli document]
   (file-service/upsert-file-from-bytes
     aws-s3-client
     (file-path file-key-prefix valvonta-id toimenpide-id osapuoli)
     document))
 
 (defn find-document [aws-s3-client valvonta-id toimenpide-id osapuoli]
-  (file-service/find-file aws-s3-client (file-key-prefix file-key-prefix valvonta-id toimenpide-id osapuoli)))
+  (file-service/find-file aws-s3-client (file-path file-key-prefix valvonta-id toimenpide-id osapuoli)))
 #_
 (defn find-kaytto-valvonta-documents [db id]
   (->> (valvonta-oikeellisuus-db/select-kaytto-valvonta-documents db {:valvonta-id id})
@@ -158,7 +158,7 @@
                     (map (fn [osapuoli]
                            (let [{:keys [template template-data]} (generate-template db whoami valvonta toimenpide osapuoli ilmoituspaikat)
                                  bytes (pdf/generate-pdf->bytes template template-data)]
-                             (store-document aws-s3-client file-key-prefix (:id valvonta) (:id toimenpide) osapuoli bytes)
+                             (store-document aws-s3-client (:id valvonta) (:id toimenpide) osapuoli bytes)
                              bytes)) osapuolet))]
     (asha/log-toimenpide!
       sender-id
