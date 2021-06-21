@@ -13,7 +13,9 @@
     [clojure.java.io :as io]
     [solita.etp.service.liite :as liite-service]
     [clojure.set :as set]
-    [flathead.flatten :as flat]))
+    [flathead.flatten :as flat]
+    [solita.etp.service.rooli :as rooli-service]
+    [solita.etp.exception :as exception]))
 
 (db/require-queries 'valvonta-oikeellisuus)
 
@@ -33,10 +35,29 @@
         (assoc :last-toimenpide (when-not (-> last-toimenpide :id nil?) last-toimenpide))
         (assoc :energiatodistus energiatodistus))))
 
-(defn find-valvonnat [db query]
-  (map db-row->valvonta (valvonta-oikeellisuus-db/select-valvonnat db (merge {:limit 10 :offset 0} query))))
+(def ^:private default-filters
+  {:valvoja-id nil
+   :has-valvoja nil
+   :include-closed false})
 
-(defn count-valvonnat [db] (first (valvonta-oikeellisuus-db/count-valvonnat db)))
+(defn- select-valvonnat [db whoami query paakayttaja-sql laatija-sql]
+  (cond
+    (rooli-service/paakayttaja? whoami) (paakayttaja-sql db (merge default-filters query))
+    (rooli-service/laatija? whoami) (laatija-sql db (assoc query :laatija-id (:id whoami)))
+    :else (exception/throw-forbidden! "Allowed only for valvoja or laatija")))
+
+(defn find-valvonnat [db whoami query]
+  (->> (select-valvonnat
+         db whoami (merge {:limit 10 :offset 0} query)
+         valvonta-oikeellisuus-db/select-valvonnat-paakayttaja
+         valvonta-oikeellisuus-db/select-valvonnat-laatija)
+       (map db-row->valvonta)))
+
+(defn count-valvonnat [db whoami query]
+  (-> (select-valvonnat db whoami query
+                        valvonta-oikeellisuus-db/count-valvonnat-paakayttaja
+                        valvonta-oikeellisuus-db/count-valvonnat-laatija)
+      first))
 
 (defn find-valvonta [db id] (first (valvonta-oikeellisuus-db/select-valvonta db {:id id})))
 

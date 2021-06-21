@@ -49,10 +49,11 @@
     ["/count"
      {:conflicting true
       :get         {:summary    "Hae energiatodistusten oikeellisuuden valvontojen lukumäärä."
+                    :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                     :parameters {:query valvonta-schema/ValvontaQuery}
                     :responses  {200 {:body {:count schema/Int}}}
-                    :handler    (fn [{:keys [db whoami]}]
-                                  (r/response (valvonta-service/count-valvonnat db)))}}]
+                    :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
+                                  (r/response (valvonta-service/count-valvonnat db whoami query)))}}]
 
     [""
      {:conflicting true
@@ -60,9 +61,9 @@
                     :parameters {:query (merge valvonta-schema/ValvontaQuery
                                                valvonta-schema/ValvontaQueryWindow)}
                     :responses {200 {:body [oikeellisuus-schema/ValvontaStatus]}}
-                    :access    rooli-service/paakayttaja?
-                    :handler   (fn [{{:keys [query]} :parameters :keys [db]}]
-                                 (r/response (valvonta-service/find-valvonnat db query)))}}]
+                    :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+                    :handler   (fn [{{:keys [query]} :parameters :keys [db whoami]}]
+                                 (r/response (valvonta-service/find-valvonnat db whoami query)))}}]
 
     ["/:id"
      [""
