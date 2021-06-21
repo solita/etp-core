@@ -1,6 +1,7 @@
 (ns solita.etp.service.energiatodistus-history-test
   (:require [clojure.test :as t]
             [solita.etp.test-system :as ts]
+            [solita.etp.test-data.kayttaja :as kayttaja-test-data]
             [solita.etp.test-data.laatija :as laatija-test-data]
             [solita.etp.test-data.energiatodistus :as energiatodistus-test-data]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
@@ -156,9 +157,15 @@
         [energiatodistus-id-1
          energiatodistus-id-2
          energiatodistus-id-3] (-> energiatodistukset keys sort)
-        history-1 (service/find-history ts/*db* energiatodistus-id-1)
-        history-2 (service/find-history ts/*db* energiatodistus-id-2)
-        history-3 (service/find-history ts/*db* energiatodistus-id-3)]
+        history-1 (service/find-history ts/*db*
+                                        {:id laatija-id-1 :rooli 0}
+                                        energiatodistus-id-1)
+        history-2 (service/find-history ts/*db*
+                                        {:id laatija-id-2 :rooli 0}
+                                        energiatodistus-id-2)
+        history-3 (service/find-history ts/*db*
+                                        {:id laatija-id-3 :rooli 0}
+                                        energiatodistus-id-3)]
 
     ;; Energiatodistus 1 state history
     (t/is (= 7 (-> history-1 :state-history count)))
@@ -258,3 +265,20 @@
                   :form-history
                   (map #(dissoc % :modifytime :init-v)))))
     (t/is (string? (-> history-2 :form-history last :init-v)))))
+
+(t/deftest find-history-no-permissions-test
+  (let [{:keys [laatijat energiatodistukset]} (test-data-set)
+        laatija-ids (-> laatijat keys sort)
+        [laatija-id-1] laatija-ids
+        [_ _ energiatodistus-id-3] (-> energiatodistukset keys sort)]
+    (doseq [whoami [{:id laatija-id-1 :rooli 0}
+                    kayttaja-test-data/paakayttaja
+                    kayttaja-test-data/laskuttaja
+                    kayttaja-test-data/patevyyden-toteaja]]
+      (t/is
+       (thrown-with-msg?
+        clojure.lang.ExceptionInfo
+        #"Forbidden"
+        (service/find-history ts/*db*
+                              whoami
+                              energiatodistus-id-3))))))
