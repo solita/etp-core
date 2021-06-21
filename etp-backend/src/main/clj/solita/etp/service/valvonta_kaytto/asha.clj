@@ -64,7 +64,6 @@
    :omistaja-yritys  (when (kaytto-schema/yritys? osapuoli)
                        {:nimi             (:nimi osapuoli)
                         :ytunnus          (:ytunnus osapuoli)
-                        :sukunimi         (:sukunimi osapuoli)
                         :katuosoite       (:jakeluosoite osapuoli)
                         :postinumero      (:postinumero osapuoli)
                         :postitoimipaikka (find-postitoimipaikka db (:postinumero osapuoli))})
