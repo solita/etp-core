@@ -12,6 +12,7 @@
 
 (def KetjuUpdate
   {(schema/optional-key :kasittelija-id) (schema/maybe common-schema/Key)
+   (schema/optional-key :energiatodistus-id) (schema/maybe common-schema/Key)
    (schema/optional-key :kasitelty) schema/Bool})
 
 (def Kayttaja
