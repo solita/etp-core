@@ -205,12 +205,15 @@
       :diaarinumero))
 
 (defn add-toimenpide! [db aws-s3-client whoami valvonta-id toimenpide-add]
-  (let [diaarinumero (if (toimenpide/case-open? toimenpide-add)
+  (let [osapuolet (concat
+                    (find-henkilot db valvonta-id)
+                    (find-yritykset db valvonta-id))
+        diaarinumero (if (toimenpide/case-open? toimenpide-add)
                        (asha/open-case!
                          db
                          whoami
                          (find-valvonta db valvonta-id)
-                         (find-henkilot db valvonta-id)
+                         osapuolet
                          (find-ilmoituspaikat db))
                        (find-diaarinumero db valvonta-id toimenpide-add))
         toimenpide (insert-toimenpide! db whoami valvonta-id diaarinumero toimenpide-add)
@@ -224,9 +227,7 @@
           whoami
           (find-valvonta db valvonta-id)
           toimenpide
-          (concat
-            (find-henkilot db valvonta-id)
-            (find-yritykset db valvonta-id))
+          osapuolet
           (find-ilmoituspaikat db))))
     {:id toimenpide-id}))
 

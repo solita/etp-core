@@ -134,7 +134,7 @@
         type-key (toimenpide/type-key (:type-id toimenpide))]
     (get processing-actions type-key)))
 
-(defn open-case! [db whoami valvonta henkilot ilmoituspaikat]
+(defn open-case! [db whoami valvonta osapuolet ilmoituspaikat]
   (asha/open-case! {:request-id     (request-id (:id valvonta) 1)
                     :sender-id      (:email whoami)
                     :classification "05.03.01"
@@ -146,7 +146,7 @@
 
                     :description    (asha/string-join "\r" [(find-ilmoituspaikka ilmoituspaikat (:ilmoituspaikka-id valvonta))
                                                             (:ilmoitustunnus valvonta)])
-                    :attach         {:contact (map osapuoli->contact henkilot)}}))
+                    :attach         {:contact (map osapuoli->contact osapuolet)}}))
 
 (defn log-toimenpide! [db aws-s3-client whoami valvonta toimenpide osapuolet ilmoituspaikat]
   (let [request-id (request-id (:id valvonta) (:id toimenpide))
