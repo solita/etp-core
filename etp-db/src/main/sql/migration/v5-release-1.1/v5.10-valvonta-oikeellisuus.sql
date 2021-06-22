@@ -39,6 +39,7 @@ create table vo_toimenpide (
   description text,
   severity_id int references vo_severity (id)
 );
+call audit.activate('vo_toimenpide'::name);
 
 create table vo_virhe (
   toimenpide_id int not null references vo_toimenpide (id),
