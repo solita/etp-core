@@ -1,11 +1,13 @@
 (ns solita.etp.service.energiatodistus-history-test
   (:require [clojure.test :as t]
             [solita.etp.test-system :as ts]
+            [solita.etp.test-data.kayttaja :as kayttaja-test-data]
             [solita.etp.test-data.laatija :as laatija-test-data]
             [solita.etp.test-data.energiatodistus :as energiatodistus-test-data]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.energiatodistus-history :as service])
-  (:import (java.time Instant)))
+  (:import (java.time Instant)
+           (java.time.temporal ChronoUnit)))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -76,15 +78,56 @@
                                      (map service/audit-row->flat-energiatodistus))]
     (doseq [flat-energiatodistus flats]
       (t/is (contains? flat-energiatodistus :id))
-      (t/is (contains? flat-energiatodistus :lahtotiedot$lammitetty-nettoala)))))
+      (t/is (contains? flat-energiatodistus :lahtotiedot.lammitetty-nettoala)))))
 
 (t/deftest audit-event-test
-  (let [now (Instant/now)]
+  (let [now (Instant/now)
+        yesterday (.minus now 1 ChronoUnit/DAYS)]
     (t/is (= {:modifiedby-fullname "Cooper, Dale"
               :modifytime now
               :k :foo
-              :v 123}
-             (service/audit-event "Cooper, Dale" now :foo 123)))))
+              :init-v "bar"
+              :new-v "baz"
+              :type :str
+              :external-api false}
+             (service/audit-event "Cooper, Dale" now :foo "bar" "baz" false)))
+    (t/is (= {:modifiedby-fullname "Bob"
+              :modifytime now
+              :k :foo
+              :init-v 100
+              :new-v 123
+              :type :number
+              :external-api true}
+             (service/audit-event "Bob" now :foo 100 123 true)))
+    (t/is (= {:modifiedby-fullname "Mike"
+              :modifytime now
+              :k :foo
+              :init-v now
+              :new-v yesterday
+              :type :date
+              :external-api false}
+             (service/audit-event "Mike" now :foo now yesterday false)))
+    (t/is (= {:modifiedby-fullname "Judy"
+              :modifytime yesterday
+              :k :allekirjoitusaika
+              :init-v now
+              :new-v yesterday
+              :type :date
+              :external-api true}
+             (service/audit-event "Judy"
+                                  now
+                                  :allekirjoitusaika
+                                  now
+                                  yesterday
+                                  true)))
+    (t/is (= {:modifiedby-fullname "Palmer, Laura"
+              :modifytime now
+              :k :foo
+              :init-v []
+              :new-v [1 2 3]
+              :type :other
+              :external-api false}
+             (service/audit-event "Palmer, Laura" now :foo [] [1 2 3] false)))))
 
 (t/deftest find-audit-rows-test
   (let [{:keys [energiatodistukset]} (test-data-set)
@@ -114,54 +157,128 @@
         [energiatodistus-id-1
          energiatodistus-id-2
          energiatodistus-id-3] (-> energiatodistukset keys sort)
-        history-1 (service/find-history ts/*db* energiatodistus-id-1)
-        history-2 (service/find-history ts/*db* energiatodistus-id-2)
-        history-3 (service/find-history ts/*db* energiatodistus-id-3)]
+        history-1 (service/find-history ts/*db*
+                                        {:id laatija-id-1 :rooli 0}
+                                        energiatodistus-id-1)
+        history-2 (service/find-history ts/*db*
+                                        {:id laatija-id-2 :rooli 0}
+                                        energiatodistus-id-2)
+        history-3 (service/find-history ts/*db*
+                                        {:id laatija-id-3 :rooli 0}
+                                        energiatodistus-id-3)]
 
     ;; Energiatodistus 1 state history
     (t/is (= 7 (-> history-1 :state-history count)))
-    (t/is (= {:modifiedby-fullname laatija-1-fullname :k :tila-id :v 0}
+    (t/is (= {:modifiedby-fullname laatija-1-fullname
+              :k :tila-id
+              :init-v nil
+              :new-v 0
+              :type :number
+              :external-api false}
              (-> history-1 :state-history first (dissoc :modifytime))))
-    (t/is (= {:modifiedby-fullname laatija-1-fullname :k :tila-id :v 1}
+    (t/is (= {:modifiedby-fullname laatija-1-fullname
+              :k :tila-id
+              :init-v 0
+              :new-v 1
+              :type :number
+              :external-api false}
             (-> history-1 :state-history second (dissoc :modifytime))))
-    (t/is (= :voimassaolo-paattymisaika
-             (-> history-1 :state-history (nth 2) :k)))
-    (t/is (= {:modifiedby-fullname laatija-1-fullname :k :tila-id :v 2}
-             (-> history-1 :state-history (nth 3) (dissoc :modifytime))))
-    (t/is (= :allekirjoitusaika (-> history-1 :state-history (nth 4) :k)))
-    (t/is (= {:modifiedby-fullname laatija-2-fullname :k :tila-id :v 4}
-             (-> history-1 :state-history (nth 5) (dissoc :modifytime))))
+    (t/is (= {:modifiedby-fullname laatija-1-fullname
+              :k :tila-id
+              :init-v 0
+              :new-v 2
+              :type :number
+              :external-api false}
+             (-> history-1 :state-history (nth 2) (dissoc :modifytime))))
+    (t/is (= :allekirjoitusaika (-> history-1 :state-history (nth 3) :k)))
     (t/is (= {:modifiedby-fullname laatija-2-fullname
-              :k :korvaava-energiatodistus-id :v energiatodistus-id-2}
-             (-> history-1 :state-history last (dissoc :modifytime))))
+              :k :tila-id
+              :init-v 0
+              :new-v 4
+              :type :number
+              :external-api false}
+             (-> history-1 :state-history (nth 4) (dissoc :modifytime))))
+    (t/is (= {:modifiedby-fullname laatija-2-fullname
+              :k :korvaava-energiatodistus-id
+              :init-v nil
+              :new-v energiatodistus-id-2
+              :type :number
+              :external-api false}
+             (-> history-1 :state-history (nth 5) (dissoc :modifytime))))
+    (t/is (= :voimassaolo-paattymisaika
+             (-> history-1 :state-history last :k)))
 
     ;; Energiatodistus 1 form history
     (t/is (= [{:modifiedby-fullname laatija-1-fullname
-               :k :tulokset$e-luku
-               :v 1}
+               :k :lahtotiedot.lammitetty-nettoala
+               :init-v 1.0M
+               :new-v 123.45M
+               :type :number
+               :external-api false}
               {:modifiedby-fullname laatija-1-fullname
-               :k :lahtotiedot$lammitetty-nettoala
-               :v 123.45M}]
+               :k :tulokset.e-luku
+               :init-v 4
+               :new-v 1
+               :type :number
+               :external-api false}]
              (->> history-1 :form-history (map #(dissoc % :modifytime)))))
 
     ;; Energiatodistus 2 state history
     (t/is (= 5 (-> history-2 :state-history count)))
-    (t/is (= {:modifiedby-fullname laatija-2-fullname :k :tila-id :v 0}
+    (t/is (= {:modifiedby-fullname laatija-2-fullname
+              :k :tila-id
+              :init-v nil
+              :new-v 0
+              :type :number
+              :external-api false}
              (-> history-2 :state-history first (dissoc :modifytime))))
-    (t/is (= {:modifiedby-fullname laatija-2-fullname :k :tila-id :v 1}
+    (t/is (= {:modifiedby-fullname laatija-2-fullname
+              :k :tila-id
+              :init-v 0
+              :new-v 1
+              :type :number
+              :external-api false}
              (-> history-2 :state-history second (dissoc :modifytime))))
+    (t/is (= {:modifiedby-fullname laatija-2-fullname
+              :k :tila-id
+              :init-v 0
+              :new-v 2
+              :type :number
+              :external-api false}
+             (-> history-2 :state-history (nth 2) (dissoc :modifytime))))
+    (t/is (= :allekirjoitusaika (-> history-2 :state-history (nth 3) :k)))
     (t/is (= :voimassaolo-paattymisaika
-             (-> history-2 :state-history (nth 2) :k)))
-    (t/is (= {:modifiedby-fullname laatija-2-fullname :k :tila-id :v 2}
-             (-> history-2 :state-history (nth 3) (dissoc :modifytime))))
-    (t/is (= :allekirjoitusaika (-> history-2 :state-history last :k)))
-
+             (-> history-2 :state-history last :k)))
 
     ;; Energiatodistus 2 form history
     (t/is (= [{:modifiedby-fullname laatija-2-fullname
                :k :korvattu-energiatodistus-id
-               :v energiatodistus-id-1}
+               :new-v energiatodistus-id-1
+               :type :number
+               :external-api false}
               {:modifiedby-fullname laatija-2-fullname
                :k :laskuriviviite
-               :v "laskuriviviite"}]
-             (->> history-2 :form-history (map #(dissoc % :modifytime)))))))
+               :new-v "laskuriviviite"
+               :type :str
+               :external-api false}]
+             (->> history-2
+                  :form-history
+                  (map #(dissoc % :modifytime :init-v)))))
+    (t/is (string? (-> history-2 :form-history last :init-v)))))
+
+(t/deftest find-history-no-permissions-test
+  (let [{:keys [laatijat energiatodistukset]} (test-data-set)
+        laatija-ids (-> laatijat keys sort)
+        [laatija-id-1] laatija-ids
+        [_ _ energiatodistus-id-3] (-> energiatodistukset keys sort)]
+    (doseq [whoami [{:id laatija-id-1 :rooli 0}
+                    kayttaja-test-data/paakayttaja
+                    kayttaja-test-data/laskuttaja
+                    kayttaja-test-data/patevyyden-toteaja]]
+      (t/is
+       (thrown-with-msg?
+        clojure.lang.ExceptionInfo
+        #"Forbidden"
+        (service/find-history ts/*db*
+                              whoami
+                              energiatodistus-id-3))))))
