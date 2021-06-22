@@ -77,10 +77,11 @@
 (defn sort-by-modifytime [coll]
   (sort-by :modifytime coll))
 
-(defn find-history [db id]
-  (let [audit-rows (find-audit-rows db id)]
-    (as-> audit-rows $
-      (reduce audit-history {} $)
-      (select-keys $ [:state-history :form-history])
-      (update $ :form-history (comp sort-by-modifytime vals))
-      (update $ :state-history sort-by-modifytime))))
+(defn find-history [db whoami id]
+  (when (energiatodistus-service/find-energiatodistus db whoami id)
+    (let [audit-rows (find-audit-rows db id)]
+      (as-> audit-rows $
+        (reduce audit-history {} $)
+        (select-keys $ [:state-history :form-history])
+        (update $ :form-history (comp sort-by-modifytime vals))
+        (update $ :state-history sort-by-modifytime)))))
