@@ -8,8 +8,8 @@
             [solita.etp.service.valvonta-oikeellisuus.toimenpide :as toimenpide]
             [solita.etp.service.pdf :as pdf]
             [clojure.java.io :as io]
-            [solita.etp.service.file :as file-service]
-            [solita.etp.db :as db]))
+            [solita.etp.db :as db]
+            [solita.etp.service.file :as file-service]))
 
 (db/require-queries 'valvonta-oikeellisuus)
 
@@ -100,48 +100,54 @@
 (defn- request-id [energiatodistus-id toimenpide-id]
   (str energiatodistus-id "/" toimenpide-id))
 
+(defn- kayttaja->contact [kayttaja]
+  {:type          "ORGANIZATION"                            ;No enum constant fi.ys.eservice.entity.ContactType.PERSON
+   :first-name    (:etunimi kayttaja)
+   :last-name     (:sukunimi kayttaja)
+   :email-address (:email kayttaja)})
+
 (defn- available-processing-actions [toimenpide laatija]
   {:rfi-request   {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Vireillepano"}}
                    :processing-action {:name                 "Tietopyyntö"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
-                                       :contact              (asha/kayttaja->contact laatija)}
+                                       :contact              (kayttaja->contact laatija)}
                    :document          (toimenpide-type->document (:type-id toimenpide))}
    :rfi-order     {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Kehotuksen antaminen"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
-                                       :contact              (asha/kayttaja->contact laatija)}
+                                       :contact              (kayttaja->contact laatija)}
                    :document          (toimenpide-type->document (:type-id toimenpide))}
    :rfi-warning   {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Varoituksen antaminen"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
-                                       :contact              (asha/kayttaja->contact laatija)}
+                                       :contact              (kayttaja->contact laatija)}
                    :document          (toimenpide-type->document (:type-id toimenpide))}
    :audit-report  {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Valvontamuistion laatiminen"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
-                                       :contact              (asha/kayttaja->contact laatija)}
+                                       :contact              (kayttaja->contact laatija)}
                    :document          (toimenpide-type->document (:type-id toimenpide))}
    :audit-order   {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Kehotuksen antaminen valvontamuistion perusteella"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
-                                       :contact              (asha/kayttaja->contact laatija)}
+                                       :contact              (kayttaja->contact laatija)}
                    :document          (toimenpide-type->document (:type-id toimenpide))}
    :audit-warning {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                        :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Varoituksen antaminen valvontamuistion perusteella"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
-                                       :contact              (asha/kayttaja->contact laatija)}
+                                       :contact              (kayttaja->contact laatija)}
                    :document          (toimenpide-type->document (:type-id toimenpide))}
    :rfc-request   {:identity          {:case {:number (:diaarinumero toimenpide)}}
                    :processing-action {:name           "Lisäselvityspyyntö"
@@ -161,26 +167,21 @@
     (cond-> (get processing-actions type-key)
             (= type-key :rfc-request) (update :identity update-latest-processsing-action))))
 
-(defn- string-join [separator coll]
-  (str/join separator (->> coll
-                           (map str)
-                           (remove empty?))))
-
 (defn open-case! [db whoami energiatodistus-id]
   (let [{:keys [energiatodistus laatija]} (resolve-energiatodistus-laatija db energiatodistus-id)]
     (asha/open-case! {:request-id     (request-id energiatodistus-id 1)
                       :sender-id      (:email whoami)
                       :classification "05.03.02"
                       :service        "general"             ; Yleinen menettely
-                      :name           (string-join "; " [(-> energiatodistus :id)
-                                                         (string-join " " [(:etunimi laatija)
-                                                                           (:sukunimi laatija)])])
-                      :description    (string-join "\r" [(-> energiatodistus :perustiedot :nimi)
-                                                         (string-join ", " [(-> energiatodistus :perustiedot :katuosoite-fi)
-                                                                            (string-join " " [(-> energiatodistus :perustiedot :postinumero)
-                                                                                              (-> energiatodistus :perustiedot :postitoimipaikka-fi)])])
-                                                         (-> energiatodistus :perustiedot :rakennustunnus)])
-                      :attach         {:contact (asha/kayttaja->contact laatija)}})))
+                      :name           (asha/string-join "; " [(-> energiatodistus :id)
+                                                              (asha/string-join " " [(:etunimi laatija)
+                                                                                     (:sukunimi laatija)])])
+                      :description    (asha/string-join "\r" [(-> energiatodistus :perustiedot :nimi)
+                                                              (asha/string-join ", " [(-> energiatodistus :perustiedot :katuosoite-fi)
+                                                                                      (asha/string-join " " [(-> energiatodistus :perustiedot :postinumero)
+                                                                                                             (-> energiatodistus :perustiedot :postitoimipaikka-fi)])])
+                                                              (-> energiatodistus :perustiedot :rakennustunnus)])
+                      :attach         {:contact (kayttaja->contact laatija)}})))
 
 (defn log-toimenpide! [db aws-s3-client whoami energiatodistus-id toimenpide]
   (let [{:keys [energiatodistus laatija]} (resolve-energiatodistus-laatija db energiatodistus-id)
@@ -188,17 +189,17 @@
         sender-id (:email whoami)
         case-number (:diaarinumero toimenpide)
         processing-action (resolve-processing-action sender-id request-id case-number toimenpide laatija)
-        document (when (:document processing-action)
-                   (let [{:keys [template template-data]} (generate-template db whoami toimenpide energiatodistus laatija)
-                         bytes (pdf/generate-pdf->bytes template template-data)]
-                     (store-document aws-s3-client energiatodistus-id (:id toimenpide) bytes)
-                     bytes))]
+        documents (when (:document processing-action)
+                    (let [{:keys [template template-data]} (generate-template db whoami toimenpide energiatodistus laatija)
+                          bytes (pdf/generate-pdf->bytes template template-data)]
+                      (store-document aws-s3-client energiatodistus-id (:id toimenpide) bytes)
+                      [bytes]))]
     (asha/log-toimenpide!
       sender-id
       request-id
       case-number
       processing-action
-      document)))
+      documents)))
 
 (defn close-case! [whoami energiatodistus-id toimenpide]
   (asha/close-case!

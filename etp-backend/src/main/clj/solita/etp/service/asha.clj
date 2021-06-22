@@ -8,7 +8,9 @@
             [clojure.tools.logging :as log]
             [solita.etp.config :as config]
             [solita.etp.exception :as exception]
-            [clojure.data.codec.base64 :as b64]))
+            [clojure.data.codec.base64 :as b64]
+            [solita.etp.service.file :as file-service]
+            [clojure.string :as str]))
 
 (defn debug-print [info]
   (when config/asha-debug?
@@ -172,7 +174,7 @@
                                           :processing-action {:name-identity processing-action}}
                        :start-processing {:assignee sender-id}}))
 
-(defn log-toimenpide! [sender-id request-id case-number processing-action & [document]]
+(defn log-toimenpide! [sender-id request-id case-number processing-action & [documents]]
   (move-processing-action!
     sender-id
     request-id
@@ -188,15 +190,16 @@
                        :sender-id         sender-id
                        :identity          (:identity processing-action)
                        :processing-action (:processing-action processing-action)})
-  (when document
-    (add-documents-to-processing-action!
-      sender-id
-      request-id
-      case-number
-      (-> processing-action :processing-action :name)
-      [{:content (bytes->base64 document)
-        :type    (-> processing-action :document :type)
-        :name    (-> processing-action :document :filename)}]))
+
+   (doseq [document documents]
+     (add-documents-to-processing-action!
+        sender-id
+        request-id
+        case-number
+        (-> processing-action :processing-action :name)
+        [{:content (bytes->base64 document)
+          :type    (-> processing-action :document :type)
+          :name    (-> processing-action :document :filename)}]))
   (take-processing-action! sender-id request-id case-number (-> processing-action :processing-action :name))
   (mark-processing-action-as-ready!
     sender-id
@@ -218,8 +221,7 @@
                              :description    description}}))
     (proceed-operation! sender-id request-id case-number latest-prosessing-action "Sulje asia")))
 
-(defn kayttaja->contact [kayttaja]
-  {:type          "ORGANIZATION"                            ;No enum constant fi.ys.eservice.entity.ContactType.PERSON
-   :first-name    (:etunimi kayttaja)
-   :last-name     (:sukunimi kayttaja)
-   :email-address (:email kayttaja)})
+(defn string-join [separator coll]
+  (str/join separator (->> coll
+                           (map str)
+                           (remove empty?))))
