@@ -21,9 +21,13 @@ from energiatodistus
     where energiatodistus.id = toimenpide.energiatodistus_id
     order by coalesce(toimenpide.publish_time, toimenpide.create_time) desc
     limit 1) last_toimenpide on true
-where (energiatodistus.valvonta$pending or last_toimenpide.type_id not in (0, 1, 15) or :include-closed) and
-      (energiatodistus.valvonta$valvoja_id = coalesce(:valvoja-id, energiatodistus.valvonta$valvoja_id) or
-       (energiatodistus.valvonta$valvoja_id is not null) = :has-valvoja)
+where
+  (energiatodistus.valvonta$pending or
+    last_toimenpide.type_id not in (0, 1, 15) or
+    (:include-closed and last_toimenpide.id is not null)) and
+  (energiatodistus.valvonta$valvoja_id = :valvoja-id or
+    (energiatodistus.valvonta$valvoja_id is not null) = :has-valvoja or
+    (:valvoja-id::int is null and :has-valvoja::boolean is null))
 order by coalesce(last_toimenpide.publish_time, last_toimenpide.create_time) desc
 limit :limit offset :offset;
 
@@ -63,9 +67,12 @@ from energiatodistus left join lateral (
   order by coalesce(toimenpide.publish_time, toimenpide.create_time) desc
   limit 1) last_toimenpide on true
 where
-  (energiatodistus.valvonta$pending or last_toimenpide.type_id not in (0, 1, 15) or :include-closed) and
-  (energiatodistus.valvonta$valvoja_id = coalesce(:valvoja-id, energiatodistus.valvonta$valvoja_id) or
-    (energiatodistus.valvonta$valvoja_id is not null) = :has-valvoja);
+  (energiatodistus.valvonta$pending or
+   last_toimenpide.type_id not in (0, 1, 15) or
+   (:include-closed and last_toimenpide.id is not null)) and
+  (energiatodistus.valvonta$valvoja_id = :valvoja-id or
+   (energiatodistus.valvonta$valvoja_id is not null) = :has-valvoja or
+   (:valvoja-id::int is null and :has-valvoja::boolean is null));
 
 -- name: count-valvonnat-laatija
 select count(*)
