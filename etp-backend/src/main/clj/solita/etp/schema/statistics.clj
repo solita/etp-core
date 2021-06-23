@@ -25,7 +25,7 @@
     :e-luku-statistics {Versio (schema/maybe
                                 {:avg common-schema/NonNegative
                                  :percentile-15 common-schema/NonNegative
-                                 :percentile-75 common-schema/NonNegative})}
+                                 :percentile-85 common-schema/NonNegative})}
     :common-averages (schema/maybe
                       {:ilmanvuotoluku common-schema/NonNegative
                        :ulkoseinat-u common-schema/NonNegative
