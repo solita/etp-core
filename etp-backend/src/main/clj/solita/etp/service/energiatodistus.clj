@@ -306,7 +306,8 @@
                                     :bypass-validation-limits
                                     :bypass-validation-limits-reason)
     [:draft :paakayttaja false] (select-keys energiatodistus-update
-                                             [:bypass-validation-limits
+                                             [:kommentti
+                                              :bypass-validation-limits
                                               :bypass-validation-limits-reason])
     [:signed :laatija false] (select-keys energiatodistus-update
                                           [:laskutettava-yritys-id
