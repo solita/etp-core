@@ -11,6 +11,8 @@
 (def state-fields #{:tila-id :voimassaolo-paattymisaika :allekirjoitusaika
                     :korvaava-energiatodistus-id})
 
+(def omitted-fields #{:kommentti})
+
 (defn audit-row->flat-energiatodistus [audit-row]
   (->> audit-row
        energiatodistus-service/db-row->energiatodistus
@@ -59,7 +61,8 @@
                                               (select-keys state-fields)
                                               vals))
             (update :form-history merge (apply dissoc new-history state-fields))
-            (update :form-history #(apply dissoc % reverted-keys))))
+            (update :form-history #(apply dissoc % (concat omitted-fields
+                                                           reverted-keys)))))
       {:init flat-et
        :prev flat-et
        :state-history [(audit-event modifiedby-fullname
