@@ -1,12 +1,8 @@
 (ns solita.etp.api.stream
   (:require [clojure.tools.logging :as log]
             [solita.etp.exception :as exception]
-            [org.httpkit.server :as http-kit]
-            [solita.etp.api.response :as api-response])
+            [org.httpkit.server :as http-kit])
   (:import (org.httpkit.server Channel)))
-
-(defn csv-response-headers [filename inline?]
-  (api-response/file-response-headers "text/csv" inline? filename))
 
 (defn- send! [^Channel channel headers body]
   (when-not (http-kit/send! channel {:headers headers :body body} false)

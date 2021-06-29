@@ -109,7 +109,7 @@
                                               db whoami (update query :where json/read-value))]
                                  (api-stream/result->async-channel
                                    request
-                                   (api-stream/csv-response-headers "energiatodistukset.csv" false)
+                                   (api-response/csv-response-headers "energiatodistukset.csv" false)
                                    result))
                               search-exceptions))}}]
 

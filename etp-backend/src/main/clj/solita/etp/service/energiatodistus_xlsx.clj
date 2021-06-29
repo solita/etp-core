@@ -71,7 +71,7 @@
                          (complete-energiatodistus-service/complete-energiatodistus
                           luokittelut))))
              []
-             (energiatodistus-search-service/reducible-search db whoami query false))))
+             (energiatodistus-search-service/reducible-search db whoami query {:raw false}))))
 
 (defn find-energiatodistukset-xlsx [db whoami query]
   (let [energiatodistukset (search-completed-energiatodistukset db whoami query)

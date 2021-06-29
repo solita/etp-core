@@ -56,6 +56,9 @@
    "Content-Disposition:" (str (if inline? "inline" "attachment")
                                (str "; filename=\"" filename "\""))})
 
+(defn csv-response-headers [filename inline?]
+  (file-response-headers "text/csv" inline? filename))
+
 (defn file-response [body filename content-type inline? not-found]
   (if (nil? body)
     (r/not-found not-found)
