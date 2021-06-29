@@ -1,6 +1,5 @@
 (ns solita.etp.service.energiatodistus-history
   (:require [clojure.string :as str]
-            [clojure.data :as data]
             [flathead.flatten :as flat]
             [solita.etp.db :as db]
             [solita.etp.service.energiatodistus :as energiatodistus-service])
@@ -9,7 +8,7 @@
 (db/require-queries 'energiatodistus-history)
 
 (def state-fields #{:tila-id :voimassaolo-paattymisaika :allekirjoitusaika
-                    :korvaava-energiatodistus-id})
+                    :korvaava-energiatodistus-id :laskutusaika})
 
 (def omitted-fields #{:kommentti})
 
@@ -37,13 +36,20 @@
      :type type
      :external-api external-api?}))
 
+(defn diff [a b pred]
+  (->> b
+       (filter (fn [[k v]]
+                 (pred (get a k) v)))
+       (into {})))
+
 (defn audit-history [{:keys [init prev] :as acc}
                      {:keys [modifiedby-fullname modifytime service-uri]
                       :as audit-row}]
   (let [flat-et (audit-row->flat-energiatodistus audit-row)]
     (if init
-      (let [[_ diff-to-prev _] (data/diff prev flat-et)
-            reverted-keys (-> (data/diff init diff-to-prev) (nth 2) keys)
+      (let [diff-to-prev (diff prev flat-et not=)
+            reverted-keys (-> (diff init diff-to-prev =)
+                              keys)
             new-history (reduce-kv (fn [acc k v]
                                      (assoc acc
                                             k

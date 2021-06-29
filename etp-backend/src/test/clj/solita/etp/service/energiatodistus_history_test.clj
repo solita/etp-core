@@ -210,15 +210,15 @@
 
     ;; Energiatodistus 1 form history
     (t/is (= [{:modifiedby-fullname laatija-1-fullname
-               :k :lahtotiedot.lammitetty-nettoala
-               :init-v 1.0M
-               :new-v 123.45M
-               :type :number
-               :external-api false}
-              {:modifiedby-fullname laatija-1-fullname
                :k :tulokset.e-luku
                :init-v 4
                :new-v 1
+               :type :number
+               :external-api false}
+              {:modifiedby-fullname laatija-1-fullname
+               :k :lahtotiedot.lammitetty-nettoala
+               :init-v 1.0M
+               :new-v 123.45M
                :type :number
                :external-api false}]
              (->> history-1 :form-history (map #(dissoc % :modifytime)))))
