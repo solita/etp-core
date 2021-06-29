@@ -9,8 +9,7 @@
             [solita.etp.service.complete-energiatodistus
              :as complete-energiatodistus-service]
             [solita.etp.service.energiatodistus-csv :as service])
-  (:import (java.io ByteArrayOutputStream)
-           (java.time Instant)))
+  (:import (java.time Instant)))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -67,10 +66,9 @@
 (t/deftest write-energiatodistukset-csv-test
   (let [{:keys [laatijat energiatodistukset]} (test-data-set)
         laatija-id (-> laatijat keys sort first)]
-    (with-open [ostream (ByteArrayOutputStream.)]
-      (service/write-energiatodistukset-csv! ts/*db*
-                                             {:id laatija-id :rooli 0}
-                                             {}
-                                             ostream)
-      (t/is (str/starts-with? (-> ostream .toByteArray (String.))
+    (let [result (service/energiatodistukset-csv
+                   ts/*db* {:id laatija-id :rooli 0} {})
+          buffer (StringBuffer.)]
+      (result #(.append buffer %))
+      (t/is (str/starts-with? (.toString buffer)
                               "\"Id\";\"Versio\";")))))

@@ -234,8 +234,8 @@
   "Energiatodistus search for other services. Does reducibly-query meaning that
    there are certain limitations of how results can be handled. Does not coerce
    with db-row->energiatodistus, so that must be done manually if needed."
-  [db whoami query raw?]
-  (jdbc/reducible-query db (sql-query select-all whoami query) {:raw raw?}))
+  [db whoami query options]
+  (jdbc/reducible-query db (sql-query select-all whoami query) options))
 
 (defn search-count [db whoami query]
   (first (jdbc/query db (sql-query "select count(*) count" whoami query) nil)))

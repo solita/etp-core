@@ -1,8 +1,6 @@
 (ns solita.etp.api.energiatodistus
   (:require [ring.util.response :as r]
-            [ring.util.io :as ring-io]
             [schema.core :as schema]
-            [solita.common.schema :as xschema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.schema.public-energiatodistus :as public-energiatodistus-schema]
@@ -19,6 +17,7 @@
             [solita.etp.service.energiatodistus-xlsx :as energiatodistus-xlsx-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.api.response :as api-response]
+            [solita.etp.api.stream :as api-stream]
             [solita.etp.service.json :as json]
             [solita.etp.exception :as exception]
             [solita.etp.schema.viesti :as viesti-schema]
@@ -104,17 +103,16 @@
               :parameters {:query energiatodistus-schema/EnergiatodistusSearch}
               :responses  {200 {:body nil}}
               :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
-              :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
+              :handler    (fn [{{:keys [query]} :parameters :keys [db whoami] :as request}]
                             (api-response/with-exceptions
-                              #(api-response/csv-response
-                                (ring-io/piped-input-stream
-                                 (partial energiatodistus-csv-service/write-energiatodistukset-csv!
-                                    db
-                                    whoami
-                                    (update query :where json/read-value)))
-                                 "energiatodistukset.csv"
-                                 "Not found.")
+                              #(let [result (energiatodistus-csv-service/energiatodistukset-csv
+                                              db whoami (update query :where json/read-value))]
+                                 (api-stream/result->async-channel
+                                   request
+                                   (api-response/csv-response-headers "energiatodistukset.csv" false)
+                                   result))
                               search-exceptions))}}]
+
       ["/xlsx/energiatodistukset.xlsx"
        {:get {:summary    "Hae energiatodistusten tiedot XLSX-tiedostona"
               :parameters {:query energiatodistus-schema/EnergiatodistusSearch}

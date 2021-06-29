@@ -1,7 +1,5 @@
 (ns solita.etp.service.energiatodistus-csv
   (:require [clojure.string :as str]
-            [clojure.java.io :as io]
-            [clojure.java.jdbc :as jdbc]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.energiatodistus-search :as
              energiatodistus-search-service]
@@ -9,8 +7,6 @@
              :as complete-energiatodistus-service])
   (:import (java.util Locale)
            (java.text DecimalFormat DecimalFormatSymbols)
-           (java.io OutputStreamWriter)
-           (java.nio.charset Charset)
            (java.time Instant LocalDateTime ZoneId)))
 
 (def tmp-dir "tmp-csv/")
@@ -20,7 +16,6 @@
                              (.setMinusSign \-)))
 (def ^DecimalFormat decimal-format (doto (DecimalFormat. "#.###")
                       (.setDecimalFormatSymbols decimal-format-symbol)))
-(def charset (Charset/forName "UTF-8"))
 (def timezone (ZoneId/of "Europe/Helsinki"))
 
 (def columns
@@ -215,28 +210,28 @@
     (str/join column-separator $)
     (str $ "\n")))
 
-(defn write-headers! [writer]
-  (->> columns
-       (map column-ks->str)
-       csv-line
-       (.write writer)))
-
-(defn write-energiatodistus! [writer energiatodistus]
+(defn energiatodistus->csv-line [energiatodistus]
   (->> columns
        (map #(get-in energiatodistus %))
-       csv-line
-       (.write writer)))
+       csv-line))
 
-(defn write-energiatodistukset-csv! [db whoami query ostream]
-  (let [luokittelut (complete-energiatodistus-service/luokittelut db)]
-    (with-open [writer (OutputStreamWriter. ostream charset)]
-      (write-headers! writer)
-      (run! (comp #(write-energiatodistus! writer %)
-               #(complete-energiatodistus-service/complete-energiatodistus
-                 %
-                 luokittelut)
-               energiatodistus-service/db-row->energiatodistus)
-            (energiatodistus-search-service/reducible-search db
-                                                             whoami
-                                                             query
-                                                             false)))))
+(def headers-csv-line
+  (->> columns
+       (map column-ks->str)
+       csv-line))
+
+(defn energiatodistukset-csv [db whoami query]
+  (let [luokittelut (complete-energiatodistus-service/luokittelut db)
+        energiatodistukset (energiatodistus-search-service/reducible-search
+                             db whoami query {:raw false
+                                              :result-type :forward-only
+                                              :concurrency :read-only
+                                              :fetch-size  100})]
+    (fn [write!]
+      (write! headers-csv-line)
+      (run! (comp write!
+                  energiatodistus->csv-line
+                  #(complete-energiatodistus-service/complete-energiatodistus
+                     % luokittelut)
+                  energiatodistus-service/db-row->energiatodistus)
+            energiatodistukset))))

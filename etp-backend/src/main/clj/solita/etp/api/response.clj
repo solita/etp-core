@@ -51,20 +51,23 @@
 (def unauthorized {:status 401 :body "Unauthorized"})
 (def forbidden {:status 403 :body "Forbidden"})
 
+(defn file-response-headers [content-type inline? filename]
+  {"Content-Type" (or content-type "application/octet-stream")
+   "Content-Disposition:" (str (if inline? "inline" "attachment")
+                               (str "; filename=\"" filename "\""))})
+
+(defn csv-response-headers [filename inline?]
+  (file-response-headers "text/csv" inline? filename))
+
 (defn file-response [body filename content-type inline? not-found]
   (if (nil? body)
     (r/not-found not-found)
     {:status 200
-     :headers {"Content-Type" (or content-type "application/octet-stream")
-               "Content-Disposition:" (str (if inline? "inline" "attachment")
-                                              (str "; filename=\"" filename "\""))}
+     :headers (file-response-headers content-type inline? filename)
      :body body}))
 
 (defn pdf-response [body filename not-found]
   (file-response body filename "application/pdf" true not-found))
-
-(defn csv-response [body filename not-found]
-  (file-response body filename "text/csv" false not-found))
 
 (defn xlsx-response [body filename not-found]
   (file-response body
