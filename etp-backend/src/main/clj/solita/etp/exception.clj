@@ -44,6 +44,8 @@
 
 (defn class-name [object] (.getName (class object)))
 
+(defn exception-type [^Throwable e] (or (:type (ex-data e)) (class-name e)))
+
 (defn default-handler
   "Default safe handler for any exception."
   [^Throwable e request]
@@ -52,7 +54,7 @@
                (service-name request)
                (or (ex-data e) ""))
     {:status 500
-     :body {:type (or (:type (ex-data e)) (class-name e))
+     :body {:type (exception-type e)
             :message "Internal system error - see logs for details."}}))
 
 (def exception-middleware
