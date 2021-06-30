@@ -1,6 +1,10 @@
 (ns solita.etp.api.response
-  (:require [ring.util.response :as r])
+  (:require [ring.util.response :as r]
+            [clojure.string :as str])
   (:import (clojure.lang ExceptionInfo)))
+
+(defn msg-404 [entity & ids]
+  (str (str/capitalize entity) ": " (str/join "/" ids) " does not exists."))
 
 (defn get-response [body not-found]
   (if (nil? body)

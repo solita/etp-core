@@ -18,7 +18,7 @@
   (let [content (clostache/render template data)]
     (clostache/render-resource "pdf/template.html" {:content content})))
 
-(defn html->pdf
+(defn- html->pdf
   [template data output-stream]
   (let [html-doc (render-template-with-content template data)
         builder (PdfRendererBuilder.)]
@@ -41,3 +41,6 @@
   (with-open [baos (ByteArrayOutputStream.)]
     (html->pdf template template-data baos)
     (.toByteArray baos)))
+
+(defn template->pdf-input-stream [template template-data]
+  (io/input-stream (generate-pdf->bytes template template-data)))

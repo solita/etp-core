@@ -8,10 +8,11 @@
             [ring.util.response :as r]
             [schema.core :as schema]
             [schema-tools.core :as schema-tools]
-            [ring.util.io :as ring-io]
             [reitit.ring.schema :as reitit-schema]
             [solita.etp.schema.liite :as liite-schema]))
 
+(defn toimenpide-404-msg [valvonta-id toimenpide-id]
+  (api-response/msg-404 "toimenpide" valvonta-id toimenpide-id))
 
 (def routes
   [["/valvonta/oikeellisuus"
@@ -86,7 +87,7 @@
                                        :parameters :keys [db]}]
                                    (api-response/ok|not-found
                                      (valvonta-service/save-valvonta! db id body)
-                                     (str "Energiatodistus " id " does not exists.")))}}]
+                                     (api-response/msg-404 "energiatodistus" id)))}}]
 
      ["/toimenpiteet"
       [""
@@ -97,7 +98,7 @@
                :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                              (api-response/get-response
                                (valvonta-service/find-toimenpiteet db whoami id)
-                               (str "Energiatodistus " id " does not exists.")))}
+                               (api-response/msg-404 "energiatodistus" id)))}
 
         :post {:summary    "Lisää energiatodistuksen valvontatoimenpide."
                :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
@@ -123,11 +124,9 @@
                       :handler    (fn [{{{:keys [id]} :path :keys [body]}
                                         :parameters :keys [db whoami]}]
                                     (api-response/pdf-response
-                                      (ring-io/piped-input-stream
-                                        (partial valvonta-service/preview-toimenpide
-                                                 db whoami id body))
+                                      (valvonta-service/preview-toimenpide db whoami id body)
                                       (valvonta-service/toimenpide-filename body)
-                                      "Not found."))}}]
+                                      (api-response/msg-404 "energiatodistus" id)))}}]
       ["/:toimenpide-id"
        [""
         {:conflicting true
@@ -142,7 +141,7 @@
                                      (api-response/get-response
                                        (valvonta-service/find-toimenpide
                                          db whoami id toimenpide-id)
-                                       (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}
+                                       (toimenpide-404-msg id toimenpide-id)))}
         :put {:summary    "Muuta toimenpiteen tietoja."
               :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
               :parameters {:path {:id            common-schema/Key
@@ -155,7 +154,7 @@
                             (api-response/ok|not-found
                               (valvonta-service/update-toimenpide!
                                 db whoami id toimenpide-id body)
-                              (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}}]
+                              (toimenpide-404-msg id toimenpide-id)))}}]
        ["/liitteet"
         [""
         {:get {:summary    "Hae toimenpiteen liitteet."
@@ -231,7 +230,7 @@
                 :handler    (fn [{{{:keys [id toimenpide-id]} :path} :parameters :keys [db whoami aws-s3-client]}]
                               (api-response/ok|not-found
                                 (valvonta-service/publish-toimenpide! db aws-s3-client whoami id toimenpide-id)
-                                (str "Toimenpide " id "/" toimenpide-id " does not exists.")))}}]
+                                (toimenpide-404-msg id toimenpide-id)))}}]
        ["/document/:filename"
         {:get {:summary    "Esikatsele tai lataa toimenpiteen dokumentti"
                :parameters {:path {:id            common-schema/Key
@@ -243,11 +242,10 @@
                :handler    (fn [{{{:keys [id toimenpide-id filename]} :path}
                                  :parameters :keys [db whoami aws-s3-client]}]
                              (api-response/pdf-response
-                               (ring-io/piped-input-stream
-                                 (partial valvonta-service/find-toimenpide-document
-                                          db aws-s3-client whoami id toimenpide-id))
+                               (valvonta-service/find-toimenpide-document
+                                 db aws-s3-client whoami id toimenpide-id)
                                filename
-                               "Not found."))}}]]]
+                               (toimenpide-404-msg id toimenpide-id)))}}]]]
      ["/notes"
       [""
        {:get  {:summary    "Hae energiatodistuksen valvonnan muistiinpanot."

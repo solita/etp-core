@@ -6,9 +6,7 @@
             [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.api.response :as api-response]
-            [cognitect.aws.client.api :as aws]
-            [solita.etp.service.rooli :as rooli-service])
-  (:import (java.io InputStream)))
+            [solita.etp.service.rooli :as rooli-service]))
 
 (def liite-access (some-fn rooli-service/laatija? rooli-service/paakayttaja?))
 
@@ -79,30 +77,23 @@
                                :keys [db whoami]}]
                           (api-response/ok|not-found
                               (liite-service/delete-liite! db whoami liite-id)
-                              (str "Energiatodistuksen " id " liite " liite-id " does not exists.")))}}]
+                              (api-response/msg-404 "energiatodistusliite" id liite-id)))}}]
 
    ["/:liite-id/:filename"
-    {:get {:summary "Hae energiatodistuksen yhden liitteen sisältö."
-           :access  liite-access
-           :parameters {:path {:id common-schema/Key
+    {:get {:summary    "Hae energiatodistuksen yhden liitteen sisältö."
+           :access     liite-access
+           :parameters {:path {:id       common-schema/Key
                                :liite-id common-schema/Key
                                :filename schema/Str}}
-           :responses {200 {:body nil}
-                       404 {:body schema/Str}}
-           :handler (fn [{{{:keys [id liite-id filename]} :path} :parameters
-                         :keys [db whoami aws-s3-client]}]
-                      (let [{:keys [content nimi contenttype]}
-                            (liite-service/find-energiatodistus-liite-content
-                             db whoami aws-s3-client liite-id)]
-                        (if (= nimi filename)
-                          (api-response/file-response
-                           content
-                           nimi
-                           contenttype
-                           false
-                           (str "Liite "
-                                liite-id
-                                " of energiatodistus "
-                                id
-                                " does not exists."))
-                          (r/not-found "File not found"))))}}]])
+           :responses  {200 {:body nil}
+                        404 {:body schema/Str}}
+           :handler    (fn [{{{:keys [id liite-id filename]} :path} :parameters
+                             :keys [db whoami aws-s3-client]}]
+                         (let [{:keys [content nimi contenttype]}
+                               (liite-service/find-energiatodistus-liite-content
+                                 db whoami aws-s3-client liite-id)]
+                           (if (or (= nimi filename) (nil? content))
+                             (api-response/file-response
+                               content nimi contenttype false
+                               (api-response/msg-404 "energiatodistusliite" id liite-id))
+                             (api-response/bad-request "Filename is invalid."))))}}]])
