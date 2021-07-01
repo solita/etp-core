@@ -75,12 +75,17 @@
        (map kayttajat (:vastaanottajat ketju))
        (assoc ketju :vastaanottajat)))
 
+(defn builtin-vastaanottajaryhma-id [whoami]
+  (case (:rooli whoami)
+    0 1            ;; laatija
+    2 0            ;; paakayttaja
+    3 2))          ;; laskuttaja
+
 (defn- visible-for? [whoami ketju]
   (or (rooli-service/paakayttaja? whoami)
       (contains? (->> ketju :vastaanottajat (map :id) set) (:id whoami))
       (-> ketju :viestit first :from :id (= (:id whoami)))
-      (and (rooli-service/laatija? whoami) (-> ketju :vastaanottajaryhma-id (= 1)))
-      (and (rooli-service/laskuttaja? whoami) (-> ketju :vastaanottajaryhma-id (= 2)))))
+      (= (builtin-vastaanottajaryhma-id whoami) (:vastaanottajaryhma-id ketju))))
 
 (defn- assert-visibility [whoami ketju]
   (if (visible-for? whoami ketju) ketju
@@ -99,12 +104,6 @@
 (defn find-ketju! [db whoami id]
   (viesti-db/read-ketju! db {:viestiketju-id id})
   (find-ketju db whoami id))
-
-(defn builtin-vastaanottajaryhma-id [whoami]
-  (case (:rooli whoami)
-    0 1            ;; laatija
-    2 0            ;; paakayttaja
-    3 2))          ;; laskuttaja
 
 (defn- query-for-other-users [whoami]
   {:kayttaja-id           (:id whoami)
