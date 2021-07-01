@@ -83,10 +83,9 @@
           db {:energiatodistus-id energiatodistus-id}))))
 
 (defn find-energiatodistus-liite-content [db whoami aws-s3-client liite-id]
-  (jdbc/with-db-transaction [db db]
-    (when-let [liite (first (liite-db/select-liite db {:id liite-id}))]
-      (assert-permission! db whoami (:energiatodistus-id liite))
-      (assoc liite :content (file-service/find-file aws-s3-client (file-key liite-id))))))
+  (when-let [liite (first (liite-db/select-liite db {:id liite-id}))]
+    (assert-permission! db whoami (:energiatodistus-id liite))
+    (assoc liite :content (file-service/find-file aws-s3-client (file-key liite-id)))))
 
 (defn delete-liite!
   ([db liite-id]

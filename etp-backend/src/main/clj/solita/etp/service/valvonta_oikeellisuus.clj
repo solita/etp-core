@@ -190,17 +190,15 @@
         toimenpide-with-diaarinumero (assoc toimenpide :diaarinumero diaarinumero)]
     (asha-valvonta-oikeellisuus/generate-template db whoami toimenpide-with-diaarinumero energiatodistus laatija)))
 
-(defn preview-toimenpide [db whoami id toimenpide ostream]
+(defn preview-toimenpide [db whoami id toimenpide]
   (when-let [{:keys [template template-data]} (generate-template db whoami id toimenpide)]
-    (with-open [output (io/output-stream ostream)]
-      (pdf/html->pdf template template-data output))))
+    (pdf/template->pdf-input-stream template template-data)))
 
-(defn find-toimenpide-document [db aws-s3-client whoami id toimenpide-id ostream]
+(defn find-toimenpide-document [db aws-s3-client whoami id toimenpide-id]
   (when-let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
     (if (:publish-time toimenpide)
-      (with-open [output (io/output-stream ostream)]
-        (io/copy (asha-valvonta-oikeellisuus/find-document aws-s3-client id toimenpide-id) output))
-      (preview-toimenpide db whoami id toimenpide ostream))))
+      (asha-valvonta-oikeellisuus/find-document aws-s3-client id toimenpide-id)
+      (preview-toimenpide db whoami id toimenpide))))
 
 (defn find-notes [db id] (valvonta-oikeellisuus-db/select-valvonta-notes
                            db {:energiatodistus-id id}))

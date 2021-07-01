@@ -3,7 +3,8 @@
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
             [clojure.java.io :as io]
             [solita.etp.service.pdf :as pdf]
-            [clojure.set :as set])
+            [clojure.set :as set]
+            [solita.common.logic :as logic])
   (:import (java.time Instant)))
 
 (defonce state (atom {:valvonnat (sorted-map)
@@ -238,23 +239,27 @@
 
 (defn toimenpide-filename [toimenpide] "test.pdf")
 
-(defn find-osapuoli [db osapuoli-type osapuoli-id]
-  (cond
-    (= osapuoli-type :henkilo) (find-henkilo db osapuoli-id)
-    (= osapuoli-type :yritys) (find-yritys db osapuoli-id)))
+(defn- preview-toimenpide [db whoami id toimenpide maybe-osapuoli]
+  (logic/if-let*
+    [osapuoli maybe-osapuoli
+     valvonta (find-valvonta db id)
+     {:keys [template template-data]} (asha/generate-template
+                                        db
+                                        whoami
+                                        (find-valvonta db id)
+                                        toimenpide
+                                        osapuoli
+                                        (find-ilmoituspaikat db))]
+    (pdf/template->pdf-input-stream template template-data)))
 
-(defn preview-toimenpide [db whoami id toimenpide osapuoli ostream]
-  (when-let [{:keys [template template-data]} (asha/generate-template
-                                                db
-                                                whoami
-                                                (find-valvonta db id)
-                                                toimenpide
-                                                osapuoli
-                                                (find-ilmoituspaikat db))]
-    (with-open [output (io/output-stream ostream)]
-      (pdf/html->pdf template template-data output))))
+(defn preview-henkilo-toimenpide [db whoami id toimenpide henkilo-id]
+  (preview-toimenpide db whoami id toimenpide (find-henkilo db henkilo-id)))
 
-(defn find-toimenpide-document [aws-s3-client valvonta-id toimenpide-id osapuoli ostream]
-  (when-let [document (asha/find-document aws-s3-client valvonta-id toimenpide-id osapuoli)]
-    (with-open [output (io/output-stream ostream)]
-      (io/copy document output))))
+(defn preview-yritys-toimenpide [db whoami id toimenpide yritys-id]
+  (preview-toimenpide db whoami id toimenpide (find-yritys db yritys-id)))
+
+(defn find-toimenpide-henkilo-document [db aws-s3-client valvonta-id toimenpide-id henkilo-id]
+  (asha/find-document aws-s3-client valvonta-id toimenpide-id (find-henkilo db henkilo-id)))
+
+(defn find-toimenpide-yritys-document [db aws-s3-client valvonta-id toimenpide-id yritys-id]
+  (asha/find-document aws-s3-client valvonta-id toimenpide-id (find-yritys db yritys-id)))

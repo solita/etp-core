@@ -1,7 +1,5 @@
 (ns solita.etp.api.valvonta-kaytto-toimenpiteet
   (:require
-    [ring.util.io :as ring-io]
-
     [schema.core :as schema]
     [solita.etp.schema.common :as common-schema]
     [solita.etp.schema.valvonta-kaytto :as kaytto-schema]
@@ -11,7 +9,7 @@
     [solita.etp.service.valvonta-kaytto :as valvonta-service]))
 
 (defn toimenpide-404-msg [valvonta-id toimenpide-id]
-  (str "Toimenpide " valvonta-id "/" toimenpide-id " does not exists."))
+  (api-response/msg-404 "Toimenpide" valvonta-id toimenpide-id))
 
 (def routes
   ["/toimenpiteet"
@@ -23,7 +21,7 @@
             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                           (api-response/get-response
                             (valvonta-service/find-toimenpiteet db id)
-                            (str "Käytönvalvonta " id " does not exists.")))}
+                            (api-response/msg-404 "kaytonvalvonta" id)))}
 
      :post {:summary    "Lisää käytönvalvonnan toimenpide."
             :access     rooli-service/paakayttaja? 
@@ -41,7 +39,7 @@
    ["/henkilot/:henkilo-id/preview"
     {:conflicting true
      :post        {:summary    "Henkilö-osapuolen toimenpiteen esikatselu"
-                   :parameters {:path {:id common-schema/Key
+                   :parameters {:path {:id         common-schema/Key
                                        :henkilo-id common-schema/Key}
                                 :body kaytto-schema/ToimenpideAdd}
                    :access     rooli-service/paakayttaja?
@@ -50,16 +48,14 @@
                    :handler    (fn [{{{:keys [id henkilo-id]} :path :keys [body]}
                                      :parameters :keys [db whoami]}]
                                  (api-response/pdf-response
-                                   (ring-io/piped-input-stream
-                                     (partial valvonta-service/preview-toimenpide
-                                              db whoami id body
-                                              (valvonta-service/find-osapuoli db :henkilo henkilo-id)))
+                                   (valvonta-service/preview-henkilo-toimenpide
+                                     db whoami id body henkilo-id)
                                    (valvonta-service/toimenpide-filename body)
-                                   "Not found."))}}]
+                                   (api-response/msg-404 "henkilo" id henkilo-id)))}}]
    ["/yritykset/:yritys-id/preview"
     {:conflicting true
      :post        {:summary    "Yritys-osapuolen toimenpiteen esikatselu"
-                   :parameters {:path {:id common-schema/Key
+                   :parameters {:path {:id        common-schema/Key
                                        :yritys-id common-schema/Key}
                                 :body kaytto-schema/ToimenpideAdd}
                    :access     rooli-service/paakayttaja?
@@ -68,12 +64,10 @@
                    :handler    (fn [{{{:keys [id yritys-id]} :path :keys [body]}
                                      :parameters :keys [db whoami]}]
                                  (api-response/pdf-response
-                                   (ring-io/piped-input-stream
-                                     (partial valvonta-service/preview-toimenpide
-                                              db whoami id body
-                                              (valvonta-service/find-osapuoli db :yritys yritys-id)))
+                                   (valvonta-service/preview-yritys-toimenpide
+                                     db whoami id body yritys-id)
                                    (valvonta-service/toimenpide-filename body)
-                                   "Not found."))}}]
+                                   (api-response/msg-404 "yritys" id yritys-id)))}}]
    ["/:toimenpide-id"
     [""
      {:conflicting true
@@ -115,12 +109,10 @@
             :handler    (fn [{{{:keys [id toimenpide-id henkilo-id filename]} :path}
                               :parameters :keys [db aws-s3-client]}]
                           (api-response/pdf-response
-                            (ring-io/piped-input-stream
-                              (partial valvonta-service/find-toimenpide-document
-                                       aws-s3-client id toimenpide-id
-                                       (valvonta-service/find-osapuoli db :henkilo henkilo-id)))
+                            (valvonta-service/find-toimenpide-henkilo-document
+                              db aws-s3-client id toimenpide-id henkilo-id)
                             filename
-                            "Not found."))}}]
+                            (api-response/msg-404 "henkilo" id toimenpide-id henkilo-id)))}}]
     ["/yritykset/:yritys-id/document/:filename"
      {:get {:summary    "Yritys-osapuolen toimenpiteen esikatselu tai lataus"
             :parameters {:path {:id            common-schema/Key
@@ -133,9 +125,7 @@
             :handler    (fn [{{{:keys [id toimenpide-id yritys-id filename]} :path}
                               :parameters :keys [db aws-s3-client]}]
                           (api-response/pdf-response
-                            (ring-io/piped-input-stream
-                              (partial valvonta-service/find-toimenpide-document
-                                       aws-s3-client id toimenpide-id
-                                       (valvonta-service/find-osapuoli db :yritys yritys-id)))
+                            (valvonta-service/find-toimenpide-yritys-document
+                              db aws-s3-client id toimenpide-id yritys-id)
                             filename
-                            "Not found."))}}]]])
+                            (api-response/msg-404 "yritys "id toimenpide-id yritys-id)))}}]]])
