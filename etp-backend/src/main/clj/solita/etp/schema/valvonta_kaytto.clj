@@ -14,7 +14,7 @@
                     x))
                 geo-schema/Postiosoite))
 
-(defn complete-valvonta-schema [schema]
+(defn complete-valvonta-related-schema [schema]
   (assoc schema :id common-schema/Key :valvonta-id common-schema/Key))
 
 (def ValvontaSave
@@ -29,7 +29,26 @@
 
 (def Valvonta (assoc ValvontaSave :id common-schema/Key))
 
-(def ValvontaStatus Valvonta)
+(def ToimenpideUpdate
+  (schema-tools/optional-keys
+   {:deadline-date (schema/maybe common-schema/Date)
+    :template-id   (schema/maybe common-schema/Key)
+    :description   (schema/maybe schema/Str)}))
+
+(def ToimenpideAdd
+  {:type-id       common-schema/Key
+   :deadline-date (schema/maybe common-schema/Date)
+   :template-id   (schema/maybe common-schema/Key)
+   :description   (schema/maybe schema/Str)})
+
+(def Toimenpide
+  (assoc ToimenpideAdd
+         :id common-schema/Key
+         :diaarinumero (schema/maybe schema/Str)
+         :author common-schema/Kayttaja
+         :create-time common-schema/Instant
+         :publish-time common-schema/Instant
+         :filename schema/Str))
 
 (def OsapuoliBase
   (st/merge {:rooli-id (schema/maybe common-schema/Key)
@@ -43,34 +62,20 @@
 (def HenkiloSave (assoc OsapuoliBase :henkilotunnus common-schema/Henkilotunnus
                                      :etunimi common-schema/String100
                                      :sukunimi common-schema/String100))
-(def Henkilo (complete-valvonta-schema HenkiloSave))
+(def Henkilo (complete-valvonta-related-schema HenkiloSave))
 (def HenkiloStatus Henkilo)
 
 (def YritysSave (assoc OsapuoliBase :ytunnus common-schema/Ytunnus
                                     :nimi common-schema/String100))
-(def Yritys (complete-valvonta-schema YritysSave))
+(def Yritys (complete-valvonta-related-schema YritysSave))
 (def YritysStatus Yritys)
+
+(def ValvontaStatus
+  (assoc Valvonta
+         :last-toimenpide
+         (schema/maybe (st/select-keys Toimenpide [:type-id :deadline-date]))
+         :henkilot [(st/select-keys Henkilo [:id :rooli-id :etunimi :sukunimi])]
+         :yritykset [(st/select-keys Yritys [:id :rooli-id :nimi])]))
 
 (def henkilo? #(contains? % :henkilotunnus))
 (def yritys? #(contains? % :nimi))
-
-(def ToimenpideUpdate
-  (schema-tools/optional-keys
-    {:deadline-date (schema/maybe common-schema/Date)
-     :template-id   (schema/maybe common-schema/Key)
-     :description   (schema/maybe schema/Str)}))
-
-(def ToimenpideAdd
-  {:type-id       common-schema/Key
-   :deadline-date (schema/maybe common-schema/Date)
-   :template-id   (schema/maybe common-schema/Key)
-   :description   (schema/maybe schema/Str)})
-
-(def Toimenpide
-  (assoc ToimenpideAdd
-    :id common-schema/Key
-    :diaarinumero (schema/maybe schema/Str)
-    :author common-schema/Kayttaja
-    :create-time common-schema/Instant
-    :publish-time common-schema/Instant
-    :filename schema/Str))

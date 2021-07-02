@@ -12,6 +12,8 @@
                       :yritykset (sorted-map)
                       :liitteet (sorted-map)}))
 
+(def valvonta-toimenpiteet (atom {}))
+
 (defn find! [k id]
   (let [found (some-> @state (get-in [k id]) (assoc :id id))]
     (when-not (:deleted? found)
@@ -44,15 +46,49 @@
                                   dereffed)))]
     (if (= old new) 0 1)))
 
+(defn valvonta-related [id coll]
+  (->> coll
+       (filter #(= id (-> % second :valvonta-id)))
+       (filter #(-> % second :deleted? not))))
+
 (defn find-valvonnat [_ {:keys [valvoja-id limit offset]}]
-  (cond->> (:valvonnat @state)
-    true (filter #(-> % second :deleted? not))
-    valvoja-id (filter #(= valvoja-id (-> % second :valvoja-id)))
-    offset (drop offset)
-    limit (take limit)
-    true (reduce (fn [acc [id valvonta]]
-                   (conj acc (assoc valvonta :id id)))
-                 [])))
+  (let [{:keys [valvonnat henkilot yritykset]} @state]
+    (cond->> valvonnat
+      true (filter #(-> % second :deleted? not))
+      valvoja-id (filter #(= valvoja-id
+                             (-> % second :valvoja-id)))
+      offset (drop offset)
+      limit (take limit)
+      true (reduce (fn [acc [id valvonta]]
+                     (conj acc (assoc valvonta :id id)))
+                   [])
+      true (map (fn [{:keys [id] :as valvonta}]
+                  (assoc valvonta
+                         :henkilot
+                         (->> henkilot
+                              (valvonta-related id)
+                              (map (fn [[id henkilo]]
+                                     (-> henkilo
+                                         (select-keys [:etunimi
+                                                       :sukunimi
+                                                       :rooli-id])
+                                         (assoc :id id))))))))
+      true (map (fn [{:keys [id] :as valvonta}]
+                  (assoc valvonta
+                         :yritykset
+                         (->> yritykset
+                              (valvonta-related id)
+                              (map (fn [[id yritys]]
+                                     (-> yritys
+                                         (select-keys [:nimi :rooli-id])
+                                         (assoc :id id))))))))
+      true (map (fn [{:keys [id] :as valvonta}]
+                  (assoc valvonta
+                         :last-toimenpide
+                         (some-> @valvonta-toimenpiteet
+                                 (get id)
+                                 last
+                                 (select-keys [:type-id :deadline-date]))))))))
 
 (defn count-valvonnat [db _] {:count 1})
 
@@ -174,8 +210,6 @@
      :language "fi"
      :valid true}))
 
-(def valvonta-toimenpiteet (atom {}))
-
 (defn find-toimenpiteet [db valvonta-id]
   (when-not (nil? (find-valvonta db valvonta-id))
     (or (@valvonta-toimenpiteet valvonta-id) [])))
@@ -263,3 +297,19 @@
 
 (defn find-toimenpide-yritys-document [db aws-s3-client valvonta-id toimenpide-id yritys-id]
   (asha/find-document aws-s3-client valvonta-id toimenpide-id (find-yritys db yritys-id)))
+
+(defn preview-toimenpide [db whoami id toimenpide osapuoli ostream]
+  (when-let [{:keys [template template-data]} (asha/generate-template
+                                                db
+                                                whoami
+                                                (find-valvonta db id)
+                                                toimenpide
+                                                osapuoli
+                                                (find-ilmoituspaikat db))]
+    (with-open [output (io/output-stream ostream)]
+      (pdf/html->pdf template template-data output))))
+
+(defn find-toimenpide-document [aws-s3-client valvonta-id toimenpide-id osapuoli ostream]
+  (when-let [document (asha/find-document aws-s3-client valvonta-id toimenpide-id osapuoli)]
+    (with-open [output (io/output-stream ostream)]
+      (io/copy document output))))
