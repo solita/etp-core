@@ -54,8 +54,7 @@ from energiatodistus
     order by coalesce(toimenpide.publish_time, toimenpide.create_time) desc
     limit 1) last_toimenpide on true
 where energiatodistus.laatija_id = :laatija-id and
-      (last_toimenpide.type_id in (0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13) and last_toimenpide.publish_time is not null or
-       last_toimenpide.type_id in (4, 8, 12))
+      etp.vo_toimenpide_visible_laatija(last_toimenpide)
 order by coalesce(last_toimenpide.publish_time, last_toimenpide.create_time) desc
 limit :limit offset :offset;
 
@@ -82,8 +81,7 @@ from energiatodistus left join lateral (
   order by coalesce(toimenpide.publish_time, toimenpide.create_time) desc
   limit 1) last_toimenpide on true
 where energiatodistus.laatija_id = :laatija-id and
-  (last_toimenpide.type_id in (0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13) and last_toimenpide.publish_time is not null or
-   last_toimenpide.type_id in (4, 8, 12));
+      etp.vo_toimenpide_visible_laatija(last_toimenpide);
 
 -- name: select-valvonta
 select
@@ -124,7 +122,8 @@ select
   author.etunimi author$etunimi, author.sukunimi author$sukunimi
   from vo_toimenpide toimenpide
     inner join kayttaja author on author.id = toimenpide.author_id
-where toimenpide.energiatodistus_id = :energiatodistus-id;
+where toimenpide.energiatodistus_id = :energiatodistus-id and
+      (:paakayttaja? or etp.vo_toimenpide_visible_laatija(toimenpide));
 
 -- name: select-energiatodistus-valvonta-documents
 select distinct on (type_id) *
