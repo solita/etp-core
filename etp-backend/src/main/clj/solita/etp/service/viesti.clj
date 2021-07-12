@@ -63,7 +63,7 @@
   (map #(flat/flat->tree #"\$" %)
        (viesti-db/select-viestit db {:id viestiketju-id :reader-id (:id whoami)})))
 
-(defn find-kayttajat [db]
+(defn- find-kayttajat [db]
   (->> db viesti-db/select-kayttajat (group-by :id) (map/map-values first)))
 
 (defn- assoc-join-viestit [db whoami ketju]
