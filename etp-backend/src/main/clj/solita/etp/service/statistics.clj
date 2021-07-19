@@ -5,7 +5,8 @@
 (db/require-queries 'statistics)
 
 (def default-query {:keyword nil
-                    :alakayttotarkoitus-ids []
+                    :alakayttotarkoitus-2013-ids []
+                    :alakayttotarkoitus-2018-ids []
                     :valmistumisvuosi-min nil
                     :valmistumisvuosi-max nil
                     :lammitetty-nettoala-min nil

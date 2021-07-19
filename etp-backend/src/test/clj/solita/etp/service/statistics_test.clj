@@ -67,7 +67,9 @@
 (def query-exact (assoc service/default-query
                         :keyword
                         "Uusimaa"
-                        :alakayttotarkoitus-ids
+                        :alakayttotarkoitus-2013-ids
+                        ["YAT"]
+                        :alakayttotarkoitus-2018-ids
                         ["YAT"]
                         :valmistumisvuosi-max
                         2019
@@ -75,8 +77,8 @@
                         199))
 
 (def query-alakayttotarkoitusluokka (assoc service/default-query
-                                           :alakayttotarkoitus-ids
-                                           ["YAT"]))
+                                           :alakayttotarkoitus-2013-ids ["YAT"]
+                                           :alakayttotarkoitus-2018-ids ["YAT"]))
 
 (t/deftest sufficient-sample-size?-test
   (t/is (false? (service/sufficient-sample-size? {})))

@@ -16,7 +16,9 @@ AND (:keyword::text IS NULL
      OR k.label_sv ILIKE :keyword
      OR t.label_fi ILIKE :keyword
      OR t.label_sv ILIKE :keyword)
-AND ((:alakayttotarkoitus-ids) IS NULL OR e.pt$kayttotarkoitus IN (:alakayttotarkoitus-ids))
+AND (((:alakayttotarkoitus-2013-ids) IS NULL AND (:alakayttotarkoitus-2018-ids) IS NULL) OR
+     (e.versio = 2013 AND  e.pt$kayttotarkoitus IN (:alakayttotarkoitus-2013-ids)) OR
+     (e.versio = 2018 AND  e.pt$kayttotarkoitus IN (:alakayttotarkoitus-2018-ids)))
 AND (:valmistumisvuosi-min::numeric IS NULL OR e.pt$valmistumisvuosi >= :valmistumisvuosi-min)
 AND (:valmistumisvuosi-max::numeric IS NULL OR e.pt$valmistumisvuosi <= :valmistumisvuosi-max)
 AND (:lammitetty-nettoala-min::numeric IS NULL OR e.lt$lammitetty_nettoala >= :lammitetty-nettoala-min)
@@ -40,7 +42,9 @@ AND (:keyword::text IS NULL
      OR k.label_sv ILIKE :keyword
      OR t.label_fi ILIKE :keyword
      OR t.label_sv ILIKE :keyword)
-AND ((:alakayttotarkoitus-ids) IS NULL OR e.pt$kayttotarkoitus IN (:alakayttotarkoitus-ids))
+AND (((:alakayttotarkoitus-2013-ids) IS NULL AND (:alakayttotarkoitus-2018-ids) IS NULL) OR
+     (e.versio = 2013 AND  e.pt$kayttotarkoitus IN (:alakayttotarkoitus-2013-ids)) OR
+     (e.versio = 2018 AND  e.pt$kayttotarkoitus IN (:alakayttotarkoitus-2018-ids)))
 AND (:valmistumisvuosi-min::numeric IS NULL OR e.pt$valmistumisvuosi >= :valmistumisvuosi-min)
 AND (:valmistumisvuosi-max::numeric IS NULL OR e.pt$valmistumisvuosi <= :valmistumisvuosi-max)
 AND (:lammitetty-nettoala-min::numeric IS NULL OR e.lt$lammitetty_nettoala >= :lammitetty-nettoala-min)
@@ -71,7 +75,9 @@ AND (:keyword::text IS NULL
      OR k.label_sv ILIKE :keyword
      OR t.label_fi ILIKE :keyword
      OR t.label_sv ILIKE :keyword)
-AND ((:alakayttotarkoitus-ids) IS NULL OR e.pt$kayttotarkoitus IN (:alakayttotarkoitus-ids))
+AND (((:alakayttotarkoitus-2013-ids) IS NULL AND (:alakayttotarkoitus-2018-ids) IS NULL) OR
+     (e.versio = 2013 AND  e.pt$kayttotarkoitus IN (:alakayttotarkoitus-2013-ids)) OR
+     (e.versio = 2018 AND  e.pt$kayttotarkoitus IN (:alakayttotarkoitus-2018-ids)))
 AND (:valmistumisvuosi-min::numeric IS NULL OR e.pt$valmistumisvuosi >= :valmistumisvuosi-min)
 AND (:valmistumisvuosi-max::numeric IS NULL OR e.pt$valmistumisvuosi <= :valmistumisvuosi-max)
 AND (:lammitetty-nettoala-min::numeric IS NULL OR e.lt$lammitetty_nettoala >= :lammitetty-nettoala-min)
@@ -97,7 +103,9 @@ AND (:keyword::text IS NULL
      OR k.label_sv ILIKE :keyword
      OR t.label_fi ILIKE :keyword
      OR t.label_sv ILIKE :keyword)
-AND ((:alakayttotarkoitus-ids) IS NULL OR e.pt$kayttotarkoitus IN (:alakayttotarkoitus-ids))
+AND (((:alakayttotarkoitus-2013-ids) IS NULL AND (:alakayttotarkoitus-2018-ids) IS NULL) OR
+     (e.versio = 2013 AND  e.pt$kayttotarkoitus IN (:alakayttotarkoitus-2013-ids)) OR
+     (e.versio = 2018 AND  e.pt$kayttotarkoitus IN (:alakayttotarkoitus-2018-ids)))
 AND (:valmistumisvuosi-min::numeric IS NULL OR e.pt$valmistumisvuosi >= :valmistumisvuosi-min)
 AND (:valmistumisvuosi-max::numeric IS NULL OR e.pt$valmistumisvuosi <= :valmistumisvuosi-max)
 AND (:lammitetty-nettoala-min::numeric IS NULL OR e.lt$lammitetty_nettoala >= :lammitetty-nettoala-min)
