@@ -74,6 +74,10 @@
                         :lammitetty-nettoala-max
                         199))
 
+(def query-alakayttotarkoitusluokka (assoc service/default-query
+                                           :alakayttotarkoitus-ids
+                                           ["YAT"]))
+
 (t/deftest sufficient-sample-size?-test
   (t/is (false? (service/sufficient-sample-size? {})))
   (t/is (false? (service/sufficient-sample-size? {:e-luokka {"A" 1}})))
@@ -94,7 +98,10 @@
              (service/find-counts ts/*db* query-all)))
     (t/is (= {2013 {:e-luokka {"A" 3} :lammitysmuoto {2 3} :ilmanvaihto {2 3}}
               2018 {:e-luokka {"A" 3} :lammitysmuoto {2 3} :ilmanvaihto {2 3}}}
-             (service/find-counts ts/*db* query-exact)))))
+             (service/find-counts ts/*db* query-exact)))
+    (t/is (= {2013 {:e-luokka {"A" 3} :lammitysmuoto {2 3} :ilmanvaihto {2 3}}
+              2018 {:e-luokka {"A" 3} :lammitysmuoto {2 3} :ilmanvaihto {2 3}}}
+             (service/find-counts ts/*db* query-alakayttotarkoitusluokka)))))
 
 (t/deftest find-e-luku-statistics-test
   (let [{:keys [energiatodistukset]} (test-data-set 12 true)]
