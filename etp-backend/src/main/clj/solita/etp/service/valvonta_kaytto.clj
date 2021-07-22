@@ -188,7 +188,7 @@
 (defn add-liite-from-link! [db valvonta-id liite]
   (add! :liitteet (assoc liite :valvonta-id valvonta-id)))
 
-(defn delete-liite! [_ liite-id]
+(defn delete-liite! [_ _ liite-id]
   (delete! :liitteet liite-id))
 
 (defn find-toimenpidetyypit [db]
