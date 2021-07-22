@@ -414,6 +414,42 @@
     (t/is (= 0 (laatija-count-unread)))
     (t/is (= 0 (paakayttaja-count-unread)))
     (t/is (= 0 (paakayttaja-count-not-kasitelty)))
+    (t/is (= 0 (paakayttaja-count-omat)))
+
+    ;; End of typical sequence
+    ;;
+    ;; Also check the case from AE-1321 where an added question is
+    ;; posted. It is expected that the kasitelty flag gets cleared.
+    (t/is (= 1 (service/add-viesti! (ts/db-user laatija-id)
+                                    (laatija-whoami laatija-id)
+                                    ketju-id "Vielä yksi juttu")))
+    (t/is (= 0 (laatija-count-unread)))
+    (t/is (= 1 (paakayttaja-count-unread)))
+    (t/is (= 1 (paakayttaja-count-not-kasitelty)))
+    (t/is (= 1 (paakayttaja-count-omat)))
+
+    (t/is (= 2 (service/add-viesti! (ts/db-user paakayttaja-id)
+                                    (paakayttaja-whoami paakayttaja-id)
+                                    ketju-id "Juu")))
+    (t/is (= 1 (laatija-count-unread)))
+    (t/is (= 0 (paakayttaja-count-unread)))
+    (t/is (= 1 (paakayttaja-count-not-kasitelty)))
+    (t/is (= 1 (paakayttaja-count-omat)))
+
+    (t/is (= #{"Hello" "Heippa vaan" "Vielä yksi juttu" "Juu"}
+             (->> (service/find-ketju! (ts/db-user laatija-id)
+                                       (laatija-whoami laatija-id)
+                                       ketju-id)
+                  :viestit
+                  (map #(:body %))
+                  set)))
+
+    (t/is (= 1 (service/update-ketju! (ts/db-user paakayttaja-id)
+                                      ketju-id {:kasitelty true})))
+
+    (t/is (= 0 (laatija-count-unread)))
+    (t/is (= 0 (paakayttaja-count-unread)))
+    (t/is (= 0 (paakayttaja-count-not-kasitelty)))
     (t/is (= 0 (paakayttaja-count-omat)))))
 
 (t/deftest test-viesti-many-users-test
@@ -480,3 +516,52 @@
                                     (laatija-whoami laatija-1-id)
                                     (inc ketju-id)))
           "Nil is expected from find of a non-existent ketju")))
+
+(t/deftest remove-kasitelty-on-new-viesti-test
+  "Check that we meet requirements in AE-1321"
+  (let [{:keys [laatijat paakayttajat]} (test-data-set)
+        [[paakayttaja-id _]] (take 1 paakayttajat)
+        [[laatija-id _]] (take 1 laatijat)
+        ketju-id (service/add-ketju! (ts/db-user laatija-id)
+                                     (laatija-whoami laatija-id)
+                                     (complete-ketju-add
+                                      {:vastaanottajat []
+                                       :vastaanottajaryhma-id 0
+                                       :energiatodistus-id nil}))]
+    (t/is (not (:kasitelty (service/find-ketju (ts/db-user paakayttaja-id)
+                                               (paakayttaja-whoami paakayttaja-id)
+                                               ketju-id))))
+    (service/add-viesti! (ts/db-user paakayttaja-id)
+                         (paakayttaja-whoami paakayttaja-id)
+                         ketju-id
+                         "Pääkäyttäjän vastaus")
+    (service/add-viesti! (ts/db-user laatija-id)
+                         (laatija-whoami laatija-id)
+                         ketju-id
+                         "Ok")
+    (t/is (not (:kasitelty (service/find-ketju (ts/db-user paakayttaja-id)
+                                               (paakayttaja-whoami paakayttaja-id)
+                                               ketju-id))))
+    (t/is (= 1 (service/update-ketju! (ts/db-user paakayttaja-id)
+                                      ketju-id {:kasitelty true})))
+    (t/is (:kasitelty (service/find-ketju (ts/db-user paakayttaja-id)
+                                          (paakayttaja-whoami paakayttaja-id)
+                                          ketju-id)))
+    (service/add-viesti! (ts/db-user laatija-id)
+                                    (laatija-whoami laatija-id)
+                                    ketju-id "Niin vielä yks juttu")
+    (t/is (not (:kasitelty (service/find-ketju (ts/db-user paakayttaja-id)
+                                               (paakayttaja-whoami paakayttaja-id)
+                                               ketju-id))))
+    (service/add-viesti! (ts/db-user paakayttaja-id)
+                                    (paakayttaja-whoami paakayttaja-id)
+                                    ketju-id "Toinen vastaus")
+    (t/is (not (:kasitelty (service/find-ketju (ts/db-user paakayttaja-id)
+                                               (paakayttaja-whoami paakayttaja-id)
+                                               ketju-id))))
+    (t/is (= 1 (service/update-ketju! (ts/db-user paakayttaja-id)
+                                      ketju-id {:kasitelty true})))
+    (t/is (:kasitelty (service/find-ketju (ts/db-user paakayttaja-id)
+                                          (paakayttaja-whoami paakayttaja-id)
+                                          ketju-id)))))
+
