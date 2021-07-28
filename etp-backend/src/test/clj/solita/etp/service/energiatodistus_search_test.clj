@@ -103,6 +103,34 @@
                              id
                              [[["=" "energiatodistus.id" id]]]))))
 
+(t/deftest bilingual-search-test
+  (let [target-text "Noeinejinte"
+        laatija-id (-> (laatija-test-data/generate-and-insert! 1) keys first)
+        target-fi-add (-> (energiatodistus-test-data/generate-add 2018 true)
+                          (assoc :draft-visible-to-paakayttaja true)
+                          (assoc-in [:lahtotiedot :ilmanvaihto :kuvaus-fi] target-text))
+        target-fi (first (energiatodistus-test-data/insert! [target-fi-add] laatija-id))
+
+        target-sv-add (-> (energiatodistus-test-data/generate-add 2018 true)
+                          (assoc :draft-visible-to-paakayttaja true)
+                          (assoc-in [:lahtotiedot :ilmanvaihto :kuvaus-sv] target-text))
+        target-sv (first (energiatodistus-test-data/insert! [target-sv-add] laatija-id))
+        target-ids #{target-fi target-sv}
+
+        energiatodistus-ids (concat (-> (map #(assoc % :draft-visible-to-paakayttaja true)
+                                                (energiatodistus-test-data/generate-adds 2 2018 true))
+                                        (energiatodistus-test-data/insert! laatija-id))
+                                    [target-fi target-sv])]
+    ;; Verify some assumptions of the test data
+    (t/is (int? laatija-id))
+    (t/is (every? int? energiatodistus-ids))
+    (t/is (= #{target-fi target-sv}
+             (->> (service/search ts/*db*
+                                  kayttaja-test-data/paakayttaja
+                                  {:where [[["ilike" "energiatodistus.lahtotiedot.ilmanvaihto.kuvaus" (str "%" target-text "%")]]]})
+                  (map :id)
+                  set)))))
+
 (t/deftest search-by-laatija-voimassaolo-paattymisaika-test
   (let [{:keys [energiatodistukset laatijat] :as test-data-set} (test-data-set)
         id (-> energiatodistukset keys sort first)

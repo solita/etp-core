@@ -97,7 +97,9 @@
   "Computed field consists of sql expression and value schema [sql, schema]"
   {:energiatodistus
    {:lahtotiedot
-    {:rakennusvaippa (deep/deep-merge ua-fields osuus-lampohaviosta-fields)}
+    {:ilmanvaihto
+     {:kuvaus ["(energiatodistus.lt$ilmanvaihto$kuvaus_fi || '___' || energiatodistus.lt$ilmanvaihto$kuvaus_sv)" schema/Str]}
+     :rakennusvaippa (deep/deep-merge ua-fields osuus-lampohaviosta-fields)}
     :tulokset
     {:kaytettavat-energiamuodot
      (merge
