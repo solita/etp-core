@@ -46,8 +46,8 @@
          (keyword (str (name (last path)) appendix))))
 
 (defn- bilingual-for-schema [path schema]
-  (let [path-fi (language-suffix-last-key path "-fi")
-        path-sv (language-suffix-last-key path "-sv")
+  (let [path-fi (concat [:energiatodistus] (language-suffix-last-key path "-fi"))
+        path-sv (concat [:energiatodistus] (language-suffix-last-key path "-sv"))
         schema-fi (get-in schema (rest path-fi))
         schema-sv (get-in schema (rest path-sv))
         sql-fi (field->db-column (map name path-fi))
@@ -113,7 +113,7 @@
   {:energiatodistus
    {:lahtotiedot
     {:ilmanvaihto
-     {:kuvaus (bilingual-for-schema [:energiatodistus :lahtotiedot :ilmanvaihto :kuvaus]
+     {:kuvaus (bilingual-for-schema [:lahtotiedot :ilmanvaihto :kuvaus]
                                     energiatodistus-schema/Energiatodistus2018)}
      :rakennusvaippa (deep/deep-merge ua-fields osuus-lampohaviosta-fields)}
     :tulokset
