@@ -41,6 +41,21 @@
     (into {} (map (per-nettoala-entry (map name path) rename-key))
           (get-in schema path))))
 
+(defn- language-suffix-last-key [path appendix]
+  (assoc path (dec (count path))
+         (keyword (str (name (last path)) appendix))))
+
+(defn- bilingual-for-schema [path schema]
+  (let [path-fi (language-suffix-last-key path "-fi")
+        path-sv (language-suffix-last-key path "-sv")
+        schema-fi (get-in schema (rest path-fi))
+        schema-sv (get-in schema (rest path-sv))
+        sql-fi (field->db-column (map name path-fi))
+        sql-sv (field->db-column (map name path-sv))]
+    (assert (not (nil? schema-fi)) "The localized path needs to be present in schema")
+    (assert (= schema-fi schema-sv) "The schema must match for fi and sv")
+    [(str "(" sql-fi " || '___' || " sql-sv ")") schema-fi]))
+
 (defn- painotettu-kulutus-sql [path key]
   (str (field->db-column (conj path (name key))) " * (case energiatodistus.versio"
        " when 2013 then "
@@ -98,7 +113,8 @@
   {:energiatodistus
    {:lahtotiedot
     {:ilmanvaihto
-     {:kuvaus ["(energiatodistus.lt$ilmanvaihto$kuvaus_fi || '___' || energiatodistus.lt$ilmanvaihto$kuvaus_sv)" schema/Str]}
+     {:kuvaus (bilingual-for-schema [:energiatodistus :lahtotiedot :ilmanvaihto :kuvaus]
+                                    energiatodistus-schema/Energiatodistus2018)}
      :rakennusvaippa (deep/deep-merge ua-fields osuus-lampohaviosta-fields)}
     :tulokset
     {:kaytettavat-energiamuodot
