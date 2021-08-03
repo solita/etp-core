@@ -10,7 +10,8 @@
             [solita.etp.service.valvonta-kaytto :as valvonta-service]
             [solita.etp.schema.valvonta :as valvonta-schema]
             [solita.etp.schema.valvonta-kaytto :as valvonta-kaytto-schema]
-            [solita.etp.schema.liite :as liite-schema]))
+            [solita.etp.schema.liite :as liite-schema]
+            [clojure.java.io :as io]))
 
 (def routes
   [["/valvonta/kaytto"
@@ -147,7 +148,7 @@
                             404 {:body schema/Str}}
                :handler    (fn [{{{:keys [id henkilo-id]} :path :keys [body]} :parameters :keys [db]}]
                              (api-response/ok|not-found
-                              (valvonta-service/update-henkilo! db henkilo-id body)
+                              (valvonta-service/update-henkilo! db id henkilo-id body)
                               (str "Henkilö " id "/" henkilo-id " does not exist.")))}
          :delete {:summary    "Poista henkilö."
                   :access     rooli-service/paakayttaja?
@@ -203,7 +204,7 @@
                             404 {:body schema/Str}}
                :handler    (fn [{{{:keys [id yritys-id]} :path :keys [body]} :parameters :keys [db]}]
                              (api-response/ok|not-found
-                              (valvonta-service/update-yritys! db yritys-id body)
+                              (valvonta-service/update-yritys! db id yritys-id body)
                               (str "Yritys " id "/" yritys-id " does not exist.")))}
          :delete {:summary    "Poista yritys."
                   :access     rooli-service/paakayttaja?
@@ -262,14 +263,34 @@
                                  {:id (valvonta-service/add-liite-from-link! db id body)})
                                [{:constraint :liite-valvonta-id-fkey :response 404}]))}}]
       ["/:liite-id"
-       {:conflicting true
-        :delete {:summary    "Poista käytönvalvonnan liite."
-                 :access     rooli-service/paakayttaja?
-                 :parameters {:path {:id common-schema/Key
-                                     :liite-id common-schema/Key}}
-                 :responses  {200 {:body nil}
-                              404 {:body schema/Str}}
-                 :handler    (fn [{{{:keys [id liite-id]} :path} :parameters :keys [db]}]
-                               (api-response/ok|not-found
-                                (valvonta-service/delete-liite! db id liite-id)
-                                (str "Liite " id "/" liite-id " does not exist.")))}}]]]]])
+       [""
+        {:conflicting true
+         :delete      {:summary    "Poista käytönvalvonnan liite."
+                       :access     rooli-service/paakayttaja?
+                       :parameters {:path {:id       common-schema/Key
+                                           :liite-id common-schema/Key}}
+                       :responses  {200 {:body nil}
+                                    404 {:body schema/Str}}
+                       :handler    (fn [{{{:keys [id liite-id]} :path} :parameters :keys [db]}]
+                                     (api-response/ok|not-found
+                                       (valvonta-service/delete-liite! db id liite-id)
+                                       (str "Liite " id "/" liite-id " does not exist.")))}}]
+        ["/:filename"
+         {:conflicting true
+          :get         {:summary    "Hae käytönvalvonnan liitteen sisältö."
+                        :access     rooli-service/paakayttaja?
+                        :parameters {:path {:id       common-schema/Key
+                                            :liite-id common-schema/Key
+                                            :filename schema/Str}}
+                        :responses  {200 {:body nil}
+                                     404 {:body schema/Str}}
+                        :handler    (fn [{{{:keys [id liite-id filename]} :path} :parameters
+                                          :keys                                  [db whoami aws-s3-client]}]
+                                      (let [{:keys [tempfile contenttype] :as file}
+                                            (valvonta-service/find-liite
+                                              db whoami aws-s3-client liite-id)]
+                                        (if (= (:filename file) filename)
+                                          (api-response/file-response
+                                            (io/input-stream tempfile) filename contenttype false
+                                            (str "Liite " id "/" liite-id " does not exist."))
+                                          (api-response/bad-request "Filename is invalid."))))}}]]]]]])

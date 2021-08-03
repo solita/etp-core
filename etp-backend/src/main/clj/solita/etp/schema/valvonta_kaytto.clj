@@ -59,13 +59,13 @@
              :toimitustapa-description (schema/maybe common-schema/String200)}
             (with-maybe-vals geo-schema/Postiosoite)))
 
-(def HenkiloSave (assoc OsapuoliBase :henkilotunnus common-schema/Henkilotunnus
+(def HenkiloSave (assoc OsapuoliBase :henkilotunnus (schema/maybe common-schema/Henkilotunnus)
                                      :etunimi common-schema/String100
                                      :sukunimi common-schema/String100))
 (def Henkilo (complete-valvonta-related-schema HenkiloSave))
 (def HenkiloStatus Henkilo)
 
-(def YritysSave (assoc OsapuoliBase :ytunnus common-schema/Ytunnus
+(def YritysSave (assoc OsapuoliBase :ytunnus (schema/maybe common-schema/Ytunnus)
                                     :nimi common-schema/String100))
 (def Yritys (complete-valvonta-related-schema YritysSave))
 (def YritysStatus Yritys)

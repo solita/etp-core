@@ -125,8 +125,8 @@
 (defn add-henkilo! [_ valvonta-id henkilo]
   (add! :henkilot (assoc henkilo :valvonta-id valvonta-id)))
 
-(defn update-henkilo! [_ henkilo-id henkilo]
-  (update! :henkilot henkilo-id henkilo))
+(defn update-henkilo! [_ valvonta-id henkilo-id henkilo]
+  (update! :henkilot henkilo-id (assoc henkilo :valvonta-id valvonta-id)))
 
 (defn delete-henkilo! [db henkilo-id]
   (delete! :henkilot henkilo-id))
@@ -163,8 +163,8 @@
 (defn add-yritys! [_ valvonta-id yritys]
   (add! :yritykset (assoc yritys :valvonta-id valvonta-id)))
 
-(defn update-yritys! [_ yritys-id yritys]
-  (update! :yritykset yritys-id yritys))
+(defn update-yritys! [_ valvonta-id yritys-id yritys]
+  (update! :yritykset yritys-id (assoc yritys :valvonta-id valvonta-id)))
 
 (defn delete-yritys! [_ yritys-id]
   (delete! :yritykset yritys-id))
@@ -175,21 +175,27 @@
        (filter #(= valvonta-id (-> % second :valvonta-id)))
        (reduce (fn [acc [id liite]]
                  (conj acc (-> liite
-                               (dissoc :valvonta-id)
+                               (dissoc :valvonta-id :content-type :filename :tempfile :size)
                                (assoc :id id
+                                      :nimi (:filename liite)
+                                      :url (:url liite)
                                       :createtime (java.time.Instant/now)
                                       :author-fullname "Liisa Specimen-Potex"
                                       :contenttype "application/pdf"))))
                [])))
 
-(defn add-liitteet-from-files! [_ valvonta-id liite]
-  (add! :liitteet (assoc liite :valvonta-id valvonta-id)))
+(defn add-liitteet-from-files! [_ _ valvonta-id liitteet]
+  (doseq [liite liitteet]
+    (add! :liitteet (assoc liite :valvonta-id valvonta-id))))
 
 (defn add-liite-from-link! [db valvonta-id liite]
   (add! :liitteet (assoc liite :valvonta-id valvonta-id)))
 
-(defn delete-liite! [_ liite-id]
+(defn delete-liite! [_ _ liite-id]
   (delete! :liitteet liite-id))
+
+(defn find-liite [_ _ _ liite-id]
+  (find! :liitteet liite-id))
 
 (defn find-toimenpidetyypit [db]
   (for [[idx label] (map-indexed vector ["Valvonnan aloitus"
