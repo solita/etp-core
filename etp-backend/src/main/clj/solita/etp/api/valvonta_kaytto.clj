@@ -242,7 +242,6 @@
                              (api-response/response-with-exceptions
                               201
                               #(valvonta-service/add-liitteet-from-files!
-                                db
                                 aws-s3-client
                                 id
                                 (if (vector? files) files [files]))
@@ -285,10 +284,9 @@
                         :responses  {200 {:body nil}
                                      404 {:body schema/Str}}
                         :handler    (fn [{{{:keys [id liite-id filename]} :path} :parameters
-                                          :keys                                  [db whoami aws-s3-client]}]
+                                          :keys                                  [aws-s3-client]}]
                                       (let [{:keys [tempfile contenttype] :as file}
-                                            (valvonta-service/find-liite
-                                              db whoami aws-s3-client liite-id)]
+                                            (valvonta-service/find-liite aws-s3-client id liite-id)]
                                         (if (= (:filename file) filename)
                                           (api-response/file-response
                                             (io/input-stream tempfile) filename contenttype false

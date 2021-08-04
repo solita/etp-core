@@ -4,7 +4,8 @@
             [clojure.java.io :as io]
             [solita.etp.service.pdf :as pdf]
             [clojure.set :as set]
-            [solita.common.logic :as logic])
+            [solita.common.logic :as logic]
+            [solita.etp.service.file :as file-service])
   (:import (java.time Instant)))
 
 (defonce state (atom {:valvonnat (sorted-map)
@@ -184,9 +185,17 @@
                                       :contenttype "application/pdf"))))
                [])))
 
-(defn add-liitteet-from-files! [_ _ valvonta-id liitteet]
+
+(defn file-path [valvonta-id liite-id]
+  (str "/valvonta/kaytto/" valvonta-id "/liitteet/" liite-id))
+
+(defn add-liitteet-from-files! [aws-s3-client valvonta-id liitteet]
   (doseq [liite liitteet]
-    (add! :liitteet (assoc liite :valvonta-id valvonta-id))))
+    (let [liite-id (add! :liitteet (assoc liite :valvonta-id valvonta-id))]
+      (file-service/upsert-file-from-file
+        aws-s3-client
+        (file-path valvonta-id liite-id)
+        (:tempfile liite)))))
 
 (defn add-liite-from-link! [db valvonta-id liite]
   (add! :liitteet (assoc liite :valvonta-id valvonta-id)))
@@ -194,8 +203,10 @@
 (defn delete-liite! [_ _ liite-id]
   (delete! :liitteet liite-id))
 
-(defn find-liite [_ _ _ liite-id]
-  (find! :liitteet liite-id))
+(defn find-liite [aws-s3-client valvonta-id liite-id]
+  (when-let [liite (find! :liitteet liite-id)]
+    (assoc liite :content
+                 (file-service/find-file aws-s3-client (file-path valvonta-id liite-id)))))
 
 (defn find-toimenpidetyypit [db]
   (for [[idx label] (map-indexed vector ["Valvonnan aloitus"
@@ -292,6 +303,17 @@
                                         (find-ilmoituspaikat db))]
     (pdf/template->pdf-input-stream template template-data)))
 
+(defn preview-toimenpide [db whoami id toimenpide osapuoli]
+  (when-let [{:keys [template template-data]} (asha/generate-template
+                                                db
+                                                whoami
+                                                (find-valvonta db id)
+                                                toimenpide
+                                                osapuoli
+                                                (find-ilmoituspaikat db))]
+    (pdf/template->pdf-input-stream template template-data)))
+
+
 (defn preview-henkilo-toimenpide [db whoami id toimenpide henkilo-id]
   (preview-toimenpide db whoami id toimenpide (find-henkilo db henkilo-id)))
 
@@ -304,16 +326,6 @@
 (defn find-toimenpide-yritys-document [db aws-s3-client valvonta-id toimenpide-id yritys-id]
   (asha/find-document aws-s3-client valvonta-id toimenpide-id (find-yritys db yritys-id)))
 
-(defn preview-toimenpide [db whoami id toimenpide osapuoli ostream]
-  (when-let [{:keys [template template-data]} (asha/generate-template
-                                                db
-                                                whoami
-                                                (find-valvonta db id)
-                                                toimenpide
-                                                osapuoli
-                                                (find-ilmoituspaikat db))]
-    (with-open [output (io/output-stream ostream)]
-      (pdf/html->pdf template template-data output))))
 
 (defn find-toimenpide-document [aws-s3-client valvonta-id toimenpide-id osapuoli ostream]
   (when-let [document (asha/find-document aws-s3-client valvonta-id toimenpide-id osapuoli)]
