@@ -234,6 +234,9 @@
 (defn find-toimenpide [db valvonta-id toimenpide-id]
   (get-in @valvonta-toimenpiteet [valvonta-id toimenpide-id]))
 
+(defn toimenpide-filename [toimenpide]
+  (:filename (asha/toimenpide-type->document (:type-id toimenpide))))
+
 (defn- insert-toimenpide! [db whoami valvonta-id diaarinumero toimenpide-add]
   (-> valvonta-toimenpiteet
       (swap! #(update % valvonta-id
@@ -246,7 +249,7 @@
                                 :author (-> whoami
                                             (select-keys [:id :etunimi :sukunimi :rooli])
                                             (set/rename-keys {:rooli :rooli-id}))
-                                :filename "test.pdf"
+                                :filename (toimenpide-filename toimenpide-add)
                                 :diaarinumero diaarinumero)))))
       (get valvonta-id)
       last))
@@ -287,8 +290,6 @@
   (swap! valvonta-toimenpiteet
          #(update-in % [valvonta-id toimenpide-id]
                      (fn [toimenpide] (merge toimenpide toimenpide-update)))))
-
-(defn toimenpide-filename [toimenpide] "test.pdf")
 
 (defn- preview-toimenpide [db whoami id toimenpide maybe-osapuoli]
   (logic/if-let*
