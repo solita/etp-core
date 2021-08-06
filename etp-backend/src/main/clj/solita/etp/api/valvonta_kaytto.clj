@@ -71,10 +71,10 @@
                     :access     rooli-service/paakayttaja?
                     :parameters {:body valvonta-kaytto-schema/ValvontaSave}
                     :responses  {200 {:body common-schema/Id}}
-                    :handler    (fn [{{:keys [body]} :parameters :keys [db uri]}]
+                    :handler    (fn [{{:keys [body]} :parameters :keys [db uri whoami]}]
                                   (api-response/created
                                    uri
-                                   {:id (valvonta-service/add-valvonta! db body)}))}}]
+                                   {:id (valvonta-service/add-valvonta! db whoami body)}))}}]
     ["/:id"
      [""
       {:conflicting true

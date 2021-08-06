@@ -96,8 +96,8 @@
 (defn find-valvonta [_ valvonta-id]
   (find! :valvonnat valvonta-id))
 
-(defn add-valvonta! [_ valvonta]
-  (add! :valvonnat valvonta))
+(defn add-valvonta! [_ whoami valvonta]
+  (add! :valvonnat (assoc valvonta :valvoja-id (:id whoami))))
 
 (defn update-valvonta! [_ valvonta-id valvonta]
   (update! :valvonnat valvonta-id valvonta))
