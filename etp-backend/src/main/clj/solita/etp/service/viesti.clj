@@ -26,13 +26,15 @@
                 (map/bindings->map viestiketju-id body)
                 db/default-opts))
 
-(defn- assert-vastaanottajaryhma! [whoami ketju]
+(defn- assert-vastaanottajat! [whoami ketju]
+  ;; laatija is only allowed to post new ketju for paakayttaja
   (when (and (rooli-service/laatija? whoami)
-             (not= 0 (:vastaanottajaryhma-id ketju)))
+             (or (not= 0 (:vastaanottajaryhma-id ketju))
+                 (not-empty (:vastaanottajat ketju))))
     (exception/throw-forbidden!
       (str "Laatija " (:id whoami)
-           " is not allowed to use vastaanottajaryhma: "
-           (:vastaanottajaryhma-id ketju)))))
+           " is not allowed to post ketju: "
+           (select-keys ketju [:vastaanottajaryhma-id :vastaanottajat])))))
 
 (defn- assert-vastaanottajaryhma-or-vastaanottaja-exists! [ketju]
   (when (and (-> ketju :vastaanottajat empty?)
@@ -42,7 +44,7 @@
       :message "Missing either vastaanottaja or vastaanottajaryhma-id"})))
 
 (defn add-ketju! [db whoami ketju]
-  (assert-vastaanottajaryhma! whoami ketju)
+  (assert-vastaanottajat! whoami ketju)
   (assert-vastaanottajaryhma-or-vastaanottaja-exists! ketju)
   (db/with-db-exception-translation
     #(jdbc/with-db-transaction
