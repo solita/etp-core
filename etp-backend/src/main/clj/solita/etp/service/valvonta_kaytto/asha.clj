@@ -76,9 +76,9 @@
 
 (defn template-id->template [template-id]
   (let [file (case template-id
-               1 "pdf/toimituspyynto.html"
-               2 "pdf/toimituspyynto-kehotus.html"
-               3 "pdf/toimituspyynto-varoitus.html"
+               0 "pdf/toimituspyynto.html"
+               1 "pdf/toimituspyynto-kehotus.html"
+               2 "pdf/toimituspyynto-varoitus.html"
                "pdf/tietopyynto.html")]
     (-> file io/resource slurp)))
 
