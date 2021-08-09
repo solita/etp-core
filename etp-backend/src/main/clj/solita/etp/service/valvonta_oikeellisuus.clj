@@ -124,7 +124,9 @@
     ;; assert privileges to view et information and check that it exists
     (nil? (energiatodistus-service/find-energiatodistus db whoami id))
     (map db-row->toimenpide
-         (valvonta-oikeellisuus-db/select-toimenpiteet db {:energiatodistus-id id}))))
+         (valvonta-oikeellisuus-db/select-toimenpiteet
+           db {:energiatodistus-id id
+               :paakayttaja?       (rooli-service/paakayttaja? whoami)}))))
 
 (defn find-toimenpide [db whoami id toimenpide-id]
   ;; assert privileges to view et information:
