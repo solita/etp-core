@@ -16,13 +16,13 @@
              :handler    (fn [{:keys [db whoami parameters uri]}]
                            (api-response/with-exceptions
                              #(api-response/created
-                               uri
-                               {:id (viesti-service/add-ketju! db whoami (:body parameters))})
-                             [{:type :missing-vastaanottaja-or-vastaanottajaryhma-id
+                                uri
+                                {:id (viesti-service/add-ketju! db whoami (:body parameters))})
+                             [{:type     :missing-vastaanottaja-or-vastaanottajaryhma-id
                                :response 400}
-                              {:type :viestiketju-vastaanottajaryhma-id-fkey
+                              {:type     :viestiketju-vastaanottajaryhma-id-fkey
                                :response 400}
-                              {:type :viestiketju-vastaanottaja-id-fkey
+                              {:type     :viestiketju-vastaanottaja-id-fkey
                                :response 400}]))}
 
       :get  {:summary    "Hae kaikki käyttäjän viestiketjut."
@@ -34,40 +34,40 @@
     ["/count"
      [""
       {:conflicting true
-       :get  {:summary   "Hae viestiketjujen lukumäärä."
-              :parameters {:query viesti-schema/KetjuQuery}
-              :responses {200 {:body {:count schema/Int}}}
-              :handler   (fn [{{:keys [query]} :parameters :keys [db whoami]}]
-                           (r/response (viesti-service/count-ketjut db whoami query)))}}]
+       :get         {:summary    "Hae viestiketjujen lukumäärä."
+                     :parameters {:query viesti-schema/KetjuQuery}
+                     :responses  {200 {:body {:count schema/Int}}}
+                     :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
+                                   (r/response (viesti-service/count-ketjut db whoami query)))}}]
      ["/unread"
       {:conflicting true
-       :get  {:summary   "Hae lukemattomien viestiketjujen lukumäärä."
-              :responses {200 {:body {:count schema/Int}}}
-              :handler   (fn [{:keys [db whoami]}]
-                           (r/response (viesti-service/count-unread-ketjut db whoami)))}}]]
+       :get         {:summary   "Hae lukemattomien viestiketjujen lukumäärä."
+                     :responses {200 {:body {:count schema/Int}}}
+                     :handler   (fn [{:keys [db whoami]}]
+                                  (r/response (viesti-service/count-unread-ketjut db whoami)))}}]]
     ["/:id"
      [""
       {:conflicting true
-       :get {:summary    "Hae viestiketjun tiedot"
-             :parameters {:path {:id common-schema/Key}}
-             :responses  {200 {:body viesti-schema/Ketju}
-                          404 {:body schema/Str}}
-             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
-                           (api-response/get-response
-                             (viesti-service/find-ketju! db whoami id)
-                             (str "Ketju " id " does not exists.")))}
-       :put {:summary    "Päivitä viestiketjun tiedot"
-             :access     (some-fn rooli-service/paakayttaja? rooli-service/laskuttaja?)
-             :parameters {:path {:id common-schema/Key}
-                          :body viesti-schema/KetjuUpdate}
-             :responses  {200 {:body nil}
-                          404 {:body schema/Str}}
-             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
-                           (api-response/response-with-exceptions
-                            (fn [] (api-response/ok|not-found
-                                    (viesti-service/update-ketju! db id (:body parameters))
-                                    (str "Ketju " id " does not exists.")))
-                            [{:type :foreign-key-violation :response 400}]))}}]
+       :get         {:summary    "Hae viestiketjun tiedot"
+                     :parameters {:path {:id common-schema/Key}}
+                     :responses  {200 {:body viesti-schema/Ketju}
+                                  404 {:body schema/Str}}
+                     :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+                                   (api-response/get-response
+                                     (viesti-service/find-ketju! db whoami id)
+                                     (str "Ketju " id " does not exists.")))}
+       :put         {:summary    "Päivitä viestiketjun tiedot"
+                     :access     (some-fn rooli-service/paakayttaja? rooli-service/laskuttaja?)
+                     :parameters {:path {:id common-schema/Key}
+                                  :body viesti-schema/KetjuUpdate}
+                     :responses  {200 {:body nil}
+                                  404 {:body schema/Str}}
+                     :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
+                                   (api-response/response-with-exceptions
+                                     #(api-response/ok|not-found
+                                        (viesti-service/update-ketju! db id (:body parameters))
+                                        (str "Ketju " id " does not exists."))
+                                     [{:type :foreign-key-violation :response 400}]))}}]
      ["/viestit"
       {:post {:summary    "Lisää ketjuun uusi viesti"
               :parameters {:path {:id common-schema/Key}
