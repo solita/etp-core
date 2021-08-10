@@ -63,9 +63,11 @@
              :responses  {200 {:body nil}
                           404 {:body schema/Str}}
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
-                           (api-response/ok|not-found
-                            (viesti-service/update-ketju! db id (:body parameters))
-                            (str "Ketju " id " does not exists.")))}}]
+                           (api-response/response-with-exceptions
+                            (fn [] (api-response/ok|not-found
+                                    (viesti-service/update-ketju! db id (:body parameters))
+                                    (str "Ketju " id " does not exists.")))
+                            [{:type :foreign-key-violation :response 400}]))}}]
      ["/viestit"
       {:post {:summary    "Lisää ketjuun uusi viesti"
               :parameters {:path {:id common-schema/Key}
