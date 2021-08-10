@@ -147,6 +147,7 @@
   (when (find-ketju db whoami id)
     (jdbc/with-db-transaction [tx db]
       (insert-viesti! tx id body)
+      (update-ketju! tx id {:kasitelty false})
       (viesti-db/read-ketju! tx {:viestiketju-id id}))))
 
 (defn find-vastaanottajaryhmat [db]
