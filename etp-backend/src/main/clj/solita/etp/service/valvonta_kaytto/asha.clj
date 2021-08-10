@@ -50,7 +50,7 @@
 (defn- find-postitoimipaikka [db postinumero]
   (-> (geo-db/select-postinumero-by-id db {:id (formats/string->int postinumero)}) first :label-fi ))
 
-(defn- template-data [db whoami valvonta toimenpide osapuoli dokumentit ilmoituspaikat]
+(defn- template-data [db whoami valvonta toimenpide osapuoli dokumentit ilmoituspaikat tiedoksi]
   {:päivä            (time/today)
    :määräpäivä       (time/format-date (:deadline-date toimenpide))
    :diaarinumero     (:diaarinumero toimenpide)
@@ -72,7 +72,8 @@
                       :ilmoitustunnus (:ilmoitustunnus valvonta)
                       :havaintopäivä  (-> valvonta :havaintopaiva time/format-date)}
    :toimituspyyntö   {:toimituspyyntö-pvm         (time/format-date (:rfi-request dokumentit))
-                      :toimituspyyntö-kehotus-pvm (time/format-date (:rfi-order dokumentit))}})
+                      :toimituspyyntö-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
+   :tiedoksi         tiedoksi})
 
 (defn template-id->template [template-id]
   (let [file (case template-id
@@ -82,10 +83,21 @@
                "pdf/tietopyynto.html")]
     (-> file io/resource slurp)))
 
-(defn generate-template [db whoami valvonta toimenpide osapuoli ilmoituspaikat]
+(defn generate-template [db whoami valvonta toimenpide osapuoli ilmoituspaikat osapuolet]
   (let [template (template-id->template (:template-id toimenpide)) #_(:content toimenpide)
         dokumentit {} #_(find-kaytto-valvonta-documents db valvonta-id)
-        template-data (template-data db whoami valvonta toimenpide osapuoli dokumentit ilmoituspaikat)]
+        tiedoksi (->> osapuolet
+                      (remove (fn [o]
+                                (or (and (= (:id o) (:id osapuoli))
+                                         (= (:etunimi o) (:etunimi osapuoli))
+                                         (= (:sukunimi o) (:sukunimi osapuoli)))
+                                    (and (= (:id o) (:id osapuoli))
+                                         (= (:nimi o) (:nimi osapuoli))))))
+                      (map (fn [o]
+                             (if (kaytto-schema/henkilo? o)
+                               (str (:etunimi o) " " (:sukunimi o))
+                               (:nimi o)))))
+        template-data (template-data db whoami valvonta toimenpide osapuoli dokumentit ilmoituspaikat tiedoksi)]
     {:template      template
      :template-data template-data}))
 
@@ -155,7 +167,7 @@
         processing-action (resolve-processing-action toimenpide osapuolet)
         documents (when (:document processing-action)
                     (map (fn [osapuoli]
-                           (let [{:keys [template template-data]} (generate-template db whoami valvonta toimenpide osapuoli ilmoituspaikat)
+                           (let [{:keys [template template-data]} (generate-template db whoami valvonta toimenpide osapuoli ilmoituspaikat osapuolet)
                                  bytes (pdf/generate-pdf->bytes template template-data)]
                              (store-document aws-s3-client (:id valvonta) (:id toimenpide) osapuoli bytes)
                              bytes)) osapuolet))]

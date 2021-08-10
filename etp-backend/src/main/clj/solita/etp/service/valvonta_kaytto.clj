@@ -185,6 +185,10 @@
                                       :contenttype "application/pdf"))))
                [])))
 
+(defn- find-osapuolet [db valvonta-id]
+  (concat
+    (find-henkilot db valvonta-id)
+    (find-yritykset db valvonta-id)))
 
 (defn file-path [valvonta-id liite-id]
   (str "/valvonta/kaytto/" valvonta-id "/liitteet/" liite-id))
@@ -260,9 +264,7 @@
       :diaarinumero))
 
 (defn add-toimenpide! [db aws-s3-client whoami valvonta-id toimenpide-add]
-  (let [osapuolet (concat
-                    (find-henkilot db valvonta-id)
-                    (find-yritykset db valvonta-id))
+  (let [osapuolet (find-osapuolet db valvonta-id)
         diaarinumero (if (toimenpide/case-open? toimenpide-add)
                        (asha/open-case!
                          db
@@ -291,19 +293,6 @@
          #(update-in % [valvonta-id toimenpide-id]
                      (fn [toimenpide] (merge toimenpide toimenpide-update)))))
 
-(defn- preview-toimenpide [db whoami id toimenpide maybe-osapuoli]
-  (logic/if-let*
-    [osapuoli maybe-osapuoli
-     valvonta (find-valvonta db id)
-     {:keys [template template-data]} (asha/generate-template
-                                        db
-                                        whoami
-                                        (find-valvonta db id)
-                                        toimenpide
-                                        osapuoli
-                                        (find-ilmoituspaikat db))]
-    (pdf/template->pdf-input-stream template template-data)))
-
 (defn preview-toimenpide [db whoami id toimenpide osapuoli]
   (when-let [{:keys [template template-data]} (asha/generate-template
                                                 db
@@ -311,9 +300,9 @@
                                                 (find-valvonta db id)
                                                 toimenpide
                                                 osapuoli
-                                                (find-ilmoituspaikat db))]
+                                                (find-ilmoituspaikat db)
+                                                (find-osapuolet db id))]
     (pdf/template->pdf-input-stream template template-data)))
-
 
 (defn preview-henkilo-toimenpide [db whoami id toimenpide henkilo-id]
   (preview-toimenpide db whoami id toimenpide (find-henkilo db henkilo-id)))

@@ -77,5 +77,5 @@
          :henkilot [(st/select-keys Henkilo [:id :rooli-id :etunimi :sukunimi])]
          :yritykset [(st/select-keys Yritys [:id :rooli-id :nimi])]))
 
-(def henkilo? #(contains? % :henkilotunnus))
+(def henkilo? #(and (contains? % :etunimi) (contains? % :sukunimi)))
 (def yritys? #(contains? % :nimi))
