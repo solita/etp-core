@@ -178,7 +178,7 @@
                  (conj acc (-> liite
                                (dissoc :valvonta-id :content-type :filename :tempfile :size)
                                (assoc :id id
-                                      :nimi (:filename liite)
+                                      :nimi (or (:filename liite) (:nimi liite))
                                       :url (:url liite)
                                       :createtime (java.time.Instant/now)
                                       :author-fullname "Liisa Specimen-Potex"
