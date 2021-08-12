@@ -79,19 +79,8 @@
         :failed-to-resolve-energiatodistus-or-laatija-from-toimenpide
         "Failed to resolve energiatodistus or laatija from toimenpide"))))
 
-(defn template-id->template [template-id]
-  (let [file (case template-id
-               1 "pdf/taustamateriaali-toimituspyynto.html"
-               2 "pdf/taustamateriaali-kehotus.html"
-               3 "pdf/taustamateriaali-varoitus.html"
-               4 "pdf/valvontamuistio.html"
-               5 "pdf/valvontamuistio-kehotus.html"
-               6 "pdf/valvontamuistio-varoitus.html"
-               "pdf/taustamateriaali-toimituspyynto.html")]
-    (-> file io/resource slurp)))
-
 (defn generate-template [db whoami toimenpide energiatodistus laatija]
-  (let [template (template-id->template (:template-id toimenpide)) #_(:content toimenpide)
+  (let [template (-> (valvonta-oikeellisuus-db/select-template db {:id (:template-id toimenpide)}) first :content)
         dokumentit (find-energiatodistus-valvonta-documents db (:id energiatodistus))
         template-data (template-data whoami toimenpide laatija energiatodistus dokumentit)]
     {:template      template
