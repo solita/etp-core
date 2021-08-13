@@ -134,6 +134,11 @@ order by type_id, publish_time desc;
 -- name: select-templates
 select id, toimenpidetype_id, label_fi, label_sv, valid, language from vo_template;
 
+-- name: select-template
+select id, toimenpidetype_id, label_fi, label_sv, valid, language, content
+from vo_template
+where id = :id;
+
 -- name: select-virhetypes
 select id, label_fi, label_sv, valid, description_fi, description_sv from vo_virhetype;
 

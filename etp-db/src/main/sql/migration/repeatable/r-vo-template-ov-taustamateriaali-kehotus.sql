@@ -1,5 +1,8 @@
+insert into vo_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, content)
+values (2, 'Taustamateriaalin kehotus FI', 'TODO', 2, 5, 'fi', 
+$$
 <div class="otsikko">
-    <b>VAROITUS</b> <br/>
+    <b>KEHOTUS</b> <br/>
     <b>{{päivä}}</b> <br/>
     {{diaarinumero}}
 </div>
@@ -10,8 +13,7 @@
     {{#energiatodistus}}
     Kohde: {{nimi}} <br/>
     Todistustunnus: {{tunnus}} <br/>
-    Toimituspyynnön päivämäärä: {{#taustamateriaali}} {{taustamateriaali-pvm}} {{/taustamateriaali}} <br />
-    Kehotuksen päivämäärä: {{#taustamateriaali}} {{taustamateriaali-kehotus-pvm}} {{/taustamateriaali}}
+    Toimituspyynnön päivämäärä: {{#taustamateriaali}} {{taustamateriaali-pvm}} {{/taustamateriaali}}
     {{/energiatodistus}}
 </p>
 
@@ -20,14 +22,13 @@
     Oikeellisuustarkastukset kohdistuvat energiatodistusten lähtötietoihin, energiatehokkuusluvun laskentaan sekä
     säästösuositusten oikeellisuuteen.</p>
 
-<p>ARA on lähettänyt teille tästä energiatodistuksesta taustamateriaalin toimituspyynnön ja kehotuksen. ARA antaa
-    varoituksen ja vaatii toimittamaan taustamateriaalin kuukauden kuluessa tämän varoituksen päiväyksestä.
-    <b>ARA tulee tarkastamaan todistuksen oikeellisuuden tämän materiaalin pohjalta.</b> Pyydämme, että toimitatte
-    seuraavat todistuksen laadinnassa käytetyt taustamateriaalit ARAn energiatodistusrekisteriin {{määräpäivä}}
-    mennessä:</p>
+<p>ARA on lähettänyt teille tästä energiatodistuksesta taustamateriaalin toimituspyynnön. ARA pyytää toimittamaan
+    taustamateriaalin kuukauden kuluessa tämän kehotuksen päiväyksestä. <b>ARA tulee tarkastamaan todistuksen
+        oikeellisuuden tämän materiaalin pohjalta.</b> Pyydämme, että toimitatte seuraavat todistuksen laadinnassa
+    käytetyt taustamateriaalit ARAn energiatodistusrekisteriin {{määräpäivä}} mennessä:</p>
 
 <ul>
-    <li>Pääpiirustukset (asema-, pohja-, julkisivu- ja leikkauspiirustukset sekä U-arvot).</li>
+    <li>Pääpiirustukset (asema-, pohja-, julkisivu- ja leikkauspiirustukset sekä U-arvot)</li>
     <li>E-lukulaskentaan vaikuttavat ilmanvaihto-, jäähdytys- ja lämmitysjärjestelmien laskelmat ja tekniset tiedot (ei
         pohjakuvia)
     </li>
@@ -66,3 +67,11 @@
         <td class="sarake-sisalto"><a href="https://www.energiatodistusrekisteri.fi">www.energiatodistusrekisteri.fi</a></td>
     </tr>
 </table>
+$$)
+on conflict (id) do update set
+  label_fi = excluded.label_fi,
+  label_sv = excluded.label_sv,
+  ordinal = excluded.ordinal,
+  toimenpidetype_id = excluded.toimenpidetype_id,
+  language = excluded.language,
+  content = excluded.content;

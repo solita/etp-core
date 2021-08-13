@@ -19,18 +19,3 @@ on conflict (id) do update set
   label_fi = excluded.label_fi,
   label_sv = excluded.label_sv,
   ordinal = excluded.ordinal;
-
-insert into vo_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language)
-values
-(1, 'Taustamateriaalin toimituspyyntö FI', 'TODO', 1, 3, 'fi'),
-(2, 'Taustamateriaalin kehotus FI', 'TODO', 2, 5, 'fi'),
-(3, 'Taustamateriaalin varoitus FI', 'TODO', 3, 6, 'fi'),
-(4, 'Valvontamuistio FI', 'TODO', 4, 7, 'fi'),
-(5, 'Valvontamuistion kehotus FI', 'TODO', 5, 9, 'fi'),
-(6, 'Valvontamuistion varoitus FI', 'TODO', 6, 10, 'fi')
-on conflict (id) do update set
-  label_fi = excluded.label_fi,
-  label_sv = excluded.label_sv,
-  ordinal = excluded.ordinal,
-  toimenpidetype_id = excluded.toimenpidetype_id,
-  language = excluded.language;

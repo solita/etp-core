@@ -1,3 +1,6 @@
+insert into vo_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, content)
+values (4, 'Valvontamuistio FI', 'TODO', 4, 7, 'fi', 
+$$
 <div class="otsikko">
     <b>VALVONTAMUISTIO</b> <br/>
     <b>{{päivä}}</b> <br/>
@@ -14,7 +17,7 @@
 </p>
 
 
-<p>Asumisen rahoitus- ja kehittämiskeskus (ARA) on energiatodistuslain (50/2013) 18 §:n nojalla tarkastanut laatimanne energiatodistuksen. Oikeellisuustarkastus on kohdistunut energiatodistuksen lähtötietoihin, energiatehokkuusluvun laskentaan sekä säästösuositusten oikeellisuuteen. Tarkastuksen perusteella kiinnitettiin huomiota seuraaviin asioihin:</p>
+<p>Asumisen rahoitus- ja kehittämiskeskus (ARA) on energiatodistuslain (50/2013) <span class="nowrap">18 §:n</span> nojalla tarkastanut laatimanne energiatodistuksen. Oikeellisuustarkastus on kohdistunut energiatodistuksen lähtötietoihin, energiatehokkuusluvun laskentaan sekä säästösuositusten oikeellisuuteen. Tarkastuksen perusteella kiinnitettiin huomiota seuraaviin asioihin:</p>
 
 <ul>
     {{#valvontamuistio}}
@@ -69,3 +72,11 @@
         <td class="sarake-sisalto"><a href="https://www.energiatodistusrekisteri.fi">www.energiatodistusrekisteri.fi</a></td>
     </tr>
 </table>
+$$)
+on conflict (id) do update set
+  label_fi = excluded.label_fi,
+  label_sv = excluded.label_sv,
+  ordinal = excluded.ordinal,
+  toimenpidetype_id = excluded.toimenpidetype_id,
+  language = excluded.language,
+  content = excluded.content;

@@ -1,3 +1,6 @@
+insert into vo_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, content)
+values (6, 'Valvontamuistion varoitus FI', 'TODO', 6, 10, 'fi', 
+$$
 <div class="otsikko">
     <b>VAROITUS</b> <br/>
     <b>{{päivä}}</b> <br/>
@@ -64,3 +67,11 @@
         <td class="sarake-sisalto"><a href="https://www.energiatodistusrekisteri.fi">www.energiatodistusrekisteri.fi</a></td>
     </tr>
 </table>
+$$)
+on conflict (id) do update set
+  label_fi = excluded.label_fi,
+  label_sv = excluded.label_sv,
+  ordinal = excluded.ordinal,
+  toimenpidetype_id = excluded.toimenpidetype_id,
+  language = excluded.language,
+  content = excluded.content;
