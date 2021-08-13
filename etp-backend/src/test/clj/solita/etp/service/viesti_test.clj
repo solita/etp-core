@@ -138,19 +138,19 @@
         ketju-0-id (service/add-ketju! (ts/db-user laatija-1-id)
                                        (laatija-whoami laatija-1-id)
                                        (complete-ketju-add
-                                        {:vastaanottajat [laatija-1-id]
+                                        {:vastaanottajat []
                                          :vastaanottajaryhma-id 0
                                          :energiatodistus-id nil}))
         ketju-1-id (service/add-ketju! (ts/db-user laatija-1-id)
                                        (laatija-whoami laatija-1-id)
                                        (complete-ketju-add
-                                        {:vastaanottajat [laatija-1-id]
+                                        {:vastaanottajat []
                                          :vastaanottajaryhma-id 0
                                          :energiatodistus-id nil}))
         ketju-2-id (service/add-ketju! (ts/db-user laatija-2-id)
                                        (laatija-whoami laatija-2-id)
                                        (complete-ketju-add
-                                        {:vastaanottajat [laatija-2-id]
+                                        {:vastaanottajat []
                                          :vastaanottajaryhma-id 0
                                          :energiatodistus-id nil}))
         ;; PK1 assingns ketju 0 and ketju 2 to themselves
