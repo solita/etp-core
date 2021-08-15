@@ -53,6 +53,14 @@
                          (kayttaja-laatija-service/update-kayttaja-laatija!
                           db whoami id (:body parameters))
                          (str "Laatija " id " does not exists.")))}}]
+
+     ["/laskutusosoitteet"
+      {:get {:summary    "Hae laatijan laskutusosoitteet"
+             :parameters {:path {:id common-schema/Key}}
+             :responses  {200 {:body [laatija-schema/Laskutusosoite]}}
+             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+                           (r/response
+                             (laatija-service/find-laatija-laskutusosoitteet db whoami id)))}}]
      ["/yritykset"
       [""
        {:get {:summary    "Hae laatijan yritykset"

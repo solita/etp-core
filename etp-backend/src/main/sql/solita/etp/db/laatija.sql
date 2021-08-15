@@ -76,3 +76,24 @@ on conflict (laatija_id, yritys_id) do update set tila_id = 0
 -- name: delete-laatija-yritys!
 update laatija_yritys set tila_id = 2
 where laatija_id = :laatija-id and yritys_id = :yritys-id
+
+-- name: select-laatija-laskutusosoitteet
+select
+  -1 id, null ytunnus, k.etunimi || ' ' || k.sukunimi nimi,
+  l.vastaanottajan_tarkenne, l.jakeluosoite,
+  l.postinumero, l.postitoimipaikka, l.maa,
+  null verkkolaskuoperaattori, null verkkolaskuosoite
+from laatija l inner join kayttaja k on l.id = k.id
+where l.id = :id
+union all
+select
+  y.id, y.ytunnus, y.nimi,
+  y.vastaanottajan_tarkenne, y.jakeluosoite,
+  y.postinumero, y.postitoimipaikka, y.maa,
+  y.verkkolaskuoperaattori, y.verkkolaskuosoite
+from yritys y
+where exists (
+  select 1 from laatija_yritys
+  where laatija_yritys.laatija_id = :id and
+        laatija_yritys.yritys_id = y.id and
+        laatija_yritys.tila_id = 1);

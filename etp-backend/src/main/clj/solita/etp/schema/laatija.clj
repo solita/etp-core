@@ -113,3 +113,11 @@
   :modifiedby-name schema/Str
   :modifytime common-schema/Instant
   :tila-id  common-schema/Key})
+
+(def Laskutusosoite
+  (assoc geo-schema/Postiosoite
+    :id common-schema/Key
+    :ytunnus (schema/maybe schema/Str)
+    :nimi schema/Str
+    :verkkolaskuoperaattori (schema/maybe common-schema/Key)
+    :verkkolaskuosoite (schema/maybe common-schema/Verkkolaskuosoite)))
