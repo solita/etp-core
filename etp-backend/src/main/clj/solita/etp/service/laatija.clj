@@ -107,13 +107,17 @@
     (exception/throw-ex-info!
       :not-laatija (str "User: " user-id " is not a laatija."))))
 
-(defn find-laatija-yritykset [db whoami id]
-  (assert-read-access! whoami id)
-  (laatija-db/select-laatija-yritykset db {:id id}))
+(defn find-laatija-yritykset
+  ([db whoami id]
+    (assert-read-access! whoami id)
+    (laatija-db/select-laatija-yritykset db {:id id})))
 
-(defn find-laatija-laskutusosoitteet [db whoami id]
-  (assert-read-access! whoami id)
-  (laatija-db/select-laatija-laskutusosoitteet db {:id id}))
+(defn find-laatija-laskutusosoitteet
+  ([db id]
+   (laatija-db/select-laatija-laskutusosoitteet db {:id id}))
+  ([db whoami id]
+   (assert-read-access! whoami id)
+   (find-laatija-laskutusosoitteet db id)))
 
 (defn add-laatija-yritys! [db whoami laatija-id yritys-id]
   (if (= laatija-id (:id whoami))

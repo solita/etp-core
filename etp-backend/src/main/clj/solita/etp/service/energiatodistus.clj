@@ -206,6 +206,14 @@
       (if (== laskutusosoite-id -1) nil laskutusosoite-id))
     energiatodistus))
 
+(defn- validate-laskutettava-yritys-id! [db laatija-id energiatodistus]
+  (if-let [laskutettava-yritys-id (:laskutettava-yritys-id energiatodistus)]
+    (let [laskutusosoitteet (set (map :id (laatija-service/find-laatija-laskutusosoitteet db laatija-id)))]
+      (when-not (contains? laskutusosoitteet laskutettava-yritys-id)
+        (exception/throw-forbidden!
+          (str "Laatija: " laatija-id " does not belong to yritys: "
+               laskutettava-yritys-id))))))
+
 (defn- save-laskutusosoite-id [energiatodistus]
   (-> energiatodistus
       assoc-laskutettava-yritys-defined
@@ -307,6 +315,7 @@
                                            :bypass-validation-limits-reason)
                                    energiatodistus->db-row)
         warnings (validate-db-row! db energiatodistus-db-row versio)]
+    (validate-laskutettava-yritys-id! db (:id whoami) energiatodistus-db-row)
     {:id (-> (db/with-db-exception-translation jdbc/insert!
                db
                :energiatodistus
@@ -397,6 +406,7 @@
       (when-not (or (-> energiatodistus->db-row :bypass-validation-limits true?)
                     (:bypass-validation-limits current-energiatodistus))
         (validate-db-row! db energiatodistus-db-row versio))
+      (validate-laskutettava-yritys-id! db (:laatija-id current-energiatodistus) energiatodistus-db-row)
       (first (db/with-db-exception-translation jdbc/update!
                db
                :energiatodistus

@@ -1,5 +1,7 @@
 (ns solita.etp.service.energiatodistus-laskutus-test
   (:require [clojure.test :as t]
+            [solita.etp.test :as etp-test]
+            [solita.etp.whoami :as whoami]
             [solita.etp.service.energiatodistus-test :as energiatodistus-test]
             [solita.etp.service.energiatodistus :as service]
             [solita.etp.test-data.laatija :as laatija-test-data]
@@ -57,3 +59,23 @@
       (t/is (energiatodistus-test/add-eq-found?
               energiatodistus
               (service/find-energiatodistus ts/*db* id))))))
+
+(t/deftest add-invalid-yritys-laskutus
+  (let [laatija-id (-> (laatija-test-data/generate-and-insert! 1) keys first)
+        energiatodistus (assoc (energiatodistus-test-data/generate-add 2018 false) :laskutusosoite-id 1)]
+    (t/is
+      (= (etp-test/catch-ex-data #(energiatodistus-test-data/insert! [energiatodistus] laatija-id))
+         {:type :forbidden :reason "Laatija: 1 does not belong to yritys: 1"}))))
+
+(t/deftest update-invalid-yritys-laskutus
+  (let [laatija-id (-> (laatija-test-data/generate-and-insert! 1) keys first)
+        energiatodistus (assoc (energiatodistus-test-data/generate-add 2018 false) :laskutusosoite-id nil)
+        id (first (energiatodistus-test-data/insert! [energiatodistus] laatija-id))]
+
+    (t/is
+      (= (etp-test/catch-ex-data #(service/update-energiatodistus!
+                                    (ts/db-user laatija-id)
+                                    (whoami/laatija laatija-id)
+                                    id
+                                    {:laskutusosoite-id 1}))
+         {:type :forbidden :reason "Laatija: 1 does not belong to yritys: 1"}))))
