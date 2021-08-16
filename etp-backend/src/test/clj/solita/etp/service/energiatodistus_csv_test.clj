@@ -38,7 +38,7 @@
                        (map #(complete-energiatodistus-service/complete-energiatodistus
                               %
                               luokittelut))
-                       (map #(dissoc % :kommentti))
+                       (map #(dissoc % :kommentti :laskutusosoite-id))
                        (map #(xmap/dissoc-in % [:tulokset :kuukausierittely]))
                        (map #(xmap/dissoc-in % [:tulokset
                                                 :kuukausierittely-summat]))
