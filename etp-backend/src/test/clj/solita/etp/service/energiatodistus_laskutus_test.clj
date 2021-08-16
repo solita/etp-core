@@ -39,7 +39,7 @@
             (map vector energiatodistukset
                  (energiatodistus-test-data/insert! energiatodistukset laatija-id))]
       (t/is (energiatodistus-test/add-eq-found?
-              energiatodistus
+              (assoc energiatodistus :laskutettava-yritys-id nil)
               (service/find-energiatodistus ts/*db* id))))))
 
 (t/deftest undefined-laskutusosoite
