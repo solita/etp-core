@@ -7,9 +7,7 @@
             [solita.etp.test-data.kayttaja :as kayttaja-test-data]
             [solita.etp.test-data.laatija :as laatija-test-data]
             [solita.etp.test-data.energiatodistus :as energiatodistus-test-data]
-            [solita.etp.service.energiatodistus :as service])
-  (:import (java.time Instant)
-           (clojure.lang ExceptionInfo)))
+            [solita.etp.service.energiatodistus :as service]))
 
 (t/use-fixtures :each ts/fixture)
 

@@ -187,8 +187,42 @@
   (map (comp flat->tree db/kebab-case-keys)
        (energiatodistus-db/select-sisaiset-kuormat db {:versio versio})))
 
+(defn- assoc-laskutusosoite-id [row]
+  (-> row
+    (assoc :laskutusosoite-id
+      (when (:laskutettava-yritys-defined row)
+        (or (:laskutettava-yritys-id row) -1)))
+    (dissoc :laskutettava-yritys-defined)))
+
+(defn- assoc-laskutettava-yritys-defined [energiatodistus]
+  (assoc energiatodistus :laskutettava-yritys-defined
+         (or (some? (:laskutettava-yritys-id energiatodistus))
+             (some? (:laskutusosoite-id energiatodistus)))))
+
+(defn- update-laskutettava-yritys-id [energiatodistus]
+  (if-let [laskutusosoite-id (:laskutusosoite-id energiatodistus)]
+    (assoc energiatodistus
+      :laskutettava-yritys-id
+      (if (== laskutusosoite-id -1) nil laskutusosoite-id))
+    energiatodistus))
+
+(defn- validate-laskutettava-yritys-id! [db laatija-id energiatodistus]
+  (if-let [laskutettava-yritys-id (:laskutettava-yritys-id energiatodistus)]
+    (let [laskutusosoitteet (set (map :id (laatija-service/find-laatija-laskutusosoitteet db laatija-id)))]
+      (when-not (contains? laskutusosoitteet laskutettava-yritys-id)
+        (exception/throw-forbidden!
+          (str "Laatija: " laatija-id " does not belong to yritys: "
+               laskutettava-yritys-id))))))
+
+(defn- save-laskutusosoite-id [energiatodistus]
+  (-> energiatodistus
+      assoc-laskutettava-yritys-defined
+      update-laskutettava-yritys-id
+      (dissoc :laskutusosoite-id)))
+
 (defn schema->db-row->energiatodistus [schema]
   (comp (coerce-energiatodistus schema)
+        assoc-laskutusosoite-id
         (logic/when*
          #(= (:versio %) 2013)
          #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] :muu))
@@ -215,6 +249,7 @@
    tree->flat
    #(set/rename-keys % db-abbreviations)
    #(update-in % [:perustiedot :postinumero] (logic/unless* nil? parseInt))
+   save-laskutusosoite-id
    (logic/when*
     #(= (:versio %) 2013)
     #(update-in % [:tulokset :uusiutuvat-omavaraisenergiat] (partial assoc {} :muu)))))
@@ -280,6 +315,7 @@
                                            :bypass-validation-limits-reason)
                                    energiatodistus->db-row)
         warnings (validate-db-row! db energiatodistus-db-row versio)]
+    (validate-laskutettava-yritys-id! db (:id whoami) energiatodistus-db-row)
     {:id (-> (db/with-db-exception-translation jdbc/insert!
                db
                :energiatodistus
@@ -370,6 +406,7 @@
       (when-not (or (-> energiatodistus->db-row :bypass-validation-limits true?)
                     (:bypass-validation-limits current-energiatodistus))
         (validate-db-row! db energiatodistus-db-row versio))
+      (validate-laskutettava-yritys-id! db (:laatija-id current-energiatodistus) energiatodistus-db-row)
       (first (db/with-db-exception-translation jdbc/update!
                db
                :energiatodistus
@@ -389,8 +426,10 @@
     result))
 
 (defn find-required-properties [db versio]
-  (map (comp to-property-name :column-name)
-       (energiatodistus-db/select-required-columns db {:versio versio})))
+  (cons
+    "laskutusosoite-id"
+    (map (comp to-property-name :column-name)
+         (energiatodistus-db/select-required-columns db {:versio versio}))))
 
 (defn find-required-constraints [db energiatodistus]
   (->> energiatodistus

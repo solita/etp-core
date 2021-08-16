@@ -42,18 +42,24 @@
                        (rooli-service/public? whoami)
                        (public-laatija laatija)))))))
 
+(defn assert-read-access! [whoami id]
+  (when-not (or (= id (:id whoami))
+                (rooli-service/patevyydentoteaja? whoami)
+                (rooli-service/paakayttaja? whoami)
+                (rooli-service/laskuttaja? whoami))
+    (exception/throw-forbidden!
+      (str "User " (:id whoami)
+           " is not allowed to access laatija: "
+           id " information."))))
+
 (defn find-laatija-by-id
   ([db id]
    (->> {:id id}
         (laatija-db/select-laatija-by-id db)
         first))
   ([db whoami id]
-   (if (or (= id (:id whoami))
-           (rooli-service/patevyydentoteaja? whoami)
-           (rooli-service/paakayttaja? whoami)
-           (rooli-service/laskuttaja? whoami))
-     (find-laatija-by-id db id)
-     (exception/throw-forbidden!))))
+   (assert-read-access! whoami id)
+   (find-laatija-by-id db id)))
 
 (defn find-laatija-with-henkilotunnus [db henkilotunnus]
   (->> {:henkilotunnus henkilotunnus}
@@ -101,13 +107,17 @@
     (exception/throw-ex-info!
       :not-laatija (str "User: " user-id " is not a laatija."))))
 
-(defn find-laatija-yritykset [db whoami id]
-  (if (or (= id (:id whoami))
-          (rooli-service/patevyydentoteaja? whoami)
-          (rooli-service/paakayttaja? whoami)
-          (rooli-service/laskuttaja? whoami))
-    (laatija-db/select-laatija-yritykset db {:id id})
-    (exception/throw-forbidden!)))
+(defn find-laatija-yritykset
+  ([db whoami id]
+    (assert-read-access! whoami id)
+    (laatija-db/select-laatija-yritykset db {:id id})))
+
+(defn find-laatija-laskutusosoitteet
+  ([db id]
+   (laatija-db/select-laatija-laskutusosoitteet db {:id id}))
+  ([db whoami id]
+   (assert-read-access! whoami id)
+   (find-laatija-laskutusosoitteet db id)))
 
 (defn add-laatija-yritys! [db whoami laatija-id yritys-id]
   (if (= laatija-id (:id whoami))

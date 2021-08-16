@@ -71,8 +71,8 @@
                                                       (repeat nil)))
                                   (partition 2)
                                   (map #(assoc (second %)
-                                               :laskutettava-yritys-id
-                                               (first %))))
+                                               :laskutusosoite-id
+                                               (or (first %) -1))))
         energiatodistus-laatija-ids (concat (repeat 7 (first laatija-ids))
                                             [(second laatija-ids)
                                              (nth laatija-ids 2)

@@ -267,6 +267,7 @@
         f #(xml/get-in-xml xml [:energiatodistus %])]
     (-> {:korvattu-energiatodistus-id     nil
          :laskutettava-yritys-id          nil
+         :laskutusosoite-id               nil
          :laskuriviviite                  nil
          :kommentti                       nil
          :draft-visible-to-paakayttaja    false

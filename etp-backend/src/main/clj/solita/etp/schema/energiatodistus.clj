@@ -256,25 +256,35 @@
    :ymparys           Huomio
    :alapohja-ylapohja Huomio})
 
+(def Laskutus
+  "Laskutusosoite can be defined either using:
+  - laskutusosoite-id - both laatija and yrityslaskutus or
+  - laskutettava-yritys-id - only for yrityslaskutus.
+  If both are defined then laskutusosoite-id is decisive.
+  Laskutettava-yritys-id is for backwards compatibility."
+  {:laskutettava-yritys-id common-schema/Key
+   :laskutusosoite-id      common-schema/Key
+   :laskuriviviite         common-schema/String6300})
+
 (def EnergiatodistusSave2018
   "This schema is used in
   add-energiatodistus and update-energiatodistus
   services for 2018 version"
   (optional-properties
-    {:korvattu-energiatodistus-id     common-schema/Key
-     :laskutettava-yritys-id          common-schema/Key
-     :laskuriviviite                  common-schema/String6300
-     :kommentti                       common-schema/String6300
-     :draft-visible-to-paakayttaja    schema/Bool
-     :bypass-validation-limits        schema/Bool
-     :bypass-validation-limits-reason schema/Str
-     :perustiedot                     Perustiedot
-     :lahtotiedot                     Lahtotiedot
-     :tulokset                        Tulokset
-     :toteutunut-ostoenergiankulutus  ToteutunutOstoenergiankulutus
-     :huomiot                         Huomiot
-     :lisamerkintoja-fi               common-schema/String6300
-     :lisamerkintoja-sv               common-schema/String6300}))
+    (merge
+      Laskutus
+      {:korvattu-energiatodistus-id     common-schema/Key
+       :kommentti                       common-schema/String6300
+       :draft-visible-to-paakayttaja    schema/Bool
+       :bypass-validation-limits        schema/Bool
+       :bypass-validation-limits-reason schema/Str
+       :perustiedot                     Perustiedot
+       :lahtotiedot                     Lahtotiedot
+       :tulokset                        Tulokset
+       :toteutunut-ostoenergiankulutus  ToteutunutOstoenergiankulutus
+       :huomiot                         Huomiot
+       :lisamerkintoja-fi               common-schema/String6300
+       :lisamerkintoja-sv               common-schema/String6300})))
 
 (defn dissoc-not-in-2013 [schema2018]
   (-> schema2018
