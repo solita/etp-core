@@ -7,6 +7,7 @@
             [solita.etp.test-data.kayttaja :as kayttaja-test-data]
             [solita.etp.test-data.laatija :as laatija-test-data]
             [solita.etp.test-data.energiatodistus :as energiatodistus-test-data]
+            [solita.etp.service.energiatodistus-tila :as energiatodistus-tila]
             [solita.etp.service.energiatodistus :as service]))
 
 (t/use-fixtures :each ts/fixture)
@@ -39,7 +40,7 @@
                     (xmap/dissoc-in [:tulokset :e-luku]))))
 
 (defn energiatodistus-tila [id]
-  (-> (service/find-energiatodistus ts/*db* id) :tila-id service/tila-key))
+  (-> (service/find-energiatodistus ts/*db* id) :tila-id energiatodistus-tila/tila-key))
 
 (t/deftest add-and-find-energiatodistus-test
   (let [{:keys [laatijat energiatodistukset]} (test-data-set)]

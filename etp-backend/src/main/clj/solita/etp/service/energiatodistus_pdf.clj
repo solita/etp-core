@@ -7,6 +7,7 @@
             [solita.common.xlsx :as xlsx]
             [solita.common.certificates :as certificates]
             [solita.common.libreoffice :as libreoffice]
+            [solita.etp.service.energiatodistus-tila :as energiatodistus-tila]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]
             [solita.etp.service.file :as file-service]
@@ -100,7 +101,7 @@
       {:path [:perustiedot :yritys :nimi]}
       {:f (fn [_] (.format date-formatter (LocalDate/now)))}
       {:f (fn [{:keys [tila-id]}]
-            (when (and tila-id (= (energiatodistus-service/tila-key tila-id) :in-signing))
+            (when (and tila-id (= (energiatodistus-tila/tila-key tila-id) :in-signing))
               (.format date-formatter (.plusYears (LocalDate/now) 10))))}]
    1 [{:path [:id]}
       {:f #(-> % :lahtotiedot :lammitetty-nettoala (formats/format-number 1 false) (str " m²"))}
@@ -703,7 +704,7 @@
       (generate-pdf-as-input-stream complete-energiatodistus kieli true))))
 
 (defn do-when-signing [{:keys [tila-id]} f]
-  (case (energiatodistus-service/tila-key tila-id)
+  (case (energiatodistus-tila/tila-key tila-id)
     :in-signing (f)
     :draft :not-in-signing
     :deleted :not-in-signing

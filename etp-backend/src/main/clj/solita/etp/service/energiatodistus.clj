@@ -4,6 +4,7 @@
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.schema.geo :as geo-schema]
             [solita.etp.service.json :as json]
+            [solita.etp.service.energiatodistus-tila :as energiatodistus-tila]
             [solita.etp.service.energiatodistus-validation :as validation]
             [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
             [solita.etp.service.laatija :as laatija-service]
@@ -37,10 +38,6 @@
                            (logic/unless* nil? #(format "%05d" %))
                            schema/Num
                            xschema/parse-big-decimal))))
-
-(def ^:private tilat [:draft :in-signing :signed :discarded :replaced :deleted])
-
-(defn tila-key [tila-id] (nth tilat tila-id))
 
 (def db-abbreviations
   {:perustiedot :pt
@@ -257,7 +254,7 @@
 (defn- select-energiatodistus-for-find
   [{:keys [tila-id laatija-id draft-visible-to-paakayttaja] :as energiatodistus} whoami]
   (match/match
-   [(tila-key tila-id)
+   [(energiatodistus-tila/tila-key tila-id)
     (-> whoami :rooli rooli-service/rooli-key)
     (= laatija-id (:id whoami))
     draft-visible-to-paakayttaja]
@@ -293,7 +290,7 @@
         (and (:korvaava-energiatodistus-id korvattava-energiatodistus)
              (not= (:korvaava-energiatodistus-id korvattava-energiatodistus) id))
         (throw-invalid-replace! korvattu-energiatodistus-id " is already replaced")
-        (not (contains? #{:signed :discarded} (-> korvattava-energiatodistus :tila-id tila-key)))
+        (not (contains? #{:signed :discarded} (-> korvattava-energiatodistus :tila-id energiatodistus-tila/tila-key)))
         (throw-invalid-replace! korvattu-energiatodistus-id " is not in signed or discarded state"))
       (throw-invalid-replace! korvattu-energiatodistus-id " does not exist"))))
 
@@ -304,9 +301,12 @@
     (kayttotarkoitus-service/find-alakayttotarkoitukset db versio)
     energiatodistus))
 
+(defn- validate-draft! [db id versio energiatodistus]
+  (assert-korvaavuus-draft! db id energiatodistus)
+  (validate-sisainen-kuorma! db versio energiatodistus))
+
 (defn add-energiatodistus! [db whoami versio energiatodistus]
-  (assert-korvaavuus-draft! db nil energiatodistus)
-  (validate-sisainen-kuorma! db versio energiatodistus)
+  (validate-draft! db nil versio energiatodistus)
   (let [energiatodistus-db-row (-> energiatodistus
                                    (assoc :versio versio :laatija-id (:id whoami))
                                    (assoc-e-tehokkuus db versio)
@@ -336,7 +336,7 @@
 (defn- select-energiatodistus-for-update
   [energiatodistus-update id tila-id rooli laskutettu?]
   (match/match
-    [(tila-key tila-id) rooli laskutettu?]
+    [(energiatodistus-tila/tila-key tila-id) rooli laskutettu?]
     [:draft :laatija false] (dissoc energiatodistus-update
                                     :kommentti
                                     :bypass-validation-limits
@@ -366,7 +366,7 @@
     :else (exception/throw-forbidden!
             (str "Role: " rooli
                  " is not allowed to update energiatodistus " id
-                 " in state: " (tila-key tila-id) " laskutettu: " laskutettu?))))
+                 " in state: " (energiatodistus-tila/tila-key tila-id) " laskutettu: " laskutettu?))))
 
 (defn- mark-energiatodistus-korvattu! [db id]
   (when id
@@ -378,7 +378,7 @@
 
 (defn- update-korvattu! [energiatodistus db tila-id current-korvattu-energiatodistus-id]
   (let [new-korvattava-energiatodistus-id (get energiatodistus :korvattu-energiatodistus-id :not-found)]
-    (when (and (#{:signed :replaced :discarded} (tila-key tila-id))
+    (when (and (#{:signed :replaced :discarded} (energiatodistus-tila/tila-key tila-id))
                (not= new-korvattava-energiatodistus-id :not-found)
                (not= new-korvattava-energiatodistus-id current-korvattu-energiatodistus-id))
       (mark-energiatodistus-korvattu! db new-korvattava-energiatodistus-id)
@@ -449,20 +449,16 @@
 
 (defn update-energiatodistus! [db whoami id energiatodistus]
   (if-let [current-energiatodistus (find-energiatodistus db id)]
-    (let [tila-id (:tila-id current-energiatodistus)]
+    (do
       (assert-laatija! whoami current-energiatodistus)
-      (when (not= (tila-key tila-id) :draft)
+      (if (energiatodistus-tila/draft? current-energiatodistus)
+        (validate-draft! db id (:versio current-energiatodistus) energiatodistus)
         (validate-required! db
                             current-energiatodistus
                             energiatodistus))
-      (when (= (tila-key tila-id) :draft)
-        (assert-korvaavuus-draft! db id energiatodistus)
-        (validate-sisainen-kuorma!
-         db (:versio current-energiatodistus) energiatodistus))
       (assert-update!
        id
-       (db-update-energiatodistus! db
-                                   id
+       (db-update-energiatodistus! db id
                                    current-energiatodistus
                                    energiatodistus
                                    (-> whoami :rooli rooli-service/rooli-key)))
@@ -496,7 +492,7 @@
           :ok)
         (when-let [{:keys [tila-id]} energiatodistus]
           (assert-laatija! whoami energiatodistus)
-          (case (tila-key tila-id)
+          (case (energiatodistus-tila/tila-key tila-id)
             :in-signing :already-in-signing
             :deleted nil
             :already-signed))))))
@@ -504,7 +500,7 @@
 (defn- failure-code [db whoami id]
   (when-let [{:keys [tila-id] :as et} (find-energiatodistus db id)]
     (assert-laatija! whoami et)
-    (case (tila-key tila-id)
+    (case (energiatodistus-tila/tila-key tila-id)
       :draft :not-in-signing
       :deleted nil
       :already-signed)))
