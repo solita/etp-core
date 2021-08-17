@@ -403,7 +403,7 @@
                                      (update-korvattu! db
                                                        tila-id
                                                        current-korvattu-energiatodistus-id))]
-      (when-not (or (-> energiatodistus->db-row :bypass-validation-limits true?)
+      (when-not (or (:bypass-validation-limits energiatodistus-db-row)
                     (:bypass-validation-limits current-energiatodistus))
         (validate-db-row! db energiatodistus-db-row versio))
       (validate-laskutettava-yritys-id! db (:laatija-id current-energiatodistus) energiatodistus-db-row)
