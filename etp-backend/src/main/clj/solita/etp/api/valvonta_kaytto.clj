@@ -56,8 +56,8 @@
                     :parameters {:query valvonta-schema/ValvontaQuery}
                     :responses  {200 {:body {:count schema/Int}}}
                     :access     rooli-service/paakayttaja?
-                    :handler    (fn [{{:keys [query]} :parameters :keys [db]}]
-                                  (r/response (valvonta-service/count-valvonnat db query)))}}]
+                    :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
+                                  (r/response (valvonta-service/count-valvonnat db whoami query)))}}]
     [""
      {:conflicting true
       :get         {:summary    "Hae käytönvalvonnat (työjono)."
@@ -65,16 +65,16 @@
                                                valvonta-schema/ValvontaQueryWindow)}
                     :responses  {200 {:body [valvonta-kaytto-schema/ValvontaStatus]}}
                     :access     rooli-service/paakayttaja?
-                    :handler    (fn [{{:keys [query]} :parameters :keys [db]}]
-                                  (r/response (valvonta-service/find-valvonnat db query)))}
+                    :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
+                                  (r/response (valvonta-service/find-valvonnat db whoami query)))}
       :post        {:summary    "Luo uusi käytönvalvonta"
                     :access     rooli-service/paakayttaja?
                     :parameters {:body valvonta-kaytto-schema/ValvontaSave}
                     :responses  {200 {:body common-schema/Id}}
-                    :handler    (fn [{{:keys [body]} :parameters :keys [db uri whoami]}]
+                    :handler    (fn [{{:keys [body]} :parameters :keys [db uri]}]
                                   (api-response/created
                                    uri
-                                   {:id (valvonta-service/add-valvonta! db whoami body)}))}}]
+                                   {:id (valvonta-service/add-valvonta! db body)}))}}]
     ["/:id"
      [""
       {:conflicting true

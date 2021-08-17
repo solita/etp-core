@@ -5,8 +5,13 @@
             [solita.etp.service.pdf :as pdf]
             [clojure.set :as set]
             [solita.common.logic :as logic]
-            [solita.etp.service.file :as file-service])
+            [solita.etp.service.file :as file-service]
+            [solita.etp.db :as db]
+            [clojure.java.jdbc :as jdbc]
+            [solita.etp.service.luokittelu :as luokittelu])
   (:import (java.time Instant)))
+
+(db/require-queries 'valvonta-kaytto)
 
 (defonce state (atom {:valvonnat (sorted-map)
                       :henkilot (sorted-map)
@@ -51,8 +56,30 @@
   (->> coll
        (filter #(= id (-> % second :valvonta-id)))
        (filter #(-> % second :deleted? not))))
+#_
+(defn find-test-valvonnat [db {:keys [valvoja-id limit offset]}]
+  (let [valvonnat (valvonta-kaytto-db/select)]))
 
-(defn find-valvonnat [_ {:keys [valvoja-id limit offset]}]
+
+(defn find-henkilot [db valvonta-id]
+  (valvonta-kaytto-db/select-henkilot db {:valvonta-id valvonta-id}))
+
+(defn find-yritykset [db valvonta-id]
+  (valvonta-kaytto-db/select-yritykset db {:valvonta-id valvonta-id}))
+
+(defn find-valvonnat [db whoami query]
+  (let [valvonnat (valvonta-kaytto-db/select-valvonnat db
+                                                            (merge {:limit 10 :offset 0 :valvoja-id (:id whoami)} query))]
+    (->> valvonnat
+         (map (fn [valvonta]
+                (-> valvonta
+                    (assoc :henkilot (->> (find-henkilot db (:id valvonta))
+                                          (map #(select-keys % [:id :rooli-id :etunimi :sukunimi])))
+                           :yritykset  (->> (find-yritykset db (:id valvonta))
+                                            (map #(select-keys % [:id :rooli-id :nimi])))
+                           :last-toimenpide nil)))))))
+
+(defn find-valvonnat2 [_ {:keys [valvoja-id limit offset]}]
   (let [{:keys [valvonnat henkilot yritykset]} @state]
     (cond->> valvonnat
       true (filter #(-> % second :deleted? not))
@@ -91,84 +118,91 @@
                                  last
                                  (select-keys [:type-id :deadline-date]))))))))
 
-(defn count-valvonnat [db _] {:count 1})
+(defn count-valvonnat [db whoami query]
+  (first (valvonta-kaytto-db/select-valvonnat-count db
+                                                      (merge {:limit 10 :offset 0 :valvoja-id (:id whoami)} query))))
 
-(defn find-valvonta [_ valvonta-id]
-  (find! :valvonnat valvonta-id))
+(defn find-valvonta [db valvonta-id]
+  (first (valvonta-kaytto-db/select-valvonta db {:id valvonta-id})))
 
-(defn add-valvonta! [_ whoami valvonta]
-  (add! :valvonnat (assoc valvonta :valvoja-id (:id whoami))))
+(defn add-valvonta! [db valvonta]
+  (-> (db/with-db-exception-translation
+           jdbc/insert! db :vk-valvonta
+           (dissoc valvonta :valvoja-id)
+           db/default-opts) first :id))
 
-(defn update-valvonta! [_ valvonta-id valvonta]
-  (update! :valvonnat valvonta-id valvonta))
+(defn update-valvonta! [db valvonta-id valvonta]
+  (first (db/with-db-exception-translation
+           jdbc/update! db :vk_valvonta
+           valvonta ["id = ?" valvonta-id]
+           db/default-opts)))
 
-(defn delete-valvonta! [_ valvonta-id]
-  (delete! :valvonnat valvonta-id))
+(defn delete-valvonta! [db valvonta-id]
+  (let [valvonta (find-valvonta db valvonta-id)]
+    (first (db/with-db-exception-translation
+             jdbc/update! db :vk_valvonta
+             (assoc valvonta :deleted true)
+             ["id = ?" valvonta-id]
+             db/default-opts))))
 
-(defn find-ilmoituspaikat [_]
-  (for [[idx label] (map-indexed vector ["Etuovi" "Oikotie" "Muu, mikä?"])]
-    {:id idx
-     :label-fi label
-     :label-sv (str label " SV?")
-     :valid true}))
+(defn find-ilmoituspaikat [db]
+  (luokittelu/find-vk-ilmoituspaikat db))
 
-(defn find-henkilot [_ valvonta-id]
-  (->> (:henkilot @state)
-       (filter #(-> % second :deleted? not))
-       (filter #(= valvonta-id (-> % second :valvonta-id)))
-       (reduce (fn [acc [id henkilo]]
-                 (conj acc (assoc henkilo :id id)))
-               [])))
 
-(defn find-henkilo [_ henkilo-id]
-  (find! :henkilot henkilo-id))
 
-(defn add-henkilo! [_ valvonta-id henkilo]
-  (add! :henkilot (assoc henkilo :valvonta-id valvonta-id)))
+(defn find-henkilo [db henkilo-id]
+  (first (valvonta-kaytto-db/select-henkilo db {:id henkilo-id})))
 
-(defn update-henkilo! [_ valvonta-id henkilo-id henkilo]
-  (update! :henkilot henkilo-id (assoc henkilo :valvonta-id valvonta-id)))
+(defn add-henkilo! [db valvonta-id henkilo]
+  (-> (db/with-db-exception-translation
+        jdbc/insert! db :vk_henkilo
+        (assoc henkilo :valvonta-id valvonta-id)
+        db/default-opts) first :id))
+
+(defn update-henkilo! [db valvonta-id henkilo-id henkilo]
+  (first (db/with-db-exception-translation
+        jdbc/update! db :vk_henkilo
+        (assoc henkilo :valvonta-id valvonta-id)
+        ["id = ?" henkilo-id]
+        db/default-opts)))
 
 (defn delete-henkilo! [db henkilo-id]
-  (delete! :henkilot henkilo-id))
+  (let [henkilo (find-henkilo db henkilo-id)]
+    (first (db/with-db-exception-translation
+             jdbc/update! db :vk_henkilo
+             (assoc henkilo :deleted true)
+             ["id = ?" henkilo-id]
+             db/default-opts))))
 
-(defn find-roolit [_]
-  (for [[idx label] (map-indexed vector ["Omistaja"
-                                         "Kiinteistövälittäjä"
-                                         "Muu, mikä?"])]
-    {:id idx
-     :label-fi label
-     :label-sv (str label " SV?")
-     :valid true}))
+(defn find-roolit [db]
+  (luokittelu/find-vk-roolit db))
 
-(defn find-toimitustavat [_]
-  (for [[idx label] (map-indexed vector ["Suomi.fi"
-                                         "Sähköposti"
-                                         "Muu, mikä?"])]
-    {:id idx
-     :label-fi label
-     :label-sv (str label " SV?")
-     :valid true}))
+(defn find-toimitustavat [db]
+  (luokittelu/find-vk-toimitustavat db))
 
-(defn find-yritykset [_ valvonta-id]
-  (->> (:yritykset @state)
-       (filter #(-> % second :deleted? not))
-       (filter #(= valvonta-id (-> % second :valvonta-id)))
-       (reduce (fn [acc [id yritys]]
-                 (conj acc (assoc yritys :id id)))
-               [])))
+(defn find-yritys [db yritys-id]
+  (first (valvonta-kaytto-db/select-yritys db {:id yritys-id})))
 
-(defn find-yritys [_ yritys-id]
-  (find! :yritykset yritys-id))
+(defn add-yritys! [db valvonta-id yritys]
+  (-> (db/with-db-exception-translation
+        jdbc/insert! db :vk_yritys
+        (assoc yritys :valvonta-id valvonta-id)
+        db/default-opts) first :id))
 
-(defn add-yritys! [_ valvonta-id yritys]
-  (add! :yritykset (assoc yritys :valvonta-id valvonta-id)))
+(defn update-yritys! [db valvonta-id yritys-id yritys]
+  (first (db/with-db-exception-translation
+           jdbc/update! db :vk_yritys
+           (assoc yritys :valvonta-id valvonta-id)
+           ["id = ?" yritys-id]
+           db/default-opts)))
 
-(defn update-yritys! [_ valvonta-id yritys-id yritys]
-  (update! :yritykset yritys-id (assoc yritys :valvonta-id valvonta-id)))
-
-(defn delete-yritys! [_ yritys-id]
-  (delete! :yritykset yritys-id))
+(defn delete-yritys! [db yritys-id]
+  (let [yritys (find-yritys db yritys-id)]
+    (first (db/with-db-exception-translation
+             jdbc/update! db :vk_yritys
+             (assoc yritys :deleted true)
+             ["id = ?" yritys-id]
+             db/default-opts))))
 
 (defn find-liitteet [_ valvonta-id]
   (->> (:liitteet @state)
@@ -326,7 +360,6 @@
 
 (defn find-toimenpide-yritys-document [db aws-s3-client valvonta-id toimenpide-id yritys-id]
   (asha/find-document aws-s3-client valvonta-id toimenpide-id (find-yritys db yritys-id)))
-
 
 (defn find-toimenpide-document [aws-s3-client valvonta-id toimenpide-id osapuoli ostream]
   (when-let [document (asha/find-document aws-s3-client valvonta-id toimenpide-id osapuoli)]
