@@ -31,6 +31,7 @@
 
 (def case-open? (partial type? :case))
 (def case-closed? (partial type? :closed))
+(def anomaly? (partial type? :anomaly))
 
 (def asha-toimenpide?
   (partial some-type?

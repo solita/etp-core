@@ -1,7 +1,6 @@
 (ns solita.etp.service.valvonta-oikeellisuus
   (:require
     [solita.etp.db :as db]
-    [solita.etp.schema.energiatodistus :as energiatodistus-schema]
     [solita.etp.service.energiatodistus :as energiatodistus-service]
     [solita.etp.service.valvonta-oikeellisuus.asha :as asha-valvonta-oikeellisuus]
     [solita.etp.service.valvonta-oikeellisuus.toimenpide :as toimenpide]
@@ -15,7 +14,9 @@
     [clojure.set :as set]
     [flathead.flatten :as flat]
     [solita.etp.service.rooli :as rooli-service]
-    [solita.etp.exception :as exception]))
+    [solita.etp.exception :as exception]
+    [solita.etp.service.viesti :as viesti-service]
+    [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]))
 
 (db/require-queries 'valvonta-oikeellisuus)
 
@@ -89,6 +90,25 @@
     (-> (valvonta-oikeellisuus-db/select-last-diaarinumero db {:id id})
         first :diaarinumero)))
 
+(defn add-anomaly-viestiketju! [db whoami id toimenpide]
+  (let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db id)]
+    (viesti-service/add-ketju!
+      db whoami
+      {:vastaanottajat        [(:laatija-id energiatodistus)]
+       :vastaanottajaryhma-id nil
+       :energiatodistus-id    id
+       :vo-toimenpide-id      (:id toimenpide)
+       :subject               (str "Poikkeamailmoitus ET " (:energiatodistus-id toimenpide))
+       :body
+       (str (-> energiatodistus :perustiedot :nimi) "\n"
+            (or (-> energiatodistus :perustiedot :katuosoite-fi)
+                (-> energiatodistus :perustiedot :katuosoite-sv)) "\n"
+            (-> energiatodistus :perustiedot :postinumero) " "
+            (-> energiatodistus :perustiedot :postitoimipaikka-fi) "\n\n"
+            (:description toimenpide) "\n\n"
+            "Energia-asiantuntija\n"
+            (:etunimi whoami) " " (:sukunimi whoami))})))
+
 (defn add-toimenpide! [db aws-s3-client whoami id toimenpide-add]
   (jdbc/with-db-transaction [db db]
     (let [diaarinumero (if (toimenpide/case-open? toimenpide-add)
@@ -103,6 +123,8 @@
             :closed (asha-valvonta-oikeellisuus/close-case! whoami id toimenpide)
             (when (toimenpide/asha-toimenpide? toimenpide)
               (asha-valvonta-oikeellisuus/log-toimenpide! db aws-s3-client whoami id toimenpide))))
+        (when (toimenpide/anomaly? toimenpide)
+          (add-anomaly-viestiketju! db whoami id toimenpide))
         {:id toimenpide-id})))
 
 (defn- assoc-virheet [db toimenpide]
