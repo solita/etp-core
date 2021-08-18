@@ -72,7 +72,7 @@
        :get         {:summary    "Hae yksittäisen valvonnan yleiset tiedot."
                      :parameters {:path {:id common-schema/Key}}
                      :responses  {200 {:body oikeellisuus-schema/Valvonta}}
-                     :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+                     :access     rooli-service/energiatodistus-reader?
                      :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                                    (api-response/get-response
                                      (valvonta-service/find-valvonta db id)
