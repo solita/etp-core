@@ -1,10 +1,12 @@
 alter table etp.energiatodistus
-  add column laskutettava_yritys_defined bool not null default false;
+  add column laskutettava_yritys_defined boolean not null default true;
 
-update etp.energiatodistus
-  set laskutettava_yritys_defined = true
-where tila_id in (1, 2, 3, 4);
+alter table audit.energiatodistus
+  add column laskutettava_yritys_defined boolean not null default true;
+call audit.create_audit_procedure('energiatodistus'::name);
 
-update etp.energiatodistus
-  set laskutettava_yritys_defined = true
-where tila_id in (0, 5) and laskutettava_yritys_id is not null;
+alter table etp.energiatodistus
+  alter column laskutettava_yritys_defined set default false;
+
+alter table audit.energiatodistus
+  alter column laskutettava_yritys_defined set default false;
