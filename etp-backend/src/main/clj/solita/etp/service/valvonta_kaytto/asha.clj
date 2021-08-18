@@ -11,7 +11,7 @@
             [solita.common.formats :as formats]
             [solita.etp.service.file :as file-service]))
 
-#_(db/require-queries 'valvonta-kaytto)
+(db/require-queries 'valvonta-kaytto)
 (db/require-queries 'geo)
 
 (def file-key-prefix "valvonta/kaytto")
@@ -74,16 +74,8 @@
    :toimituspyyntö   {:toimituspyyntö-pvm         (time/format-date (:rfi-request dokumentit))
                       :toimituspyyntö-kehotus-pvm (time/format-date (:rfi-order dokumentit))}})
 
-(defn template-id->template [template-id]
-  (let [file (case template-id
-               0 "pdf/toimituspyynto.html"
-               1 "pdf/toimituspyynto-kehotus.html"
-               2 "pdf/toimituspyynto-varoitus.html"
-               "pdf/tietopyynto.html")]
-    (-> file io/resource slurp)))
-
 (defn generate-template [db whoami valvonta toimenpide osapuoli ilmoituspaikat]
-  (let [template (template-id->template (:template-id toimenpide)) #_(:content toimenpide)
+  (let [template (-> (valvonta-kaytto-db/select-template db {:id (:template-id toimenpide)}) first :content)
         dokumentit {} #_(find-kaytto-valvonta-documents db valvonta-id)
         template-data (template-data db whoami valvonta toimenpide osapuoli dokumentit ilmoituspaikat)]
     {:template      template

@@ -1,3 +1,6 @@
+insert into vk_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, content)
+values (2, 'Tietopyyntö / kehotus', 'Tietopyyntö / kehotus (sv)', 2, 2, 'fi', 
+$$
 <div class="otsikko">
     <b>KEHOTUS/UPPMANING</b> <br/>
     <b>{{päivä}}</b> <br/>
@@ -87,3 +90,11 @@
         </td>
     </tr>
 </table>
+$$)
+on conflict (id) do update set
+  label_fi = excluded.label_fi,
+  label_sv = excluded.label_sv,
+  ordinal = excluded.ordinal,
+  toimenpidetype_id = excluded.toimenpidetype_id,
+  language = excluded.language,
+  content = excluded.content;

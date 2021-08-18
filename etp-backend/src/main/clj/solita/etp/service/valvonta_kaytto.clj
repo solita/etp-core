@@ -8,58 +8,11 @@
             [solita.etp.service.file :as file-service]
             [solita.etp.db :as db]
             [clojure.java.jdbc :as jdbc]
-            [solita.etp.service.luokittelu :as luokittelu])
+            [solita.etp.service.luokittelu :as luokittelu]
+            [flathead.flatten :as flat])
   (:import (java.time Instant)))
 
 (db/require-queries 'valvonta-kaytto)
-
-(defonce state (atom {:valvonnat (sorted-map)
-                      :henkilot (sorted-map)
-                      :yritykset (sorted-map)
-                      :liitteet (sorted-map)}))
-
-(def valvonta-toimenpiteet (atom {}))
-
-(defn find! [k id]
-  (let [found (some-> @state (get-in [k id]) (assoc :id id))]
-    (when-not (:deleted? found)
-      found)))
-
-(defn add! [k coll]
-  (-> (swap! state (fn [dereffed]
-                     (let [id (-> dereffed (get k) keys last (or 0) inc)]
-                       (assoc-in dereffed [k id] coll))))
-      (get k)
-      keys
-      last))
-
-(defn update! [k id coll]
-  (let [new-state (swap! state
-                         (fn [dereffed]
-                           (if (and (contains? (get dereffed k) id)
-                                    (-> dereffed
-                                        (get-in [k id :deleted?])
-                                        not))
-                             (assoc-in dereffed [k id] coll)
-                             dereffed)))]
-    (if (contains? (get new-state k) id) 1 0)))
-
-(defn delete! [k id]
-  (let [[old new] (swap-vals! state
-                              (fn [dereffed]
-                                (if (contains? (get dereffed k) id)
-                                  (assoc-in dereffed [k id :deleted?] true)
-                                  dereffed)))]
-    (if (= old new) 0 1)))
-
-(defn valvonta-related [id coll]
-  (->> coll
-       (filter #(= id (-> % second :valvonta-id)))
-       (filter #(-> % second :deleted? not))))
-#_
-(defn find-test-valvonnat [db {:keys [valvoja-id limit offset]}]
-  (let [valvonnat (valvonta-kaytto-db/select)]))
-
 
 (defn find-henkilot [db valvonta-id]
   (valvonta-kaytto-db/select-henkilot db {:valvonta-id valvonta-id}))
@@ -69,67 +22,28 @@
 
 (defn find-valvonnat [db whoami query]
   (let [valvonnat (valvonta-kaytto-db/select-valvonnat db
-                                                            (merge {:limit 10 :offset 0 :valvoja-id (:id whoami)} query))]
+                                                       (merge {:limit 10 :offset 0 :valvoja-id (:id whoami)} query))]
     (->> valvonnat
          (map (fn [valvonta]
                 (-> valvonta
                     (assoc :henkilot (->> (find-henkilot db (:id valvonta))
                                           (map #(select-keys % [:id :rooli-id :etunimi :sukunimi])))
-                           :yritykset  (->> (find-yritykset db (:id valvonta))
-                                            (map #(select-keys % [:id :rooli-id :nimi])))
-                           :last-toimenpide nil)))))))
-
-(defn find-valvonnat2 [_ {:keys [valvoja-id limit offset]}]
-  (let [{:keys [valvonnat henkilot yritykset]} @state]
-    (cond->> valvonnat
-      true (filter #(-> % second :deleted? not))
-      valvoja-id (filter #(= valvoja-id
-                             (-> % second :valvoja-id)))
-      offset (drop offset)
-      limit (take limit)
-      true (reduce (fn [acc [id valvonta]]
-                     (conj acc (assoc valvonta :id id)))
-                   [])
-      true (map (fn [{:keys [id] :as valvonta}]
-                  (assoc valvonta
-                         :henkilot
-                         (->> henkilot
-                              (valvonta-related id)
-                              (map (fn [[id henkilo]]
-                                     (-> henkilo
-                                         (select-keys [:etunimi
-                                                       :sukunimi
-                                                       :rooli-id])
-                                         (assoc :id id))))))))
-      true (map (fn [{:keys [id] :as valvonta}]
-                  (assoc valvonta
-                         :yritykset
-                         (->> yritykset
-                              (valvonta-related id)
-                              (map (fn [[id yritys]]
-                                     (-> yritys
-                                         (select-keys [:nimi :rooli-id])
-                                         (assoc :id id))))))))
-      true (map (fn [{:keys [id] :as valvonta}]
-                  (assoc valvonta
-                         :last-toimenpide
-                         (some-> @valvonta-toimenpiteet
-                                 (get id)
-                                 last
-                                 (select-keys [:type-id :deadline-date]))))))))
+                           :yritykset (->> (find-yritykset db (:id valvonta))
+                                           (map #(select-keys % [:id :rooli-id :nimi])))
+                           :last-toimenpide nil)))))))      ;TODO find last toimenpide
 
 (defn count-valvonnat [db whoami query]
   (first (valvonta-kaytto-db/select-valvonnat-count db
-                                                      (merge {:limit 10 :offset 0 :valvoja-id (:id whoami)} query))))
+                                                    (merge {:limit 10 :offset 0 :valvoja-id (:id whoami)} query))))
 
 (defn find-valvonta [db valvonta-id]
   (first (valvonta-kaytto-db/select-valvonta db {:id valvonta-id})))
 
 (defn add-valvonta! [db valvonta]
   (-> (db/with-db-exception-translation
-           jdbc/insert! db :vk-valvonta
-           (dissoc valvonta :valvoja-id)
-           db/default-opts) first :id))
+        jdbc/insert! db :vk-valvonta
+        (dissoc valvonta :valvoja-id)
+        db/default-opts) first :id))
 
 (defn update-valvonta! [db valvonta-id valvonta]
   (first (db/with-db-exception-translation
@@ -148,8 +62,6 @@
 (defn find-ilmoituspaikat [db]
   (luokittelu/find-vk-ilmoituspaikat db))
 
-
-
 (defn find-henkilo [db henkilo-id]
   (first (valvonta-kaytto-db/select-henkilo db {:id henkilo-id})))
 
@@ -161,18 +73,14 @@
 
 (defn update-henkilo! [db valvonta-id henkilo-id henkilo]
   (first (db/with-db-exception-translation
-        jdbc/update! db :vk_henkilo
-        (assoc henkilo :valvonta-id valvonta-id)
-        ["id = ?" henkilo-id]
-        db/default-opts)))
+           jdbc/update! db :vk_henkilo
+           (assoc henkilo :valvonta-id valvonta-id)
+           ["id = ?" henkilo-id]
+           db/default-opts)))
 
-(defn delete-henkilo! [db henkilo-id]
-  (let [henkilo (find-henkilo db henkilo-id)]
-    (first (db/with-db-exception-translation
-             jdbc/update! db :vk_henkilo
-             (assoc henkilo :deleted true)
-             ["id = ?" henkilo-id]
-             db/default-opts))))
+(defn delete-henkilo! [db valvonta-id henkilo-id]
+  (valvonta-kaytto-db/delete-yritys! db {:valvonta-id valvonta-id
+                                         :id          henkilo-id}))
 
 (defn find-roolit [db]
   (luokittelu/find-vk-roolit db))
@@ -196,97 +104,76 @@
            ["id = ?" yritys-id]
            db/default-opts)))
 
-(defn delete-yritys! [db yritys-id]
-  (let [yritys (find-yritys db yritys-id)]
-    (first (db/with-db-exception-translation
-             jdbc/update! db :vk_yritys
-             (assoc yritys :deleted true)
-             ["id = ?" yritys-id]
-             db/default-opts))))
+(defn delete-yritys! [db valvonta-id yritys-id]
+  (valvonta-kaytto-db/delete-yritys! db {:valvonta-id valvonta-id
+                                         :id          yritys-id}))
 
-(defn find-liitteet [_ valvonta-id]
-  (->> (:liitteet @state)
-       (filter #(-> % second :deleted? not))
-       (filter #(= valvonta-id (-> % second :valvonta-id)))
-       (reduce (fn [acc [id liite]]
-                 (conj acc (-> liite
-                               (dissoc :valvonta-id :content-type :filename :tempfile :size)
-                               (assoc :id id
-                                      :nimi (or (:filename liite) (:nimi liite))
-                                      :url (:url liite)
-                                      :createtime (java.time.Instant/now)
-                                      :author-fullname "Liisa Specimen-Potex"
-                                      :contenttype "application/pdf"))))
-               [])))
-
+(defn find-liitteet [db valvonta-id]
+  (valvonta-kaytto-db/select-liite-by-valvonta-id db {:valvonta-id valvonta-id}))
 
 (defn file-path [valvonta-id liite-id]
   (str "/valvonta/kaytto/" valvonta-id "/liitteet/" liite-id))
 
-(defn add-liitteet-from-files! [aws-s3-client valvonta-id liitteet]
+(defn- insert-liite! [db liite]
+  (-> (db/with-db-exception-translation jdbc/insert! db :vk_valvonta_liite liite db/default-opts)
+      first
+      :id))
+
+(defn add-liitteet-from-files! [db aws-s3-client valvonta-id liitteet]
   (doseq [liite liitteet]
-    (let [liite-id (add! :liitteet (assoc liite :valvonta-id valvonta-id))]
+    (let [liite-id (insert-liite! db (-> liite
+                                         (dissoc :tempfile :size)
+                                         (assoc :valvonta-id valvonta-id)
+                                         (set/rename-keys {:content-type :contenttype
+                                                           :filename     :nimi})))]
       (file-service/upsert-file-from-file
         aws-s3-client
         (file-path valvonta-id liite-id)
         (:tempfile liite)))))
 
 (defn add-liite-from-link! [db valvonta-id liite]
-  (add! :liitteet (assoc liite :valvonta-id valvonta-id)))
+  (insert-liite! db (-> liite
+                        (assoc :contenttype "text/uri-list"
+                               :valvonta-id valvonta-id))))
 
-(defn delete-liite! [_ _ liite-id]
-  (delete! :liitteet liite-id))
+(defn delete-liite! [db valvonta-id liite-id]
+  (valvonta-kaytto-db/delete-liite! db {:id          liite-id
+                                        :valvonta-id valvonta-id}))
 
-(defn find-liite [aws-s3-client valvonta-id liite-id]
-  (when-let [liite (find! :liitteet liite-id)]
+(defn find-liite [db aws-s3-client valvonta-id liite-id]
+  (when-let [liite (valvonta-kaytto-db/select-liite db {:id          liite-id
+                                                        :valvonta-id valvonta-id})]
     (assoc liite :content
                  (file-service/find-file aws-s3-client (file-path valvonta-id liite-id)))))
 
 (defn find-toimenpidetyypit [db]
-  (for [[idx label] (map-indexed vector ["Valvonnan aloitus"
-                                         "Tietopyyntö" "Tietopyyntö / Kehotus" "Tietopyyntö / Varoitus"
-                                         "Käskypäätös"
-                                         "Valvonnan lopetus"])]
-    {:id idx
-     :label-fi label
-     :label-sv (str label " SV?")
-     :valid true}))
+  (luokittelu/find-vk-toimenpidetypes db))
 
 (defn find-templates [db]
-  (for [[idx label] (map-indexed vector ["Tietopyyntö" "Tietopyyntö / Kehotus" "Tietopyyntö / Varoitus"])]
-    {:id idx
-     :label-fi label
-     :label-sv (str label " SV?")
-     :toimenpidetype-id (inc idx)
-     :language "fi"
-     :valid true}))
-
-(defn find-toimenpiteet [db valvonta-id]
-  (when-not (nil? (find-valvonta db valvonta-id))
-    (or (@valvonta-toimenpiteet valvonta-id) [])))
-
-(defn find-toimenpide [db valvonta-id toimenpide-id]
-  (get-in @valvonta-toimenpiteet [valvonta-id toimenpide-id]))
+  (valvonta-kaytto-db/select-templates db))
 
 (defn toimenpide-filename [toimenpide]
   (:filename (asha/toimenpide-type->document (:type-id toimenpide))))
 
-(defn- insert-toimenpide! [db whoami valvonta-id diaarinumero toimenpide-add]
-  (-> valvonta-toimenpiteet
-      (swap! #(update % valvonta-id
-                      (fn [toimenpiteet]
-                        (conj (or toimenpiteet [])
-                              (assoc toimenpide-add
-                                :id (count toimenpiteet)
-                                :publish-time (Instant/now)
-                                :create-time (Instant/now)
-                                :author (-> whoami
-                                            (select-keys [:id :etunimi :sukunimi :rooli])
-                                            (set/rename-keys {:rooli :rooli-id}))
-                                :filename (toimenpide-filename toimenpide-add)
-                                :diaarinumero diaarinumero)))))
-      (get valvonta-id)
-      last))
+(defn- db-row->toimenpide [db-row]
+  (as-> db-row %
+        (flat/flat->tree #"\$" %)
+        (assoc % :filename (toimenpide-filename %))))
+
+(defn find-toimenpiteet [db valvonta-id]
+  (map db-row->toimenpide (valvonta-kaytto-db/select-toimenpiteet db {:valvonta-id valvonta-id})))
+
+(defn find-toimenpide [db valvonta-id toimenpide-id]
+  (valvonta-kaytto-db/select-toimenpide db {:id toimenpide-id}))
+
+(defn- insert-toimenpide! [db whoami valvonta-id diaarinumero toimenpide]
+  (first (db/with-db-exception-translation
+           jdbc/insert! db :vk-toimenpide
+           (assoc toimenpide
+             :diaarinumero diaarinumero
+             :valvonta_id valvonta-id
+             :publish-time (Instant/now))                   ;TODO: is publish time needed?
+           db/default-opts)))
 
 (defn- find-diaarinumero [db valvonta-id toimenpide]
   (-> (find-toimenpiteet db valvonta-id)
@@ -320,10 +207,11 @@
           (find-ilmoituspaikat db))))
     {:id toimenpide-id}))
 
-(defn update-toimenpide! [db valvonta-id toimenpide-id toimenpide-update]
-  (swap! valvonta-toimenpiteet
-         #(update-in % [valvonta-id toimenpide-id]
-                     (fn [toimenpide] (merge toimenpide toimenpide-update)))))
+(defn update-toimenpide! [db toimenpide-id toimenpide]
+  (first (db/with-db-exception-translation
+           jdbc/update! db :vk_toimenpide
+           toimenpide ["id = ?" toimenpide-id]
+           db/default-opts)))
 
 (defn- preview-toimenpide [db whoami id toimenpide maybe-osapuoli]
   (logic/if-let*

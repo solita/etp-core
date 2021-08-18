@@ -1,40 +1,42 @@
+insert into vk_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, content)
+values
+(1, 'Tietopyyntö', 'Tietopyyntö (sv)', 1, 1, 'fi',
+$$
 <div class="otsikko">
-    <b>VAROITUS/VARNING</b> <br/>
+    <b>TIETOPYYNTÖ/ <br/>
+        BEGÄRAN OM UPPGIFTER</b> <br/>
     <b>{{päivä}}</b> <br/>
     {{diaarinumero}}
 </div>
 
 <div class="kaytto-omistaja">
     {{#omistaja-henkilo}}
-        {{etunimi}} {{sukunimi}} <br />
-        {{katuosoite}}  <br />
+        {{etunimi}} {{sukunimi}} <br/>
+        {{katuosoite}} <br/>
         {{postinumero}} {{postitoimipaikka}}
     {{/omistaja-henkilo}}
     {{#omistaja-yritys}}
-        {{nimi}} {{ytunnus}} <br />
-        {{katuosoite}}  <br />
+        {{nimi}} {{ytunnus}} <br/>
+        {{katuosoite}} <br/>
         {{postinumero}} {{postitoimipaikka}}
     {{/omistaja-yritys}}
 </div>
 <div class="kaytto-kohde">
     {{#kohde}}
-    Kohde/Objekt: {{nimi}} <br/>
-    Ilmoituspaikka/Meddelandeplats: {{ilmoituspaikka}} <br/>
-    Ilmoitustunnus/Meddelandekod: {{ilmoitustunnus}} <br/>
-    Havaintopäivä/Observationsdatum: {{havaintopäivä}} <br/>
+        Kohde/Objekt: {{nimi}} <br/>
+        Ilmoituspaikka/Meddelandeplats: {{ilmoituspaikka}} <br/>
+        Ilmoitustunnus/Meddelandekod: {{ilmoitustunnus}} <br/>
+        Havaintopäivä/Observationsdatum: {{havaintopäivä}}
     {{/kohde}}
-    Tietopyynnön päivämäärä/Begäran om uppgifter: {{#toimituspyyntö}} {{toimituspyyntö-pvm}} {{/toimituspyyntö}} <br/>
-    Kehotuksen päivämäärä/Kehotuksen päivämäärä (sv): {{#toimituspyyntö}} {{toimituspyyntö-kehotus-pvm}} {{/toimituspyyntö}}
 </div>
 
-<h1>Energiatodistusvalvonnan varoitus</h1>
+<h1>Energiatodistusvalvonnan tietopyyntö</h1>
 
 <p>Asumisen rahoitus- ja kehittämiskeskuksen (ARA) tehtävänä on valvoa energiatodistusten käyttämistä myynti- ja
-    vuokraustilanteissa. ARA on lähettänyt teille tietopyynnön ja kehotuksen liittyen rakennuksen/asunnon markkinointiin
-    ilman energiatodistusta. <b>ARA antaa Teille varoituksen.</b> Mikäli kohteen julkista markkinointia jatketaan tai se
-    myydään, <b>ARA pyytää esittämään energiatodistuksen {{määräpäivä}} mennessä sähköpostitse energiatodistus@ara.fi
-        tai
-        postitse.</b></p>
+    vuokraustilanteissa. Valvontamme perusteella myynnissä tai vuokrattavana olevaa rakennustanne/asuntoanne välitetään
+    julkisesti ilman energiatodistusta. Pyydämme tietoa mahdollisesta energiatodistuksesta tai energiatodistuksen
+    puuttuessa sen laadinta-aikataulusta. <b>Tieto on toimitettava ARAlle {{määräpäivä}} mennessä sähköpostitse
+        energiatodistus@ara.fi tai postitse.</b></p>
 
 <p>Rakennusta, huoneistoa tai niiden hallintaoikeutta myytäessä tai vuokrattaessa täytyy olla energiatodistus.
     Energiatodistus on annettava joko alkuperäisenä tai jäljennöksenä ostajalle tai vuokralaiselle. Myynti- tai
@@ -48,12 +50,12 @@
 
 <div class="sivunvaihto"></div>
 
-<h1>Energiatodistusvalvonnan varoitus (sv)</h1>
+<h1>Energiatodistusvalvonnan tietopyyntö (sv)</h1>
 
 <p>Finansierings- och utvecklingscentralen för boendet (ARA) har till uppgift att övervaka användningen av
-    energicertifikat vid försäljning och uthyrning. ARA har sänt er en begäran om information och en uppmaning rörande
-    marknadsföring av en byggnad/bostad utan energicertifikat. <b>ARA tilldelar er en varning.</b> Om den offentliga
-    marknadsföringen av objektet fortsätter eller om det säljs <b>ber ARA er att skicka in ett energicertifikat senast
+    energicertifikat vid försäljning och uthyrning. På basis av vår övervakning förmedlas den byggnad/bostad som ni ska
+    sälja eller hyra ut offentligt utan energicertifikat. Vi ber er om information om ett eventuelltenergicertifikat
+    eller om ett sådant saknas om tidtabellen för när det upprättas. <b>Informationen ska skickas till ARA senast
         {{määräpäivä}} per e-post till energiatodistus@ara.fi eller per post.</b></p>
 
 <p>Vid försäljning eller uthyrning av en byggnad eller lägenhet eller besittningsrätten till dem måste det finnas ett
@@ -90,3 +92,11 @@
         </td>
     </tr>
 </table>
+$$)
+on conflict (id) do update set
+  label_fi = excluded.label_fi,
+  label_sv = excluded.label_sv,
+  ordinal = excluded.ordinal,
+  toimenpidetype_id = excluded.toimenpidetype_id,
+  language = excluded.language,
+  content = excluded.content;

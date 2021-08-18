@@ -157,7 +157,7 @@
                   :responses  {200 {:body nil}}
                   :handler    (fn [{{{:keys [id henkilo-id]} :path} :parameters :keys [db]}]
                                 (api-response/ok|not-found
-                                 (valvonta-service/delete-henkilo! db henkilo-id)
+                                 (valvonta-service/delete-henkilo! db id henkilo-id)
                                  (str "Henkilö " id "/" henkilo-id " does not exist.")))}}]]]
      ["/yritykset"
       [""
@@ -213,7 +213,7 @@
                   :responses  {200 {:body nil}}
                   :handler    (fn [{{{:keys [id yritys-id]} :path} :parameters :keys [db]}]
                                 (api-response/ok|not-found
-                                 (valvonta-service/delete-yritys! db yritys-id)
+                                 (valvonta-service/delete-yritys! db id yritys-id)
                                  (str "Yritys " id "/" yritys-id " does not exist.")))}}]]]
      toimenpiteet-api/routes
      ["/liitteet"
@@ -242,9 +242,10 @@
                              (api-response/response-with-exceptions
                               201
                               #(valvonta-service/add-liitteet-from-files!
-                                aws-s3-client
-                                id
-                                (if (vector? files) files [files]))
+                                 db
+                                 aws-s3-client
+                                 id
+                                 (if (vector? files) files [files]))
                               [{:constraint :liite-valvonta-id-fkey :response 404}]))}}]
       ["/link"
        {:conflicting true
@@ -284,9 +285,9 @@
                         :responses  {200 {:body nil}
                                      404 {:body schema/Str}}
                         :handler    (fn [{{{:keys [id liite-id filename]} :path} :parameters
-                                          :keys                                  [aws-s3-client]}]
+                                          :keys                                  [db aws-s3-client]}]
                                       (let [{:keys [tempfile contenttype] :as file}
-                                            (valvonta-service/find-liite aws-s3-client id liite-id)]
+                                            (valvonta-service/find-liite db aws-s3-client id liite-id)]
                                         (if (= (:filename file) filename)
                                           (api-response/file-response
                                             (io/input-stream tempfile) filename contenttype false

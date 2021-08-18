@@ -48,7 +48,8 @@
          :author common-schema/Kayttaja
          :create-time common-schema/Instant
          :publish-time common-schema/Instant
-         :filename (schema/maybe schema/Str)))
+         :filename (schema/maybe schema/Str)
+         :valvonta-id common-schema/Key))
 
 (def OsapuoliBase
   (st/merge {:rooli-id (schema/maybe common-schema/Key)
