@@ -49,7 +49,9 @@
          :create-time common-schema/Instant
          :publish-time common-schema/Instant
          :filename (schema/maybe schema/Str)
-         :valvonta-id common-schema/Key))
+         :valvonta-id common-schema/Key
+         :henkilot [(schema/maybe common-schema/Key)]
+         :yritykset [(schema/maybe common-schema/Key)]))
 
 (def OsapuoliBase
   (st/merge {:rooli-id (schema/maybe common-schema/Key)

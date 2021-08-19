@@ -1,13 +1,10 @@
 (ns solita.etp.service.valvonta-kaytto.asha
   (:require [solita.common.time :as time]
             [solita.etp.service.asha :as asha]
-            [clojure.string :as str]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
             [solita.etp.schema.valvonta-kaytto :as kaytto-schema]
             [solita.etp.service.pdf :as pdf]
-            [clojure.java.io :as io]
             [solita.etp.db :as db]
-            [solita.etp.service.geo :as geo]
             [solita.common.formats :as formats]
             [solita.etp.service.file :as file-service]))
 
@@ -36,9 +33,9 @@
 
 (defn find-document [aws-s3-client valvonta-id toimenpide-id osapuoli]
   (file-service/find-file aws-s3-client (file-path file-key-prefix valvonta-id toimenpide-id osapuoli)))
-#_
-(defn find-kaytto-valvonta-documents [db id]
-  (->> (valvonta-oikeellisuus-db/select-kaytto-valvonta-documents db {:valvonta-id id})
+
+(defn find-kaytto-valvonta-documents [db valvonta-id]
+  (->> (valvonta-kaytto-db/select-valvonta-documents db {:valvonta-id valvonta-id})
        (map (fn [toimenpide]
               (let [type (toimenpide/type-key (:type-id toimenpide))]
                 {type (:publish-time toimenpide)})))
@@ -76,7 +73,7 @@
 
 (defn generate-template [db whoami valvonta toimenpide osapuoli ilmoituspaikat]
   (let [template (-> (valvonta-kaytto-db/select-template db {:id (:template-id toimenpide)}) first :content)
-        dokumentit {} #_(find-kaytto-valvonta-documents db valvonta-id)
+        dokumentit (find-kaytto-valvonta-documents db (:id valvonta))
         template-data (template-data db whoami valvonta toimenpide osapuoli dokumentit ilmoituspaikat)]
     {:template      template
      :template-data template-data}))

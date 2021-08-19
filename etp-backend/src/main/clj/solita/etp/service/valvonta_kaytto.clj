@@ -9,7 +9,8 @@
             [solita.etp.db :as db]
             [clojure.java.jdbc :as jdbc]
             [solita.etp.service.luokittelu :as luokittelu]
-            [flathead.flatten :as flat])
+            [flathead.flatten :as flat]
+            [solita.etp.schema.valvonta-kaytto :as kaytto-schema])
   (:import (java.time Instant)))
 
 (db/require-queries 'valvonta-kaytto)
@@ -160,16 +161,48 @@
         (flat/flat->tree #"\$" %)
         (assoc % :filename (toimenpide-filename %))))
 
+(defn- find-toimenpide-henkilot [db toimenpide-id]
+  (->> (valvonta-kaytto-db/select-toimenpide-henkilo db {:toimenpide-id toimenpide-id})
+       (map :henkilo-id)))
+
+(defn- find-toimenpide-yritykset [db toimenpide-id]
+  (->> (valvonta-kaytto-db/select-toimenpide-yritys db {:toimenpide-id toimenpide-id})
+       (map :yritys-id)))
+
 (defn find-toimenpiteet [db valvonta-id]
-  (map db-row->toimenpide (valvonta-kaytto-db/select-toimenpiteet db {:valvonta-id valvonta-id})))
+  (->> (valvonta-kaytto-db/select-toimenpiteet db {:valvonta-id valvonta-id})
+       (map db-row->toimenpide)
+       (map #(assoc % :henkilot (find-toimenpide-henkilot db (:id %))
+                      :yritykset (find-toimenpide-yritykset db (:id %))))))
+
 
 (defn find-toimenpide [db valvonta-id toimenpide-id]
   (valvonta-kaytto-db/select-toimenpide db {:id toimenpide-id}))
 
-(defn- insert-toimenpide! [db whoami valvonta-id diaarinumero toimenpide]
+(defn- insert-toimenpide-henkilo! [db toimenpide-id henkilo-id]
+  (db/with-db-exception-translation
+    jdbc/insert! db :vk_toimenpide_henkilo
+    {:toimenpide-id toimenpide-id
+     :henkilo-id    henkilo-id}
+    db/default-opts))
+
+(defn- insert-toimenpide-yritys! [db toimenpide-id yritys-id]
+  (db/with-db-exception-translation
+    jdbc/insert! db :vk_toimenpide_yritys
+    {:toimenpide-id toimenpide-id
+     :yritys-id     yritys-id}
+    db/default-opts))
+
+(defn- insert-toimenpide-osapuolet! [db toimenpide-id osapuolet]
+  (doseq [osapuoli osapuolet]
+    (cond
+      (kaytto-schema/henkilo? osapuoli) (insert-toimenpide-henkilo! db toimenpide-id (:id osapuoli))
+      (kaytto-schema/yritys? osapuoli) (insert-toimenpide-yritys! db toimenpide-id (:id osapuoli)))))
+
+(defn- insert-toimenpide! [db valvonta-id diaarinumero toimenpide-add]
   (first (db/with-db-exception-translation
            jdbc/insert! db :vk-toimenpide
-           (assoc toimenpide
+           (assoc toimenpide-add
              :diaarinumero diaarinumero
              :valvonta_id valvonta-id
              :publish-time (Instant/now))                   ;TODO: is publish time needed?
@@ -181,6 +214,7 @@
       :diaarinumero))
 
 (defn add-toimenpide! [db aws-s3-client whoami valvonta-id toimenpide-add]
+  (jdbc/with-db-transaction [db db]
   (let [osapuolet (concat
                     (find-henkilot db valvonta-id)
                     (find-yritykset db valvonta-id))
@@ -192,8 +226,9 @@
                          osapuolet
                          (find-ilmoituspaikat db))
                        (find-diaarinumero db valvonta-id toimenpide-add))
-        toimenpide (insert-toimenpide! db whoami valvonta-id diaarinumero toimenpide-add)
+        toimenpide (insert-toimenpide! db valvonta-id diaarinumero toimenpide-add)
         toimenpide-id (:id toimenpide)]
+    (insert-toimenpide-osapuolet! db toimenpide-id osapuolet)
     (case (-> toimenpide :type-id toimenpide/type-key)
       :closed (asha/close-case! whoami valvonta-id toimenpide)
       (when (toimenpide/asha-toimenpide? toimenpide)
@@ -205,7 +240,7 @@
           toimenpide
           osapuolet
           (find-ilmoituspaikat db))))
-    {:id toimenpide-id}))
+    {:id toimenpide-id})))
 
 (defn update-toimenpide! [db toimenpide-id toimenpide]
   (first (db/with-db-exception-translation
