@@ -7,9 +7,10 @@ select
     where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
   from viestiketju
 where
-  ((not viestiketju.kasitelty) or :include-kasitelty) and
-  (:kasittelija-id::int is null or viestiketju.kasittelija_id = :kasittelija-id) and
-  (:has-kasittelija::boolean is null or :has-kasittelija = (viestiketju.kasittelija_id is not null))
+  (not viestiketju.kasitelty or :include-kasitelty) and
+  ((viestiketju.kasittelija_id = :kasittelija-id or
+   (viestiketju.kasittelija_id is not null) = :has-kasittelija) or
+   (:kasittelija-id::int is null and :has-kasittelija::boolean is null))
 order by (select max(sent_time) from viesti where viestiketju_id = viestiketju.id) desc
 limit :limit offset :offset;
 
@@ -32,9 +33,10 @@ limit :limit offset :offset;
 -- name: select-count-all-viestiketjut
 select count(*) count from viestiketju
 where
-  ((not viestiketju.kasitelty) or :include-kasitelty) and
-  (:kasittelija-id::int is null or viestiketju.kasittelija_id = :kasittelija-id) and
-  (:has-kasittelija::boolean is null or :has-kasittelija = (viestiketju.kasittelija_id is not null));
+  (not viestiketju.kasitelty or :include-kasitelty) and
+  ((viestiketju.kasittelija_id = :kasittelija-id or
+   (viestiketju.kasittelija_id is not null) = :has-kasittelija) or
+   (:kasittelija-id::int is null and :has-kasittelija::boolean is null));
 
 -- name: select-count-viestiketjut-for-kayttaja
 select count(*) count
