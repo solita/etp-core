@@ -61,7 +61,7 @@ from alakayttotarkoitusluokka
 where versio = 2013 and kayttotarkoitusluokka_id = 11
 on conflict do nothing;
 
-
+/*
 select id, label_fi statistics_kayttotarkoitus,
   (select string_agg(label_fi, chr(13)) from stat_ktluokka_alaktluokka
      inner join alakayttotarkoitusluokka

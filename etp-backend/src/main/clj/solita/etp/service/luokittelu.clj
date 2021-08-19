@@ -15,6 +15,7 @@
 (def find-ilmanvaihtotyypit #(select-luokittelu % "ilmanvaihtotyyppi"))
 (def find-lammitysmuodot #(select-luokittelu % "lammitysmuoto"))
 (def find-lammonjaot #(select-luokittelu % "lammonjako"))
+(def find-statistics-kayttotarkoitukset #(select-luokittelu % "stat_kayttotarkoitusluokka"))
 
 (def find-vastaanottajaryhmat #(select-luokittelu % "vastaanottajaryhma"))
 

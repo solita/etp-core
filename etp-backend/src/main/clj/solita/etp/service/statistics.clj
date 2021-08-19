@@ -1,11 +1,14 @@
 (ns solita.etp.service.statistics
-  (:require [solita.etp.db :as db]))
+  (:require [solita.etp.db :as db]
+            [solita.etp.service.luokittelu :as luokittelu-service]))
 
 ;; *** Require sql functions ***
 (db/require-queries 'statistics)
 
+(def find-kayttotarkoitukset luokittelu-service/find-statistics-kayttotarkoitukset)
+
 (def default-query {:keyword nil
-                    :alakayttotarkoitus-ids []
+                    :kayttotarkoitus-id nil
                     :valmistumisvuosi-min nil
                     :valmistumisvuosi-max nil
                     :lammitetty-nettoala-min nil
