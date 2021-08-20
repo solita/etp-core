@@ -157,7 +157,7 @@
                   :responses  {200 {:body nil}}
                   :handler    (fn [{{{:keys [id henkilo-id]} :path} :parameters :keys [db]}]
                                 (api-response/ok|not-found
-                                 (valvonta-service/delete-henkilo! db id henkilo-id)
+                                 (valvonta-service/delete-henkilo! db henkilo-id)
                                  (str "Henkilö " id "/" henkilo-id " does not exist.")))}}]]]
      ["/yritykset"
       [""
@@ -213,7 +213,7 @@
                   :responses  {200 {:body nil}}
                   :handler    (fn [{{{:keys [id yritys-id]} :path} :parameters :keys [db]}]
                                 (api-response/ok|not-found
-                                 (valvonta-service/delete-yritys! db id yritys-id)
+                                 (valvonta-service/delete-yritys! db yritys-id)
                                  (str "Yritys " id "/" yritys-id " does not exist.")))}}]]]
      toimenpiteet-api/routes
      ["/liitteet"
@@ -273,7 +273,7 @@
                                     404 {:body schema/Str}}
                        :handler    (fn [{{{:keys [id liite-id]} :path} :parameters :keys [db]}]
                                      (api-response/ok|not-found
-                                       (valvonta-service/delete-liite! db id liite-id)
+                                       (valvonta-service/delete-liite! db liite-id)
                                        (str "Liite " id "/" liite-id " does not exist.")))}}]
         ["/:filename"
          {:conflicting true

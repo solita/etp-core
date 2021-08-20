@@ -22,6 +22,9 @@ where valvoja_id = :valvoja-id and
 limit :limit
 offset :offset;
 
+-- name: delete-valvonta!
+update vk_valvonta set delete = true where id = :id;
+
 -- name: select-valvonta
 select id,
        rakennustunnus,
@@ -79,7 +82,7 @@ where id = :id
   and deleted is false;
 
 -- name: delete-henkilo!
-update vk_henkilo set deleted = true where id = :id and valvonta_id = :valvonta-id;
+update vk_henkilo set deleted = true where id = :id;
 
 --name: select-yritykset
 select id,
@@ -122,7 +125,7 @@ where id = :id
   and deleted is false;
 
 -- name: delete-yritys!
-update vk_yritys set deleted = true where id = :id and valvonta_id = :valvonta-id;
+update vk_yritys set deleted = true where id = :id;
 
 -- name: select-valvonta-documents
 select distinct on (type_id) *
@@ -139,8 +142,9 @@ from vk_template
 where id = :id;
 
 -- name: select-liite
-select liite.nimi, liite.valvonta_id, liite.contenttype from vk_valvonta_liite
-where id = :id valvonta_id = :valvonta-id and deleted = false
+select nimi, valvonta_id, contenttype, nimi as filename
+from vk_valvonta_liite
+where id = :id and deleted = false
 
 -- name: select-liite-by-valvonta-id
 select distinct on (l.id) l.id, a.modifytime createtime,
@@ -152,7 +156,7 @@ where l.valvonta_id = :valvonta-id and l.deleted = false
 order by l.id, a.modifytime asc, a.event_id desc
 
 -- name: delete-liite!
-update vk_valvonta_liite set deleted = true where id = :id and valvonta_id = :valvonta-id;
+update vk_valvonta_liite set deleted = true where id = :id;
 
 -- name: select-toimenpide
 select
@@ -185,3 +189,10 @@ where toimenpide_id = :toimenpide-id;
 select yritys_id
 from vk_toimenpide_yritys
 where toimenpide_id = :toimenpide-id;
+
+-- name: select-last-toimenpide
+select type_id, deadline_date
+from vk_toimenpide
+where valvonta_id = :valvonta-id
+order by id desc
+limit 1;
