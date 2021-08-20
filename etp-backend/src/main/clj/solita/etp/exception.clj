@@ -2,7 +2,8 @@
   (:require [reitit.ring.middleware.exception :as exception]
             [clojure.tools.logging :as log]
             [solita.common.map :as map]
-            [solita.common.maybe :as maybe]))
+            [solita.common.maybe :as maybe]
+            [clojure.string :as str]))
 
 (defn illegal-argument! [msg]
   (throw (IllegalArgumentException. msg)))
@@ -11,6 +12,14 @@
   ([map]
     (throw (ex-info (:message map) map)))
   ([type message] (throw-ex-info! (map/bindings->map type message))))
+
+(defn require-some!
+  ([type id value]
+   (when (nil? value)
+     (throw-ex-info!
+       (-> type name (str "-not-found") keyword)
+       (-> type name str/capitalize (str " " id " does not exist."))))
+   value))
 
 (defn redefine-exception [operation exception-resolver]
   (try

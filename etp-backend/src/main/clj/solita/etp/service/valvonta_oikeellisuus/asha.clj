@@ -1,15 +1,14 @@
 (ns solita.etp.service.valvonta-oikeellisuus.asha
   (:require [solita.common.time :as time]
+            [solita.common.maybe :as maybe]
             [solita.etp.service.asha :as asha]
             [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]
             [solita.etp.service.kayttaja :as kayttaja-service]
-            [clojure.string :as str]
-            [solita.etp.exception :as exception]
             [solita.etp.service.valvonta-oikeellisuus.toimenpide :as toimenpide]
             [solita.etp.service.pdf :as pdf]
-            [clojure.java.io :as io]
             [solita.etp.db :as db]
-            [solita.etp.service.file :as file-service]))
+            [solita.etp.service.file :as file-service]
+            [solita.etp.exception :as exception]))
 
 (db/require-queries 'valvonta-oikeellisuus)
 
@@ -69,22 +68,27 @@
                                                        1 {:ei-toimenpiteitä true}
                                                        2 {:virheellinen true}))}})
 
-(defn resolve-energiatodistus-laatija [db energiatodistus-id]
-  (let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db energiatodistus-id)
-        laatija (kayttaja-service/find-kayttaja db (:laatija-id energiatodistus))]
-    (if (and energiatodistus laatija)
-      {:energiatodistus energiatodistus
-       :laatija         laatija}
-      (exception/throw-ex-info!
-        :failed-to-resolve-energiatodistus-or-laatija-from-toimenpide
-        "Failed to resolve energiatodistus or laatija from toimenpide"))))
+(defn- find-resources [db energiatodistus-id]
+  (when-let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db energiatodistus-id)]
+    {:energiatodistus energiatodistus
+     :laatija         (kayttaja-service/find-kayttaja db (:laatija-id energiatodistus))}))
 
-(defn generate-template [db whoami toimenpide energiatodistus laatija]
-  (let [template (-> (valvonta-oikeellisuus-db/select-template db {:id (:template-id toimenpide)}) first :content)
-        dokumentit (find-energiatodistus-valvonta-documents db (:id energiatodistus))
-        template-data (template-data whoami toimenpide laatija energiatodistus dokumentit)]
-    {:template      template
-     :template-data template-data}))
+(defn- get-resources! [db energiatodistus-id]
+  (maybe/require-some! (str "Energiatodistus " energiatodistus-id " does not exist.")
+                       (find-resources db energiatodistus-id)))
+
+(defn generate-pdf-document
+  ([db whoami toimenpide energiatodistus-id]
+   (when-let [{:keys [energiatodistus laatija]} (find-resources db energiatodistus-id)]
+     (generate-pdf-document db whoami toimenpide energiatodistus laatija)))
+  ([db whoami toimenpide energiatodistus laatija]
+    (let [template-id (:template-id toimenpide)
+          template (->> (valvonta-oikeellisuus-db/select-template db {:id template-id})
+                        first :content
+                        (exception/require-some! :template template-id))
+          documents (find-energiatodistus-valvonta-documents db (:id energiatodistus))
+          template-data (template-data whoami toimenpide laatija energiatodistus documents)]
+      (pdf/generate-pdf->bytes template template-data))))
 
 (defn- request-id [energiatodistus-id toimenpide-id]
   (str energiatodistus-id "/" toimenpide-id))
@@ -157,7 +161,7 @@
             (= type-key :rfc-request) (update :identity update-latest-processsing-action))))
 
 (defn open-case! [db whoami energiatodistus-id]
-  (let [{:keys [energiatodistus laatija]} (resolve-energiatodistus-laatija db energiatodistus-id)]
+  (let [{:keys [energiatodistus laatija]} (get-resources! db energiatodistus-id)]
     (asha/open-case! {:request-id     (request-id energiatodistus-id 1)
                       :sender-id      (:email whoami)
                       :classification "05.03.02"
@@ -173,16 +177,15 @@
                       :attach         {:contact (kayttaja->contact laatija)}})))
 
 (defn log-toimenpide! [db aws-s3-client whoami energiatodistus-id toimenpide]
-  (let [{:keys [energiatodistus laatija]} (resolve-energiatodistus-laatija db energiatodistus-id)
+  (let [{:keys [energiatodistus laatija]} (get-resources! db energiatodistus-id)
         request-id (request-id energiatodistus-id (:id toimenpide))
         sender-id (:email whoami)
         case-number (:diaarinumero toimenpide)
         processing-action (resolve-processing-action sender-id request-id case-number toimenpide laatija)
         documents (when (:document processing-action)
-                    (let [{:keys [template template-data]} (generate-template db whoami toimenpide energiatodistus laatija)
-                          bytes (pdf/generate-pdf->bytes template template-data)]
-                      (store-document aws-s3-client energiatodistus-id (:id toimenpide) bytes)
-                      [bytes]))]
+                    (let [document (generate-pdf-document db whoami toimenpide energiatodistus laatija)]
+                      (store-document aws-s3-client energiatodistus-id (:id toimenpide) document)
+                      [document]))]
     (asha/log-toimenpide!
       sender-id
       request-id
