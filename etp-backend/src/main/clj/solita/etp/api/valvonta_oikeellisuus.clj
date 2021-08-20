@@ -123,10 +123,12 @@
                                    404 {:body schema/Str}}
                       :handler    (fn [{{{:keys [id]} :path :keys [body]}
                                         :parameters :keys [db whoami]}]
-                                    (api-response/pdf-response
-                                      (valvonta-service/preview-toimenpide db whoami id body)
-                                      (valvonta-service/toimenpide-filename body)
-                                      (api-response/msg-404 "energiatodistus" id)))}}]
+                                    (api-response/with-exceptions
+                                      #(api-response/pdf-response
+                                        (valvonta-service/preview-toimenpide db whoami id body)
+                                        (valvonta-service/toimenpide-filename body)
+                                        (api-response/msg-404 "energiatodistus" id))
+                                      [{:type :template-not-found :response 400}]))}}]
       ["/:toimenpide-id"
        [""
         {:conflicting true
