@@ -11,3 +11,6 @@ create table stat_ktluokka_alaktluokka (
     references alakayttotarkoitusluokka (id, versio),
   primary key (stat_kayttotarkoitusluokka_id, alakayttotarkoitusluokka_id, versio)
 );
+
+call audit.activate('stat_kayttotarkoitusluokka'::name);
+call audit.activate('stat_ktluokka_alaktluokka'::name);
