@@ -1,14 +1,17 @@
 (ns solita.common.smtp
   (:require [clojure.tools.logging :as log])
-  (:import (javax.mail Message Message$RecipientType Session)
+  (:import (javax.mail Message$RecipientType Session Transport)
            (javax.mail.internet InternetAddress
                                 MimeMessage
                                 MimeBodyPart
-                                MimeMultipart)))
+                                MimeMultipart)
+           (java.util Properties)
+           (java.io File)))
 
 (def timeout "5000")
+(def charset "UTF-8")
 
-(defn mail-properties [port]
+(defn- mail-properties [port]
   (doto (System/getProperties)
     (.put "mail.transport.protocol" "smtp")
     (.put "mail.smtp.port" port)
@@ -17,54 +20,72 @@
     (.put "mail.smtp.connectiontimeout" "5000")
     (.put "mail.smtp.timeout" "5000")))
 
-(defn session [properties]
+(defn- session [^Properties properties]
   (Session/getDefaultInstance properties))
 
-(defn body-mime-body-part [body content-type]
-  (doto (MimeBodyPart.)
-    (.setContent body content-type)))
-
-(defn attachment-mime-body-part [attachment]
-  (doto (MimeBodyPart.)
-    (.attachFile attachment)))
-
-(defn multipart [& mime-body-parts]
-  (let [mime-multi-part (MimeMultipart.)]
-    (doseq [mime-body-part mime-body-parts]
-      (.addBodyPart mime-multi-part mime-body-part))
-    mime-multi-part))
-
-(defn mime-message [session from-email from-name to subject multipart]
+(defn- mime-message [^Session session
+                    ^String from-email ^String from-name
+                    to ^String subject]
   (doto (MimeMessage. session)
     (.setFrom (InternetAddress. from-email from-name))
     (.setSubject subject)
-    (.setRecipients Message$RecipientType/TO (->> to
-                                                  (map #(InternetAddress. %))
-                                                  into-array))
-    (.setContent multipart)))
+    (.setRecipients Message$RecipientType/TO
+                    (->> to
+                         (map #(InternetAddress. %))
+                         into-array))))
 
-(defn transport [session]
-  (.getTransport session))
+(defn- send-email! [host port username password
+                    from-email from-name to subject
+                    add-content]
+  (let [^Properties properties (mail-properties port)
+        ^Session session (session properties)
+        ^MimeMessage mime-message (mime-message session
+                                                from-email
+                                                from-name
+                                                to
+                                                subject)]
+    (with-open [^Transport transport (.getTransport session)]
+      (.connect transport host username password)
+      (add-content mime-message)
+      (.sendMessage transport mime-message
+                    (.getAllRecipients mime-message))
+      (log/info "Email sent " {:to to :subject subject})
+      nil)))
 
-(defn send-email! [host port username password from-email from-name to subject
-                   body content-type attachments]
-  (let [properties (mail-properties port)
-        session (session properties)
-        body-mime-body-part (body-mime-body-part body content-type)
+(defn- body-mime-body-part [^String body ^String subtype]
+  (doto (MimeBodyPart.)
+    (.setText body charset subtype)))
+
+(defn- attachment-mime-body-part [^File attachment]
+  (doto (MimeBodyPart.)
+    (.attachFile attachment)))
+
+(defn- multipart [& mime-body-parts]
+  (let [mime-multi-part (MimeMultipart.)]
+    (doseq [^MimeBodyPart mime-body-part mime-body-parts]
+      (.addBodyPart mime-multi-part mime-body-part))
+    mime-multi-part))
+
+(defn- add-multipart [^MimeMultipart content ^MimeMessage message]
+  (.setContent message content))
+
+(defn send-multipart-email! [host port username password
+                             from-email from-name to subject
+                             ^String body ^String subtype attachments]
+  (let [body-mime-body-part (body-mime-body-part body subtype)
         attachments-mime-body-part (map attachment-mime-body-part
                                         attachments)
-        multipart (apply multipart body-mime-body-part attachments-mime-body-part)
-        mime-message (mime-message session
-                                   from-email
-                                   from-name
-                                   to
-                                   subject
-                                   multipart)
-        transport (transport session)]
-    (.connect transport host username password)
-    (try
-      (.sendMessage transport mime-message (.getAllRecipients mime-message))
-      (log/info "Email sent " {:to to :subject subject})
-      (finally
-        (.close transport)))
-    nil))
+        multipart (apply multipart body-mime-body-part attachments-mime-body-part)]
+    (send-email! host port username password
+                 from-email from-name to subject
+                 (partial add-multipart multipart))))
+
+(defn- set-text [^String body ^String subtype ^MimeMessage message]
+  (.setText message body charset subtype))
+
+(defn send-text-email! [host port username password
+                        from-email from-name to subject
+                        ^String body ^String subtype]
+  (send-email! host port username password
+               from-email from-name to subject
+               (partial set-text body subtype)))
