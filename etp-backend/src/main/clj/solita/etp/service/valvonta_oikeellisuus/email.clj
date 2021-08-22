@@ -6,7 +6,8 @@
             [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.service.valvonta-oikeellisuus.toimenpide :as toimenpide]
             [solita.common.map :as map]
-            [solita.common.time :as time])
+            [solita.common.time :as time]
+            [solita.common.logic :as logic])
   (:import (java.time LocalDate)))
 
 (defn- send-email! [{:keys [to subject body]}]
@@ -43,7 +44,13 @@
    {:subject
     "Poikkeamailmoitus koskien energiatodistusta {energiatodistus.id}"
     :body
-    ""}
+    (str
+      (paragraph
+        "Sinulle on saapunut poikkeamailmoitus koskien energiatodistusta {energiatodistus.id},"
+        "{energiatodistus.perustiedot.katuosoite-fi},"
+        "{energiatodistus.perustiedot.postinumero}"
+        "{energiatodistus.perustiedot.postitoimipaikka-fi}.")
+      (link "Katso poikkeamailmoitus energiatodistuspalvelussa."))}
 
    ;; tietopyynnön toimenpidetyypit
    :rfi-request
@@ -92,17 +99,18 @@
                #(view (get-in values (map keyword (-> % second (str/split #"\.")))))))
 
 (defn send-toimenpide-email! [db energiatodistus-id toimenpide]
-  (let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus
-                          db energiatodistus-id)
-        laatija (kayttaja-service/find-kayttaja db (:laatija-id energiatodistus))
-        toimenpide-type (-> toimenpide :type-id toimenpide/type-key)
-        template-values
-        {:energiatodistus energiatodistus
-         :laatija         laatija
-         :toimenpide      toimenpide
-         :host            config/service-host}
-        template (toimenpide-type templates)
-        message (map/map-values #(interpolate % template-values) template)]
+  (logic/if-let*
+    [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus
+                       db energiatodistus-id)
+     laatija (kayttaja-service/find-kayttaja db (:laatija-id energiatodistus))
+     template-type (-> toimenpide :type-id toimenpide/type-key)
+     template-values
+     {:energiatodistus energiatodistus
+      :laatija         laatija
+      :toimenpide      toimenpide
+      :host            config/service-host}
+     template (template-type templates)
+     message (map/map-values #(interpolate % template-values) template)]
     (send-email! (-> message
                      (assoc :to (:email laatija))
                      (update :body #(str % (paragraph signature)))))))
