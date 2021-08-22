@@ -24,16 +24,24 @@
   "Tämä on energiatodistuspalvelun lähettämä automaattinen viesti. Älä vastaa tähän viestiin.")
 
 (defn- link [title]
-  (str "<a href=\"https://{host}/#/valvonta/oikeellisuus/{id}\">" title "</a>"))
+  (str "<a href=\"https://{host}/#/valvonta/oikeellisuus/{energiatodistus.versio}/{energiatodistus.id}\">" title "</a>"))
 
 (defn- paragraph [& body] (str "<p>" (str/join " " body) "</p>"))
+
+(defn- html [& body] (str "<html><body>"
+                          (str/join "" body)
+                          (paragraph signature)
+                          "</body></html>"))
+
+(def ^:private address
+  (str "{energiatodistus.perustiedot.katuosoite-fi}, "
+       "{energiatodistus.perustiedot.postinumero} "
+       "{energiatodistus.perustiedot.postitoimipaikka-fi}."))
 
 (def ^:private rfi-order-description
   (paragraph
     "Sinulle on saapunut tietopyyntö koskien energiatodistusta {energiatodistus.id},"
-    "{energiatodistus.perustiedot.katuosoite-fi},"
-    "{energiatodistus.perustiedot.postinumero}"
-    "{energiatodistus.perustiedot.postitoimipaikka-fi}."))
+    address))
 
 (def ^:private rfi-order-link
   (link "Katso ja vastaa tietopyyntöön energiatodistuspalvelussa."))
@@ -44,12 +52,10 @@
    {:subject
     "Poikkeamailmoitus koskien energiatodistusta {energiatodistus.id}"
     :body
-    (str
+    (html
       (paragraph
         "Sinulle on saapunut poikkeamailmoitus koskien energiatodistusta {energiatodistus.id},"
-        "{energiatodistus.perustiedot.katuosoite-fi},"
-        "{energiatodistus.perustiedot.postinumero}"
-        "{energiatodistus.perustiedot.postitoimipaikka-fi}.")
+        address)
       (link "Katso poikkeamailmoitus energiatodistuspalvelussa."))}
 
    ;; tietopyynnön toimenpidetyypit
@@ -57,7 +63,7 @@
    {:subject
     "Tietopyyntö koskien energiatodistusta {energiatodistus.id}"
     :body
-    (str
+    (html
       rfi-order-description
       rfi-order-link
       (paragraph
@@ -66,7 +72,7 @@
    {:subject
     "Kehotus vastata tietopyyntöön koskien energiatodistusta {energiatodistus.id}"
     :body
-    (str
+    (html
       (paragraph
         "Kehotamme vastaamaan tietopyyntöön {toimenpide.deadline-date} mennessä.")
       rfi-order-description
@@ -75,7 +81,7 @@
    {:subject
     "Varoitus vastata tietopyyntöön koskien energiatodistusta {energiatodistus.id}"
     :body
-    (str
+    (html
       (paragraph
         "ARA on lähettänyt teille tästä energiatodistuksesta tietopyynnön ja kehotuksen."
         "ARA antaa varoituksen ja vaatii vastaamaan tietopyyntöön {toimenpide.deadline-date} mennessä.")
@@ -112,6 +118,5 @@
      template (template-type templates)
      message (map/map-values #(interpolate % template-values) template)]
     (send-email! (-> message
-                     (assoc :to (:email laatija))
-                     (update :body #(str % (paragraph signature)))))))
+                     (assoc :to (:email laatija))))))
 
