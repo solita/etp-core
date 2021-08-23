@@ -1,5 +1,5 @@
 insert into vo_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, content)
-values (6, 'Valvontamuistion varoitus FI', 'TODO', 6, 10, 'fi', 
+values (6, 'Valvontamuistio / varoitus (fi)', 'TODO', 6, 10, 'fi', 
 $$
 <div class="otsikko">
     <b>VAROITUS</b> <br/>
@@ -8,10 +8,19 @@ $$
 </div>
 
 <p class="oikeellisuus-kohde">
-    <span class="isot-kirjaimet">{{#laatija}} {{etunimi}} {{sukunimi}} {{/laatija}}</span> <br/>
+    <span class="isot-kirjaimet">{{#laatija}} {{etunimi}} {{sukunimi}} {{/laatija}}</span>
 
     {{#energiatodistus}}
-    Kohde: {{nimi}} <br/>
+     <table class="sarake">
+        <tr>
+            <td>Kohde:</td> 
+            <td>
+                <div class="nowrap">{{nimi}}</div>
+                <div class="nowrap">{{katuosoite-fi}}</div>  
+                <div class="nowrap">{{postinumero}} {{postitoimipaikka-fi}}</div>  
+            </td>
+        </tr>
+    </table>
     Todistustunnus: {{tunnus}} <br/>
     Valvontamuistion päivämäärä: {{#valvontamuistio}} {{valvontamuistio-pvm}} {{/valvontamuistio}} <br />
     Kehotuksen päivämäärä: {{#valvontamuistio}} {{valvontamuistio-kehotus-pvm}} {{/valvontamuistio}}
@@ -51,20 +60,18 @@ $$
     energia-asiantuntija
 </p>
 
-<table class="sarake">
+<table class="sarake max-width">
     <tr>
-        <td class="sarake-otsikko"><b>Sovelletut säännökset:</b></td>
-        <td class="sarake-sisalto">Laki rakennuksen energiatodistuksesta (50/2013)</td>
+        <td><b>Sovelletut säännökset:</b></td>
+        <td>Laki rakennuksen energiatodistuksesta (50/2013)</td>
     </tr>
     <tr>
-        <td class="sarake-otsikko"><b>Tiedoksi:</b></td>
-        <td class="sarake-sisalto"><div>{{#tiedoksi}}{{.}}<br />{{/tiedoksi}}</div></td>
+        <td><b>Tiedoksi:</b></td>
+        <td><div>{{#tiedoksi}}{{.}}<br />{{/tiedoksi}}</div></td>
     </tr>
-</table>
-<table class="sarake">
     <tr>
-        <td class="sarake-otsikko"><b>Lisätietoja:</b></td>
-        <td class="sarake-sisalto"><a href="https://www.energiatodistusrekisteri.fi">www.energiatodistusrekisteri.fi</a></td>
+        <td><b>Lisätietoja:</b></td>
+        <td><a href="https://www.energiatodistusrekisteri.fi">www.energiatodistusrekisteri.fi</a></td>
     </tr>
 </table>
 $$)
