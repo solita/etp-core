@@ -22,7 +22,7 @@ $$
         </tr>
     </table>
     Todistustunnus: {{tunnus}} <br/>
-    Toimituspyynnön päivämäärä: {{#tietopyynto}} {{pvm}} {{/tietopyynto}}
+    Toimituspyynnön päivämäärä: {{#tietopyynto}} {{tietopyynto-pvm}} {{/tietopyynto}}
     {{/energiatodistus}}
 </p>
 
