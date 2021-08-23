@@ -201,8 +201,8 @@
   (when-let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
     (when (toimenpide/asha-toimenpide? toimenpide)
       (asha-valvonta-oikeellisuus/log-toimenpide! db aws-s3-client whoami id toimenpide))
-    (valvonta-oikeellisuus-db/update-toimenpide-published! db {:id toimenpide-id})
-    (email/send-toimenpide-email! db id toimenpide)))
+    (email/send-toimenpide-email! db id toimenpide)
+    (valvonta-oikeellisuus-db/update-toimenpide-published! db {:id toimenpide-id})))
 
 (defn find-toimenpidetyypit [db] (luokittelu/find-toimenpidetypes db))
 
