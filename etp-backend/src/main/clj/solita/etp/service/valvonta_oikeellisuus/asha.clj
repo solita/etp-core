@@ -19,12 +19,12 @@
 
 (defn toimenpide-type->document [type-id]
   (let [type-key (toimenpide/type-key type-id )
-        documents {:rfi-request {:type "Pyyntö" :filename "toimituspyynto.pdf"}
-                   :rfi-order {:type "Kirje" :filename "kehotus_toimituspyynto.pdf"}
-                   :rfi-warning {:type "Kirje" :filename "varoitus_toimituspyynto.pdf"}
+        documents {:rfi-request {:type "Pyyntö" :filename "tietopyynto.pdf"}
+                   :rfi-order {:type "Kirje" :filename "tietopyynto_kehotus.pdf"}
+                   :rfi-warning {:type "Kirje" :filename "tietopyynto_varoitus.pdf"}
                    :audit-report {:type "Muistio" :filename "valvontamuistio.pdf"}
-                   :audit-order {:type "Kirje" :filename "kehotus_valvontamuistio.pdf"}
-                   :audit-warning  {:type "Kirje" :filename "varoitus_valvontamuistio.pdf"}}]
+                   :audit-order {:type "Kirje" :filename "valvontamuistio_kehotus.pdf"}
+                   :audit-warning  {:type "Kirje" :filename "valvontamuistio_varoitus.pdf"}}]
     (get documents type-key)))
 
 (defn- store-document [aws-s3-client energiatodistus-id toimenpide-id document]
@@ -44,29 +44,29 @@
        (into {})))
 
 (defn- template-data [whoami toimenpide laatija energiatodistus dokumentit]
-  {:päivä            (time/today)
-   :määräpäivä       (time/format-date (:deadline-date toimenpide))
-   :diaarinumero     (:diaarinumero toimenpide)
-   :valvoja          (select-keys whoami [:etunimi :sukunimi :email])
-   :laatija          (select-keys laatija [:etunimi :sukunimi :henkilotunnus :email :puhelin])
-   :energiatodistus  {:tunnus              (str "ET-" (:id energiatodistus))
-                      :rakennustunnus      (-> energiatodistus :perustiedot :rakennustunnus)
-                      :nimi                (-> energiatodistus :perustiedot :nimi)
-                      :katuosoite-fi       (-> energiatodistus :perustiedot :katuosoite-fi)
-                      :katuosoite-sv       (-> energiatodistus :perustiedot :katuosoite-sv)
-                      :postinumero         (-> energiatodistus :perustiedot :postinumero)
-                      :postitoimipaikka-fi (-> energiatodistus :perustiedot :postitoimipaikka-fi)
-                      :postitoimipaikka-sv (-> energiatodistus :perustiedot :postitoimipaikka-sv)}
-   :taustamateriaali {:taustamateriaali-pvm         (time/format-date (:rfi-request dokumentit))
-                      :taustamateriaali-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
-   :valvontamuistio  {:valvontamuistio-pvm         (time/format-date (:audit-report dokumentit))
-                      :valvontamuistio-kehotus-pvm (time/format-date (:audit-order dokumentit))
-                      :virheet                     (:virheet toimenpide)
-                      :vakavuus                    (when-let [luokka (:severity-id toimenpide)]
-                                                     (case luokka
-                                                       0 {:ei-huomioitavaa true}
-                                                       1 {:ei-toimenpiteitä true}
-                                                       2 {:virheellinen true}))}})
+  {:päivä           (time/today)
+   :määräpäivä      (time/format-date (:deadline-date toimenpide))
+   :diaarinumero    (:diaarinumero toimenpide)
+   :valvoja         (select-keys whoami [:etunimi :sukunimi :email])
+   :laatija         (select-keys laatija [:etunimi :sukunimi :henkilotunnus :email :puhelin])
+   :energiatodistus {:tunnus              (str "ET-" (:id energiatodistus))
+                     :rakennustunnus      (-> energiatodistus :perustiedot :rakennustunnus)
+                     :nimi                (-> energiatodistus :perustiedot :nimi)
+                     :katuosoite-fi       (-> energiatodistus :perustiedot :katuosoite-fi)
+                     :katuosoite-sv       (-> energiatodistus :perustiedot :katuosoite-sv)
+                     :postinumero         (-> energiatodistus :perustiedot :postinumero)
+                     :postitoimipaikka-fi (-> energiatodistus :perustiedot :postitoimipaikka-fi)
+                     :postitoimipaikka-sv (-> energiatodistus :perustiedot :postitoimipaikka-sv)}
+   :tietopyynto     {:pvm             (time/format-date (:rfi-request dokumentit))
+                     :kehotus-pvm     (time/format-date (:rfi-order dokumentit))}
+   :valvontamuistio {:valvontamuistio-pvm         (time/format-date (:audit-report dokumentit))
+                     :valvontamuistio-kehotus-pvm (time/format-date (:audit-order dokumentit))
+                     :virheet                     (:virheet toimenpide)
+                     :vakavuus                    (when-let [luokka (:severity-id toimenpide)]
+                                                    (case luokka
+                                                      0 {:ei-huomioitavaa true}
+                                                      1 {:ei-toimenpiteitä true}
+                                                      2 {:virheellinen true}))}})
 
 (defn- find-resources [db energiatodistus-id]
   (when-let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db energiatodistus-id)]
