@@ -57,8 +57,8 @@
                      :postinumero         (-> energiatodistus :perustiedot :postinumero)
                      :postitoimipaikka-fi (-> energiatodistus :perustiedot :postitoimipaikka-fi)
                      :postitoimipaikka-sv (-> energiatodistus :perustiedot :postitoimipaikka-sv)}
-   :tietopyynto     {:pvm             (time/format-date (:rfi-request dokumentit))
-                     :kehotus-pvm     (time/format-date (:rfi-order dokumentit))}
+   :tietopyynto     {:tietopyynto-pvm             (time/format-date (:rfi-request dokumentit))
+                     :tietopyynto-kehotus-pvm     (time/format-date (:rfi-order dokumentit))}
    :valvontamuistio {:valvontamuistio-pvm         (time/format-date (:audit-report dokumentit))
                      :valvontamuistio-kehotus-pvm (time/format-date (:audit-order dokumentit))
                      :virheet                     (:virheet toimenpide)
