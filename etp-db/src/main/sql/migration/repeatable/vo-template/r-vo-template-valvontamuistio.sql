@@ -39,15 +39,15 @@ $$
 {{#valvontamuistio}}
     {{#vakavuus}}
         {{#ei-huomioitavaa}}
-            <p>ARA toteaa, että energiatodistuksessa ei ole havaittu huomautettavaa.</p>
+            <p><b>ARA toteaa, että energiatodistuksessa ei ole havaittu huomautettavaa.<b/></p>
         {{/ei-huomioitavaa}}
         {{#ei-toimenpiteitä}}
-            <p>ARA toteaa, että energiatodistuksessa ei ole havaittu muuta huomautettavaa kuin edellä mainitut. <u>Havainnot eivät
-               edellytä laatijalta toimenpiteitä.</u></p>
+            <p><b>ARA toteaa, että energiatodistuksessa ei ole havaittu muuta huomautettavaa kuin edellä mainitut. <u>Havainnot eivät
+               edellytä laatijalta toimenpiteitä.</u></b></p>
         {{/ei-toimenpiteitä}}
         {{#virheellinen}}
-          <p>ARA toteaa, että energiatodistus voi edellä luetelluin perustein olla olennaisesti virheellinen eikä todistuksen
-             sisältöä käyty muilta osin lävitse. ARA pyytää esittämään omat perustelunne tarkastuksessa tehdyistä havainnoista ja
+          <p><b>ARA toteaa, että energiatodistus voi edellä luetelluin perustein olla olennaisesti virheellinen eikä todistuksen
+             sisältöä käyty muilta osin lävitse.</b> ARA pyytää esittämään omat perustelunne tarkastuksessa tehdyistä havainnoista ja
              toimittamaan ne ARAn energiatodistusrekisteriin {{määräpäivä}} mennessä.</p>
         {{/virheellinen}}
     {{/vakavuus}}
