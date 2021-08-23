@@ -32,8 +32,7 @@ $$
     Oikeellisuustarkastukset kohdistuvat energiatodistusten lähtötietoihin, energiatehokkuusluvun laskentaan sekä
     säästösuositusten oikeellisuuteen.</p>
 
-<p>ARA on lähettänyt teille tästä energiatodistuksesta taustamateriaalin toimituspyynnön ja kehotuksen. ARA antaa
-    varoituksen ja vaatii toimittamaan taustamateriaalin kuukauden kuluessa tämän varoituksen päiväyksestä.
+<p>ARA on lähettänyt teille tästä energiatodistuksesta taustamateriaalin toimituspyynnön ja kehotuksen. 
     <b>ARA tulee tarkastamaan todistuksen oikeellisuuden tämän materiaalin pohjalta.</b> Pyydämme, että toimitatte
     seuraavat todistuksen laadinnassa käytetyt taustamateriaalit ARAn energiatodistusrekisteriin {{määräpäivä}}
     mennessä:</p>
