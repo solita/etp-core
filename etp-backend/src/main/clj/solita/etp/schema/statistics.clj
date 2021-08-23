@@ -6,7 +6,7 @@
 (def StatisticsQuery
   (st/optional-keys
    {:keyword schema/Str
-    :alakayttotarkoitus-ids [schema/Str]
+    :kayttotarkoitus-id common-schema/Key
     :valmistumisvuosi-min common-schema/Year
     :valmistumisvuosi-max common-schema/Year
     :lammitetty-nettoala-min common-schema/NonNegative
