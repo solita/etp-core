@@ -24,7 +24,7 @@
   "Tämä on energiatodistuspalvelun lähettämä automaattinen viesti. Älä vastaa tähän viestiin.")
 
 (defn- link [title]
-  (str "<a href=\"https://{host}/#/valvonta/oikeellisuus/{energiatodistus.versio}/{energiatodistus.id}\">" title "</a>"))
+  (str "<a href=\"{host}/#/valvonta/oikeellisuus/{energiatodistus.versio}/{energiatodistus.id}\">" title "</a>"))
 
 (defn- paragraph [& body] (str "<p>" (str/join " " body) "</p>"))
 
@@ -150,7 +150,7 @@
      {:energiatodistus energiatodistus
       :laatija         laatija
       :toimenpide      toimenpide
-      :host            config/service-host}
+      :host            config/index-url}
      template (template-type templates)
      message (map/map-values #(interpolate % template-values) template)]
     (send-email! (-> message
