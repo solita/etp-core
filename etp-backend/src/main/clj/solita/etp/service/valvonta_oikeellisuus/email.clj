@@ -86,7 +86,43 @@
         "ARA on lähettänyt teille tästä energiatodistuksesta tietopyynnön ja kehotuksen."
         "ARA antaa varoituksen ja vaatii vastaamaan tietopyyntöön {toimenpide.deadline-date} mennessä.")
       rfi-order-description
-      rfi-order-link)}})
+      rfi-order-link)}
+
+   ;; Valvontamuistion toimenpidetyypit
+   :audit-report
+   {:subject
+    "Valvontamuistio koskien energiatodistusta {energiatodistus.id}"
+    :body
+    (html
+      (paragraph
+        "Sinulle on saapunut valvontamuistio koskien energiatodistusta {energiatodistus.id},"
+        address)
+      (link "Katso valvontamuistio energiatodistuspalvelussa."))}
+
+   :audit-order
+   {:subject
+    "Kehotus vastata valvontamuistioon koskien energiatodistusta {energiatodistus.id}"
+    :body
+    (html
+      (paragraph
+        "Kehotamme vastaamaan valvontamuistioon {toimenpide.deadline-date} mennessä.")
+      (paragraph
+        "Sinulle on saapunut valvontamuistio koskien energiatodistusta {energiatodistus.id},"
+        address)
+      (link "Katso valvontamuistio energiatodistuspalvelussa."))}
+
+   :audit-warning
+   {:subject
+    "Vastaa valvontamuistioon koskien energiatodistusta {energiatodistus.id}"
+    :body
+    (html
+      (paragraph
+        "ARA on lähettänyt teille tästä energiatodistuksesta valvontamuistion ja kehotuksen."
+        "ARA antaa varoituksen ja vaatii vastaamaan valvontamuistioon {toimenpide.deadline-date} mennessä.")
+      (paragraph
+        "Sinulle on saapunut valvontamuistio koskien energiatodistusta {energiatodistus.id},"
+        address)
+      (link "Katso valvontamuistio energiatodistuspalvelussa."))}})
 
 (defprotocol TemplateValue (view [value]))
 
