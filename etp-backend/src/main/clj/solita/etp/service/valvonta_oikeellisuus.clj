@@ -4,6 +4,7 @@
     [solita.etp.service.energiatodistus :as energiatodistus-service]
     [solita.etp.service.valvonta-oikeellisuus.asha :as asha-valvonta-oikeellisuus]
     [solita.etp.service.valvonta-oikeellisuus.toimenpide :as toimenpide]
+    [solita.etp.service.valvonta-oikeellisuus.email :as email]
     [clojure.java.jdbc :as jdbc]
     [solita.common.map :as map]
     [solita.etp.service.luokittelu :as luokittelu]
@@ -120,6 +121,7 @@
         (insert-virheet! db toimenpide-id (:virheet toimenpide-add))
         (when-not (toimenpide/draft-support? toimenpide)
           (valvonta-oikeellisuus-db/update-toimenpide-published! db {:id toimenpide-id})
+          (email/send-toimenpide-email! db id toimenpide)
           (case (-> toimenpide :type-id toimenpide/type-key)
             :closed (asha-valvonta-oikeellisuus/close-case! whoami id toimenpide)
             (when (toimenpide/asha-toimenpide? toimenpide)
@@ -199,6 +201,7 @@
   (when-let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
     (when (toimenpide/asha-toimenpide? toimenpide)
       (asha-valvonta-oikeellisuus/log-toimenpide! db aws-s3-client whoami id toimenpide))
+    (email/send-toimenpide-email! db id toimenpide)
     (valvonta-oikeellisuus-db/update-toimenpide-published! db {:id toimenpide-id})))
 
 (defn find-toimenpidetyypit [db] (luokittelu/find-toimenpidetypes db))

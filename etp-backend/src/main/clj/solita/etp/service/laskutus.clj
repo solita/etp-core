@@ -301,17 +301,17 @@
                                :pdf-result? pdf-exists?)))))))
 
 (defn send-tasmaytysraportti-email! [tasmaytysraportti-file]
-  (smtp/send-email! config/smtp-host
-                    config/smtp-port
-                    config/smtp-username
-                    config/smtp-password
-                    config/email-from-email
-                    config/email-from-name
-                    config/laskutus-tasmaytysraportti-email-to
-                    "ARA ETP täsmätysraportti"
-                    "Liitteenä täsmäytysraportti."
-                    config/email-content-type
-                    [tasmaytysraportti-file]))
+  (smtp/send-multipart-email! config/smtp-host
+                              config/smtp-port
+                              config/smtp-username
+                              config/smtp-password
+                              config/email-from-email
+                              config/email-from-name
+                              config/laskutus-tasmaytysraportti-email-to
+                              "ARA ETP täsmätysraportti"
+                              "Liitteenä täsmäytysraportti."
+                              "plain"
+                              [tasmaytysraportti-file]))
 
 (defn xml-filename [now filename-prefix idx]
   (str filename-prefix
