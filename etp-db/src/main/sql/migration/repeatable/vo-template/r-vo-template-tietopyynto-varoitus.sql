@@ -22,8 +22,8 @@ $$
         </tr>
     </table>
     Todistustunnus: {{tunnus}} <br/>
-    Toimituspyynnön päivämäärä: {{#taustamateriaali}} {{taustamateriaali-pvm}} {{/taustamateriaali}} <br />
-    Kehotuksen päivämäärä: {{#taustamateriaali}} {{taustamateriaali-kehotus-pvm}} {{/taustamateriaali}}
+    Toimituspyynnön päivämäärä: {{#tietopyynto}} {{pvm}} {{/tietopyynto}} <br />
+    Kehotuksen päivämäärä: {{#tietopyynto}} {{kehotus-pvm}} {{/tietopyynto}}
     {{/energiatodistus}}
 </p>
 
