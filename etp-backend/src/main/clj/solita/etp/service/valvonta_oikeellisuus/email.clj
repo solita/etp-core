@@ -79,7 +79,7 @@
       rfi-order-link)}
    :rfi-warning
    {:subject
-    "Varoitus vastata tietopyyntöön koskien energiatodistusta {energiatodistus.id}"
+    "Vastaa tietopyyntöön koskien energiatodistusta {energiatodistus.id}"
     :body
     (html
       (paragraph
