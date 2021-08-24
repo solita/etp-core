@@ -10,14 +10,19 @@ select
   last_toimenpide.energiatodistus_id last_toimenpide$energiatodistus_id,
   last_toimenpide.create_time last_toimenpide$create_time,
   last_toimenpide.publish_time last_toimenpide$publish_time,
-  last_toimenpide.deadline_date last_toimenpide$deadline_date,
+  case when (last_toimenpide.type_id in (4, 8, 12))
+    then last_toimenpide.previous_deadline_date
+    else last_toimenpide.deadline_date
+  end last_toimenpide$deadline_date,
   last_toimenpide.template_id last_toimenpide$template_id,
   last_toimenpide.diaarinumero last_toimenpide$diaarinumero
 from energiatodistus
   inner join kayttaja on kayttaja.id = energiatodistus.laatija_id
   left join energiatodistus korvaava_energiatodistus on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
   left join lateral (
-    select * from vo_toimenpide toimenpide
+    select toimenpide.*,
+      lag(toimenpide.deadline_date) over (order by toimenpide.id) previous_deadline_date
+    from vo_toimenpide toimenpide
     where energiatodistus.id = toimenpide.energiatodistus_id
     order by coalesce(toimenpide.publish_time, toimenpide.create_time) desc
     limit 1) last_toimenpide on true
@@ -42,19 +47,25 @@ select
   last_toimenpide.energiatodistus_id last_toimenpide$energiatodistus_id,
   last_toimenpide.create_time last_toimenpide$create_time,
   last_toimenpide.publish_time last_toimenpide$publish_time,
-  last_toimenpide.deadline_date last_toimenpide$deadline_date,
+  case when (last_toimenpide.type_id in (4, 8, 12))
+    then last_toimenpide.previous_deadline_date
+    else last_toimenpide.deadline_date
+  end last_toimenpide$deadline_date,
   last_toimenpide.template_id last_toimenpide$template_id,
   last_toimenpide.diaarinumero last_toimenpide$diaarinumero
 from energiatodistus
   inner join kayttaja on kayttaja.id = energiatodistus.laatija_id
   left join energiatodistus korvaava_energiatodistus on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
   left join lateral (
-    select * from vo_toimenpide toimenpide
+    select toimenpide.*,
+      etp.vo_toimenpide_visible_laatija(toimenpide) visible_laatija,
+      lag(toimenpide.deadline_date) over (order by toimenpide.id) previous_deadline_date
+    from vo_toimenpide toimenpide
     where energiatodistus.id = toimenpide.energiatodistus_id
     order by coalesce(toimenpide.publish_time, toimenpide.create_time) desc
     limit 1) last_toimenpide on true
 where energiatodistus.laatija_id = :laatija-id and
-      etp.vo_toimenpide_visible_laatija(last_toimenpide)
+      last_toimenpide.visible_laatija
 order by coalesce(last_toimenpide.publish_time, last_toimenpide.create_time) desc
 limit :limit offset :offset;
 
