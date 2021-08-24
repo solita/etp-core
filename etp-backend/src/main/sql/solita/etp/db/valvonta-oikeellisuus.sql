@@ -4,7 +4,7 @@ select
   energiatodistus.*,
   fullname(kayttaja) "laatija-fullname",
   korvaava_energiatodistus.id as korvaava_energiatodistus_id,
-  coalesce(last_toimenpide.type_id not in (0, 1, 15), false) valvonta$ongoing,
+  coalesce(last_toimenpide.ongoing, false) valvonta$ongoing,
   last_toimenpide.id      last_toimenpide$id,
   last_toimenpide.type_id last_toimenpide$type_id,
   last_toimenpide.energiatodistus_id last_toimenpide$energiatodistus_id,
@@ -21,6 +21,7 @@ from energiatodistus
   left join energiatodistus korvaava_energiatodistus on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
   left join lateral (
     select toimenpide.*,
+      vo_toimenpide_ongoing(toimenpide) ongoing,
       lag(toimenpide.deadline_date) over (order by toimenpide.id) previous_deadline_date
     from vo_toimenpide toimenpide
     where energiatodistus.id = toimenpide.energiatodistus_id
@@ -28,7 +29,7 @@ from energiatodistus
     limit 1) last_toimenpide on true
 where
   (energiatodistus.valvonta$pending or
-    last_toimenpide.type_id not in (0, 1, 15) or
+    last_toimenpide.ongoing or
     (:include-closed and last_toimenpide.id is not null)) and
   (energiatodistus.valvonta$valvoja_id = :valvoja-id or
     (energiatodistus.valvonta$valvoja_id is not null) = :has-valvoja or
@@ -41,7 +42,7 @@ select
   energiatodistus.*,
   fullname(kayttaja) "laatija-fullname",
   korvaava_energiatodistus.id as korvaava_energiatodistus_id,
-  coalesce(last_toimenpide.type_id not in (0, 1, 15), false) valvonta$ongoing,
+  coalesce(last_toimenpide.ongoing, false) valvonta$ongoing,
   last_toimenpide.id      last_toimenpide$id,
   last_toimenpide.type_id last_toimenpide$type_id,
   last_toimenpide.energiatodistus_id last_toimenpide$energiatodistus_id,
@@ -58,6 +59,7 @@ from energiatodistus
   left join energiatodistus korvaava_energiatodistus on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
   left join lateral (
     select toimenpide.*,
+      vo_toimenpide_ongoing(toimenpide) ongoing,
       etp.vo_toimenpide_visible_laatija(toimenpide) visible_laatija,
       lag(toimenpide.deadline_date) over (order by toimenpide.id) previous_deadline_date
     from vo_toimenpide toimenpide
@@ -78,7 +80,7 @@ from energiatodistus left join lateral (
   limit 1) last_toimenpide on true
 where
   (energiatodistus.valvonta$pending or
-   last_toimenpide.type_id not in (0, 1, 15) or
+   vo_toimenpide_ongoing(last_toimenpide) or
    (:include-closed and last_toimenpide.id is not null)) and
   (energiatodistus.valvonta$valvoja_id = :valvoja-id or
    (energiatodistus.valvonta$valvoja_id is not null) = :has-valvoja or
@@ -99,7 +101,7 @@ select
   energiatodistus.id,
   energiatodistus.valvonta$pending pending,
   energiatodistus.valvonta$valvoja_id valvoja_id,
-  coalesce(last_toimenpide.type_id not in (0, 1, 15), false) ongoing
+  coalesce(vo_toimenpide_ongoing(last_toimenpide), false) ongoing
 from energiatodistus left join lateral (
   select * from vo_toimenpide toimenpide
   where energiatodistus.id = toimenpide.energiatodistus_id
