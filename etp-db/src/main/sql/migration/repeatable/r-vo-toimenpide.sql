@@ -6,3 +6,9 @@ begin
          toimenpide.type_id in (4, 8, 12);
 end;
 $$ language plpgsql immutable;
+
+create or replace function etp.vo_toimenpide_ongoing(last_toimenpide vo_toimenpide) returns boolean as $$
+begin
+  return last_toimenpide.type_id not in (0, 1, 14);
+end;
+$$ language plpgsql immutable;
