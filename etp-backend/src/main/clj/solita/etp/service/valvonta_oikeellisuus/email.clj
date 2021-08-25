@@ -34,7 +34,8 @@
                           "</body></html>"))
 
 (def ^:private address
-  (str "{energiatodistus.perustiedot.katuosoite-fi}, "
+  (str "{energiatodistus.perustiedot.nimi}, "
+       "{energiatodistus.perustiedot.katuosoite-fi}, "
        "{energiatodistus.perustiedot.postinumero} "
        "{energiatodistus.perustiedot.postitoimipaikka-fi}."))
 
