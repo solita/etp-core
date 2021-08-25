@@ -4,7 +4,7 @@
     [solita.etp.service.energiatodistus :as energiatodistus-service]
     [solita.etp.service.valvonta-oikeellisuus.asha :as asha-valvonta-oikeellisuus]
     [solita.etp.service.valvonta-oikeellisuus.toimenpide :as toimenpide]
-    [solita.etp.service.pdf :as pdf]
+    [solita.etp.service.valvonta-oikeellisuus.email :as email]
     [clojure.java.jdbc :as jdbc]
     [solita.common.map :as map]
     [solita.etp.service.luokittelu :as luokittelu]
@@ -16,7 +16,9 @@
     [solita.etp.service.rooli :as rooli-service]
     [solita.etp.exception :as exception]
     [solita.etp.service.viesti :as viesti-service]
-    [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]))
+    [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]
+
+    [solita.common.maybe :as maybe]))
 
 (db/require-queries 'valvonta-oikeellisuus)
 
@@ -119,6 +121,7 @@
         (insert-virheet! db toimenpide-id (:virheet toimenpide-add))
         (when-not (toimenpide/draft-support? toimenpide)
           (valvonta-oikeellisuus-db/update-toimenpide-published! db {:id toimenpide-id})
+          (email/send-toimenpide-email! db id toimenpide)
           (case (-> toimenpide :type-id toimenpide/type-key)
             :closed (asha-valvonta-oikeellisuus/close-case! whoami id toimenpide)
             (when (toimenpide/asha-toimenpide? toimenpide)
@@ -195,10 +198,11 @@
     (update-toimenpide-row! db toimenpide-id (dissoc toimenpide-update :virheet))))
 
 (defn publish-toimenpide! [db aws-s3-client whoami id toimenpide-id]
-  (let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
+  (when-let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
     (when (toimenpide/asha-toimenpide? toimenpide)
-      (asha-valvonta-oikeellisuus/log-toimenpide! db aws-s3-client whoami id toimenpide)))
-  (valvonta-oikeellisuus-db/update-toimenpide-published! db {:id toimenpide-id}))
+      (asha-valvonta-oikeellisuus/log-toimenpide! db aws-s3-client whoami id toimenpide))
+    (email/send-toimenpide-email! db id toimenpide)
+    (valvonta-oikeellisuus-db/update-toimenpide-published! db {:id toimenpide-id})))
 
 (defn find-toimenpidetyypit [db] (luokittelu/find-toimenpidetypes db))
 
@@ -208,15 +212,13 @@
 
 (defn find-severities [db] (luokittelu/find-severities db))
 
-(defn generate-template [db whoami id toimenpide]
-  (let [{:keys [energiatodistus laatija]} (asha-valvonta-oikeellisuus/resolve-energiatodistus-laatija db id)
-        diaarinumero (find-diaarinumero db id toimenpide)
-        toimenpide-with-diaarinumero (assoc toimenpide :diaarinumero diaarinumero)]
-    (asha-valvonta-oikeellisuus/generate-template db whoami toimenpide-with-diaarinumero energiatodistus laatija)))
-
 (defn preview-toimenpide [db whoami id toimenpide]
-  (when-let [{:keys [template template-data]} (generate-template db whoami id toimenpide)]
-    (pdf/template->pdf-input-stream template template-data)))
+  (maybe/map*
+    io/input-stream
+    (asha-valvonta-oikeellisuus/generate-pdf-document
+        db whoami
+        (assoc toimenpide :diaarinumero (find-diaarinumero db id toimenpide))
+        id)))
 
 (defn find-toimenpide-document [db aws-s3-client whoami id toimenpide-id]
   (when-let [toimenpide (find-toimenpide db whoami id toimenpide-id)]

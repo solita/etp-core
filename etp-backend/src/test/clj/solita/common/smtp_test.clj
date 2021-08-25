@@ -10,7 +10,7 @@
 (def to ["recipient1@example.com" "recipient2@example.com"])
 (def subject "Subject")
 (def body "This is body!")
-(def content-type config/email-content-type)
+(def subtype "plain")
 (def attachments [(io/file "deps.edn") (io/file "start.sh")])
 
 (def result-email-from-and-to
@@ -27,12 +27,10 @@ Content-Type: multipart/mixed;"
           subject))
 
 (def result-email-body-part
-  (format "Content-Type: %s
+  (format "Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-%s"
-          content-type
-          body))
+%s" body))
 
 (def result-email-attachment-1-part
   "Content-Type: application/octet-stream; name=deps.edn
@@ -58,17 +56,17 @@ Content-Disposition: attachment; filename=start.sh
     (io/delete-file file)))
 
 (defn send-email! [attachments]
-  (smtp/send-email! config/smtp-host
-                    config/smtp-port
-                    config/smtp-username
-                    config/smtp-password
-                    sender-email
-                    sender-name
-                    to
-                    subject
-                    body
-                    content-type
-                    attachments))
+  (smtp/send-multipart-email! config/smtp-host
+                              config/smtp-port
+                              config/smtp-username
+                              config/smtp-password
+                              sender-email
+                              sender-name
+                              to
+                              subject
+                              body
+                              subtype
+                              attachments))
 
 ;; 2 recipients x 2 emails => 4 files.
 (t/deftest ^:eftest/synchronized send-email!-test
