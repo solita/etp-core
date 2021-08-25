@@ -3,7 +3,7 @@ values
 (1, 'Tietopyyntö (fi)', 'TODO', 1, 3, 'fi',
 $$
 <div class="otsikko">
-    <b>Toimituspyyntö</b> <br/>
+    <b>Tietopyyntö</b> <br/>
     <b>{{päivä}}</b> <br/>
     {{diaarinumero}}
 </div>
