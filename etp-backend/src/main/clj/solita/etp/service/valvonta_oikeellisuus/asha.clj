@@ -49,7 +49,7 @@
    :diaarinumero    (:diaarinumero toimenpide)
    :valvoja         (select-keys whoami [:etunimi :sukunimi :email])
    :laatija         (select-keys laatija [:etunimi :sukunimi :henkilotunnus :email :puhelin])
-   :energiatodistus {:tunnus              (str "ET-" (:id energiatodistus))
+   :energiatodistus {:tunnus              (:id energiatodistus)
                      :rakennustunnus      (-> energiatodistus :perustiedot :rakennustunnus)
                      :nimi                (-> energiatodistus :perustiedot :nimi)
                      :katuosoite-fi       (-> energiatodistus :perustiedot :katuosoite-fi)

@@ -22,7 +22,7 @@ $$
         </tr>
     </table>
     Todistustunnus: {{tunnus}} <br/>
-    Toimituspyynnön päivämäärä: {{#tietopyynto}} {{tietopyynto-pvm}} {{/tietopyynto}} <br />
+    Tietopyynnön päivämäärä: {{#tietopyynto}} {{tietopyynto-pvm}} {{/tietopyynto}} <br />
     Kehotuksen päivämäärä: {{#tietopyynto}} {{tietopyynto-kehotus-pvm}} {{/tietopyynto}}
     {{/energiatodistus}}
 </p>
@@ -32,7 +32,7 @@ $$
     Oikeellisuustarkastukset kohdistuvat energiatodistusten lähtötietoihin, energiatehokkuusluvun laskentaan sekä
     säästösuositusten oikeellisuuteen.</p>
 
-<p>ARA on lähettänyt teille tästä energiatodistuksesta taustamateriaalin toimituspyynnön ja kehotuksen. 
+<p>ARA on lähettänyt teille tästä energiatodistuksesta taustamateriaalin tietopyynnön ja kehotuksen. 
     <b>ARA tulee tarkastamaan todistuksen oikeellisuuden tämän materiaalin pohjalta.</b> Pyydämme, että toimitatte
     seuraavat todistuksen laadinnassa käytetyt taustamateriaalit ARAn energiatodistusrekisteriin {{määräpäivä}}
     mennessä:</p>

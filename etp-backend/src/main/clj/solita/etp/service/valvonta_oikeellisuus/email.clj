@@ -34,7 +34,8 @@
                           "</body></html>"))
 
 (def ^:private address
-  (str "{energiatodistus.perustiedot.katuosoite-fi}, "
+  (str "{energiatodistus.perustiedot.nimi}, "
+       "{energiatodistus.perustiedot.katuosoite-fi}, "
        "{energiatodistus.perustiedot.postinumero} "
        "{energiatodistus.perustiedot.postitoimipaikka-fi}."))
 
@@ -122,7 +123,20 @@
       (paragraph
         "Sinulle on saapunut valvontamuistio koskien energiatodistusta {energiatodistus.id},"
         address)
-      (link "Katso valvontamuistio energiatodistuspalvelussa."))}})
+      (link "Katso valvontamuistio energiatodistuspalvelussa."))}
+
+   ;; lisäselvityspyyntö
+   :rfc-request
+   {:subject
+    "Lisäselvityspyyntö koskien energiatodistusta {energiatodistus.id}"
+    :body
+    (html
+      (paragraph
+        "Sinulle on saapunut lisäselvityspyyntö koskien energiatodistusta {energiatodistus.id},"
+        address)
+      (link "Katso ja vastaa lisäselvityspyyntöön energiatodistuspalvelussa.")
+      (paragraph
+        "Lisäselvityspyyntöön on vastattava {toimenpide.deadline-date} mennessä."))}})
 
 (defprotocol TemplateValue (view [value]))
 
