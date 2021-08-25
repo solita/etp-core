@@ -8,6 +8,7 @@
     [clojure.java.jdbc :as jdbc]
     [solita.common.map :as map]
     [solita.etp.service.luokittelu :as luokittelu]
+    [solita.etp.service.concurrent :as concurrent]
     [clojure.string :as str]
     [clojure.java.io :as io]
     [solita.etp.service.liite :as liite-service]
@@ -111,6 +112,11 @@
             "Energia-asiantuntija\n"
             (:etunimi whoami) " " (:sukunimi whoami))})))
 
+(defn- send-toimenpide-email! [db id toimenpide]
+  (concurrent/run-background
+    #(email/send-toimenpide-email! db id toimenpide)
+    (str "Sending email failed for toimenpide: " id "/" (:id toimenpide))))
+
 (defn add-toimenpide! [db aws-s3-client whoami id toimenpide-add]
   (jdbc/with-db-transaction [db db]
     (let [diaarinumero (if (toimenpide/case-open? toimenpide-add)
@@ -121,7 +127,7 @@
         (insert-virheet! db toimenpide-id (:virheet toimenpide-add))
         (when-not (toimenpide/draft-support? toimenpide)
           (valvonta-oikeellisuus-db/update-toimenpide-published! db {:id toimenpide-id})
-          (email/send-toimenpide-email! db id toimenpide)
+          (send-toimenpide-email! db id toimenpide)
           (case (-> toimenpide :type-id toimenpide/type-key)
             :closed (asha-valvonta-oikeellisuus/close-case! whoami id toimenpide)
             (when (toimenpide/asha-toimenpide? toimenpide)
@@ -201,7 +207,7 @@
   (when-let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
     (when (toimenpide/asha-toimenpide? toimenpide)
       (asha-valvonta-oikeellisuus/log-toimenpide! db aws-s3-client whoami id toimenpide))
-    (email/send-toimenpide-email! db id toimenpide)
+    (send-toimenpide-email! db id toimenpide)
     (valvonta-oikeellisuus-db/update-toimenpide-published! db {:id toimenpide-id})))
 
 (defn find-toimenpidetyypit [db] (luokittelu/find-toimenpidetypes db))
