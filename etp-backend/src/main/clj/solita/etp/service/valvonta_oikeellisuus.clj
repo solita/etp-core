@@ -101,6 +101,8 @@
        :vastaanottajaryhma-id nil
        :energiatodistus-id    id
        :vo-toimenpide-id      (:id toimenpide)
+       :kasitelty             true
+       :kasittelija-id        (:id whoami)
        :subject               (str "Poikkeamailmoitus ET " (:energiatodistus-id toimenpide))
        :body
        (str (-> energiatodistus :perustiedot :nimi) "\n"

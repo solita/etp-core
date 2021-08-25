@@ -18,7 +18,10 @@
 
 (defn- insert-ketju! [db ketju]
   (jdbc/insert! db :viestiketju
-                (select-keys ketju [:vastaanottajaryhma-id :energiatodistus-id :vo-toimenpide-id :subject])
+                (select-keys ketju [:vastaanottajaryhma-id
+                                    :energiatodistus-id :vo-toimenpide-id
+                                    :kasitelty :kasittelija-id
+                                    :subject])
                 db/default-opts))
 
 (defn- insert-viesti! [db viestiketju-id body]
