@@ -221,13 +221,15 @@
                             (let [osapuolet (concat
                                               (find-henkilot db valvonta-id)
                                               (find-yritykset db valvonta-id))
+                                  valvonta    (find-valvonta db valvonta-id)
+                                  ilmoituspaikat (find-ilmoituspaikat db)
                                   diaarinumero (if (toimenpide/case-open? toimenpide-add)
                                                  (asha/open-case!
                                                    db
                                                    whoami
-                                                   (find-valvonta db valvonta-id)
+                                                   valvonta
                                                    osapuolet
-                                                   (find-ilmoituspaikat db))
+                                                   ilmoituspaikat)
                                                  (find-diaarinumero db valvonta-id toimenpide-add))
                                   toimenpide (insert-toimenpide! db valvonta-id diaarinumero toimenpide-add)
                                   toimenpide-id (:id toimenpide)]
@@ -239,10 +241,10 @@
                                     db
                                     aws-s3-client
                                     whoami
-                                    (find-valvonta db valvonta-id)
+                                    valvonta
                                     toimenpide
                                     osapuolet
-                                    (find-ilmoituspaikat db))))
+                                    ilmoituspaikat)))
                               {:id toimenpide-id})))
 
 (defn update-toimenpide! [db toimenpide-id toimenpide]
