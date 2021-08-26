@@ -2,19 +2,17 @@
   (:require [solita.etp.service.valvonta-kaytto.asha :as asha]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
             [clojure.java.io :as io]
-            [solita.etp.service.pdf :as pdf]
             [clojure.set :as set]
-            [solita.common.logic :as logic]
             [solita.etp.service.file :as file-service]
             [solita.etp.db :as db]
             [clojure.java.jdbc :as jdbc]
             [solita.etp.service.luokittelu :as luokittelu]
             [flathead.flatten :as flat]
-            [solita.etp.schema.valvonta-kaytto :as kaytto-schema])
+            [solita.etp.schema.valvonta-kaytto :as kaytto-schema]
+            [solita.common.maybe :as maybe])
   (:import (java.time Instant)))
 
 (db/require-queries 'valvonta-kaytto)
-
 
 (defn find-henkilot [db valvonta-id]
   (valvonta-kaytto-db/select-henkilot db {:valvonta-id valvonta-id}))
@@ -141,9 +139,8 @@
         (:tempfile liite)))))
 
 (defn add-liite-from-link! [db valvonta-id liite]
-  (insert-liite! db (-> liite
-                        (assoc :contenttype "text/uri-list"
-                               :valvonta-id valvonta-id))))
+  (insert-liite! db (assoc liite :contenttype "text/uri-list"
+                                 :valvonta-id valvonta-id)))
 
 (defn delete-liite! [db liite-id]
   (valvonta-kaytto-db/delete-liite! db {:id liite-id}))
@@ -210,13 +207,14 @@
            (assoc toimenpide-add
              :diaarinumero diaarinumero
              :valvonta_id valvonta-id
-             :publish-time (Instant/now))                   ;TODO: is publish time needed?
+             :publish-time (Instant/now))
            db/default-opts)))
 
-(defn- find-diaarinumero [db valvonta-id]
-  (-> (find-toimenpiteet db valvonta-id)
-      last
-      :diaarinumero))
+(defn find-diaarinumero [db id toimenpide]
+  (when (or (toimenpide/asha-toimenpide? toimenpide)
+            (toimenpide/case-closed? toimenpide))
+    (-> (valvonta-kaytto-db/select-last-diaarinumero db {:id id})
+        first :diaarinumero)))
 
 (defn add-toimenpide! [db aws-s3-client whoami valvonta-id toimenpide-add]
   (jdbc/with-db-transaction [db db]
@@ -230,7 +228,7 @@
                                                    (find-valvonta db valvonta-id)
                                                    osapuolet
                                                    (find-ilmoituspaikat db))
-                                                 (find-diaarinumero db valvonta-id))
+                                                 (find-diaarinumero db valvonta-id toimenpide-add))
                                   toimenpide (insert-toimenpide! db valvonta-id diaarinumero toimenpide-add)
                                   toimenpide-id (:id toimenpide)]
                               (insert-toimenpide-osapuolet! db toimenpide-id osapuolet)
@@ -253,28 +251,16 @@
            toimenpide ["id = ?" toimenpide-id]
            db/default-opts)))
 
-(defn- preview-toimenpide [db whoami id toimenpide maybe-osapuoli]
-  (logic/if-let*
-    [osapuoli maybe-osapuoli
-     valvonta (find-valvonta db id)
-     {:keys [template template-data]} (asha/generate-template
-                                        db
-                                        whoami
-                                        (find-valvonta db id)
-                                        toimenpide
-                                        osapuoli
-                                        (find-ilmoituspaikat db))]
-    (pdf/template->pdf-input-stream template template-data)))
-
 (defn preview-toimenpide [db whoami id toimenpide osapuoli]
-  (when-let [{:keys [template template-data]} (asha/generate-template
-                                                db
-                                                whoami
-                                                (find-valvonta db id)
-                                                toimenpide
-                                                osapuoli
-                                                (find-ilmoituspaikat db))]
-    (pdf/template->pdf-input-stream template template-data)))
+  (maybe/map*
+    io/input-stream
+    (asha/generate-pdf-document
+      db
+      whoami
+      (find-valvonta db id)
+      (assoc toimenpide :diaarinumero (find-diaarinumero db id toimenpide))
+      (find-ilmoituspaikat db)
+      osapuoli)))
 
 
 (defn preview-henkilo-toimenpide [db whoami id toimenpide henkilo-id]
@@ -282,7 +268,7 @@
     db
     whoami
     id
-    (assoc toimenpide :diaarinumero (find-diaarinumero db id))
+    toimenpide
     (find-henkilo db henkilo-id)))
 
 (defn preview-yritys-toimenpide [db whoami id toimenpide yritys-id]
@@ -290,7 +276,7 @@
     db
     whoami
     id
-    (assoc toimenpide :diaarinumero (find-diaarinumero db id))
+    toimenpide
     (find-yritys db yritys-id)))
 
 (defn find-toimenpide-henkilo-document [db aws-s3-client valvonta-id toimenpide-id henkilo-id]

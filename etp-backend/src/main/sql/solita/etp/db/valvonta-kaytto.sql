@@ -196,3 +196,9 @@ from vk_toimenpide
 where valvonta_id = :valvonta-id
 order by id desc
 limit 1;
+
+-- name: select-last-diaarinumero
+select diaarinumero from vk_toimenpide
+where valvonta_id = :id and diaarinumero is not null
+order by coalesce(publish_time, create_time) desc
+limit 1;
