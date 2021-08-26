@@ -1,5 +1,5 @@
 insert into vk_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, content)
-values (2, 'Tietopyyntö / kehotus', 'Tietopyyntö / kehotus (sv)', 2, 2, 'fi', 
+values (1, 'Tietopyyntö / kehotus', 'Tietopyyntö / kehotus (sv)', 1, 2, 'fi', 
 $$
 <div class="otsikko">
     <b>KEHOTUS/UPPMANING</b> <br/>
@@ -26,7 +26,7 @@ $$
     Ilmoitustunnus/Meddelandekod: {{ilmoitustunnus}} <br/>
     Havaintopäivä/Observationsdatum: {{havaintopäivä}} <br/>
     {{/kohde}}
-    Tietopyynnön päivämäärä/Begäran om uppgifter: {{#toimituspyyntö}} {{toimituspyyntö-pvm}} {{/toimituspyyntö}}
+    Tietopyynnön päivämäärä/Begäran om uppgifter: {{#tietopyynto}} {{tietopyynto-pvm}} {{/tietopyynto}}
 </div>
 
 <h1>Energiatodistusvalvonnan kehotus</h1>

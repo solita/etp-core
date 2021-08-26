@@ -68,8 +68,8 @@
                       :ilmoituspaikka (find-ilmoituspaikka ilmoituspaikat (:ilmoituspaikka-id valvonta))
                       :ilmoitustunnus (:ilmoitustunnus valvonta)
                       :havaintopäivä  (-> valvonta :havaintopaiva time/format-date)}
-   :toimituspyyntö   {:toimituspyyntö-pvm         (time/format-date (:rfi-request dokumentit))
-                      :toimituspyyntö-kehotus-pvm (time/format-date (:rfi-order dokumentit))}})
+   :tietopyynto      {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
+                      :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}})
 
 (defn generate-template [db whoami valvonta toimenpide osapuoli ilmoituspaikat]
   (let [template (-> (valvonta-kaytto-db/select-template db {:id (:template-id toimenpide)}) first :content)
