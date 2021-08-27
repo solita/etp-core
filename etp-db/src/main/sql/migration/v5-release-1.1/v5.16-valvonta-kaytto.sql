@@ -18,7 +18,7 @@ create table vk_valvonta (
   rakennustunnus text,
   katuosoite text not null,
   postinumero int references postinumero (id),
-  ilmoituspaikka_id int references vk_ilmoituspaikka,
+  ilmoituspaikka_id int references vk_ilmoituspaikka (id),
   ilmoituspaikka_description text,
   ilmoitustunnus text,
   havaintopaiva date,
