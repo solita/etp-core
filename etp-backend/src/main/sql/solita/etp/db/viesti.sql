@@ -2,7 +2,7 @@
 -- name: select-all-viestiketjut
 select
   viestiketju.id, viestiketju.kasittelija_id, viestiketju.kasitelty, viestiketju.subject,
-  viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id,
+  viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id, viestiketju.vo_toimenpide_id,
   (select array_agg(vastaanottaja_id) from vastaanottaja
     where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
   from viestiketju
@@ -17,7 +17,7 @@ limit :limit offset :offset;
 -- name: select-viestiketjut-for-kayttaja
 select
   viestiketju.id, viestiketju.kasittelija_id, viestiketju.kasitelty, viestiketju.subject,
-  viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id,
+  viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id, viestiketju.vo_toimenpide_id,
   (select array_agg(vastaanottaja_id) from vastaanottaja
     where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
 from viestiketju
@@ -51,7 +51,7 @@ where from_id = :kayttaja-id or vastaanottajaryhma_id = :vastaanottajaryhma-id o
 -- name: select-viestiketju
 select
   viestiketju.id, viestiketju.kasittelija_id, viestiketju.kasitelty, viestiketju.subject,
-  viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id,
+  viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id, viestiketju.vo_toimenpide_id,
   (select array_agg(vastaanottaja_id) from vastaanottaja
     where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
 from viestiketju
@@ -110,7 +110,7 @@ where (from_id = :kayttaja-id or vastaanottajaryhma_id = :vastaanottajaryhma-id 
 -- name: select-energiatodistus-viestiketjut
 select
   viestiketju.id, viestiketju.kasittelija_id, viestiketju.kasitelty, viestiketju.subject,
-  viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id,
+  viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id, viestiketju.vo_toimenpide_id,
   (select array_agg(vastaanottaja_id) from vastaanottaja
    where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
 from viestiketju
