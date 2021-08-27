@@ -57,7 +57,9 @@
   (-> (db/with-db-exception-translation
         jdbc/insert! db :vk-valvonta
         (dissoc valvonta :valvoja-id)
-        db/default-opts) first :id))
+        db/default-opts)
+      first
+      :id))
 
 (defn update-valvonta! [db valvonta-id valvonta]
   (first (db/with-db-exception-translation
@@ -78,7 +80,9 @@
   (-> (db/with-db-exception-translation
         jdbc/insert! db :vk_henkilo
         (assoc henkilo :valvonta-id valvonta-id)
-        db/default-opts) first :id))
+        db/default-opts)
+      first
+      :id))
 
 (defn update-henkilo! [db valvonta-id henkilo-id henkilo]
   (first (db/with-db-exception-translation
@@ -103,7 +107,9 @@
   (-> (db/with-db-exception-translation
         jdbc/insert! db :vk_yritys
         (assoc yritys :valvonta-id valvonta-id)
-        db/default-opts) first :id))
+        db/default-opts)
+      first
+      :id))
 
 (defn update-yritys! [db valvonta-id yritys-id yritys]
   (first (db/with-db-exception-translation
@@ -214,14 +220,15 @@
   (when (or (toimenpide/asha-toimenpide? toimenpide)
             (toimenpide/case-closed? toimenpide))
     (-> (valvonta-kaytto-db/select-last-diaarinumero db {:id id})
-        first :diaarinumero)))
+        first
+        :diaarinumero)))
 
 (defn add-toimenpide! [db aws-s3-client whoami valvonta-id toimenpide-add]
   (jdbc/with-db-transaction [db db]
                             (let [osapuolet (concat
                                               (find-henkilot db valvonta-id)
                                               (find-yritykset db valvonta-id))
-                                  valvonta    (find-valvonta db valvonta-id)
+                                  valvonta (find-valvonta db valvonta-id)
                                   ilmoituspaikat (find-ilmoituspaikat db)
                                   diaarinumero (if (toimenpide/case-open? toimenpide-add)
                                                  (asha/open-case!
