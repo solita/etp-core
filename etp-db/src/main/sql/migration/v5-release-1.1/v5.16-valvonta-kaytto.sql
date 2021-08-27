@@ -40,7 +40,7 @@ create table vk_toimenpide (
   diaarinumero text,
   description text,
   filename text,
-  valvonta_id int references vk_valvonta (id)
+  valvonta_id int not null references vk_valvonta (id)
 );
 
 call audit.activate('vk_toimenpide'::name);
@@ -62,7 +62,7 @@ create table vk_henkilo (
   toimitustapa_id int references vk_toimitustapa (id),
   toimitustapa_description text,
   deleted boolean not null default false,
-  valvonta_id int references vk_valvonta (id)
+  valvonta_id int not null references vk_valvonta (id)
 );
 
 call audit.activate('vk_henkilo'::name);
@@ -83,7 +83,7 @@ create table vk_yritys (
   toimitustapa_id int references vk_toimitustapa (id),
   toimitustapa_description text,
   deleted boolean not null default false,
-  valvonta_id int references vk_valvonta (id)
+  valvonta_id int not null references vk_valvonta (id)
 );
 
 call audit.activate('vk_yritys'::name);
