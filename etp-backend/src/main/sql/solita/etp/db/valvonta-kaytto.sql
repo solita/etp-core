@@ -18,9 +18,7 @@ offset :offset;
 select count(*)
 from vk_valvonta
 where valvoja_id = :valvoja-id and
-      deleted is false
-limit :limit
-offset :offset;
+      deleted is false;
 
 -- name: delete-valvonta!
 update vk_valvonta set delete = true where id = :id;

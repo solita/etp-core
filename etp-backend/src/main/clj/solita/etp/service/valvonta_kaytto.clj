@@ -26,7 +26,7 @@
 
 (defn find-valvonta-yritykset [db valvonta-id]
   (->> (find-yritykset db valvonta-id)
-       (mapv #(select-keys % [:id :rooli-id :nimi]))))
+       (map #(select-keys % [:id :rooli-id :nimi]))))
 
 (defn- find-valvonta-last-toimenpide [db valvonta-id]
   (first
@@ -47,7 +47,7 @@
   (first
     (valvonta-kaytto-db/select-valvonnat-count db
                                                (merge
-                                                 {:limit 10 :offset 0 :valvoja-id (:id whoami)}
+                                                 {:valvoja-id (:id whoami)}
                                                  query))))
 
 (defn find-valvonta [db valvonta-id]
