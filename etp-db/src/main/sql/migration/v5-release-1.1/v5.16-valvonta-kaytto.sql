@@ -89,14 +89,14 @@ call audit.activate('vk_yritys'::name);
 
 create table vk_toimenpide_henkilo (
   toimenpide_id int not null references vk_toimenpide (id),
-  henkilo_id int not null references vk_toimenpide (id)
+  henkilo_id int not null references vk_henkilo (id)
 );
 
 call audit.activate('vk_toimenpide_henkilo'::name);
 
 create table vk_toimenpide_yritys (
   toimenpide_id int not null references vk_toimenpide (id),
-  yritys_id int not null references vk_toimenpide (id)
+  yritys_id int not null references vk_yritys (id)
 );
 
 call audit.activate('vk_toimenpide_yritys'::name);

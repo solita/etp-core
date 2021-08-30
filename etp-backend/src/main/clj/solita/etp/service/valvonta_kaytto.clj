@@ -223,11 +223,14 @@
         first
         :diaarinumero)))
 
+(defn- find-osapuolet [db valvonta-id]
+  (concat
+    (find-henkilot db valvonta-id)
+    (find-yritykset db valvonta-id)))
+
 (defn add-toimenpide! [db aws-s3-client whoami valvonta-id toimenpide-add]
   (jdbc/with-db-transaction [db db]
-                            (let [osapuolet (concat
-                                              (find-henkilot db valvonta-id)
-                                              (find-yritykset db valvonta-id))
+                            (let [osapuolet (find-osapuolet db valvonta-id)
                                   valvonta (find-valvonta db valvonta-id)
                                   ilmoituspaikat (find-ilmoituspaikat db)
                                   diaarinumero (if (toimenpide/case-open? toimenpide-add)
@@ -269,7 +272,8 @@
       (find-valvonta db id)
       (assoc toimenpide :diaarinumero (find-diaarinumero db id toimenpide))
       (find-ilmoituspaikat db)
-      osapuoli)))
+      osapuoli
+      (find-osapuolet db id))))
 
 
 (defn preview-henkilo-toimenpide [db whoami id toimenpide henkilo-id]

@@ -1,4 +1,4 @@
-insert into vk_ilmoituspaikka  (id, ordinal, label_fi, label_sv)
+insert into vk_rooli  (id, ordinal, label_fi, label_sv)
 values
 (0, 1, 'Omistaja', 'Omistaja (sv)'),
 (1, 2, 'Kiinteistövälittäjä', 'Kiinteistövälittäjä (sv)'),

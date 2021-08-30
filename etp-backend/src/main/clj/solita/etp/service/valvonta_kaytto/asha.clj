@@ -47,7 +47,7 @@
 (defn- find-postitoimipaikka [db postinumero]
   (-> (geo-db/select-postinumero-by-id db {:id (formats/string->int postinumero)}) first :label-fi ))
 
-(defn- template-data [db whoami valvonta toimenpide osapuoli dokumentit ilmoituspaikat]
+(defn- template-data [db whoami valvonta toimenpide osapuoli dokumentit ilmoituspaikat tiedoksi]
   {:päivä            (time/today)
    :määräpäivä       (time/format-date (:deadline-date toimenpide))
    :diaarinumero     (:diaarinumero toimenpide)
@@ -69,7 +69,11 @@
                       :ilmoitustunnus (:ilmoitustunnus valvonta)
                       :havaintopäivä  (-> valvonta :havaintopaiva time/format-date)}
    :tietopyynto      {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
-                      :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}})
+                      :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
+   :tiedoksi         (map (fn [o]
+                            (cond
+                              (kaytto-schema/henkilo? o) (str (:etunimi o) " " (:sukunimi o))
+                              (kaytto-schema/yritys? o) (:nimi o))) tiedoksi)})
 
 (defn- request-id [valvonta-id toimenpide-id]
   (str valvonta-id "/" toimenpide-id))
@@ -131,12 +135,13 @@
                     :attach         {:contact (map osapuoli->contact osapuolet)}}))
 
 (defn generate-pdf-document
-  [db whoami valvonta toimenpide ilmoituspaikat osapuoli]
-   (let [template-id (:template-id toimenpide)
-         template (-> (valvonta-kaytto-db/select-template db {:id template-id}) first :content)
-         documents (find-kaytto-valvonta-documents db (:id valvonta))
-         template-data (template-data db whoami valvonta toimenpide osapuoli documents ilmoituspaikat)]
-     (pdf/generate-pdf->bytes template template-data)))
+  [db whoami valvonta toimenpide ilmoituspaikat osapuoli osapuolet]
+  (let [template-id (:template-id toimenpide)
+        template (-> (valvonta-kaytto-db/select-template db {:id template-id}) first :content)
+        documents (find-kaytto-valvonta-documents db (:id valvonta))
+        tiedoksi (filter kaytto-schema/tiedoksi? osapuolet)]
+    (let [template-data (template-data db whoami valvonta toimenpide osapuoli documents ilmoituspaikat tiedoksi)]
+      (pdf/generate-pdf->bytes template template-data))))
 
 (defn log-toimenpide! [db aws-s3-client whoami valvonta toimenpide osapuolet ilmoituspaikat]
   (let [request-id (request-id (:id valvonta) (:id toimenpide))
@@ -144,10 +149,12 @@
         case-number (:diaarinumero toimenpide)
         processing-action (resolve-processing-action toimenpide osapuolet)
         documents (when (:document processing-action)
-                    (map (fn [osapuoli]
-                           (let [document (generate-pdf-document db whoami valvonta toimenpide ilmoituspaikat osapuoli)]
-                             (store-document aws-s3-client (:id valvonta) (:id toimenpide) osapuoli document)
-                             document)) osapuolet))]
+                    (->> osapuolet
+                         (filter kaytto-schema/omistaja?)
+                         (map (fn [osapuoli]
+                                (let [document (generate-pdf-document db whoami valvonta toimenpide ilmoituspaikat osapuoli osapuolet)]
+                                  (store-document aws-s3-client (:id valvonta) (:id toimenpide) osapuoli document)
+                                  document)))))]
     (asha/log-toimenpide!
       sender-id
       request-id

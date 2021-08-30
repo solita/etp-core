@@ -74,18 +74,18 @@ $$
     energia-asiantuntija
 </p>
 
-<table class="sarake">
+<table class="sarake max-width">
     <tr>
-        <td class="sarake-otsikko"><b>Sovelletut säännökset:</b></td>
-        <td class="sarake-sisalto">Laki rakennuksen energiatodistuksesta (50/2013)</td>
+        <td><b>Sovelletut säännökset:</b></td>
+        <td>Laki rakennuksen energiatodistuksesta (50/2013)</td>
     </tr>
     <tr>
-        <td class="sarake-otsikko"><b>Tillämpade förordningar: </b></td>
-        <td class="sarake-sisalto">Lagen om energicertifikat för byggnader (50/2013)</td>
+        <td><b>Tillämpade förordningar: </b></td>
+        <td>Lagen om energicertifikat för byggnader (50/2013)</td>
     </tr>
     <tr>
-        <td class="sarake-otsikko"><b>Tiedoksi/För kännedom:</b></td>
-        <td class="sarake-sisalto">
+        <td><b>Tiedoksi/För kännedom:</b></td>
+        <td>
             <div>{{#tiedoksi}}{{.}}<br/>{{/tiedoksi}}</div>
         </td>
     </tr>
