@@ -35,6 +35,7 @@
    :vastaanottajat        [Kayttaja]
    :vastaanottajaryhma-id (schema/maybe common-schema/Key)
    :energiatodistus-id    (schema/maybe common-schema/Key)
+   :vo-toimenpide-id      (schema/maybe common-schema/Key)
    :subject               schema/Str
    :viestit               [Viesti]})
 
