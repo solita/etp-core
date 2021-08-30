@@ -115,27 +115,32 @@
             (:etunimi whoami) " " (:sukunimi whoami))})))
 
 (defn- send-toimenpide-email! [db id toimenpide]
+  (when (-> db :connection some?)
+    (exception/illegal-argument!
+      (str "Connections are not thread safe see "
+           "https://jdbc.postgresql.org/documentation/head/thread.html. "
+           "Existing connection is not allowed when sending emails in background.")))
   (concurrent/run-background
     #(email/send-toimenpide-email! db id toimenpide)
     (str "Sending email failed for toimenpide: " id "/" (:id toimenpide))))
 
 (defn add-toimenpide! [db aws-s3-client whoami id toimenpide-add]
-  (jdbc/with-db-transaction [db db]
+  (jdbc/with-db-transaction [tx db]
     (let [diaarinumero (if (toimenpide/case-open? toimenpide-add)
-                         (asha-valvonta-oikeellisuus/open-case! db whoami id)
-                         (find-diaarinumero db id toimenpide-add))
-          toimenpide (insert-toimenpide! db id diaarinumero (dissoc toimenpide-add :virheet))
+                         (asha-valvonta-oikeellisuus/open-case! tx whoami id)
+                         (find-diaarinumero tx id toimenpide-add))
+          toimenpide (insert-toimenpide! tx id diaarinumero (dissoc toimenpide-add :virheet))
           toimenpide-id (:id toimenpide)]
-        (insert-virheet! db toimenpide-id (:virheet toimenpide-add))
+        (insert-virheet! tx toimenpide-id (:virheet toimenpide-add))
         (when-not (toimenpide/draft-support? toimenpide)
-          (valvonta-oikeellisuus-db/update-toimenpide-published! db {:id toimenpide-id})
+          (valvonta-oikeellisuus-db/update-toimenpide-published! tx {:id toimenpide-id})
           (send-toimenpide-email! db id toimenpide)
           (case (-> toimenpide :type-id toimenpide/type-key)
             :closed (asha-valvonta-oikeellisuus/close-case! whoami id toimenpide)
             (when (toimenpide/asha-toimenpide? toimenpide)
-              (asha-valvonta-oikeellisuus/log-toimenpide! db aws-s3-client whoami id toimenpide))))
+              (asha-valvonta-oikeellisuus/log-toimenpide! tx aws-s3-client whoami id toimenpide))))
         (when (toimenpide/anomaly? toimenpide)
-          (add-anomaly-viestiketju! db whoami id toimenpide))
+          (add-anomaly-viestiketju! tx whoami id toimenpide))
         {:id toimenpide-id})))
 
 (defn- assoc-virheet [db toimenpide]
