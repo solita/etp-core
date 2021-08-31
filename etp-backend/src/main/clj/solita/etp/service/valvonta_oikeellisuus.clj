@@ -87,6 +87,14 @@
       (map #(vector toimenpide-id (:type-id %) (:description %)) virheet)
       db/default-opts)))
 
+(defn- insert-tiedoksi! [db toimenpide-id tiedoksi]
+  (when-not (empty? tiedoksi)
+    (db/with-db-exception-translation
+      jdbc/insert-multi! db :vo-tiedoksi
+      [:toimenpide-id :name :email]
+      (map #(vector toimenpide-id (:name %) (:email %)) tiedoksi)
+      db/default-opts)))
+
 (defn find-diaarinumero [db id toimenpide]
   (when (or (toimenpide/asha-toimenpide? toimenpide)
             (toimenpide/case-closed? toimenpide))
@@ -132,6 +140,7 @@
           toimenpide (insert-toimenpide! tx id diaarinumero (dissoc toimenpide-add :virheet))
           toimenpide-id (:id toimenpide)]
         (insert-virheet! tx toimenpide-id (:virheet toimenpide-add))
+        (insert-tiedoksi! tx toimenpide-id (:tiedoksi toimenpide-add))
         (when-not (toimenpide/draft-support? toimenpide)
           (valvonta-oikeellisuus-db/update-toimenpide-published! tx {:id toimenpide-id})
           (case (-> toimenpide :type-id toimenpide/type-key)
@@ -146,6 +155,10 @@
 (defn- assoc-virheet [db toimenpide]
   (assoc toimenpide :virheet (valvonta-oikeellisuus-db/select-toimenpide-virheet
                                db {:toimenpide-id (:id toimenpide)})))
+
+(defn- assoc-tiedoksi [db toimenpide]
+  (assoc toimenpide :tiedoksi (valvonta-oikeellisuus-db/select-toimenpide-tiedoksi
+                                db {:toimenpide-id (:id toimenpide)})))
 
 (defn toimenpide-filename [{:keys [type-id]}]
   (-> type-id
@@ -171,6 +184,7 @@
   (energiatodistus-service/find-energiatodistus db whoami id)
   (->> (valvonta-oikeellisuus-db/select-toimenpide db {:id toimenpide-id})
        (map (partial assoc-virheet db))
+       (map (partial assoc-tiedoksi db))
        (map db-row->toimenpide)
        first))
 
@@ -207,8 +221,11 @@
   (jdbc/with-db-transaction [db db]
     (when (toimenpide/audit-report? (find-toimenpide db whoami id toimenpide-id ))
       (valvonta-oikeellisuus-db/delete-toimenpide-virheet! db {:toimenpide-id toimenpide-id})
-      (insert-virheet! db toimenpide-id (:virheet toimenpide-update)))
-    (update-toimenpide-row! db toimenpide-id (dissoc toimenpide-update :virheet))))
+      (insert-virheet! db toimenpide-id (:virheet toimenpide-update))
+
+      (valvonta-oikeellisuus-db/delete-toimenpide-tiedoksi! db {:toimenpide-id toimenpide-id})
+      (insert-tiedoksi! db toimenpide-id (:tiedoksi toimenpide-update)))
+    (update-toimenpide-row! db toimenpide-id (dissoc toimenpide-update :virheet :tiedoksi))))
 
 (defn publish-toimenpide! [db aws-s3-client whoami id toimenpide-id]
   (when-let [toimenpide (find-toimenpide db whoami id toimenpide-id)]

@@ -8,7 +8,8 @@
             [solita.etp.service.pdf :as pdf]
             [solita.etp.db :as db]
             [solita.etp.service.file :as file-service]
-            [solita.etp.exception :as exception]))
+            [solita.etp.exception :as exception]
+            [clojure.set :as set]))
 
 (db/require-queries 'valvonta-oikeellisuus)
 
@@ -57,8 +58,8 @@
                      :postinumero         (-> energiatodistus :perustiedot :postinumero)
                      :postitoimipaikka-fi (-> energiatodistus :perustiedot :postitoimipaikka-fi)
                      :postitoimipaikka-sv (-> energiatodistus :perustiedot :postitoimipaikka-sv)}
-   :tietopyynto     {:tietopyynto-pvm             (time/format-date (:rfi-request dokumentit))
-                     :tietopyynto-kehotus-pvm     (time/format-date (:rfi-order dokumentit))}
+   :tietopyynto     {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
+                     :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
    :valvontamuistio {:valvontamuistio-pvm         (time/format-date (:audit-report dokumentit))
                      :valvontamuistio-kehotus-pvm (time/format-date (:audit-order dokumentit))
                      :virheet                     (:virheet toimenpide)
@@ -66,7 +67,8 @@
                                                     (case luokka
                                                       0 {:ei-huomioitavaa true}
                                                       1 {:ei-toimenpiteitä true}
-                                                      2 {:virheellinen true}))}})
+                                                      2 {:virheellinen true}))}
+   :tiedoksi        (map #(set/rename-keys % {:name :nimi}) (:tiedoksi toimenpide))})
 
 (defn- find-resources [db energiatodistus-id]
   (when-let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db energiatodistus-id)]
