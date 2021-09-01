@@ -122,14 +122,14 @@
             "Energia-asiantuntija\n"
             (:etunimi whoami) " " (:sukunimi whoami))})))
 
-(defn- send-toimenpide-email! [db id toimenpide]
+(defn- send-toimenpide-email! [db aws-s3-client id toimenpide]
   (when (-> db :connection some?)
     (exception/illegal-argument!
       (str "Connections are not thread safe see "
            "https://jdbc.postgresql.org/documentation/head/thread.html. "
            "Existing connection is not allowed when sending emails in background.")))
   (concurrent/run-background
-    #(email/send-toimenpide-email! db id toimenpide)
+    #(email/send-toimenpide-email! db aws-s3-client id toimenpide)
     (str "Sending email failed for toimenpide: " id "/" (:id toimenpide))))
 
 (defn add-toimenpide! [db aws-s3-client whoami id toimenpide-add]
@@ -137,7 +137,7 @@
     (let [diaarinumero (if (toimenpide/case-open? toimenpide-add)
                          (asha-valvonta-oikeellisuus/open-case! tx whoami id)
                          (find-diaarinumero tx id toimenpide-add))
-          toimenpide (insert-toimenpide! tx id diaarinumero (dissoc toimenpide-add :virheet))
+          toimenpide (insert-toimenpide! tx id diaarinumero (dissoc toimenpide-add :virheet :tiedoksi))
           toimenpide-id (:id toimenpide)]
         (insert-virheet! tx toimenpide-id (:virheet toimenpide-add))
         (insert-tiedoksi! tx toimenpide-id (:tiedoksi toimenpide-add))
@@ -147,7 +147,7 @@
             :closed (asha-valvonta-oikeellisuus/close-case! whoami id toimenpide)
             (when (toimenpide/asha-toimenpide? toimenpide)
               (asha-valvonta-oikeellisuus/log-toimenpide! tx aws-s3-client whoami id toimenpide)))
-          (send-toimenpide-email! db id toimenpide))
+          (send-toimenpide-email! db aws-s3-client id toimenpide))
         (when (toimenpide/anomaly? toimenpide)
           (add-anomaly-viestiketju! tx whoami id toimenpide))
         {:id toimenpide-id})))
@@ -231,7 +231,7 @@
   (when-let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
     (when (toimenpide/asha-toimenpide? toimenpide)
       (asha-valvonta-oikeellisuus/log-toimenpide! db aws-s3-client whoami id toimenpide))
-    (send-toimenpide-email! db id toimenpide)
+    (send-toimenpide-email! db aws-s3-client id toimenpide)
     (valvonta-oikeellisuus-db/update-toimenpide-published! db {:id toimenpide-id})))
 
 (defn find-toimenpidetyypit [db] (luokittelu/find-toimenpidetypes db))

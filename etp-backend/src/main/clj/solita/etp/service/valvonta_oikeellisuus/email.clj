@@ -7,8 +7,11 @@
             [solita.etp.service.valvonta-oikeellisuus.toimenpide :as toimenpide]
             [solita.common.map :as map]
             [solita.common.time :as time]
-            [solita.common.logic :as logic])
-  (:import (java.time LocalDate)))
+            [solita.common.logic :as logic]
+            [solita.etp.service.valvonta-oikeellisuus.asha :as asha-valvonta-oikeellisuus]
+            [clojure.java.io :as io])
+  (:import (java.time LocalDate)
+           (java.io File)))
 
 (defn- send-email! [{:keys [to subject body]}]
   (smtp/send-text-email! config/smtp-host
@@ -19,6 +22,16 @@
                          config/email-from-name
                          [to]
                          subject body "html"))
+
+(defn- send-email-with-attachment! [{:keys [to subject body attachment]}]
+  (smtp/send-multipart-email! config/smtp-host
+                              config/smtp-port
+                              config/smtp-username
+                              config/smtp-password
+                              config/email-from-email
+                              config/email-from-name
+                              [to]
+                              subject body "html" [attachment]))
 
 (def ^:private signature
   "Tämä on energiatodistuspalvelun lähettämä automaattinen viesti. Älä vastaa tähän viestiin.")
@@ -100,6 +113,14 @@
         address)
       (link "Katso valvontamuistio energiatodistuspalvelussa."))}
 
+   :audit-report-tiedoksi
+   {:subject
+    "Valvontamuistio tiedoksi koskien energiatodistusta {energiatodistus.id}"
+    :body
+    (html
+      (paragraph
+        "Ohessa valvontamuistio tiedoksi koskien energiatodistusta {energiatodistus.id},"
+        address))}
    :audit-order
    {:subject
     "Kehotus vastata valvontamuistioon koskien energiatodistusta {energiatodistus.id}"
@@ -154,7 +175,7 @@
   (str/replace template #"\{(.*?)\}"
                #(view (get-in values (map keyword (-> % second (str/split #"\.")))))))
 
-(defn send-toimenpide-email! [db energiatodistus-id toimenpide]
+(defn- send-mail-to-laatija! [db energiatodistus-id toimenpide]
   (logic/if-let*
     [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus
                        db energiatodistus-id)
@@ -170,3 +191,25 @@
     (send-email! (-> message
                      (assoc :to (:email laatija))))))
 
+(defn- send-mail-to-tiedoksi! [db aws-s3-client energiatodistus-id toimenpide-id email]
+  (logic/if-let*
+    [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus
+                       db energiatodistus-id)
+     template-values {:energiatodistus energiatodistus
+                      :host            config/index-url}
+     template (:audit-report-tiedoksi templates)
+     message (map/map-values #(interpolate % template-values) template)
+     valvontamuistio (asha-valvonta-oikeellisuus/find-document aws-s3-client energiatodistus-id toimenpide-id)
+     valvontamuistio-tmp-file (File/createTempFile "valvontamuistio-" ".pdf")]
+    (do
+      (io/copy valvontamuistio valvontamuistio-tmp-file)
+      (send-email-with-attachment! (-> message
+                                       (assoc :to email
+                                              :attachment valvontamuistio-tmp-file))))))
+
+(defn send-toimenpide-email! [db aws-s3-client energiatodistus-id toimenpide]
+  (send-mail-to-laatija! db energiatodistus-id toimenpide)
+  (when-let [tiedoksi (and (= (-> toimenpide :type-id toimenpide/type-key) :audit-report)
+                           (seq (filter #(-> % :email seq) (:tiedoksi toimenpide))))]
+    (doseq [vastaanottaja tiedoksi]
+      (send-mail-to-tiedoksi! db aws-s3-client energiatodistus-id (:id toimenpide) (:email vastaanottaja)))))

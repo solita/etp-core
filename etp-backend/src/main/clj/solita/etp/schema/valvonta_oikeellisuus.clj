@@ -18,16 +18,16 @@
 
 (def Tiedoksi
   {:name schema/Str
-   :email schema/Str})
+   :email (schema/maybe schema/Str)})
 
 (def ToimenpideUpdate
   (schema-tools/optional-keys
     {:deadline-date (schema/maybe common-schema/Date)
      :template-id   (schema/maybe common-schema/Key)
      :description   (schema/maybe schema/Str)
-     :virheet [Virhe]
-     :severity-id (schema/maybe common-schema/Key)
-     :tiedoksi [Tiedoksi]}))
+     :virheet       [Virhe]
+     :severity-id   (schema/maybe common-schema/Key)
+     :tiedoksi      [Tiedoksi]}))
 
 (def ToimenpideAdd
   {:type-id       common-schema/Key
@@ -52,7 +52,7 @@
   (assoc Valvonta
     :last-toimenpide
     (schema/maybe (dissoc Toimenpide
-                          :author :description :virheet
+                          :author :description :virheet :tiedoksi
                           :severity-id :filename))
     :energiatodistus energiatodistus-schema/Energiatodistus))
 
