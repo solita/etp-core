@@ -66,3 +66,6 @@
    :author-id   common-schema/Key
    :create-time common-schema/Instant
    :description schema/Str})
+
+(def laatija? #(and (contains? % :etunimi) (contains? % :sukunimi)))
+(def tiedoksi? #(and (contains? % :name)))
