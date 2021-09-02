@@ -1,5 +1,6 @@
 (ns solita.etp.exception
   (:require [reitit.ring.middleware.exception :as exception]
+            [reitit.coercion :as coercion]
             [clojure.tools.logging :as log]
             [solita.common.map :as map]
             [solita.common.maybe :as maybe]
@@ -66,9 +67,17 @@
      :body {:type (exception-type e)
             :message "Internal system error - see logs for details."}}))
 
+(defn create-coercion-handler []
+  (let [base-handler (exception/create-coercion-handler 500)]
+    (fn [e request]
+      (log/error e "Failed to coerce response in service: "
+                 (service-name request))
+      (base-handler e request))))
+
 (def exception-middleware
   (exception/create-exception-middleware
     (assoc exception/default-handlers
       ::exception/default default-handler
       :unique-violation unique-exception-handler
-      :forbidden forbidden-handler)))
+      :forbidden forbidden-handler
+      ::coercion/response-coercion (create-coercion-handler))))
