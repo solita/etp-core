@@ -13,7 +13,7 @@
   (:import (java.time LocalDate)
            (java.io File)))
 
-(defn- send-email! [{:keys [to subject body]}]
+(defn- send-email! [{:keys [to subject body]} & [{:keys [reply-to-email reply-to-name]}]]
   (smtp/send-text-email! config/smtp-host
                          config/smtp-port
                          config/smtp-username
@@ -21,9 +21,10 @@
                          config/email-from-email
                          config/email-from-name
                          [to]
-                         subject body "html"))
+                         subject body "html"
+                         reply-to-email reply-to-name))
 
-(defn- send-email-with-attachment! [{:keys [to subject body attachment]}]
+(defn- send-email-with-attachment! [{:keys [to subject body attachment]} & [{:keys [reply-to-email reply-to-name]}]]
   (smtp/send-multipart-email! config/smtp-host
                               config/smtp-port
                               config/smtp-username
@@ -31,7 +32,8 @@
                               config/email-from-email
                               config/email-from-name
                               [to]
-                              subject body "html" [attachment]))
+                              subject body "html" [attachment]
+                              reply-to-email reply-to-name))
 
 (def ^:private signature
   "Tämä on energiatodistuspalvelun lähettämä automaattinen viesti. Älä vastaa tähän viestiin.")
@@ -203,9 +205,10 @@
      valvontamuistio-tmp-file (File/createTempFile "valvontamuistio-" ".pdf")]
     (do
       (io/copy valvontamuistio valvontamuistio-tmp-file)
-      (send-email-with-attachment! (-> message
-                                       (assoc :to email
-                                              :attachment valvontamuistio-tmp-file))))))
+      (send-email-with-attachment! (assoc message :to email
+                                                  :attachment valvontamuistio-tmp-file)
+                                   {:reply-to-email config/email-reply-to-email
+                                    :reply-to-name config/email-reply-to-name}))))
 
 (defn send-toimenpide-email! [db aws-s3-client energiatodistus-id toimenpide]
   (send-mail-to-laatija! db energiatodistus-id toimenpide)
