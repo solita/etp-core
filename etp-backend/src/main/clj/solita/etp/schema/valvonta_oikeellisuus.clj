@@ -18,7 +18,7 @@
 
 (def Tiedoksi
   {:name schema/Str
-   :email (schema/maybe schema/Str)})
+   :email (schema/maybe common-schema/Email)})
 
 (def ToimenpideUpdate
   (schema-tools/optional-keys
