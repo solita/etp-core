@@ -31,7 +31,7 @@ $$
 <ul>
     {{#valvontamuistio}}
         {{#virheet}}
-            <li>{{description}}</li>
+            <li>{{&description}}</li>
         {{/virheet}}
     {{/valvontamuistio}}
 </ul>
