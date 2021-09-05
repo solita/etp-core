@@ -21,7 +21,7 @@ where valvoja_id = :valvoja-id and
       deleted is false;
 
 -- name: delete-valvonta!
-update vk_valvonta set delete = true where id = :id;
+update vk_valvonta set deleted = true where id = :id;
 
 -- name: select-valvonta
 select id,
