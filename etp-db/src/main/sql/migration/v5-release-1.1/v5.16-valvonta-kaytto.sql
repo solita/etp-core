@@ -7,10 +7,14 @@ alter table vk_template
   add column language text not null,
   add column content text;
 
-);
-
 call create_classification('vk_rooli'::name);
 call create_classification('vk_ilmoituspaikka'::name);
+
+call audit.activate('vk_toimenpidetype'::name);
+call audit.activate('vk_toimitustapa'::name);
+call audit.activate('vk_template'::name);
+call audit.activate('vk_rooli'::name);
+call audit.activate('vk_ilmoituspaikka'::name);
 
 
 create table vk_valvonta (
@@ -89,14 +93,18 @@ call audit.activate('vk_yritys'::name);
 
 create table vk_toimenpide_henkilo (
   toimenpide_id int not null references vk_toimenpide (id),
-  henkilo_id int not null references vk_henkilo (id)
+  henkilo_id int not null references vk_henkilo (id),
+  henkilo_versio int not null references audit.vk_henkilo (event_id),
+  primary key (toimenpide_id, henkilo_id)
 );
 
 call audit.activate('vk_toimenpide_henkilo'::name);
 
 create table vk_toimenpide_yritys (
   toimenpide_id int not null references vk_toimenpide (id),
-  yritys_id int not null references vk_yritys (id)
+  yritys_id int not null references vk_yritys (id),
+  yritys_versio int not null references audit.vk_yritys (event_id),
+  primary key (toimenpide_id, yritys_id)
 );
 
 call audit.activate('vk_toimenpide_yritys'::name);
