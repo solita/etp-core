@@ -8,8 +8,8 @@
             [clojure.java.jdbc :as jdbc]
             [solita.etp.service.luokittelu :as luokittelu]
             [flathead.flatten :as flat]
-            [solita.etp.schema.valvonta-kaytto :as kaytto-schema]
-            [solita.common.maybe :as maybe])
+            [solita.common.maybe :as maybe]
+            [solita.common.map :as map])
   (:import (java.time Instant)))
 
 (db/require-queries 'valvonta-kaytto)
@@ -187,32 +187,17 @@
 (defn find-toimenpide [db toimenpide-id]
   (valvonta-kaytto-db/select-toimenpide db {:id toimenpide-id}))
 
-(defn- insert-toimenpide-henkilo! [db toimenpide-id henkilo-id]
-  (db/with-db-exception-translation
-    jdbc/insert! db :vk_toimenpide_henkilo
-    {:toimenpide-id toimenpide-id
-     :henkilo-id    henkilo-id}
-    db/default-opts))
-
-(defn- insert-toimenpide-yritys! [db toimenpide-id yritys-id]
-  (db/with-db-exception-translation
-    jdbc/insert! db :vk_toimenpide_yritys
-    {:toimenpide-id toimenpide-id
-     :yritys-id     yritys-id}
-    db/default-opts))
-
-(defn- insert-toimenpide-osapuolet! [db toimenpide-id osapuolet]
-  (doseq [osapuoli osapuolet]
-    (cond
-      (kaytto-schema/henkilo? osapuoli) (insert-toimenpide-henkilo! db toimenpide-id (:id osapuoli))
-      (kaytto-schema/yritys? osapuoli) (insert-toimenpide-yritys! db toimenpide-id (:id osapuoli)))))
+(defn- insert-toimenpide-osapuolet! [db valvonta-id toimenpide-id]
+  (let [params (map/bindings->map valvonta-id toimenpide-id)]
+    (valvonta-kaytto-db/insert-toimenpide-henkilot! db params)
+    (valvonta-kaytto-db/insert-toimenpide-yritykset! db params)))
 
 (defn- insert-toimenpide! [db valvonta-id diaarinumero toimenpide-add]
   (first (db/with-db-exception-translation
            jdbc/insert! db :vk-toimenpide
            (assoc toimenpide-add
              :diaarinumero diaarinumero
-             :valvonta_id valvonta-id
+             :valvonta-id valvonta-id
              :publish-time (Instant/now))
            db/default-opts)))
 
@@ -229,33 +214,27 @@
     (find-yritykset db valvonta-id)))
 
 (defn add-toimenpide! [db aws-s3-client whoami valvonta-id toimenpide-add]
-  (jdbc/with-db-transaction [db db]
-                            (let [osapuolet (find-osapuolet db valvonta-id)
-                                  valvonta (find-valvonta db valvonta-id)
-                                  ilmoituspaikat (find-ilmoituspaikat db)
-                                  diaarinumero (if (toimenpide/case-open? toimenpide-add)
-                                                 (asha/open-case!
-                                                   db
-                                                   whoami
-                                                   valvonta
-                                                   osapuolet
-                                                   ilmoituspaikat)
-                                                 (find-diaarinumero db valvonta-id toimenpide-add))
-                                  toimenpide (insert-toimenpide! db valvonta-id diaarinumero toimenpide-add)
-                                  toimenpide-id (:id toimenpide)]
-                              (insert-toimenpide-osapuolet! db toimenpide-id osapuolet)
-                              (case (-> toimenpide :type-id toimenpide/type-key)
-                                :closed (asha/close-case! whoami valvonta-id toimenpide)
-                                (when (toimenpide/asha-toimenpide? toimenpide)
-                                  (asha/log-toimenpide!
-                                    db
-                                    aws-s3-client
-                                    whoami
-                                    valvonta
-                                    toimenpide
-                                    osapuolet
-                                    ilmoituspaikat)))
-                              {:id toimenpide-id})))
+  (jdbc/with-db-transaction
+    [db db]
+    (let [osapuolet (find-osapuolet db valvonta-id)
+          valvonta (find-valvonta db valvonta-id)
+          ilmoituspaikat (find-ilmoituspaikat db)
+          diaarinumero (if (toimenpide/case-open? toimenpide-add)
+                         (asha/open-case!
+                           db whoami
+                           valvonta osapuolet ilmoituspaikat)
+                         (find-diaarinumero db valvonta-id toimenpide-add))
+          toimenpide (insert-toimenpide! db valvonta-id diaarinumero toimenpide-add)
+          toimenpide-id (:id toimenpide)]
+      (insert-toimenpide-osapuolet! db valvonta-id toimenpide-id)
+      (case (-> toimenpide :type-id toimenpide/type-key)
+        :closed (asha/close-case! whoami valvonta-id toimenpide)
+        (when (toimenpide/asha-toimenpide? toimenpide)
+          (asha/log-toimenpide!
+            db aws-s3-client whoami
+            valvonta toimenpide
+            osapuolet ilmoituspaikat)))
+      {:id toimenpide-id})))
 
 (defn update-toimenpide! [db toimenpide-id toimenpide]
   (first (db/with-db-exception-translation

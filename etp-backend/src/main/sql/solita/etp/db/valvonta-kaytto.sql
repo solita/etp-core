@@ -200,3 +200,19 @@ select diaarinumero from vk_toimenpide
 where valvonta_id = :id and diaarinumero is not null
 order by coalesce(publish_time, create_time) desc
 limit 1;
+
+--name: insert-toimenpide-henkilot!
+insert into vk_toimenpide_henkilo (toimenpide_id, henkilo_id, henkilo_versio)
+select distinct on (henkilo.id) :toimenpide-id, henkilo.id, audit.event_id
+from etp.vk_henkilo henkilo
+  inner join audit.vk_henkilo audit on henkilo.id = audit.id
+where henkilo.valvonta_id = :valvonta-id and not henkilo.deleted
+order by henkilo.id, audit.modifytime desc, audit.event_id desc;
+
+--name: insert-toimenpide-yritykset!
+insert into vk_toimenpide_yritys (toimenpide_id, yritys_id, yritys_versio)
+select distinct on (yritys.id) :toimenpide-id, yritys.id, audit.event_id
+from etp.vk_yritys yritys
+     inner join audit.vk_yritys audit on yritys.id = audit.id
+where yritys.valvonta_id = :valvonta-id and not yritys.deleted
+order by yritys.id, audit.modifytime desc, audit.event_id desc;
