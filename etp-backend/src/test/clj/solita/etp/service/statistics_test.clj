@@ -25,15 +25,19 @@
         (cycle [2010 2020])
         (cycle [100 200])
         (cycle [0.5 1])
-        (cycle [2 4]))
-       (partition 7)
+        (cycle [2 4])
+        (cycle [0 nil 2 2])
+        (cycle [nil 1 1 2]))
+       (partition 9)
        (map (fn [[add
-                 postinumero
-                 alakayttotarkoitus-id
-                 valmistumisvuosi
-                 lammitetty-nettoala
-                 numeric-value
-                 luokittelu-id]]
+                  postinumero
+                  alakayttotarkoitus-id
+                  valmistumisvuosi
+                  lammitetty-nettoala
+                  numeric-value
+                  luokittelu-id
+                  takkojen-lkm
+                  ilp-lkm]]
               (-> add
                   (assoc-in [:perustiedot :postinumero] postinumero)
                   (assoc-in [:perustiedot :kayttotarkoitus] alakayttotarkoitus-id)
@@ -43,7 +47,9 @@
                   (assoc-in [:lahtotiedot :rakennusvaippa :ikkunat :U] numeric-value)
                   (assoc-in [:lahtotiedot :ilmanvaihto :lto-vuosihyotysuhde] numeric-value)
                   (assoc-in [:lahtotiedot :ilmanvaihto :tyyppi-id] luokittelu-id)
-                  (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-1 :id] luokittelu-id))))))
+                  (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-1 :id] luokittelu-id)
+                  (assoc-in [:lahtotiedot :lammitys :takka :maara] takkojen-lkm)
+                  (assoc-in [:lahtotiedot :lammitys :ilmalampopumppu :maara] ilp-lkm))))))
 
 (defn test-data-set [n sign?]
   (let [laatijat (laatija-test-data/generate-and-insert! 1)
