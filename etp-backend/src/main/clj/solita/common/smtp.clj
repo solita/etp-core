@@ -1,5 +1,6 @@
 (ns solita.common.smtp
-  (:require [clojure.tools.logging :as log])
+  (:require [clojure.tools.logging :as log]
+            [solita.etp.config :as config])
   (:import (javax.mail Message$RecipientType Session Transport)
            (javax.mail.internet InternetAddress
                                 MimeMessage
@@ -37,7 +38,7 @@
 (defn- send-email! [host port username password
                     from-email from-name to subject
                     add-content
-                    & [[^String reply-to-email ^String reply-to-name]]]
+                    reply?]
   (let [^Properties properties (mail-properties port)
         ^Session session (session properties)
         ^MimeMessage mime-message (mime-message session
@@ -48,8 +49,9 @@
     (with-open [^Transport transport (.getTransport session)]
       (.connect transport host username password)
       (add-content mime-message)
-      (when (and reply-to-email reply-to-name)
-        (.setReplyTo mime-message (into-array [(InternetAddress. reply-to-email reply-to-name)])))
+      (when reply?
+        (.setReplyTo mime-message (into-array [(InternetAddress. config/email-reply-to-email
+                                                                 config/email-reply-to-name)])))
       (.sendMessage transport mime-message
                     (.getAllRecipients mime-message))
       (log/info "Email sent " {:to to :subject subject})
@@ -72,10 +74,15 @@
 (defn- add-multipart [^MimeMultipart content ^MimeMessage message]
   (.setContent message content))
 
-(defn send-multipart-email! [host port username password
-                             from-email from-name to subject
-                             ^String body ^String subtype attachments
-                             & reply-to]
+(defn send-multipart-email! [{:keys [host port username password
+                                     from-email from-name to subject
+                                     body subtype reply? attachments]
+                              :or   {host       config/smtp-host
+                                     port       config/smtp-port
+                                     username   config/smtp-username
+                                     password   config/smtp-password
+                                     from-email config/email-from-email
+                                     from-name  config/email-from-name}}]
   (let [body-mime-body-part (body-mime-body-part body subtype)
         attachments-mime-body-part (map attachment-mime-body-part
                                         attachments)
@@ -83,16 +90,21 @@
     (send-email! host port username password
                  from-email from-name to subject
                  (partial add-multipart multipart)
-                 reply-to)))
+                 reply?)))
 
 (defn- set-text [^String body ^String subtype ^MimeMessage message]
   (.setText message body charset subtype))
 
-(defn send-text-email! [host port username password
-                        from-email from-name to subject
-                        ^String body ^String subtype
-                        & reply-to]
+(defn send-text-email! [{:keys [host port username password
+                                from-email from-name to subject
+                                body subtype reply?]
+                         :or   {host       config/smtp-host
+                                port       config/smtp-port
+                                username   config/smtp-username
+                                password   config/smtp-password
+                                from-email config/email-from-email
+                                from-name  config/email-from-name}}]
   (send-email! host port username password
                from-email from-name to subject
                (partial set-text body subtype)
-               reply-to))
+               reply?))

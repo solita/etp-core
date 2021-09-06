@@ -13,39 +13,21 @@
   (:import (java.time LocalDate)
            (java.io File)))
 
-(defn- send-email! [{:keys [to subject body]} & [{:keys [reply-to-email reply-to-name]}]]
-  (smtp/send-text-email! config/smtp-host
-                         config/smtp-port
-                         config/smtp-username
-                         config/smtp-password
-                         config/email-from-email
-                         config/email-from-name
-                         [to]
-                         subject body "html"
-                         reply-to-email reply-to-name))
 
-(defn- send-email-with-attachment! [{:keys [to subject body attachment]} & [{:keys [reply-to-email reply-to-name]}]]
-  (smtp/send-multipart-email! config/smtp-host
-                              config/smtp-port
-                              config/smtp-username
-                              config/smtp-password
-                              config/email-from-email
-                              config/email-from-name
-                              [to]
-                              subject body "html" [attachment]
-                              reply-to-email reply-to-name))
-
-(def ^:private signature
-  "Tämä on energiatodistuspalvelun lähettämä automaattinen viesti. Älä vastaa tähän viestiin.")
 
 (defn- link [title]
   (str "<a href=\"{host}/#/valvonta/oikeellisuus/{energiatodistus.versio}/{energiatodistus.id}\">" title "</a>"))
 
 (defn- paragraph [& body] (str "<p>" (str/join " " body) "</p>"))
 
+(def ^:private signature-do-not-reply
+  (paragraph "Tämä on energiatodistuspalvelun lähettämä automaattinen viesti. Älä vastaa tähän viestiin."))
+
+(def ^:private signature-reply
+  (paragraph "Tämä on energiatodistuspalvelun lähettämä automaattinen viesti."))
+
 (defn- html [& body] (str "<html><body>"
                           (str/join "" body)
-                          (paragraph signature)
                           "</body></html>"))
 
 (def ^:private address
@@ -72,7 +54,8 @@
       (paragraph
         "Sinulle on saapunut poikkeamailmoitus koskien energiatodistusta {energiatodistus.id},"
         address)
-      (link "Katso poikkeamailmoitus energiatodistuspalvelussa."))}
+      (link "Katso poikkeamailmoitus energiatodistuspalvelussa.")
+      signature-do-not-reply)}
 
    ;; tietopyynnön toimenpidetyypit
    :rfi-request
@@ -83,7 +66,8 @@
       rfi-order-description
       rfi-order-link
       (paragraph
-        "Tietopyyntöön on vastattava {toimenpide.deadline-date} mennessä."))}
+        "Tietopyyntöön on vastattava {toimenpide.deadline-date} mennessä.")
+      signature-do-not-reply)}
    :rfi-order
    {:subject
     "Kehotus vastata tietopyyntöön koskien energiatodistusta {energiatodistus.id}"
@@ -92,7 +76,8 @@
       (paragraph
         "Kehotamme vastaamaan tietopyyntöön {toimenpide.deadline-date} mennessä.")
       rfi-order-description
-      rfi-order-link)}
+      rfi-order-link
+      signature-do-not-reply)}
    :rfi-warning
    {:subject
     "Vastaa tietopyyntöön koskien energiatodistusta {energiatodistus.id}"
@@ -102,7 +87,8 @@
         "ARA on lähettänyt teille tästä energiatodistuksesta tietopyynnön ja kehotuksen."
         "ARA antaa varoituksen ja vaatii vastaamaan tietopyyntöön {toimenpide.deadline-date} mennessä.")
       rfi-order-description
-      rfi-order-link)}
+      rfi-order-link
+      signature-do-not-reply)}
 
    ;; Valvontamuistion toimenpidetyypit
    :audit-report
@@ -113,16 +99,8 @@
       (paragraph
         "Sinulle on saapunut valvontamuistio koskien energiatodistusta {energiatodistus.id},"
         address)
-      (link "Katso valvontamuistio energiatodistuspalvelussa."))}
-
-   :audit-report-tiedoksi
-   {:subject
-    "Valvontamuistio tiedoksi koskien energiatodistusta {energiatodistus.id}"
-    :body
-    (html
-      (paragraph
-        "Ohessa valvontamuistio tiedoksi koskien energiatodistusta {energiatodistus.id},"
-        address))}
+      (link "Katso valvontamuistio energiatodistuspalvelussa.")
+      signature-do-not-reply)}
    :audit-order
    {:subject
     "Kehotus vastata valvontamuistioon koskien energiatodistusta {energiatodistus.id}"
@@ -133,7 +111,8 @@
       (paragraph
         "Sinulle on saapunut valvontamuistio koskien energiatodistusta {energiatodistus.id},"
         address)
-      (link "Katso valvontamuistio energiatodistuspalvelussa."))}
+      (link "Katso valvontamuistio energiatodistuspalvelussa.")
+      signature-do-not-reply)}
 
    :audit-warning
    {:subject
@@ -146,7 +125,8 @@
       (paragraph
         "Sinulle on saapunut valvontamuistio koskien energiatodistusta {energiatodistus.id},"
         address)
-      (link "Katso valvontamuistio energiatodistuspalvelussa."))}
+      (link "Katso valvontamuistio energiatodistuspalvelussa.")
+      signature-do-not-reply)}
 
    ;; lisäselvityspyyntö
    :rfc-request
@@ -159,7 +139,18 @@
         address)
       (link "Katso ja vastaa lisäselvityspyyntöön energiatodistuspalvelussa.")
       (paragraph
-        "Lisäselvityspyyntöön on vastattava {toimenpide.deadline-date} mennessä."))}})
+        "Lisäselvityspyyntöön on vastattava {toimenpide.deadline-date} mennessä.")
+      signature-do-not-reply)}})
+
+(def ^:private tiedoksi-template
+  {:subject
+   "Valvontamuistio tiedoksi koskien energiatodistusta {energiatodistus.id}"
+   :body
+   (html
+     (paragraph
+       "Ohessa valvontamuistio tiedoksi koskien energiatodistusta {energiatodistus.id},"
+       address)
+     signature-reply)})
 
 (defprotocol TemplateValue (view [value]))
 
@@ -177,7 +168,7 @@
   (str/replace template #"\{(.*?)\}"
                #(view (get-in values (map keyword (-> % second (str/split #"\.")))))))
 
-(defn- send-mail-to-laatija! [db energiatodistus-id toimenpide]
+(defn- send-email-to-laatija! [db energiatodistus-id toimenpide]
   (logic/if-let*
     [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus
                        db energiatodistus-id)
@@ -190,29 +181,28 @@
       :host            config/index-url}
      template (template-type templates)
      message (map/map-values #(interpolate % template-values) template)]
-    (send-email! (-> message
-                     (assoc :to (:email laatija))))))
+    (smtp/send-text-email! (assoc message :to [(:email laatija)]
+                                          :subtype "html"))))
 
-(defn- send-mail-to-tiedoksi! [db aws-s3-client energiatodistus-id toimenpide-id email]
+(defn- send-email-to-tiedoksi! [db aws-s3-client energiatodistus-id toimenpide-id email]
   (logic/if-let*
     [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus
                        db energiatodistus-id)
      template-values {:energiatodistus energiatodistus
                       :host            config/index-url}
-     template (:audit-report-tiedoksi templates)
-     message (map/map-values #(interpolate % template-values) template)
+     message (map/map-values #(interpolate % template-values) tiedoksi-template)
      valvontamuistio (asha-valvonta-oikeellisuus/find-document aws-s3-client energiatodistus-id toimenpide-id)
      valvontamuistio-tmp-file (File/createTempFile "valvontamuistio-" ".pdf")]
     (do
       (io/copy valvontamuistio valvontamuistio-tmp-file)
-      (send-email-with-attachment! (assoc message :to email
-                                                  :attachment valvontamuistio-tmp-file)
-                                   {:reply-to-email config/email-reply-to-email
-                                    :reply-to-name config/email-reply-to-name}))))
+      (smtp/send-multipart-email! (assoc message :to [email]
+                                                 :subtype "html"
+                                                 :reply? true
+                                                 :attachments [valvontamuistio-tmp-file])))))
 
 (defn send-toimenpide-email! [db aws-s3-client energiatodistus-id toimenpide]
-  (send-mail-to-laatija! db energiatodistus-id toimenpide)
+  (send-email-to-laatija! db energiatodistus-id toimenpide)
   (when-let [tiedoksi (and (= (-> toimenpide :type-id toimenpide/type-key) :audit-report)
                            (seq (filter #(-> % :email seq) (:tiedoksi toimenpide))))]
     (doseq [vastaanottaja tiedoksi]
-      (send-mail-to-tiedoksi! db aws-s3-client energiatodistus-id (:id toimenpide) (:email vastaanottaja)))))
+      (send-email-to-tiedoksi! db aws-s3-client energiatodistus-id (:id toimenpide) (:email vastaanottaja)))))
