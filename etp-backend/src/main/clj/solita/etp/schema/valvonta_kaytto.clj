@@ -48,7 +48,10 @@
          :author common-schema/Kayttaja
          :create-time common-schema/Instant
          :publish-time common-schema/Instant
-         :filename (schema/maybe schema/Str)))
+         :filename (schema/maybe schema/Str)
+         :valvonta-id common-schema/Key
+         :henkilot [(schema/maybe common-schema/Key)]
+         :yritykset [(schema/maybe common-schema/Key)]))
 
 (def OsapuoliBase
   (st/merge {:rooli-id (schema/maybe common-schema/Key)
@@ -77,5 +80,8 @@
          :henkilot [(st/select-keys Henkilo [:id :rooli-id :etunimi :sukunimi])]
          :yritykset [(st/select-keys Yritys [:id :rooli-id :nimi])]))
 
-(def henkilo? #(contains? % :henkilotunnus))
+(def henkilo? #(and (contains? % :etunimi) (contains? % :sukunimi)))
 (def yritys? #(contains? % :nimi))
+
+(def omistaja? #(= (:rooli-id %) 0))
+(def tiedoksi? #(= (:rooli-id %) 1))

@@ -22,6 +22,12 @@
 (def find-toimenpidetypes #(select-luokittelu % "vo_toimenpidetype"))
 (def find-severities #(select-luokittelu % "vo_severity"))
 
+(def find-vk-ilmoituspaikat #(select-luokittelu % "vk_ilmoituspaikka"))
+(def find-vk-roolit #(select-luokittelu % "vk_rooli"))
+(def find-vk-toimitustavat #(select-luokittelu % "vk_toimitustapa"))
+(def find-vk-toimenpidetypes #(select-luokittelu % "vk_toimenpidetype"))
+(def find-vk-toimenpidetyypit #(select-luokittelu % "vk_toimenpidetyypit"))
+
 (defn- path= [value path object]
   (= value (get-in object path)))
 

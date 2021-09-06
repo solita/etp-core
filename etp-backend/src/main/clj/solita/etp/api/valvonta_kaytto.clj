@@ -56,8 +56,8 @@
                     :parameters {:query valvonta-schema/ValvontaQuery}
                     :responses  {200 {:body {:count schema/Int}}}
                     :access     rooli-service/paakayttaja?
-                    :handler    (fn [{{:keys [query]} :parameters :keys [db]}]
-                                  (r/response (valvonta-service/count-valvonnat db query)))}}]
+                    :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
+                                  (r/response (valvonta-service/count-valvonnat db whoami query)))}}]
     [""
      {:conflicting true
       :get         {:summary    "Hae käytönvalvonnat (työjono)."
@@ -65,16 +65,16 @@
                                                valvonta-schema/ValvontaQueryWindow)}
                     :responses  {200 {:body [valvonta-kaytto-schema/ValvontaStatus]}}
                     :access     rooli-service/paakayttaja?
-                    :handler    (fn [{{:keys [query]} :parameters :keys [db]}]
-                                  (r/response (valvonta-service/find-valvonnat db query)))}
+                    :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
+                                  (r/response (valvonta-service/find-valvonnat db whoami query)))}
       :post        {:summary    "Luo uusi käytönvalvonta"
                     :access     rooli-service/paakayttaja?
                     :parameters {:body valvonta-kaytto-schema/ValvontaSave}
                     :responses  {200 {:body common-schema/Id}}
-                    :handler    (fn [{{:keys [body]} :parameters :keys [db uri whoami]}]
+                    :handler    (fn [{{:keys [body]} :parameters :keys [db uri]}]
                                   (api-response/created
                                    uri
-                                   {:id (valvonta-service/add-valvonta! db whoami body)}))}}]
+                                   {:id (valvonta-service/add-valvonta! db body)}))}}]
     ["/:id"
      [""
       {:conflicting true
@@ -242,9 +242,10 @@
                              (api-response/response-with-exceptions
                               201
                               #(valvonta-service/add-liitteet-from-files!
-                                aws-s3-client
-                                id
-                                (if (vector? files) files [files]))
+                                 db
+                                 aws-s3-client
+                                 id
+                                 (if (vector? files) files [files]))
                               [{:constraint :liite-valvonta-id-fkey :response 404}]))}}]
       ["/link"
        {:conflicting true
@@ -272,7 +273,7 @@
                                     404 {:body schema/Str}}
                        :handler    (fn [{{{:keys [id liite-id]} :path} :parameters :keys [db]}]
                                      (api-response/ok|not-found
-                                       (valvonta-service/delete-liite! db id liite-id)
+                                       (valvonta-service/delete-liite! db liite-id)
                                        (str "Liite " id "/" liite-id " does not exist.")))}}]
         ["/:filename"
          {:conflicting true
@@ -284,9 +285,9 @@
                         :responses  {200 {:body nil}
                                      404 {:body schema/Str}}
                         :handler    (fn [{{{:keys [id liite-id filename]} :path} :parameters
-                                          :keys                                  [aws-s3-client]}]
+                                          :keys                                  [db aws-s3-client]}]
                                       (let [{:keys [tempfile contenttype] :as file}
-                                            (valvonta-service/find-liite aws-s3-client id liite-id)]
+                                            (valvonta-service/find-liite db aws-s3-client id liite-id)]
                                         (if (= (:filename file) filename)
                                           (api-response/file-response
                                             (io/input-stream tempfile) filename contenttype false

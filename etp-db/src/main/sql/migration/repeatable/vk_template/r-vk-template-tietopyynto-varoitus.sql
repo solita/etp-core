@@ -1,5 +1,8 @@
+insert into vk_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, content)
+values (2, 'Tietopyyntö / varoitus', 'Tietopyyntö / varoitus (sv)', 1, 3, 'fi', 
+$$
 <div class="otsikko">
-    <b>KEHOTUS/UPPMANING</b> <br/>
+    <b>VAROITUS/VARNING</b> <br/>
     <b>{{päivä}}</b> <br/>
     {{diaarinumero}}
 </div>
@@ -23,15 +26,18 @@
     Ilmoitustunnus/Meddelandekod: {{ilmoitustunnus}} <br/>
     Havaintopäivä/Observationsdatum: {{havaintopäivä}} <br/>
     {{/kohde}}
-    Tietopyynnön päivämäärä/Begäran om uppgifter: {{#toimituspyyntö}} {{toimituspyyntö-pvm}} {{/toimituspyyntö}}
+    Tietopyynnön päivämäärä/Begäran om uppgifter: {{#tietopyynto}} {{tietopyynto-pvm}} {{/tietopyynto}} <br/>
+    Kehotuksen päivämäärä/Kehotuksen päivämäärä (sv): {{#tietopyynto}} {{tietopyynto-kehotus-pvm}} {{/tietopyynto}}
 </div>
 
-<h1>Energiatodistusvalvonnan kehotus</h1>
+<h1>Energiatodistusvalvonnan varoitus</h1>
 
 <p>Asumisen rahoitus- ja kehittämiskeskuksen (ARA) tehtävänä on valvoa energiatodistusten käyttämistä myynti- ja
-    vuokraustilanteissa. ARA on lähettänyt teille tietopyynnön liittyen rakennuksen/asunnon markkinointiin ilman
-    energiatodistusta. Mikäli kohteen julkista markkinointia jatketaan tai se myydään, <b>ARA kehottaa esittämään
-        energiatodistuksen {{määräpäivä}} mennessä sähköpostitse energiatodistus@ara.fi tai postitse.</b></p>
+    vuokraustilanteissa. ARA on lähettänyt teille tietopyynnön ja kehotuksen liittyen rakennuksen/asunnon markkinointiin
+    ilman energiatodistusta. <b>ARA antaa Teille varoituksen.</b> Mikäli kohteen julkista markkinointia jatketaan tai se
+    myydään, <b>ARA pyytää esittämään energiatodistuksen {{määräpäivä}} mennessä sähköpostitse energiatodistus@ara.fi
+        tai
+        postitse.</b></p>
 
 <p>Rakennusta, huoneistoa tai niiden hallintaoikeutta myytäessä tai vuokrattaessa täytyy olla energiatodistus.
     Energiatodistus on annettava joko alkuperäisenä tai jäljennöksenä ostajalle tai vuokralaiselle. Myynti- tai
@@ -45,13 +51,13 @@
 
 <div class="sivunvaihto"></div>
 
-<h1>Energiatodistusvalvonnan kehotus (sv)</h1>
+<h1>Energiatodistusvalvonnan varoitus (sv)</h1>
 
 <p>Finansierings- och utvecklingscentralen för boendet (ARA) har till uppgift att övervaka användningen av
-    energicertifikat vid försäljning och uthyrning. ARA har sänt er en begäran om information rörande marknadsföring av
-    byggnad/bostad utan energicertifikat. Om den offentliga marknadsföringen av objektet fortsätter eller om det säljs
-    <b>uppmanar ARA er att skicka in ett energicertifikat senast {{määräpäivä}} per e-post till energiatodistus@ara.fi eller
-        per post.</b></p>
+    energicertifikat vid försäljning och uthyrning. ARA har sänt er en begäran om information och en uppmaning rörande
+    marknadsföring av en byggnad/bostad utan energicertifikat. <b>ARA tilldelar er en varning.</b> Om den offentliga
+    marknadsföringen av objektet fortsätter eller om det säljs <b>ber ARA er att skicka in ett energicertifikat senast
+        {{määräpäivä}} per e-post till energiatodistus@ara.fi eller per post.</b></p>
 
 <p>Vid försäljning eller uthyrning av en byggnad eller lägenhet eller besittningsrätten till dem måste det finnas ett
     energicertifikat. Energicertifikatet ska överlämnas till köparen eller hyrestagaren antingen i original eller som
@@ -71,19 +77,27 @@
     energia-asiantuntija
 </p>
 
-<table class="sarake">
+<table class="sarake max-width">
     <tr>
-        <td class="sarake-otsikko"><b>Sovelletut säännökset:</b></td>
-        <td class="sarake-sisalto">Laki rakennuksen energiatodistuksesta (50/2013)</td>
+        <td><b>Sovelletut säännökset:</b></td>
+        <td>Laki rakennuksen energiatodistuksesta (50/2013)</td>
     </tr>
     <tr>
-        <td class="sarake-otsikko"><b>Tillämpade förordningar: </b></td>
-        <td class="sarake-sisalto">Lagen om energicertifikat för byggnader (50/2013)</td>
+        <td><b>Tillämpade förordningar: </b></td>
+        <td>Lagen om energicertifikat för byggnader (50/2013)</td>
     </tr>
     <tr>
-        <td class="sarake-otsikko"><b>Tiedoksi/För kännedom:</b></td>
-        <td class="sarake-sisalto">
+        <td><b>Tiedoksi/För kännedom:</b></td>
+        <td>
             <div>{{#tiedoksi}}{{.}}<br/>{{/tiedoksi}}</div>
         </td>
     </tr>
 </table>
+$$)
+on conflict (id) do update set
+  label_fi = excluded.label_fi,
+  label_sv = excluded.label_sv,
+  ordinal = excluded.ordinal,
+  toimenpidetype_id = excluded.toimenpidetype_id,
+  language = excluded.language,
+  content = excluded.content;
