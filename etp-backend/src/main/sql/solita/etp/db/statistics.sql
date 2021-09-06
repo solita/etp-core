@@ -59,8 +59,8 @@ SELECT round(avg(e.lt$rakennusvaippa$ilmanvuotoluku), 1) ilmanvuotoluku,
        round(avg(e.lt$rakennusvaippa$ulkoovet$u), 2) ulkoovet_u,
        round(avg(coalesce(e.lt$lammitys$takka$maara, 0)), 1) takka,
        round(avg(coalesce(e.lt$lammitys$ilmalampopumppu$maara, 0)), 1) ilmalampopumppu,
-       round(avg(e.lt$lammitys$tilat_ja_iv$lampokerroin), 1) tilat_ja_iv_lampokerroin,
-       round(avg(e.lt$lammitys$lammin_kayttovesi$lampokerroin), 1) lammin_kayttovesi_lampokerroin,
+       round(avg(nullif(e.lt$lammitys$tilat_ja_iv$lampokerroin, 0)), 1) tilat_ja_iv_lampokerroin,
+       round(avg(nullif(e.lt$lammitys$lammin_kayttovesi$lampokerroin, 0)), 1) lammin_kayttovesi_lampokerroin,
        round(avg(e.lt$ilmanvaihto$lto_vuosihyotysuhde), 1) lto_vuosihyotysuhde,
        round(avg(e.lt$ilmanvaihto$ivjarjestelma$sfp), 1) ivjarjestelma_sfp
 FROM energiatodistus e
