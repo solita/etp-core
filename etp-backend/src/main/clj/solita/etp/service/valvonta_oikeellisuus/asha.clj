@@ -8,9 +8,16 @@
             [solita.etp.service.pdf :as pdf]
             [solita.etp.db :as db]
             [solita.etp.service.file :as file-service]
-            [solita.etp.exception :as exception]))
+            [solita.etp.exception :as exception]
+            [commonmark-hiccup.core :as ch]))
 
 (db/require-queries 'valvonta-oikeellisuus)
+
+(def markdown-config (-> ch/default-config
+                         (update-in [:renderer :nodes org.commonmark.node.Paragraph]
+                                    (constantly :content))
+                         (update-in [:renderer :nodes org.commonmark.node.SoftLineBreak]
+                                    (constantly [:br]))))
 
 (def file-key-prefix "valvonta/oikeellisuus")
 
@@ -43,6 +50,11 @@
                 {type (:publish-time toimenpide)})))
        (into {})))
 
+(defn- markdown->html [content]
+  (when content
+    (->> (clojure.string/replace content #"\n\n" "\n")
+         (ch/markdown->html markdown-config))))
+
 (defn- template-data [whoami toimenpide laatija energiatodistus dokumentit]
   {:päivä           (time/today)
    :määräpäivä      (time/format-date (:deadline-date toimenpide))
@@ -61,7 +73,9 @@
                      :tietopyynto-kehotus-pvm     (time/format-date (:rfi-order dokumentit))}
    :valvontamuistio {:valvontamuistio-pvm         (time/format-date (:audit-report dokumentit))
                      :valvontamuistio-kehotus-pvm (time/format-date (:audit-order dokumentit))
-                     :virheet                     (:virheet toimenpide)
+                     :virheet                     (map
+                                                    #(update % :description markdown->html)
+                                                    (:virheet toimenpide))
                      :vakavuus                    (when-let [luokka (:severity-id toimenpide)]
                                                     (case luokka
                                                       0 {:ei-huomioitavaa true}
