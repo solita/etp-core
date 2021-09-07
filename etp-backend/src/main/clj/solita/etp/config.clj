@@ -105,3 +105,13 @@
 (def asha-endpoint-url (env "ASHA_ENDPOINT_URL" nil))
 (def asha-proxy? (edn/read-string (env "ASHA_PROXY" "false")))
 (def asha-debug? (edn/read-string (env "ASHA_DEBUG" "false")))
+
+
+;; Suomifi / viestit
+
+(def suomifi-viestit-debug?  (edn/read-string (env "SUOMIFI_VIESTIT_DEBUG" "true")))
+(def suomifi-viestit-endpoint-url (env "SUOMIFI_VIESTIT_ENDPOINT_URL" nil))
+(def suomifi-viestit-viranomaistunnus (env "SUOMIFI_VIESTIT_VIRANOMAISTUNNUS" "Viranoaminen"))
+(def suomifi-viestit-palvelutunnus (env "SUOMIFI_VIESTIT_PALVELUTUNNUS" "VN"))
+(def suomifi-viestit-varmenne (env "SUOMIFI_VIESTIT_VARMENNE" "Virasto"))
+(def suomifi-viestit-tulostustoimittaja (env "SUOMIFI_VIESTIT_TULOSTUSTOIMITTAJA" "Edita"))
