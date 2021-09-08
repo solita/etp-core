@@ -5,8 +5,11 @@
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
             [solita.etp.config :as config]
             [clj-http.client :as http]
+            [schema-tools.coerce :as sc]
             [clojure.tools.logging :as log]
-            [solita.etp.exception :as exception])
+            [solita.etp.exception :as exception]
+            [solita.common.xml :as xml]
+            [schema.core :as schema])
   (:import (java.time Instant)))
 
 (defn- debug-print [info]
@@ -16,15 +19,15 @@
 (defn- bytes->base64 [bytes]
   (String. (b64/encode bytes) "UTF-8"))
 
-(defn ->sanoma [valvonta-id toimenpide-id osapuoli-id]
+(defn- ->sanoma [varmenne valvonta-id toimenpide-id osapuoli-id]
   {:tunniste (str "ETP-" valvonta-id "-" toimenpide-id "-" osapuoli-id)
    :versio   "1.0"
-   :varmenne config/suomifi-viestit-varmenne})
+   :varmenne varmenne})
 
 (defn- henkilo->asiakas [henkilo]
   {:tunnus (:henkilotunnus henkilo)
    :tyyppi "SSN"
-   :osoite {:nimi             (str (:etunimi henkilo) (:sukunimi henkilo))
+   :osoite {:nimi             (str (:etunimi henkilo) " " (:sukunimi henkilo))
             :lahiosoite       (:jakeluosoite henkilo)
             :postinumero      (:postinumero henkilo)
             :postitoimipaikka (:postitoimipaikka henkilo)
@@ -44,33 +47,35 @@
     (kaytto-schema/henkilo? osapuoli) (henkilo->asiakas osapuoli)
     (kaytto-schema/yritys? osapuoli) (yritys->asiakas osapuoli)))
 
-(defn toimenpide->kohde [type-key]
-  (get {:rfi-request {:nimike "Päätös ...."
-                      :kuvaus "Tämän viestin liitteessä on päätös asiointiasiaan liittyen."}}
+(defn- toimenpide->kohde [type-key]
+  (get {:rfi-request {:nimike "Tietopyyntö"
+                      :kuvaus "Tämän viestin liitteenä on tietopyyntö"}}
        type-key))
 
-(defn toimenpide->tiedosto [type-key]
-  (get {:rfi-request {:nimi   "Päätös.pdf"
-                      :kuvaus "Liitetiedosto asiaan liittyen"}}
+(defn- toimenpide->tiedosto [type-key]
+  (get {:rfi-request {:nimi   "tietopyynto.pdf"
+                      :kuvaus "Tietopyyntö liitteenä"}}
        type-key))
 
-(defn dokumentti->tiedosto [type-key dokumentti]
+(defn- dokumentti->tiedosto [type-key tiedosto]
   (let [{:keys [nimi kuvaus]} (toimenpide->tiedosto type-key)]
     {:nimi    nimi
      :kuvaus  kuvaus
-     :sisalto dokumentti
+     :sisalto (bytes->base64 tiedosto)
      :muoto   "application/pdf"}))
 
-(defn ->kohde [toimenpide osapuoli]
+(defn- ^:dynamic now []
+  (Instant/now))
+
+(defn- ->kohde [toimenpide osapuoli tiedosto]
   (let [type-key (toimenpide/type-key (:type-id toimenpide))
-        {:keys [nimike kuvaus]} (toimenpide->kohde type-key)
-        dokumentti "tämä on tiedosto"]
+        {:keys [nimike kuvaus]} (toimenpide->kohde type-key)]
     {:viranomaistunniste (:diaarinumero toimenpide)
      :nimike             nimike
      :kuvaus-teksti      kuvaus
-     :lahetys-pvm        (Instant/now)
+     :lahetys-pvm        (now)
      :asiakas            (osaapuoli->asiakas osapuoli)
-     :tiedostot          (dokumentti->tiedosto type-key dokumentti)}))
+     :tiedostot          (dokumentti->tiedosto type-key tiedosto)}))
 
 (defn- request-create-xml [data]
   (let [xml (clostache/render-resource (str "suomifi/viesti.xml") data)]
@@ -100,15 +105,44 @@
       (log/error "Sending xml failed: " e)
       (exception/throw-ex-info! :suomifi-viestit-request-failed (str "Sending xml failed: " (.getMessage e))))))
 
+(defn- read-response->xml [response]
+  (-> response xml/string->xml xml/without-soap-envelope first xml/with-kebab-case-tags))
+
+(defn- response-parser [response-soap]
+  (let [response-xml (read-response->xml response-soap)]
+    (debug-print response-xml)
+    {:tila-koodi        (xml/get-content response-xml [:laheta-viesti-result :tila-koodi :tila-koodi])
+     :tila-koodi-kuvaus (xml/get-content response-xml [:laheta-viesti-result :tila-koodi :tila-koodi-kuvaus])
+     :sanoma-tunniste   (xml/get-content response-xml [:laheta-viesti-result :tila-koodi :sanoma-tunniste])}))
+
+(defn- read-response [response]
+  (let [coercer (sc/coercer {:tila-koodi schema/Int
+                             :tila-koodi-kuvaus schema/Str
+                             :sanoma-tunniste schema/Str}
+                            sc/string-coercion-matcher)]
+    (-> response response-parser coercer)))
+
 (defn- request-handler! [data]
   (let [request-xml (request-create-xml data)
-        response-xml (send-request! request-xml)]
-    response-xml))
+        response (send-request! request-xml)]
+    (read-response response)))
 
-(defn send-message-to-osapuoli [toimenpide osapuoli]
-  (let [data {:viranomainen {:viranomaistunnus config/suomifi-viestit-viranomaistunnus
-                             :palvelutunnus    config/suomifi-viestit-palvelutunnus}
-              :sanoma       (->sanoma (:valvonta-id toimenpide) (:id toimenpide) (:id osapuoli))
-              :kysely       {:kohteet            (->kohde toimenpide osapuoli)
-                             :tulostustoimittaja config/suomifi-viestit-tulostustoimittaja}}]
+(defn send-message-to-osapuoli! [toimenpide
+                                 osapuoli
+                                 tiedosto
+                                 & [{:keys [viranomaistunnus palvelutunnus tulostustoimittaja varmenne
+                                            yhteyshenkilo-nimi yhteyshenkilo-email]
+                                     :or   {viranomaistunnus    config/suomifi-viestit-viranomaistunnus
+                                            palvelutunnus       config/suomifi-viestit-palvelutunnus
+                                            tulostustoimittaja  config/suomifi-viestit-tulostustoimittaja
+                                            varmenne            config/suomifi-viestit-varmenne
+                                            yhteyshenkilo-nimi  config/suomifi-viestit-yhteyshenkilo-nimi
+                                            yhteyshenkilo-email config/suomifi-viestit-yhteyshenkilo-email}}]]
+  (let [data {:viranomainen (cond-> {:viranomaistunnus viranomaistunnus
+                                     :palvelutunnus    palvelutunnus}
+                                    (and yhteyshenkilo-nimi yhteyshenkilo-email) (assoc :yhteyshenkilo {:nimi  yhteyshenkilo-nimi
+                                                                                                        :email yhteyshenkilo-email}))
+              :sanoma       (->sanoma varmenne (:valvonta-id toimenpide) (:id toimenpide) (:id osapuoli))
+              :kysely       {:kohteet            (->kohde toimenpide osapuoli tiedosto)
+                             :tulostustoimittaja tulostustoimittaja}}]
     (request-handler! data)))

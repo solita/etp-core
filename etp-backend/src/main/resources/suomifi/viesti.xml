@@ -1,4 +1,5 @@
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:asi="http://www.suomi.fi/asiointitili">
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                  xmlns:asi="http://www.suomi.fi/asiointitili">
     <soapenv:Header/>
     <soapenv:Body>
         <asi:LahetaViesti xmlns:asi="http://www.suomi.fi/asiointitili">
@@ -6,19 +7,7 @@
                 {{#viranomainen}}
                 <asi:ViranomaisTunnus>{{viranomaistunnus}}</asi:ViranomaisTunnus>
                 <asi:PalveluTunnus>{{palvelutunnus}}</asi:PalveluTunnus>
-                {{#kayttaja}}<asi:KayttajaTunnus>{{tunnus}}</asi:KayttajaTunnus>{{/kayttaja}}
-                {{#yhteyshenkilo}}
-                <asi:Yhteyshenkilo Nimi="{{nimi}}" Sahkoposti="{{email}}" Matkapuhelin="{{puhelin}}"/>
-                {{/yhteyshenkilo}}
-                {{#osoite}}
-                <asi:Osoite>
-                    <asi:Nimi>{{nimi}}</asi:Nimi>
-                    <asi:Lahiosoite>{{lahiosoite}}</asi:Lahiosoite>
-                    <asi:Postinumero>{{postinumero}}</asi:Postinumero>
-                    <asi:Postitoimipaikka>{{postitoimipaikka}}</asi:Postitoimipaikka>
-                    <asi:Maa>{{maa}}</asi:Maa>
-                </asi:Osoite>
-                {{/osoite}}
+                {{#yhteyshenkilo}}<asi:Yhteyshenkilo Nimi="{{nimi}}" Sahkoposti="{{email}}" />{{/yhteyshenkilo}}
                 {{/viranomainen}}
                 {{#sanoma}}
                 <asi:SanomaTunniste>{{tunniste}}</asi:SanomaTunniste>
