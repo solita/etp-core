@@ -34,14 +34,17 @@
       db
       {:valvonta-id valvonta-id})))
 
+(defn- db-row->valvonta [valvonta-db-row]
+  (update valvonta-db-row :postinumero (maybe/lift1 #(format "%05d" %))))
+
 (defn find-valvonnat [db whoami query]
-  (->> (valvonta-kaytto-db/select-valvonnat db
-                                            (merge {:limit 10 :offset 0 :valvoja-id (:id whoami)} query))
-       (map (fn [valvonta]
-              (-> valvonta
-                  (assoc :henkilot (find-valvonta-henkilot db (:id valvonta))
-                         :yritykset (find-valvonta-yritykset db (:id valvonta))
-                         :last-toimenpide (find-valvonta-last-toimenpide db (:id valvonta))))))))
+  (->> (valvonta-kaytto-db/select-valvonnat
+         db (merge {:limit 10 :offset 0 :valvoja-id nil} query))
+       (map #(-> %
+                 db-row->valvonta
+                 (assoc :henkilot (find-valvonta-henkilot db (:id %))
+                        :yritykset (find-valvonta-yritykset db (:id %))
+                        :last-toimenpide (find-valvonta-last-toimenpide db (:id %)))))))
 
 (defn count-valvonnat [db whoami query]
   (first
@@ -51,12 +54,17 @@
                                                  query))))
 
 (defn find-valvonta [db valvonta-id]
-  (first (valvonta-kaytto-db/select-valvonta db {:id valvonta-id})))
+  (->> (valvonta-kaytto-db/select-valvonta db {:id valvonta-id})
+       (map db-row->valvonta)
+       first))
+
+(defn- valvonta->db-row [valvonta]
+  (update valvonta :postinumero (maybe/lift1 #(Integer/parseInt %))))
 
 (defn add-valvonta! [db valvonta]
   (-> (db/with-db-exception-translation
         jdbc/insert! db :vk-valvonta
-        (dissoc valvonta :valvoja-id)
+        (valvonta->db-row valvonta)
         db/default-opts)
       first
       :id))
@@ -64,7 +72,8 @@
 (defn update-valvonta! [db valvonta-id valvonta]
   (first (db/with-db-exception-translation
            jdbc/update! db :vk_valvonta
-           valvonta ["id = ?" valvonta-id]
+           (valvonta->db-row valvonta)
+           ["id = ?" valvonta-id]
            db/default-opts)))
 
 (defn delete-valvonta! [db valvonta-id]
