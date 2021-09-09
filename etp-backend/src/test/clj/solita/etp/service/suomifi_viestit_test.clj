@@ -3,7 +3,8 @@
             [solita.etp.test-system :as ts]
             [clojure.java.io :as io]
             [solita.etp.service.suomifi-viestit :as suomifi-viestit]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [solita.etp.service.pdf :as pdf]))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -18,7 +19,9 @@
                                                                       "suomifi/viesti-response.xml"
                                                                       200)
                   #'suomifi-viestit/now               (fn []
-                                                        "2021-09-08T06:21:03.625667Z")}
+                                                        "2021-09-08T06:21:03.625667Z")
+                  #'suomifi-viestit/bytes->base64     (fn [_]
+                                                        "dGVzdGk=")}
     (t/is (= (suomifi-viestit/send-message-to-osapuoli!
                {:type-id      1
                 :id           2
@@ -32,7 +35,7 @@
                 :postinumero      "00000"
                 :postitoimipaikka "Kaupunki"
                 :maa              "FI"}
-               (.getBytes "testi")
+              (pdf/generate-pdf->bytes {:layout "pdf/ipost-address-page.html"})
                {:viranomaistunnus    "Organisaatio"
                 :palvelutunnus       "OR"
                 :tulostustoimittaja  "Edita"
@@ -42,4 +45,3 @@
              {:tila-koodi        202,
               :tila-koodi-kuvaus "Asia tallennettuna asiointitilipalvelun käsittelyjonoon, mutta se ei vielä näy asiakkaan asiointi-tilillä. Lopullinen vastaus on haettavissa erikseen erillisellä kutsulla."
               :sanoma-tunniste   "ETP-1-2-1"}))))
-

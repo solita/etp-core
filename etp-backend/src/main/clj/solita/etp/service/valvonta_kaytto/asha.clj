@@ -141,7 +141,8 @@
         documents (find-kaytto-valvonta-documents db (:id valvonta))
         tiedoksi (filter kaytto-schema/tiedoksi? osapuolet)]
     (let [template-data (template-data db whoami valvonta toimenpide osapuoli documents ilmoituspaikat tiedoksi)]
-      (pdf/generate-pdf->bytes template template-data))))
+      (pdf/generate-pdf->bytes {:template template
+                                :data     template-data}))))
 
 (defn log-toimenpide! [db aws-s3-client whoami valvonta toimenpide osapuolet ilmoituspaikat]
   (let [request-id (request-id (:id valvonta) (:id toimenpide))

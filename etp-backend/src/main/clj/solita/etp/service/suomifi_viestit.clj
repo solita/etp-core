@@ -9,14 +9,22 @@
             [clojure.tools.logging :as log]
             [solita.etp.exception :as exception]
             [solita.common.xml :as xml]
-            [schema.core :as schema])
-  (:import (java.time Instant)))
+            [schema.core :as schema]
+            [clojure.java.io :as io]
+            [solita.etp.service.pdf :as pdf])
+  (:import (java.time Instant)
+           (java.io ByteArrayOutputStream)))
+
+(def lahettaja {:nimi "Asumisen rahoitus- ja kehittämiskeskus"
+                :jakeluosoite "Vesijärvenkatu 11A / PL 30"
+                :postinumero "15141"
+                :postitoimipaikka "Lahti"})
 
 (defn- debug-print [info]
   (when config/suomifi-viestit-debug?
     (log/info info)))
 
-(defn- bytes->base64 [bytes]
+(defn- ^:dynamic bytes->base64 [bytes]
   (String. (b64/encode bytes) "UTF-8"))
 
 (defn- ->sanoma [varmenne valvonta-id toimenpide-id osapuoli-id]
@@ -57,11 +65,24 @@
                       :kuvaus "Tietopyyntö liitteenä"}}
        type-key))
 
-(defn- dokumentti->tiedosto [type-key tiedosto]
+(defn- add-cover-page [document osapuoli]
+  (with-open [baos (ByteArrayOutputStream.)]
+    (pdf/merge-pdf
+      [(pdf/generate-pdf->input-stream {:layout "pdf/ipost-address-page.html"
+                                        :data   {:lahettaja     lahettaja
+                                                 :vastaanottaja {:nimi             (str (:etunimi osapuoli) " " (:sukunimi osapuoli))
+                                                                 :jakeluosoite     (:jakeluosoite osapuoli)
+                                                                 :postinumero      (:postinumero osapuoli)
+                                                                 :postitoimipaikka (:postitoimipaikka osapuoli)}}})
+       (io/input-stream document)]
+      baos)
+    (.toByteArray baos)))
+
+(defn- dokumentti->tiedosto [type-key osapuoli dokumentti]
   (let [{:keys [nimi kuvaus]} (toimenpide->tiedosto type-key)]
     {:nimi    nimi
      :kuvaus  kuvaus
-     :sisalto (bytes->base64 tiedosto)
+     :sisalto (-> dokumentti (add-cover-page osapuoli) bytes->base64)
      :muoto   "application/pdf"}))
 
 (defn- ^:dynamic now []
@@ -75,7 +96,7 @@
      :kuvaus-teksti      kuvaus
      :lahetys-pvm        (now)
      :asiakas            (osaapuoli->asiakas osapuoli)
-     :tiedostot          (dokumentti->tiedosto type-key tiedosto)}))
+     :tiedostot          (dokumentti->tiedosto type-key osapuoli tiedosto)}))
 
 (defn- request-create-xml [data]
   (let [xml (clostache/render-resource (str "suomifi/viesti.xml") data)]
@@ -129,7 +150,7 @@
 
 (defn send-message-to-osapuoli! [toimenpide
                                  osapuoli
-                                 tiedosto
+                                 dokumentti
                                  & [{:keys [viranomaistunnus palvelutunnus tulostustoimittaja varmenne
                                             yhteyshenkilo-nimi yhteyshenkilo-email]
                                      :or   {viranomaistunnus    config/suomifi-viestit-viranomaistunnus
@@ -143,6 +164,6 @@
                                     (and yhteyshenkilo-nimi yhteyshenkilo-email) (assoc :yhteyshenkilo {:nimi  yhteyshenkilo-nimi
                                                                                                         :email yhteyshenkilo-email}))
               :sanoma       (->sanoma varmenne (:valvonta-id toimenpide) (:id toimenpide) (:id osapuoli))
-              :kysely       {:kohteet            (->kohde toimenpide osapuoli tiedosto)
+              :kysely       {:kohteet            (->kohde toimenpide osapuoli dokumentti)
                              :tulostustoimittaja tulostustoimittaja}}]
     (request-handler! data)))
