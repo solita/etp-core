@@ -56,7 +56,7 @@
 (defn add-valvonta! [db valvonta]
   (-> (db/with-db-exception-translation
         jdbc/insert! db :vk-valvonta
-        (dissoc valvonta :valvoja-id)
+        valvonta
         db/default-opts)
       first
       :id))

@@ -26,7 +26,7 @@ create table vk_valvonta (
   ilmoituspaikka_description text,
   ilmoitustunnus text,
   havaintopaiva date,
-  valvoja_id int not null default etp.current_kayttaja_id() references etp.kayttaja (id),
+  valvoja_id int references etp.kayttaja (id),
   deleted boolean not null default false
 );
 
