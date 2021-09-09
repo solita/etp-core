@@ -9,7 +9,8 @@
             [solita.common.time :as time]
             [solita.common.logic :as logic]
             [solita.etp.service.valvonta-oikeellisuus.asha :as asha-valvonta-oikeellisuus]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [solita.etp.email :as email])
   (:import (java.time LocalDate)
            (java.io File)))
 
@@ -181,8 +182,8 @@
       :host            config/index-url}
      template (template-type templates)
      message (map/map-values #(interpolate % template-values) template)]
-    (smtp/send-text-email! (assoc message :to [(:email laatija)]
-                                          :subtype "html"))))
+    (email/send-text-email! (assoc message :to [(:email laatija)]
+                                           :subtype "html"))))
 
 (defn- send-email-to-tiedoksi! [db aws-s3-client energiatodistus-id toimenpide-id email]
   (logic/if-let*
@@ -195,10 +196,10 @@
      valvontamuistio-tmp-file (File/createTempFile "valvontamuistio-" ".pdf")]
     (do
       (io/copy valvontamuistio valvontamuistio-tmp-file)
-      (smtp/send-multipart-email! (assoc message :to [email]
-                                                 :subtype "html"
-                                                 :reply? true
-                                                 :attachments [valvontamuistio-tmp-file])))))
+      (email/send-multipart-email! (assoc message :to [email]
+                                                  :subtype "html"
+                                                  :reply? true
+                                                  :attachments [valvontamuistio-tmp-file])))))
 
 (defn send-toimenpide-email! [db aws-s3-client energiatodistus-id toimenpide]
   (send-email-to-laatija! db energiatodistus-id toimenpide)
