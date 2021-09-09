@@ -141,6 +141,12 @@
           (send-toimenpide-email! db id toimenpide))
         (when (toimenpide/anomaly? toimenpide)
           (add-anomaly-viestiketju! tx whoami id toimenpide))
+        (when (toimenpide/clears-from-tyojono? toimenpide)
+          (jdbc/update! db
+                        :energiatodistus
+                        (add-prefix "valvonta$" {:pending false})
+                        ["id = ?" id]
+                        db/default-opts))
         {:id toimenpide-id})))
 
 (defn- assoc-virheet [db toimenpide]
