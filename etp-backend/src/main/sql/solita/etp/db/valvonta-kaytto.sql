@@ -9,7 +9,7 @@ select id,
        havaintopaiva,
        valvoja_id
 from vk_valvonta
-where valvoja_id = :valvoja-id
+where (valvoja_id = :valvoja-id or :valvoja-id::int is null)
   and deleted is false
 limit :limit
 offset :offset;
