@@ -19,7 +19,7 @@ grant insert, update, delete on table sivu to etp_app;
 grant insert, update on table vo_toimenpide to etp_app;
 grant delete, insert, update on table vo_virhe to etp_app;
 grant insert, update on table vo_note to etp_app;
-
+grant delete, insert on table vo_tiedoksi to etp_app;
 
 grant insert, update on table vk_valvonta to etp_app;
 grant insert, update on table vk_toimenpide to etp_app;

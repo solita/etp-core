@@ -66,10 +66,6 @@ $$
         <td>Laki rakennuksen energiatodistuksesta (50/2013)</td>
     </tr>
     <tr>
-        <td><b>Tiedoksi:</b></td>
-        <td><div>{{#tiedoksi}}{{.}}<br />{{/tiedoksi}}</div></td>
-    </tr>
-    <tr>
         <td><b>Lisätietoja:</b></td>
         <td><a href="https://www.energiatodistusrekisteri.fi">www.energiatodistusrekisteri.fi</a></td>
     </tr>

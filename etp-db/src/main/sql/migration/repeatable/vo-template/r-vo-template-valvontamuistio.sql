@@ -72,7 +72,7 @@ $$
     </tr>
     <tr>
         <td><b>Tiedoksi:</b></td>
-        <td><div>{{#tiedoksi}}{{.}}<br />{{/tiedoksi}}</div></td>
+        <td><div>{{#tiedoksi}}{{nimi}} {{email}}<br />{{/tiedoksi}}</div></td>
     </tr>
     <tr>
         <td><b>Lisätietoja:</b></td>
