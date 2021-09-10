@@ -180,3 +180,9 @@ select distinct on (note.id) note.id,
 from etp.vo_note note inner join audit.vo_note a on note.id = a.id
 where note.energiatodistus_id = :energiatodistus-id and note.deleted = false
 order by note.id, a.modifytime asc, a.event_id desc
+
+-- name: select-toimenpide-tiedoksi
+select name, email from vo_tiedoksi where toimenpide_id = :toimenpide-id;
+
+-- name: delete-toimenpide-tiedoksi!
+delete from vo_tiedoksi where toimenpide_id = :toimenpide-id;

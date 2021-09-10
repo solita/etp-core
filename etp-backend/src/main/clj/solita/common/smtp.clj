@@ -36,7 +36,7 @@
 
 (defn- send-email! [host port username password
                     from-email from-name to subject
-                    add-content]
+                    add-content  reply-to-email reply-to-name]
   (let [^Properties properties (mail-properties port)
         ^Session session (session properties)
         ^MimeMessage mime-message (mime-message session
@@ -47,6 +47,8 @@
     (with-open [^Transport transport (.getTransport session)]
       (.connect transport host username password)
       (add-content mime-message)
+      (when (and reply-to-email reply-to-name)
+        (.setReplyTo mime-message (into-array [(InternetAddress. reply-to-email reply-to-name)])))
       (.sendMessage transport mime-message
                     (.getAllRecipients mime-message))
       (log/info "Email sent " {:to to :subject subject})
@@ -69,23 +71,27 @@
 (defn- add-multipart [^MimeMultipart content ^MimeMessage message]
   (.setContent message content))
 
-(defn send-multipart-email! [host port username password
-                             from-email from-name to subject
-                             ^String body ^String subtype attachments]
+(defn send-multipart-email! [{:keys [host port username password
+                                     from-email from-name to subject
+                                     ^String body ^String subtype attachments
+                                     reply-to-email reply-to-name]}]
   (let [body-mime-body-part (body-mime-body-part body subtype)
         attachments-mime-body-part (map attachment-mime-body-part
                                         attachments)
         multipart (apply multipart body-mime-body-part attachments-mime-body-part)]
     (send-email! host port username password
                  from-email from-name to subject
-                 (partial add-multipart multipart))))
+                 (partial add-multipart multipart)
+                 reply-to-email reply-to-name)))
 
 (defn- set-text [^String body ^String subtype ^MimeMessage message]
   (.setText message body charset subtype))
 
-(defn send-text-email! [host port username password
-                        from-email from-name to subject
-                        ^String body ^String subtype]
+(defn send-text-email! [{:keys [host port username password
+                                from-email from-name to subject
+                                ^String body ^String subtype
+                                reply-to-email reply-to-name]}]
   (send-email! host port username password
                from-email from-name to subject
-               (partial set-text body subtype)))
+               (partial set-text body subtype)
+               reply-to-email reply-to-name))

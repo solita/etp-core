@@ -8,7 +8,7 @@
             [solita.common.xlsx :as xlsx]
             [solita.common.libreoffice :as libreoffice]
             [solita.common.sftp :as sftp]
-            [solita.common.smtp :as smtp]
+            [solita.etp.email :as email]
             [solita.etp.config :as config]
             [solita.etp.db :as db]
             [solita.etp.service.file :as file-service])
@@ -301,17 +301,11 @@
                                :pdf-result? pdf-exists?)))))))
 
 (defn send-tasmaytysraportti-email! [tasmaytysraportti-file]
-  (smtp/send-multipart-email! config/smtp-host
-                              config/smtp-port
-                              config/smtp-username
-                              config/smtp-password
-                              config/email-from-email
-                              config/email-from-name
-                              config/laskutus-tasmaytysraportti-email-to
-                              "ARA ETP täsmätysraportti"
-                              "Liitteenä täsmäytysraportti."
-                              "plain"
-                              [tasmaytysraportti-file]))
+  (email/send-multipart-email! {:to          config/laskutus-tasmaytysraportti-email-to
+                                :subject     "ARA ETP täsmätysraportti"
+                                :body        "Liitteenä täsmäytysraportti."
+                                :subtype     "plain"
+                                :attachments [tasmaytysraportti-file]}))
 
 (defn xml-filename [now filename-prefix idx]
   (str filename-prefix

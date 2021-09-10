@@ -56,17 +56,18 @@ Content-Disposition: attachment; filename=start.sh
     (io/delete-file file)))
 
 (defn send-email! [attachments]
-  (smtp/send-multipart-email! config/smtp-host
-                              config/smtp-port
-                              config/smtp-username
-                              config/smtp-password
-                              sender-email
-                              sender-name
-                              to
-                              subject
-                              body
-                              subtype
-                              attachments))
+  (smtp/send-multipart-email!
+    {:host        config/smtp-host
+     :port        config/smtp-port
+     :username    config/smtp-username
+     :password    config/smtp-password
+     :from-email  sender-email
+     :from-name   sender-name
+     :to          to
+     :subject     subject
+     :body        body
+     :subtype     subtype
+     :attachments attachments}))
 
 ;; 2 recipients x 2 emails => 4 files.
 (t/deftest ^:eftest/synchronized send-email!-test

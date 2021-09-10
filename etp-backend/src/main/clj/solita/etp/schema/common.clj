@@ -178,3 +178,10 @@
 (defn QueryWindow [max-limit]
   {(schema/optional-key :limit)  (LimitedInt 1 max-limit)
    (schema/optional-key :offset) schema/Int})
+
+
+(defn valid-email? [s]
+  (re-matches #"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
+              s))
+
+(def Email (schema/constrained schema/Str valid-email?))
