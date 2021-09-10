@@ -3,7 +3,6 @@
     [schema.core :as schema]
     [solita.etp.schema.common :as common-schema]
     [solita.etp.schema.valvonta-kaytto :as kaytto-schema]
-
     [solita.etp.api.response :as api-response]
     [solita.etp.service.rooli :as rooli-service]
     [solita.etp.service.valvonta-kaytto :as valvonta-service]))
@@ -22,7 +21,6 @@
                           (api-response/get-response
                             (valvonta-service/find-toimenpiteet db id)
                             (api-response/msg-404 "kaytonvalvonta" id)))}
-
      :post {:summary    "Lisää käytönvalvonnan toimenpide."
             :access     rooli-service/paakayttaja? 
             :parameters {:path {:id common-schema/Key}
@@ -80,7 +78,7 @@
                     :handler    (fn [{{{:keys [id toimenpide-id]} :path}
                                       :parameters :keys [db]}]
                                   (api-response/get-response
-                                    (valvonta-service/find-toimenpide db id toimenpide-id)
+                                    (valvonta-service/find-toimenpide db toimenpide-id)
                                     (toimenpide-404-msg id toimenpide-id)))}
 
       :put {:summary    "Muuta toimenpiteen tietoja."
@@ -94,7 +92,7 @@
                               :parameters :keys [db]}]
                           (api-response/ok|not-found
                             (valvonta-service/update-toimenpide!
-                              db id toimenpide-id body)
+                              db toimenpide-id body)
                             (toimenpide-404-msg id toimenpide-id)))}}]
 
     ["/henkilot/:henkilo-id/document/:filename"

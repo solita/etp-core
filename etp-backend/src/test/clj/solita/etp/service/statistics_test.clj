@@ -25,15 +25,23 @@
         (cycle [2010 2020])
         (cycle [100 200])
         (cycle [0.5 1])
-        (cycle [2 4]))
-       (partition 7)
+        (cycle [2 4])
+        (cycle [0 nil 2 2])
+        (cycle [nil 1 1 2])
+        (cycle [nil 0 1.5 2.5])
+        (cycle [nil 0 2.5 3.5]))
+       (partition 11)
        (map (fn [[add
-                 postinumero
-                 alakayttotarkoitus-id
-                 valmistumisvuosi
-                 lammitetty-nettoala
-                 numeric-value
-                 luokittelu-id]]
+                  postinumero
+                  alakayttotarkoitus-id
+                  valmistumisvuosi
+                  lammitetty-nettoala
+                  numeric-value
+                  luokittelu-id
+                  takkojen-lkm
+                  ilp-lkm
+                  tilat-ja-iv-lampokerroin
+                  lammin-kayttovesi-lampokerroin]]
               (-> add
                   (assoc-in [:perustiedot :postinumero] postinumero)
                   (assoc-in [:perustiedot :kayttotarkoitus] alakayttotarkoitus-id)
@@ -43,7 +51,11 @@
                   (assoc-in [:lahtotiedot :rakennusvaippa :ikkunat :U] numeric-value)
                   (assoc-in [:lahtotiedot :ilmanvaihto :lto-vuosihyotysuhde] numeric-value)
                   (assoc-in [:lahtotiedot :ilmanvaihto :tyyppi-id] luokittelu-id)
-                  (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-1 :id] luokittelu-id))))))
+                  (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-1 :id] luokittelu-id)
+                  (assoc-in [:lahtotiedot :lammitys :takka :maara] takkojen-lkm)
+                  (assoc-in [:lahtotiedot :lammitys :ilmalampopumppu :maara] ilp-lkm)
+                  (assoc-in [:lahtotiedot :lammitys :tilat-ja-iv :lampokerroin] tilat-ja-iv-lampokerroin)
+                  (assoc-in [:lahtotiedot :lammitys :lammin-kayttovesi :lampokerroin] lammin-kayttovesi-lampokerroin))))))
 
 (defn test-data-set [n sign?]
   (let [laatijat (laatija-test-data/generate-and-insert! 1)
@@ -167,11 +179,11 @@
                                 :ulkoseinat-u 1.00M
                                 :ilmalampopumppu 1.0M
                                 :ikkunat-u 0.75M
-                                :tilat-ja-iv-lampokerroin 1.0M
+                                :tilat-ja-iv-lampokerroin 2.0M
                                 :ilmanvuotoluku 1.0M
                                 :ivjarjestelma-sfp 1.0M
                                 :takka 1.0M
-                                :lammin-kayttovesi-lampokerroin 1.0M
+                                :lammin-kayttovesi-lampokerroin 3.0M
                                 :lto-vuosihyotysuhde 0.8M}
               :uusiutuvat-omavaraisenergiat-counts {2018 {:aurinkolampo 6
                                                           :aurinkosahko 6
