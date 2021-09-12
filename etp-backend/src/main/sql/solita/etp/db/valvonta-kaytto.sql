@@ -216,3 +216,14 @@ from etp.vk_yritys yritys
      inner join audit.vk_yritys audit on yritys.id = audit.id
 where yritys.valvonta_id = :valvonta-id and not yritys.deleted
 order by yritys.id, audit.modifytime desc, audit.event_id desc;
+
+-- name: select-valvonta-notes
+select distinct on (note.id) note.id,
+                             a.modifytime    create_time,
+                             a.modifiedby_id author_id,
+                             note.description
+from etp.vk_note note
+         inner join audit.vk_note a on note.id = a.id
+where note.valvonta_id = :valvonta-id
+  and note.deleted = false
+order by note.id, a.modifytime asc, a.event_id desc

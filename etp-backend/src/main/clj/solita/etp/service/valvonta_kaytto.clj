@@ -290,3 +290,22 @@
   (when-let [document (asha/find-document aws-s3-client valvonta-id toimenpide-id osapuoli)]
     (with-open [output (io/output-stream ostream)]
       (io/copy document output))))
+
+(defn find-notes [db id]
+  (valvonta-kaytto-db/select-valvonta-notes
+    db {:valvonta-id id}))
+
+(defn add-note! [db valvonta-id description]
+  (-> (db/with-db-exception-translation
+        jdbc/insert! db :vk-note
+        {:valvonta-id valvonta-id
+         :description description}
+        db/default-opts)
+      first
+      (select-keys [:id])))
+
+(defn update-note! [db id description]
+  (first (db/with-db-exception-translation
+           jdbc/update! db :vk-note
+           {:description description} ["id = ?" id]
+           db/default-opts)))

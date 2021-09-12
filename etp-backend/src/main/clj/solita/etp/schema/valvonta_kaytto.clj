@@ -80,6 +80,12 @@
          :henkilot [(st/select-keys Henkilo [:id :rooli-id :etunimi :sukunimi])]
          :yritykset [(st/select-keys Yritys [:id :rooli-id :nimi])]))
 
+(def Note
+  {:id          common-schema/Key
+   :author-id   common-schema/Key
+   :create-time common-schema/Instant
+   :description schema/Str})
+
 (def henkilo? #(and (contains? % :etunimi) (contains? % :sukunimi)))
 (def yritys? #(contains? % :nimi))
 

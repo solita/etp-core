@@ -300,4 +300,40 @@
                                          (api-response/file-response
                                            (io/input-stream tempfile) filename contenttype false
                                            (str "Liite " id "/" liite-id " does not exist."))
-                                         (api-response/bad-request "Filename is invalid."))))}}]]]]]])
+                                         (api-response/bad-request "Filename is invalid."))))}}]]]
+     ["/notes"
+      [""
+       {:get  {:summary    "Hae käytönvalvonnan muistiinpanot."
+               :parameters {:path {:id common-schema/Key}}
+               :responses  {200 {:body [valvonta-kaytto-schema/Note]}}
+               :access     rooli-service/paakayttaja?
+               :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                             (r/response (valvonta-service/find-notes db id)))}
+
+        :post {:summary    "Lisää käytönvalvonnan muistiinpano."
+               :access     rooli-service/paakayttaja?
+               :parameters {:path {:id common-schema/Key}
+                            :body schema/Str}
+               :responses  {201 {:body common-schema/Id}
+                            404 common-schema/ConstraintError}
+               :handler    (fn [{{{:keys [id]} :path :keys [body]}
+                                 :parameters :keys [db uri]}]
+                             (api-response/with-exceptions
+                               #(api-response/created
+                                  uri (valvonta-service/add-note! db id body))
+                               [{:constraint :vk-note-valvonta-id-fkey
+                                 :response   404}]))}}]
+      ["/:note-id"
+       [""
+        {:put {:summary    "Muuta käytönvalvonnan muistiinpanoa."
+               :access     rooli-service/paakayttaja?
+               :parameters {:path {:id      common-schema/Key
+                                   :note-id common-schema/Key}
+                            :body schema/Str}
+               :responses  {200 {:body nil}
+                            404 {:body schema/Str}}
+               :handler    (fn [{{{:keys [id note-id]} :path :keys [body]}
+                                 :parameters :keys [db]}]
+                             (api-response/ok|not-found
+                               (valvonta-service/update-note! db note-id body)
+                               (str "Muistiinpano " id "/" note-id " does not exists.")))}}]]]]]])
