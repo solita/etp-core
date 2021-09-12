@@ -180,18 +180,16 @@
         (assoc % :filename (toimenpide-filename %))))
 
 (defn- find-toimenpide-henkilot [db toimenpide-id]
-  (->> (valvonta-kaytto-db/select-toimenpide-henkilo db {:toimenpide-id toimenpide-id})
-       (map :henkilo-id)))
+  (valvonta-kaytto-db/select-toimenpide-henkilo db {:toimenpide-id toimenpide-id}))
 
 (defn- find-toimenpide-yritykset [db toimenpide-id]
-  (->> (valvonta-kaytto-db/select-toimenpide-yritys db {:toimenpide-id toimenpide-id})
-       (map :yritys-id)))
+  (valvonta-kaytto-db/select-toimenpide-yritys db {:toimenpide-id toimenpide-id}))
 
 (defn find-toimenpiteet [db valvonta-id]
   (->> (valvonta-kaytto-db/select-toimenpiteet db {:valvonta-id valvonta-id})
        (map db-row->toimenpide)
-       (map #(assoc % :henkilot (find-toimenpide-henkilot db (:id %))
-                      :yritykset (find-toimenpide-yritykset db (:id %))))))
+       (pmap #(assoc % :henkilot (find-toimenpide-henkilot db (:id %))
+                       :yritykset (find-toimenpide-yritykset db (:id %))))))
 
 (defn find-toimenpide [db toimenpide-id]
   (valvonta-kaytto-db/select-toimenpide db {:id toimenpide-id}))
