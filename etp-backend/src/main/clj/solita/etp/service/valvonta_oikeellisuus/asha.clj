@@ -113,7 +113,7 @@
 (defn- osapuoli->contact [osapuoli]
   (cond
     (oikeellisuus-schema/laatija? osapuoli)
-    {:type          "ORGANIZATION"                          ;No enum constant fi.ys.eservice.entity.ContactType.PERSON
+    {:type          "PERSON"
      :first-name    (:etunimi osapuoli)
      :last-name     (:sukunimi osapuoli)
      :email-address (:email osapuoli)}
