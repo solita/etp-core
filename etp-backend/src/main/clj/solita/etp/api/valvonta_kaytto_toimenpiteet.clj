@@ -69,18 +69,6 @@
    ["/:toimenpide-id"
     [""
      {:conflicting true
-      :get         {:summary    "Hae yksittäisen toimenpiteen tiedot."
-                    :parameters {:path {:id            common-schema/Key
-                                        :toimenpide-id common-schema/Key}}
-                    :responses  {200 {:body kaytto-schema/Toimenpide}
-                                 404 {:body schema/Str}}
-                    :access     rooli-service/paakayttaja? 
-                    :handler    (fn [{{{:keys [id toimenpide-id]} :path}
-                                      :parameters :keys [db]}]
-                                  (api-response/get-response
-                                    (valvonta-service/find-toimenpide db toimenpide-id)
-                                    (toimenpide-404-msg id toimenpide-id)))}
-
       :put {:summary    "Muuta toimenpiteen tietoja."
             :access     rooli-service/paakayttaja?
             :parameters {:path {:id            common-schema/Key

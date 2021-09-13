@@ -191,9 +191,6 @@
        (pmap #(assoc % :henkilot (find-toimenpide-henkilot db (:id %))
                        :yritykset (find-toimenpide-yritykset db (:id %))))))
 
-(defn find-toimenpide [db toimenpide-id]
-  (valvonta-kaytto-db/select-toimenpide db {:id toimenpide-id}))
-
 (defn- insert-toimenpide-osapuolet! [db valvonta-id toimenpide-id]
   (let [params (map/bindings->map valvonta-id toimenpide-id)]
     (valvonta-kaytto-db/insert-toimenpide-henkilot! db params)

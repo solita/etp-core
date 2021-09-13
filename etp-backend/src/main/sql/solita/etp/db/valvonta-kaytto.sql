@@ -156,17 +156,6 @@ order by l.id, a.modifytime asc, a.event_id desc
 -- name: delete-liite!
 update vk_valvonta_liite set deleted = true where id = :id;
 
--- name: select-toimenpide
-select
-    toimenpide.id, toimenpide.type_id, toimenpide.valvonta_id,
-    toimenpide.create_time, toimenpide.publish_time, toimenpide.deadline_date,
-    toimenpide.template_id, toimenpide.diaarinumero, toimenpide.description,
-    toimenpide.author_id author$id, author.rooli_id author$rooli_id,
-    author.etunimi author$etunimi, author.sukunimi author$sukunimi
-from vk_toimenpide toimenpide
-         inner join kayttaja author on author.id = toimenpide.author_id
-where toimenpide.id = :id;
-
 -- name: select-toimenpiteet
 select
     toimenpide.id, toimenpide.type_id, toimenpide.valvonta_id,
