@@ -34,7 +34,10 @@ where
   (energiatodistus.valvonta$valvoja_id = :valvoja-id or
     (energiatodistus.valvonta$valvoja_id is not null) = :has-valvoja or
     (:valvoja-id::int is null and :has-valvoja::boolean is null))
-order by coalesce(last_toimenpide.publish_time, last_toimenpide.create_time) desc
+order by
+  case when last_toimenpide.type_id in (4, 8, 12) then last_toimenpide.publish_time end desc nulls last,
+  last_toimenpide$deadline_date asc nulls last,
+  coalesce(last_toimenpide.publish_time, last_toimenpide.create_time) desc
 limit :limit offset :offset;
 
 -- name: select-valvonnat-laatija
