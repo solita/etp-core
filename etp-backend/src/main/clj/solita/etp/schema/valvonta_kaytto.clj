@@ -41,18 +41,6 @@
    :template-id   (schema/maybe common-schema/Key)
    :description   (schema/maybe schema/Str)})
 
-(def Toimenpide
-  (assoc ToimenpideAdd
-         :id common-schema/Key
-         :diaarinumero (schema/maybe schema/Str)
-         :author common-schema/Kayttaja
-         :create-time common-schema/Instant
-         :publish-time common-schema/Instant
-         :filename (schema/maybe schema/Str)
-         :valvonta-id common-schema/Key
-         :henkilot [(schema/maybe common-schema/Key)]
-         :yritykset [(schema/maybe common-schema/Key)]))
-
 (def OsapuoliBase
   (st/merge {:rooli-id (schema/maybe common-schema/Key)
              :rooli-description (schema/maybe common-schema/String200)
@@ -72,6 +60,18 @@
                                     :nimi common-schema/String100))
 (def Yritys (complete-valvonta-related-schema YritysSave))
 (def YritysStatus Yritys)
+
+(def Toimenpide
+  (assoc ToimenpideAdd
+    :id common-schema/Key
+    :diaarinumero (schema/maybe schema/Str)
+    :author common-schema/Kayttaja
+    :create-time common-schema/Instant
+    :publish-time common-schema/Instant
+    :filename (schema/maybe schema/Str)
+    :valvonta-id common-schema/Key
+    :henkilot [Henkilo]
+    :yritykset [Yritys]))
 
 (def ValvontaStatus
   (assoc Valvonta

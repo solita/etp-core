@@ -179,14 +179,30 @@ from vk_toimenpide toimenpide
 where toimenpide.valvonta_id = :valvonta-id;
 
 -- name: select-toimenpide-henkilo
-select henkilo_id
-from vk_toimenpide_henkilo
-where toimenpide_id = :toimenpide-id;
+select
+  id, etunimi, sukunimi, henkilotunnus,
+  email, puhelin,
+  vastaanottajan_tarkenne, jakeluosoite, postinumero, postitoimipaikka, maa,
+  rooli_id, rooli_description,
+  toimitustapa_id, toimitustapa_description,
+  valvonta_id
+from vk_toimenpide_henkilo henkilo
+ inner join audit.vk_henkilo audit
+   on henkilo.henkilo_id = audit.id and audit.event_id = henkilo.henkilo_versio
+where henkilo.toimenpide_id = :toimenpide-id;
 
 -- name: select-toimenpide-yritys
-select yritys_id
-from vk_toimenpide_yritys
-where toimenpide_id = :toimenpide-id;
+select
+  id, nimi, ytunnus,
+  email, puhelin,
+  vastaanottajan_tarkenne, jakeluosoite, postinumero, postitoimipaikka, maa,
+  rooli_id, rooli_description,
+  toimitustapa_id, toimitustapa_description,
+  valvonta_id
+from vk_toimenpide_yritys yritys
+  inner join audit.vk_yritys audit
+    on yritys.yritys_id = audit.id and audit.event_id = yritys.yritys_versio
+where yritys.toimenpide_id = :toimenpide-id;
 
 -- name: select-last-toimenpide
 select type_id, deadline_date
