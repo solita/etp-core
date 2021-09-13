@@ -193,7 +193,7 @@ where henkilo.toimenpide_id = :toimenpide-id;
 
 -- name: select-toimenpide-yritys
 select
-  id, nimi, ytunnus
+  id, nimi, ytunnus,
   email, puhelin,
   vastaanottajan_tarkenne, jakeluosoite, postinumero, postitoimipaikka, maa,
   rooli_id, rooli_description,
