@@ -9,7 +9,8 @@
             [solita.etp.service.luokittelu :as luokittelu]
             [flathead.flatten :as flat]
             [solita.common.maybe :as maybe]
-            [solita.common.map :as map])
+            [solita.common.map :as map]
+            [solita.common.logic :as logic])
   (:import (java.time Instant)))
 
 (db/require-queries 'valvonta-kaytto)
@@ -20,38 +21,29 @@
 (defn find-yritykset [db valvonta-id]
   (valvonta-kaytto-db/select-yritykset db {:valvonta-id valvonta-id}))
 
-(defn find-valvonta-henkilot [db valvonta-id]
-  (->> (find-henkilot db valvonta-id)
-       (map #(select-keys % [:id :rooli-id :etunimi :sukunimi]))))
-
-(defn find-valvonta-yritykset [db valvonta-id]
-  (->> (find-yritykset db valvonta-id)
-       (map #(select-keys % [:id :rooli-id :nimi]))))
-
-(defn- find-valvonta-last-toimenpide [db valvonta-id]
-  (first
-    (valvonta-kaytto-db/select-last-toimenpide
-      db
-      {:valvonta-id valvonta-id})))
-
 (defn- db-row->valvonta [valvonta-db-row]
   (update valvonta-db-row :postinumero (maybe/lift1 #(format "%05d" %))))
 
-(defn find-valvonnat [db whoami query]
-  (->> (valvonta-kaytto-db/select-valvonnat
-         db (merge {:limit 10 :offset 0 :valvoja-id nil} query))
-       (map #(-> %
-                 db-row->valvonta
-                 (assoc :henkilot (find-valvonta-henkilot db (:id %))
-                        :yritykset (find-valvonta-yritykset db (:id %))
-                        :last-toimenpide (find-valvonta-last-toimenpide db (:id %)))))))
+(def ^:private default-valvonta-query
+  {:valvoja-id nil :has-valvoja nil :include-closed false
+   :limit 10 :offset 0})
 
-(defn count-valvonnat [db whoami query]
+(defn- nil-if-not-exists [key object]
+  (update object key (logic/when* (comp nil? :id) (constantly nil))))
+
+(defn find-valvonnat [db query]
+  (->> (valvonta-kaytto-db/select-valvonnat db (merge default-valvonta-query query))
+       (map (comp (partial nil-if-not-exists :last-toimenpide)
+                  (partial nil-if-not-exists :energiatodistus)
+                  db-row->valvonta
+                  #(flat/flat->tree #"\$" %)))
+       (pmap #(assoc % :henkilot (find-henkilot db (:id %))
+                       :yritykset (find-yritykset db (:id %))))))
+
+(defn count-valvonnat [db query]
   (first
-    (valvonta-kaytto-db/select-valvonnat-count db
-                                               (merge
-                                                 {:valvoja-id (:id whoami)}
-                                                 query))))
+    (valvonta-kaytto-db/select-valvonnat-count
+      db (merge default-valvonta-query query))))
 
 (defn find-valvonta [db valvonta-id]
   (->> (valvonta-kaytto-db/select-valvonta db {:id valvonta-id})
