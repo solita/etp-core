@@ -17,7 +17,7 @@ from vk_valvonta valvonta
     from energiatodistus
     where energiatodistus.pt$rakennustunnus = valvonta.rakennustunnus and
           energiatodistus.tila_id in (0, 1, 2) and
-          energiatodistus.voimassaolo_paattymisaika > transaction_timestamp()
+          coalesce(energiatodistus.voimassaolo_paattymisaika > transaction_timestamp(), true)
     order by energiatodistus.id desc
     limit 1) energiatodistus on true
   left join lateral (
