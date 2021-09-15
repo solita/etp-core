@@ -42,3 +42,6 @@
 (def published? #(-> % :publish-time some?))
 
 (def audit-report? (partial type? :audit-report))
+
+(def clears-from-tyojono?
+  (partial some-type? #{:verified :anomaly :closed}))

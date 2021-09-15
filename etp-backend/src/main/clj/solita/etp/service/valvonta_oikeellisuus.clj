@@ -150,6 +150,8 @@
           (send-toimenpide-email! db aws-s3-client id toimenpide))
         (when (toimenpide/anomaly? toimenpide)
           (add-anomaly-viestiketju! tx whoami id toimenpide))
+        (when (toimenpide/clears-from-tyojono? toimenpide)
+          (save-valvonta! tx id {:pending false}))
         {:id toimenpide-id})))
 
 (defn- assoc-virheet [db toimenpide]
