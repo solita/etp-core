@@ -1,24 +1,55 @@
 -- name: select-valvonnat
-select id,
-       rakennustunnus,
-       katuosoite,
-       postinumero,
-       ilmoituspaikka_id,
-       ilmoituspaikka_description,
-       ilmoitustunnus,
-       havaintopaiva,
-       valvoja_id
-from vk_valvonta
-where (valvoja_id = :valvoja-id or :valvoja-id::int is null)
-  and deleted is false
-limit :limit
-offset :offset;
+select
+  valvonta.id,
+  rakennustunnus, katuosoite, postinumero,
+  ilmoituspaikka_id, ilmoituspaikka_description, ilmoitustunnus,
+  havaintopaiva, valvoja_id,
+  last_toimenpide.id      last_toimenpide$id,
+  last_toimenpide.type_id last_toimenpide$type_id,
+  last_toimenpide.create_time last_toimenpide$create_time,
+  last_toimenpide.publish_time last_toimenpide$publish_time,
+  last_toimenpide.deadline_date last_toimenpide$deadline_date,
+  last_toimenpide.diaarinumero last_toimenpide$diaarinumero,
+  energiatodistus.id energiatodistus$id
+from vk_valvonta valvonta
+  left join lateral (
+    select energiatodistus.*
+    from energiatodistus
+    where energiatodistus.pt$rakennustunnus = valvonta.rakennustunnus and
+          energiatodistus.tila_id in (0, 1, 2) and
+          energiatodistus.voimassaolo_paattymisaika > transaction_timestamp()
+    order by energiatodistus.id desc
+    limit 1) energiatodistus on true
+  left join lateral (
+    select toimenpide.*
+    from vk_toimenpide toimenpide
+    where valvonta.id = toimenpide.valvonta_id
+    order by coalesce(toimenpide.publish_time, toimenpide.create_time) desc
+    limit 1) last_toimenpide on true
+where
+  (last_toimenpide.id is null or last_toimenpide.type_id <> 5 or :include-closed) and
+  (valvonta.valvoja_id = :valvoja-id or
+    (valvonta.valvoja_id is not null) = :has-valvoja or
+    (:valvoja-id::int is null and :has-valvoja::boolean is null))
+order by
+  last_toimenpide$deadline_date asc nulls last,
+  coalesce(last_toimenpide.publish_time, last_toimenpide.create_time) desc,
+  valvonta.id desc
+limit :limit offset :offset;
 
 -- name: select-valvonnat-count
-select count(*)
-from vk_valvonta
-where valvoja_id = :valvoja-id and
-      deleted is false;
+select count(*) from vk_valvonta valvonta
+left join lateral (
+  select toimenpide.*
+  from vk_toimenpide toimenpide
+  where valvonta.id = toimenpide.valvonta_id
+  order by coalesce(toimenpide.publish_time, toimenpide.create_time) desc
+  limit 1) last_toimenpide on true
+where
+  (last_toimenpide.id is null or last_toimenpide.type_id <> 5 or :include-closed) and
+  (valvonta.valvoja_id = :valvoja-id or
+   (valvonta.valvoja_id is not null) = :has-valvoja or
+   (:valvoja-id::int is null and :has-valvoja::boolean is null));
 
 -- name: delete-valvonta!
 update vk_valvonta set deleted = true where id = :id;
@@ -192,13 +223,6 @@ from vk_toimenpide_yritys yritys
   inner join audit.vk_yritys audit
     on yritys.yritys_id = audit.id and audit.event_id = yritys.yritys_versio
 where yritys.toimenpide_id = :toimenpide-id;
-
--- name: select-last-toimenpide
-select type_id, deadline_date
-from vk_toimenpide
-where valvonta_id = :valvonta-id
-order by id desc
-limit 1;
 
 -- name: select-last-diaarinumero
 select diaarinumero from vk_toimenpide

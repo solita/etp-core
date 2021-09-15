@@ -73,12 +73,19 @@
     :henkilot [Henkilo]
     :yritykset [Yritys]))
 
+(def LastToimenpide
+  (st/select-keys Toimenpide
+                  [:id :diaarinumero :type-id
+                   :deadline-date :create-time :publish-time]))
+
 (def ValvontaStatus
   (assoc Valvonta
          :last-toimenpide
-         (schema/maybe (st/select-keys Toimenpide [:type-id :deadline-date]))
-         :henkilot [(st/select-keys Henkilo [:id :rooli-id :etunimi :sukunimi])]
-         :yritykset [(st/select-keys Yritys [:id :rooli-id :nimi])]))
+         (schema/maybe LastToimenpide)
+         :energiatodistus
+         (schema/maybe {:id common-schema/Key})
+         :henkilot [Henkilo]
+         :yritykset [Yritys]))
 
 (def Note
   {:id          common-schema/Key

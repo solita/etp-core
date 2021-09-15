@@ -56,8 +56,8 @@
                     :parameters {:query valvonta-schema/ValvontaQuery}
                     :responses  {200 {:body {:count schema/Int}}}
                     :access     rooli-service/paakayttaja?
-                    :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
-                                  (r/response (valvonta-service/count-valvonnat db whoami query)))}}]
+                    :handler    (fn [{{:keys [query]} :parameters :keys [db]}]
+                                  (r/response (valvonta-service/count-valvonnat db query)))}}]
     [""
      {:conflicting true
       :get         {:summary    "Hae käytönvalvonnat (työjono)."
@@ -65,8 +65,8 @@
                                                valvonta-schema/ValvontaQueryWindow)}
                     :responses  {200 {:body [valvonta-kaytto-schema/ValvontaStatus]}}
                     :access     rooli-service/paakayttaja?
-                    :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
-                                  (r/response (valvonta-service/find-valvonnat db whoami query)))}
+                    :handler    (fn [{{:keys [query]} :parameters :keys [db]}]
+                                  (r/response (valvonta-service/find-valvonnat db query)))}
       :post        {:summary    "Luo uusi käytönvalvonta"
                     :access     rooli-service/paakayttaja?
                     :parameters {:body valvonta-kaytto-schema/ValvontaSave}
