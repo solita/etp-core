@@ -87,6 +87,6 @@
           (try (f)
                (finally (ig/halt! test-system)))))
       (finally
-        ;;(drop-db! management-db db-name)
+        (drop-db! management-db db-name)
         (drop-bucket! management-aws-s3-client)
         (ig/halt! management-system)))))
