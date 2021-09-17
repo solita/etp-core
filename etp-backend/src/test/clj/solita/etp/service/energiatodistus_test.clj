@@ -1,5 +1,6 @@
 (ns solita.etp.service.energiatodistus-test
   (:require [clojure.test :as t]
+            [clojure.java.jdbc :as jdbc]
             [clojure.java.io :as io]
             [solita.etp.test :as etp-test]
             [solita.common.map :as xmap]
@@ -239,20 +240,48 @@
              energiatodistus)))))
 
 (t/deftest korvaa-energiatodistus!-test
-  (let [{:keys [laatijat energiatodistukset]} (test-data-set)
+  (let [{:keys [laatijat energiatodistukset paakayttajat]} (test-data-set)
         laatija-id (-> laatijat keys sort first)
+        paakayttaja-id (-> paakayttajat keys sort first)
         whoami {:id laatija-id :rooli 0}
+        paakayttaja-whoami {:id paakayttaja-id :rooli 2}
         db (ts/db-user laatija-id)
-        korvattava-id (-> energiatodistukset keys sort second)
+        [korvattava-1st-id korvattava-2nd-id] (-> energiatodistukset keys sort)
         korvaava-add (-> (energiatodistus-test-data/generate-adds 1 2018 true)
                          first
-                         (assoc :korvattu-energiatodistus-id korvattava-id))
-        _ (energiatodistus-test-data/sign! korvattava-id laatija-id true)
+                         (assoc :korvattu-energiatodistus-id korvattava-1st-id))
+        _ (energiatodistus-test-data/sign! korvattava-1st-id laatija-id true)
+        _ (energiatodistus-test-data/sign! korvattava-2nd-id laatija-id true)
         korvaava-id (first (energiatodistus-test-data/insert! [korvaava-add]
                                                               laatija-id))]
     (energiatodistus-test-data/sign! korvaava-id laatija-id true)
+    ;; States after the initial replacement
     (t/is (= (energiatodistus-tila korvaava-id) :signed))
-    (t/is (= (energiatodistus-tila korvattava-id) :replaced))))
+    (t/is (= (energiatodistus-tila korvattava-2nd-id) :signed))
+    (t/is (= (energiatodistus-tila korvattava-1st-id) :replaced))
+
+    ;; Change the replacing ET. Should revert the first superseded ET
+    ;; back to a signed state
+    (service/update-energiatodistus! db paakayttaja-whoami korvaava-id
+                                     (-> (service/find-energiatodistus db korvaava-id)
+                                         (assoc :korvattu-energiatodistus-id korvattava-2nd-id)))
+    (t/is (= (energiatodistus-tila korvaava-id) :signed))
+    (t/is (= (energiatodistus-tila korvattava-2nd-id) :replaced))
+    (t/is (= (energiatodistus-tila korvattava-1st-id) :signed))
+
+    ;; Simulate grandfathered cases for which there is no state change
+    ;; history
+    (jdbc/execute! (ts/db-user ts/*admin-db* -1)
+                   ["DELETE FROM audit.energiatodistus_tila WHERE id = ?;" korvattava-2nd-id])
+
+    ;; Change back from the previous replacement maneuver, verifying
+    ;; that it can be done even when state change history is absent
+    (service/update-energiatodistus! db paakayttaja-whoami korvaava-id
+                                     (-> (service/find-energiatodistus db korvaava-id)
+                                         (assoc :korvattu-energiatodistus-id korvattava-1st-id)))
+    (t/is (= (energiatodistus-tila korvaava-id) :signed))
+    (t/is (= (energiatodistus-tila korvattava-2nd-id) :signed))
+    (t/is (= (energiatodistus-tila korvattava-1st-id) :replaced))))
 
 (t/deftest korvaa-energiatodistus-states-test
   (let [{:keys [laatijat]} (test-data-set)
