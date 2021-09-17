@@ -55,10 +55,11 @@ where tila_id in (et_tilat.allekirjoitettu, et_tilat.hylatty) and id = :id
 
 -- name: revert-energiatodistus-korvattu!
 update energiatodistus set
-  tila_id = (
+  tila_id = coalesce((
     select history.tila_id from audit.energiatodistus_tila history
     where history.id = energiatodistus.id
-    order by history.modifytime desc, history.event_id desc limit 1 offset 1)
+    order by history.modifytime desc, history.event_id desc limit 1 offset 1),
+  et_tilat.allekirjoitettu)
 from et_tilat
 where tila_id = et_tilat.korvattu and id = :id
 
