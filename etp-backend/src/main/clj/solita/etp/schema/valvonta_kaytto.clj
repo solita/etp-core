@@ -41,18 +41,6 @@
    :template-id   (schema/maybe common-schema/Key)
    :description   (schema/maybe schema/Str)})
 
-(def Toimenpide
-  (assoc ToimenpideAdd
-         :id common-schema/Key
-         :diaarinumero (schema/maybe schema/Str)
-         :author common-schema/Kayttaja
-         :create-time common-schema/Instant
-         :publish-time common-schema/Instant
-         :filename (schema/maybe schema/Str)
-         :valvonta-id common-schema/Key
-         :henkilot [(schema/maybe common-schema/Key)]
-         :yritykset [(schema/maybe common-schema/Key)]))
-
 (def OsapuoliBase
   (st/merge {:rooli-id (schema/maybe common-schema/Key)
              :rooli-description (schema/maybe common-schema/String200)
@@ -73,12 +61,37 @@
 (def Yritys (complete-valvonta-related-schema YritysSave))
 (def YritysStatus Yritys)
 
+(def Toimenpide
+  (assoc ToimenpideAdd
+    :id common-schema/Key
+    :diaarinumero (schema/maybe schema/Str)
+    :author common-schema/Kayttaja
+    :create-time common-schema/Instant
+    :publish-time common-schema/Instant
+    :filename (schema/maybe schema/Str)
+    :valvonta-id common-schema/Key
+    :henkilot [Henkilo]
+    :yritykset [Yritys]))
+
+(def LastToimenpide
+  (st/select-keys Toimenpide
+                  [:id :diaarinumero :type-id
+                   :deadline-date :create-time :publish-time]))
+
 (def ValvontaStatus
   (assoc Valvonta
          :last-toimenpide
-         (schema/maybe (st/select-keys Toimenpide [:type-id :deadline-date]))
-         :henkilot [(st/select-keys Henkilo [:id :rooli-id :etunimi :sukunimi])]
-         :yritykset [(st/select-keys Yritys [:id :rooli-id :nimi])]))
+         (schema/maybe LastToimenpide)
+         :energiatodistus
+         (schema/maybe {:id common-schema/Key})
+         :henkilot [Henkilo]
+         :yritykset [Yritys]))
+
+(def Note
+  {:id          common-schema/Key
+   :author-id   common-schema/Key
+   :create-time common-schema/Instant
+   :description schema/Str})
 
 (def henkilo? #(and (contains? % :etunimi) (contains? % :sukunimi)))
 (def yritys? #(contains? % :nimi))

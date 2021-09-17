@@ -16,13 +16,18 @@
   {:description schema/Str
    :type-id     common-schema/Key})
 
+(def Tiedoksi
+  {:name schema/Str
+   :email (schema/maybe common-schema/Email)})
+
 (def ToimenpideUpdate
   (schema-tools/optional-keys
     {:deadline-date (schema/maybe common-schema/Date)
      :template-id   (schema/maybe common-schema/Key)
      :description   (schema/maybe schema/Str)
-     :virheet [Virhe]
-     :severity-id (schema/maybe common-schema/Key)}))
+     :virheet       [Virhe]
+     :severity-id   (schema/maybe common-schema/Key)
+     :tiedoksi      [Tiedoksi]}))
 
 (def ToimenpideAdd
   {:type-id       common-schema/Key
@@ -30,7 +35,8 @@
    :template-id   (schema/maybe common-schema/Key)
    :description   (schema/maybe schema/Str)
    :virheet       [Virhe]
-   :severity-id   (schema/maybe common-schema/Key)})
+   :severity-id   (schema/maybe common-schema/Key)
+   :tiedoksi      [Tiedoksi]})
 
 (def Toimenpide
   (assoc ToimenpideAdd
@@ -46,7 +52,7 @@
   (assoc Valvonta
     :last-toimenpide
     (schema/maybe (dissoc Toimenpide
-                          :author :description :virheet
+                          :author :description :virheet :tiedoksi
                           :severity-id :filename))
     :energiatodistus energiatodistus-schema/Energiatodistus))
 
@@ -60,3 +66,6 @@
    :author-id   common-schema/Key
    :create-time common-schema/Instant
    :description schema/Str})
+
+(def laatija? #(and (contains? % :etunimi) (contains? % :sukunimi)))
+(def tiedoksi? #(and (contains? % :name)))

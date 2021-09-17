@@ -199,7 +199,7 @@
 
 (defn format-value [v]
   (cond
-    (string? v) (format "\"%s\"" v)
+    (string? v) (format "\"%s\"" (str/replace v #"\"" "\"\""))
     (number? v) (.format decimal-format v)
     (= Instant (type v)) (str (LocalDateTime/ofInstant v timezone))
     :else (str v)))

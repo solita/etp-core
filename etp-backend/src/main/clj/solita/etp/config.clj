@@ -99,6 +99,8 @@
 ;; General email
 (def email-from-email (env "EMAIL_FROM_EMAIL" "no-reply@example.com"))
 (def email-from-name (env "EMAIL_FROM_NAME" "Energiatodistusrekisteri [Dev]"))
+(def email-reply-to-email (env "EMAIL_REPLY_TO_EMAIL" "reply@example.com"))
+(def email-reply-to-name (env "EMAIL_REPLY_TO_NAME" "Energiatodistusrekisteri [Dev]"))
 
 ;; Asha
 

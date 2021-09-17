@@ -93,7 +93,7 @@
       [""
        {:get  {:summary    "Hae energiatodistuksen valvontatoimenpiteet."
                :parameters {:path {:id common-schema/Key}}
-               :responses  {200 {:body [(dissoc oikeellisuus-schema/Toimenpide :virheet)]}}
+               :responses  {200 {:body [(dissoc oikeellisuus-schema/Toimenpide :virheet :tiedoksi)]}}
                :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                              (api-response/get-response

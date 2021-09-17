@@ -9,7 +9,8 @@
             [solita.etp.service.luokittelu :as luokittelu]
             [flathead.flatten :as flat]
             [solita.common.maybe :as maybe]
-            [solita.common.map :as map])
+            [solita.common.map :as map]
+            [solita.common.logic :as logic])
   (:import (java.time Instant)))
 
 (db/require-queries 'valvonta-kaytto)
@@ -20,43 +21,42 @@
 (defn find-yritykset [db valvonta-id]
   (valvonta-kaytto-db/select-yritykset db {:valvonta-id valvonta-id}))
 
-(defn find-valvonta-henkilot [db valvonta-id]
-  (->> (find-henkilot db valvonta-id)
-       (map #(select-keys % [:id :rooli-id :etunimi :sukunimi]))))
+(defn- db-row->valvonta [valvonta-db-row]
+  (update valvonta-db-row :postinumero (maybe/lift1 #(format "%05d" %))))
 
-(defn find-valvonta-yritykset [db valvonta-id]
-  (->> (find-yritykset db valvonta-id)
-       (map #(select-keys % [:id :rooli-id :nimi]))))
+(def ^:private default-valvonta-query
+  {:valvoja-id nil :has-valvoja nil :include-closed false
+   :limit 10 :offset 0})
 
-(defn- find-valvonta-last-toimenpide [db valvonta-id]
+(defn- nil-if-not-exists [key object]
+  (update object key (logic/when* (comp nil? :id) (constantly nil))))
+
+(defn find-valvonnat [db query]
+  (->> (valvonta-kaytto-db/select-valvonnat db (merge default-valvonta-query query))
+       (map (comp (partial nil-if-not-exists :last-toimenpide)
+                  (partial nil-if-not-exists :energiatodistus)
+                  db-row->valvonta
+                  #(flat/flat->tree #"\$" %)))
+       (pmap #(assoc % :henkilot (find-henkilot db (:id %))
+                       :yritykset (find-yritykset db (:id %))))))
+
+(defn count-valvonnat [db query]
   (first
-    (valvonta-kaytto-db/select-last-toimenpide
-      db
-      {:valvonta-id valvonta-id})))
-
-(defn find-valvonnat [db whoami query]
-  (->> (valvonta-kaytto-db/select-valvonnat db
-                                            (merge {:limit 10 :offset 0 :valvoja-id (:id whoami)} query))
-       (map (fn [valvonta]
-              (-> valvonta
-                  (assoc :henkilot (find-valvonta-henkilot db (:id valvonta))
-                         :yritykset (find-valvonta-yritykset db (:id valvonta))
-                         :last-toimenpide (find-valvonta-last-toimenpide db (:id valvonta))))))))
-
-(defn count-valvonnat [db whoami query]
-  (first
-    (valvonta-kaytto-db/select-valvonnat-count db
-                                               (merge
-                                                 {:valvoja-id (:id whoami)}
-                                                 query))))
+    (valvonta-kaytto-db/select-valvonnat-count
+      db (merge default-valvonta-query query))))
 
 (defn find-valvonta [db valvonta-id]
-  (first (valvonta-kaytto-db/select-valvonta db {:id valvonta-id})))
+  (->> (valvonta-kaytto-db/select-valvonta db {:id valvonta-id})
+       (map db-row->valvonta)
+       first))
+
+(defn- valvonta->db-row [valvonta]
+  (update valvonta :postinumero (maybe/lift1 #(Integer/parseInt %))))
 
 (defn add-valvonta! [db valvonta]
   (-> (db/with-db-exception-translation
         jdbc/insert! db :vk-valvonta
-        (dissoc valvonta :valvoja-id)
+        (valvonta->db-row valvonta)
         db/default-opts)
       first
       :id))
@@ -64,7 +64,8 @@
 (defn update-valvonta! [db valvonta-id valvonta]
   (first (db/with-db-exception-translation
            jdbc/update! db :vk_valvonta
-           valvonta ["id = ?" valvonta-id]
+           (valvonta->db-row valvonta)
+           ["id = ?" valvonta-id]
            db/default-opts)))
 
 (defn delete-valvonta! [db valvonta-id]
@@ -171,21 +172,16 @@
         (assoc % :filename (toimenpide-filename %))))
 
 (defn- find-toimenpide-henkilot [db toimenpide-id]
-  (->> (valvonta-kaytto-db/select-toimenpide-henkilo db {:toimenpide-id toimenpide-id})
-       (map :henkilo-id)))
+  (valvonta-kaytto-db/select-toimenpide-henkilo db {:toimenpide-id toimenpide-id}))
 
 (defn- find-toimenpide-yritykset [db toimenpide-id]
-  (->> (valvonta-kaytto-db/select-toimenpide-yritys db {:toimenpide-id toimenpide-id})
-       (map :yritys-id)))
+  (valvonta-kaytto-db/select-toimenpide-yritys db {:toimenpide-id toimenpide-id}))
 
 (defn find-toimenpiteet [db valvonta-id]
   (->> (valvonta-kaytto-db/select-toimenpiteet db {:valvonta-id valvonta-id})
        (map db-row->toimenpide)
-       (map #(assoc % :henkilot (find-toimenpide-henkilot db (:id %))
-                      :yritykset (find-toimenpide-yritykset db (:id %))))))
-
-(defn find-toimenpide [db toimenpide-id]
-  (valvonta-kaytto-db/select-toimenpide db {:id toimenpide-id}))
+       (pmap #(assoc % :henkilot (find-toimenpide-henkilot db (:id %))
+                       :yritykset (find-toimenpide-yritykset db (:id %))))))
 
 (defn- insert-toimenpide-osapuolet! [db valvonta-id toimenpide-id]
   (let [params (map/bindings->map valvonta-id toimenpide-id)]
@@ -281,3 +277,22 @@
   (when-let [document (asha/find-document aws-s3-client valvonta-id toimenpide-id osapuoli)]
     (with-open [output (io/output-stream ostream)]
       (io/copy document output))))
+
+(defn find-notes [db id]
+  (valvonta-kaytto-db/select-valvonta-notes
+    db {:valvonta-id id}))
+
+(defn add-note! [db valvonta-id description]
+  (-> (db/with-db-exception-translation
+        jdbc/insert! db :vk-note
+        {:valvonta-id valvonta-id
+         :description description}
+        db/default-opts)
+      first
+      (select-keys [:id])))
+
+(defn update-note! [db id description]
+  (first (db/with-db-exception-translation
+           jdbc/update! db :vk-note
+           {:description description} ["id = ?" id]
+           db/default-opts)))

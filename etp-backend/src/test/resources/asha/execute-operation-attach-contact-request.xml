@@ -19,7 +19,7 @@
                 </ns0:IdentityChain>
                 <ns0:AttachOperation>
                     <ns0:Contact>
-                        <ns0:type>ORGANIZATION</ns0:type>
+                        <ns0:type>PERSON</ns0:type>
                         <ns0:emailAddress></ns0:emailAddress>
                         <ns0:firstName>Liisa</ns0:firstName>
                         <ns0:lastName>Meikäläinen</ns0:lastName>

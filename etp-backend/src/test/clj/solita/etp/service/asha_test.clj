@@ -90,7 +90,7 @@
                                                   :request-id "ETP-1"
                                                   :identity   {:case              {:number "ARA-05.03.02-2021-8"}
                                                                :processing-action {:name-identity "Vireillepano"}}
-                                                  :attach     {:contact {:type       "ORGANIZATION" ;TODO: fix to use PERSON -> No enum constant fi.ys.eservice.entity.ContactType.PERSON
+                                                  :attach     {:contact {:type       "PERSON"
                                                                          :first-name "Liisa"
                                                                          :last-name  "Meikäläinen"}}})))))
 
@@ -105,11 +105,11 @@
                                                   :processing-action {:name                 "Tietopyyntö"
                                                                       :reception-date       "2021-03-02T12:54:00"
                                                                       :contacting-direction "SENT"
-                                                                      :contact              {:type       "ORGANIZATION" ;TODO: fix to use PERSON -> No enum constant fi.ys.eservice.entity.ContactType.PERSON
+                                                                      :contact              {:type       "PERSON"
                                                                                              :first-name "Liisa"
                                                                                              :last-name  "Meikäläinen"}}})))))
 
-(t/deftest execute-operation-processing-action-test
+(t/deftest execute-operation-attach-document-test
   (binding [asha-service/make-send-requst! (handle-request "asha/execute-operation-attach-document-request.xml"
                                                            "asha/execute-operation-response.xml"
                                                            200)]
