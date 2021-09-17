@@ -152,18 +152,28 @@
                                  osapuoli
                                  dokumentti
                                  & [{:keys [viranomaistunnus palvelutunnus tulostustoimittaja varmenne
-                                            yhteyshenkilo-nimi yhteyshenkilo-email]
+                                            yhteyshenkilo-nimi yhteyshenkilo-email
+                                            laskutus-tunniste laskutus-salasana
+                                            paperitoimitus? laheta-tulostukseen?]
                                      :or   {viranomaistunnus    config/suomifi-viestit-viranomaistunnus
                                             palvelutunnus       config/suomifi-viestit-palvelutunnus
                                             tulostustoimittaja  config/suomifi-viestit-tulostustoimittaja
                                             varmenne            config/suomifi-viestit-varmenne
                                             yhteyshenkilo-nimi  config/suomifi-viestit-yhteyshenkilo-nimi
-                                            yhteyshenkilo-email config/suomifi-viestit-yhteyshenkilo-email}}]]
+                                            yhteyshenkilo-email config/suomifi-viestit-yhteyshenkilo-email
+                                            laskutus-tunniste config/suomifi-viestit-laskutus-tunniste
+                                            laskutus-salasana config/suomifi-viestit-laskutus-salasana
+                                            paperitoimitus?      false
+                                            laheta-tulostukseen? false}}]]
   (let [data {:viranomainen (cond-> {:viranomaistunnus viranomaistunnus
                                      :palvelutunnus    palvelutunnus}
                                     (and yhteyshenkilo-nimi yhteyshenkilo-email) (assoc :yhteyshenkilo {:nimi  yhteyshenkilo-nimi
                                                                                                         :email yhteyshenkilo-email}))
               :sanoma       (->sanoma varmenne (:valvonta-id toimenpide) (:id toimenpide) (:id osapuoli))
-              :kysely       {:kohteet            (->kohde toimenpide osapuoli dokumentti)
-                             :tulostustoimittaja tulostustoimittaja}}]
+              :kysely       (cond-> {:kohteet              (->kohde toimenpide osapuoli dokumentti)
+                                     :tulostustoimittaja   tulostustoimittaja
+                                     :paperitoimitus?      paperitoimitus?
+                                     :laheta-tulostukseen? laheta-tulostukseen?}
+                                    (and laskutus-tunniste laskutus-salasana) (assoc :lakutus {:tunniste laskutus-tunniste
+                                                                                               :salasana laskutus-salasana}))}]
     (request-handler! data)))

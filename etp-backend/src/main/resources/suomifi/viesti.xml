@@ -17,6 +17,7 @@
             </asi:Viranomainen>
             <asi:Kysely>
                 {{#kysely}}
+                <asi:Paperi>{{paperitoimitus?}}</asi:Paperi>
                 <asi:Kohteet>
                     {{#kohteet}}
                     <asi:Kohde>
@@ -51,6 +52,13 @@
                     {{/kohteet}}
                 </asi:Kohteet>
                 <asi:Tulostustoimittaja>{{tulostustoimittaja}}</asi:Tulostustoimittaja>
+                <asi:LahetaTulostukseen>{{laheta-tulostukseen?}}</asi:LahetaTulostukseen>
+                {{#laskutus}}
+                <asi:Laskutus>
+                    <asi:Tunniste>{{tunniste}}</asi:Tunniste>
+                    <asi:Salasana>{{salasana}}</asi:Salasana>
+                </asi:Laskutus>
+                {{/laskutus}}
                 {{/kysely}}
             </asi:Kysely>
         </asi:LahetaViesti>
