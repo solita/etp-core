@@ -98,3 +98,6 @@
 
 (def omistaja? #(= (:rooli-id %) 0))
 (def tiedoksi? #(= (:rooli-id %) 1))
+
+(defn toimitustapa-suomifi? [osapuoli]
+  (= (:toimitustapa-id osapuoli) 0))

@@ -1,6 +1,7 @@
 (ns solita.etp.service.valvonta-kaytto
   (:require [solita.etp.service.valvonta-kaytto.asha :as asha]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
+            [solita.etp.service.suomifi-viestit :as suomifi-viestit]
             [clojure.java.io :as io]
             [clojure.set :as set]
             [solita.etp.service.file :as file-service]
@@ -10,7 +11,9 @@
             [flathead.flatten :as flat]
             [solita.common.maybe :as maybe]
             [solita.common.map :as map]
-            [solita.common.logic :as logic])
+            [solita.common.logic :as logic]
+            [solita.etp.service.valvonta-kaytto.store :as store]
+            [solita.etp.schema.valvonta-kaytto :as kaytto-schema])
   (:import (java.time Instant)))
 
 (db/require-queries 'valvonta-kaytto)
@@ -209,6 +212,23 @@
     (find-henkilot db valvonta-id)
     (find-yritykset db valvonta-id)))
 
+(defn send-suomifi-viestit! [aws-s3-client
+                             toimenpide
+                             osapuolet]
+  (doseq [osapuoli (filter kaytto-schema/toimitustapa-suomifi? osapuolet)]
+    (suomifi-viestit/send-message-to-osapuoli!
+      toimenpide
+      osapuoli
+      (store/find-document aws-s3-client (:valvonta-id toimenpide) (:id toimenpide) osapuoli))))
+
+(defn- log-toimenpide! [db aws-s3-client whoami  valvonta toimenpide osapuolet ilmoituspaikat]
+  (when (toimenpide/asha-toimenpide? toimenpide)
+    (send-suomifi-viestit! aws-s3-client toimenpide osapuolet)
+    (asha/log-toimenpide!
+      db aws-s3-client whoami
+      valvonta toimenpide
+      osapuolet ilmoituspaikat)))
+
 (defn add-toimenpide! [db aws-s3-client whoami valvonta-id toimenpide-add]
   (jdbc/with-db-transaction
     [db db]
@@ -225,11 +245,9 @@
       (insert-toimenpide-osapuolet! db valvonta-id toimenpide-id)
       (case (-> toimenpide :type-id toimenpide/type-key)
         :closed (asha/close-case! whoami valvonta-id toimenpide)
-        (when (toimenpide/asha-toimenpide? toimenpide)
-          (asha/log-toimenpide!
-            db aws-s3-client whoami
-            valvonta toimenpide
-            osapuolet ilmoituspaikat)))
+        (log-toimenpide! db aws-s3-client whoami
+                         valvonta toimenpide
+                         osapuolet ilmoituspaikat))
       {:id toimenpide-id})))
 
 (defn update-toimenpide! [db toimenpide-id toimenpide]
@@ -268,13 +286,13 @@
     (find-yritys db yritys-id)))
 
 (defn find-toimenpide-henkilo-document [db aws-s3-client valvonta-id toimenpide-id henkilo-id]
-  (asha/find-document aws-s3-client valvonta-id toimenpide-id (find-henkilo db henkilo-id)))
+  (store/find-document aws-s3-client valvonta-id toimenpide-id (find-henkilo db henkilo-id)))
 
 (defn find-toimenpide-yritys-document [db aws-s3-client valvonta-id toimenpide-id yritys-id]
-  (asha/find-document aws-s3-client valvonta-id toimenpide-id (find-yritys db yritys-id)))
+  (store/find-document aws-s3-client valvonta-id toimenpide-id (find-yritys db yritys-id)))
 
 (defn find-toimenpide-document [aws-s3-client valvonta-id toimenpide-id osapuoli ostream]
-  (when-let [document (asha/find-document aws-s3-client valvonta-id toimenpide-id osapuoli)]
+  (when-let [document (store/find-document aws-s3-client valvonta-id toimenpide-id osapuoli)]
     (with-open [output (io/output-stream ostream)]
       (io/copy document output))))
 

@@ -111,6 +111,7 @@
 
 ;; Suomifi / viestit
 
+(def suomifi-viestit-proxy? (edn/read-string (env "SUOMIFI_VIESTIT_PROXY" "false")))
 (def suomifi-viestit-debug?  (edn/read-string (env "SUOMIFI_VIESTIT_DEBUG" "false")))
 (def suomifi-viestit-endpoint-url (env "SUOMIFI_VIESTIT_ENDPOINT_URL" nil))
 (def suomifi-viestit-viranomaistunnus (env "SUOMIFI_VIESTIT_VIRANOMAISTUNNUS" "Viranoaminen"))

@@ -2,6 +2,7 @@
   (:require [solita.common.time :as time]
             [solita.etp.service.asha :as asha]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
+            [solita.etp.service.valvonta-kaytto.store :as store]
             [solita.etp.schema.valvonta-kaytto :as kaytto-schema]
             [solita.etp.service.pdf :as pdf]
             [solita.etp.db :as db]
@@ -11,28 +12,12 @@
 (db/require-queries 'valvonta-kaytto)
 (db/require-queries 'geo)
 
-(def file-key-prefix "valvonta/kaytto")
-
 (defn toimenpide-type->document [type-id]
   (let [type-key (toimenpide/type-key type-id )
         documents {:rfi-request {:type "Pyyntö" :filename "tietopyynto.pdf"}
                    :rfi-order {:type "Kirje" :filename "tietopyynto_kehotus.pdf"}
                    :rfi-warning {:type "Kirje" :filename "tietopyynto_varoitus.pdf"}}]
     (get documents type-key)))
-
-(defn- file-path [file-key-prefix valvonta-id toimenpide-id osapuoli]
-  (cond
-    (kaytto-schema/henkilo? osapuoli) (str file-key-prefix "/" valvonta-id "/" toimenpide-id "/henkilo/" (:id osapuoli))
-    (kaytto-schema/yritys? osapuoli) (str file-key-prefix "/" valvonta-id "/" toimenpide-id "/yritys/" (:id osapuoli))))
-
-(defn store-document [aws-s3-client valvonta-id toimenpide-id osapuoli document]
-  (file-service/upsert-file-from-bytes
-    aws-s3-client
-    (file-path file-key-prefix valvonta-id toimenpide-id osapuoli)
-    document))
-
-(defn find-document [aws-s3-client valvonta-id toimenpide-id osapuoli]
-  (file-service/find-file aws-s3-client (file-path file-key-prefix valvonta-id toimenpide-id osapuoli)))
 
 (defn find-kaytto-valvonta-documents [db valvonta-id]
   (->> (valvonta-kaytto-db/select-valvonta-documents db {:valvonta-id valvonta-id})
@@ -154,7 +139,7 @@
                          (filter kaytto-schema/omistaja?)
                          (map (fn [osapuoli]
                                 (let [document (generate-pdf-document db whoami valvonta toimenpide ilmoituspaikat osapuoli osapuolet)]
-                                  (store-document aws-s3-client (:id valvonta) (:id toimenpide) osapuoli document)
+                                  (store/store-document aws-s3-client (:id valvonta) (:id toimenpide) osapuoli document)
                                   document)))))]
     (asha/log-toimenpide!
       sender-id

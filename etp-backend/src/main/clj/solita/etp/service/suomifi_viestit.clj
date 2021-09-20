@@ -11,13 +11,14 @@
             [solita.common.xml :as xml]
             [schema.core :as schema]
             [clojure.java.io :as io]
-            [solita.etp.service.pdf :as pdf])
+            [solita.etp.service.pdf :as pdf]
+            [clj-http.conn-mgr :as conn-mgr])
   (:import (java.time Instant)
-           (java.io ByteArrayOutputStream)))
+           (java.io ByteArrayOutputStream File)))
 
-(def lahettaja {:nimi "Asumisen rahoitus- ja kehittämiskeskus"
-                :jakeluosoite "Vesijärvenkatu 11A / PL 30"
-                :postinumero "15141"
+(def lahettaja {:nimi             "Asumisen rahoitus- ja kehittämiskeskus"
+                :jakeluosoite     "Vesijärvenkatu 11A / PL 30"
+                :postinumero      "15141"
                 :postitoimipaikka "Lahti"})
 
 (defn- debug-print [info]
@@ -79,10 +80,11 @@
     (.toByteArray baos)))
 
 (defn- dokumentti->tiedosto [type-key osapuoli dokumentti]
-  (let [{:keys [nimi kuvaus]} (toimenpide->tiedosto type-key)]
+  (let [{:keys [nimi kuvaus]} (toimenpide->tiedosto type-key)
+        tiedosto (add-cover-page dokumentti osapuoli)]
     {:nimi    nimi
      :kuvaus  kuvaus
-     :sisalto (-> dokumentti (add-cover-page osapuoli) bytes->base64)
+     :sisalto (bytes->base64 tiedosto)
      :muoto   "application/pdf"}))
 
 (defn- ^:dynamic now []
@@ -106,7 +108,10 @@
 (defn- ^:dynamic make-send-requst! [request]
   (if config/suomifi-viestit-endpoint-url
     (http/post config/suomifi-viestit-endpoint-url
-               {:body request})
+               (cond-> {:body request}
+                       config/suomifi-viestit-proxy? (assoc
+                                                       :connection-manager
+                                                       (conn-mgr/make-socks-proxied-conn-manager "localhost" 1080))))
     (do
       (log/info "Missing suomifi viestit endpoint url. Skip request to suomifi viestit...")
       {:status 200})))
@@ -137,16 +142,17 @@
      :sanoma-tunniste   (xml/get-content response-xml [:laheta-viesti-result :tila-koodi :sanoma-tunniste])}))
 
 (defn- read-response [response]
-  (let [coercer (sc/coercer {:tila-koodi schema/Int
+  (let [coercer (sc/coercer {:tila-koodi        schema/Int
                              :tila-koodi-kuvaus schema/Str
-                             :sanoma-tunniste schema/Str}
+                             :sanoma-tunniste   schema/Str}
                             sc/string-coercion-matcher)]
     (-> response response-parser coercer)))
 
 (defn- request-handler! [data]
   (let [request-xml (request-create-xml data)
         response (send-request! request-xml)]
-    (read-response response)))
+    (when response
+      (read-response response))))
 
 (defn send-message-to-osapuoli! [toimenpide
                                  osapuoli
@@ -155,14 +161,14 @@
                                             yhteyshenkilo-nimi yhteyshenkilo-email
                                             laskutus-tunniste laskutus-salasana
                                             paperitoimitus? laheta-tulostukseen?]
-                                     :or   {viranomaistunnus    config/suomifi-viestit-viranomaistunnus
-                                            palvelutunnus       config/suomifi-viestit-palvelutunnus
-                                            tulostustoimittaja  config/suomifi-viestit-tulostustoimittaja
-                                            varmenne            config/suomifi-viestit-varmenne
-                                            yhteyshenkilo-nimi  config/suomifi-viestit-yhteyshenkilo-nimi
-                                            yhteyshenkilo-email config/suomifi-viestit-yhteyshenkilo-email
-                                            laskutus-tunniste config/suomifi-viestit-laskutus-tunniste
-                                            laskutus-salasana config/suomifi-viestit-laskutus-salasana
+                                     :or   {viranomaistunnus     config/suomifi-viestit-viranomaistunnus
+                                            palvelutunnus        config/suomifi-viestit-palvelutunnus
+                                            tulostustoimittaja   config/suomifi-viestit-tulostustoimittaja
+                                            varmenne             config/suomifi-viestit-varmenne
+                                            yhteyshenkilo-nimi   config/suomifi-viestit-yhteyshenkilo-nimi
+                                            yhteyshenkilo-email  config/suomifi-viestit-yhteyshenkilo-email
+                                            laskutus-tunniste    config/suomifi-viestit-laskutus-tunniste
+                                            laskutus-salasana    config/suomifi-viestit-laskutus-salasana
                                             paperitoimitus?      false
                                             laheta-tulostukseen? false}}]]
   (let [data {:viranomainen (cond-> {:viranomaistunnus viranomaistunnus
