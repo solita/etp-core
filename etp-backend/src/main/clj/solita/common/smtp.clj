@@ -6,7 +6,7 @@
                                 MimeBodyPart
                                 MimeMultipart)
            (java.util Properties)
-           (java.io File)))
+           (java.io File InputStream)))
 
 (def timeout "5000")
 (def charset "UTF-8")
@@ -58,9 +58,16 @@
   (doto (MimeBodyPart.)
     (.setText body charset subtype)))
 
-(defn- attachment-mime-body-part [^File attachment]
-  (doto (MimeBodyPart.)
-    (.attachFile attachment)))
+(defprotocol AttachmentMimeBodyPart (attachment-mime-body-part [attachment]))
+(extend-protocol AttachmentMimeBodyPart
+  File
+  (attachment-mime-body-part [^File attachment]
+    (doto (MimeBodyPart.)
+      (.attachFile attachment)))
+
+  InputStream
+  (attachment-mime-body-part [^InputStream attachment]
+    (MimeBodyPart. attachment)))
 
 (defn- multipart [& mime-body-parts]
   (let [mime-multi-part (MimeMultipart.)]

@@ -203,7 +203,7 @@
 
 (defn send-toimenpide-email! [db aws-s3-client energiatodistus-id toimenpide]
   (send-email-to-laatija! db energiatodistus-id toimenpide)
-  (when-let [tiedoksi (and (= (-> toimenpide :type-id toimenpide/type-key) :audit-report)
+  (when-let [tiedoksi (and (toimenpide/audit-report? toimenpide)
                            (seq (filter #(-> % :email seq) (:tiedoksi toimenpide))))]
     (doseq [vastaanottaja tiedoksi]
       (send-email-to-tiedoksi! db aws-s3-client energiatodistus-id (:id toimenpide) (:email vastaanottaja)))))
