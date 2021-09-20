@@ -9,6 +9,7 @@
             [solita.common.aws :as aws]))
 
 (def ^:dynamic *db* nil)
+(def ^:dynamic *admin-db* nil)
 (def ^:dynamic *aws-s3-client* nil)
 
 (defn db-user
@@ -22,6 +23,11 @@
                      :database-name  "template1"
                      :current-schema "public"})
          (config/aws-s3-client {:bucket bucket})))
+
+(defn config-for-in-test-management [db-name]
+  (config/db {:username       (config/env "DB_MANAGEMENT_USER" "etp")
+              :password       (config/env "DB_MANAGEMENT_PASSWORD" "etp")
+              :database-name  db-name}))
 
 (defn config-for-tests [db-name bucket]
   (merge (config/db {:database-name            db-name
@@ -52,6 +58,15 @@
                                            :Bucket bucket}))
     (#'aws/invoke client :DeleteBucket {:Bucket bucket})))
 
+(defn- config-plain-db [config]
+  (merge (select-keys config [:server-name
+                              :port-number
+                              :password
+                              :current-schema])
+         {:dbtype "postgresql"
+          :dbname (:database-name config)
+          :user (:username config)}))
+
 (defn fixture [f]
   (let [uuid                     (-> (java.util.UUID/randomUUID)
                                      .toString
@@ -67,6 +82,7 @@
       (let [test-system (ig/init (config-for-tests db-name bucket-name))]
         (with-bindings
           {#'*db*            (db-user (:solita.etp/db test-system) 0)
+           #'*admin-db*      (config-plain-db (:solita.etp/db (config-for-in-test-management db-name)))
            #'*aws-s3-client* (:solita.etp/aws-s3-client test-system)}
           (try (f)
                (finally (ig/halt! test-system)))))
@@ -74,4 +90,3 @@
         (drop-db! management-db db-name)
         (drop-bucket! management-aws-s3-client)
         (ig/halt! management-system)))))
-
