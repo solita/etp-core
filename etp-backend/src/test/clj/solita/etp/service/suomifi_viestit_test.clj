@@ -35,13 +35,49 @@
                 :postinumero      "00000"
                 :postitoimipaikka "Kaupunki"
                 :maa              "FI"}
-              (pdf/generate-pdf->bytes {:layout "pdf/ipost-address-page.html"})
+               (pdf/generate-pdf->bytes {:layout "pdf/ipost-address-page.html"})
                {:viranomaistunnus    "Organisaatio"
                 :palvelutunnus       "OR"
                 :tulostustoimittaja  "Edita"
                 :varmenne            "OR"
                 :yhteyshenkilo-nimi  "Henkilö"
-                :yhteyshenkilo-email "testi.kayttaja@organisaatio.or"})
+                :yhteyshenkilo-email "testi.kayttaja@organisaatio.or"
+                :laskutus-tunniste   "0000"
+                :laskutus-salasana   "0000"})
              {:tila-koodi        202,
               :tila-koodi-kuvaus "Asia tallennettuna asiointitilipalvelun käsittelyjonoon, mutta se ei vielä näy asiakkaan asiointi-tilillä. Lopullinen vastaus on haettavissa erikseen erillisellä kutsulla."
+              :sanoma-tunniste   "ETP-1-2-1"}))))
+
+(t/deftest send-message-to-osapuoli-id-already-exists-test
+  (with-bindings {#'suomifi-viestit/make-send-requst! (handle-request "suomifi/viesti-request.xml"
+                                                                      "suomifi/viesti-id-already-exists-response.xml"
+                                                                      200)
+                  #'suomifi-viestit/now               (fn []
+                                                        "2021-09-08T06:21:03.625667Z")
+                  #'suomifi-viestit/bytes->base64     (fn [_]
+                                                        "dGVzdGk=")}
+    (t/is (= (suomifi-viestit/send-message-to-osapuoli!
+               {:type-id      1
+                :id           2
+                :valvonta-id  1
+                :diaarinumero "ARA-05.03.02-2021-31"}
+               {:id               1
+                :etunimi          "Testi"
+                :sukunimi         "Vastaanottaja"
+                :henkilotunnus    "010120-3319"
+                :jakeluosoite     "Testitie 1 A"
+                :postinumero      "00000"
+                :postitoimipaikka "Kaupunki"
+                :maa              "FI"}
+               (pdf/generate-pdf->bytes {:layout "pdf/ipost-address-page.html"})
+               {:viranomaistunnus    "Organisaatio"
+                :palvelutunnus       "OR"
+                :tulostustoimittaja  "Edita"
+                :varmenne            "OR"
+                :yhteyshenkilo-nimi  "Henkilö"
+                :yhteyshenkilo-email "testi.kayttaja@organisaatio.or"
+                :laskutus-tunniste   "0000"
+                :laskutus-salasana   "0000"})
+             {:tila-koodi        525,
+              :tila-koodi-kuvaus "Asian tietosisällössä virheitä. Viranomaistunnisteella löytyy jo asia, joka on tallennettu asiakkaan tilille Viestit-palveluun1"
               :sanoma-tunniste   "ETP-1-2-1"}))))

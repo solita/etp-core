@@ -12,7 +12,8 @@
             [schema.core :as schema]
             [clojure.java.io :as io]
             [solita.etp.service.pdf :as pdf]
-            [clj-http.conn-mgr :as conn-mgr])
+            [clj-http.conn-mgr :as conn-mgr]
+            [clojure.string :as str])
   (:import (java.time Instant)
            (java.io ByteArrayOutputStream File)))
 
@@ -134,19 +135,27 @@
 (defn- read-response->xml [response]
   (-> response xml/string->xml xml/without-soap-envelope first xml/with-kebab-case-tags))
 
+(defn- trim [s]
+  (when s
+    (-> s (str/replace #"\s+" " ") str/trim)))
+
 (defn- response-parser [response-soap]
   (let [response-xml (read-response->xml response-soap)]
     (debug-print response-xml)
     {:tila-koodi        (xml/get-content response-xml [:laheta-viesti-result :tila-koodi :tila-koodi])
-     :tila-koodi-kuvaus (xml/get-content response-xml [:laheta-viesti-result :tila-koodi :tila-koodi-kuvaus])
+     :tila-koodi-kuvaus (trim (xml/get-content response-xml [:laheta-viesti-result :tila-koodi :tila-koodi-kuvaus]))
      :sanoma-tunniste   (xml/get-content response-xml [:laheta-viesti-result :tila-koodi :sanoma-tunniste])}))
+
+(defn- assert-success [response]
+  (when (not= (:tila-koodi response) 202)
+    (exception/throw-ex-info! :suomifi-viestit-request-failed (:tila-koodi-kuvaus response))))
 
 (defn- read-response [response]
   (let [coercer (sc/coercer {:tila-koodi        schema/Int
                              :tila-koodi-kuvaus schema/Str
                              :sanoma-tunniste   schema/Str}
                             sc/string-coercion-matcher)]
-    (-> response response-parser coercer)))
+    (-> response response-parser coercer assert-success)))
 
 (defn- request-handler! [data]
   (let [request-xml (request-create-xml data)

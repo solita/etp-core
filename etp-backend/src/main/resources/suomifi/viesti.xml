@@ -12,11 +12,10 @@
                 {{#sanoma}}
                 <asi:SanomaTunniste>{{tunniste}}</asi:SanomaTunniste>
                 <asi:SanomaVersio>{{versio}}</asi:SanomaVersio>
-                <asi:SanomaVarmenneNimi>{{varmenne}}</asi:SanomaVarmenneNimi>
                 {{/sanoma}}
             </asi:Viranomainen>
+            {{#kysely}}
             <asi:Kysely>
-                {{#kysely}}
                 <asi:Paperi>{{paperitoimitus?}}</asi:Paperi>
                 <asi:Kohteet>
                     {{#kohteet}}
@@ -59,8 +58,8 @@
                     <asi:Salasana>{{salasana}}</asi:Salasana>
                 </asi:Laskutus>
                 {{/laskutus}}
-                {{/kysely}}
             </asi:Kysely>
+            {{/kysely}}
         </asi:LahetaViesti>
     </soapenv:Body>
 </soapenv:Envelope>
