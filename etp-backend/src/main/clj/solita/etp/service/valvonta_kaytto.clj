@@ -1,7 +1,7 @@
 (ns solita.etp.service.valvonta-kaytto
   (:require [solita.etp.service.valvonta-kaytto.asha :as asha]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
-            [solita.etp.service.suomifi-viestit :as suomifi-viestit]
+            [solita.etp.service.valvonta-kaytto.suomifi-viestit :as suomifi-viestit]
             [clojure.java.io :as io]
             [clojure.set :as set]
             [solita.etp.service.file :as file-service]
@@ -212,18 +212,10 @@
     (find-henkilot db valvonta-id)
     (find-yritykset db valvonta-id)))
 
-(defn send-suomifi-viestit! [aws-s3-client
-                             toimenpide
-                             osapuolet]
-  (doseq [osapuoli (filter kaytto-schema/toimitustapa-suomifi? osapuolet)]
-    (suomifi-viestit/send-message-to-osapuoli!
-      toimenpide
-      osapuoli
-      (store/find-document aws-s3-client (:valvonta-id toimenpide) (:id toimenpide) osapuoli))))
 
 (defn- log-toimenpide! [db aws-s3-client whoami  valvonta toimenpide osapuolet ilmoituspaikat]
   (when (toimenpide/asha-toimenpide? toimenpide)
-    (send-suomifi-viestit! aws-s3-client toimenpide osapuolet)
+    (suomifi-viestit/send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
     (asha/log-toimenpide!
       db aws-s3-client whoami
       valvonta toimenpide

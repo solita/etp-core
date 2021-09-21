@@ -26,7 +26,9 @@
                         <asi:ViranomaisTunniste>ARA-05.03.02-2021-31</asi:ViranomaisTunniste>
                         <asi:Nimeke>Tietopyyntö</asi:Nimeke>
                         <asi:LahetysPvm>2021-09-08T06:21:03.625667Z</asi:LahetysPvm>
-                        <asi:KuvausTeksti>Tämän viestin liitteenä on tietopyyntö</asi:KuvausTeksti>
+                        <asi:KuvausTeksti>Tämän viestin liitteenä on tietopyyntö koskien rakennustasi: 103515074X
+Hämeenkatu 10, 333100 Tampere
+Tietopyyntöön on vastattava 01.01.2022 mennessä.</asi:KuvausTeksti>
                         <asi:Tiedostot>
                             <asi:Tiedosto>
                                 <asi:TiedostonKuvaus>Tietopyyntö liitteenä</asi:TiedostonKuvaus>
