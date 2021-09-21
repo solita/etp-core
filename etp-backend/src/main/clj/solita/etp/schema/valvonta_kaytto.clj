@@ -95,9 +95,3 @@
 
 (def henkilo? #(and (contains? % :etunimi) (contains? % :sukunimi)))
 (def yritys? #(contains? % :nimi))
-
-(def omistaja? #(= (:rooli-id %) 0))
-(def tiedoksi? #(= (:rooli-id %) 1))
-
-(defn toimitustapa-suomifi? [osapuoli]
-  (= (:toimitustapa-id osapuoli) 0))

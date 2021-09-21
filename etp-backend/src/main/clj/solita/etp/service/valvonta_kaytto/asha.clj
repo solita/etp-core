@@ -3,6 +3,7 @@
             [solita.etp.service.asha :as asha]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
             [solita.etp.service.valvonta-kaytto.store :as store]
+            [solita.etp.service.valvonta-kaytto.osapuoli :as osapuoli]
             [solita.etp.schema.valvonta-kaytto :as kaytto-schema]
             [solita.etp.service.pdf :as pdf]
             [solita.etp.db :as db]
@@ -124,7 +125,7 @@
   (let [template-id (:template-id toimenpide)
         template (-> (valvonta-kaytto-db/select-template db {:id template-id}) first :content)
         documents (find-kaytto-valvonta-documents db (:id valvonta))
-        tiedoksi (filter kaytto-schema/tiedoksi? osapuolet)]
+        tiedoksi (filter osapuoli/tiedoksi? osapuolet)]
     (let [template-data (template-data db whoami valvonta toimenpide osapuoli documents ilmoituspaikat tiedoksi)]
       (pdf/generate-pdf->bytes {:template template
                                 :data     template-data}))))
@@ -136,7 +137,7 @@
         processing-action (resolve-processing-action toimenpide osapuolet)
         documents (when (:document processing-action)
                     (->> osapuolet
-                         (filter kaytto-schema/omistaja?)
+                         (filter osapuoli/omistaja?)
                          (map (fn [osapuoli]
                                 (let [document (generate-pdf-document db whoami valvonta toimenpide ilmoituspaikat osapuoli osapuolet)]
                                   (store/store-document aws-s3-client (:id valvonta) (:id toimenpide) osapuoli document)

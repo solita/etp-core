@@ -26,7 +26,6 @@
 (def find-vk-roolit #(select-luokittelu % "vk_rooli"))
 (def find-vk-toimitustavat #(select-luokittelu % "vk_toimitustapa"))
 (def find-vk-toimenpidetypes #(select-luokittelu % "vk_toimenpidetype"))
-(def find-vk-toimenpidetyypit #(select-luokittelu % "vk_toimenpidetyypit"))
 
 (defn- path= [value path object]
   (= value (get-in object path)))
@@ -38,5 +37,5 @@
 
 (defn find-luokka [id luokat]
   (->> luokat
-       (filter (comp (partial = id) :id))
+       (filter #(= (:id %) id))
        first))
