@@ -1,6 +1,5 @@
 (ns solita.etp.service.valvonta-oikeellisuus.email
   (:require [solita.etp.config :as config]
-            [solita.common.smtp :as smtp]
             [clojure.string :as str]
             [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]
             [solita.etp.service.kayttaja :as kayttaja-service]
@@ -9,10 +8,8 @@
             [solita.common.time :as time]
             [solita.common.logic :as logic]
             [solita.etp.service.valvonta-oikeellisuus.asha :as asha-valvonta-oikeellisuus]
-            [clojure.java.io :as io]
             [solita.etp.email :as email])
-  (:import (java.time LocalDate)
-           (java.io File)))
+  (:import (java.time LocalDate)))
 
 
 
@@ -192,18 +189,15 @@
      template-values {:energiatodistus energiatodistus
                       :host            config/index-url}
      message (map/map-values #(interpolate % template-values) tiedoksi-template)
-     valvontamuistio (asha-valvonta-oikeellisuus/find-document aws-s3-client energiatodistus-id toimenpide-id)
-     valvontamuistio-tmp-file (File/createTempFile "valvontamuistio-" ".pdf")]
-    (do
-      (io/copy valvontamuistio valvontamuistio-tmp-file)
-      (email/send-multipart-email! (assoc message :to [email]
-                                                  :subtype "html"
-                                                  :reply? true
-                                                  :attachments [valvontamuistio-tmp-file])))))
+     valvontamuistio (asha-valvonta-oikeellisuus/find-document aws-s3-client energiatodistus-id toimenpide-id)]
+    (email/send-multipart-email! (assoc message :to [email]
+                                                :subtype "html"
+                                                :reply? true
+                                                :attachments [valvontamuistio]))))
 
 (defn send-toimenpide-email! [db aws-s3-client energiatodistus-id toimenpide]
   (send-email-to-laatija! db energiatodistus-id toimenpide)
-  (when-let [tiedoksi (and (= (-> toimenpide :type-id toimenpide/type-key) :audit-report)
+  (when-let [tiedoksi (and (toimenpide/audit-report? toimenpide)
                            (seq (filter #(-> % :email seq) (:tiedoksi toimenpide))))]
     (doseq [vastaanottaja tiedoksi]
       (send-email-to-tiedoksi! db aws-s3-client energiatodistus-id (:id toimenpide) (:email vastaanottaja)))))

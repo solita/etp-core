@@ -10,7 +10,10 @@
             [flathead.flatten :as flat]
             [solita.common.maybe :as maybe]
             [solita.common.map :as map]
-            [solita.common.logic :as logic])
+            [solita.common.logic :as logic]
+            [solita.etp.service.valvonta-kaytto.email :as email]
+            [solita.etp.exception :as exception]
+            [solita.etp.service.concurrent :as concurrent])
   (:import (java.time Instant)))
 
 (db/require-queries 'valvonta-kaytto)
@@ -209,27 +212,39 @@
     (find-henkilot db valvonta-id)
     (find-yritykset db valvonta-id)))
 
+(defn- send-toimenpide-email! [db aws-s3-client valvonta toimenpide osapuolet]
+  (when (-> db :connection some?)
+    (exception/illegal-argument!
+      (str "Connections are not thread safe see "
+           "https://jdbc.postgresql.org/documentation/head/thread.html. "
+           "Existing connection is not allowed when sending emails in background.")))
+  (concurrent/run-background
+    #(email/send-toimenpide-email! db aws-s3-client valvonta toimenpide osapuolet)
+    (str "Sending email failed for toimenpide: " (:id valvonta) "/" (:id toimenpide))))
+
 (defn add-toimenpide! [db aws-s3-client whoami valvonta-id toimenpide-add]
   (jdbc/with-db-transaction
-    [db db]
-    (let [osapuolet (find-osapuolet db valvonta-id)
-          valvonta (find-valvonta db valvonta-id)
-          ilmoituspaikat (find-ilmoituspaikat db)
+    [tx db]
+    (let [valvonta (find-valvonta tx valvonta-id)
+          ilmoituspaikat (find-ilmoituspaikat tx)
           diaarinumero (if (toimenpide/case-open? toimenpide-add)
                          (asha/open-case!
-                           db whoami
-                           valvonta osapuolet ilmoituspaikat)
-                         (find-diaarinumero db valvonta-id toimenpide-add))
-          toimenpide (insert-toimenpide! db valvonta-id diaarinumero toimenpide-add)
+                           tx whoami valvonta
+                           (find-osapuolet tx valvonta-id)
+                           ilmoituspaikat)
+                         (find-diaarinumero tx valvonta-id toimenpide-add))
+          toimenpide (insert-toimenpide! tx valvonta-id diaarinumero toimenpide-add)
           toimenpide-id (:id toimenpide)]
-      (insert-toimenpide-osapuolet! db valvonta-id toimenpide-id)
+      (insert-toimenpide-osapuolet! tx valvonta-id toimenpide-id)
       (case (-> toimenpide :type-id toimenpide/type-key)
         :closed (asha/close-case! whoami valvonta-id toimenpide)
         (when (toimenpide/asha-toimenpide? toimenpide)
-          (asha/log-toimenpide!
-            db aws-s3-client whoami
-            valvonta toimenpide
-            osapuolet ilmoituspaikat)))
+          (let [find-toimenpide-osapuolet (comp flatten (juxt find-toimenpide-henkilot find-toimenpide-yritykset))
+                osapuolet (find-toimenpide-osapuolet tx (:id toimenpide))]
+            (asha/log-toimenpide!
+              tx aws-s3-client whoami valvonta toimenpide
+              osapuolet ilmoituspaikat)
+            (send-toimenpide-email! db aws-s3-client valvonta toimenpide osapuolet))))
       {:id toimenpide-id})))
 
 (defn update-toimenpide! [db toimenpide-id toimenpide]
