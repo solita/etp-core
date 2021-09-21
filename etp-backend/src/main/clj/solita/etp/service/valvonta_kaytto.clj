@@ -12,10 +12,10 @@
             [solita.common.maybe :as maybe]
             [solita.common.map :as map]
             [solita.common.logic :as logic]
-            [solita.etp.service.valvonta-kaytto.store :as store])
+            [solita.etp.service.valvonta-kaytto.store :as store]
             [solita.etp.service.valvonta-kaytto.email :as email]
             [solita.etp.exception :as exception]
-            [solita.etp.service.concurrent :as concurrent]
+            [solita.etp.service.concurrent :as concurrent])
   (:import (java.time Instant)))
 
 (db/require-queries 'valvonta-kaytto)

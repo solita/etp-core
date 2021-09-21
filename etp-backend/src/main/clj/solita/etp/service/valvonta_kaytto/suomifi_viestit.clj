@@ -4,12 +4,11 @@
             [solita.etp.schema.valvonta-kaytto :as kaytto-schema]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
             [solita.etp.service.suomifi-viestit :as suomifi]
-
             [clojure.java.io :as io]
             [solita.etp.service.pdf :as pdf]
-
             [solita.common.time :as time]
-            [solita.etp.service.valvonta-kaytto.store :as store])
+            [solita.etp.service.valvonta-kaytto.store :as store]
+            [solita.etp.service.valvonta-kaytto.osapuoli :as osapuoli])
   (:import (java.time Instant)
            (java.io ByteArrayOutputStream File)))
 
@@ -129,8 +128,8 @@
                              toimenpide
                              osapuolet]
   (doseq [osapuoli (->> osapuolet
-                        kaytto-schema/omistaja?
-                        kaytto-schema/toimitustapa-suomifi?)]
+                        osapuoli/omistaja?
+                        osapuoli/suomi-fi?)]
     (send-message-to-osapuoli!
       valvonta
       toimenpide
