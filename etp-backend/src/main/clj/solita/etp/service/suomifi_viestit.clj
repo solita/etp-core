@@ -33,17 +33,10 @@
 (defn- send-request! [request]
   (try
     (let [response (make-send-requst! request)]
-      (if (= 200 (:status response))
-        (do
-          (debug-print (:body response))
-          (:body response))
-        (do
-          (log/error (str "Sending xml failed with status " (:status response) " " (:body response)))
-          (exception/throw-ex-info! :suomifi-viestit-request-failed
-                                    (str "Sending xml failed with status " (:status response) " " (:body response))))))
+      (debug-print (:body response))
+      (:body response))
     (catch Exception e
-      (log/error "Sending xml failed: " e)
-      (exception/throw-ex-info! :suomifi-viestit-request-failed (str "Sending xml failed: " (.getMessage e))))))
+      (log/error "Sending xml failed: " e))))
 
 (defn- read-response->xml [response]
   (-> response xml/string->xml xml/without-soap-envelope first xml/with-kebab-case-tags))
