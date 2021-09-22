@@ -8,7 +8,8 @@
             [solita.etp.service.pdf :as pdf]
             [solita.common.time :as time]
             [solita.etp.service.valvonta-kaytto.store :as store]
-            [solita.etp.service.valvonta-kaytto.osapuoli :as osapuoli])
+            [solita.etp.service.valvonta-kaytto.osapuoli :as osapuoli]
+            [clojure.string :as str])
   (:import (java.time Instant)
            (java.io ByteArrayOutputStream File)))
 
@@ -41,8 +42,8 @@
 
 (defn- osaapuoli->asiakas [osapuoli]
   (cond
-    (kaytto-schema/henkilo? osapuoli) (henkilo->asiakas osapuoli)
-    (kaytto-schema/yritys? osapuoli) (yritys->asiakas osapuoli)))
+    (osapuoli/henkilo? osapuoli) (henkilo->asiakas osapuoli)
+    (osapuoli/yritys? osapuoli) (yritys->asiakas osapuoli)))
 
 (defn kuvaus [type-key valvonta toimenpide]
   (clostache/render (str "Tämän viestin liitteenä on tietopyyntö koskien rakennustasi: {{rakennustunnus}}\n"
@@ -106,7 +107,7 @@
 (defn- ->kohde [valvonta toimenpide osapuoli tiedosto]
   (let [type-key (toimenpide/type-key (:type-id toimenpide))
         {:keys [nimike kuvaus]} (toimenpide->kohde type-key valvonta toimenpide)]
-    {:viranomaistunniste (:diaarinumero toimenpide)
+    {:viranomaistunniste (str/join "-" [(:diaarinumero toimenpide) "ETP" (:id valvonta) (:id toimenpide) (:id osapuoli)])
      :nimike             nimike
      :kuvaus-teksti      kuvaus
      :lahetys-pvm        (now)
@@ -126,12 +127,14 @@
 (defn send-suomifi-viestit! [aws-s3-client
                              valvonta
                              toimenpide
-                             osapuolet]
+                             osapuolet
+                             & [config]]
   (doseq [osapuoli (->> osapuolet
-                        osapuoli/omistaja?
-                        osapuoli/suomi-fi?)]
+                        (filter osapuoli/omistaja?)
+                        (filter osapuoli/suomi-fi?))]
     (send-message-to-osapuoli!
       valvonta
       toimenpide
       osapuoli
-      (store/find-document aws-s3-client (:valvonta-id toimenpide) (:id toimenpide) osapuoli))))
+      (store/find-document aws-s3-client (:valvonta-id toimenpide) (:id toimenpide) osapuoli)
+      config)))

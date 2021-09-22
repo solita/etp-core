@@ -86,8 +86,8 @@
                                 yhteyshenkilo-email  config/suomifi-viestit-yhteyshenkilo-email
                                 laskutus-tunniste    config/suomifi-viestit-laskutus-tunniste
                                 laskutus-salasana    config/suomifi-viestit-laskutus-salasana
-                                paperitoimitus?      false
-                                laheta-tulostukseen? false}}]]
+                                paperitoimitus?      config/suomifi-viestit-paperitoimitus?
+                                laheta-tulostukseen? config/suomifi-viestit-laheta-tulostukseen?}}]]
   (let [data {:viranomainen (cond-> {:viranomaistunnus viranomaistunnus
                                      :palvelutunnus    palvelutunnus}
                                     (and yhteyshenkilo-nimi yhteyshenkilo-email) (assoc :yhteyshenkilo {:nimi  yhteyshenkilo-nimi

@@ -35,7 +35,7 @@
                :postitoimipaikka "Kaupunki"
                :maa              "FI"})
 
-(def document (pdf/generate-pdf->bytes {:layout "pdf/ipost-address-page.html"}))
+(defonce document (pdf/generate-pdf->bytes {:layout "pdf/ipost-address-page.html"}))
 
 (def config {:viranomaistunnus    "Organisaatio"
              :palvelutunnus       "OR"

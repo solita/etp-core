@@ -246,6 +246,7 @@
             (asha/log-toimenpide!
               tx aws-s3-client whoami valvonta toimenpide
               osapuolet ilmoituspaikat)
+            (suomifi-viestit/send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
             (send-toimenpide-email! db aws-s3-client valvonta toimenpide osapuolet))))
       {:id toimenpide-id})))
 

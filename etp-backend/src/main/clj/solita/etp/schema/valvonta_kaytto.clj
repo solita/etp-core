@@ -92,6 +92,3 @@
    :author-id   common-schema/Key
    :create-time common-schema/Instant
    :description schema/Str})
-
-(def henkilo? #(and (contains? % :etunimi) (contains? % :sukunimi)))
-(def yritys? #(contains? % :nimi))

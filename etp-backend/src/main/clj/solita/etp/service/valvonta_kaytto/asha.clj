@@ -38,13 +38,13 @@
    :määräpäivä       (time/format-date (:deadline-date toimenpide))
    :diaarinumero     (:diaarinumero toimenpide)
    :valvoja          (select-keys whoami [:etunimi :sukunimi :email])
-   :omistaja-henkilo (when (kaytto-schema/henkilo? osapuoli)
+   :omistaja-henkilo (when (osapuoli/henkilo? osapuoli)
                        {:etunimi          (:etunimi osapuoli)
                         :sukunimi         (:sukunimi osapuoli)
                         :katuosoite       (:jakeluosoite osapuoli)
                         :postinumero      (:postinumero osapuoli)
                         :postitoimipaikka (find-postitoimipaikka db (:postinumero osapuoli))})
-   :omistaja-yritys  (when (kaytto-schema/yritys? osapuoli)
+   :omistaja-yritys  (when (osapuoli/yritys? osapuoli)
                        {:nimi             (:nimi osapuoli)
                         :ytunnus          (:ytunnus osapuoli)
                         :katuosoite       (:jakeluosoite osapuoli)
@@ -58,21 +58,21 @@
                       :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
    :tiedoksi         (map (fn [o]
                             (cond
-                              (kaytto-schema/henkilo? o) (str (:etunimi o) " " (:sukunimi o))
-                              (kaytto-schema/yritys? o) (:nimi o))) tiedoksi)})
+                              (osapuoli/henkilo? o) (str (:etunimi o) " " (:sukunimi o))
+                              (osapuoli/yritys? o) (:nimi o))) tiedoksi)})
 
 (defn- request-id [valvonta-id toimenpide-id]
   (str valvonta-id "/" toimenpide-id))
 
 (defn- osapuoli->contact [osapuoli]
   (cond
-    (kaytto-schema/henkilo? osapuoli)
+    (osapuoli/henkilo? osapuoli)
     {:type          "PERSON"
      :first-name    (:etunimi osapuoli)
      :last-name     (:sukunimi osapuoli)
      :phone-number  (:puhelin osapuoli)
      :email-address (:email osapuoli)}
-    (kaytto-schema/yritys? osapuoli)
+    (osapuoli/yritys? osapuoli)
     {:type                "ORGANIZATION"
      :organizational-name (:nimi osapuoli)
      :phone-number        (:puhelin osapuoli)
