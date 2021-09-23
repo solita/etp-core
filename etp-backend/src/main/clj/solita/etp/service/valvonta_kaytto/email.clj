@@ -72,24 +72,6 @@
         "Sähköpostin liitteenä on tiedoksi tietopyyntö rakennuksesta: {valvonta.rakennustunnus}"
         address)
       (paragraph "Tietopyyntöön on vastattava {toimenpide.deadline-date} mennessä.")
-      signature-reply)}
-   :rfi-order
-   {:subject
-    "Kehotus vastata tietopyyntöön (tiedoksi)"
-    :body
-    (html
-      (paragraph
-        "Sähköpostin liitteenä on tiedoksi kehotus vastata tietopyyntöön koskien rakennusta: {valvonta.rakennustunnus}"
-        address)
-      signature-reply)}
-   :rfi-warning
-   {:subject
-    "Varoitus tietopyynnöstä (tiedoksi)"
-    :body
-    (html
-      (paragraph
-        "Sähköpostin liitteenä on tiedoksi varoitus tietopyynnöstä koskien rakennusta: {valvonta.rakennustunnus}"
-        address)
       signature-reply)}})
 
 (defprotocol TemplateValue (view [value]))
