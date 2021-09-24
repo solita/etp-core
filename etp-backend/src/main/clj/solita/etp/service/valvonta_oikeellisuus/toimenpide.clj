@@ -43,5 +43,7 @@
 
 (def audit-report? (partial type? :audit-report))
 
+(def audit-reply? (partial type? :audit-reply))
+
 (def clears-from-tyojono?
   (partial some-type? #{:verified :anomaly :closed}))
