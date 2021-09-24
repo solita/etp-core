@@ -122,6 +122,17 @@
             "Energia-asiantuntija\n"
             (:etunimi whoami) " " (:sukunimi whoami))})))
 
+(defn add-audit-reply-viestiketju! [db whoami id toimenpide]
+  (viesti-service/add-ketju!
+    db whoami
+    {:vastaanottajat        []
+     :vastaanottajaryhma-id 0
+     :energiatodistus-id    id
+     :vo-toimenpide-id      (:id toimenpide)
+     :subject               (str "Valvontamuistio ET " (:energiatodistus-id toimenpide))
+     :body                  (str (:description toimenpide) "\n\n"
+                                 "Katso vastauksen liitteet energiatodistuksen valvontavälilehdeltä.")}))
+
 (defn- send-toimenpide-email! [db aws-s3-client id toimenpide]
   (when (-> db :connection some?)
     (exception/illegal-argument!
@@ -231,10 +242,13 @@
 
 (defn publish-toimenpide! [db aws-s3-client whoami id toimenpide-id]
   (when-let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
-    (when (toimenpide/asha-toimenpide? toimenpide)
-      (asha-valvonta-oikeellisuus/log-toimenpide! db aws-s3-client whoami id toimenpide))
-    (send-toimenpide-email! db aws-s3-client id toimenpide)
-    (valvonta-oikeellisuus-db/update-toimenpide-published! db {:id toimenpide-id})))
+    (jdbc/with-db-transaction [tx db]
+      (when (toimenpide/asha-toimenpide? toimenpide)
+        (asha-valvonta-oikeellisuus/log-toimenpide! tx aws-s3-client whoami id toimenpide))
+      (when (toimenpide/audit-reply? toimenpide)
+        (add-audit-reply-viestiketju! tx whoami id toimenpide))
+      (send-toimenpide-email! db aws-s3-client id toimenpide)
+      (valvonta-oikeellisuus-db/update-toimenpide-published! tx {:id toimenpide-id}))))
 
 (defn find-toimenpidetyypit [db] (luokittelu/find-toimenpidetypes db))
 
