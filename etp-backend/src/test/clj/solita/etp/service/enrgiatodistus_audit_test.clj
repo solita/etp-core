@@ -2,7 +2,6 @@
   (:require [clojure.test :as t]
             [solita.etp.db :as db]
             [solita.etp.test-system :as ts]
-            [solita.etp.test-data.kayttaja :as kayttaja-test-data]
             [solita.etp.test-data.laatija :as laatija-test-data]
             [solita.etp.test-data.energiatodistus :as energiatodistus-test-data]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
@@ -70,7 +69,8 @@
 
 (defn update-energiatodistus-n [n versio [laatija-id laatija]]
   (let [energiatodistus-add (energiatodistus-test-data/generate-add versio false)
-        db (ts/db-user laatija-id)
+        service-uri (str "/" (rand-int 10000))
+        db (ts/db-user ts/*db* laatija-id service-uri)
         whoami {:id laatija-id :rooli 0}
         energiatodistus-id
         (:id (energiatodistus-service/add-energiatodistus!
@@ -88,7 +88,7 @@
                 (energiatodistus-service/db-row->energiatodistus audit)))
 
         (t/is (= laatija-id (:modifiedby-id audit)))
-        (t/is (= "core.etp.test" (:service-uri audit)))))))
+        (t/is (= (str "core.etp.test" service-uri) (:service-uri audit)))))))
 
 (t/deftest update-energiatodistus-1-2018
   (update-energiatodistus-n
@@ -98,7 +98,14 @@
   (update-energiatodistus-n
     1 2013 (first (laatija-test-data/generate-and-insert! 1))))
 
+(t/deftest update-energiatodistus-2-2018
+  (update-energiatodistus-n
+    2 2018 (first (laatija-test-data/generate-and-insert! 1))))
+
+(t/deftest update-energiatodistus-2-2013
+  (update-energiatodistus-n
+    2 2013 (first (laatija-test-data/generate-and-insert! 1))))
+
 (t/deftest parallel-update-energiatodistus-2018
-  (doall
-    (pmap (partial update-energiatodistus-n 10 2018)
-          (laatija-test-data/generate-and-insert! 10))))
+  (mapv (comp future-call (partial update-energiatodistus-n 10 2018))
+        (laatija-test-data/generate-and-insert! 10)))
