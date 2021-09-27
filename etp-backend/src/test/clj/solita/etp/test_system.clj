@@ -15,7 +15,9 @@
 (defn db-user
   ([kayttaja-id] (db-user *db* kayttaja-id))
   ([db kayttaja-id]
-   (assoc db :application-name (str kayttaja-id "@core.etp.test"))))
+   (assoc db :application-name (str kayttaja-id "@core.etp.test")))
+  ([db kayttaja-id service-uri]
+   (assoc db :application-name (str kayttaja-id "@core.etp.test" service-uri))))
 
 (defn config-for-management [bucket]
   (merge (config/db {:username       (config/env "DB_MANAGEMENT_USER" "etp")
