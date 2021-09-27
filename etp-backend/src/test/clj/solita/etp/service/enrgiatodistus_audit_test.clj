@@ -106,6 +106,15 @@
   (update-energiatodistus-n
     2 2013 (first (laatija-test-data/generate-and-insert! 1))))
 
+(t/deftest sequential-update-energiatodistus-2018
+  (doall (map (partial update-energiatodistus-n 10 2018)
+              (laatija-test-data/generate-and-insert! 10))))
+
 (t/deftest parallel-update-energiatodistus-2018
-  (mapv (comp future-call (partial update-energiatodistus-n 10 2018))
-        (laatija-test-data/generate-and-insert! 10)))
+  (doall (pmap (partial update-energiatodistus-n 10 2018)
+               (laatija-test-data/generate-and-insert! 10))))
+
+(t/deftest full-parallel-update-energiatodistus-2018
+  (->> (laatija-test-data/generate-and-insert! 10)
+       (mapv #(future (update-energiatodistus-n 10 2018 %)))
+       (mapv deref)))
