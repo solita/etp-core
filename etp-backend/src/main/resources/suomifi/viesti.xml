@@ -12,6 +12,7 @@
                 {{#sanoma}}
                 <asi:SanomaTunniste>{{tunniste}}</asi:SanomaTunniste>
                 <asi:SanomaVersio>{{versio}}</asi:SanomaVersio>
+                <asi:SanomaVarmenneNimi>{{varmenne}}</asi:SanomaVarmenneNimi>
                 {{/sanoma}}
             </asi:Viranomainen>
             {{#kysely}}

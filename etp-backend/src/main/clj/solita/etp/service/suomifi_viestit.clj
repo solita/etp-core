@@ -4,11 +4,23 @@
             [clj-http.client :as http]
             [schema-tools.coerce :as sc]
             [clojure.tools.logging :as log]
-            [solita.etp.exception :as exception]
             [solita.common.xml :as xml]
             [schema.core :as schema]
             [clj-http.conn-mgr :as conn-mgr]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import (org.apache.ws.security WSConstants WSEncryptionPart)
+           (org.apache.ws.security.components.crypto CryptoFactory)
+           (org.apache.ws.security.message WSSecSignature WSSecHeader WSSecTimestamp)
+           (java.util Properties)
+           (java.io ByteArrayInputStream)
+           (org.apache.axis.soap MessageFactoryImpl)
+           (org.apache.xml.security.c14n Canonicalizer)
+           (org.apache.axis.configuration NullProvider)
+           (org.apache.axis.client AxisClient)
+           (org.apache.axis MessageContext Message)))
+
+;; register default algorithms
+(Canonicalizer/registerDefaultAlgorithms)
 
 (defn- debug-print [info]
   (when config/suomifi-viestit-debug?
@@ -30,9 +42,50 @@
       (log/info "Missing suomifi viestit endpoint url. Skip request to suomifi viestit...")
       {:status 200})))
 
-(defn- send-request! [request]
+(defn- raw-request->document [request]
+  (with-open [inStream (ByteArrayInputStream. (.getBytes request))]
+    (let [engine (AxisClient. (NullProvider.))
+          msgContext (MessageContext. engine)
+          axisMessage (doto (Message. inStream)
+                        (.setMessageContext msgContext))]
+      (-> axisMessage .getSOAPEnvelope .getAsDocument))))
+
+(defn- document->signed-request [document]
+  (let [c14n (Canonicalizer/getInstance Canonicalizer/ALGO_ID_C14N_WITH_COMMENTS)
+        canonicalMessage (.canonicalizeSubtree c14n document)
+        in (ByteArrayInputStream. canonicalMessage)]
+    (-> (.createMessage (MessageFactoryImpl.) nil in)
+        .getSOAPEnvelope .getAsString)))
+
+(defn- signSOAPEnvelope [request keystore-file keystore-password signer-username signer-password]
+  (let [properties (doto (Properties.)
+                     (.setProperty "org.apache.ws.security.crypto.merlin.keystore.file" keystore-file)
+                     (.setProperty "org.apache.ws.security.crypto.merlin.keystore.password", keystore-password)
+                     (.setProperty "org.apache.ws.security.crypto.merlin.keystore.type", "JKS")
+                     (.setProperty "signer.username" signer-username)
+                     (.setProperty "signer.password" signer-password))
+        crypto (CryptoFactory/getInstance properties)
+        signer (doto (WSSecSignature.)
+                 (.setUserInfo signer-username signer-password)
+                 (.setKeyIdentifierType WSConstants/BST_DIRECT_REFERENCE)
+                 (.setUseSingleCertificate true))
+        doc (raw-request->document request)
+        header (doto (WSSecHeader.)
+                 (.setMustUnderstand true)
+                 (.insertSecurityHeader doc))
+        timestamp (doto (WSSecTimestamp.)
+                    (.setTimeToLive 60))
+        build-doc (.build timestamp doc header)
+        timestampPart (WSEncryptionPart. "Timestamp", WSConstants/WSU_NS, "")
+        bodyPart (WSEncryptionPart. WSConstants/ELEM_BODY, WSConstants/URI_SOAP11_ENV, "")]
+    (.setParts signer [timestampPart bodyPart])
+    (document->signed-request (.build signer build-doc crypto header))))
+
+(defn- send-request! [request keystore-file keystore-password signer-username signer-password]
   (try
-    (let [response (make-send-requst! request)]
+    (let [response (if (and keystore-file keystore-password signer-username signer-password)
+                     (make-send-requst! (signSOAPEnvelope request keystore-file keystore-password signer-username signer-password))
+                     (make-send-requst! request))]
       (debug-print (:body response))
       (:body response))
     (catch Exception e
@@ -68,23 +121,31 @@
 
 (defn send-message! [sanoma
                      kohde
-                     & [{:keys [viranomaistunnus palvelutunnus tulostustoimittaja
+                     & [{:keys [viranomaistunnus palvelutunnus varmenne tulostustoimittaja
                                 yhteyshenkilo-nimi yhteyshenkilo-email
                                 laskutus-tunniste laskutus-salasana
-                                paperitoimitus? laheta-tulostukseen?]
+                                paperitoimitus? laheta-tulostukseen?
+                                keystore-file keystore-password
+                                signer-username signer-password]
                          :or   {viranomaistunnus     config/suomifi-viestit-viranomaistunnus
                                 palvelutunnus        config/suomifi-viestit-palvelutunnus
+                                varmenne             config/suomifi-viestit-varmenne
                                 tulostustoimittaja   config/suomifi-viestit-tulostustoimittaja
                                 yhteyshenkilo-nimi   config/suomifi-viestit-yhteyshenkilo-nimi
                                 yhteyshenkilo-email  config/suomifi-viestit-yhteyshenkilo-email
                                 laskutus-tunniste    config/suomifi-viestit-laskutus-tunniste
                                 laskutus-salasana    config/suomifi-viestit-laskutus-salasana
                                 paperitoimitus?      config/suomifi-viestit-paperitoimitus?
-                                laheta-tulostukseen? config/suomifi-viestit-laheta-tulostukseen?}}]]
-  (let [data {:viranomainen (cond-> {:viranomaistunnus viranomaistunnus
-                                     :palvelutunnus    palvelutunnus}
-                                    (and yhteyshenkilo-nimi yhteyshenkilo-email) (assoc :yhteyshenkilo {:nimi  yhteyshenkilo-nimi
-                                                                                                        :email yhteyshenkilo-email}))
+                                laheta-tulostukseen? config/suomifi-viestit-laheta-tulostukseen?
+                                keystore-file        config/suomifi-viestit-keystore-file
+                                keystore-password    config/suomifi-viestit-keystore-password
+                                signer-username      config/suomifi-viestit-signer-username
+                                signer-password      config/suomifi-viestit-signer-password}}]]
+  (let [data {:viranomainen {:viranomaistunnus viranomaistunnus
+                             :palvelutunnus    palvelutunnus
+                             :varmenne         varmenne
+                             :yhteyshenkilo    {:nimi  yhteyshenkilo-nimi
+                                                :email yhteyshenkilo-email}}
               :sanoma       sanoma
               :kysely       (cond-> {:kohteet              kohde
                                      :tulostustoimittaja   tulostustoimittaja
@@ -93,6 +154,6 @@
                                     (and laskutus-tunniste laskutus-salasana) (assoc :laskutus {:tunniste laskutus-tunniste
                                                                                                 :salasana laskutus-salasana}))}
         request-xml (request-create-xml data)
-        response (send-request! request-xml)]
+        response (send-request! request-xml keystore-file keystore-password signer-username signer-password)]
     (when response
       (read-response response))))
