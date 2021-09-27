@@ -55,20 +55,15 @@
    :valvoja          (select-keys whoami [:etunimi :sukunimi :email])
    :omistaja-henkilo (when (kaytto-schema/henkilo? osapuoli)
                        {:etunimi          (:etunimi osapuoli)
-                        :sukunimi         (:sukunimi osapuoli)
-                        :katuosoite       (:jakeluosoite osapuoli)
-                        :postinumero      (:postinumero osapuoli)
-                        :postitoimipaikka (find-postitoimipaikka db (:postinumero osapuoli))})
+                        :sukunimi         (:sukunimi osapuoli)})
    :omistaja-yritys  (when (kaytto-schema/yritys? osapuoli)
-                       {:nimi             (:nimi osapuoli)
-                        :ytunnus          (:ytunnus osapuoli)
-                        :katuosoite       (:jakeluosoite osapuoli)
-                        :postinumero      (:postinumero osapuoli)
-                        :postitoimipaikka (find-postitoimipaikka db (:postinumero osapuoli))})
-   :kohde            {:nimi           (:rakennustunnus valvonta)
-                      :ilmoituspaikka (find-ilmoituspaikka ilmoituspaikat (:ilmoituspaikka-id valvonta))
-                      :ilmoitustunnus (:ilmoitustunnus valvonta)
-                      :havaintopäivä  (-> valvonta :havaintopaiva time/format-date)}
+                       {:nimi             (:nimi osapuoli)})
+   :kohde            {:katuosoite       (:katuosoite valvonta)
+                      :postinumero      (:postinumero valvonta)
+                      :postitoimipaikka (find-postitoimipaikka db (:postinumero valvonta))
+                      :ilmoituspaikka   (find-ilmoituspaikka ilmoituspaikat (:ilmoituspaikka-id valvonta))
+                      :ilmoitustunnus   (:ilmoitustunnus valvonta)
+                      :havaintopäivä    (-> valvonta :havaintopaiva time/format-date)}
    :tietopyynto      {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
                       :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
    :tiedoksi         (map (fn [o]
