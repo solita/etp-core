@@ -27,11 +27,10 @@
     (log/info info)))
 
 (defn- request-create-xml [data]
-  (let [xml (clostache/render-resource (str "suomifi/viesti.xml") data)]
-    (debug-print xml)
-    xml))
+  (clostache/render-resource (str "suomifi/viesti.xml") data))
 
 (defn- ^:dynamic make-send-requst! [request]
+  (debug-print request)
   (if config/suomifi-viestit-endpoint-url
     (http/post config/suomifi-viestit-endpoint-url
                (cond-> {:body request}
@@ -143,10 +142,9 @@
                                 signer-password      config/suomifi-viestit-signer-password}}]]
   (let [data {:viranomainen {:viranomaistunnus viranomaistunnus
                              :palvelutunnus    palvelutunnus
-                             :varmenne         varmenne
                              :yhteyshenkilo    {:nimi  yhteyshenkilo-nimi
                                                 :email yhteyshenkilo-email}}
-              :sanoma       sanoma
+              :sanoma       (assoc sanoma :varmenne varmenne)
               :kysely       (cond-> {:kohteet              kohde
                                      :tulostustoimittaja   tulostustoimittaja
                                      :paperitoimitus?      false
