@@ -56,16 +56,16 @@
     (-> (.createMessage (MessageFactoryImpl.) nil in)
         .getSOAPEnvelope .getAsString)))
 
-(defn- signSOAPEnvelope [request keystore-file keystore-password signer-username signer-password]
+(defn- signSOAPEnvelope [request keystore-file keystore-password keystore-alias]
   (let [properties (doto (Properties.)
                      (.setProperty "org.apache.ws.security.crypto.merlin.keystore.file" keystore-file)
                      (.setProperty "org.apache.ws.security.crypto.merlin.keystore.password", keystore-password)
                      (.setProperty "org.apache.ws.security.crypto.merlin.keystore.type", "JKS")
-                     (.setProperty "signer.username" signer-username)
-                     (.setProperty "signer.password" signer-password))
+                     (.setProperty "signer.username" keystore-alias)
+                     (.setProperty "signer.password" keystore-password))
         crypto (CryptoFactory/getInstance properties)
         signer (doto (WSSecSignature.)
-                 (.setUserInfo signer-username signer-password)
+                 (.setUserInfo keystore-alias keystore-password)
                  (.setKeyIdentifierType WSConstants/BST_DIRECT_REFERENCE)
                  (.setUseSingleCertificate true))
         doc (raw-request->document request)
@@ -80,10 +80,10 @@
     (.setParts signer [timestampPart bodyPart])
     (document->signed-request (.build signer build-doc crypto header))))
 
-(defn- send-request! [request keystore-file keystore-password signer-username signer-password]
+(defn- send-request! [request keystore-file keystore-password keystore-alias]
   (try
-    (let [response (if (and keystore-file keystore-password signer-username signer-password)
-                     (make-send-requst! (signSOAPEnvelope request keystore-file keystore-password signer-username signer-password))
+    (let [response (if (and keystore-file keystore-password keystore-alias)
+                     (make-send-requst! (signSOAPEnvelope request keystore-file keystore-password keystore-alias))
                      (make-send-requst! request))]
       (debug-print (:body response))
       (:body response))
@@ -124,8 +124,7 @@
                                 yhteyshenkilo-nimi yhteyshenkilo-email
                                 laskutus-tunniste laskutus-salasana
                                 paperitoimitus? laheta-tulostukseen?
-                                keystore-file keystore-password
-                                signer-username signer-password]
+                                keystore-file keystore-password keystore-alias]
                          :or   {viranomaistunnus     config/suomifi-viestit-viranomaistunnus
                                 palvelutunnus        config/suomifi-viestit-palvelutunnus
                                 varmenne             config/suomifi-viestit-varmenne
@@ -138,8 +137,7 @@
                                 laheta-tulostukseen? config/suomifi-viestit-laheta-tulostukseen?
                                 keystore-file        config/suomifi-viestit-keystore-file
                                 keystore-password    config/suomifi-viestit-keystore-password
-                                signer-username      config/suomifi-viestit-signer-username
-                                signer-password      config/suomifi-viestit-signer-password}}]]
+                                keystore-alias       config/suomifi-viestit-keystore-alias}}]]
   (let [data {:viranomainen {:viranomaistunnus viranomaistunnus
                              :palvelutunnus    palvelutunnus
                              :yhteyshenkilo    {:nimi  yhteyshenkilo-nimi
@@ -152,6 +150,6 @@
                                     (and laskutus-tunniste laskutus-salasana) (assoc :laskutus {:tunniste laskutus-tunniste
                                                                                                 :salasana laskutus-salasana}))}
         request-xml (request-create-xml data)
-        response (send-request! request-xml keystore-file keystore-password signer-username signer-password)]
+        response (send-request! request-xml keystore-file keystore-password keystore-alias)]
     (when response
       (read-response response))))
