@@ -9,22 +9,26 @@ $$
 
 <div class="kaytto-omistaja">
     {{#omistaja-henkilo}}
-        {{etunimi}} {{sukunimi}} <br />
-        {{katuosoite}}  <br />
-        {{postinumero}} {{postitoimipaikka}}
+        {{etunimi}} {{sukunimi}}
     {{/omistaja-henkilo}}
     {{#omistaja-yritys}}
-        {{nimi}} {{ytunnus}} <br />
-        {{katuosoite}}  <br />
-        {{postinumero}} {{postitoimipaikka}}
+        {{nimi}}
     {{/omistaja-yritys}}
 </div>
 <div class="kaytto-kohde">
     {{#kohde}}
-    Kohde/Objekt: {{nimi}} <br/>
-    Ilmoituspaikka/Meddelandeplats: {{ilmoituspaikka}} <br/>
-    Ilmoitustunnus/Meddelandekod: {{ilmoitustunnus}} <br/>
-    Havaintopäivä/Observationsdatum: {{havaintopäivä}} <br/>
+        <table class="sarake">
+            <tr>
+                <td>Kohde/Objekt:</td> 
+                <td>
+                    <div class="nowrap">{{katuosoite}}</div>  
+                    <div class="nowrap">{{postinumero}} {{postitoimipaikka}}</div>  
+                </td>
+            </tr>
+        </table>
+        Ilmoituspaikka/Meddelandeplats: {{ilmoituspaikka}} <br/>
+        Ilmoitustunnus/Meddelandekod: {{ilmoitustunnus}} <br/>
+        Havaintopäivä/Observationsdatum: {{havaintopäivä}} <br/>
     {{/kohde}}
     Tietopyynnön päivämäärä/Begäran om uppgifter: {{#tietopyynto}} {{tietopyynto-pvm}} {{/tietopyynto}} <br/>
     Kehotuksen päivämäärä/Kehotuksen päivämäärä (sv): {{#tietopyynto}} {{tietopyynto-kehotus-pvm}} {{/tietopyynto}}
@@ -51,7 +55,7 @@ $$
 
 <div class="sivunvaihto"></div>
 
-<h1>Energiatodistusvalvonnan varoitus (sv)</h1>
+<h1>Varning</h1>
 
 <p>Finansierings- och utvecklingscentralen för boendet (ARA) har till uppgift att övervaka användningen av
     energicertifikat vid försäljning och uthyrning. ARA har sänt er en begäran om information och en uppmaning rörande
@@ -74,7 +78,7 @@ $$
     {{#valvoja}}
     {{etunimi}} {{sukunimi}}
     {{/valvoja}}<br/>
-    energia-asiantuntija
+    energia-asiantuntija/energiexpert
 </p>
 
 <table class="sarake max-width">
