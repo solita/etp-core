@@ -26,6 +26,7 @@
   (clostache/render-resource (str "suomifi/viesti.xml") data))
 
 (defn- ^:dynamic make-send-request! [request]
+  (log/debug request)
   (if config/suomifi-viestit-endpoint-url
     (http/post config/suomifi-viestit-endpoint-url
                (cond-> {:body request}

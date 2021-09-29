@@ -9,4 +9,6 @@
     <root level="info">
         <appender-ref ref="STDOUT" />
     </root>
+    <variable name="SUOMIFI_VIESTIT_LOG_LEVEL" value="${SUOMIFI_VIESTIT_LOG_LEVEL:-INFO}" />
+    <logger name="solita.etp.service.suomifi-viestit" level="${SUOMIFI_VIESTIT_LOG_LEVEL}"/>
 </configuration>
