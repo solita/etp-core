@@ -41,7 +41,7 @@
    :omistaja-henkilo (when (osapuoli/henkilo? osapuoli)
                        {:etunimi          (:etunimi osapuoli)
                         :sukunimi         (:sukunimi osapuoli)})
-   :omistaja-yritys  (when (kaytto-schema/yritys? osapuoli)
+   :omistaja-yritys  (when (osapuoli/yritys? osapuoli)
                        {:nimi             (:nimi osapuoli)})
    :kohde            {:katuosoite       (:katuosoite valvonta)
                       :postinumero      (:postinumero valvonta)
