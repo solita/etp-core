@@ -9,6 +9,7 @@
                 <asi:Yhteyshenkilo Nimi="Henkilö" Sahkoposti="testi.kayttaja@organisaatio.or" />
                 <asi:SanomaTunniste>ETP-1-2-1</asi:SanomaTunniste>
                 <asi:SanomaVersio>1.0</asi:SanomaVersio>
+                <asi:SanomaVarmenneNimi>OR</asi:SanomaVarmenneNimi>
             </asi:Viranomainen>
             <asi:Kysely>
                 <asi:Paperi>false</asi:Paperi>

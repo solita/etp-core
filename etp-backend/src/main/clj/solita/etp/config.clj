@@ -106,13 +106,10 @@
 
 (def asha-endpoint-url (env "ASHA_ENDPOINT_URL" nil))
 (def asha-proxy? (edn/read-string (env "ASHA_PROXY" "false")))
-(def asha-debug? (edn/read-string (env "ASHA_DEBUG" "false")))
-
 
 ;; Suomifi / viestit
 
 (def suomifi-viestit-proxy? (edn/read-string (env "SUOMIFI_VIESTIT_PROXY" "false")))
-(def suomifi-viestit-debug?  (edn/read-string (env "SUOMIFI_VIESTIT_DEBUG" "false")))
 (def suomifi-viestit-paperitoimitus? (edn/read-string (env "SUOMIFI_VIESTIT_PAPERITOIMITUS" "false")))
 (def suomifi-viestit-laheta-tulostukseen?  (edn/read-string (env "SUOMIFI_VIESTIT_LAHETA_TULOSTUKSEEN" "false")))
 (def suomifi-viestit-endpoint-url (env "SUOMIFI_VIESTIT_ENDPOINT_URL" nil))
@@ -126,5 +123,4 @@
 (def suomifi-viestit-laskutus-salasana (env "SUOMIFI_VIESTIT_LASKUTUS_SALASANA" nil))
 (def suomifi-viestit-keystore-file (env "SUOMIFI_VIESTIT_KEYSTORE_FILE" nil))
 (def suomifi-viestit-keystore-password (env "SUOMIFI_VIESTIT_KEYSTORE_PASSWORD" nil))
-(def suomifi-viestit-signer-username (env "SUOMIFI_VIESTIT_SIGNER_USERNAME" nil))
-(def suomifi-viestit-signer-password (env "SUOMIFI_VIESTIT_SIGNER_PASSWORD" nil))
+(def suomifi-viestit-keystore-alias (env "SUOMIFI_VIESTIT_KEYSTORE_ALIAS" nil))

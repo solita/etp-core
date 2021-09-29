@@ -22,15 +22,10 @@
 ;; register default algorithms
 (Canonicalizer/registerDefaultAlgorithms)
 
-(defn- debug-print [info]
-  (when config/suomifi-viestit-debug?
-    (log/info info)))
-
 (defn- request-create-xml [data]
   (clostache/render-resource (str "suomifi/viesti.xml") data))
 
-(defn- ^:dynamic make-send-requst! [request]
-  (debug-print request)
+(defn- ^:dynamic make-send-request! [request]
   (if config/suomifi-viestit-endpoint-url
     (http/post config/suomifi-viestit-endpoint-url
                (cond-> {:body request}
@@ -83,9 +78,8 @@
 (defn- send-request! [request keystore-file keystore-password keystore-alias]
   (try
     (let [response (if (and keystore-file keystore-password keystore-alias)
-                     (make-send-requst! (signSOAPEnvelope request keystore-file keystore-password keystore-alias))
-                     (make-send-requst! request))]
-      (debug-print (:body response))
+                     (make-send-request! (signSOAPEnvelope request keystore-file keystore-password keystore-alias))
+                     (make-send-request! request))]
       (:body response))
     (catch Exception e
       (log/error "Sending xml failed: " e))))
@@ -99,7 +93,6 @@
 
 (defn- response-parser [response-soap]
   (let [response-xml (read-response->xml response-soap)]
-    (debug-print response-xml)
     {:tila-koodi        (xml/get-content response-xml [:laheta-viesti-result :tila-koodi :tila-koodi])
      :tila-koodi-kuvaus (trim (xml/get-content response-xml [:laheta-viesti-result :tila-koodi :tila-koodi-kuvaus]))
      :sanoma-tunniste   (xml/get-content response-xml [:laheta-viesti-result :tila-koodi :sanoma-tunniste])}))

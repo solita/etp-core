@@ -12,8 +12,8 @@
 (defn- handle-request [request-resource response-resource response-status]
   (fn [request]
     (t/is (= (-> request str/trim) (-> request-resource io/resource slurp str/trim)))
-    {:body   (-> response-resource io/resource slurp)
-     :status response-status}))
+      {:body   (-> response-resource io/resource slurp)
+       :status response-status}))
 
 (def valvonta {:id                  1
                :rakennustunnus      "103515074X"
@@ -47,21 +47,21 @@
              :laskutus-salasana   "0000"})
 
 (t/deftest send-message-to-osapuoli-test
-  (with-bindings {#'solita.etp.service.suomifi-viestit/make-send-requst! (handle-request "suomifi/viesti-request.xml"
-                                                                                         "suomifi/viesti-response.xml"
-                                                                                         200)
-                  #'suomifi-viestit/now                                  (fn []
-                                                                           "2021-09-08T06:21:03.625667Z")
-                  #'suomifi-viestit/bytes->base64                        (fn [_]
-                                                                           "dGVzdGk=")}
+  (with-bindings {#'solita.etp.service.suomifi-viestit/make-send-request! (handle-request "suomifi/viesti-request.xml"
+                                                                                          "suomifi/viesti-response.xml"
+                                                                                          200)
+                  #'suomifi-viestit/now                                   (fn []
+                                                                            "2021-09-08T06:21:03.625667Z")
+                  #'suomifi-viestit/bytes->base64                         (fn [_]
+                                                                            "dGVzdGk=")}
     (t/is (nil? (suomifi-viestit/send-message-to-osapuoli! valvonta toimenpide osapuoli document config)))))
 
 (t/deftest send-message-to-osapuoli-id-already-exists-test
-  (with-bindings {#'solita.etp.service.suomifi-viestit/make-send-requst! (handle-request "suomifi/viesti-request.xml"
-                                                                                         "suomifi/viesti-id-already-exists-response.xml"
-                                                                                         200)
-                  #'suomifi-viestit/now                                  (fn []
-                                                                           "2021-09-08T06:21:03.625667Z")
-                  #'suomifi-viestit/bytes->base64                        (fn [_]
-                                                                           "dGVzdGk=")}
+  (with-bindings {#'solita.etp.service.suomifi-viestit/make-send-request! (handle-request "suomifi/viesti-request.xml"
+                                                                                          "suomifi/viesti-id-already-exists-response.xml"
+                                                                                          200)
+                  #'suomifi-viestit/now                                   (fn []
+                                                                            "2021-09-08T06:21:03.625667Z")
+                  #'suomifi-viestit/bytes->base64                         (fn [_]
+                                                                            "dGVzdGk=")}
     (t/is (nil? (suomifi-viestit/send-message-to-osapuoli! valvonta toimenpide osapuoli document config)))))

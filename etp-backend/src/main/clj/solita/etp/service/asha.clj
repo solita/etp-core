@@ -12,17 +12,11 @@
             [solita.etp.service.file :as file-service]
             [clojure.string :as str]))
 
-(defn debug-print [info]
-  (when config/asha-debug?
-    (println info)))
-
 (defn bytes->base64 [bytes]
   (String. (b64/encode bytes) "UTF-8"))
 
 (defn- request-create-xml [resource data]
-  (let [xml (clostache/render-resource (str "asha/" resource ".xml") data)]
-    (debug-print xml)
-    xml))
+  (clostache/render-resource (str "asha/" resource ".xml") data))
 
 (defn read-response->xml [response]
   (-> response xml/string->xml xml/without-soap-envelope first xml/with-kebab-case-tags))
@@ -31,7 +25,7 @@
   (let [coercer (sc/coercer schema sc/string-coercion-matcher)]
     (coercer response-parser)))
 
-(defn- ^:dynamic make-send-requst! [request]
+(defn- ^:dynamic make-send-request! [request]
   (if config/asha-endpoint-url
     (http/post config/asha-endpoint-url
                (cond-> {:content-type "application/xop+xml;charset=\"UTF-8\"; type=\"text/xml\""
@@ -45,11 +39,9 @@
 
 (defn- send-request! [request]
   (try
-    (let [response (make-send-requst! request)]
+    (let [response (make-send-request! request)]
       (if (= 200 (:status response))
-        (do
-          (debug-print (:body response))
-          (:body response))
+        (:body response)
         (do
           (log/error (str "Sending xml failed with status " (:status response) " " (:body response)))
           (exception/throw-ex-info! :asha-request-failed
@@ -67,13 +59,11 @@
 
 (defn response-parser-case-create [response-soap]
   (let [response-xml (read-response->xml response-soap)]
-    (debug-print response-xml)
     {:id          (xml/get-content response-xml [:return :object-identity :id])
      :case-number (xml/get-content response-xml [:return :case-number])}))
 
 (defn response-parser-case-info [response-soap]
   (let [response-xml (read-response->xml response-soap)]
-    (debug-print response-xml)
     {:id             (xml/get-content response-xml [:return :case-info-response :object-identity :id])
      :case-number    (xml/get-content response-xml [:return :case-info-response :case-number])
      :status         (xml/get-content response-xml [:return :case-info-response :status])
@@ -93,7 +83,6 @@
                        :description          (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:description])))
                        :status               (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:status])))
                        :created              (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:created])))})]
-    (debug-print response-xml)
     {:processing-action (action-info [:processing-action])
      :assignee          (xml/get-content response-xml [:return :action-info-response :assignee])
      :queue             (xml/get-content response-xml [:return :action-info-response :queue])
