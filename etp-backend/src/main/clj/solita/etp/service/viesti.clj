@@ -88,6 +88,7 @@
 
 (defn- visible-for? [whoami ketju]
   (or (rooli-service/paakayttaja? whoami)
+      (rooli-service/laskuttaja? whoami)
       (contains? (->> ketju :vastaanottajat (map :id) set) (:id whoami))
       (-> ketju :viestit first :from :id (= (:id whoami)))
       (= (builtin-vastaanottajaryhma-id whoami) (:vastaanottajaryhma-id ketju))))
@@ -124,7 +125,8 @@
         kayttajat (find-kayttajat db)]
     (pmap (comp (partial assoc-join-viestit db whoami)
                 (partial assoc-join-vastaanottajat kayttajat))
-          (if (rooli-service/paakayttaja? whoami)
+          (if (or (rooli-service/paakayttaja? whoami)
+                  (rooli-service/laskuttaja? whoami))
             (viesti-db/select-all-viestiketjut db (merge default-filters query))
             (viesti-db/select-viestiketjut-for-kayttaja
               db (merge query (query-for-other-users whoami)))))))
