@@ -11,4 +11,6 @@
     </root>
     <variable name="SUOMIFI_VIESTIT_LOG_LEVEL" value="${SUOMIFI_VIESTIT_LOG_LEVEL:-INFO}" />
     <logger name="solita.etp.service.suomifi-viestit" level="${SUOMIFI_VIESTIT_LOG_LEVEL}"/>
+    <variable name="ASHA_LOG_LEVEL" value="${ASHA_LOG_LEVEL:-INFO}" />
+    <logger name="solita.etp.service.asha" level="${ASHA_LOG_LEVEL}"/>
 </configuration>

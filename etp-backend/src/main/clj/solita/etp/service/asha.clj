@@ -26,6 +26,7 @@
     (coercer response-parser)))
 
 (defn- ^:dynamic make-send-request! [request]
+  (log/debug request)
   (if config/asha-endpoint-url
     (http/post config/asha-endpoint-url
                (cond-> {:content-type "application/xop+xml;charset=\"UTF-8\"; type=\"text/xml\""
