@@ -49,7 +49,16 @@
         org.clojure/data.xml {:mvn/version "0.2.0-alpha6"}
         camel-snake-kebab {:mvn/version "0.4.1"}
         com.jcraft/jsch {:mvn/version "0.1.55"}
-        com.sun.mail/javax.mail {:mvn/version "1.6.2"}}
+        com.sun.mail/javax.mail {:mvn/version "1.6.2"}
+
+        org.apache.ws.security/wss4j {:mvn/version "1.6.9"}
+        org.apache.axis/axis {:mvn/version "1.4"}
+        org.apache.axis/axis-ant {:mvn/version "1.4"}
+        javax.xml/webservices-api {:mvn/version "1.4"}
+        commons-io/commons-io {:mvn/version "1.4"}
+        com.sun.xml.ws/webservices-rt {:mvn/version "2.0"
+                                       :exclusions ["javax.xml/webservices-api"]}
+        commons-discovery/commons-discovery {:mvn/version "0.5"}}
  :aliases {:dev {:extra-paths ["src/test/clj"
                                "src/test/resources"]
                  :extra-deps {eftest {:mvn/version "0.5.9"}

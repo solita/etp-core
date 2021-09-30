@@ -7,3 +7,7 @@
 
 (def suomi-fi? (toimitustapa? 0))
 (def email? (toimitustapa? 1))
+
+
+(def henkilo? #(and (contains? % :etunimi) (contains? % :sukunimi)))
+(def yritys? #(contains? % :nimi))

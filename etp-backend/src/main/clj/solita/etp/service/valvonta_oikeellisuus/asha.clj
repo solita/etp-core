@@ -105,7 +105,8 @@
                         (exception/require-some! :template template-id))
           documents (find-energiatodistus-valvonta-documents db (:id energiatodistus))
           template-data (template-data whoami toimenpide laatija energiatodistus documents)]
-      (pdf/generate-pdf->bytes template template-data))))
+      (pdf/generate-pdf->bytes {:template template
+                                :data     template-data}))))
 
 (defn- request-id [energiatodistus-id toimenpide-id]
   (str energiatodistus-id "/" toimenpide-id))

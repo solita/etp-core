@@ -7,20 +7,24 @@
     [com.openhtmltopdf.svgsupport BatikSVGDrawer]
     (com.openhtmltopdf.outputdevice.helper BaseRendererBuilder$FontStyle)
     (java.io ByteArrayOutputStream InputStream)
-    (com.openhtmltopdf.extend FSSupplier)))
+    (com.openhtmltopdf.extend FSSupplier)
+    (org.apache.pdfbox.multipdf PDFMergerUtility)
+    (org.apache.pdfbox.io MemoryUsageSetting)))
 
 (defn- add-font [builder font-resource font-weight font-style]
   (.useFont builder (reify FSSupplier
                       (supply [^InputStream _]
                         (-> font-resource io/resource io/input-stream)))  "roboto" (Integer/valueOf font-weight) font-style true))
 
-(defn- render-template-with-content [template data]
-  (let [content (clostache/render template data)]
-    (clostache/render-resource "pdf/template.html" {:content content})))
+(defn- render-template-with-content [template data layout]
+  (if-let [content (when template
+                     (clostache/render template data))]
+    (clostache/render-resource layout {:content content})
+    (clostache/render-resource layout data)))
 
 (defn html->pdf
-  [template data output-stream]
-  (let [html-doc (render-template-with-content template data)
+  [template data layout output-stream]
+  (let [html-doc (render-template-with-content template data layout)
         builder (PdfRendererBuilder.)]
     (.useFastMode builder)
     (.withHtmlContent builder html-doc nil)
@@ -37,10 +41,19 @@
     (.toStream builder output-stream)
     (.run builder)))
 
-(defn generate-pdf->bytes [template template-data]
-  (with-open [baos (ByteArrayOutputStream.)]
-    (html->pdf template template-data baos)
-    (.toByteArray baos)))
+(defn generate-pdf->bytes [{:keys [layout template data]
+                            :or {layout "pdf/template.html"}}]
+   (with-open [baos (ByteArrayOutputStream.)]
+     (html->pdf template data layout baos)
+     (.toByteArray baos)))
 
-(defn template->pdf-input-stream [template template-data]
-  (io/input-stream (generate-pdf->bytes template template-data)))
+
+(defn generate-pdf->input-stream [opts]
+  (io/input-stream (generate-pdf->bytes opts)))
+
+(defn merge-pdf [pdfs output]
+  (let [pmu (PDFMergerUtility.)]
+    (doseq [pdf pdfs]
+      (.addSource pmu pdf))
+    (.setDestinationStream pmu output)
+    (.mergeDocuments pmu (MemoryUsageSetting/setupMainMemoryOnly))))
