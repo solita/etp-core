@@ -141,8 +141,9 @@
                                      :tulostustoimittaja   tulostustoimittaja
                                      :paperitoimitus?      false
                                      :laheta-tulostukseen? false}
-                                    (and laskutus-tunniste laskutus-salasana) (assoc :laskutus {:tunniste laskutus-tunniste
-                                                                                                :salasana laskutus-salasana}))}
+                              (and (seq laskutus-tunniste) (seq laskutus-salasana))
+                                (assoc :laskutus {:tunniste laskutus-tunniste
+                                                  :salasana laskutus-salasana}))}
         request-xml (request-create-xml data)
         response (send-request! request-xml keystore-file keystore-password keystore-alias)]
     (when response
