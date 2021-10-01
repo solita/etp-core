@@ -1,6 +1,7 @@
 #!/bin/bash
 
 export SUOMIFI_VIESTIT_KEYSTORE_PASSWORD=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
+export SUOMIFI_VIESTIT_KEYSTORE_ALIAS=viestit
 
 echo Retrieve /secret/etp/suomifi/viestit/client.crt
 aws secretsmanager get-secret-value --secret-id "/secret/etp/suomifi/viestit/client.crt" | jq .SecretString -r > public.pem
