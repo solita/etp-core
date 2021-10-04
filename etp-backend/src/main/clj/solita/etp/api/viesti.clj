@@ -4,7 +4,6 @@
             [solita.etp.schema.viesti :as viesti-schema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.service.viesti :as viesti-service]
-            [solita.etp.service.rooli :as rooli-service]
             [schema.core :as schema]))
 
 (def routes
@@ -57,7 +56,7 @@
                                      (viesti-service/find-ketju! db whoami id)
                                      (str "Ketju " id " does not exists.")))}
        :put         {:summary    "Päivitä viestiketjun tiedot"
-                     :access     (some-fn rooli-service/paakayttaja? rooli-service/laskuttaja?)
+                     :access     viesti-service/kasittelija?
                      :parameters {:path {:id common-schema/Key}
                                   :body viesti-schema/KetjuUpdate}
                      :responses  {200 {:body nil}
