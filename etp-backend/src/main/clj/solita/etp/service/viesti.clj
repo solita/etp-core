@@ -10,6 +10,8 @@
 
 (db/require-queries 'viesti)
 
+(def kasittelija? (some-fn rooli-service/paakayttaja? rooli-service/laskuttaja?))
+
 (defn- add-vastaanottajat [db viestiketju-id vastaanottajat]
   (doseq [vastaanottaja-id vastaanottajat]
     (jdbc/insert! db :vastaanottaja
@@ -55,8 +57,7 @@
        (let [[{:keys [id]}] (insert-ketju! tx ketju)]
          (insert-viesti! tx id (:body ketju))
          (viesti-db/read-ketju! tx {:viestiketju-id id})
-         (when (or (rooli-service/paakayttaja? whoami)
-                   (rooli-service/laskuttaja? whoami))
+         (when (kasittelija? whoami)
            (add-vastaanottajat tx id (:vastaanottajat ketju)))
          id))))
 
@@ -87,8 +88,7 @@
     3 2))          ;; laskuttaja
 
 (defn- visible-for? [whoami ketju]
-  (or (rooli-service/paakayttaja? whoami)
-      (rooli-service/laskuttaja? whoami)
+  (or (kasittelija? whoami)
       (contains? (->> ketju :vastaanottajat (map :id) set) (:id whoami))
       (-> ketju :viestit first :from :id (= (:id whoami)))
       (= (builtin-vastaanottajaryhma-id whoami) (:vastaanottajaryhma-id ketju))))
@@ -125,20 +125,17 @@
         kayttajat (find-kayttajat db)]
     (pmap (comp (partial assoc-join-viestit db whoami)
                 (partial assoc-join-vastaanottajat kayttajat))
-          (if (or (rooli-service/paakayttaja? whoami)
-                  (rooli-service/laskuttaja? whoami))
+          (if (kasittelija? whoami)
             (viesti-db/select-all-viestiketjut db (merge default-filters query))
             (viesti-db/select-viestiketjut-for-kayttaja
               db (merge query (query-for-other-users whoami)))))))
 
 (defn count-ketjut [db whoami query]
-  (-> (if (rooli-service/paakayttaja? whoami)
+  (-> (if (kasittelija? whoami)
         (viesti-db/select-count-all-viestiketjut db (merge default-filters query))
         (viesti-db/select-count-viestiketjut-for-kayttaja
           db (query-for-other-users whoami)))
       first))
-
-(def kasittelija? (some-fn rooli-service/paakayttaja? rooli-service/laskuttaja?))
 
 (defn count-unread-ketjut [db whoami]
   (-> (if (kasittelija? whoami)
