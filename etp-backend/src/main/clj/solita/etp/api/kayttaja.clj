@@ -20,6 +20,20 @@
                       (whoami-service/update-kayttaja-with-whoami! db whoami)
                       (r/response whoami))}}]
    ["/kayttajat"
+    [""
+     {:post {:summary    "Lisää muu käyttäjä kuin laatija."
+             :access     rooli-service/paakayttaja?
+             :parameters {:body kayttaja-schema/KayttajaUpdate}
+             :responses  {201 {:body common-schema/Id}}
+             :handler    (fn [{:keys [db parameters uri]}]
+                           (api-response/created
+                             uri {:id (kayttaja-service/add-kayttaja! db (:body parameters))}))}
+
+      :get  {:summary    "Hae kaikki muut käyttäjät paitsi laatijat"
+             :access     rooli-service/paakayttaja?
+             :responses  {200 {:body [kayttaja-schema/Kayttaja]}}
+             :handler    (fn [{:keys [db]}]
+                           (r/response (kayttaja-service/find-kayttajat db)))}}]
     ["/:id"
      [""
       {:get {:summary "Hae minkä tahansa käyttäjän käyttäjätiedot"
