@@ -18,12 +18,16 @@
                                       {(schema/maybe kayttaja-schema/VirtuId)
                                        #(if (every? nil? (vals %)) nil %)}))
 
+(def db-row->kayttaja
+  (comp
+    coerce-kayttaja
+    (partial flat/flat->tree #"\$")))
+
 (defn find-kayttaja
   ([db id]
    (->> {:id id}
         (kayttaja-db/select-kayttaja db)
-        (map (partial flat/flat->tree #"\$"))
-        (map coerce-kayttaja)
+        (map db-row->kayttaja)
         first))
   ([db whoami id]
    (when-let [kayttaja (find-kayttaja db id)]
@@ -35,9 +39,18 @@
        kayttaja
        (exception/throw-forbidden!)))))
 
+(defn find-kayttajat [db]
+  (map db-row->kayttaja (kayttaja-db/select-kayttajat db)))
+
+(defn empty-virtuid [kayttaja]
+  (if (-> kayttaja (get :virtu :undefined) nil?)
+    (assoc kayttaja :virtu {:organisaatio nil :localid nil})
+    kayttaja))
+
 (defn- kayttaja->db-row [kayttaja]
   (-> kayttaja
       (set/rename-keys {:rooli :rooli-id})
+      empty-virtuid
       (->> (flat/tree->flat "$"))
       (dissoc :virtu)))
 
