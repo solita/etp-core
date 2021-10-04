@@ -4,7 +4,6 @@
             [solita.etp.schema.viesti :as viesti-schema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.service.viesti :as viesti-service]
-            [solita.etp.service.rooli :as rooli-service]
             [schema.core :as schema]))
 
 (def routes
