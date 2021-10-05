@@ -104,6 +104,10 @@
   { :type schema/Keyword
     :constraint schema/Keyword})
 
+(def GeneralError
+  {:type schema/Keyword
+   :message schema/Str})
+
 (defn valid-ovt-tunnus? [s]
   (if (re-find #"^0037\d{8,13}$" s)
     (let [ytunnus (str (subs s 4 11) "-" (subs s 11 12))]

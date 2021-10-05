@@ -41,7 +41,7 @@
                           :body save-schema}
              :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
              :responses  {200 {:body nil}
-                          404 {:body schema/Str}}
+                          404 {:body common-schema/GeneralError}}
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami parameters]}]
                            (api-response/response-with-exceptions
                              #(energiatodistus-service/update-energiatodistus!
