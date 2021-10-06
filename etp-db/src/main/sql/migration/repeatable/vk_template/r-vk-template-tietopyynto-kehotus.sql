@@ -19,7 +19,7 @@ $$
     {{#kohde}}
         <table class="sarake">
             <tr>
-                <td>Kohde/Objekt:</td> 
+                <td>Kohde/Objekt: </td> 
                 <td>
                     <div class="nowrap">{{katuosoite}}</div>  
                     <div class="nowrap">{{postinumero}} {{postitoimipaikka}}</div>  
