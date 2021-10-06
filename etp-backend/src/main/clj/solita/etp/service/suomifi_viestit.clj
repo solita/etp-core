@@ -139,8 +139,8 @@
               :sanoma       (assoc sanoma :varmenne varmenne)
               :kysely       (cond-> {:kohteet              kohde
                                      :tulostustoimittaja   tulostustoimittaja
-                                     :paperitoimitus?      false
-                                     :laheta-tulostukseen? false}
+                                     :paperitoimitus?      paperitoimitus?
+                                     :laheta-tulostukseen? laheta-tulostukseen?}
                               (and (seq laskutus-tunniste) (seq laskutus-salasana))
                                 (assoc :laskutus {:tunniste laskutus-tunniste
                                                   :salasana laskutus-salasana}))}
