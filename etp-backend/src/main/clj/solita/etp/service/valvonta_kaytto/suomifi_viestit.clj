@@ -18,8 +18,11 @@
                 :postinumero      "15141"
                 :postitoimipaikka "Lahti"})
 
-(defn- ->sanoma [valvonta-id toimenpide-id osapuoli-id]
-  {:tunniste (str "ETP-" valvonta-id "-" toimenpide-id "-" osapuoli-id)
+(defn- tunniste [diaarinumero valvonta-id toimenpide-id osapuoli-id]
+  (str/join "-" [diaarinumero "ETP" valvonta-id toimenpide-id osapuoli-id]))
+
+(defn- ->sanoma [diaarinumero valvonta-id toimenpide-id osapuoli-id]
+  {:tunniste (tunniste diaarinumero valvonta-id toimenpide-id osapuoli-id)
    :versio   "1.0"})
 
 (defn- henkilo->asiakas [henkilo]
@@ -107,7 +110,7 @@
 (defn- ->kohde [valvonta toimenpide osapuoli tiedosto]
   (let [type-key (toimenpide/type-key (:type-id toimenpide))
         {:keys [nimike kuvaus]} (toimenpide->kohde type-key valvonta toimenpide)]
-    {:viranomaistunniste (str/join "-" [(:diaarinumero toimenpide) "ETP" (:id valvonta) (:id toimenpide) (:id osapuoli)])
+    {:viranomaistunniste (tunniste (:diaarinumero toimenpide) (:id valvonta) (:id toimenpide) (:id osapuoli))
      :nimike             nimike
      :kuvaus-teksti      kuvaus
      :lahetys-pvm        (now)
@@ -120,7 +123,7 @@
                                  dokumentti
                                  & [config]]
   (suomifi/send-message!
-    (->sanoma (:id valvonta) (:id toimenpide) (:id osapuoli))
+    (->sanoma (:diaarinumero toimenpide) (:id valvonta) (:id toimenpide) (:id osapuoli))
     (->kohde valvonta toimenpide osapuoli dokumentti)
     config))
 
