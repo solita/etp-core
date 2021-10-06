@@ -7,7 +7,7 @@
                 <asi:ViranomaisTunnus>Organisaatio</asi:ViranomaisTunnus>
                 <asi:PalveluTunnus>OR</asi:PalveluTunnus>
                 <asi:Yhteyshenkilo Nimi="Henkilö" Sahkoposti="testi.kayttaja@organisaatio.or" />
-                <asi:SanomaTunniste>ETP-1-2-1</asi:SanomaTunniste>
+                <asi:SanomaTunniste>ARA-05.03.02-2021-31-ETP-1-2-1</asi:SanomaTunniste>
                 <asi:SanomaVersio>1.0</asi:SanomaVersio>
                 <asi:SanomaVarmenneNimi>OR</asi:SanomaVarmenneNimi>
             </asi:Viranomainen>
