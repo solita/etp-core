@@ -162,6 +162,16 @@ select id, ordinal,
 from vo_virhetype
 order by ordinal asc;
 
+-- name: insert-virhetype<!
+insert into vo_virhetype (id, ordinal, valid,
+                          label_fi, label_sv,
+                          description_fi, description_sv)
+values ((select coalesce(max(id) + 1, 1) from vo_virhetype),
+        :ordinal, :valid,
+        :label-fi, :label-sv,
+        :description-fi, :description-sv)
+returning id;
+
 -- name: update-toimenpide-published!
 update vo_toimenpide set publish_time = transaction_timestamp() where id = :id;
 

@@ -262,6 +262,9 @@
            virhetyyppi ["id = ?" id]
            db/default-opts)))
 
+(defn add-virhetyyppi! [db virhetyyppi]
+  (valvonta-oikeellisuus-db/insert-virhetype<! db virhetyyppi))
+
 (defn find-severities [db] (luokittelu/find-severities db))
 
 (defn preview-toimenpide [db whoami id toimenpide]

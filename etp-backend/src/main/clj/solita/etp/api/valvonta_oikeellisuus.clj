@@ -37,7 +37,9 @@
                      :responses  {201 {:body common-schema/Id}
                                   404 common-schema/ConstraintError}
                      :handler    (fn [{:keys [db uri parameters]}]
-                                   (api-response/created uri {:id 1}))}}]
+                                   (api-response/created
+                                     uri (valvonta-service/add-virhetyyppi!
+                                           db (:body parameters))))}}]
      ["/:id"
       {:conflicting true
        :put         {:summary    "Muuta virhetyypin tietoja."
