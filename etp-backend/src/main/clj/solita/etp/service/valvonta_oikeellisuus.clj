@@ -254,16 +254,24 @@
 
 (defn find-templates [db] (valvonta-oikeellisuus-db/select-templates db))
 
-(defn find-virhetyypit [db] (valvonta-oikeellisuus-db/select-virhetypes db))
+(defn find-virhetypes [db] (valvonta-oikeellisuus-db/select-virhetypes db))
 
-(defn save-virhetyyppi! [db id virhetyyppi]
-  (first (db/with-db-exception-translation
-           jdbc/update! db :vo-virhetype
-           virhetyyppi ["id = ?" id]
-           db/default-opts)))
+(defn save-virhetype! [db id virhetype]
+  (jdbc/with-db-transaction
+    [db db]
+    (let [result (-> (db/with-db-exception-translation
+                       jdbc/update! db :vo-virhetype
+                       virhetype ["id = ?" id]
+                       db/default-opts) first)]
+      (valvonta-oikeellisuus-db/order-virhetypes! db {:id id})
+      result)))
 
-(defn add-virhetyyppi! [db virhetyyppi]
-  (valvonta-oikeellisuus-db/insert-virhetype<! db virhetyyppi))
+(defn add-virhetype! [db virhetype]
+  (jdbc/with-db-transaction
+    [db db]
+    (let [id (valvonta-oikeellisuus-db/insert-virhetype<! db virhetype)]
+      (valvonta-oikeellisuus-db/order-virhetypes! db id)
+      id)))
 
 (defn find-severities [db] (luokittelu/find-severities db))
 

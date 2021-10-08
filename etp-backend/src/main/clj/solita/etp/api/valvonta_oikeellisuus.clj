@@ -30,7 +30,7 @@
                      :responses {200 {:body [oikeellisuus-schema/Virhetyyppi]}}
                      :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                      :handler   (fn [{:keys [db]}]
-                                  (r/response (valvonta-service/find-virhetyypit db)))}
+                                  (r/response (valvonta-service/find-virhetypes db)))}
        :post        {:summary    "Lisää uusi virhetyyppi."
                      :access     rooli-service/paakayttaja?
                      :parameters {:body oikeellisuus-schema/VirhetyyppiUpdate}
@@ -38,7 +38,7 @@
                                   404 common-schema/ConstraintError}
                      :handler    (fn [{:keys [db uri parameters]}]
                                    (api-response/created
-                                     uri (valvonta-service/add-virhetyyppi!
+                                     uri (valvonta-service/add-virhetype!
                                            db (:body parameters))))}}]
      ["/:id"
       {:conflicting true
@@ -51,7 +51,7 @@
                      :handler    (fn [{{{:keys [id]} :path :keys [body]}
                                        :parameters :keys [db]}]
                                    (api-response/ok|not-found
-                                     (valvonta-service/save-virhetyyppi! db id body)
+                                     (valvonta-service/save-virhetype! db id body)
                                      (api-response/msg-404 "virhetyyppi" id)))}}]]
 
     ["/severities"
