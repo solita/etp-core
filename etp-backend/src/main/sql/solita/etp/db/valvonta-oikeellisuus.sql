@@ -172,6 +172,14 @@ values ((select coalesce(max(id) + 1, 1) from vo_virhetype),
         :description-fi, :description-sv)
 returning id;
 
+-- name: update-virhetype!
+update vo_virhetype set
+  ordinal = case when :ordinal > ordinal then :ordinal + 1 else :ordinal end,
+  valid = :valid,
+  label_fi = :label-fi, label_sv = :label-sv,
+  description_fi = :description-fi, description_sv = :description-sv
+where id = :id;
+
 -- name: order-virhetypes!
 update vo_virhetype
 set ordinal = ordered.ordinal

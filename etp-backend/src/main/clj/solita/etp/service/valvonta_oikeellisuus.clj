@@ -259,10 +259,7 @@
 (defn save-virhetype! [db id virhetype]
   (jdbc/with-db-transaction
     [db db]
-    (let [result (-> (db/with-db-exception-translation
-                       jdbc/update! db :vo-virhetype
-                       virhetype ["id = ?" id]
-                       db/default-opts) first)]
+    (let [result (valvonta-oikeellisuus-db/update-virhetype! db (assoc virhetype :id id))]
       (valvonta-oikeellisuus-db/order-virhetypes! db {:id id})
       result)))
 
