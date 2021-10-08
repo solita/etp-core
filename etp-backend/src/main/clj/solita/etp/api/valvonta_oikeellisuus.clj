@@ -24,12 +24,33 @@
                     :handler   (fn [{:keys [db]}]
                                  (r/response (valvonta-service/find-toimenpidetyypit db)))}}]
     ["/virhetyypit"
-     {:conflicting true
-      :get         {:summary   "Hae energiatodistusten virhetyypit."
-                    :responses {200 {:body [oikeellisuus-schema/Virhetyyppi]}}
-                    :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
-                    :handler   (fn [{:keys [db]}]
-                                 (r/response (valvonta-service/find-virhetyypit db)))}}]
+     [""
+      {:conflicting true
+       :get         {:summary   "Hae energiatodistusten virhetyypit."
+                     :responses {200 {:body [oikeellisuus-schema/Virhetyyppi]}}
+                     :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+                     :handler   (fn [{:keys [db]}]
+                                  (r/response (valvonta-service/find-virhetyypit db)))}
+       :post        {:summary    "Lisää uusi virhetyyppi."
+                     :access     rooli-service/paakayttaja?
+                     :parameters {:body oikeellisuus-schema/VirhetyyppiUpdate}
+                     :responses  {201 {:body common-schema/Id}
+                                  404 common-schema/ConstraintError}
+                     :handler    (fn [{:keys [db uri parameters]}]
+                                   (api-response/created uri {:id 1}))}}]
+     ["/:id"
+      {:conflicting true
+       :put         {:summary    "Muuta virhetyypin tietoja."
+                     :access     rooli-service/paakayttaja?
+                     :parameters {:path {:id common-schema/Key}
+                                  :body (schema-tools/optional-keys-schema
+                                          oikeellisuus-schema/VirhetyyppiUpdate)}
+                     :responses  {200 {:body nil}}
+                     :handler    (fn [{{{:keys [id]} :path :keys [body]}
+                                       :parameters :keys [db]}]
+                                   (api-response/ok|not-found
+                                     (valvonta-service/save-virhetyyppi! db id body)
+                                     (api-response/msg-404 "virhetyyppi" id)))}}]]
 
     ["/severities"
      {:conflicting true
@@ -91,7 +112,8 @@
 
      ["/toimenpiteet"
       [""
-       {:get  {:summary    "Hae energiatodistuksen valvontatoimenpiteet."
+       {:conflicting true
+        :get  {:summary    "Hae energiatodistuksen valvontatoimenpiteet."
                :parameters {:path {:id common-schema/Key}}
                :responses  {200 {:body [(dissoc oikeellisuus-schema/Toimenpide :virheet :tiedoksi)]}}
                :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
@@ -250,7 +272,8 @@
                                (toimenpide-404-msg id toimenpide-id)))}}]]]
      ["/notes"
       [""
-       {:get  {:summary    "Hae energiatodistuksen valvonnan muistiinpanot."
+       {:conflicting true
+        :get  {:summary    "Hae energiatodistuksen valvonnan muistiinpanot."
                :parameters {:path {:id common-schema/Key}}
                :responses  {200 {:body [oikeellisuus-schema/Note]}}
                :access     rooli-service/paakayttaja?

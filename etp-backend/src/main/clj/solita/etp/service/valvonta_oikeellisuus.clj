@@ -256,6 +256,12 @@
 
 (defn find-virhetyypit [db] (valvonta-oikeellisuus-db/select-virhetypes db))
 
+(defn save-virhetyyppi! [db id virhetyyppi]
+  (first (db/with-db-exception-translation
+           jdbc/update! db :vo-virhetype
+           virhetyyppi ["id = ?" id]
+           db/default-opts)))
+
 (defn find-severities [db] (luokittelu/find-severities db))
 
 (defn preview-toimenpide [db whoami id toimenpide]

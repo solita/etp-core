@@ -156,7 +156,11 @@ from vo_template
 where id = :id;
 
 -- name: select-virhetypes
-select id, label_fi, label_sv, valid, description_fi, description_sv from vo_virhetype;
+select id, ordinal,
+       label_fi, label_sv, valid,
+       description_fi, description_sv
+from vo_virhetype
+order by ordinal asc;
 
 -- name: update-toimenpide-published!
 update vo_toimenpide set publish_time = transaction_timestamp() where id = :id;

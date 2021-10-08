@@ -58,8 +58,11 @@
 
 (def Virhetyyppi
   (assoc common-schema/Luokittelu
+    :ordinal schema/Int
     :description-fi schema/Str
     :description-sv schema/Str))
+
+(def VirhetyyppiUpdate (dissoc Virhetyyppi :id))
 
 (def Note
   {:id          common-schema/Key
