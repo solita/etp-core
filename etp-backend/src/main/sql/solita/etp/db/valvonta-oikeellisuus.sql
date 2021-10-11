@@ -156,7 +156,39 @@ from vo_template
 where id = :id;
 
 -- name: select-virhetypes
-select id, label_fi, label_sv, valid, description_fi, description_sv from vo_virhetype;
+select id, ordinal,
+       label_fi, label_sv, valid,
+       description_fi, description_sv
+from vo_virhetype
+order by ordinal asc;
+
+-- name: insert-virhetype<!
+insert into vo_virhetype (id, ordinal, valid,
+                          label_fi, label_sv,
+                          description_fi, description_sv)
+values ((select coalesce(max(id) + 1, 1) from vo_virhetype),
+        :ordinal, :valid,
+        :label-fi, :label-sv,
+        :description-fi, :description-sv)
+returning id;
+
+-- name: update-virhetype!
+update vo_virhetype set
+  ordinal = case when :ordinal > ordinal then :ordinal + 1 else :ordinal end,
+  valid = :valid,
+  label_fi = :label-fi, label_sv = :label-sv,
+  description_fi = :description-fi, description_sv = :description-sv
+where id = :id;
+
+-- name: order-virhetypes!
+update vo_virhetype
+set ordinal = ordered.ordinal
+from (
+  select type.id,
+    row_number() over (order by type.ordinal asc, nullif(type.id, :id) desc nulls first) ordinal
+  from  vo_virhetype type
+) as ordered
+where vo_virhetype.id = ordered.id and vo_virhetype.ordinal <> ordered.ordinal;
 
 -- name: update-toimenpide-published!
 update vo_toimenpide set publish_time = transaction_timestamp() where id = :id;
