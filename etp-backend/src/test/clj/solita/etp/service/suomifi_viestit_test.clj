@@ -24,6 +24,7 @@
 (def toimenpide {:type-id       1
                  :id            2
                  :diaarinumero  "ARA-05.03.02-2021-31"
+                 :valvonta-id   1
                  :deadline-date (LocalDate/of 2022 1 1)})
 
 (def osapuoli {:id               1
@@ -49,12 +50,13 @@
 (t/deftest send-message-to-osapuoli-test
   (with-bindings {#'solita.etp.service.suomifi-viestit/make-send-request! (handle-request "suomifi/viesti-request.xml"
                                                                                           "suomifi/viesti-response.xml"
-                                                                                          200)
+                                                                                          202)
                   #'suomifi-viestit/now                                   (fn []
                                                                             "2021-09-08T06:21:03.625667Z")
                   #'suomifi-viestit/bytes->base64                         (fn [_]
                                                                             "dGVzdGk=")}
-    (t/is (nil? (suomifi-viestit/send-message-to-osapuoli! valvonta toimenpide osapuoli document config)))))
+    (t/is (= (:sanoma-tunniste (suomifi-viestit/send-message-to-osapuoli! valvonta toimenpide osapuoli document config))
+             "ARA-05.03.02-2021-31-ETP-1-2-PERSON-1"))))
 
 (t/deftest send-message-to-osapuoli-id-already-exists-test
   (with-bindings {#'solita.etp.service.suomifi-viestit/make-send-request! (handle-request "suomifi/viesti-request.xml"
@@ -64,4 +66,7 @@
                                                                             "2021-09-08T06:21:03.625667Z")
                   #'suomifi-viestit/bytes->base64                         (fn [_]
                                                                             "dGVzdGk=")}
-    (t/is (nil? (suomifi-viestit/send-message-to-osapuoli! valvonta toimenpide osapuoli document config)))))
+    (t/is (thrown-with-msg?
+            clojure.lang.ExceptionInfo
+            #"AttributeException"
+            (suomifi-viestit/send-message-to-osapuoli! valvonta toimenpide osapuoli document config)))))
