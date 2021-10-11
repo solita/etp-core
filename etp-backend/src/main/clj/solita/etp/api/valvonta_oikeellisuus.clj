@@ -23,17 +23,17 @@
                     :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                     :handler   (fn [{:keys [db]}]
                                  (r/response (valvonta-service/find-toimenpidetyypit db)))}}]
-    ["/virhetyypit"
+    ["/virhetypes"
      [""
       {:conflicting true
        :get         {:summary   "Hae energiatodistusten virhetyypit."
-                     :responses {200 {:body [oikeellisuus-schema/Virhetyyppi]}}
+                     :responses {200 {:body [oikeellisuus-schema/Virhetype]}}
                      :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                      :handler   (fn [{:keys [db]}]
                                   (r/response (valvonta-service/find-virhetypes db)))}
        :post        {:summary    "Lisää uusi virhetyyppi."
                      :access     rooli-service/paakayttaja?
-                     :parameters {:body oikeellisuus-schema/VirhetyyppiUpdate}
+                     :parameters {:body oikeellisuus-schema/VirhetypeUpdate}
                      :responses  {201 {:body common-schema/Id}
                                   404 common-schema/ConstraintError}
                      :handler    (fn [{:keys [db uri parameters]}]
@@ -45,14 +45,13 @@
        :put         {:summary    "Muuta virhetyypin tietoja."
                      :access     rooli-service/paakayttaja?
                      :parameters {:path {:id common-schema/Key}
-                                  :body (schema-tools/optional-keys-schema
-                                          oikeellisuus-schema/VirhetyyppiUpdate)}
+                                  :body oikeellisuus-schema/VirhetypeUpdate}
                      :responses  {200 {:body nil}}
                      :handler    (fn [{{{:keys [id]} :path :keys [body]}
                                        :parameters :keys [db]}]
                                    (api-response/ok|not-found
                                      (valvonta-service/save-virhetype! db id body)
-                                     (api-response/msg-404 "virhetyyppi" id)))}}]]
+                                     (api-response/msg-404 "virhetype" id)))}}]]
 
     ["/severities"
      {:conflicting true
