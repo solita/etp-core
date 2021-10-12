@@ -77,8 +77,7 @@ limit :limit offset :offset;
 -- name: count-valvonnat-paakayttaja
 with last_toimenpide as (
   select distinct on (toimenpide.energiatodistus_id) toimenpide.*,
-    vo_toimenpide_ongoing(toimenpide) ongoing,
-      lag(toimenpide.deadline_date) over (order by toimenpide.id) previous_deadline_date
+    vo_toimenpide_ongoing(toimenpide) ongoing
   from vo_toimenpide toimenpide
   order by toimenpide.energiatodistus_id, coalesce(toimenpide.publish_time, toimenpide.create_time) desc
 )
