@@ -91,13 +91,14 @@
 
 (defn- assert-error [response]
   (if (not= (:tila-koodi response) 202)
-    (throw (ex-info "AttributeException" {:type   :suomifi-viestit-attribute-exception
-                                          :data   {:sanoma-tunniste   (:sanoma-tunniste response)
-                                                   :tila-koodi        (:tila-koodi response)
-                                                   :tila-koodi-kuvaus (:tila-koodi-kuvaus response)}
-                                          :reason (str "Sending suomifi " (:sanoma-tunniste response)
-                                                       " message failed with status " (:tila-koodi response)
-                                                       " " (:tila-koodi-kuvaus response))}))
+    (throw (ex-info
+             (str "Sending suomifi " (:sanoma-tunniste response)
+                  " message failed with status " (:tila-koodi response)
+                  " " (:tila-koodi-kuvaus response))
+             {:type :suomifi-viestit-attribute-exception
+              :data {:sanoma-tunniste   (:sanoma-tunniste response)
+                     :tila-koodi        (:tila-koodi response)
+                     :tila-koodi-kuvaus (:tila-koodi-kuvaus response)}}))
     response))
 
 (defn- read-response [response]
@@ -114,10 +115,9 @@
         (make-send-request! (signSOAPEnvelope request-xml keystore-file keystore-password keystore-alias))
         (make-send-request! request-xml)))
     (catch Throwable t
-      (throw (ex-info "ConnectionException"
+      (throw (ex-info (str "Sending suomifi " (-> data :sanoma :tunniste) " message failed with connection error")
                       {:type   :suomifi-viestit-connection-exception
-                       :data   {:sanoma-tunniste (-> data :sanoma :tunniste)}
-                       :reason (str "Sending suomifi " (-> data :sanoma :tunniste) " message failed with connection error")}
+                       :data   {:sanoma-tunniste (-> data :sanoma :tunniste)}}
                       t)))))
 
 (defn- send-request! [data keystore-file keystore-password keystore-alias]

@@ -1,6 +1,10 @@
 (ns solita.etp.exception-email-handler
   (:require [commonmark-hiccup.core :as ch]
-            [solita.etp.config :as config])
+            [solita.etp.config :as config]
+            [clojure.tools.logging :as log]
+            [solita.etp.email :as email]
+            [clojure.string :as str]
+            [clostache.parser :as clostache])
   (:import (org.commonmark.node SoftLineBreak)))
 
 (defn- html [& body] (str "<html><body>"
@@ -25,10 +29,10 @@
      :subtype "html"
      :to      config/email-exception-info}))
 
-(defn exception-handler [^Throwable t error-description]
-  (let [{:keys [type data reason]} (-> t ex-data)]
-    (if (type template)
-      (do
+(defn exception-handler [^Throwable t]
+  (let [{:keys [type data]} (-> t ex-data)]
+    (when (type template)
+      (try
         (email/send-text-email! (prepare-email (type template) data))
-        (log/error t reason))
-      (log/error t error-description))))
+        (catch Throwable th
+          (log/error th "Failed to send error email"))))))

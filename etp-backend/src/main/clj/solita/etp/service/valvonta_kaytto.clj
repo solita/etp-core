@@ -230,7 +230,7 @@
                               osapuolet]
   (concurrent/run-background
     #(suomifi-viestit/send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
-    ""))
+    "Suomifi viestit sending failed"))
 
 (defn add-toimenpide! [db aws-s3-client whoami valvonta-id toimenpide-add]
   (jdbc/with-db-transaction

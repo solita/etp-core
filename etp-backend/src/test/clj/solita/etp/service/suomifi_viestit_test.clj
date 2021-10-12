@@ -68,5 +68,5 @@
                                                                             "dGVzdGk=")}
     (t/is (thrown-with-msg?
             clojure.lang.ExceptionInfo
-            #"AttributeException"
+            #"Sending suomifi ARA-05.03.02-2021-31-ETP-1-2-PERSON-1 message failed with status 525 Asian tietosisällössä virheitä. Viranomaistunnisteella löytyy jo asia, joka on tallennettu asiakkaan tilille Viestit-palveluun"
             (suomifi-viestit/send-message-to-osapuoli! valvonta toimenpide osapuoli document config)))))
