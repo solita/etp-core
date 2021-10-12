@@ -13,7 +13,7 @@
 
 (def ^:private template
   {:suomifi-viestit-attribute-exception  {:subject "Suomifi viestin lähettäminen epäonnistui: {{sanoma-tunniste}}"
-                                          :body    (str "Viestin lähettäminen epäonnistui\n"
+                                          :body    (str "Suomifi viestin lähettäminen epäonnistui\n"
                                                         "- Sanoman tunniste: {{sanoma-tunniste}} \n"
                                                         "- Tila: {{tila-koodi}} \n"
                                                         "- Tilan-kuvaus: {{tila-koodi-kuvaus}}")}

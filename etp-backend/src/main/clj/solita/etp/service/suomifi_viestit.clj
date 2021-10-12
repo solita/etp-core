@@ -121,7 +121,7 @@
                       t)))))
 
 (defn- send-request! [data keystore-file keystore-password keystore-alias]
-  (-> (handle-request! data keystore-file keystore-password keystore-alias) :body read-response))
+  (some-> (handle-request! data keystore-file keystore-password keystore-alias) :body read-response))
 
 (defn send-message! [sanoma
                      kohde
