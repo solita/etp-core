@@ -40,17 +40,19 @@
 
 (defn- send-request! [request]
   (try
-    (let [response (make-send-request! request)]
-      (if (= 200 (:status response))
-        (:body response)
-        (exception/throw-ex-info! :asha-request-failed
-                                  (str "Sending xml failed with status " (:status response) " " (:body response)))))
+    (make-send-request! request)
     (catch Throwable t
       (exception/throw-ex-info! :asha-connection-failed (str "Sending xml failed: " (.getMessage t))))))
 
+(defn- assert-error [response]
+  (if (not= 200 (:status response))
+    (exception/throw-ex-info! :asha-request-failed
+                              (str "Sending xml failed with status " (:status response) " " (:body response)))
+    response))
+
 (defn- request-handler! [data resource parser-fn schema]
   (let [request-xml (request-create-xml resource data)
-        response-xml (send-request! request-xml)]
+        response-xml (some-> (send-request! request-xml) assert-error :body)]
     (when-let [response-parser (when (and response-xml parser-fn)
                                  (parser-fn response-xml))]
       (read-response response-parser schema))))
