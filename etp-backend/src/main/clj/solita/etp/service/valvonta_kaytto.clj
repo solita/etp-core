@@ -228,8 +228,9 @@
                               valvonta
                               toimenpide
                               osapuolet]
-  (concurrent/run-background-errors-to-email
-    #(suomifi-viestit/send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)))
+  (concurrent/run-background
+    #(suomifi-viestit/send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
+    ""))
 
 (defn add-toimenpide! [db aws-s3-client whoami valvonta-id toimenpide-add]
   (jdbc/with-db-transaction
