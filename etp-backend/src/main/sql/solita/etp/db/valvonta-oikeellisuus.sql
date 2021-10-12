@@ -76,8 +76,7 @@ limit :limit offset :offset;
 
 -- name: count-valvonnat-paakayttaja
 with last_toimenpide as (
-  select distinct on (toimenpide.energiatodistus_id) toimenpide.*,
-    vo_toimenpide_ongoing(toimenpide) ongoing
+  select distinct on (toimenpide.energiatodistus_id) toimenpide.*
   from vo_toimenpide toimenpide
   order by toimenpide.energiatodistus_id, coalesce(toimenpide.publish_time, toimenpide.create_time) desc
 )
@@ -86,7 +85,7 @@ from energiatodistus
   left join last_toimenpide on last_toimenpide.energiatodistus_id = energiatodistus.id
 where
   (energiatodistus.valvonta$pending or
-   last_toimenpide.ongoing or
+   vo_toimenpide_ongoing(last_toimenpide) or
    (:include-closed and last_toimenpide.id is not null)) and
   (energiatodistus.valvonta$valvoja_id = :valvoja-id or
    (energiatodistus.valvonta$valvoja_id is not null) = :has-valvoja or
