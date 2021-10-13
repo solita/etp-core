@@ -51,18 +51,18 @@ AND (:lammitetty-nettoala-min::numeric IS NULL OR e.lt$lammitetty_nettoala >= :l
 AND (:lammitetty-nettoala-max::numeric IS NULL OR e.lt$lammitetty_nettoala <= :lammitetty-nettoala-max);
 
 -- name: select-common-averages
-SELECT round(avg(e.lt$rakennusvaippa$ilmanvuotoluku), 1) ilmanvuotoluku,
-       round(avg(e.lt$rakennusvaippa$ulkoseinat$u), 2) ulkoseinat_u,
-       round(avg(e.lt$rakennusvaippa$ylapohja$u), 2) ylapohja_u,
-       round(avg(e.lt$rakennusvaippa$alapohja$u), 2) alapohja_u,
-       round(avg(e.lt$rakennusvaippa$ikkunat$u), 2) ikkunat_u,
-       round(avg(e.lt$rakennusvaippa$ulkoovet$u), 2) ulkoovet_u,
-       round(avg(coalesce(e.lt$lammitys$takka$maara, 0)), 1) takka,
-       round(avg(coalesce(e.lt$lammitys$ilmalampopumppu$maara, 0)), 1) ilmalampopumppu,
-       round(avg(nullif(e.lt$lammitys$tilat_ja_iv$lampokerroin, 0)), 1) tilat_ja_iv_lampokerroin,
-       round(avg(nullif(e.lt$lammitys$lammin_kayttovesi$lampokerroin, 0)), 1) lammin_kayttovesi_lampokerroin,
-       round(avg(nullif(e.lt$ilmanvaihto$lto_vuosihyotysuhde, 0)), 1) lto_vuosihyotysuhde,
-       round(avg(nullif(e.lt$ilmanvaihto$ivjarjestelma$sfp, 0)), 1) ivjarjestelma_sfp
+SELECT avg(e.lt$rakennusvaippa$ilmanvuotoluku) ilmanvuotoluku,
+       avg(e.lt$rakennusvaippa$ulkoseinat$u) ulkoseinat_u,
+       avg(e.lt$rakennusvaippa$ylapohja$u) ylapohja_u,
+       avg(e.lt$rakennusvaippa$alapohja$u) alapohja_u,
+       avg(e.lt$rakennusvaippa$ikkunat$u) ikkunat_u,
+       avg(e.lt$rakennusvaippa$ulkoovet$u) ulkoovet_u,
+       avg(coalesce(e.lt$lammitys$takka$maara, 0)) takka,
+       avg(coalesce(e.lt$lammitys$ilmalampopumppu$maara, 0)) ilmalampopumppu,
+       avg(nullif(e.lt$lammitys$tilat_ja_iv$lampokerroin, 0)) tilat_ja_iv_lampokerroin,
+       avg(nullif(e.lt$lammitys$lammin_kayttovesi$lampokerroin, 0)) lammin_kayttovesi_lampokerroin,
+       avg(nullif(e.lt$ilmanvaihto$lto_vuosihyotysuhde, 0)) lto_vuosihyotysuhde,
+       avg(nullif(e.lt$ilmanvaihto$ivjarjestelma$sfp, 0)) ivjarjestelma_sfp
 FROM energiatodistus e
 LEFT JOIN postinumero p ON e.pt$postinumero = p.id
 LEFT JOIN kunta k ON p.kunta_id = k.id
