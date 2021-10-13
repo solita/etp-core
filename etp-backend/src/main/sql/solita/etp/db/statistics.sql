@@ -61,8 +61,8 @@ SELECT round(avg(e.lt$rakennusvaippa$ilmanvuotoluku), 1) ilmanvuotoluku,
        round(avg(coalesce(e.lt$lammitys$ilmalampopumppu$maara, 0)), 1) ilmalampopumppu,
        round(avg(nullif(e.lt$lammitys$tilat_ja_iv$lampokerroin, 0)), 1) tilat_ja_iv_lampokerroin,
        round(avg(nullif(e.lt$lammitys$lammin_kayttovesi$lampokerroin, 0)), 1) lammin_kayttovesi_lampokerroin,
-       round(avg(e.lt$ilmanvaihto$lto_vuosihyotysuhde), 1) lto_vuosihyotysuhde,
-       round(avg(e.lt$ilmanvaihto$ivjarjestelma$sfp), 1) ivjarjestelma_sfp
+       round(avg(nullif(e.lt$ilmanvaihto$lto_vuosihyotysuhde, 0)), 1) lto_vuosihyotysuhde,
+       round(avg(nullif(e.lt$ilmanvaihto$ivjarjestelma$sfp, 0)), 1) ivjarjestelma_sfp
 FROM energiatodistus e
 LEFT JOIN postinumero p ON e.pt$postinumero = p.id
 LEFT JOIN kunta k ON p.kunta_id = k.id
