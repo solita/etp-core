@@ -37,8 +37,8 @@
                            :ilmalampopumppu                common-schema/NonNegative
                            :tilat-ja-iv-lampokerroin       (schema/maybe common-schema/NonNegative)
                            :lammin-kayttovesi-lampokerroin (schema/maybe common-schema/NonNegative)
-                           :lto-vuosihyotysuhde            common-schema/NonNegative
-                           :ivjarjestelma-sfp              common-schema/NonNegative})
+                           :lto-vuosihyotysuhde            (schema/maybe common-schema/NonNegative)
+                           :ivjarjestelma-sfp              (schema/maybe common-schema/NonNegative)})
      :uusiutuvat-omavaraisenergiat-counts
                         {Versio (schema/maybe {:aurinkosahko common-schema/NonNegative
                                                :aurinkolampo common-schema/NonNegative
