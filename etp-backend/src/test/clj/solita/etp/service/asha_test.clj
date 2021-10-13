@@ -8,11 +8,13 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(defn- handle-request [request-resource response-resource response-status]
+(defn- handle-request [request-resource response-resource response-status & [exception]]
   (fn [request]
     (t/is (= (str/trim request) (-> request-resource io/resource slurp str/trim)))
-    {:body   (-> response-resource io/resource slurp)
-     :status response-status}))
+    (if exception
+      (throw (Exception. exception))
+      {:body   (-> response-resource io/resource slurp)
+       :status response-status})))
 
 (t/deftest open-case-test
   (binding [asha-service/make-send-request! (handle-request "asha/case-create-request.xml"
@@ -72,9 +74,10 @@
 (t/deftest case-create-without-sender-id-test
   (binding [asha-service/make-send-request! (handle-request "asha/case-create-request-without-sender-id.xml"
                                                             "asha/case-create-response-without-sender-id.xml"
-                                                            500)]
+                                                            400
+                                                            "clj-http: status 400")]
     (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
-                            #"Sending xml failed with status 500\.?"
+                            #"Sending xml failed: clj-http: status 400"
                             (asha-service/open-case!
                               {:request-id     "ETP-1"
                                :classification "05.03.02"

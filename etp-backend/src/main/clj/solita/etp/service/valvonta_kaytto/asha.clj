@@ -4,11 +4,9 @@
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
             [solita.etp.service.valvonta-kaytto.store :as store]
             [solita.etp.service.valvonta-kaytto.osapuoli :as osapuoli]
-            [solita.etp.schema.valvonta-kaytto :as kaytto-schema]
             [solita.etp.service.pdf :as pdf]
             [solita.etp.db :as db]
-            [solita.common.formats :as formats]
-            [solita.etp.service.file :as file-service]))
+            [solita.common.formats :as formats]))
 
 (db/require-queries 'valvonta-kaytto)
 (db/require-queries 'geo)
