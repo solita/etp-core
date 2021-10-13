@@ -137,8 +137,8 @@
     (t/is (= 1.0M (:ylapohja-u common-averages-for-exact)))
     (t/is (= 0.75M (:ikkunat-u common-averages-for-all)))
     (t/is (= 0.50M (:ikkunat-u common-averages-for-exact)))
-    (t/is (= 0.8M (:lto-vuosihyotysuhde common-averages-for-all)))
-    (t/is (= 0.5M (:lto-vuosihyotysuhde common-averages-for-exact)))))
+    (t/is (= 0.5M (:lto-vuosihyotysuhde common-averages-for-all)))
+    (t/is (= 0.4M (:lto-vuosihyotysuhde common-averages-for-exact)))))
 
 (defn uusiutuvat-omavaraisenergiat-counts-result [n]
   {:aurinkolampo n
