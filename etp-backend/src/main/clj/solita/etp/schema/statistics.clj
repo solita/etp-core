@@ -16,33 +16,33 @@
 
 (def StatisticsResponse
   (schema/maybe
-   {:counts {Versio (schema/maybe
-                     {:e-luokka {schema/Str common-schema/NonNegative}
-                      (schema/optional-key :lammitysmuoto)
-                      {common-schema/Key common-schema/NonNegative}
-                      (schema/optional-key :ilmanvaihto)
-                      {common-schema/Key common-schema/NonNegative}})}
-    :e-luku-statistics {Versio (schema/maybe
-                                {:avg common-schema/NonNegative
-                                 :percentile-15 common-schema/NonNegative
-                                 :percentile-85 common-schema/NonNegative})}
-    :common-averages (schema/maybe
-                      {:ilmanvuotoluku common-schema/NonNegative
-                       :ulkoseinat-u common-schema/NonNegative
-                       :ylapohja-u common-schema/NonNegative
-                       :alapohja-u common-schema/NonNegative
-                       :ikkunat-u common-schema/NonNegative
-                       :ulkoovet-u common-schema/NonNegative
-                       :takka common-schema/NonNegative
-                       :ilmalampopumppu common-schema/NonNegative
-                       :tilat-ja-iv-lampokerroin common-schema/NonNegative
-                       :lammin-kayttovesi-lampokerroin common-schema/NonNegative
-                       :lto-vuosihyotysuhde common-schema/NonNegative
-                       :ivjarjestelma-sfp common-schema/NonNegative})
-    :uusiutuvat-omavaraisenergiat-counts
-    {Versio (schema/maybe {:aurinkosahko common-schema/NonNegative
-                           :aurinkolampo common-schema/NonNegative
-                           :tuulisahko common-schema/NonNegative
-                           :lampopumppu common-schema/NonNegative
-                           :muusahko common-schema/NonNegative
-                           :muulampo common-schema/NonNegative})}}))
+    {:counts            {Versio (schema/maybe
+                                  {:e-luokka {schema/Str common-schema/NonNegative}
+                                   (schema/optional-key :lammitysmuoto)
+                                             {common-schema/Key common-schema/NonNegative}
+                                   (schema/optional-key :ilmanvaihto)
+                                             {common-schema/Key common-schema/NonNegative}})}
+     :e-luku-statistics {Versio (schema/maybe
+                                  {:avg           common-schema/NonNegative
+                                   :percentile-15 common-schema/NonNegative
+                                   :percentile-85 common-schema/NonNegative})}
+     :common-averages   (schema/maybe
+                          {:ilmanvuotoluku                 common-schema/NonNegative
+                           :ulkoseinat-u                   common-schema/NonNegative
+                           :ylapohja-u                     common-schema/NonNegative
+                           :alapohja-u                     common-schema/NonNegative
+                           :ikkunat-u                      common-schema/NonNegative
+                           :ulkoovet-u                     common-schema/NonNegative
+                           :takka                          common-schema/NonNegative
+                           :ilmalampopumppu                common-schema/NonNegative
+                           :tilat-ja-iv-lampokerroin       (schema/maybe common-schema/NonNegative)
+                           :lammin-kayttovesi-lampokerroin (schema/maybe common-schema/NonNegative)
+                           :lto-vuosihyotysuhde            common-schema/NonNegative
+                           :ivjarjestelma-sfp              common-schema/NonNegative})
+     :uusiutuvat-omavaraisenergiat-counts
+                        {Versio (schema/maybe {:aurinkosahko common-schema/NonNegative
+                                               :aurinkolampo common-schema/NonNegative
+                                               :tuulisahko   common-schema/NonNegative
+                                               :lampopumppu  common-schema/NonNegative
+                                               :muusahko     common-schema/NonNegative
+                                               :muulampo     common-schema/NonNegative})}}))
