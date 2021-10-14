@@ -1,5 +1,7 @@
 (ns solita.etp.schema.common
   (:require [clojure.string :as str]
+            [schema-tools.walk :as walk]
+            [solita.common.schema :as xschema]
             [schema.core :as schema]))
 
 (defn not-contains-keys [object schema]
@@ -189,3 +191,10 @@
               s))
 
 (def Email (schema/constrained schema/Str valid-email?))
+
+(defn with-maybe-vals [schema]
+  (walk/prewalk (fn [x]
+                  (if (and (map-entry? x) (-> x second xschema/maybe? not))
+                    (clojure.lang.MapEntry. (first x) (schema/maybe (second x)))
+                    x))
+                schema))

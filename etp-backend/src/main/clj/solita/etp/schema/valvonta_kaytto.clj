@@ -1,39 +1,29 @@
 (ns solita.etp.schema.valvonta-kaytto
   (:require [schema.core :as schema]
-            [schema-tools.core :as st]
-            [schema-tools.walk :as walk]
-            [solita.common.schema :as xschema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.geo :as geo-schema]
             [schema-tools.core :as schema-tools]))
-
-(defn with-maybe-vals [schema]
-  (walk/prewalk (fn [x]
-                  (if (and (map-entry? x) (-> x second xschema/maybe? not))
-                    (clojure.lang.MapEntry. (first x) (schema/maybe (second x)))
-                    x))
-                geo-schema/Postiosoite))
 
 (defn complete-valvonta-related-schema [schema]
   (assoc schema :id common-schema/Key :valvonta-id common-schema/Key))
 
 (def ValvontaSave
-  {:rakennustunnus (schema/maybe common-schema/Rakennustunnus)
-   :katuosoite common-schema/String200
-   :postinumero (schema/maybe geo-schema/PostinumeroFI)
-   :ilmoituspaikka-id (schema/maybe common-schema/Key)
+  {:rakennustunnus             (schema/maybe common-schema/Rakennustunnus)
+   :katuosoite                 common-schema/String200
+   :postinumero                (schema/maybe geo-schema/PostinumeroFI)
+   :ilmoituspaikka-id          (schema/maybe common-schema/Key)
    :ilmoituspaikka-description (schema/maybe common-schema/String100)
-   :ilmoitustunnus (schema/maybe common-schema/String100)
-   :havaintopaiva (schema/maybe common-schema/Date)
-   :valvoja-id (schema/maybe common-schema/Key)})
+   :ilmoitustunnus             (schema/maybe common-schema/String100)
+   :havaintopaiva              (schema/maybe common-schema/Date)
+   :valvoja-id                 (schema/maybe common-schema/Key)})
 
 (def Valvonta (assoc ValvontaSave :id common-schema/Key))
 
 (def ToimenpideUpdate
   (schema-tools/optional-keys
-   {:deadline-date (schema/maybe common-schema/Date)
-    :template-id   (schema/maybe common-schema/Key)
-    :description   (schema/maybe schema/Str)}))
+    {:deadline-date (schema/maybe common-schema/Date)
+     :template-id   (schema/maybe common-schema/Key)
+     :description   (schema/maybe schema/Str)}))
 
 (def ToimenpideAdd
   {:type-id       common-schema/Key
@@ -42,13 +32,13 @@
    :description   (schema/maybe schema/Str)})
 
 (def OsapuoliBase
-  (st/merge {:rooli-id (schema/maybe common-schema/Key)
-             :rooli-description (schema/maybe common-schema/String200)
-             :email (schema/maybe common-schema/String200)
-             :puhelin (schema/maybe common-schema/String100)
-             :toimitustapa-id (schema/maybe common-schema/Key)
-             :toimitustapa-description (schema/maybe common-schema/String200)}
-            (with-maybe-vals geo-schema/Postiosoite)))
+  (schema-tools/merge {:rooli-id                 (schema/maybe common-schema/Key)
+                       :rooli-description        (schema/maybe common-schema/String200)
+                       :email                    (schema/maybe common-schema/String200)
+                       :puhelin                  (schema/maybe common-schema/String100)
+                       :toimitustapa-id          (schema/maybe common-schema/Key)
+                       :toimitustapa-description (schema/maybe common-schema/String200)}
+                      (common-schema/with-maybe-vals geo-schema/Postiosoite)))
 
 (def HenkiloSave (assoc OsapuoliBase :henkilotunnus (schema/maybe common-schema/Henkilotunnus)
                                      :etunimi common-schema/String100
@@ -74,18 +64,18 @@
     :yritykset [Yritys]))
 
 (def LastToimenpide
-  (st/select-keys Toimenpide
-                  [:id :diaarinumero :type-id
-                   :deadline-date :create-time :publish-time]))
+  (schema-tools/select-keys Toimenpide
+                            [:id :diaarinumero :type-id
+                             :deadline-date :create-time :publish-time]))
 
 (def ValvontaStatus
   (assoc Valvonta
-         :last-toimenpide
-         (schema/maybe LastToimenpide)
-         :energiatodistus
-         (schema/maybe {:id common-schema/Key})
-         :henkilot [Henkilo]
-         :yritykset [Yritys]))
+    :last-toimenpide
+    (schema/maybe LastToimenpide)
+    :energiatodistus
+    (schema/maybe {:id common-schema/Key})
+    :henkilot [Henkilo]
+    :yritykset [Yritys]))
 
 (def Note
   {:id          common-schema/Key
