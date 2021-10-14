@@ -27,18 +27,19 @@
                                    :percentile-15 common-schema/NonNegative
                                    :percentile-85 common-schema/NonNegative})}
      :common-averages   (schema/maybe
-                          {:ilmanvuotoluku                 common-schema/NonNegative
-                           :ulkoseinat-u                   common-schema/NonNegative
-                           :ylapohja-u                     common-schema/NonNegative
-                           :alapohja-u                     common-schema/NonNegative
-                           :ikkunat-u                      common-schema/NonNegative
-                           :ulkoovet-u                     common-schema/NonNegative
-                           :takka                          common-schema/NonNegative
-                           :ilmalampopumppu                common-schema/NonNegative
-                           :tilat-ja-iv-lampokerroin       (schema/maybe common-schema/NonNegative)
-                           :lammin-kayttovesi-lampokerroin (schema/maybe common-schema/NonNegative)
-                           :lto-vuosihyotysuhde            (schema/maybe common-schema/NonNegative)
-                           :ivjarjestelma-sfp              (schema/maybe common-schema/NonNegative)})
+                          (common-schema/with-maybe-vals
+                            {:ilmanvuotoluku                 common-schema/NonNegative
+                             :ulkoseinat-u                   common-schema/NonNegative
+                             :ylapohja-u                     common-schema/NonNegative
+                             :alapohja-u                     common-schema/NonNegative
+                             :ikkunat-u                      common-schema/NonNegative
+                             :ulkoovet-u                     common-schema/NonNegative
+                             :takka                          common-schema/NonNegative
+                             :ilmalampopumppu                common-schema/NonNegative
+                             :tilat-ja-iv-lampokerroin       common-schema/NonNegative
+                             :lammin-kayttovesi-lampokerroin common-schema/NonNegative
+                             :lto-vuosihyotysuhde            common-schema/NonNegative
+                             :ivjarjestelma-sfp              common-schema/NonNegative}))
      :uusiutuvat-omavaraisenergiat-counts
                         {Versio (schema/maybe {:aurinkosahko common-schema/NonNegative
                                                :aurinkolampo common-schema/NonNegative
