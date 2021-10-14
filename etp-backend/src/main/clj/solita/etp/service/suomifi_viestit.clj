@@ -76,15 +76,6 @@
     (.setParts signer [timestampPart bodyPart])
     (document->signed-request (.build signer build-doc crypto header))))
 
-(defn- send-request! [request keystore-file keystore-password keystore-alias]
-  (try
-    (let [response (if (and keystore-file keystore-password keystore-alias)
-                     (make-send-request! (signSOAPEnvelope request keystore-file keystore-password keystore-alias))
-                     (make-send-request! request))]
-      (:body response))
-    (catch Exception e
-      (log/error "Sending xml failed: " e))))
-
 (defn- read-response->xml [response]
   (-> response xml/string->xml xml/without-soap-envelope first xml/with-kebab-case-tags))
 
@@ -98,19 +89,39 @@
      :tila-koodi-kuvaus (trim (xml/get-content response-xml [:laheta-viesti-result :tila-koodi :tila-koodi-kuvaus]))
      :sanoma-tunniste   (xml/get-content response-xml [:laheta-viesti-result :tila-koodi :sanoma-tunniste])}))
 
-(defn- log-error [response]
-  (when (not= (:tila-koodi response) 202)
-    (log/error
-      (str "Sending suomifi " (:sanoma-tunniste response)
-           " message failed with status " (:tila-koodi response)
-           " " (:tila-koodi-kuvaus response)))))
+(defn- assert-error [response]
+  (if (not= (:tila-koodi response) 202)
+    (throw (ex-info
+             (str "Sending suomifi " (:sanoma-tunniste response)
+                  " message failed with status " (:tila-koodi response)
+                  " " (:tila-koodi-kuvaus response))
+             {:type :suomifi-viestit-attribute-exception
+              :data {:sanoma-tunniste   (:sanoma-tunniste response)
+                     :tila-koodi        (:tila-koodi response)
+                     :tila-koodi-kuvaus (:tila-koodi-kuvaus response)}}))
+    response))
 
 (defn- read-response [response]
   (let [coercer (sc/coercer {:tila-koodi        schema/Int
                              :tila-koodi-kuvaus schema/Str
                              :sanoma-tunniste   schema/Str}
                             sc/string-coercion-matcher)]
-    (-> response response-parser coercer log-error)))
+    (-> response response-parser coercer assert-error)))
+
+(defn- handle-request! [data keystore-file keystore-password keystore-alias]
+  (try
+    (let [request-xml (request-create-xml data)]
+      (if (and keystore-file keystore-password keystore-alias)
+        (make-send-request! (signSOAPEnvelope request-xml keystore-file keystore-password keystore-alias))
+        (make-send-request! request-xml)))
+    (catch Throwable t
+      (throw (ex-info (str "Sending suomifi " (-> data :sanoma :tunniste) " message failed with connection error")
+                      {:type   :suomifi-viestit-connection-exception
+                       :data   {:sanoma-tunniste (-> data :sanoma :tunniste)}}
+                      t)))))
+
+(defn- send-request! [data keystore-file keystore-password keystore-alias]
+  (some-> (handle-request! data keystore-file keystore-password keystore-alias) :body read-response))
 
 (defn send-message! [sanoma
                      kohde
@@ -141,10 +152,7 @@
                                      :tulostustoimittaja   tulostustoimittaja
                                      :paperitoimitus?      paperitoimitus?
                                      :laheta-tulostukseen? laheta-tulostukseen?}
-                              (and (seq laskutus-tunniste) (seq laskutus-salasana))
-                                (assoc :laskutus {:tunniste laskutus-tunniste
-                                                  :salasana laskutus-salasana}))}
-        request-xml (request-create-xml data)
-        response (send-request! request-xml keystore-file keystore-password keystore-alias)]
-    (when response
-      (read-response response))))
+                                    (and (seq laskutus-tunniste) (seq laskutus-salasana))
+                                    (assoc :laskutus {:tunniste laskutus-tunniste
+                                                      :salasana laskutus-salasana}))}]
+    (send-request! data keystore-file keystore-password keystore-alias)))

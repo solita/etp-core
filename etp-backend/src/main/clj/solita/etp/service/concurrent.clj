@@ -1,5 +1,6 @@
 (ns solita.etp.service.concurrent
-  (:require [clojure.tools.logging :as log]))
+  (:require [solita.etp.exception-email-handler :as exception-email-handler]
+            [clojure.tools.logging :as log]))
 
 (defn run-background
   "Executes the given function asynchronously as a background service.
@@ -10,5 +11,6 @@
     (try
       (fn)
       (catch Throwable t
-        (log/error t error-description))))
+        (log/error t error-description)
+        (exception-email-handler/exception-handler t))))
   nil)

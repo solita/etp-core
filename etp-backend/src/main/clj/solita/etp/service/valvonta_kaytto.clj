@@ -224,6 +224,14 @@
     #(email/send-toimenpide-email! db aws-s3-client valvonta toimenpide osapuolet)
     (str "Sending email failed for toimenpide: " (:id valvonta) "/" (:id toimenpide))))
 
+(defn- send-suomifi-viestit! [aws-s3-client
+                              valvonta
+                              toimenpide
+                              osapuolet]
+  (concurrent/run-background
+    #(suomifi-viestit/send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
+    "Suomifi viestit sending failed"))
+
 (defn add-toimenpide! [db aws-s3-client whoami valvonta-id toimenpide-add]
   (jdbc/with-db-transaction
     [tx db]
@@ -246,7 +254,7 @@
             (asha/log-toimenpide!
               tx aws-s3-client whoami valvonta toimenpide
               osapuolet ilmoituspaikat)
-            (suomifi-viestit/send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
+            (send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
             (send-toimenpide-email! db aws-s3-client valvonta toimenpide osapuolet))))
       {:id toimenpide-id})))
 

@@ -55,6 +55,11 @@
               client)
      :bucket (or bucket (env "FILES_BUCKET_NAME" "files"))}}))
 
+(defn- prepare-emails [name default]
+  (->> (str/split (env name default) #",")
+       (map str/trim)
+       (remove str/blank?)))
+
 ;;
 ;; Misc config
 ;;
@@ -85,10 +90,7 @@
 (def laskutus-sftp-username (env "LASKUTUS_SFTP_USERNAME" "etp"))
 (def laskutus-sftp-password (env "LASKUTUS_SFTP_PASSWORD" "etp"))
 (def known-hosts-path "known_hosts")
-(def laskutus-tasmaytysraportti-email-to
-  (->> (str/split (env "LASKUTUS_TASMAYTYSRAPORTTI_EMAIL_TO" "etp@example.com") #",")
-       (map str/trim)
-       (remove str/blank?)))
+(def laskutus-tasmaytysraportti-email-to (prepare-emails "LASKUTUS_TASMAYTYSRAPORTTI_EMAIL_TO" "etp@example.com"))
 
 ;; SMTP
 (def smtp-host (env "SMTP_HOST" "localhost"))
@@ -101,6 +103,7 @@
 (def email-from-name (env "EMAIL_FROM_NAME" "Energiatodistusrekisteri [Dev]"))
 (def email-reply-to-email (env "EMAIL_REPLY_TO_EMAIL" "reply@example.com"))
 (def email-reply-to-name (env "EMAIL_REPLY_TO_NAME" "Energiatodistusrekisteri [Dev]"))
+(def email-exception-info (prepare-emails "EMAIL_EXCEPTION_INFO" ""))
 
 ;; Asha
 

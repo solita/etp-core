@@ -18,11 +18,18 @@
                 :postinumero      "15141"
                 :postitoimipaikka "Lahti"})
 
-(defn- tunniste [diaarinumero valvonta-id toimenpide-id osapuoli-id]
-  (str/join "-" [diaarinumero "ETP" valvonta-id toimenpide-id osapuoli-id]))
+(defn- tunniste [toimenpide osapuoli]
+  (str/join "-" [(:diaarinumero toimenpide)
+                 "ETP"
+                 (:valvonta-id toimenpide)
+                 (:id toimenpide)
+                 (cond
+                   (osapuoli/henkilo? osapuoli) "PERSON"
+                   (osapuoli/yritys? osapuoli) "COMPANY")
+                 (:id osapuoli)]))
 
-(defn- ->sanoma [diaarinumero valvonta-id toimenpide-id osapuoli-id]
-  {:tunniste (tunniste diaarinumero valvonta-id toimenpide-id osapuoli-id)
+(defn- ->sanoma [toimenpide osapuoli]
+  {:tunniste (tunniste toimenpide osapuoli)
    :versio   "1.0"})
 
 (defn- henkilo->asiakas [henkilo]
@@ -110,7 +117,7 @@
 (defn- ->kohde [valvonta toimenpide osapuoli tiedosto]
   (let [type-key (toimenpide/type-key (:type-id toimenpide))
         {:keys [nimike kuvaus]} (toimenpide->kohde type-key valvonta toimenpide)]
-    {:viranomaistunniste (tunniste (:diaarinumero toimenpide) (:id valvonta) (:id toimenpide) (:id osapuoli))
+    {:viranomaistunniste (tunniste toimenpide osapuoli)
      :nimike             nimike
      :kuvaus-teksti      kuvaus
      :lahetys-pvm        (now)
@@ -123,7 +130,7 @@
                                  dokumentti
                                  & [config]]
   (suomifi/send-message!
-    (->sanoma (:diaarinumero toimenpide) (:id valvonta) (:id toimenpide) (:id osapuoli))
+    (->sanoma toimenpide osapuoli)
     (->kohde valvonta toimenpide osapuoli dokumentti)
     config))
 
