@@ -10,14 +10,6 @@
   {:localid schema/Str
    :organisaatio schema/Str})
 
-(def KayttajaAdd
-  "Schema to add all other users (kayttaja) except laatija."
-  {:etunimi  schema/Str
-   :sukunimi schema/Str
-   :email    schema/Str
-   :puhelin  schema/Str
-   :rooli    (schema/enum 1 2)})
-
 (def KayttajaAdminUpdate
   "Only administrators can update this information.
    Not intended for laatija-users."
