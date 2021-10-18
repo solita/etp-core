@@ -61,9 +61,9 @@
    (assert-read-access! whoami id)
    (find-laatija-by-id db id)))
 
-(defn find-laatija-with-henkilotunnus [db henkilotunnus]
+(defn find-laatija-by-henkilotunnus [db henkilotunnus]
   (->> {:henkilotunnus henkilotunnus}
-       (laatija-db/select-laatija-with-henkilotunnus db)
+       (laatija-db/select-laatija-by-henkilotunnus db)
        first))
 
 (def db-keymap {:muuttoimintaalueet :muut_toimintaalueet

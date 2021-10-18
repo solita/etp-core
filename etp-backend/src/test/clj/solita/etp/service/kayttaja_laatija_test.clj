@@ -54,20 +54,20 @@
                   update (-> (laatija-test-data/generate-adds 1)
                              first
                              (assoc :henkilotunnus henkilotunnus))
-                  found-original (laatija-service/find-laatija-with-henkilotunnus
+                  found-original (laatija-service/find-laatija-by-henkilotunnus
                                   ts/*db*
                                   henkilotunnus)
                   _ (service/upsert-kayttaja-laatijat! ts/*db* [update])
-                  found-updated (laatija-service/find-laatija-with-henkilotunnus
+                  found-updated (laatija-service/find-laatija-by-henkilotunnus
                                  ts/*db*
                                  henkilotunnus)
-                  found-not-updated (laatija-service/find-laatija-with-henkilotunnus
+                  found-not-updated (laatija-service/find-laatija-by-henkilotunnus
                                      ts/*db*
                                      (:henkilotunnus not-updated-add))]]
       (t/is (not= found-original found-updated))
       (schema/validate
        (dissoc laatija-schema/Laatija :voimassa :voimassaolo-paattymisaika)
-       found-updated)
+       (dissoc found-updated :henkilotunnus))
       (t/is (xmap/submap? (st/select-schema update
                                             laatija-schema/LaatijaAdd)
                           found-updated))

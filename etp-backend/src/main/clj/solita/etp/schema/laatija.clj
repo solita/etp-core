@@ -59,8 +59,7 @@
   This defines only the laatija specific kayttaja information."
   (merge (dissoc LaatijaUpdate :api-key)
          common-schema/Id
-         {:henkilotunnus common-schema/Henkilotunnus
-          :voimassaolo-paattymisaika common-schema/Instant
+         {:voimassaolo-paattymisaika common-schema/Instant
           :voimassa schema/Bool}))
 
 (def KayttajaAdminUpdate

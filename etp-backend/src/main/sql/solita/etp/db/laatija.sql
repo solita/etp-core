@@ -32,7 +32,7 @@ ORDER BY k.sukunimi, k.etunimi
 
 --name: select-laatija-by-id
 select
-  l.id, k.henkilotunnus, l.patevyystaso,
+  l.id, l.patevyystaso,
   l.toteamispaivamaara, l.toteaja, l.laatimiskielto,
   patevyys_paattymisaika(l) voimassaolo_paattymisaika,
   patevyys_voimassa(l) as voimassa,
@@ -44,9 +44,9 @@ select
   l.laskutuskieli,
   l.vastaanottajan_tarkenne, l.jakeluosoite,
   l.postinumero, l.postitoimipaikka, l.wwwosoite, l.maa
-from laatija l inner join kayttaja k on l.id = k.id where l.id = :id
+from laatija l where l.id = :id
 
---name: select-laatija-with-henkilotunnus
+--name: select-laatija-by-henkilotunnus
 SELECT l.id, k.henkilotunnus, l.patevyystaso,
        l.toteamispaivamaara, l.toteaja, l.laatimiskielto,
        l.toimintaalue, l.muut_toimintaalueet as muuttoimintaalueet,

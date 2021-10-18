@@ -10,9 +10,17 @@
 (def laskuttaja {:rooli 3})
 (def public nil)
 
+(def KayttajaAdd
+  "Schema to add other users for tests."
+  {:etunimi  schema/Str
+   :sukunimi schema/Str
+   :email    schema/Str
+   :puhelin  schema/Str
+   :rooli    (schema/enum 1 2 3)})
+
 (defn generate-adds [n]
   (take n (map #(generators/complete {:email %}
-                                     kayttaja-schema/KayttajaAdd)
+                                     KayttajaAdd)
                (generators/unique-emails n))))
 
 (defn generate-updates [n]
