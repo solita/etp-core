@@ -46,7 +46,7 @@ select
   l.postinumero, l.postitoimipaikka, l.wwwosoite, l.maa
 from laatija l where l.id = :id
 
---name: select-laatija-with-henkilotunnus
+--name: select-laatija-by-henkilotunnus
 SELECT l.id, k.henkilotunnus, l.patevyystaso,
        l.toteamispaivamaara, l.toteaja, l.laatimiskielto,
        l.toimintaalue, l.muut_toimintaalueet as muuttoimintaalueet,
