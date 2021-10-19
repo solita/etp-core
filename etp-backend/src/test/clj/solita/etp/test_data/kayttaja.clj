@@ -2,7 +2,8 @@
   (:require [solita.etp.test-system :as ts]
             [solita.etp.test-data.generators :as generators]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
-            [solita.etp.service.kayttaja :as kayttaja-service]))
+            [solita.etp.service.kayttaja :as kayttaja-service]
+            [schema.core :as schema]))
 
 (def laatija {:rooli 0})
 (def patevyyden-toteaja {:rooli 1})
