@@ -25,15 +25,15 @@
 
 (t/deftest columns-test
   (let [luokittelut (complete-energiatodistus-service/luokittelut ts/*db*)]
-    (t/is (every? vector? service/columns))
+    (t/is (every? vector? service/private-columns))
     (t/is (every? #(or (keyword? %)
                        (integer? %))
-                  (apply concat service/columns)))
+                  (apply concat service/private-columns)))
 
     ;; Tests that all paths in generated energiatodistus are
     ;; found in columns listed in the service. Basically for finding typos
     ;; in configuration.
-    (t/is (every? #(contains? (set service/columns) %)
+    (t/is (every? #(contains? (set service/private-columns) %)
                   (->> (energiatodistus-test-data/generate-adds 100 2018 true)
                        (map #(complete-energiatodistus-service/complete-energiatodistus
                               %
@@ -66,7 +66,7 @@
 (t/deftest write-energiatodistukset-csv-test
   (let [{:keys [laatijat energiatodistukset]} (test-data-set)
         laatija-id (-> laatijat keys sort first)]
-    (let [result (service/energiatodistukset-csv
+    (let [result (service/energiatodistukset-private-csv
                    ts/*db* {:id laatija-id :rooli 0} {})
           buffer (StringBuffer.)]
       (result #(.append buffer %))

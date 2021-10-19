@@ -4,7 +4,9 @@
             [solita.etp.service.energiatodistus-search :as
              energiatodistus-search-service]
             [solita.etp.service.complete-energiatodistus
-             :as complete-energiatodistus-service])
+             :as complete-energiatodistus-service]
+            [solita.etp.schema.public-energiatodistus
+             :as public-energiatodistus-schema])
   (:import (java.util Locale)
            (java.text DecimalFormat DecimalFormatSymbols)
            (java.time Instant LocalDateTime ZoneId)))
@@ -18,7 +20,7 @@
                       (.setDecimalFormatSymbols decimal-format-symbol)))
 (def timezone (ZoneId/of "Europe/Helsinki"))
 
-(def columns
+(def private-columns
   (concat
    (for [k [:id :versio :tila-id :laatija-id :laatija-fullname
             :allekirjoitusaika :voimassaolo-paattymisaika
@@ -191,6 +193,18 @@
    [[:lisamerkintoja-fi]
     [:lisamerkintoja-sv]]))
 
+(def public-columns
+  (let [extra-columns #{[:perustiedot :alakayttotarkoitus-fi]}
+        hidden-columns #{[:laatija-id]
+                         [:laatija-fullname]}]
+    (filter
+     (fn [column]
+       (and
+        (or (contains? extra-columns column)
+            (schema-tools.core/get-in solita.etp.schema.public-energiatodistus/Energiatodistus2018 column))
+        (not (contains? hidden-columns column))))
+     private-columns)))
+
 (defn column-ks->str [ks]
   (->> ks
        (map #(if (keyword? %) (name %) %))
@@ -210,17 +224,17 @@
     (str/join column-separator $)
     (str $ "\n")))
 
-(defn energiatodistus->csv-line [energiatodistus]
+(defn energiatodistus->csv-line [columns energiatodistus]
   (->> columns
        (map #(get-in energiatodistus %))
        csv-line))
 
-(def headers-csv-line
+(defn headers-csv-line [columns]
   (->> columns
        (map column-ks->str)
        csv-line))
 
-(defn energiatodistukset-csv [db whoami query]
+(defn energiatodistukset-csv [db whoami query columns]
   (let [luokittelut (complete-energiatodistus-service/luokittelut db)
         energiatodistukset (energiatodistus-search-service/reducible-search
                              db whoami query {:raw false
@@ -228,10 +242,16 @@
                                               :concurrency :read-only
                                               :fetch-size  100})]
     (fn [write!]
-      (write! headers-csv-line)
+      (write! (headers-csv-line columns))
       (run! (comp write!
-                  energiatodistus->csv-line
+                  (partial energiatodistus->csv-line columns)
                   #(complete-energiatodistus-service/complete-energiatodistus
                      % luokittelut)
                   energiatodistus-service/db-row->energiatodistus)
             energiatodistukset))))
+
+(defn energiatodistukset-private-csv [db whoami query]
+  (energiatodistukset-csv db whoami query private-columns))
+
+(defn energiatodistukset-public-csv [db whoami query]
+  (energiatodistukset-csv db whoami query public-columns))
