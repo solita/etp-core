@@ -42,7 +42,8 @@
                 :julkinen-rakennus]]
      [:perustiedot child])
    [[:tulokset :e-luku]
-    [:tulokset :e-luokka]]
+    [:tulokset :e-luokka]
+    [:tulokset :e-luokka-rajat :raja-uusi-2018]]
    (for [child [:keskeiset-suositukset-fi :keskeiset-suositukset-sv]]
      [:perustiedot child])
    [[:lahtotiedot :lammitetty-nettoala]]
@@ -195,6 +196,7 @@
 
 (def public-columns
   (let [extra-columns #{[:perustiedot :alakayttotarkoitus-fi]
+                        [:tulokset :e-luokka-rajat :raja-uusi-2018]
                         [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]
                         [:tulokset :kaytettavat-energiamuodot :sahko-kerroin]
                         [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin]
