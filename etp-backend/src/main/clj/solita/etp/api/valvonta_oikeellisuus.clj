@@ -78,6 +78,14 @@
                     :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
                                   (r/response (valvonta-service/count-valvonnat db whoami query)))}}]
 
+    ["/count/unfinished"
+     {:conflicting true
+      :get         {:summary    "Hae energiatodistusten keskeneräisten oikeellisuuden valvontojen lukumäärä."
+                    :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+                    :responses  {200 {:body {:count schema/Int}}}
+                    :handler    (fn [{:keys [db whoami]}]
+                                  (r/response (valvonta-service/count-unfinished-valvonnat db whoami)))}}]
+
     [""
      {:conflicting true
       :get         {:summary   "Hae energiatodistusten oikeellisuuden valvonnat (työjono)."

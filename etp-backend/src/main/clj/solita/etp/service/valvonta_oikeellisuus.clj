@@ -44,23 +44,34 @@
    :has-valvoja nil
    :include-closed false})
 
+(def ^:private default-window {:limit 10 :offset 0})
+
 (defn- select-valvonnat [db whoami query paakayttaja-sql laatija-sql]
-  (cond
-    (rooli-service/paakayttaja? whoami) (paakayttaja-sql db (merge default-filters query))
-    (rooli-service/laatija? whoami) (laatija-sql db (assoc query :laatija-id (:id whoami)))
-    :else (exception/throw-forbidden! "Allowed only for valvoja or laatija")))
+  (let [params (assoc query :whoami-id (:id whoami))]
+    (cond
+      (rooli-service/paakayttaja? whoami) (paakayttaja-sql db params)
+      (rooli-service/laatija? whoami) (laatija-sql db params)
+      :else (exception/throw-forbidden! "Allowed only for valvoja or laatija"))))
 
 (defn find-valvonnat [db whoami query]
   (->> (select-valvonnat
-         db whoami (merge {:limit 10 :offset 0} query)
+         db whoami (merge default-window default-filters query)
          valvonta-oikeellisuus-db/select-valvonnat-paakayttaja
          valvonta-oikeellisuus-db/select-valvonnat-laatija)
        (map db-row->valvonta)))
 
 (defn count-valvonnat [db whoami query]
-  (-> (select-valvonnat db whoami query
-                        valvonta-oikeellisuus-db/count-valvonnat-paakayttaja
-                        valvonta-oikeellisuus-db/count-valvonnat-laatija)
+  (-> (select-valvonnat
+        db whoami (merge default-filters query)
+        valvonta-oikeellisuus-db/count-valvonnat-paakayttaja
+        valvonta-oikeellisuus-db/count-valvonnat-laatija)
+      first))
+
+(defn count-unfinished-valvonnat [db whoami]
+  (-> (select-valvonnat
+        db whoami {}
+        valvonta-oikeellisuus-db/count-unfinished-valvonnat-paakayttaja
+        valvonta-oikeellisuus-db/count-unfinished-valvonnat-laatija)
       first))
 
 (defn find-valvonta [db id] (first (valvonta-oikeellisuus-db/select-valvonta db {:id id})))

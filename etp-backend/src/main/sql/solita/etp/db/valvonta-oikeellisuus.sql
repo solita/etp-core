@@ -1,15 +1,5 @@
 
 -- name: select-valvonnat-paakayttaja
-with last_toimenpide as (
-  select distinct on (toimenpide.energiatodistus_id) toimenpide.*,
-    vo_toimenpide_ongoing(toimenpide) ongoing,
-    lead(toimenpide.deadline_date) over
-      (partition by toimenpide.energiatodistus_id
-       order by toimenpide.create_time desc, toimenpide.id desc)
-      previous_deadline_date
-  from vo_toimenpide toimenpide
-  order by toimenpide.energiatodistus_id, toimenpide.create_time desc, toimenpide.id desc
-)
 select
   energiatodistus.*,
   fullname(kayttaja) "laatija-fullname",
@@ -29,7 +19,7 @@ select
 from energiatodistus
   inner join kayttaja on kayttaja.id = energiatodistus.laatija_id
   left join energiatodistus korvaava_energiatodistus on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
-  left join last_toimenpide on last_toimenpide.energiatodistus_id = energiatodistus.id
+  left join vo_last_toimenpide_v1 last_toimenpide on last_toimenpide.energiatodistus_id = energiatodistus.id
 where
   (energiatodistus.valvonta$pending or
     last_toimenpide.ongoing or
@@ -63,46 +53,43 @@ select
 from energiatodistus
   inner join kayttaja on kayttaja.id = energiatodistus.laatija_id
   left join energiatodistus korvaava_energiatodistus on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
-  left join lateral (
-    select toimenpide.*,
-      vo_toimenpide_ongoing(toimenpide) ongoing,
-      etp.vo_toimenpide_visible_laatija(toimenpide) visible_laatija,
-      lag(toimenpide.deadline_date) over (order by toimenpide.id) previous_deadline_date
-    from vo_toimenpide toimenpide
-    where energiatodistus.id = toimenpide.energiatodistus_id
-    order by coalesce(toimenpide.publish_time, toimenpide.create_time) desc
-    limit 1) last_toimenpide on true
-where energiatodistus.laatija_id = :laatija-id and
+  left join vo_last_toimenpide_v1 last_toimenpide on last_toimenpide.energiatodistus_id = energiatodistus.id
+where energiatodistus.laatija_id = :whoami-id and
       last_toimenpide.visible_laatija
 order by coalesce(last_toimenpide.publish_time, last_toimenpide.create_time) desc
 limit :limit offset :offset;
 
 -- name: count-valvonnat-paakayttaja
-with last_toimenpide as (
-  select distinct on (toimenpide.energiatodistus_id) toimenpide.*
-  from vo_toimenpide toimenpide
-  order by toimenpide.energiatodistus_id, coalesce(toimenpide.publish_time, toimenpide.create_time) desc
-)
 select count(*)
 from energiatodistus
-  left join last_toimenpide on last_toimenpide.energiatodistus_id = energiatodistus.id
+  left join vo_last_toimenpide_v1 last_toimenpide on last_toimenpide.energiatodistus_id = energiatodistus.id
 where
   (energiatodistus.valvonta$pending or
-   vo_toimenpide_ongoing(last_toimenpide) or
-   (:include-closed and last_toimenpide.id is not null)) and
+    last_toimenpide.ongoing or
+    (:include-closed and last_toimenpide.id is not null)) and
   (energiatodistus.valvonta$valvoja_id = :valvoja-id or
-   (energiatodistus.valvonta$valvoja_id is not null) = :has-valvoja or
-   (:valvoja-id::int is null and :has-valvoja::boolean is null));
+    (energiatodistus.valvonta$valvoja_id is not null) = :has-valvoja or
+    (:valvoja-id::int is null and :has-valvoja::boolean is null));
 
 -- name: count-valvonnat-laatija
 select count(*)
-from energiatodistus left join lateral (
-  select * from vo_toimenpide toimenpide
-  where energiatodistus.id = toimenpide.energiatodistus_id
-  order by coalesce(toimenpide.publish_time, toimenpide.create_time) desc
-  limit 1) last_toimenpide on true
-where energiatodistus.laatija_id = :laatija-id and
-      etp.vo_toimenpide_visible_laatija(last_toimenpide);
+from energiatodistus
+  left join vo_last_toimenpide_v1 last_toimenpide on last_toimenpide.energiatodistus_id = energiatodistus.id
+where energiatodistus.laatija_id = :whoami-id and
+      last_toimenpide.visible_laatija;
+
+-- name: count-unfinished-valvonnat-paakayttaja
+select count(*)
+from energiatodistus
+  left join vo_last_toimenpide_v1 last_toimenpide on last_toimenpide.energiatodistus_id = energiatodistus.id
+where energiatodistus.valvonta$valvoja_id = :whoami-id and
+  (energiatodistus.valvonta$pending or (last_toimenpide.ongoing and not last_toimenpide.unfinished_laatija));
+
+-- name: count-unfinished-valvonnat-laatija
+select count(*)
+from energiatodistus
+  left join vo_last_toimenpide_v1 last_toimenpide on last_toimenpide.energiatodistus_id = energiatodistus.id
+where energiatodistus.laatija_id = :whoami-id and last_toimenpide.unfinished_laatija;
 
 -- name: select-valvonta
 select
