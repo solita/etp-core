@@ -48,13 +48,18 @@
      {:type :missing-vastaanottaja-or-vastaanottajaryhma-id
       :message "Missing either vastaanottaja or vastaanottajaryhma-id"})))
 
+(defn default-kasittelija [whoami ketju]
+  (if (and (kasittelija? whoami) (not (contains? ketju :kasittelija-id)))
+    (assoc ketju :kasittelija-id (:id whoami))
+    ketju))
+
 (defn add-ketju! [db whoami ketju]
   (assert-vastaanottajat! whoami ketju)
   (assert-vastaanottajaryhma-or-vastaanottaja-exists! ketju)
   (db/with-db-exception-translation
     #(jdbc/with-db-transaction
        [tx db]
-       (let [[{:keys [id]}] (insert-ketju! tx ketju)]
+       (let [[{:keys [id]}] (insert-ketju! tx (default-kasittelija whoami ketju))]
          (insert-viesti! tx id (:body ketju))
          (viesti-db/read-ketju! tx {:viestiketju-id id})
          (when (kasittelija? whoami)
