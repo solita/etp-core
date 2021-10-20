@@ -194,7 +194,12 @@
     [:lisamerkintoja-sv]]))
 
 (def public-columns
-  (let [extra-columns #{[:perustiedot :alakayttotarkoitus-fi]}
+  (let [extra-columns #{[:perustiedot :alakayttotarkoitus-fi]
+                        [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]
+                        [:tulokset :kaytettavat-energiamuodot :sahko-kerroin]
+                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin]
+                        [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]
+                        [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]}
         hidden-columns #{[:laatija-id]
                          [:laatija-fullname]}]
     (filter
