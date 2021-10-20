@@ -195,8 +195,7 @@
     [:lisamerkintoja-sv]]))
 
 (def public-columns
-  (let [extra-columns #{[:perustiedot :alakayttotarkoitus-fi]
-                        [:tulokset :e-luokka-rajat :raja-uusi-2018]
+  (let [extra-columns #{[:tulokset :e-luokka-rajat :raja-uusi-2018]
                         [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]
                         [:tulokset :kaytettavat-energiamuodot :sahko-kerroin]
                         [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin]
