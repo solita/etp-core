@@ -82,14 +82,14 @@ where energiatodistus.laatija_id = :whoami-id and
 select count(*)
 from energiatodistus
   left join vo_last_toimenpide_v1 last_toimenpide on last_toimenpide.energiatodistus_id = energiatodistus.id
-where energiatodistus.valvonta$valvoja_id = :whoami-id and
-  (energiatodistus.valvonta$pending or (last_toimenpide.ongoing and not last_toimenpide.unfinished_laatija));
+where energiatodistus.valvonta$valvoja_id = :whoami-id and not last_toimenpide.unfinished_laatija and
+  (energiatodistus.valvonta$pending or last_toimenpide.ongoing);
 
 -- name: count-unfinished-valvonnat-laatija
 select count(*)
 from energiatodistus
   left join vo_last_toimenpide_v1 last_toimenpide on last_toimenpide.energiatodistus_id = energiatodistus.id
-where energiatodistus.laatija_id = :whoami-id and last_toimenpide.unfinished_laatija;
+where energiatodistus.laatija_id = :whoami-id and last_toimenpide.unfinished_laatija and last_toimenpide.visible_laatija;
 
 -- name: select-valvonta
 select
