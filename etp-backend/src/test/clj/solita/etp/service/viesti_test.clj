@@ -271,8 +271,9 @@
     (t/is (nil? (schema/check viesti-schema/Ketju ketju)))
     (t/is (= laatija-1-id (->> ketju :vastaanottajat first :id)))
 
-    ;; TODO pitäisikö asettaa automaattisesti?
-    (t/is (nil? (:kasittelija-id ketju)))
+    ;; default kasittelija is paakayttaja
+    (t/is (= (:kasittelija-id ketju) paakayttaja-id))
+
     ;; TODO jos ei pidä asettaa käsittelijää, pitäisikö asettaa
     ;; käsitellyksi?
     (t/is (false? (:kasitelty ketju)))
