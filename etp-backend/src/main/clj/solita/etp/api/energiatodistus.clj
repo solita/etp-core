@@ -91,7 +91,7 @@
 
 (defn csv-route [energiatodistukset-csv]
   ["/csv/energiatodistukset.csv"
-   {:get {:summary    "Hae energiatodistusten julkiset tiedot CSV-tiedostona"
+   {:get {:summary    "Hae energiatodistusten tiedot CSV-tiedostona"
           :parameters {:query energiatodistus-schema/EnergiatodistusSearch}
           :responses  {200 {:body nil}}
           :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
