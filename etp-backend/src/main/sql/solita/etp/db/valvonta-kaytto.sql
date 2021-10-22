@@ -26,7 +26,7 @@ from vk_valvonta valvonta
     where valvonta.id = toimenpide.valvonta_id
     order by coalesce(toimenpide.publish_time, toimenpide.create_time) desc
     limit 1) last_toimenpide on true
-where
+where not valvonta.deleted and
   (last_toimenpide.id is null or last_toimenpide.type_id <> 5 or :include-closed) and
   (valvonta.valvoja_id = :valvoja-id or
     (valvonta.valvoja_id is not null) = :has-valvoja or
