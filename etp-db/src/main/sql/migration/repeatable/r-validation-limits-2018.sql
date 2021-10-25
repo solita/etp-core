@@ -26,7 +26,7 @@ values
 (2018, 'lt$lammitys$lammin_kayttovesi$tuoton_hyotysuhde', 0, 1.01, 0, 1.01),
 (2018, 'lt$lammitys$lammin_kayttovesi$jaon_hyotysuhde', 0, 1, 0, 1),
 (2018, 'lt$lammitys$lammin_kayttovesi$lampokerroin', 0, 10, 0, 10),
-(2018, 'lt$lammitys$lammin_kayttovesi$apulaitteet', 0, 1.5, 0, 5),
+(2018, 'lt$lammitys$lammin_kayttovesi$apulaitteet', 0, 1.5, 0, 999999),
 
 (2018, 'lt$lammitys$takka$maara',             0, 10, 0, 100),
 (2018, 'lt$lammitys$takka$tuotto',            0, 30000, 0, 300000),
