@@ -10,8 +10,9 @@
     ["Usage: java -jar etp-db.jar [command]"
      "Parameters: DB_URL, DB_USER and DB_PASSWORD can be defined as environment variables. Otherwise common default values are used. "
      "Supported commands are: "
-     "- clean"
-     "- migrate"]))
+     "- clean    - initialize a fresh database"
+     "- migrate  - migrate to the latest database layout"
+     "- repair   - attempt to fix migration checksum mismatches"]))
 
 (def flyway-configuration {
    ConfigUtils/SCHEMAS                 "etp,audit"
@@ -43,6 +44,7 @@
     (case command
       "clean" (.clean flyway)
       "migrate" (.migrate flyway)
+      "repair" (.repair flyway)
       (do
         (println "Unsupported command:" command)
         (println guide)))))
