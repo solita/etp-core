@@ -87,10 +87,30 @@
                              (update query :where json/read-value))
                           search-exceptions))}}])
 
+
+
+(defn csv-route [energiatodistukset-csv]
+  ["/csv/energiatodistukset.csv"
+   {:get {:summary    "Hae energiatodistusten tiedot CSV-tiedostona"
+          :parameters {:query energiatodistus-schema/EnergiatodistusSearch}
+          :responses  {200 {:body nil}}
+          :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
+          :handler    (fn [{{:keys [query]} :parameters :keys [db whoami] :as request}]
+                        (api-response/with-exceptions
+                          #(let [result (energiatodistukset-csv
+                                         db whoami (update query :where json/read-value))]
+                             (api-stream/result->async-channel
+                              request
+                              (api-response/csv-response-headers "energiatodistukset.csv" false)
+                              result))
+                          search-exceptions))}}])
+
 (def public-routes
   (concat
    [["/energiatodistukset"
-     search-route search-count-route
+     search-route
+     search-count-route
+     (csv-route energiatodistus-csv-service/energiatodistukset-public-csv)
      luokittelut-api/routes]]))
 
 (def private-routes
@@ -98,20 +118,7 @@
     [["/energiatodistukset"
       search-route
       search-count-route
-      ["/csv/energiatodistukset.csv"
-       {:get {:summary    "Hae energiatodistusten tiedot CSV-tiedostona"
-              :parameters {:query energiatodistus-schema/EnergiatodistusSearch}
-              :responses  {200 {:body nil}}
-              :access     (some-fn rooli-service/laatija? rooli-service/paakayttaja?)
-              :handler    (fn [{{:keys [query]} :parameters :keys [db whoami] :as request}]
-                            (api-response/with-exceptions
-                              #(let [result (energiatodistus-csv-service/energiatodistukset-csv
-                                              db whoami (update query :where json/read-value))]
-                                 (api-stream/result->async-channel
-                                   request
-                                   (api-response/csv-response-headers "energiatodistukset.csv" false)
-                                   result))
-                              search-exceptions))}}]
+      (csv-route energiatodistus-csv-service/energiatodistukset-private-csv)
 
       ["/xlsx/energiatodistukset.xlsx"
        {:get {:summary    "Hae energiatodistusten tiedot XLSX-tiedostona"
