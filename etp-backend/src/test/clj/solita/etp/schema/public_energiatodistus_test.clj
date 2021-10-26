@@ -5,7 +5,9 @@
              :as public-energiatodistus-schema]))
 
 (def example-2013
-  {:allekirjoitusaika (java.time.Instant/now)
+  {:laatija-fullname "Liisa Laatija"
+   :laatija-id 0
+   :allekirjoitusaika (java.time.Instant/now)
    :voimassaolo-paattymisaika (java.time.Instant/now)
    :korvaava-energiatodistus-id nil
    :tulokset {:e-luku 10
