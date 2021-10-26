@@ -63,7 +63,8 @@
 
 (def mappings
   {0 [{:path [:id]}
-      {:path [:perustiedot :nimi]}
+      {:path [:perustiedot :nimi-fi]}
+      {:path [:perustiedot :nimi-sv]}
       {:path [:perustiedot :katuosoite-fi]}
       {:path [:perustiedot :katuosoite-sv]}
       {:f #(str (-> % :perustiedot :postinumero)

@@ -305,6 +305,16 @@
   (assert-korvaavuus-draft! db id energiatodistus)
   (validate-sisainen-kuorma! db versio energiatodistus))
 
+; FIXME
+(defn update-nimi [energiatodistus]
+  (if (-> energiatodistus :perustiedot :nimi seq)
+    (cond-> (update energiatodistus :perustiedot #(dissoc % :nimi))
+            (= 0 (-> energiatodistus :perustiedot :kieli)) (assoc-in [:perustiedot :nimi-fi]  (-> energiatodistus :perustiedot :nimi))
+            (= 1 (-> energiatodistus :perustiedot :kieli)) (assoc-in [:perustiedot :nimi-sv]  (-> energiatodistus :perustiedot :nimi))
+            (= 2 (-> energiatodistus :perustiedot :kieli)) (->  (assoc-in [:perustiedot :nimi-fi]  (-> energiatodistus :perustiedot :nimi))
+                                                                (assoc-in [:perustiedot :nimi-sv] (-> energiatodistus :perustiedot :nimi))))
+    energiatodistus))
+
 (defn add-energiatodistus! [db whoami versio energiatodistus]
   (validate-draft! db nil versio energiatodistus)
   (let [energiatodistus-db-row (-> energiatodistus
@@ -313,6 +323,7 @@
                                    (dissoc :kommentti
                                            :bypass-validation-limits
                                            :bypass-validation-limits-reason)
+                                   update-nimi
                                    energiatodistus->db-row)
         warnings (validate-db-row! db energiatodistus-db-row versio)]
     (validate-laskutettava-yritys-id! db (:id whoami) energiatodistus-db-row)
@@ -394,6 +405,7 @@
           energiatodistus-db-row (-> energiatodistus
                                      (assoc-e-tehokkuus db versio)
                                      (assoc :versio versio)
+                                     update-nimi
                                      energiatodistus->db-row
                                      (dissoc :versio)
                                      (select-energiatodistus-for-update id

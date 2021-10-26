@@ -124,7 +124,7 @@
        :kasittelija-id        (:id whoami)
        :subject               (str "Poikkeamailmoitus ET " (:energiatodistus-id toimenpide))
        :body
-       (str (-> energiatodistus :perustiedot :nimi) "\n"
+       (str (-> energiatodistus :perustiedot :nimi-fi) "\n"
             (or (-> energiatodistus :perustiedot :katuosoite-fi)
                 (-> energiatodistus :perustiedot :katuosoite-sv)) "\n"
             (-> energiatodistus :perustiedot :postinumero) " "

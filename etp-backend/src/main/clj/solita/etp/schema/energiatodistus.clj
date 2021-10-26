@@ -53,7 +53,8 @@
    :tilaaja                  common-schema/String200
    :rakennusosa              common-schema/String100
    :kieli                    common-schema/Key
-   :nimi                     common-schema/String50
+   :nimi-fi                  common-schema/String50
+   :nimi-sv                  common-schema/String50
 
    ;; This is alakäyttötarkoitusluokka
    ;; Käyttötarkoitusluokka can be inferred from this
@@ -393,6 +394,6 @@
       (select-keys Perustiedot
                    [:rakennustunnus
                     :kayttotarkoitus
-                    :nimi
+                    :nimi :nimi-fi :nimi-sv                 ;FIXME
                     :katuosoite-fi :katuosoite-sv
                     :postinumero]))))

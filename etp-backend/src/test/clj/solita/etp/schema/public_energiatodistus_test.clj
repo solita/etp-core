@@ -24,7 +24,8 @@
                  :katuosoite-sv nil
                  :keskeiset-suositukset-fi "Suositukset FI"
                  :kieli 0
-                 :nimi "Rakennuksen nimi"
+                 :nimi-fi "Rakennuksen nimi"
+                 :nimi-sv nil
                  :postinumero "33100"
                  :yritys {:nimi "Joku yritys Oy"
                           :katuosoite "Hämeenkatu 1"
