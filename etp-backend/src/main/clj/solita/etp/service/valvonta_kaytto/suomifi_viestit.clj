@@ -81,9 +81,9 @@
 (defn- toimenpide->tiedosto [type-key]
   (get {:rfi-request {:nimi   "tietopyynto.pdf"
                       :kuvaus "Tietopyyntö liitteenä"}
-        :rfi-order   {:nimi   "tietopyynto_kehtotus.pdf"
+        :rfi-order   {:nimi   "kehtotus.pdf"
                       :kuvaus "Tietopyynnön kehotus liitteenä"}
-        :rfi-warning {:nimi   "tietopyynto_varoitus.pdf"
+        :rfi-warning {:nimi   "varoitus.pdf"
                       :kuvaus "Tietopyynnön varoitus liitteenä"}}
        type-key))
 
