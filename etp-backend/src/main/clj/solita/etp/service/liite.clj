@@ -45,24 +45,26 @@
                 (rooli-service/paakayttaja? whoami))
     (exception/throw-forbidden!)))
 
-(defn add-liite-from-file! [db aws-s3-client energiatodistus-id liite]
+(defn temp-file->liite [temp-file]
+  (-> temp-file
+      (dissoc :tempfile :size)
+      (set/rename-keys {:content-type :contenttype
+                        :filename :nimi})))
+
+(defn add-liite-from-file! [db aws-s3-client energiatodistus-id file]
   (jdbc/with-db-transaction [db db]
-    (let [id (-> liite
-                 (dissoc :tempfile :size)
+    (let [id (-> file
+                 temp-file->liite
                  (assoc :energiatodistus-id energiatodistus-id)
                  (insert-liite! db))]
-      (-> id file-key (insert-file! aws-s3-client (:tempfile liite)))
+      (-> id file-key (insert-file! aws-s3-client (:tempfile file)))
       id)))
 
 (defn add-liitteet-from-files! [db aws-s3-client whoami energiatodistus-id files]
   (jdbc/with-db-transaction [db db]
     (assert-liite-insert-permission! db whoami energiatodistus-id)
     (mapv #(add-liite-from-file!
-            db
-            aws-s3-client
-            energiatodistus-id
-            (set/rename-keys % {:content-type :contenttype
-                                :filename :nimi}))
+            db aws-s3-client energiatodistus-id %)
           files)))
 
 (defn add-liite-from-link!
