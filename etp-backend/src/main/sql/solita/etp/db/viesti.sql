@@ -128,7 +128,7 @@ select distinct on (l.id) l.id, a.modifytime createtime,
 from viesti_liite l
      inner join audit.viesti_liite a on l.id = a.id
      inner join kayttaja k on a.modifiedby_id = k.id
-where l.valvonta_id = :valvonta-id and l.deleted = false
+where l.viestiketju_id = :viestiketju-id and l.deleted = false
 order by l.id, a.modifytime asc, a.event_id desc;
 
 -- name: delete-liite!

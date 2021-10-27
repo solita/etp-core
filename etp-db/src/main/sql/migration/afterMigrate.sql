@@ -14,6 +14,7 @@ grant insert, update on table viestiketju to etp_app;
 grant insert, update on table viesti to etp_app;
 grant insert, update on table vastaanottaja to etp_app;
 grant insert on table viesti_reader to etp_app;
+grant insert, update on table viesti_liite to etp_app;
 grant insert, update, delete on table sivu to etp_app;
 
 grant insert, update on table vo_toimenpide to etp_app;
