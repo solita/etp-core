@@ -60,18 +60,19 @@
            :invalid-arguments
            (str "Invalid json in where: " where)))))
 
-(def search-route
+(defn search-route [schema]
   [""
    {:get {:summary    "Hae energiatodistuksia"
           :parameters {:query energiatodistus-schema/EnergiatodistusSearch}
-          :responses  {200 {:body [public-energiatodistus-schema/Energiatodistus]}}
+          :responses  {200 {:body [schema]}}
           :access     rooli-service/energiatodistus-reader?
           :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
                         (api-response/response-with-exceptions
                          #(energiatodistus-search-service/search
                            db
                            whoami
-                           (update query :where parse-where))
+                           (update query :where parse-where)
+                           schema)
                          search-exceptions))}}])
 
 (def search-count-route
@@ -108,7 +109,7 @@
 (def public-routes
   (concat
    [["/energiatodistukset"
-     search-route
+     (search-route public-energiatodistus-schema/Energiatodistus)
      search-count-route
      (csv-route energiatodistus-csv-service/energiatodistukset-public-csv)
      luokittelut-api/routes]]))
@@ -116,7 +117,7 @@
 (def private-routes
   (concat
     [["/energiatodistukset"
-      search-route
+      (search-route energiatodistus-schema/Energiatodistus)
       search-count-route
       (csv-route energiatodistus-csv-service/energiatodistukset-private-csv)
 
