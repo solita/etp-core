@@ -14,8 +14,8 @@
 (defn toimenpide-type->document [type-id]
   (let [type-key (toimenpide/type-key type-id )
         documents {:rfi-request {:type "Pyyntö" :filename "tietopyynto.pdf"}
-                   :rfi-order {:type "Kirje" :filename "tietopyynto_kehotus.pdf"}
-                   :rfi-warning {:type "Kirje" :filename "tietopyynto_varoitus.pdf"}}]
+                   :rfi-order {:type "Kirje" :filename "kehotus.pdf"}
+                   :rfi-warning {:type "Kirje" :filename "varoitus.pdf"}}]
     (get documents type-key)))
 
 (defn find-kaytto-valvonta-documents [db valvonta-id]
