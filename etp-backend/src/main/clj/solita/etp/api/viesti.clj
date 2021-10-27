@@ -95,10 +95,10 @@
        {:conflicting true
         :post        {:summary    "Viestiketjun liitteiden lisäys tiedostoista."
                       :parameters {:path      {:id common-schema/Key}
-                                   :multipart liite-schema/MultipartFiles
-                      :responses              {201 {:body [common-schema/Key]}}
-                                   404 common-schema/ConstraintError}
-                      :handler                (fn [{{{:keys [id]} :path {:keys [files]} :multipart}
+                                   :multipart liite-schema/MultipartFiles}
+                      :responses  {201 {:body [common-schema/Key]}
+                                   404 {:body common-schema/ConstraintError}}
+                      :handler    (fn [{{{:keys [id]} :path {:keys [files]} :multipart}
                                         :parameters :keys [db aws-s3-client]}]
                                     (api-response/response-with-exceptions
                                       201
@@ -112,7 +112,7 @@
                       :parameters {:path {:id common-schema/Key}
                                    :body liite-schema/LiiteLinkAdd}
                       :responses  {201 {:body common-schema/Id}
-                                   404 common-schema/ConstraintError}
+                                   404 {:body common-schema/ConstraintError}}
                       :handler    (fn [{{{:keys [id]} :path :keys [body]}
                                         :parameters :keys [db uri]}]
                                     (api-response/with-exceptions
