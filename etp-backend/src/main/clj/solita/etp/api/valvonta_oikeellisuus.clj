@@ -197,7 +197,7 @@
                      :handler    (fn [{{{:keys [id toimenpide-id]} :path}
                                        :parameters :keys [db]}]
                                    (api-response/ok|not-found
-                                     (valvonta-service/delete-toimenpide! db toimenpide-id)
+                                     (valvonta-service/delete-draft-toimenpide! db toimenpide-id)
                                      (toimenpide-404-msg id toimenpide-id)))}}]
        ["/liitteet"
         [""

@@ -216,5 +216,5 @@ select name, email from vo_tiedoksi where toimenpide_id = :toimenpide-id;
 -- name: delete-toimenpide-tiedoksi!
 delete from vo_tiedoksi where toimenpide_id = :toimenpide-id;
 
--- name: delete-toimenpide!
-update vo_toimenpide set deleted = true where id = :toimenpide-id;
+-- name: delete-draft-toimenpide!
+update vo_toimenpide set deleted = true where id = :toimenpide-id and publish_time is null;
