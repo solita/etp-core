@@ -251,6 +251,9 @@
       (insert-tiedoksi! db toimenpide-id (:tiedoksi toimenpide-update)))
     (update-toimenpide-row! db toimenpide-id (dissoc toimenpide-update :virheet :tiedoksi))))
 
+(defn delete-draft-toimenpide! [db toimenpide-id]
+  (valvonta-oikeellisuus-db/delete-draft-toimenpide! db {:toimenpide-id toimenpide-id}))
+
 (defn publish-toimenpide! [db aws-s3-client whoami id toimenpide-id]
   (when-let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
     (jdbc/with-db-transaction [tx db]

@@ -187,7 +187,18 @@
                             (api-response/ok|not-found
                               (valvonta-service/update-toimenpide!
                                 db whoami id toimenpide-id body)
-                              (toimenpide-404-msg id toimenpide-id)))}}]
+                              (toimenpide-404-msg id toimenpide-id)))}
+         :delete    {:summary    "Poistaa luonnostilaisen toimenpiteen."
+                     :access     rooli-service/paakayttaja?
+                     :parameters {:path {:id            common-schema/Key
+                                         :toimenpide-id common-schema/Key}}
+                     :responses  {200 {:body nil}
+                                  404 {:body schema/Str}}
+                     :handler    (fn [{{{:keys [id toimenpide-id]} :path}
+                                       :parameters :keys [db]}]
+                                   (api-response/ok|not-found
+                                     (valvonta-service/delete-draft-toimenpide! db toimenpide-id)
+                                     (toimenpide-404-msg id toimenpide-id)))}}]
        ["/liitteet"
         [""
         {:get {:summary    "Hae toimenpiteen liitteet."

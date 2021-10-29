@@ -106,7 +106,7 @@ where energiatodistus.id = :id;
 
 --name: select-last-diaarinumero
 select diaarinumero from vo_toimenpide
-where energiatodistus_id = :id and diaarinumero is not null
+where energiatodistus_id = :id and diaarinumero is not null and deleted is false
 order by coalesce(publish_time, create_time) desc
 limit 1;
 
@@ -119,7 +119,7 @@ select
   author.etunimi author$etunimi, author.sukunimi author$sukunimi
 from vo_toimenpide toimenpide
   inner join kayttaja author on author.id = toimenpide.author_id
-where toimenpide.id = :id;
+where toimenpide.id = :id and toimenpide.deleted is false;
 
 -- name: select-toimenpiteet
 select
@@ -131,12 +131,14 @@ select
   from vo_toimenpide toimenpide
     inner join kayttaja author on author.id = toimenpide.author_id
 where toimenpide.energiatodistus_id = :energiatodistus-id and
-      (:paakayttaja? or etp.vo_toimenpide_visible_laatija(toimenpide));
+      (:paakayttaja? or etp.vo_toimenpide_visible_laatija(toimenpide)) and
+      toimenpide.deleted is false;
 
 -- name: select-energiatodistus-valvonta-documents
 select distinct on (type_id) *
 from vo_toimenpide
 where energiatodistus_id = :energiatodistus-id and type_id in (3, 5, 7, 9) and publish_time is not null
+      and deleted is false
 order by type_id, publish_time desc;
 
 -- name: select-templates
@@ -183,7 +185,7 @@ from (
 where vo_virhetype.id = ordered.id and vo_virhetype.ordinal <> ordered.ordinal;
 
 -- name: update-toimenpide-published!
-update vo_toimenpide set publish_time = transaction_timestamp() where id = :id;
+update vo_toimenpide set publish_time = transaction_timestamp() where id = :id and deleted is false;
 
 -- name: select-toimenpide-virheet
 select type_id, description from vo_virhe where toimenpide_id = :toimenpide-id;
@@ -213,3 +215,6 @@ select name, email from vo_tiedoksi where toimenpide_id = :toimenpide-id;
 
 -- name: delete-toimenpide-tiedoksi!
 delete from vo_tiedoksi where toimenpide_id = :toimenpide-id;
+
+-- name: delete-draft-toimenpide!
+update vo_toimenpide set deleted = true where id = :toimenpide-id and publish_time is null;

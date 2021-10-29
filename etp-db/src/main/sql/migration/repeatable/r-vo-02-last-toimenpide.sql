@@ -10,4 +10,5 @@ select distinct on (toimenpide.energiatodistus_id)
     partition by toimenpide.energiatodistus_id
     order by toimenpide.create_time desc, toimenpide.id desc) previous_deadline_date
 from etp.vo_toimenpide toimenpide
+where toimenpide.deleted is false
 order by toimenpide.energiatodistus_id, toimenpide.create_time desc, toimenpide.id desc;
