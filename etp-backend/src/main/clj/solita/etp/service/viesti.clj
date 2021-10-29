@@ -6,7 +6,9 @@
             [solita.etp.exception :as exception]
             [solita.etp.service.luokittelu :as luokittelu-service]
             [solita.etp.service.rooli :as rooli-service]
-            [solita.etp.service.energiatodistus :as energiatodistus-service]))
+            [solita.etp.service.energiatodistus :as energiatodistus-service]
+            [solita.etp.service.liite :as liite-service]
+            [solita.etp.service.file :as file-service]))
 
 (db/require-queries 'viesti)
 
@@ -171,3 +173,39 @@
                   (partial assoc-join-vastaanottajat kayttajat))
             (viesti-db/select-energiatodistus-viestiketjut
               db {:energiatodistus-id energiatodistus-id})))))
+
+;; Vietiketjun liitteet
+
+(defn find-liitteet [db viestiketju-id]
+  (viesti-db/select-liite-by-viestiketju-id db {:viestiketju-id viestiketju-id}))
+
+(defn file-path [viestiketju-id liite-id]
+  (str "/viesti/" viestiketju-id "/liitteet/" liite-id))
+
+(defn- insert-liite! [db liite]
+  (-> (db/with-db-exception-translation
+        jdbc/insert! db :viesti_liite liite db/default-opts)
+      first
+      :id))
+
+(defn add-liitteet-from-files! [db aws-s3-client valvonta-id liitteet]
+  (doseq [liite liitteet]
+    (let [liite-id (insert-liite! db (-> liite
+                                         liite-service/temp-file->liite
+                                         (assoc :viestiketju-id valvonta-id)))]
+      (file-service/upsert-file-from-file
+        aws-s3-client
+        (file-path valvonta-id liite-id)
+        (:tempfile liite)))))
+
+(defn add-liite-from-link! [db viestiketju-id liite]
+  (insert-liite! db (assoc liite :contenttype "text/uri-list"
+                                 :viestiketju-id viestiketju-id)))
+
+(defn delete-liite! [db liite-id]
+  (viesti-db/delete-liite! db {:id liite-id}))
+
+(defn find-liite [db aws-s3-client valvonta-id liite-id]
+  (when-let [liite (first (viesti-db/select-liite db {:id liite-id}))]
+    (assoc liite :tempfile
+                 (file-service/find-file aws-s3-client (file-path valvonta-id liite-id)))))

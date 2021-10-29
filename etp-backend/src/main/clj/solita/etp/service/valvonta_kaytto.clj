@@ -15,7 +15,8 @@
             [solita.etp.service.valvonta-kaytto.store :as store]
             [solita.etp.service.valvonta-kaytto.email :as email]
             [solita.etp.exception :as exception]
-            [solita.etp.service.concurrent :as concurrent])
+            [solita.etp.service.concurrent :as concurrent]
+            [solita.etp.service.liite :as liite-service])
   (:import (java.time Instant)))
 
 (db/require-queries 'valvonta-kaytto)
@@ -141,10 +142,8 @@
 (defn add-liitteet-from-files! [db aws-s3-client valvonta-id liitteet]
   (doseq [liite liitteet]
     (let [liite-id (insert-liite! db (-> liite
-                                         (dissoc :tempfile :size)
-                                         (assoc :valvonta-id valvonta-id)
-                                         (set/rename-keys {:content-type :contenttype
-                                                           :filename     :nimi})))]
+                                         liite-service/temp-file->liite
+                                         (assoc :valvonta-id valvonta-id)))]
       (file-service/upsert-file-from-file
         aws-s3-client
         (file-path valvonta-id liite-id)
