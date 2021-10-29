@@ -11,9 +11,6 @@
 (db/require-queries 'valvonta-kaytto)
 (db/require-queries 'geo)
 
-(defn ilmoituspaikka-muu-mika? [valvonta]
-  (= (:ilmoituspaikka-id valvonta) 2))
-
 (defn toimenpide-type->document [type-id]
   (let [type-key (toimenpide/type-key type-id )
         documents {:rfi-request {:type "Pyyntö" :filename "tietopyynto.pdf"}
@@ -29,7 +26,7 @@
        (into {})))
 
 (defn- find-ilmoituspaikka [ilmoituspaikat valvonta]
-  (if (ilmoituspaikka-muu-mika? valvonta)
+  (if (osapuoli/ilmoituspaikka-other? valvonta)
     (:ilmoituspaikka-description valvonta)
     (->> ilmoituspaikat (filter #(= (:id %) (:ilmoituspaikka-id valvonta))) first :label-fi)))
 
