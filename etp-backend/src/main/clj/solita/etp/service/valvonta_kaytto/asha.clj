@@ -11,6 +11,9 @@
 (db/require-queries 'valvonta-kaytto)
 (db/require-queries 'geo)
 
+(defn ilmoituspaikka-muu-mika? [valvonta]
+  (= (:ilmoituspaikka-id valvonta) 2))
+
 (defn toimenpide-type->document [type-id]
   (let [type-key (toimenpide/type-key type-id )
         documents {:rfi-request {:type "Pyyntö" :filename "tietopyynto.pdf"}
@@ -25,8 +28,10 @@
                 {type (:publish-time toimenpide)})))
        (into {})))
 
-(defn- find-ilmoituspaikka [ilmoituspaikat ilmoituspaikka-id]
-  (->> ilmoituspaikat (filter #(= (:id %) ilmoituspaikka-id)) first :label-fi))
+(defn- find-ilmoituspaikka [ilmoituspaikat valvonta]
+  (if (ilmoituspaikka-muu-mika? valvonta)
+    (:ilmoituspaikka-description valvonta)
+    (->> ilmoituspaikat (filter #(= (:id %) (:ilmoituspaikka-id valvonta))) first :label-fi)))
 
 (defn- find-postitoimipaikka [db postinumero]
   (-> (geo-db/select-postinumero-by-id db {:id (formats/string->int postinumero)}) first :label-fi ))
@@ -44,7 +49,7 @@
    :kohde            {:katuosoite       (:katuosoite valvonta)
                       :postinumero      (:postinumero valvonta)
                       :postitoimipaikka (find-postitoimipaikka db (:postinumero valvonta))
-                      :ilmoituspaikka   (find-ilmoituspaikka ilmoituspaikat (:ilmoituspaikka-id valvonta))
+                      :ilmoituspaikka   (find-ilmoituspaikka ilmoituspaikat valvonta)
                       :ilmoitustunnus   (:ilmoitustunnus valvonta)
                       :havaintopäivä    (-> valvonta :havaintopaiva time/format-date)}
    :tietopyynto      {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
@@ -109,7 +114,7 @@
                                                             (asha/string-join " " [(:postinumero valvonta)
                                                                                    (find-postitoimipaikka db (:postinumero valvonta))])])
 
-                    :description    (asha/string-join "\r" [(find-ilmoituspaikka ilmoituspaikat (:ilmoituspaikka-id valvonta))
+                    :description    (asha/string-join "\r" [(find-ilmoituspaikka ilmoituspaikat valvonta)
                                                             (:ilmoitustunnus valvonta)])
                     :attach         {:contact (map osapuoli->contact osapuolet)}}))
 
