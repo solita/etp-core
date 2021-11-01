@@ -23,7 +23,7 @@ SELECT k.id,
        l.julkinen_puhelin julkinenpuhelin,
        l.julkinen_wwwosoite julkinenwwwosoite,
        l.julkinen_osoite julkinenosoite,
-       array(select yritys_id from laatija_yritys where laatija_id = l.id) as yritys,
+       array(select yritys_id from laatija_yritys where laatija_id = l.id and tila_id = 1) as yritys,
        coalesce(current_timestamp < login + interval '6 month', false) as aktiivinen
 FROM laatija l
 INNER JOIN kayttaja k
