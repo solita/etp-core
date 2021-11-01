@@ -12,7 +12,8 @@
     ["/valvojat"
      {:conflicting true
       :get         {:summary   "Hae kaikki valvojat."
-                    :responses {200 {:body [common-schema/Kayttaja]}}
+                    :responses {200 {:body [(merge common-schema/Kayttaja
+                                                   {:passivoitu schema/Bool})]}}
                     :handler   (fn [{:keys [db]}]
                                  (r/response (valvonta-service/find-valvojat db)))}}]
     ["/:id"
