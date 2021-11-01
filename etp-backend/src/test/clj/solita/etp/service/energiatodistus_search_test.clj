@@ -8,6 +8,7 @@
             [solita.etp.test-data.kayttaja :as kayttaja-test-data]
             [solita.etp.test-data.laatija :as laatija-test-data]
             [solita.etp.test-data.energiatodistus :as energiatodistus-test-data]
+            [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.energiatodistus-search :as service]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.laatija :as laatija-service]
@@ -69,7 +70,8 @@
                     where (assoc :where where)
                     keyword (assoc :keyword keyword)
                     sort (assoc :sort sort)
-                    order (assoc :order order))))
+                    order (assoc :order order))
+                  energiatodistus-schema/Energiatodistus))
 
 (defn search-and-assert
   ([test-data-set id where]
@@ -116,7 +118,8 @@
                      {:where [[["=" "energiatodistus.id" id]
                                ["between" "laatija.voimassaolo-paattymisaika"
                                 (.minus voimassaolo-paattymisaika two-days)
-                                (.minus voimassaolo-paattymisaika one-day)]]]})
+                                (.minus voimassaolo-paattymisaika one-day)]]]}
+                     energiatodistus-schema/Energiatodistus)
                     first :id)))
     (t/is (= id (-> (service/search
                      ts/*db*
@@ -124,7 +127,8 @@
                      {:where [[["=" "energiatodistus.id" id]
                                ["between" "laatija.voimassaolo-paattymisaika"
                                 (.minus voimassaolo-paattymisaika one-day)
-                                (.plus voimassaolo-paattymisaika one-day)]]]})
+                                (.plus voimassaolo-paattymisaika one-day)]]]}
+                     energiatodistus-schema/Energiatodistus)
                     first :id)))
     (t/is (nil? (-> (service/search
                      ts/*db*
@@ -132,7 +136,8 @@
                      {:where [[["=" "energiatodistus.id" id]
                                ["between" "laatija.voimassaolo-paattymisaika"
                                 (.plus voimassaolo-paattymisaika one-day)
-                                (.plus voimassaolo-paattymisaika two-days)]]]})
+                                (.plus voimassaolo-paattymisaika two-days)]]]}
+                     energiatodistus-schema/Energiatodistus)
                     first :id)))))
 
 (t/deftest search-by-id-null-nettoala-test
@@ -146,7 +151,8 @@
                         ts/*db*
                         {:rooli 0 :id laatija-id}
                         {:where [[["=" "energiatodistus.id" id]
-                                  ["nil?" "energiatodistus.tulokset.nettotarve.tilojen-lammitys-neliovuosikulutus"]]]})
+                                  ["nil?" "energiatodistus.tulokset.nettotarve.tilojen-lammitys-neliovuosikulutus"]]]}
+                        energiatodistus-schema/Energiatodistus)
                        first :id)]
 
       (t/is (= id found-id)))))
@@ -164,7 +170,8 @@
                         ts/*db*
                         {:rooli 0 :id laatija-id}
                         {:where [[["=" "energiatodistus.id" id]
-                                  ["nil?" "energiatodistus.tulokset.nettotarve.tilojen-lammitys-neliovuosikulutus"]]]})
+                                  ["nil?" "energiatodistus.tulokset.nettotarve.tilojen-lammitys-neliovuosikulutus"]]]}
+                        energiatodistus-schema/Energiatodistus)
                        first :id)]
 
       (t/is (= id found-id)))))
@@ -300,7 +307,8 @@
                            kayttaja-test-data/paakayttaja
                            {:where [[["=" "energiatodistus.toteutunut-ostoenergiankulutus.ostettu-energia.kaukolampo-neliovuosikulutus"
                                       expected-kwh-per-year-m2
-                                      ]]]})
+                                      ]]]}
+                           energiatodistus-schema/Energiatodistus)
                           (map :id)
                           set)
                      target-et-id))
@@ -309,7 +317,8 @@
                                 kayttaja-test-data/paakayttaja
                                 {:where [[["<" "energiatodistus.toteutunut-ostoenergiankulutus.ostettu-energia.kaukolampo-neliovuosikulutus"
                                            (dec expected-kwh-per-year-m2)
-                                           ]]]})
+                                           ]]]}
+                                energiatodistus-schema/Energiatodistus)
                                (map :id)
                                set)
                          target-et-id)))
@@ -318,7 +327,8 @@
                                 kayttaja-test-data/paakayttaja
                                 {:where [[[">" "energiatodistus.toteutunut-ostoenergiankulutus.ostettu-energia.kaukolampo-neliovuosikulutus"
                                            (inc expected-kwh-per-year-m2)
-                                           ]]]})
+                                           ]]]}
+                                energiatodistus-schema/Energiatodistus)
                                (map :id)
                                set)
                          target-et-id)))))
@@ -424,7 +434,8 @@
                            kayttaja-test-data/paakayttaja
                            {:where [[["=" "energiatodistus.toteutunut-ostoenergiankulutus.ostetut-polttoaineet.kevyt-polttooljy-neliovuosikulutus"
                                       expected-kwh-per-year-m2
-                                      ]]]})
+                                      ]]]}
+                           energiatodistus-schema/Energiatodistus)
                           (map :id)
                           set)
                      target-et-id))
@@ -433,7 +444,8 @@
                                 kayttaja-test-data/paakayttaja
                                 {:where [[["<" "energiatodistus.toteutunut-ostoenergiankulutus.ostetut-polttoaineet.kevyt-polttooljy-neliovuosikulutus"
                                            (dec expected-kwh-per-year-m2)
-                                           ]]]})
+                                           ]]]}
+                                energiatodistus-schema/Energiatodistus)
                                (map :id)
                                set)
                          target-et-id)))
@@ -442,7 +454,8 @@
                                 kayttaja-test-data/paakayttaja
                                 {:where [[[">" "energiatodistus.toteutunut-ostoenergiankulutus.ostetut-polttoaineet.kevyt-polttooljy-neliovuosikulutus"
                                            (inc expected-kwh-per-year-m2)
-                                           ]]]})
+                                           ]]]}
+                                energiatodistus-schema/Energiatodistus)
                                (map :id)
                                set)
                          target-et-id)))))

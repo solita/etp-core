@@ -35,7 +35,9 @@
         {:perustiedot Perustiedot
          :lahtotiedot Lahtotiedot
          :tulokset    Tulokset}))
-      (dissoc :laskutusaika)))
+      (dissoc :laatija-fullname
+              :laatija-id
+              :laskutusaika)))
 
 (def Energiatodistus2013
   (-> (energiatodistus-versio 2013)

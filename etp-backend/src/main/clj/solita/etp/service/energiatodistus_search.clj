@@ -217,18 +217,14 @@
             where-params
             keyword-params)))
 
-(def db-row->public-energiatodistus
-  (energiatodistus-service/schema->db-row->energiatodistus
-    public-energiatodistus-schema/Energiatodistus))
-
 (defn search
   "Energiatodistus search for APIs. Returns only public data and makes sure that
    there's a sensible limit for results. Coerces results with
-   db-row->public-energiatodistus."
-  [db whoami query]
+   schema->db-row->energiatodistus."
+  [db whoami query schema]
   (let [query (update query :limit #(min 1000 (or % 1000)))]
     (->> (jdbc/query db (sql-query select-all whoami query) nil)
-         (map db-row->public-energiatodistus))))
+         (map (energiatodistus-service/schema->db-row->energiatodistus schema)))))
 
 (defn reducible-search
   "Energiatodistus search for other services. Does reducibly-query meaning that
