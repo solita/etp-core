@@ -32,6 +32,9 @@ where not valvonta.deleted and
     (valvonta.valvoja_id is not null) = :has-valvoja or
     (:valvoja-id::int is null and :has-valvoja::boolean is null))
 order by
+  case when last_toimenpide.id is null then
+    valvonta.id
+  end desc nulls last,
   last_toimenpide$deadline_date asc nulls last,
   coalesce(last_toimenpide.publish_time, last_toimenpide.create_time) desc,
   valvonta.id desc
