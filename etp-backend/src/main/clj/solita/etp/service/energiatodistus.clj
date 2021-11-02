@@ -425,16 +425,17 @@
            " update conflicts with other concurrent update."))
     result))
 
-(defn find-required-properties [db versio]
+(defn find-required-properties [db versio bypass-validation]
   (cons
     "laskutusosoite-id"
     (map (comp to-property-name :column-name)
-         (energiatodistus-db/select-required-columns db {:versio versio}))))
+         (energiatodistus-db/select-required-columns
+           db {:versio versio :bypass-validation bypass-validation}))))
 
 (defn find-required-constraints [db energiatodistus]
-  (->> energiatodistus
-      :versio
-      (find-required-properties db)
+  (-> (find-required-properties
+        db (:versio energiatodistus)
+        (:bypass-validation-limits energiatodistus))
       validation/required-constraints))
 
 (defn validate-required!

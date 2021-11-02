@@ -69,7 +69,8 @@ from validation_numeric_column where versio = :versio;
 
 -- name: select-required-columns
 select column_name
-from validation_required_column where versio = :versio
+from validation_required_column
+where versio = :versio and valid and not (bypass_allowed and :bypass-validation)
 order by ordinal asc;
 
 -- name: select-sisaiset-kuormat

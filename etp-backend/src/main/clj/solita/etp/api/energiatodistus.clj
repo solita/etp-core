@@ -187,13 +187,23 @@
                            (r/response (energiatodistus-service/find-numeric-validations
                                          db versio)))}}]
 
-     ["/validation/required/:versio"
-      {:get {:summary    "Hae voimassaolevan energiatodistuksen pakolliset kentät"
+     ["/validation/required/:versio/bypass"
+      {:get {:summary    "Hae voimassaolevan energiatodistuksen pakolliset kentät,
+                          joita ei voi ohittaa allekirjoituksessa"
              :parameters {:path {:versio common-schema/Key}}
              :responses  {200 {:body [schema/Str]}}
              :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
                            (r/response (energiatodistus-service/find-required-properties
-                                         db versio)))}}]
+                                         db versio true)))}}]
+
+     ["/validation/required/:versio/all"
+      {:get {:summary    "Hae voimassaolevan energiatodistuksen kaikki pakolliset kentät.
+                          Osa näistä on mahdollista ohittaa allekirjoituksessa."
+             :parameters {:path {:versio common-schema/Key}}
+             :responses  {200 {:body [schema/Str]}}
+             :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
+                           (r/response (energiatodistus-service/find-required-properties
+                                         db versio false)))}}]
 
      ["/validation/sisaiset-kuormat/:versio"
       {:get {:summary    "Hae voimassaolevan energiatodistuksen pakolliset kentät"
