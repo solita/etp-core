@@ -14,6 +14,7 @@
       :get         {:summary   "Hae kaikki valvojat."
                     :responses {200 {:body [(assoc common-schema/Kayttaja
                                                    :passivoitu schema/Bool)]}}
+                    :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                     :handler   (fn [{:keys [db]}]
                                  (r/response (valvonta-service/find-valvojat db)))}}]
     ["/:id"
