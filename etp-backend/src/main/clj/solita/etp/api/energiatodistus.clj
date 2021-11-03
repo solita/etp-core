@@ -205,6 +205,14 @@
                            (r/response (energiatodistus-service/find-required-properties
                                          db versio false)))}}]
 
+     ["/validation/required/:versio"
+      {:get {:summary    "Depraceted - same as /validation/required/:versio/all"
+             :parameters {:path {:versio common-schema/Key}}
+             :responses  {200 {:body [schema/Str]}}
+             :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
+                           (r/response (energiatodistus-service/find-required-properties
+                                         db versio false)))}}]
+
      ["/validation/sisaiset-kuormat/:versio"
       {:get {:summary    "Hae voimassaolevan energiatodistuksen pakolliset kentät"
              :parameters {:path {:versio common-schema/Key}}
