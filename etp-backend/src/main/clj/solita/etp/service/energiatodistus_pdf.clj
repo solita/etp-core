@@ -539,7 +539,7 @@
                {:path [:lahtotiedot :ilmanvaihto :tuloilma-lampotila] :dp 1}
                {:path [:lahtotiedot :lammitys :tilat-ja-iv :lampopumppu-tuotto-osuus] :dp 0 :percent? true}
                {:path [:lahtotiedot :lammitys :lammin-kayttovesi :lampopumppu-tuotto-osuus] :dp 0 :percent? true}
-               {:path [:tulokset :lampohavio-lammittamaton-tila] :dp 1}
+               {:path [:lahtotiedot :lammitys :lampohavio-lammittamaton-tila] :dp 1}
                {:path [:lahtotiedot :lammitys :lammin-kayttovesi :lampohavio-lammittamaton-tila] :dp 1}]
               (flatten (for [i (range 12)]
                          [{:path [:tulokset :kuukausierittely i :tuotto :aurinkosahko] :dp 0}

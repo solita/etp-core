@@ -493,7 +493,7 @@
                         [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala])
           (combine-keys +
                         0
-                        [:tulokset :lampohavio-lammittamaton-tila]
+                        [:lahtotiedot :lammitys :lampohavio-lammittamaton-tila]
                         [:lahtotiedot :lammitys :tilat-ja-iv :lampohavio-lammittamaton-tila]
                         [:lahtotiedot :lammitys :lammin-kayttovesi :lampohavio-lammittamaton-tila])))))
 
