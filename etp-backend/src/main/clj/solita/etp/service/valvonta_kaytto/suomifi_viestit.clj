@@ -87,25 +87,27 @@
                       :kuvaus "Tietopyynnön varoitus liitteenä"}}
        type-key))
 
-(defn- add-cover-page [document osapuoli]
-  (with-open [baos (ByteArrayOutputStream.)]
-    (pdf/merge-pdf
-      [(pdf/generate-pdf->input-stream {:layout "pdf/ipost-address-page.html"
-                                        :data   {:lahettaja     lahettaja
-                                                 :vastaanottaja {:nimi             (str (:etunimi osapuoli) " " (:sukunimi osapuoli))
-                                                                 :jakeluosoite     (:jakeluosoite osapuoli)
-                                                                 :postinumero      (:postinumero osapuoli)
-                                                                 :postitoimipaikka (:postitoimipaikka osapuoli)}}})
-       (io/input-stream document)]
-      baos)
-    (.toByteArray baos)))
+
+(defn- create-cover-page [osapuoli]
+  (pdf/generate-pdf->input-stream {:layout "pdf/ipost-address-page.html"
+                                   :data   {:lahettaja     lahettaja
+                                            :vastaanottaja {:nimi             (str (:etunimi osapuoli) " " (:sukunimi osapuoli))
+                                                            :jakeluosoite     (:jakeluosoite osapuoli)
+                                                            :postinumero      (:postinumero osapuoli)
+                                                            :postitoimipaikka (:postitoimipaikka osapuoli)}}}))
+
+(defn- create-document [document osapuoli]
+  (pdf/merge-pdf
+    [(create-cover-page osapuoli)
+     (io/input-stream document)
+     (store/info-letter)]))
 
 (defn- ^:dynamic bytes->base64 [bytes]
   (String. (b64/encode bytes) "UTF-8"))
 
 (defn- dokumentti->tiedosto [type-key osapuoli dokumentti]
   (let [{:keys [nimi kuvaus]} (toimenpide->tiedosto type-key)
-        tiedosto (add-cover-page dokumentti osapuoli)]
+        tiedosto (create-document dokumentti osapuoli)]
     {:nimi    nimi
      :kuvaus  kuvaus
      :sisalto (bytes->base64 tiedosto)
