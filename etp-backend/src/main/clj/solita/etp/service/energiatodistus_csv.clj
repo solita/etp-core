@@ -80,7 +80,8 @@
     [:lahtotiedot :lammitys :lammonjako-label-fi]
     [:lahtotiedot :lammitys :lammonjako-label-sv]
     [:lahtotiedot :lammitys :lammonjako :kuvaus-fi]
-    [:lahtotiedot :lammitys :lammonjako :kuvaus-sv]]
+    [:lahtotiedot :lammitys :lammonjako :kuvaus-sv]
+    [:lahtotiedot :lammitys :lampohavio-lammittamaton-tila]]
    (for [parent [:tilat-ja-iv :lammin-kayttovesi]
          child [:tuoton-hyotysuhde :jaon-hyotysuhde :lampokerroin :apulaitteet
                 :lampopumppu-tuotto-osuus :lampohavio-lammittamaton-tila]]
