@@ -10,8 +10,10 @@
             [solita.etp.service.geo :as geo-service]
             [solita.etp.service.luokittelu :as luokittelu-service]
             [solita.common.maybe :as maybe]
-            [solita.etp.service.valvonta-kaytto.store :as store])
-  (:import (java.time LocalDate)))
+            [solita.etp.service.valvonta-kaytto.store :as store]
+            [solita.etp.service.pdf :as pdf]
+            [clojure.java.io :as io])
+  (:import (java.time LocalDate))))
 
 (defn- paragraph [& body] (str "<p>" (str/join " " body) "</p>"))
 
@@ -104,8 +106,12 @@
                                                 :reply? true
                                                 :attachments documents))))
 
+(defn- find-document [aws-s3-client valvonta toimenpide osapuoli]
+  (when-let [document (store/find-document aws-s3-client (:id valvonta) (:id toimenpide) osapuoli)]
+    (io/input-stream (pdf/merge-pdf [document (store/info-letter)]))))
+
 (defn- send-email-to-omistaja! [aws-s3-client valvonta toimenpide osapuoli]
-  (if-let [document (store/find-document aws-s3-client (:id valvonta) (:id toimenpide) osapuoli)]
+  (when-let [document (find-document aws-s3-client valvonta toimenpide osapuoli)]
     (send-email! valvonta toimenpide osapuoli [document] templates-omistaja)))
 
 (defn send-toimenpide-email! [db aws-s3-client valvonta toimenpide osapuolet]

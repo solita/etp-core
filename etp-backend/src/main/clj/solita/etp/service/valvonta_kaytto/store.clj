@@ -1,6 +1,7 @@
 (ns solita.etp.service.valvonta-kaytto.store
   (:require [solita.etp.service.file :as file-service]
-            [solita.etp.service.valvonta-kaytto.osapuoli :as osapuoli]))
+            [solita.etp.service.valvonta-kaytto.osapuoli :as osapuoli]
+            [clojure.java.io :as io]))
 
 (def file-key-prefix "valvonta/kaytto")
 
@@ -17,4 +18,7 @@
 
 (defn find-document [aws-s3-client valvonta-id toimenpide-id osapuoli]
   (file-service/find-file aws-s3-client (file-path file-key-prefix valvonta-id toimenpide-id osapuoli)))
+
+(defn info-letter []
+  (-> "pdf/Saate_rakennuksen_omistaja_su_ru.pdf" io/resource io/input-stream))
 
