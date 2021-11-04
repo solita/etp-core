@@ -106,7 +106,7 @@
                      :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                                    (api-response/get-response
                                      (valvonta-service/find-valvonta db id)
-                                     (str "Energiatodistus " id " does not exists.")))}
+                                     (api-response/msg-404 "energiatodistus" id)))}
 
        :put         {:summary    "Muuta valvonnan yleisiä tietoja."
                      :access     rooli-service/paakayttaja?
@@ -114,9 +114,9 @@
                                   :body (schema-tools/optional-keys-schema oikeellisuus-schema/ValvontaSave)}
                      :responses  {200 {:body nil}}
                      :handler    (fn [{{{:keys [id]} :path :keys [body]}
-                                       :parameters :keys [db]}]
+                                       :parameters :keys [db whoami]}]
                                    (api-response/ok|not-found
-                                     (valvonta-service/save-valvonta! db id body)
+                                     (valvonta-service/save-valvonta! db whoami id body)
                                      (api-response/msg-404 "energiatodistus" id)))}}]
 
      ["/toimenpiteet"

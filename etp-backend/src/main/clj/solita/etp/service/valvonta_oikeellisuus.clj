@@ -76,11 +76,19 @@
 
 (defn find-valvonta [db id] (first (valvonta-oikeellisuus-db/select-valvonta db {:id id})))
 
-(defn save-valvonta! [db id valvonta]
+(defn- update-energiatodistus! [db id valvonta]
   (first (db/with-db-exception-translation
            jdbc/update! db :energiatodistus
            (add-prefix "valvonta$" valvonta) ["id = ?" id]
            db/default-opts)))
+
+(defn save-valvonta! [db whoami id valvonta]
+  (jdbc/with-db-transaction
+    [tx db]
+    (when (and (nil? (:valvoja-id valvonta)) (:pending valvonta))
+      (valvonta-oikeellisuus-db/update-default-valvoja!
+        db {:whoami-id (:id whoami) :id id}))
+    (update-energiatodistus! db id valvonta)))
 
 (defn- insert-toimenpide! [db id diaarinumero toimenpide]
   (first (db/with-db-exception-translation
@@ -154,6 +162,13 @@
     #(email/send-toimenpide-email! db aws-s3-client id toimenpide)
     (str "Sending email failed for toimenpide: " id "/" (:id toimenpide))))
 
+(defn- update-valvonta-state! [db whoami id toimenpide]
+  (when (rooli-service/paakayttaja? whoami)
+    (if (toimenpide/final? toimenpide)
+      (save-valvonta! db whoami id {:pending false})
+      (valvonta-oikeellisuus-db/update-default-valvoja!
+        db {:whoami-id (:id whoami) :id id}))))
+
 (defn add-toimenpide! [db aws-s3-client whoami id toimenpide-add]
   (jdbc/with-db-transaction [tx db]
     (let [diaarinumero (if (toimenpide/case-open? toimenpide-add)
@@ -172,8 +187,7 @@
           (send-toimenpide-email! db aws-s3-client id toimenpide))
         (when (toimenpide/anomaly? toimenpide)
           (add-anomaly-viestiketju! tx whoami id toimenpide))
-        (when (toimenpide/clears-from-tyojono? toimenpide)
-          (save-valvonta! tx id {:pending false}))
+        (update-valvonta-state! tx whoami id toimenpide)
         {:id toimenpide-id})))
 
 (defn- assoc-virheet [db toimenpide]
