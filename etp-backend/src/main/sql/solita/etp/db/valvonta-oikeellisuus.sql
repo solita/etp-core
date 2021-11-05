@@ -219,3 +219,6 @@ delete from vo_tiedoksi where toimenpide_id = :toimenpide-id;
 
 -- name: delete-draft-toimenpide!
 update vo_toimenpide set deleted = true where id = :toimenpide-id and publish_time is null;
+
+-- name: update-default-valvoja!
+update energiatodistus set valvonta$valvoja_id = :whoami-id where id = :id and valvonta$valvoja_id is null;
