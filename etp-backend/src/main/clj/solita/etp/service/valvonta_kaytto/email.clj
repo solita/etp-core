@@ -4,7 +4,6 @@
             [solita.common.map :as map]
             [solita.common.time :as time]
             [solita.common.logic :as logic]
-            [solita.etp.service.valvonta-kaytto.asha :as asha]
             [solita.etp.email :as email]
             [solita.etp.service.valvonta-kaytto.osapuoli :as osapuoli]
             [solita.etp.service.geo :as geo-service]
@@ -13,7 +12,7 @@
             [solita.etp.service.valvonta-kaytto.store :as store]
             [solita.etp.service.pdf :as pdf]
             [clojure.java.io :as io])
-  (:import (java.time LocalDate))))
+  (:import (java.time LocalDate)))
 
 (defn- paragraph [& body] (str "<p>" (str/join " " body) "</p>"))
 
