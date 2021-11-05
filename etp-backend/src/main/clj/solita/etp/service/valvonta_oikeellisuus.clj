@@ -164,7 +164,7 @@
 
 (defn- update-valvonta-state! [db whoami id toimenpide]
   (when (rooli-service/paakayttaja? whoami)
-    (if (toimenpide/final? toimenpide)
+    (if (toimenpide/close-valvonta? toimenpide)
       (save-valvonta! db whoami id {:pending false})
       (valvonta-oikeellisuus-db/update-default-valvoja!
         db {:whoami-id (:id whoami) :id id}))))

@@ -45,5 +45,5 @@
 
 (def audit-reply? (partial type? :audit-reply))
 
-(def final?
+(def close-valvonta?
   (partial some-type? #{:verified :anomaly :closed}))
