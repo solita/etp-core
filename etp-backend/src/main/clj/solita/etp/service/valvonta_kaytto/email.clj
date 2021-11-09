@@ -12,7 +12,8 @@
             [solita.etp.service.valvonta-kaytto.store :as store]
             [solita.etp.service.pdf :as pdf]
             [clojure.java.io :as io])
-  (:import (java.time LocalDate)))
+  (:import (java.time LocalDate)
+           (java.io File)))
 
 (defn- paragraph [& body] (str "<p>" (str/join " " body) "</p>"))
 
@@ -105,9 +106,17 @@
                                                 :reply? true
                                                 :attachments documents))))
 
+(def document-prefix
+  {:rfi-request "tietopyynto-"
+   :rfi-order   "kehtotus-"
+   :rfi-warning "varoitus-"})
+
 (defn- find-document [aws-s3-client valvonta toimenpide osapuoli]
-  (when-let [document (store/find-document aws-s3-client (:id valvonta) (:id toimenpide) osapuoli)]
-    (io/input-stream (pdf/merge-pdf [document (store/info-letter)]))))
+  (logic/if-let* [document (store/find-document aws-s3-client (:id valvonta) (:id toimenpide) osapuoli)
+                  prefix (-> toimenpide :type-id toimenpide/type-key document-prefix)]
+    (let [document-file (File/createTempFile prefix ".pdf")]
+      (io/copy (pdf/merge-pdf [document (store/info-letter)]) document-file)
+      document-file)))
 
 (defn- send-email-to-omistaja! [aws-s3-client valvonta toimenpide osapuoli]
   (when-let [document (find-document aws-s3-client valvonta toimenpide osapuoli)]
