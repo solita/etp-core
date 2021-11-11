@@ -7,7 +7,7 @@
                 <asi:ViranomaisTunnus>Organisaatio</asi:ViranomaisTunnus>
                 <asi:PalveluTunnus>OR</asi:PalveluTunnus>
                 <asi:Yhteyshenkilo Nimi="Henkilö" Sahkoposti="testi.kayttaja@organisaatio.or" />
-                <asi:SanomaTunniste>ARA-05.03.02-2021-31-ETP-1-2-PERSON-1</asi:SanomaTunniste>
+                <asi:SanomaTunniste>ARA-05.03.02-2021-31-ETP-KV-1-2-PERSON-1</asi:SanomaTunniste>
                 <asi:SanomaVersio>1.0</asi:SanomaVersio>
                 <asi:SanomaVarmenneNimi>OR</asi:SanomaVarmenneNimi>
             </asi:Viranomainen>
@@ -24,7 +24,7 @@
                                 <asi:Maa>FI</asi:Maa>
                             </asi:Osoite>
                         </asi:Asiakas>
-                        <asi:ViranomaisTunniste>ARA-05.03.02-2021-31-ETP-1-2-PERSON-1</asi:ViranomaisTunniste>
+                        <asi:ViranomaisTunniste>ARA-05.03.02-2021-31-ETP-KV-1-2-PERSON-1</asi:ViranomaisTunniste>
                         <asi:Nimeke>Tietopyyntö</asi:Nimeke>
                         <asi:LahetysPvm>2021-09-08T06:21:03.625667Z</asi:LahetysPvm>
                         <asi:KuvausTeksti>Tämän viestin liitteenä on tietopyyntö koskien rakennustasi: 103515074X

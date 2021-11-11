@@ -51,12 +51,11 @@
   (with-bindings {#'solita.etp.service.suomifi-viestit/post! (handle-request "suomifi/viesti-request.xml"
                                                                              "suomifi/viesti-response.xml"
                                                                              202)
-                  #'suomifi-viestit/now                      (fn []
-                                                                            "2021-09-08T06:21:03.625667Z")
-                  #'suomifi-viestit/bytes->base64            (fn [_]
-                                                                            "dGVzdGk=")}
+                  #'suomifi-viestit/now                      (fn [] "2021-09-08T06:21:03.625667Z")
+                  #'suomifi-viestit/bytes->base64            (fn [_] "dGVzdGk=")}
+
     (t/is (= (:sanoma-tunniste (suomifi-viestit/send-message-to-osapuoli! valvonta toimenpide osapuoli document config))
-             "ARA-05.03.02-2021-31-ETP-1-2-PERSON-1"))))
+             "ARA-05.03.02-2021-31-ETP-KV-1-2-PERSON-1"))))
 
 (t/deftest send-message-to-osapuoli-id-already-exists-test
   (with-bindings {#'solita.etp.service.suomifi-viestit/post! (handle-request "suomifi/viesti-request.xml"
@@ -68,5 +67,5 @@
                                                                             "dGVzdGk=")}
     (t/is (thrown-with-msg?
             clojure.lang.ExceptionInfo
-            #"Sending suomifi ARA-05.03.02-2021-31-ETP-1-2-PERSON-1 message failed with status 525 Asian tietosisällössä virheitä. Viranomaistunnisteella löytyy jo asia, joka on tallennettu asiakkaan tilille Viestit-palveluun"
+            #"Sending suomifi message ARA-05.03.02-2021-31-ETP-KV-1-2-PERSON-1 failed."
             (suomifi-viestit/send-message-to-osapuoli! valvonta toimenpide osapuoli document config)))))
