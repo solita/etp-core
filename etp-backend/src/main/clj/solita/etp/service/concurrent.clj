@@ -11,6 +11,6 @@
     (try
       (fn)
       (catch Throwable t
-        (log/error t error-description)
+        (log/error t error-description (or (ex-data t) ""))
         (exception-email-handler/exception-handler t))))
   nil)

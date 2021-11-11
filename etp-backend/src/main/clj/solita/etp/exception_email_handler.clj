@@ -12,14 +12,20 @@
                           "</body></html>"))
 
 (def ^:private template
-  {:suomifi-viestit-attribute-exception  {:subject "Suomifi viestin lähettäminen epäonnistui: {{sanoma-tunniste}}"
-                                          :body    (str "Suomifi viestin lähettäminen epäonnistui\n"
-                                                        "- Sanoman tunniste: {{sanoma-tunniste}} \n"
-                                                        "- Tila: {{tila-koodi}} \n"
-                                                        "- Tilan-kuvaus: {{tila-koodi-kuvaus}}")}
-   :suomifi-viestit-connection-exception {:subject "Yhteys suomifi viestit palveluun epäonnistui: {{sanoma-tunniste}}"
-                                          :body    (str "Yhteys suomifi viestit palveluun epäonnistui\n"
-                                                        "- Sanoman tunniste: {{sanoma-tunniste}}")}})
+  {:suomifi-viestit-invalid-request  {:subject "Suomifi viestin lähetys epäonnistui: {{request.sanoma-tunniste}}"
+                                      :body    (str "Suomifi viestin lähettäminen epäonnistui. Lähetyspyynnön sisällössä on virhe.\n"
+                                                    "- Sanoman tunniste: {{request.sanoma.tunniste}} \n"
+                                                    "- Tila: {{response.tila-koodi}} \n"
+                                                    "- Tilan-kuvaus: {{response.tila-koodi-kuvaus}}")}
+
+   :suomifi-viestit-invalid-response {:subject "Suomifi viestin lähetys epäonnistui: {{request.sanoma-tunniste}}"
+                                      :body    (str "Suomifi viestin lähettäminen epäonnistui. Lähetyksen vastauksen sisällössä on virhe\n"
+                                                    "- Sanoman tunniste: {{request.sanoma.tunniste}}\n"
+                                                    "- HTTP status: {{response.status}}")}
+
+   :suomifi-viestit-failure          {:subject "Suomifi viestin lähetys epäonnistui: {{request.sanoma-tunniste}}"
+                                      :body    (str "Suomifi viestin lähettäminen epäonnistui\n"
+                                                    "- Sanoman tunniste: {{request.sanoma.tunniste}}")}})
 
 (defn- prepare-email [{:keys [subject body]} data]
   (let [config (update-in ch/default-config
@@ -30,7 +36,7 @@
      :to      config/email-exception-info}))
 
 (defn exception-handler [^Throwable t]
-  (let [{:keys [type data]} (-> t ex-data)]
+  (let [{:keys [type] :as data} (-> t ex-data)]
     (when (type template)
       (try
         (email/send-text-email! (prepare-email (type template) data))

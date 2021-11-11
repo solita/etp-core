@@ -7,7 +7,8 @@
             [solita.common.xml :as xml]
             [schema.core :as schema]
             [clj-http.conn-mgr :as conn-mgr]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [solita.etp.exception :as exception])
   (:import (org.apache.ws.security WSConstants WSEncryptionPart)
            (org.apache.ws.security.components.crypto CryptoFactory)
            (org.apache.ws.security.message WSSecSignature WSSecHeader WSSecTimestamp)
@@ -25,14 +26,16 @@
 (defn- request-create-xml [data]
   (clostache/render-resource (str "suomifi/viesti.xml") data))
 
-(defn- ^:dynamic make-send-request! [request]
+(defn- ^:dynamic post! [request]
   (log/debug request)
   (if config/suomifi-viestit-endpoint-url
     (http/post config/suomifi-viestit-endpoint-url
-               (cond-> {:body request}
-                       config/suomifi-viestit-proxy? (assoc
-                                                       :connection-manager
-                                                       (conn-mgr/make-socks-proxied-conn-manager "localhost" 1080))))
+               (cond-> {:body request
+                        :throw-exceptions false}
+                       config/suomifi-viestit-proxy?
+                       (assoc
+                         :connection-manager
+                         (conn-mgr/make-socks-proxied-conn-manager "localhost" 1080))))
     (do
       (log/info "Missing suomifi viestit endpoint url. Skip request to suomifi viestit...")
       {:status 200})))
@@ -89,39 +92,55 @@
      :tila-koodi-kuvaus (trim (xml/get-content response-xml [:laheta-viesti-result :tila-koodi :tila-koodi-kuvaus]))
      :sanoma-tunniste   (xml/get-content response-xml [:laheta-viesti-result :tila-koodi :sanoma-tunniste])}))
 
-(defn- assert-error [response]
+(def ^:private coerce-response!
+  (sc/coercer {:tila-koodi        schema/Int
+               :tila-koodi-kuvaus schema/Str
+               :sanoma-tunniste   schema/Str}
+              sc/string-coercion-matcher))
+
+(defn select-keys* [m paths]
+  (into {} (map (fn [p] (assoc-in {} p (get-in m p)))) paths))
+
+(defn- throw-ex-info! [type request response cause]
+  (throw
+    (ex-info
+      (str "Sending suomifi message " (-> request :sanoma :tunniste) " failed.")
+      {:type     type
+       :request  (select-keys* request [[:sanoma :tunniste]
+                                        [:kysely :kohteet :nimike]])
+       :response response
+       :cause    (ex-data cause)}
+      cause)))
+
+(defn- assert-status! [response]
+  (when-not (#{200 201 202 203 204 205 206 207 300 301 302 303 304 307} (:status response))
+    (exception/illegal-argument! (str "Invalid response status: " (:status response))))
+  response)
+
+(defn- read-response [request response]
+  (try
+    (some-> response assert-status! :body response-parser coerce-response!)
+  (catch Throwable t
+    (throw-ex-info! :suomifi-viestit-invalid-response request response t))))
+
+(defn- handle-request! [request keystore-file keystore-password keystore-alias]
+  (try
+    (let [request-xml (request-create-xml request)]
+      (if (and keystore-file keystore-password keystore-alias)
+        (post! (signSOAPEnvelope request-xml keystore-file keystore-password keystore-alias))
+        (post! request-xml)))
+    (catch Throwable t
+      (throw-ex-info! :suomifi-viestit-failure request nil t))))
+
+(defn- assert-tila-koodi! [request response]
   (if (not= (:tila-koodi response) 202)
-    (throw (ex-info
-             (str "Sending suomifi " (:sanoma-tunniste response)
-                  " message failed with status " (:tila-koodi response)
-                  " " (:tila-koodi-kuvaus response))
-             {:type :suomifi-viestit-attribute-exception
-              :data {:sanoma-tunniste   (:sanoma-tunniste response)
-                     :tila-koodi        (:tila-koodi response)
-                     :tila-koodi-kuvaus (:tila-koodi-kuvaus response)}}))
+    (throw-ex-info! :suomifi-viestit-invalid-request request response nil)
     response))
 
-(defn- read-response [response]
-  (let [coercer (sc/coercer {:tila-koodi        schema/Int
-                             :tila-koodi-kuvaus schema/Str
-                             :sanoma-tunniste   schema/Str}
-                            sc/string-coercion-matcher)]
-    (-> response response-parser coercer assert-error)))
-
-(defn- handle-request! [data keystore-file keystore-password keystore-alias]
-  (try
-    (let [request-xml (request-create-xml data)]
-      (if (and keystore-file keystore-password keystore-alias)
-        (make-send-request! (signSOAPEnvelope request-xml keystore-file keystore-password keystore-alias))
-        (make-send-request! request-xml)))
-    (catch Throwable t
-      (throw (ex-info (str "Sending suomifi " (-> data :sanoma :tunniste) " message failed with connection error")
-                      {:type   :suomifi-viestit-connection-exception
-                       :data   {:sanoma-tunniste (-> data :sanoma :tunniste)}}
-                      t)))))
-
-(defn- send-request! [data keystore-file keystore-password keystore-alias]
-  (some-> (handle-request! data keystore-file keystore-password keystore-alias) :body read-response))
+(defn- send-request! [request keystore-file keystore-password keystore-alias]
+  (some->> (handle-request! request keystore-file keystore-password keystore-alias)
+           (read-response request)
+           (assert-tila-koodi! request)))
 
 (defn send-message! [sanoma
                      kohde

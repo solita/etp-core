@@ -48,23 +48,23 @@
              :laskutus-salasana   "0000"})
 
 (t/deftest send-message-to-osapuoli-test
-  (with-bindings {#'solita.etp.service.suomifi-viestit/make-send-request! (handle-request "suomifi/viesti-request.xml"
-                                                                                          "suomifi/viesti-response.xml"
-                                                                                          202)
-                  #'suomifi-viestit/now                                   (fn []
+  (with-bindings {#'solita.etp.service.suomifi-viestit/post! (handle-request "suomifi/viesti-request.xml"
+                                                                             "suomifi/viesti-response.xml"
+                                                                             202)
+                  #'suomifi-viestit/now                      (fn []
                                                                             "2021-09-08T06:21:03.625667Z")
-                  #'suomifi-viestit/bytes->base64                         (fn [_]
+                  #'suomifi-viestit/bytes->base64            (fn [_]
                                                                             "dGVzdGk=")}
     (t/is (= (:sanoma-tunniste (suomifi-viestit/send-message-to-osapuoli! valvonta toimenpide osapuoli document config))
              "ARA-05.03.02-2021-31-ETP-1-2-PERSON-1"))))
 
 (t/deftest send-message-to-osapuoli-id-already-exists-test
-  (with-bindings {#'solita.etp.service.suomifi-viestit/make-send-request! (handle-request "suomifi/viesti-request.xml"
-                                                                                          "suomifi/viesti-id-already-exists-response.xml"
-                                                                                          200)
-                  #'suomifi-viestit/now                                   (fn []
+  (with-bindings {#'solita.etp.service.suomifi-viestit/post! (handle-request "suomifi/viesti-request.xml"
+                                                                             "suomifi/viesti-id-already-exists-response.xml"
+                                                                             200)
+                  #'suomifi-viestit/now                      (fn []
                                                                             "2021-09-08T06:21:03.625667Z")
-                  #'suomifi-viestit/bytes->base64                         (fn [_]
+                  #'suomifi-viestit/bytes->base64            (fn [_]
                                                                             "dGVzdGk=")}
     (t/is (thrown-with-msg?
             clojure.lang.ExceptionInfo
