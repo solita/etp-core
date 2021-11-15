@@ -97,3 +97,13 @@ where exists (
   where laatija_yritys.laatija_id = :id and
         laatija_yritys.yritys_id = y.id and
         laatija_yritys.tila_id = 1);
+
+-- name: select-count-public-laatijat
+select
+  count(*)
+from
+  laatija inner join kayttaja on laatija.id = kayttaja.id
+where
+  kayttaja.login is not null and
+  patevyys_voimassa(laatija) and
+  not laatija.laatimiskielto;

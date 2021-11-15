@@ -2,6 +2,7 @@
   (:require [ring.util.response :as r]
             [schema.core :as schema]
             [solita.etp.api.response :as api-response]
+            [solita.etp.header-middleware :as header]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.laatija :as laatija-schema]
             [solita.etp.service.laatija :as laatija-service]
@@ -20,10 +21,19 @@
    :handler   (fn [{:keys [db]}]
                 (r/response (laatija-service/find-patevyystasot db)))})
 
+(def get-count-public-laatijat
+  {:summary "Hae laatijahaussa näkyvien laatijoiden lukumäärä"
+   :responses {200 {:body {:count schema/Int}}}
+   :handler (fn [{:keys [db]}]
+              (r/response (laatija-service/count-public-laatijat db)))})
+
 (def public-routes
   [["/laatijat"
     [""
      {:get get-laatijat}]]
+   ["/count-public-laatijat"
+    {:get        get-count-public-laatijat
+     :middleware [[header/wrap-cache-control 3600]]}]
    ["/patevyydet"
     {:get get-patevyydet}]])
 

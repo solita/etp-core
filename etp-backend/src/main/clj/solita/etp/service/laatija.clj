@@ -137,6 +137,9 @@
      (map/bindings->map laatija-id yritys-id))
     (exception/throw-forbidden!)))
 
+(defn count-public-laatijat [db]
+  (first (laatija-db/select-count-public-laatijat db)))
+
 ;;
 ;; Pätevyydet
 ;;
