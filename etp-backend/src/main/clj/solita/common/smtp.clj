@@ -30,9 +30,10 @@
     (.setFrom (InternetAddress. from-email from-name))
     (.setSubject subject)
     (.setRecipients Message$RecipientType/TO
+                    ^"[Ljavax.mail.internet.InternetAddress;"
                     (->> to
                          (map #(InternetAddress. %))
-                         into-array))))
+                         (into-array InternetAddress)))))
 
 (defn- send-email! [host port username password
                     from-email from-name to subject

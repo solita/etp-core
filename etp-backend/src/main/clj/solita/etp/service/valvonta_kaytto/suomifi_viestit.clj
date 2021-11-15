@@ -19,8 +19,8 @@
                 :postitoimipaikka "Lahti"})
 
 (defn- tunniste [toimenpide osapuoli]
-  (str/join "-" [(:diaarinumero toimenpide)
-                 "ETP"
+  (str/join "-" [(or (:diaarinumero toimenpide) "ARA")
+                 "ETP" "KV"
                  (:valvonta-id toimenpide)
                  (:id toimenpide)
                  (cond
