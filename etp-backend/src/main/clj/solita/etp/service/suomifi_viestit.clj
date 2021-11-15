@@ -106,6 +106,7 @@
     (ex-info
       (str "Sending suomifi message " (-> request :sanoma :tunniste) " failed.")
       {:type     type
+       :endpoint-url config/suomifi-viestit-endpoint-url
        :request  (select-keys* request [[:sanoma :tunniste]
                                         [:kysely :kohteet :nimike]])
        :response response
