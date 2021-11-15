@@ -30,10 +30,10 @@
 (def public-routes
   [["/laatijat"
     [""
-     {:get get-laatijat}]]
-   ["/count-public-laatijat"
-    {:get        get-count-public-laatijat
-     :middleware [[header/wrap-cache-control 3600]]}]
+     {:get get-laatijat}]
+    ["/count"
+     {:get        get-count-public-laatijat
+      :middleware [[header/wrap-cache-control 3600]]}]]
    ["/patevyydet"
     {:get get-patevyydet}]])
 
