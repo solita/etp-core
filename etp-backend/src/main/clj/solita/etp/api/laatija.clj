@@ -20,10 +20,18 @@
    :handler   (fn [{:keys [db]}]
                 (r/response (laatija-service/find-patevyystasot db)))})
 
+(def get-count-public-laatijat
+  {:summary "Hae laatijahaussa näkyvien laatijoiden lukumäärä"
+   :responses {200 {:body {:count schema/Int}}}
+   :handler (fn [{:keys [db]}]
+              (r/response (laatija-service/count-public-laatijat db)))})
+
 (def public-routes
   [["/laatijat"
     [""
      {:get get-laatijat}]]
+   ["/count-public-laatijat"
+    {:get get-count-public-laatijat}]
    ["/patevyydet"
     {:get get-patevyydet}]])
 
