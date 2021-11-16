@@ -96,7 +96,7 @@
                                                             :postinumero      (:postinumero osapuoli)
                                                             :postitoimipaikka (:postitoimipaikka osapuoli)}}}))
 
-(defn- create-document [document osapuoli]
+(defn- tiedosto-sisalto [document osapuoli]
   (pdf/merge-pdf
     [(create-cover-page osapuoli)
      (io/input-stream document)
@@ -105,9 +105,9 @@
 (defn- ^:dynamic bytes->base64 [bytes]
   (String. (b64/encode bytes) "UTF-8"))
 
-(defn- dokumentti->tiedosto [type-key osapuoli dokumentti]
+(defn- document->tiedosto [type-key osapuoli document]
   (let [{:keys [nimi kuvaus]} (toimenpide->tiedosto type-key)
-        tiedosto (create-document dokumentti osapuoli)]
+        tiedosto (tiedosto-sisalto document osapuoli)]
     {:nimi    nimi
      :kuvaus  kuvaus
      :sisalto (bytes->base64 tiedosto)
@@ -116,7 +116,7 @@
 (defn- ^:dynamic now []
   (Instant/now))
 
-(defn- ->kohde [valvonta toimenpide osapuoli tiedosto]
+(defn- ->kohde [valvonta toimenpide osapuoli document]
   (let [type-key (toimenpide/type-key (:type-id toimenpide))
         {:keys [nimike kuvaus]} (toimenpide->kohde type-key valvonta toimenpide)]
     {:viranomaistunniste (tunniste toimenpide osapuoli)
@@ -124,16 +124,16 @@
      :kuvaus-teksti      kuvaus
      :lahetys-pvm        (now)
      :asiakas            (osaapuoli->asiakas osapuoli)
-     :tiedostot          (dokumentti->tiedosto type-key osapuoli tiedosto)}))
+     :tiedostot          (document->tiedosto type-key osapuoli document)}))
 
 (defn send-message-to-osapuoli! [valvonta
                                  toimenpide
                                  osapuoli
-                                 dokumentti
+                                 document
                                  & [config]]
   (suomifi/send-message!
     (->sanoma toimenpide osapuoli)
-    (->kohde valvonta toimenpide osapuoli dokumentti)
+    (->kohde valvonta toimenpide osapuoli document)
     config))
 
 (defn send-suomifi-viestit! [aws-s3-client
