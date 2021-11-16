@@ -4,7 +4,8 @@
            (javax.mail.internet InternetAddress
                                 MimeMessage
                                 MimeBodyPart
-                                MimeMultipart InternetHeaders)
+                                MimeMultipart
+                                InternetHeaders)
            (java.util Properties)
            (java.io File InputStream)
            (org.apache.commons.io IOUtils)))
@@ -81,8 +82,7 @@
 
 (defn send-multipart-email! [{:keys [host port username password
                                      from-email from-name to subject
-                                     ^String body ^String subtype
-                                     ^"[Ljavax.mail.internet.MimeBodyPart;" attachments
+                                     ^String body ^String subtype attachments
                                      reply-to-email reply-to-name]}]
   (let [body-mime-body-part (body-mime-body-part body subtype)
         multipart (apply multipart body-mime-body-part attachments)]
