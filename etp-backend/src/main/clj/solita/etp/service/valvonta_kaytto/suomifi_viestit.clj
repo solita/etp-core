@@ -50,7 +50,7 @@
             :postitoimipaikka (:postitoimipaikka yritys)
             :maa              (:maa yritys)}})
 
-(defn- osaapuoli->asiakas [osapuoli]
+(defn- osapuoli->asiakas [osapuoli]
   (cond
     (osapuoli/henkilo? osapuoli) (henkilo->asiakas osapuoli)
     (osapuoli/yritys? osapuoli) (yritys->asiakas osapuoli)))
@@ -123,7 +123,7 @@
      :nimike             nimike
      :kuvaus-teksti      kuvaus
      :lahetys-pvm        (now)
-     :asiakas            (osaapuoli->asiakas osapuoli)
+     :asiakas            (osapuoli->asiakas osapuoli)
      :tiedostot          (document->tiedosto type-key osapuoli document)}))
 
 (defn send-message-to-osapuoli! [valvonta
