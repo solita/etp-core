@@ -41,8 +41,7 @@
                                      uri (valvonta-service/add-virhetype!
                                            db (:body parameters))))}}]
      ["/statistics/virhetilastot.csv"
-      {:conflicting true
-       :get {:summary "Hae virhetyyppien tilastot"
+      {:get {:summary "Hae virhetyyppien tilastot"
              :access rooli-service/paakayttaja?
              :responses {200 {:body schema/Str}}
              :handler (fn [{:keys [db]}]
