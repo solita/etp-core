@@ -228,8 +228,8 @@ select
     extract(year from t.publish_time)::int as year,
     extract(month from t.publish_time)::int as month,
     v.type_id as type_id,
-    vt.label_fi as label_fi,
-    count(*)
+    count(*),
+    vt.label_fi as label_fi
 from
   vo_toimenpide t
   join vo_virhe v on t.id = v.toimenpide_id
