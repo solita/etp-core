@@ -8,6 +8,7 @@
             [solita.common.xlsx :as xlsx]
             [solita.common.libreoffice :as libreoffice]
             [solita.common.sftp :as sftp]
+            [solita.common.smtp :as smtp]
             [solita.etp.email :as email]
             [solita.etp.config :as config]
             [solita.etp.db :as db]
@@ -305,7 +306,7 @@
                                 :subject     "ARA ETP täsmätysraportti"
                                 :body        "Liitteenä täsmäytysraportti."
                                 :subtype     "plain"
-                                :attachments [tasmaytysraportti-file]}))
+                                :attachments [(smtp/file->attachment tasmaytysraportti-file)]}))
 
 (defn xml-filename [now filename-prefix idx]
   (str filename-prefix

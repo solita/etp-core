@@ -298,11 +298,6 @@
 (defn find-toimenpide-yritys-document [db aws-s3-client valvonta-id toimenpide-id yritys-id]
   (store/find-document aws-s3-client valvonta-id toimenpide-id (find-yritys db yritys-id)))
 
-(defn find-toimenpide-document [aws-s3-client valvonta-id toimenpide-id osapuoli ostream]
-  (when-let [document (store/find-document aws-s3-client valvonta-id toimenpide-id osapuoli)]
-    (with-open [output (io/output-stream ostream)]
-      (io/copy document output))))
-
 (defn find-notes [db id]
   (valvonta-kaytto-db/select-valvonta-notes
     db {:valvonta-id id}))

@@ -1,12 +1,15 @@
 (ns solita.common.smtp
-  (:require [clojure.tools.logging :as log])
+  (:require [clojure.tools.logging :as log]
+            [clojure.data.codec.base64 :as b64])
   (:import (javax.mail Message$RecipientType Session Transport)
            (javax.mail.internet InternetAddress
                                 MimeMessage
                                 MimeBodyPart
-                                MimeMultipart)
+                                MimeMultipart
+                                InternetHeaders)
            (java.util Properties)
-           (java.io File InputStream)))
+           (java.io File InputStream)
+           (org.apache.commons.io IOUtils)))
 
 (def timeout "5000")
 (def charset "UTF-8")
@@ -59,17 +62,6 @@
   (doto (MimeBodyPart.)
     (.setText body charset subtype)))
 
-(defprotocol AttachmentMimeBodyPart (attachment-mime-body-part [attachment]))
-(extend-protocol AttachmentMimeBodyPart
-  File
-  (attachment-mime-body-part [^File attachment]
-    (doto (MimeBodyPart.)
-      (.attachFile attachment)))
-
-  InputStream
-  (attachment-mime-body-part [^InputStream attachment]
-    (MimeBodyPart. attachment)))
-
 (defn- multipart [& mime-body-parts]
   (let [mime-multi-part (MimeMultipart.)]
     (doseq [^MimeBodyPart mime-body-part mime-body-parts]
@@ -79,14 +71,23 @@
 (defn- add-multipart [^MimeMultipart content ^MimeMessage message]
   (.setContent message content))
 
+(defn file->attachment [^File file]
+  (doto (MimeBodyPart.)
+    (.attachFile file)))
+
+(defn input-stream->attachment [^InputStream input-stream ^String name ^String content-type]
+  (doto (MimeBodyPart. (InternetHeaders.) (b64/encode (IOUtils/toByteArray input-stream)))
+    (.setFileName name)
+    (.setDescription content-type)
+    (.setHeader "Content-Transfer-Encoding" "base64")
+    (.setDisposition MimeBodyPart/ATTACHMENT)))
+
 (defn send-multipart-email! [{:keys [host port username password
                                      from-email from-name to subject
                                      ^String body ^String subtype attachments
                                      reply-to-email reply-to-name]}]
   (let [body-mime-body-part (body-mime-body-part body subtype)
-        attachments-mime-body-part (map attachment-mime-body-part
-                                        attachments)
-        multipart (apply multipart body-mime-body-part attachments-mime-body-part)]
+        multipart (apply multipart body-mime-body-part attachments)]
     (send-email! host port username password
                  from-email from-name to subject
                  (partial add-multipart multipart)

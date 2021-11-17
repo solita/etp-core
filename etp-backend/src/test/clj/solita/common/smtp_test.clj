@@ -11,7 +11,7 @@
 (def subject "Subject")
 (def body "This is body!")
 (def subtype "plain")
-(def attachments [(io/file "deps.edn") (io/file "start.sh")])
+(def attachments (map smtp/file->attachment [(io/file "deps.edn") (io/file "start.sh")]))
 
 (def result-email-from-and-to
   (format "From: %s <%s>

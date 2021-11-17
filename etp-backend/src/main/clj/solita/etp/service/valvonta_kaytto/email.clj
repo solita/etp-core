@@ -10,10 +10,8 @@
             [solita.etp.service.luokittelu :as luokittelu-service]
             [solita.common.maybe :as maybe]
             [solita.etp.service.valvonta-kaytto.store :as store]
-            [solita.etp.service.pdf :as pdf]
-            [clojure.java.io :as io])
-  (:import (java.time LocalDate)
-           (java.io File)))
+            [solita.common.smtp :as smtp])
+  (:import (java.time LocalDate)))
 
 (defn- paragraph [& body] (str "<p>" (str/join " " body) "</p>"))
 
@@ -107,16 +105,14 @@
                                                 :attachments documents))))
 
 (def document-prefix
-  {:rfi-request "tietopyynto-"
-   :rfi-order   "kehtotus-"
-   :rfi-warning "varoitus-"})
+  {:rfi-request "tietopyynto"
+   :rfi-order   "kehotus"
+   :rfi-warning "varoitus"})
 
 (defn- find-document [aws-s3-client valvonta toimenpide osapuoli]
   (logic/if-let* [document (store/find-document aws-s3-client (:id valvonta) (:id toimenpide) osapuoli)
                   prefix (-> toimenpide :type-id toimenpide/type-key document-prefix)]
-    (let [document-file (File/createTempFile prefix ".pdf")]
-      (io/copy (pdf/merge-pdf [document (store/info-letter)]) document-file)
-      document-file)))
+    (smtp/input-stream->attachment document (str prefix ".pdf") "application/pdf")))
 
 (defn- send-email-to-omistaja! [aws-s3-client valvonta toimenpide osapuoli]
   (when-let [document (find-document aws-s3-client valvonta toimenpide osapuoli)]
@@ -131,7 +127,7 @@
                    :postitoimipaikka-fi (:label-fi postinumero)
                    :postitoimipaikka-sv (:label-sv postinumero))
         email-osapuolet (filter osapuoli/email? osapuolet)
-        documents (mapv (partial store/find-document aws-s3-client (:id valvonta) (:id toimenpide))
+        documents (mapv (partial find-document aws-s3-client valvonta toimenpide)
                         (filter osapuoli/omistaja? osapuolet))]
     (doseq [vastaanottaja (filter osapuoli/omistaja? email-osapuolet)]
       (send-email-to-omistaja! aws-s3-client valvonta toimenpide vastaanottaja))
