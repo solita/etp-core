@@ -78,7 +78,7 @@
 (defn input-stream->attachment [^InputStream input-stream ^String name ^String content-type]
   (doto (MimeBodyPart. (InternetHeaders.) (b64/encode (IOUtils/toByteArray input-stream)))
     (.setFileName name)
-    (.setDescription content-type)
+    (.setHeader "Content-Type" content-type)
     (.setHeader "Content-Transfer-Encoding" "base64")
     (.setDisposition MimeBodyPart/ATTACHMENT)))
 
