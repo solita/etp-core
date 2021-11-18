@@ -120,7 +120,7 @@
   (let [template-id (:template-id toimenpide)
         template (-> (valvonta-kaytto-db/select-template db {:id template-id}) first :content)
         documents (find-kaytto-valvonta-documents db (:id valvonta))
-        tiedoksi (filter osapuoli/tiedoksi? osapuolet)]
+        tiedoksi (if (toimenpide/send-tiedoksi? toimenpide) (filter osapuoli/tiedoksi? osapuolet) [])]
     (let [template-data (template-data db whoami valvonta toimenpide osapuoli documents ilmoituspaikat tiedoksi)]
       (pdf/generate-pdf->bytes {:template template
                                 :data     template-data}))))
