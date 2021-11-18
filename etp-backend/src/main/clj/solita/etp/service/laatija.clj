@@ -145,3 +145,9 @@
 ;;
 
 (defn find-patevyystasot [db] (luokittelu-service/find-patevyystasot db))
+
+(defn find-history [db whoami laatija-id]
+  (if (or (rooli-service/paakayttaja? whoami)
+          (= laatija-id (:id whoami)))
+    (laatija-db/select-laatija-history db {:id laatija-id})
+    (exception/throw-forbidden!)))
