@@ -14,20 +14,21 @@
 (db/require-queries 'kayttaja)
 
 ;; *** Conversions from database data types ***
-(def coerce-kayttaja (coerce/coercer! kayttaja-schema/Kayttaja
-                                      {(schema/maybe kayttaja-schema/VirtuId)
-                                       #(if (every? nil? (vals %)) nil %)}))
+(defn coerce-kayttaja [schema]
+  (coerce/coercer! schema
+                   {(schema/maybe kayttaja-schema/VirtuId)
+                    #(if (every? nil? (vals %)) nil %)}))
 
-(def db-row->kayttaja
+(defn db-row->kayttaja [schema]
   (comp
-    coerce-kayttaja
+   (coerce-kayttaja schema)
     (partial flat/flat->tree #"\$")))
 
 (defn find-kayttaja
   ([db id]
    (->> {:id id}
         (kayttaja-db/select-kayttaja db)
-        (map db-row->kayttaja)
+        (map (db-row->kayttaja kayttaja-schema/Kayttaja))
         first))
   ([db whoami id]
    (when-let [kayttaja (find-kayttaja db id)]
@@ -40,7 +41,8 @@
        (exception/throw-forbidden!)))))
 
 (defn find-kayttajat [db]
-  (map db-row->kayttaja (kayttaja-db/select-kayttajat db)))
+  (map (db-row->kayttaja kayttaja-schema/Kayttaja)
+       (kayttaja-db/select-kayttajat db)))
 
 (defn empty-virtuid [kayttaja]
   (if (-> kayttaja (get :virtu :undefined) nil?)
@@ -76,5 +78,6 @@
 (defn find-history [db whoami kayttaja-id]
   (if (or (rooli-service/paakayttaja? whoami)
           (= kayttaja-id (:id whoami)))
-    (kayttaja-db/select-kayttaja-history db {:id kayttaja-id})
+    (->> (kayttaja-db/select-kayttaja-history db {:id kayttaja-id})
+         (map (db-row->kayttaja kayttaja-schema/KayttajaHistory)))
     (exception/throw-forbidden!)))

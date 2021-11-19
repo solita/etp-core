@@ -61,9 +61,7 @@
      ["/history"
       {:get {:summary "Hae käyttäjän muutoshistoria"
              :parameters {:path {:id common-schema/Key}}
-             :responses {200 {:body [(-> kayttaja-schema/Kayttaja
-                                         (merge audit-schema/Audit)
-                                         (dissoc :login :virtu))]}}
+             :responses {200 {:body [kayttaja-schema/KayttajaHistory]}}
              :handler (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                         (r/response
                          (kayttaja-service/find-history db whoami id)))}}]
