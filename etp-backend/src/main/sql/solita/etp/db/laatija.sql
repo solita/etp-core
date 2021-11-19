@@ -126,4 +126,4 @@ from
   audit.laatija l
   join kayttaja modifier on l.modifiedby_id = modifier.id
 where l.id = :id
-order by modifytime;
+order by modifytime, event_id;

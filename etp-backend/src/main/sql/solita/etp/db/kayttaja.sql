@@ -29,4 +29,4 @@ from
   audit.kayttaja k
   join kayttaja modifier on k.modifiedby_id = modifier.id
 where k.id = :id
-order by modifytime;
+order by modifytime, event_id;
