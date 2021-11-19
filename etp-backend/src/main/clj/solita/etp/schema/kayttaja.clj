@@ -4,6 +4,7 @@
   solita.etp.schema.kayttaja
   (:require [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]
+            [solita.etp.schema.audit :as audit-schema]
             [schema-tools.core :as st]))
 
 (def VirtuId
@@ -41,3 +42,8 @@
           :sukunimi          schema/Str
           :puhelin           schema/Str
           :email             schema/Str}))
+
+(def KayttajaHistory
+  (-> Kayttaja
+      (merge audit-schema/Audit)
+      (dissoc :login)))

@@ -107,3 +107,23 @@ where
   kayttaja.login is not null and
   patevyys_voimassa(laatija) and
   not laatija.laatimiskielto;
+
+-- name: select-laatija-history
+select
+  l.id, l.patevyystaso,
+  l.toteamispaivamaara, l.toteaja, l.laatimiskielto,
+  l.toimintaalue, l.muut_toimintaalueet as muuttoimintaalueet,
+  l.julkinen_puhelin as julkinenpuhelin,
+  l.julkinen_email as julkinenemail,
+  l.julkinen_osoite as julkinenosoite,
+  l.julkinen_wwwosoite as julkinenwwwosoite,
+  l.laskutuskieli,
+  l.vastaanottajan_tarkenne, l.jakeluosoite,
+  l.postinumero, l.postitoimipaikka, l.wwwosoite, l.maa,
+  l.modifytime,
+  fullname(modifier) modifiedby_name
+from
+  audit.laatija l
+  join kayttaja modifier on l.modifiedby_id = modifier.id
+where l.id = :id
+order by modifytime, event_id;
