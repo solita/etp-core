@@ -3,6 +3,7 @@
             [schema.core :as schema]
             [solita.etp.api.response :as api-response]
             [solita.etp.schema.common :as common-schema]
+            [solita.etp.schema.audit :as audit-schema]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
             [solita.etp.schema.laatija :as laatija-schema]
             [solita.etp.schema.whoami :as whoami-schema]
@@ -57,6 +58,15 @@
                          (kayttaja-service/update-kayttaja!
                           db whoami id (:body parameters))
                          (str "Käyttäjä " id " does not exists or käyttäjä is laatija.")))}}]
+     ["/history"
+      {:get {:summary "Hae käyttäjän muutoshistoria"
+             :parameters {:path {:id common-schema/Key}}
+             :responses {200 {:body [(-> kayttaja-schema/Kayttaja
+                                         (merge audit-schema/Audit)
+                                         (dissoc :login :virtu))]}}
+             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+                        (r/response
+                         (kayttaja-service/find-history db whoami id)))}}]
      ["/laatija"
       {:get {:summary "Hae käyttäjään liittyvät laatijatiedot."
              :parameters {:path {:id common-schema/Key}}

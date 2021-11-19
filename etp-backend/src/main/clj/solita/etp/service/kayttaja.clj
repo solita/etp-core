@@ -72,3 +72,9 @@
         ["rooli_id > 0 and id = ?" id]
         db/default-opts)
     (exception/throw-forbidden!)))
+
+(defn find-history [db whoami kayttaja-id]
+  (if (or (rooli-service/paakayttaja? whoami)
+          (= kayttaja-id (:id whoami)))
+    (kayttaja-db/select-kayttaja-history db {:id kayttaja-id})
+    (exception/throw-forbidden!)))
