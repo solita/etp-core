@@ -3,9 +3,5 @@
             [solita.etp.schema.common :as common-schema]))
 
 (def Audit
-  {;:event-id common-schema/Key
-   ;:transaction-id common-schema/Key
-   :modifytime common-schema/Instant
-   :modifiedby-name schema/Str
-   ;;:service-uri schema/Str
-   })
+  {:modifytime common-schema/Instant
+   :modifiedby-name schema/Str})
