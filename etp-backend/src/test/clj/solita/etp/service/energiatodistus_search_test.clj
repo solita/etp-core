@@ -1,7 +1,6 @@
 (ns solita.etp.service.energiatodistus-search-test
   (:require [clojure.test :as t]
             [clojure.java.jdbc :as jdbc]
-            [schema-tools.core :as st]
             [solita.common.map :as xmap]
             [solita.etp.test-system :as ts]
             [solita.etp.test :as etp-test]
@@ -9,14 +8,25 @@
             [solita.etp.test-data.laatija :as laatija-test-data]
             [solita.etp.test-data.energiatodistus :as energiatodistus-test-data]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
+            [solita.etp.schema.public-energiatodistus :as energiatodistus-public-schema]
+            [solita.etp.schema.valvonta-oikeellisuus :as valvonta-schema]
             [solita.etp.service.energiatodistus-search :as service]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.laatija :as laatija-service]
             [solita.etp.service.e-luokka :as e-luokka-service])
-  (:import (clojure.lang ExceptionInfo)
-           (java.time LocalDate Instant ZoneId)))
+  (:import (java.time Instant)))
 
 (t/use-fixtures :each ts/fixture)
+
+(t/deftest select
+  (t/is (= (service/select {})
+           "select energiatodistus.*"))
+  (t/is (= (service/select energiatodistus-schema/Energiatodistus)
+           "select energiatodistus.*,\nfullname(kayttaja.*) laatija_fullname,\nkorvaava_energiatodistus.id as korvaava_energiatodistus_id"))
+  (t/is (= (service/select energiatodistus-public-schema/Energiatodistus)
+           "select energiatodistus.*,\nkorvaava_energiatodistus.id as korvaava_energiatodistus_id"))
+  (t/is (= (service/select valvonta-schema/Energiatodistus+Valvonta)
+           "select energiatodistus.*,\nfullname(kayttaja.*) laatija_fullname,\nkorvaava_energiatodistus.id as korvaava_energiatodistus_id,\ncoalesce(last_toimenpide.ongoing, false) valvonta$ongoing,\nlast_toimenpide.type_id valvonta$type_id")))
 
 (defn test-data-set []
   (let [laatijat (laatija-test-data/generate-and-insert! 3)

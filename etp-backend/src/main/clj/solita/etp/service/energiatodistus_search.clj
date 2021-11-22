@@ -68,15 +68,33 @@
       {:postinumero schema/Int}}}
     geo-schema/Search))
 
-(def select-all
-  "SELECT energiatodistus.*,
-          fullname(kayttaja.*) laatija_fullname,
-          korvaava_energiatodistus.id AS korvaava_energiatodistus_id")
+(defn- schema-contains? [key schema]
+  (if (xschema/conditional? schema)
+    (not (not-any? (partial schema-contains? key) (map second (:preds-and-schemas schema))))
+    (contains? schema key)))
+
+(def ^:private select-expressions
+  {any? "energiatodistus.*"
+   (partial schema-contains? :laatija-fullname)
+   ["fullname(kayttaja.*) laatija_fullname"]
+   (partial schema-contains? :korvaava-energiatodistus-id)
+   ["korvaava_energiatodistus.id as korvaava_energiatodistus_id"]
+   (partial schema-contains? :valvonta)
+   ["coalesce(last_toimenpide.ongoing, false) valvonta$ongoing"
+    "last_toimenpide.type_id valvonta$type_id"]})
+
+(defn select [schema]
+  (str "select "
+       (->> select-expressions
+            (map (fn [[has? expression]] (if (has? schema) expression [])))
+            flatten
+            (str/join ",\n"))))
 
 (def relation
   "FROM energiatodistus
    INNER JOIN kayttaja ON kayttaja.id = energiatodistus.laatija_id
    INNER JOIN laatija ON laatija.id = energiatodistus.laatija_id
+   LEFT JOIN vo_last_toimenpide_v1 last_toimenpide ON last_toimenpide.energiatodistus_id = energiatodistus.id
    LEFT JOIN energiatodistus korvaava_energiatodistus
      ON korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
    LEFT JOIN postinumero ON postinumero.id = energiatodistus.pt$postinumero
@@ -223,7 +241,7 @@
    schema->db-row->energiatodistus."
   [db whoami query schema]
   (let [query (update query :limit #(min 1000 (or % 1000)))]
-    (->> (jdbc/query db (sql-query select-all whoami query) nil)
+    (->> (jdbc/query db (sql-query (select schema) whoami query) nil)
          (map (energiatodistus-service/schema->db-row->energiatodistus schema)))))
 
 (defn reducible-search
@@ -231,7 +249,7 @@
    there are certain limitations of how results can be handled. Does not coerce
    with db-row->energiatodistus, so that must be done manually if needed."
   [db whoami query options]
-  (jdbc/reducible-query db (sql-query select-all whoami query) options))
+  (jdbc/reducible-query db (sql-query (select energiatodistus-schema/Energiatodistus) whoami query) options))
 
 (defn search-count [db whoami query]
   (first (jdbc/query db (sql-query "select count(*) count" whoami query) nil)))
