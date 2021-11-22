@@ -80,15 +80,12 @@
 
 (defn virhetilastot->csv [virhetilastot]
   (let [col-keys (-> virhetilastot first keys)
-        col-titles (map name col-keys)]
+        col-titles (map name col-keys)
+        tilasto-db-row->csv-row (apply juxt col-keys)]
     (with-open [writer (java.io.StringWriter.)]
       (csv/write-csv writer
                      (concat [col-titles]
-                             (map (fn [row]
-                                    (map (fn [k]
-                                           (k row))
-                                         col-keys))
-                                  virhetilastot))
+                             (map tilasto-db-row->csv-row virhetilastot))
                      :separator \;)
       (str writer))))
 
