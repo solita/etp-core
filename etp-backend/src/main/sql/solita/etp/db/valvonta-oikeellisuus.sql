@@ -231,6 +231,7 @@ with last_valvontamuistio as (
   from vo_toimenpide toimenpide
   where
     toimenpide.publish_time is not null and
+    -- valvontamuistio == 7, as definned in r-0-vo-toimenpide.sql
     toimenpide.type_id = 7 and
     not toimenpide.deleted
   order by toimenpide.energiatodistus_id asc, toimenpide.publish_time desc
