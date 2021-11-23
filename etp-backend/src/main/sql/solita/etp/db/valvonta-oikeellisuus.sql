@@ -222,3 +222,29 @@ update vo_toimenpide set deleted = true where id = :toimenpide-id and publish_ti
 
 -- name: update-default-valvoja!
 update energiatodistus set valvonta$valvoja_id = :whoami-id where id = :id and valvonta$valvoja_id is null;
+
+-- name: select-virhetilastot
+with last_valvontamuistio as (
+  select distinct on (toimenpide.energiatodistus_id)
+  toimenpide.id,
+  toimenpide.publish_time
+  from vo_toimenpide toimenpide
+  where
+    toimenpide.publish_time is not null and
+    -- valvontamuistio == 7, as definned in r-0-vo-toimenpide.sql
+    toimenpide.type_id = 7 and
+    not toimenpide.deleted
+  order by toimenpide.energiatodistus_id asc, toimenpide.publish_time desc
+)
+select
+  extract(year from t.publish_time)::int as year,
+  extract(month from t.publish_time)::int as month,
+  v.type_id as type_id,
+  count(*),
+  vt.label_fi as label_fi
+from
+  last_valvontamuistio t
+  inner join vo_virhe v on t.id = v.toimenpide_id
+  inner join vo_virhetype vt on v.type_id = vt.id
+group by year, month, v.type_id, vt.label_fi
+order by year, month, v.type_id;

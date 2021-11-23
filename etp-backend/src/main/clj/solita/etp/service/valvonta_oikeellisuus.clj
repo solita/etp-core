@@ -5,6 +5,7 @@
     [solita.etp.service.valvonta-oikeellisuus.asha :as asha-valvonta-oikeellisuus]
     [solita.etp.service.valvonta-oikeellisuus.toimenpide :as toimenpide]
     [solita.etp.service.valvonta-oikeellisuus.email :as email]
+    [clojure.data.csv :as csv]
     [clojure.java.jdbc :as jdbc]
     [solita.common.map :as map]
     [solita.etp.service.luokittelu :as luokittelu]
@@ -73,6 +74,20 @@
         valvonta-oikeellisuus-db/count-unfinished-valvonnat-paakayttaja
         valvonta-oikeellisuus-db/count-unfinished-valvonnat-laatija)
       first))
+
+(defn virhetilastot [db]
+  (valvonta-oikeellisuus-db/select-virhetilastot db))
+
+(defn virhetilastot->csv [virhetilastot]
+  (let [col-keys (-> virhetilastot first keys)
+        col-titles (map name col-keys)
+        tilasto-db-row->csv-row (apply juxt col-keys)]
+    (with-open [writer (java.io.StringWriter.)]
+      (csv/write-csv writer
+                     (concat [col-titles]
+                             (map tilasto-db-row->csv-row virhetilastot))
+                     :separator \;)
+      (str writer))))
 
 (defn find-valvonta [db id] (first (valvonta-oikeellisuus-db/select-valvonta db {:id id})))
 

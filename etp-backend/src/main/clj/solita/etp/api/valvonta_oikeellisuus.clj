@@ -40,6 +40,14 @@
                                    (api-response/created
                                      uri (valvonta-service/add-virhetype!
                                            db (:body parameters))))}}]
+     ["/statistics/virhetilastot.csv"
+      {:get {:summary "Hae virhetyyppien tilastot"
+             :access rooli-service/paakayttaja?
+             :responses {200 {:body schema/Str}}
+             :handler (fn [{:keys [db]}]
+                        (-> (valvonta-service/virhetilastot db)
+                            valvonta-service/virhetilastot->csv
+                            r/response))}}]
      ["/:id"
       {:conflicting true
        :put         {:summary    "Muuta virhetyypin tietoja."
