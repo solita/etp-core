@@ -41,5 +41,5 @@
     (let [resp (handler req)]
       (cond-> resp
         (not (contains-header? resp cache-control))
-        (-> (with-default-header cache-control (str "max-age=" seconds))
+        (-> (with-default-header cache-control (str "max-age=" seconds ",public"))
             (with-default-header pragma nil))))))
