@@ -63,6 +63,11 @@
 (defn csv-response-headers [filename inline?]
   (file-response-headers "text/csv" inline? filename))
 
+;; This is only intended for asynchronous responses. Otherwise, use
+;; the wrap-cache-control middleware.
+(defn async-cache-headers [ttl-seconds]
+  {"Cache-Control" (str "max-age=" ttl-seconds ",public")})
+
 (defn file-response [body filename content-type inline? not-found]
   (if (nil? body)
     (r/not-found not-found)

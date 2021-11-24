@@ -91,7 +91,7 @@
 
 
 
-(defn csv-route [energiatodistukset-csv]
+(defn csv-route [energiatodistukset-csv cache-ttl-seconds]
   ["/csv/energiatodistukset.csv"
    {:get {:summary    "Hae energiatodistusten tiedot CSV-tiedostona"
           :parameters {:query energiatodistus-schema/EnergiatodistusSearch}
@@ -103,7 +103,8 @@
                                          db whoami (update query :where json/read-value))]
                              (api-stream/result->async-channel
                               request
-                              (api-response/csv-response-headers "energiatodistukset.csv" false)
+                              (merge (api-response/csv-response-headers "energiatodistukset.csv" false)
+                                     (api-response/async-cache-headers cache-ttl-seconds))
                               result))
                           search-exceptions))}}])
 
@@ -112,7 +113,7 @@
    [["/energiatodistukset"
      (search-route public-energiatodistus-schema/Energiatodistus)
      search-count-route
-     (csv-route energiatodistus-csv-service/energiatodistukset-public-csv)
+     (csv-route energiatodistus-csv-service/energiatodistukset-public-csv 43200)
      luokittelut-api/routes]]))
 
 (def private-routes
@@ -120,7 +121,7 @@
     [["/energiatodistukset"
       (search-route valvonta-schema/Energiatodistus+Valvonta)
       search-count-route
-      (csv-route energiatodistus-csv-service/energiatodistukset-private-csv)
+      (csv-route energiatodistus-csv-service/energiatodistukset-private-csv 900)
 
       ["/xlsx/energiatodistukset.xlsx"
        {:get {:summary    "Hae energiatodistusten tiedot XLSX-tiedostona"
