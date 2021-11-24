@@ -4,7 +4,7 @@
             [schema-tools.core :as schema-tools]
             [clojure.walk :as walk]
             [schema-tools.coerce :as schema-tools-coerce])
-  (:import (schema.core Maybe)))
+  (:import (schema.core Maybe ConditionalSchema)))
 
 (defn schema-record?
   "Tests if the parameter is schema record."
@@ -13,6 +13,9 @@
 
 (defn maybe? [schema]
   (instance? Maybe schema))
+
+(defn conditional? [schema]
+  (instance? ConditionalSchema schema))
 
 (defn optional-key-for-maybe [schema]
   (let [convert

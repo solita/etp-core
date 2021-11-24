@@ -72,3 +72,9 @@
 
 (def laatija? #(and (contains? % :etunimi) (contains? % :sukunimi)))
 (def tiedoksi? #(and (contains? % :name)))
+
+(def Energiatodistus+Valvonta
+  (energiatodistus-schema/assoc-energiatodistus
+    :valvonta (assoc ValvontaSave
+                :ongoing schema/Bool
+                :type-id (schema/maybe common-schema/Key))))

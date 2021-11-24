@@ -4,6 +4,7 @@
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.schema.public-energiatodistus :as public-energiatodistus-schema]
+            [solita.etp.schema.valvonta-oikeellisuus :as valvonta-schema]
             [solita.etp.api.energiatodistus-crud :as crud-api]
             [solita.etp.api.energiatodistus-xml :as xml-api]
             [solita.etp.api.energiatodistus-liite :as liite-api]
@@ -117,7 +118,7 @@
 (def private-routes
   (concat
     [["/energiatodistukset"
-      (search-route energiatodistus-schema/Energiatodistus)
+      (search-route valvonta-schema/Energiatodistus+Valvonta)
       search-count-route
       (csv-route energiatodistus-csv-service/energiatodistukset-private-csv)
 
