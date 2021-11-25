@@ -160,6 +160,17 @@
                               (api-response/get-response
                                 (viesti-service/find-energiatodistus-ketjut db whoami id)
                                 (str "Energiatodistus " id " does not exists.")))}}]
+        ["/korvattavat"
+         {:get {:summary    "Hae energiatodistuksen liittyvät muuta energiatodistukset,
+                             jotka mahdollisesti pitäisi korvata"
+                :parameters {:path {:id common-schema/Key}}
+                :responses  {200 {:body [energiatodistus-schema/EnergiatodistusForAnyLaatija]}
+                             404 {:body schema/Str}}
+                :access     rooli-service/energiatodistus-reader?
+                :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+                              (api-response/get-response
+                                (energiatodistus-service/find-korvattavat db id)
+                                (str "Energiatodistus " id " does not exists.")))}}]
         history-api/routes]]
       ["/2013"
        ["" (crud-api/post 2013 energiatodistus-schema/EnergiatodistusSave2013)]

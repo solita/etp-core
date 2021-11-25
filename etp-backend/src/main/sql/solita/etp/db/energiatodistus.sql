@@ -83,3 +83,27 @@ select
   valaistus$kayttoaste,
   valaistus$lampokuorma
 from validation_sisainen_kuorma where versio = :versio;
+
+-- name: select-korvattavat
+with korvaava as (
+  select
+    pt$rakennustunnus,
+    pt$katuosoite_fi, pt$katuosoite_sv,
+    pt$postinumero
+  from energiatodistus where energiatodistus.id = :id
+)
+select energiatodistus.*,
+  fullname(kayttaja.*) "laatija-fullname",
+  korvaava_energiatodistus.id as korvaava_energiatodistus_id
+from energiatodistus cross join korvaava
+  inner join kayttaja on kayttaja.id = energiatodistus.laatija_id
+  left join energiatodistus korvaava_energiatodistus on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
+where energiatodistus.tila_id in (select allekirjoitettu from et_tilat union select hylatty from et_tilat) and (
+  energiatodistus.pt$rakennustunnus = korvaava.pt$rakennustunnus or
+  (energiatodistus.pt$postinumero = korvaava.pt$postinumero and
+    (energiatodistus.pt$katuosoite_fi = korvaava.pt$katuosoite_fi or
+     energiatodistus.pt$katuosoite_sv = korvaava.pt$katuosoite_sv)))
+order by
+  case when energiatodistus.pt$rakennustunnus = korvaava.pt$rakennustunnus then 1 end nulls last,
+  energiatodistus.allekirjoitusaika desc
+limit 10;
