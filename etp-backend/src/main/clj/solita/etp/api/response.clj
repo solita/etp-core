@@ -57,8 +57,8 @@
 
 (defn file-response-headers [content-type inline? filename]
   {"Content-Type" (or content-type "application/octet-stream")
-   "Content-Disposition:" (str (if inline? "inline" "attachment")
-                               (str "; filename=\"" filename "\""))})
+   "Content-Disposition" (str (if inline? "inline" "attachment")
+                              (str "; filename=\"" filename "\""))})
 
 (defn csv-response-headers [filename inline?]
   (file-response-headers "text/csv" inline? filename))
