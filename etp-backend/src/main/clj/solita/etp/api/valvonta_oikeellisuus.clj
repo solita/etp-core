@@ -47,7 +47,7 @@
              :handler (fn [{:keys [db]}]
                         (-> (valvonta-service/virhetilastot db)
                             valvonta-service/virhetilastot->csv
-                            r/response))}}]
+                            (api-response/csv-response "virhetilastot.csv" "")))}}]
      ["/:id"
       {:conflicting true
        :put         {:summary    "Muuta virhetyypin tietoja."

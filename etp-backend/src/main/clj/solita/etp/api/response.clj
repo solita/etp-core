@@ -57,8 +57,8 @@
 
 (defn file-response-headers [content-type inline? filename]
   {"Content-Type" (or content-type "application/octet-stream")
-   "Content-Disposition:" (str (if inline? "inline" "attachment")
-                               (str "; filename=\"" filename "\""))})
+   "Content-Disposition" (str (if inline? "inline" "attachment")
+                              (str "; filename=\"" filename "\""))})
 
 (defn csv-response-headers [filename inline?]
   (file-response-headers "text/csv" inline? filename))
@@ -74,6 +74,9 @@
     {:status 200
      :headers (file-response-headers content-type inline? filename)
      :body body}))
+
+(defn csv-response [body filename not-found]
+  (file-response body filename "text/csv" true not-found))
 
 (defn pdf-response [body filename not-found]
   (file-response body filename "application/pdf" true not-found))
