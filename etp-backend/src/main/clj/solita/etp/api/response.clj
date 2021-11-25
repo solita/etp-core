@@ -75,6 +75,9 @@
      :headers (file-response-headers content-type inline? filename)
      :body body}))
 
+(defn csv-response [body filename not-found]
+  (file-response body filename "text/csv" true not-found))
+
 (defn pdf-response [body filename not-found]
   (file-response body filename "application/pdf" true not-found))
 
