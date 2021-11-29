@@ -51,9 +51,9 @@
        {:get {:summary    "Hae yrityksen laatijat"
               :parameters {:path {:id common-schema/Key}}
               :responses  {200 {:body [yritys-schema/Laatija]}}
-              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                             (r/response
-                              (yritys-service/find-laatijat db id)))}}]
+                              (yritys-service/find-laatijat db whoami id)))}}]
       ["/:laatija-id"
        {:put {:summary    "Liitä laatija yritykseen - hyväksytty"
               :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
