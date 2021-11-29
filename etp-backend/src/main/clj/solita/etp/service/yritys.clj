@@ -15,8 +15,23 @@
 (defn find-all-yritykset [db]
   (yritys-db/select-all-yritykset db))
 
-(defn find-laatijat [db id]
+(defn- find-laatijat-nocheck [db id]
   (yritys-db/select-laatijat db {:id id}))
+
+(defn- laatija-in-laatijat? [laatija-id laatijat]
+  (some #(= laatija-id (:id %))
+        (filter laatija-yritys/accepted? laatijat)))
+
+(defn- assert-permission-laatijat! [whoami yritys-id laatijat]
+  (if (or (rooli-service/paakayttaja? whoami)
+          (laatija-in-laatijat? (:id whoami) laatijat))
+    laatijat
+    (exception/throw-forbidden!
+     (str "User " (:id whoami) " is not paakayttaja or "
+          "does not belong to organization: " yritys-id))))
+
+(defn find-laatijat [db whoami id]
+  (assert-permission-laatijat! whoami id (find-laatijat-nocheck db id)))
 
 (defn find-all-laskutuskielet [db]
   (yritys-db/select-all-laskutuskielet db))
@@ -24,25 +39,29 @@
 (defn find-all-verkkolaskuoperaattorit [db]
   (yritys-db/select-all-verkkolaskuoperaattorit db))
 
-(defn laatija-in-yritys? [db laatija-id yritys-id]
-  (some #(= laatija-id (:id %))
-        (filter laatija-yritys/accepted? (find-laatijat db yritys-id))))
+(defn laatija-in-yritys? [db whoami laatija-id yritys-id]
+  (let [find-impl (if (= laatija-id (:id whoami))
+                    ;; Laatija may check their own status
+                    (fn [] (find-laatijat-nocheck db yritys-id))
+                    ;; Trying to check other people requires going
+                    ;; through the usual visibility checks
+                    (fn [] (find-laatijat db whoami yritys-id))) ]
+    (some #(= laatija-id (:id %))
+          (filter laatija-yritys/accepted? (find-impl)))))
 
-(defn assert-modify-permission! [db whoami yritys-id]
-  (when-not (or (laatija-in-yritys? db (:id whoami) yritys-id)
-                (rooli-service/paakayttaja? whoami))
-    (exception/throw-forbidden!
-      (str "User " (:id whoami) " is not paakayttaja or "
-           "does not belong to organization: " yritys-id))))
+
+(defn assert-permission! [db whoami yritys-id]
+  (let [laatijat (find-laatijat-nocheck db yritys-id)]
+    (assert-permission-laatijat! whoami yritys-id laatijat)))
 
 (defn update-yritys!
   [db whoami id yritys]
-  (assert-modify-permission! db whoami id)
+  (assert-permission! db whoami id)
   (yritys-db/update-yritys! db (assoc yritys :id id)))
 
 (defn add-laatija-yritys!
   ([db whoami laatija-id yritys-id]
-   (assert-modify-permission! db whoami yritys-id)
+   (assert-permission! db whoami yritys-id)
    (add-laatija-yritys! db laatija-id yritys-id))
   ([db laatija-id yritys-id]
    (yritys-db/insert-laatija-yritys!

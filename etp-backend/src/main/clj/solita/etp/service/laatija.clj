@@ -131,7 +131,7 @@
 (defn detach-laatija-yritys! [db whoami laatija-id yritys-id]
   (if (or (rooli-service/paakayttaja? whoami)
           (= laatija-id (:id whoami))
-          (yritys-service/laatija-in-yritys? db (:id whoami) yritys-id))
+          (yritys-service/laatija-in-yritys? db whoami (:id whoami) yritys-id))
     (laatija-db/delete-laatija-yritys!
      db
      (map/bindings->map laatija-id yritys-id))
