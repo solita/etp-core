@@ -123,19 +123,19 @@
   (if (= laatija-id (:id whoami))
     (do
       (laatija-db/insert-laatija-yritys!
-       db
-       (map/bindings->map laatija-id yritys-id))
+        db (map/bindings->map laatija-id yritys-id))
       nil)
-    (exception/throw-forbidden!)))
+    (exception/throw-forbidden!
+      (str "User " (:id whoami) " is not allowed to add laatija: " laatija-id))))
 
 (defn detach-laatija-yritys! [db whoami laatija-id yritys-id]
   (if (or (rooli-service/paakayttaja? whoami)
           (= laatija-id (:id whoami))
-          (yritys-service/laatija-in-yritys? db whoami (:id whoami) yritys-id))
+          (yritys-service/laatija-in-yritys? db (:id whoami) yritys-id))
     (laatija-db/delete-laatija-yritys!
-     db
-     (map/bindings->map laatija-id yritys-id))
-    (exception/throw-forbidden!)))
+      db (map/bindings->map laatija-id yritys-id))
+    (exception/throw-forbidden!
+      (str "User " (:id whoami) " is not allowed to detach laatija: " laatija-id))))
 
 (defn count-public-laatijat [db]
   (first (laatija-db/select-count-public-laatijat db)))
