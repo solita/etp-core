@@ -29,6 +29,7 @@ from vk_valvonta valvonta
 where
   not valvonta.deleted and
   (last_toimenpide.id is null or last_toimenpide.type_id <> 5 or :include-closed) and
+  (:toimenpidetype-id::int is null or :toimenpidetype-id = last_toimenpide.type_id) and
   (valvonta.valvoja_id = :valvoja-id or
     (valvonta.valvoja_id is not null) = :has-valvoja or
     (:valvoja-id::int is null and :has-valvoja::boolean is null))
@@ -52,6 +53,7 @@ left join lateral (
 where
   not valvonta.deleted and
   (last_toimenpide.id is null or last_toimenpide.type_id <> 5 or :include-closed) and
+  (:toimenpidetype-id::int is null or :toimenpidetype-id = last_toimenpide.type_id) and
   (valvonta.valvoja_id = :valvoja-id or
    (valvonta.valvoja_id is not null) = :has-valvoja or
    (:valvoja-id::int is null and :has-valvoja::boolean is null));
