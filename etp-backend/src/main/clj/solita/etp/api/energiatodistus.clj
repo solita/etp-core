@@ -138,6 +138,18 @@
                                 "energiatodistukset.xlsx"
                                 "Not found.")
                               search-exceptions))}}]
+      ["/korvattavat"
+       {:get {:summary    "Hae energiatodistukseen liittyvät energiatodistukset,
+                           jotka mahdollisesti pitäisi korvata"
+              :parameters {:query
+                           {(schema/optional-key :rakennustunnus) schema/Str
+                            (schema/optional-key :postinumero)    schema/Int
+                            (schema/optional-key :katuosoite-fi)  schema/Str
+                            (schema/optional-key :katuosoite-sv)  schema/Str}}
+              :responses  {200 {:body [energiatodistus-schema/EnergiatodistusForAnyLaatija]}}
+              :access     rooli-service/energiatodistus-reader?
+              :handler    (fn [{{:keys [query]} :parameters :keys [db]}]
+                            (r/response (energiatodistus-service/find-korvattavat db query)))}}]
       ["/all"
        ["/:id"
         [""

@@ -275,10 +275,16 @@
   (schema->db-row->energiatodistus
     energiatodistus-schema/EnergiatodistusForAnyLaatija))
 
-(defn find-energiatodistus-any-laatija
-  ([db id]
-   (first (map db-row->energiatodistus-for-any-laatija
-               (energiatodistus-db/select-energiatodistus db {:id id})))))
+(defn find-energiatodistus-any-laatija [db id]
+  (first (map db-row->energiatodistus-for-any-laatija
+              (energiatodistus-db/select-energiatodistus db {:id id}))))
+
+(defn find-korvattavat [db query]
+  (map db-row->energiatodistus-for-any-laatija
+       (energiatodistus-db/select-korvattavat
+         db (merge {:rakennustunnus nil :postinumero nil
+                    :katuosoite-fi nil :katuosoite-sv nil}
+                   query))))
 
 (defn- throw-invalid-replace! [id msg]
   (exception/throw-ex-info! :invalid-replace (str "Replaceable energiatodistus " id msg)))
