@@ -1,12 +1,12 @@
 -- name: select-kayttaja
 select id, etunimi, sukunimi, email, puhelin, passivoitu, rooli_id as rooli,
-       login, ensitallennus, cognito_id as cognitoid,
+       login, verifytime, cognito_id as cognitoid,
        virtu$localid, virtu$organisaatio, henkilotunnus
 from kayttaja where id = :id
 
 -- name: select-kayttajat
 select id, etunimi, sukunimi, email, puhelin, passivoitu, rooli_id as rooli,
-  login, ensitallennus, cognito_id as cognitoid,
+  login, verifytime, cognito_id as cognitoid,
   virtu$localid, virtu$organisaatio, henkilotunnus
 from kayttaja where rooli_id in (1, 2, 3)
 
@@ -18,7 +18,6 @@ select k.id,
        k.puhelin,
        k.passivoitu,
        k.rooli_id as rooli,
-       k.ensitallennus,
        k.cognito_id as cognitoid,
        k.virtu$localid,
        k.virtu$organisaatio,
