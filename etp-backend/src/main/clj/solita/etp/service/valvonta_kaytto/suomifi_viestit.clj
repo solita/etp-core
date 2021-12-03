@@ -89,12 +89,18 @@
 
 
 (defn- create-cover-page [osapuoli]
-  (pdf/generate-pdf->input-stream {:layout "pdf/ipost-address-page.html"
-                                   :data   {:lahettaja     lahettaja
-                                            :vastaanottaja {:nimi             (str (:etunimi osapuoli) " " (:sukunimi osapuoli))
-                                                            :jakeluosoite     (:jakeluosoite osapuoli)
-                                                            :postinumero      (:postinumero osapuoli)
-                                                            :postitoimipaikka (:postitoimipaikka osapuoli)}}}))
+  (pdf/generate-pdf->input-stream
+    {:layout "pdf/ipost-address-page.html"
+     :data   {:lahettaja lahettaja
+              :vastaanottaja
+              {:tarkenne?        (-> osapuoli :vastaanottajan-tarkenne str/blank? not)
+               :tarkenne         (:vastaanottajan-tarkenne osapuoli)
+               :nimi             (if (osapuoli/henkilo? osapuoli)
+                                   (str (:etunimi osapuoli) " " (:sukunimi osapuoli))
+                                   (:nimi osapuoli))
+               :jakeluosoite     (:jakeluosoite osapuoli)
+               :postinumero      (:postinumero osapuoli)
+               :postitoimipaikka (:postitoimipaikka osapuoli)}}}))
 
 (defn- tiedosto-sisalto [document osapuoli]
   (pdf/merge-pdf
