@@ -10,6 +10,7 @@
   {(schema/optional-key :valvoja-id) common-schema/Key
    (schema/optional-key :has-valvoja) schema/Bool
    (schema/optional-key :include-closed) schema/Bool
+   (schema/optional-key :keyword) schema/Str
    (schema/optional-key :toimenpidetype-id) common-schema/Key})
 
 (def Template

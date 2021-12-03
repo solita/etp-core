@@ -34,6 +34,7 @@
   {:valvoja-id nil
    :has-valvoja nil
    :include-closed false
+   :keyword nil
    :toimenpidetype-id nil
    :limit 10
    :offset 0})

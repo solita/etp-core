@@ -30,6 +30,11 @@ where
   not valvonta.deleted and
   (last_toimenpide.id is null or last_toimenpide.type_id <> 5 or :include-closed) and
   (:toimenpidetype-id::int is null or :toimenpidetype-id = last_toimenpide.type_id) and
+  (:keyword::text is null or
+   valvonta.rakennustunnus                  like :keyword or
+   valvonta.katuosoite                      like :keyword or
+   lpad(valvonta.postinumero::text, 5, '0') like :keyword or
+   last_toimenpide.diaarinumero             like :keyword) and
   (valvonta.valvoja_id = :valvoja-id or
     (valvonta.valvoja_id is not null) = :has-valvoja or
     (:valvoja-id::int is null and :has-valvoja::boolean is null))
@@ -54,6 +59,11 @@ where
   not valvonta.deleted and
   (last_toimenpide.id is null or last_toimenpide.type_id <> 5 or :include-closed) and
   (:toimenpidetype-id::int is null or :toimenpidetype-id = last_toimenpide.type_id) and
+  (:keyword::text is null or
+   valvonta.rakennustunnus                  like :keyword or
+   valvonta.katuosoite                      like :keyword or
+   lpad(valvonta.postinumero::text, 5, '0') like :keyword or
+   last_toimenpide.diaarinumero             like :keyword) and
   (valvonta.valvoja_id = :valvoja-id or
    (valvonta.valvoja_id is not null) = :has-valvoja or
    (:valvoja-id::int is null and :has-valvoja::boolean is null));
