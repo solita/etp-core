@@ -34,7 +34,10 @@ where
    valvonta.rakennustunnus                  ilike :keyword or
    valvonta.katuosoite                      ilike :keyword or
    lpad(valvonta.postinumero::text, 5, '0') ilike :keyword or
-   last_toimenpide.diaarinumero             ilike :keyword) and
+   valvonta.ilmoituspaikka_description      ilike :keyword or
+   valvonta.ilmoitustunnus                  ilike :keyword or
+   last_toimenpide.diaarinumero             ilike :keyword or
+   last_toimenpide.description              ilike :keyword) and
   (valvonta.valvoja_id = :valvoja-id or
     (valvonta.valvoja_id is not null) = :has-valvoja or
     (:valvoja-id::int is null and :has-valvoja::boolean is null))
@@ -63,7 +66,10 @@ where
    valvonta.rakennustunnus                  ilike :keyword or
    valvonta.katuosoite                      ilike :keyword or
    lpad(valvonta.postinumero::text, 5, '0') ilike :keyword or
-   last_toimenpide.diaarinumero             ilike :keyword) and
+   valvonta.ilmoituspaikka_description      ilike :keyword or
+   valvonta.ilmoitustunnus                  ilike :keyword or
+   last_toimenpide.diaarinumero             ilike :keyword or
+   last_toimenpide.description              ilike :keyword) and
   (valvonta.valvoja_id = :valvoja-id or
    (valvonta.valvoja_id is not null) = :has-valvoja or
    (:valvoja-id::int is null and :has-valvoja::boolean is null));
