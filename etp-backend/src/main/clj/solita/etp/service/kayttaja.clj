@@ -21,7 +21,7 @@
 
 (defn db-row->kayttaja [schema]
   (comp
-   (coerce-kayttaja schema)
+    (coerce-kayttaja schema)
     (partial flat/flat->tree #"\$")))
 
 (defn find-kayttaja

@@ -4,8 +4,8 @@
             [buddy.hashers :as hashers]
             [flathead.flatten :as flat]
             [solita.etp.db :as db]
-            [solita.etp.service.json :as json]
-            [solita.etp.schema.whoami :as whoami-schema]))
+            [solita.etp.service.kayttaja :as kayttaja-service]
+            [solita.etp.schema.kayttaja :as kayttaja-schema]))
 
 ;; *** Require sql functions ***
 (db/require-queries 'whoami)
@@ -15,26 +15,30 @@
     (:valid (hashers/verify api-key api-key-hash))
     false))
 
-(defn- find-whoami-with-api-key-hash [db opts]
+(def db-row->whoami
+  (kayttaja-service/db-row->kayttaja
+    (assoc kayttaja-schema/Whoami
+      :api-key-hash (schema/maybe schema/Str))))
+
+(defn- find-whoami-with-api-key-hash [db query]
   (some->> (merge {:email nil
                    :cognitoid nil
                    :henkilotunnus nil
                    :virtu {:localid nil
                            :organisaatio nil}}
-                  opts)
+                  query)
            (flat/tree->flat "_")
            (whoami-db/select-whoami db)
-           first
-           (flat/flat->tree #"\$")))
+           first db-row->whoami))
 
-(defn find-whoami [db opts]
-  (some-> (find-whoami-with-api-key-hash db opts)
-          (st/select-schema whoami-schema/Whoami)))
+(defn find-whoami [db query]
+  (some-> (find-whoami-with-api-key-hash db query)
+          (st/select-schema kayttaja-schema/Whoami)))
 
 (defn find-whoami-by-email-and-api-key [db email api-key]
   (let [whoami (find-whoami-with-api-key-hash db {:email email})]
     (when (verified-api-key? api-key (:api-key-hash whoami))
-      (st/select-schema whoami whoami-schema/Whoami))))
+      (st/select-schema whoami kayttaja-schema/Whoami))))
 
 (defn update-kayttaja-with-whoami! [db whoami]
   (whoami-db/update-kayttaja-with-whoami! db whoami))

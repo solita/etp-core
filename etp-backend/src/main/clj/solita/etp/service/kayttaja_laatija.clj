@@ -8,9 +8,10 @@
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.schema.laatija :as laatija-schema]
             [solita.etp.schema.common :as common-schema]
-            [flathead.flatten :as flat]))
+            [flathead.flatten :as flat])
+  (:import (java.time Instant)))
 
-(defn- update-kayttaja [db id kayttaja]
+(defn- update-kayttaja! [db id kayttaja]
   (db/with-db-exception-translation
     jdbc/update!
     db
@@ -29,7 +30,7 @@
         id (:id existing-laatija)]
     (if existing-laatija
       (do
-        (update-kayttaja db id (dissoc kayttaja :henkilotunnus))
+        (update-kayttaja! db id (dissoc kayttaja :henkilotunnus))
         (laatija-service/update-laatija-by-id! db id laatija)
         id)
       (let [id (add-kayttaja db kayttaja)]
@@ -48,9 +49,10 @@
                 kayttaja-laatija laatija-schema/KayttajaAdminUpdate))
           (rooli-service/paakayttaja? whoami))
     (let [kayttaja (st/select-schema kayttaja-laatija laatija-schema/KayttajaUpdate)
-          laatija (st/select-schema kayttaja-laatija laatija-schema/LaatijaUpdate)]
+          laatija (st/select-schema kayttaja-laatija laatija-schema/LaatijaUpdate)
+          verification (when (= id (:id whoami)) { :verifytime (Instant/now) })]
       (jdbc/with-db-transaction
         [db db]
-        (update-kayttaja db id kayttaja)
+        (update-kayttaja! db id (merge verification kayttaja))
         (laatija-service/update-laatija-by-id! db id laatija)))
     (exception/throw-forbidden!)))
