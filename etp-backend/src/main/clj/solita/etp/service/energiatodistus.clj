@@ -205,11 +205,13 @@
 
 (defn- validate-laskutettava-yritys-id! [db laatija-id energiatodistus]
   (if-let [laskutettava-yritys-id (:laskutettava-yritys-id energiatodistus)]
-    (let [laskutusosoitteet (set (map :id (laatija-service/find-laatija-laskutusosoitteet db laatija-id)))]
+    (let [laskutusosoitteet (->> (laatija-service/find-laatija-laskutusosoitteet db laatija-id)
+                                 (filter :valid) (map :id) set)]
       (when-not (contains? laskutusosoitteet laskutettava-yritys-id)
-        (exception/throw-forbidden!
+        (exception/throw-ex-info!
+          :invalid-laskutusosoite
           (str "Laatija: " laatija-id " does not belong to yritys: "
-               laskutettava-yritys-id))))))
+               laskutettava-yritys-id " or yritys is deleted."))))))
 
 (defn- save-laskutusosoite-id [energiatodistus]
   (-> energiatodistus

@@ -116,6 +116,7 @@
 (def Laskutusosoite
   (assoc geo-schema/Postiosoite
     :id common-schema/Key
+    :valid schema/Bool
     :ytunnus (schema/maybe schema/Str)
     :nimi schema/Str
     :verkkolaskuoperaattori (schema/maybe common-schema/Key)
