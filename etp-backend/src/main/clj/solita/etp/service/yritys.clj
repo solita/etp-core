@@ -63,3 +63,7 @@
      (let [id (:id (yritys-db/insert-yritys<! db yritys))]
        (add-laatija-yritys! db (:id whoami) id)
        id))))
+
+(defn set-yritys-deleted! [db whoami id deleted]
+  (db-assert-permission! db whoami id)
+  (yritys-db/update-yritys-deleted! db {:id id :deleted deleted}))

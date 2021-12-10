@@ -81,7 +81,8 @@ select
   -1 id, null ytunnus, k.etunimi || ' ' || k.sukunimi nimi,
   l.vastaanottajan_tarkenne, l.jakeluosoite,
   l.postinumero, l.postitoimipaikka, l.maa,
-  null verkkolaskuoperaattori, null verkkolaskuosoite
+  null verkkolaskuoperaattori, null verkkolaskuosoite,
+  true as valid
 from laatija l inner join kayttaja k on l.id = k.id
 where l.id = :id
 union all
@@ -89,13 +90,11 @@ select
   y.id, y.ytunnus, y.nimi,
   y.vastaanottajan_tarkenne, y.jakeluosoite,
   y.postinumero, y.postitoimipaikka, y.maa,
-  y.verkkolaskuoperaattori, y.verkkolaskuosoite
-from yritys y
-where exists (
-  select 1 from laatija_yritys
-  where laatija_yritys.laatija_id = :id and
-        laatija_yritys.yritys_id = y.id and
-        laatija_yritys.tila_id = 1);
+  y.verkkolaskuoperaattori, y.verkkolaskuosoite,
+  not y.deleted and laatija_yritys.tila_id = 1 as valid
+from yritys y inner join laatija_yritys
+  on laatija_yritys.laatija_id = :id and
+     laatija_yritys.yritys_id = y.id;
 
 -- name: select-count-public-laatijat
 select
