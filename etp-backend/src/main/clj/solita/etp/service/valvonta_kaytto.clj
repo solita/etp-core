@@ -31,8 +31,13 @@
   (update valvonta-db-row :postinumero (maybe/lift1 #(format "%05d" %))))
 
 (def ^:private default-valvonta-query
-  {:valvoja-id nil :has-valvoja nil :include-closed false
-   :limit 10 :offset 0})
+  {:valvoja-id nil
+   :has-valvoja nil
+   :include-closed false
+   :keyword nil
+   :toimenpidetype-id nil
+   :limit 10
+   :offset 0})
 
 (defn- nil-if-not-exists [key object]
   (update object key (logic/when* (comp nil? :id) (constantly nil))))

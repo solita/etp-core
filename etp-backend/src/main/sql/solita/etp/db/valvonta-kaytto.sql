@@ -29,6 +29,15 @@ from vk_valvonta valvonta
 where
   not valvonta.deleted and
   (last_toimenpide.id is null or last_toimenpide.type_id <> 5 or :include-closed) and
+  (:toimenpidetype-id::int is null or :toimenpidetype-id = last_toimenpide.type_id) and
+  (:keyword::text is null or
+   valvonta.rakennustunnus                  ilike :keyword or
+   valvonta.katuosoite                      ilike :keyword or
+   lpad(valvonta.postinumero::text, 5, '0') ilike :keyword or
+   valvonta.ilmoituspaikka_description      ilike :keyword or
+   valvonta.ilmoitustunnus                  ilike :keyword or
+   last_toimenpide.diaarinumero             ilike :keyword or
+   last_toimenpide.description              ilike :keyword) and
   (valvonta.valvoja_id = :valvoja-id or
     (valvonta.valvoja_id is not null) = :has-valvoja or
     (:valvoja-id::int is null and :has-valvoja::boolean is null))
@@ -52,6 +61,15 @@ left join lateral (
 where
   not valvonta.deleted and
   (last_toimenpide.id is null or last_toimenpide.type_id <> 5 or :include-closed) and
+  (:toimenpidetype-id::int is null or :toimenpidetype-id = last_toimenpide.type_id) and
+  (:keyword::text is null or
+   valvonta.rakennustunnus                  ilike :keyword or
+   valvonta.katuosoite                      ilike :keyword or
+   lpad(valvonta.postinumero::text, 5, '0') ilike :keyword or
+   valvonta.ilmoituspaikka_description      ilike :keyword or
+   valvonta.ilmoitustunnus                  ilike :keyword or
+   last_toimenpide.diaarinumero             ilike :keyword or
+   last_toimenpide.description              ilike :keyword) and
   (valvonta.valvoja_id = :valvoja-id or
    (valvonta.valvoja_id is not null) = :has-valvoja or
    (:valvoja-id::int is null and :has-valvoja::boolean is null));
