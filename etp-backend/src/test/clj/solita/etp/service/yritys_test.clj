@@ -33,7 +33,7 @@
 (t/deftest add-and-find-yritys-test
   (let [{:keys [yritykset]} (test-data-set)]
     (doseq [[id yritys-add] yritykset]
-      (t/is (= (assoc yritys-add :id id) (service/find-yritys ts/*db* id))))))
+      (t/is (= (assoc yritys-add :id id :deleted false) (service/find-yritys ts/*db* id))))))
 
 (t/deftest add-yritys-with-duplicate-ytunnus-nimi-and-vastaanottajan-tarkenne-test
   (let [{:keys [laatijat]} (test-data-set)
@@ -61,7 +61,7 @@
                               whoami
                               yritys-id
                               update)
-      (t/is (= (assoc update :id yritys-id)
+      (t/is (= (assoc update :id yritys-id :deleted false)
                (service/find-yritys ts/*db* yritys-id))))))
 
 (t/deftest update-yritys-no-permissions-test

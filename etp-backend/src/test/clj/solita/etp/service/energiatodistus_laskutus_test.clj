@@ -65,7 +65,8 @@
         energiatodistus (assoc (energiatodistus-test-data/generate-add 2018 false) :laskutusosoite-id 1)]
     (t/is
       (= (etp-test/catch-ex-data #(energiatodistus-test-data/insert! [energiatodistus] laatija-id))
-         {:type :forbidden :reason "Laatija: 1 does not belong to yritys: 1"}))))
+         {:type :invalid-laskutusosoite
+          :message "Laatija: 1 does not belong to yritys: 1 or yritys is deleted."}))))
 
 (t/deftest update-invalid-yritys-laskutus
   (let [laatija-id (-> (laatija-test-data/generate-and-insert! 1) keys first)
@@ -78,4 +79,5 @@
                                     (whoami/laatija laatija-id)
                                     id
                                     {:laskutusosoite-id 1}))
-         {:type :forbidden :reason "Laatija: 1 does not belong to yritys: 1"}))))
+         {:type :invalid-laskutusosoite
+          :message "Laatija: 1 does not belong to yritys: 1 or yritys is deleted."}))))
