@@ -7,7 +7,11 @@
 (def ValvontaQuery
   {(schema/optional-key :valvoja-id) common-schema/Key
    (schema/optional-key :has-valvoja) schema/Bool
-   (schema/optional-key :include-closed) schema/Bool})
+   (schema/optional-key :include-closed) schema/Bool
+   (schema/optional-key :keyword) schema/Str
+   (schema/optional-key :toimenpidetype-id) common-schema/Key
+   (schema/optional-key :laatija-id) common-schema/Key
+   (schema/optional-key :kayttotarkoitus-id) common-schema/Key})
 
 (def ValvontaSave
   {:pending    schema/Bool
