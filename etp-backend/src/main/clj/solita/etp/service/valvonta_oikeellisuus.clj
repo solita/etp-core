@@ -5,6 +5,7 @@
     [solita.etp.service.valvonta-oikeellisuus.asha :as asha-valvonta-oikeellisuus]
     [solita.etp.service.valvonta-oikeellisuus.toimenpide :as toimenpide]
     [solita.etp.service.valvonta-oikeellisuus.email :as email]
+    [solita.etp.service.csv :as csv-service]
     [clojure.data.csv :as csv]
     [clojure.java.jdbc :as jdbc]
     [solita.common.map :as map]
@@ -346,3 +347,24 @@
            jdbc/update! db :vo-note
            {:description description} ["id = ?" id]
            db/default-opts)))
+
+(def ^:private csv-header
+  (csv-service/csv-line
+    ["energiatodistus-id",
+     "toimenpide-id" "toimenpidetyyppi" "aika"]))
+(defn csv [db]
+  (fn [write!]
+    (write! csv-header)
+    (jdbc/query
+      db
+      "select energiatodistus.id,
+         toimenpide.id, toimenpidetype.label_fi, toimenpide.publish_time
+       from energiatodistus
+         inner join vo_toimenpide toimenpide on toimenpide.energiatodistus_id = energiatodistus.id
+         inner join vo_toimenpidetype toimenpidetype on toimenpidetype.id = toimenpide.type_id"
+      {:row-fn        (comp write! csv-service/csv-line)
+       :as-arrays?    :cols-as-is
+       :result-set-fn dorun
+       :result-type   :forward-only
+       :concurrency   :read-only
+       :fetch-size    100})))
