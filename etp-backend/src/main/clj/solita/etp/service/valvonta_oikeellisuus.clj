@@ -350,18 +350,25 @@
 
 (def ^:private csv-header
   (csv-service/csv-line
-    ["energiatodistus-id",
-     "toimenpide-id" "toimenpidetyyppi" "aika"]))
+    ["energiatodistus-id", "ktl", "ala-ktl"
+     "toimenpide-id" "toimenpidetyyppi" "aika" "valvoja"]))
 (defn csv [db]
   (fn [write!]
     (write! csv-header)
     (jdbc/query
       db
-      "select energiatodistus.id,
-         toimenpide.id, toimenpidetype.label_fi, toimenpide.publish_time
+      "select
+         energiatodistus.id, ktl.label_fi, alaktl.label_fi,
+         toimenpide.id, toimenpidetype.label_fi, toimenpide.publish_time,
+         fullname(kayttaja)
        from energiatodistus
+         inner join alakayttotarkoitusluokka alaktl
+           on alaktl.id = energiatodistus.pt$kayttotarkoitus and alaktl.versio = energiatodistus.versio
+         inner join kayttotarkoitusluokka ktl
+           on ktl.id = alaktl.kayttotarkoitusluokka_id and ktl.versio = energiatodistus.versio
          inner join vo_toimenpide toimenpide on toimenpide.energiatodistus_id = energiatodistus.id
-         inner join vo_toimenpidetype toimenpidetype on toimenpidetype.id = toimenpide.type_id"
+         inner join vo_toimenpidetype toimenpidetype on toimenpidetype.id = toimenpide.type_id
+         left join kayttaja on kayttaja.id = energiatodistus.valvonta$valvoja_id"
       {:row-fn        (comp write! csv-service/csv-line)
        :as-arrays?    :cols-as-is
        :result-set-fn dorun
