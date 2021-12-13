@@ -8,7 +8,8 @@
             [solita.etp.schema.energiatodistus :as schema]
             [solita.etp.service.complete-energiatodistus
              :as complete-energiatodistus-service]
-            [solita.etp.service.energiatodistus-csv :as service])
+            [solita.etp.service.energiatodistus-csv :as service]
+            [solita.etp.service.csv :as csv-service])
   (:import (java.time Instant)))
 
 (t/use-fixtures :each ts/fixture)
@@ -57,9 +58,9 @@
                               [:foo "b" 5 :x]))))
 
 (t/deftest csv-line-test
-  (t/is (= "\n" (service/csv-line [])))
+  (t/is (= "\n" (csv-service/csv-line [])))
   (t/is (= "\"test\";1,235;-15;2021-01-01T14:15\n"
-           (service/csv-line ["test"
+           (csv-service/csv-line ["test"
                               1.23456
                               -15
                               (Instant/parse "2021-01-01T12:15:00.000Z")]))))
