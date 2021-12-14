@@ -11,7 +11,8 @@
             [solita.etp.schema.valvonta :as valvonta-schema]
             [solita.etp.schema.valvonta-kaytto :as valvonta-kaytto-schema]
             [solita.etp.schema.liite :as liite-schema]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [solita.etp.api.stream :as api-stream]))
 
 (def routes
   [["/valvonta/kaytto"
@@ -78,6 +79,18 @@
                                        {:id (valvonta-service/add-valvonta! db body)})
                                     [{:constraint :vk-valvonta-postinumero-fkey
                                       :response   404}]))}}]
+
+    ["/csv/valvonta.csv"
+     {:get {:summary   "Hae valvontojen tiedot CSV-tiedostona"
+            :responses {200 {:body nil}}
+            :access    rooli-service/paakayttaja?
+            :handler   (fn [{:keys [db] :as request}]
+                         (let [result (valvonta-service/csv db)]
+                           (api-stream/result->async-channel
+                             request
+                             (api-response/csv-response-headers "valvonta.csv" false)
+                             result)))}}]
+
     ["/:id"
      [""
       {:conflicting true
