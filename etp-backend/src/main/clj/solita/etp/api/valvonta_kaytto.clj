@@ -54,7 +54,7 @@
     ["/count"
      {:conflicting true
       :get         {:summary    "Hae käytönvalvontojen lukumäärä."
-                    :parameters {:query valvonta-schema/ValvontaQuery}
+                    :parameters {:query valvonta-kaytto-schema/ValvontaQuery}
                     :responses  {200 {:body {:count schema/Int}}}
                     :access     rooli-service/paakayttaja?
                     :handler    (fn [{{:keys [query]} :parameters :keys [db]}]
@@ -62,7 +62,7 @@
     [""
      {:conflicting true
       :get         {:summary    "Hae käytönvalvonnat (työjono)."
-                    :parameters {:query (merge valvonta-schema/ValvontaQuery
+                    :parameters {:query (merge valvonta-kaytto-schema/ValvontaQuery
                                                valvonta-schema/ValvontaQueryWindow)}
                     :responses  {200 {:body [valvonta-kaytto-schema/ValvontaStatus]}}
                     :access     rooli-service/paakayttaja?

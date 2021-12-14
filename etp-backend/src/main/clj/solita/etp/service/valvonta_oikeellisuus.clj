@@ -44,7 +44,11 @@
 (def ^:private default-filters
   {:valvoja-id nil
    :has-valvoja nil
-   :include-closed false})
+   :include-closed false
+   :keyword nil
+   :toimenpidetype-id nil
+   :laatija-id nil
+   :kayttotarkoitus-id nil})
 
 (def ^:private default-window {:limit 10 :offset 0})
 
