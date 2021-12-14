@@ -16,7 +16,8 @@
             [solita.etp.service.valvonta-kaytto.email :as email]
             [solita.etp.exception :as exception]
             [solita.etp.service.concurrent :as concurrent]
-            [solita.etp.service.liite :as liite-service])
+            [solita.etp.service.liite :as liite-service]
+            [solita.etp.service.csv :as csv-service])
   (:import (java.time Instant)))
 
 (db/require-queries 'valvonta-kaytto)
@@ -321,3 +322,31 @@
            jdbc/update! db :vk-note
            {:description description} ["id = ?" id]
            db/default-opts)))
+
+(def ^:private csv-header
+  (csv-service/csv-line
+    ["id" "rakennustunnus", "diaarinumero"
+     "katuosoite" "postinumero" "postitoimipaikka"
+     "toimenpide-id" "toimenpidetyyppi" "aika" "valvoja"]))
+(defn csv [db]
+  (fn [write!]
+    (write! csv-header)
+    (jdbc/query
+      db
+      "select
+         valvonta.id, valvonta.rakennustunnus, toimenpide.diaarinumero,
+         valvonta.katuosoite, lpad(valvonta.postinumero::text, 5, '0'), postinumero.label_fi,
+         toimenpide.id, toimenpidetype.label_fi, toimenpide.publish_time,
+         fullname(kayttaja)
+       from vk_valvonta valvonta
+         inner join postinumero on postinumero.id = valvonta.postinumero
+         inner join vk_toimenpide toimenpide on toimenpide.valvonta_id = valvonta.id
+         inner join vk_toimenpidetype toimenpidetype on toimenpidetype.id = toimenpide.type_id
+         left join kayttaja on kayttaja.id = valvonta.valvoja_id
+       where not deleted"
+      {:row-fn        (comp write! csv-service/csv-line)
+       :as-arrays?    :cols-as-is
+       :result-set-fn dorun
+       :result-type   :forward-only
+       :concurrency   :read-only
+       :fetch-size    100})))
