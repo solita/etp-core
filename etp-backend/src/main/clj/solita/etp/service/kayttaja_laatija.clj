@@ -5,6 +5,7 @@
             [solita.etp.exception :as exception]
             [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.service.laatija :as laatija-service]
+            [solita.etp.service.laatija.email :as email]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.schema.laatija :as laatija-schema]
             [solita.etp.schema.common :as common-schema]
@@ -22,24 +23,36 @@
 (defn- add-kayttaja [db kayttaja]
   (kayttaja-service/add-kayttaja! db (assoc kayttaja :rooli 0)))
 
+(defn- diff [new-laatija existing-laatija]
+  (cond
+    (not= (:patevyystaso new-laatija) (:patevyystaso existing-laatija))
+    :patevyystaso
+    (not= (:toteamispaivamaara new-laatija) (:toteamispaivamaara existing-laatija))
+    :toteamispaivamaara
+    :else :other))
+
 (defn- upsert-kayttaja-laatija! [db {:keys [henkilotunnus] :as kayttaja-laatija}]
-  "Upserts käyttäjä and laatija WITHOUT transaction."
+  "Upserts kayttaja and laatija WITHOUT transaction."
   (let [kayttaja (st/select-schema kayttaja-laatija laatija-schema/KayttajaAdd)
         laatija (st/select-schema kayttaja-laatija laatija-schema/LaatijaAdd)
         existing-laatija (laatija-service/find-laatija-by-henkilotunnus db henkilotunnus)
-        id (:id existing-laatija)]
+        id (:id existing-laatija)
+        email (:email kayttaja-laatija)]
     (if existing-laatija
       (do
         (update-kayttaja! db id (dissoc kayttaja :henkilotunnus))
         (laatija-service/update-laatija-by-id! db id laatija)
-        id)
+        {:id id :type (diff laatija existing-laatija) :email email})
       (let [id (add-kayttaja db kayttaja)]
-        (laatija-service/add-laatija! db (assoc laatija :id id))))))
+        (laatija-service/add-laatija! db (assoc laatija :id id))
+        {:id id :type :new :email email}))))
 
 (defn upsert-kayttaja-laatijat! [db kayttaja-laatijat]
-  (jdbc/with-db-transaction
-    [db db]
-    (mapv #(upsert-kayttaja-laatija! db %) kayttaja-laatijat)))
+  (let [results (jdbc/with-db-transaction
+                 [db db]
+                 (mapv #(upsert-kayttaja-laatija! db %) kayttaja-laatijat))]
+    (email/send-emails! results)
+    (map :id results)))
 
 (defn update-kayttaja-laatija! [db whoami id kayttaja-laatija]
   (if (or (and (= id (:id whoami))
