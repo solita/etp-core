@@ -126,7 +126,8 @@
             (tag "Käytönvalvonta API" valvonta-kaytto-api/routes)
             (tag "Valvonta API" valvonta-api/routes)
             (tag "Viesti API" viesti-api/routes)
-            (tag "Sivu API" sivu-api/routes))]
+            (tag "Sivu API" sivu-api/routes)
+            (tag "Tilastointi API" statistics-api/routes))]
    ["/external" {:middleware [[security/wrap-whoami-from-basic-auth
                                "Access to external API"]
                               [security/wrap-access]
