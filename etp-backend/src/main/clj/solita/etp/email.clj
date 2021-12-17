@@ -1,6 +1,7 @@
 (ns solita.etp.email
   (:require [solita.common.smtp :as smtp]
-            [solita.etp.config :as config]))
+            [solita.etp.config :as config]
+            [clojure.string :as str]))
 
 (defn send-multipart-email! [{:keys [to subject body subtype reply? attachments]}]
   (smtp/send-multipart-email!
@@ -32,3 +33,9 @@
      :subtype        subtype
      :reply-to-email (and reply? config/email-reply-to-email)
      :reply-to-name  (and reply? config/email-reply-to-name)}))
+
+(defn paragraph [& body] (str "<p>" (str/join " " body) "</p>"))
+
+(defn html [& body] (str "<html><body>"
+                         (str/join "" body)
+                         "</body></html>"))
