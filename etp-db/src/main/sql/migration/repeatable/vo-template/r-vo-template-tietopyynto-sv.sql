@@ -1,7 +1,6 @@
 insert into vo_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, content)
-values
-(1, 'Tietopyyntö (sv)', 'Begäran om inlämning (sv)', 1, 3, 'sv',
-$$
+values (1, 'Tietopyyntö (sv)', 'Begäran om inlämning (sv)', 1, 3, 'sv',
+        $$
 <div class="otsikko">
     <b>BEGÄRAN OM INLÄMNING</b> <br/>
     <b>{{päivä}}</b> <br/>
@@ -64,10 +63,9 @@ $$
     </tr>
 </table>
 $$)
-on conflict (id) do update set
-  label_fi = excluded.label_fi,
-  label_sv = excluded.label_sv,
-  ordinal = excluded.ordinal,
-  toimenpidetype_id = excluded.toimenpidetype_id,
-  language = excluded.language,
-  content = excluded.content;
+on conflict (id) do update set label_fi          = excluded.label_fi,
+                               label_sv          = excluded.label_sv,
+                               ordinal           = excluded.ordinal,
+                               toimenpidetype_id = excluded.toimenpidetype_id,
+                               language          = excluded.language,
+                               content           = excluded.content;
