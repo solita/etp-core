@@ -24,7 +24,8 @@
   (st/merge (st/select-keys geo-schema/Postiosoite [:jakeluosoite :postinumero :postitoimipaikka :maa])
             {:patevyystaso       common-schema/Key
              :toteamispaivamaara common-schema/Date
-             :toteaja            PatevyydenToteaja}))
+             :toteaja            PatevyydenToteaja
+             :ispartner          schema/Bool}))
 
 (def LaatijaAdminUpdate
   "Only for internal use in laatija services.

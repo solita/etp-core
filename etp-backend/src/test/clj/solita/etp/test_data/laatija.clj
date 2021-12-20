@@ -6,7 +6,8 @@
             [solita.etp.service.kayttaja-laatija :as kayttaja-laatija-service]))
 
 (defn generate-adds [n]
-  (map #(generators/complete {:henkilotunnus %1
+  (map #(generators/complete {:ispartner false
+                              :henkilotunnus %1
                               :email %2
                               :patevyystaso (rand-nth [1 2])}
                              laatija-schema/KayttajaLaatijaAdd)

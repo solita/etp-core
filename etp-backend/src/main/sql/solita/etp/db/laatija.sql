@@ -105,6 +105,7 @@ select
 from
   laatija inner join kayttaja on laatija.id = kayttaja.id
 where
+  not is_partner and
   kayttaja.login is not null and
   patevyys_voimassa(laatija) and
   not laatija.laatimiskielto;
