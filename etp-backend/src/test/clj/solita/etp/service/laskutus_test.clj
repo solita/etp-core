@@ -367,9 +367,10 @@
                                               (.format laskutus-service/time-formatter-file
                                                        started-at)
                                               ".pdf")
-              tasmaytysraportti-email (-> (smtp-test/email-directory-files)
-                                          first
-                                          slurp)]
+              tasmaytysraportti-email (->> (smtp-test/email-directory-files)
+                                           (map slurp)
+                                           (filter #(str/includes? % "=?UTF-8?Q?ARA_ETP_t=C3=A4sm=C3=A4tysraportti?="))
+                                           first)]
           (t/is (= 4 (count asiakastieto-filenames)))
           (t/is (= 4 (count laskutustieto-filenames)))
           (t/is (every? #(re-matches #"asiakastieto_etp_ara_.+\.xml" %)
