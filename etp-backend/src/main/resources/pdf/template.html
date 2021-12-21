@@ -126,8 +126,21 @@
             margin-left: 1cm;
             margin-bottom: 1.2cm;
         }
+
         .nowrap {
             white-space: nowrap;
+        }
+
+        .list-item:after {
+          content: ", ";
+        }
+
+        .list-item:last-child:after {
+          content: "";
+        }
+
+        .page-break-avoid {
+          page-break-inside: avoid;
         }
     </style>
 

@@ -242,6 +242,7 @@
     [tx db]
     (let [valvonta (find-valvonta tx valvonta-id)
           ilmoituspaikat (find-ilmoituspaikat tx)
+          roolit (find-roolit tx)
           diaarinumero (if (toimenpide/case-open? toimenpide-add)
                          (asha/open-case!
                            tx whoami valvonta
@@ -258,7 +259,7 @@
                 osapuolet (find-toimenpide-osapuolet tx (:id toimenpide))]
             (asha/log-toimenpide!
               tx aws-s3-client whoami valvonta toimenpide
-              osapuolet ilmoituspaikat)
+              osapuolet ilmoituspaikat roolit)
             (send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
             (send-toimenpide-email! db aws-s3-client valvonta toimenpide osapuolet))))
       {:id toimenpide-id})))
@@ -279,7 +280,8 @@
       (assoc toimenpide :diaarinumero (find-diaarinumero db id toimenpide))
       (find-ilmoituspaikat db)
       osapuoli
-      (find-osapuolet db id))))
+      (find-osapuolet db id)
+      (find-roolit db))))
 
 
 (defn preview-henkilo-toimenpide [db whoami id toimenpide henkilo-id]

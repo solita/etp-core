@@ -80,7 +80,7 @@ $$
     energia-asiantuntija/energiexpert
 </p>
 
-<table class="sarake max-width">
+<table class="max-width page-break-avoid">
     <tr>
         <td><b>Sovelletut säännökset:</b></td>
         <td>Laki rakennuksen energiatodistuksesta (50/2013)</td>
@@ -90,11 +90,17 @@ $$
         <td>Lagen om energicertifikat för byggnader (50/2013)</td>
     </tr>
     <tr>
-        <td><b>Tiedoksi/För kännedom:</b></td>
-        <td>
-            <div>{{#tiedoksi}}{{.}}<br/>{{/tiedoksi}}</div>
-        </td>
+        <td colspan="2"><b>Tiedoksi/För kännedom:</b></td>
     </tr>
+    {{#tiedoksi}}
+    <tr>
+      <td colspan="2">
+        {{#rooli}}<span class="list-item">{{.}}</span>{{/rooli}}
+        <span class="list-item nowrap">{{nimi}}</span>
+        {{#email}}<span class="list-item nowrap">{{.}}</span>{{/email}}
+      </td>
+    </tr>
+    {{/tiedoksi}}
 </table>
 $$)
 on conflict (id) do update set
