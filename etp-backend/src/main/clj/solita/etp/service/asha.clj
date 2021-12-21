@@ -9,7 +9,6 @@
             [solita.etp.config :as config]
             [solita.etp.exception :as exception]
             [clojure.data.codec.base64 :as b64]
-            [solita.etp.service.file :as file-service]
             [clojure.string :as str]))
 
 (defn bytes->base64 [bytes]
@@ -18,19 +17,16 @@
 (defn- request-create-xml [resource data]
   (clostache/render-resource (str "asha/" resource ".xml") data))
 
-(defn read-response->xml [response]
+(defn response->xml [response]
   (-> response xml/string->xml xml/without-soap-envelope first xml/with-kebab-case-tags))
 
-(defn read-response [response-parser schema]
-  (let [coercer (sc/coercer schema sc/string-coercion-matcher)]
-    (coercer response-parser)))
-
-(defn- ^:dynamic make-send-request! [request]
+(defn- ^:dynamic post! [request]
   (log/debug request)
   (if config/asha-endpoint-url
     (http/post config/asha-endpoint-url
-               (cond-> {:content-type "application/xop+xml;charset=\"UTF-8\"; type=\"text/xml\""
-                        :body         request}
+               (cond-> {:content-type     "application/xop+xml;charset=\"UTF-8\"; type=\"text/xml\""
+                        :throw-exceptions false
+                        :body             request}
                        config/asha-proxy? (assoc
                                             :connection-manager
                                             (conn-mgr/make-socks-proxied-conn-manager "localhost" 1080))))
@@ -38,62 +34,83 @@
       (log/info "Missing asha endpoint url. Skip request to asha...")
       {:status 200})))
 
-(defn- send-request! [request]
+(defn- throw-ex-info! [request response cause]
+  (throw
+    (ex-info
+      (str "Sending asiahallinta request failed.")
+      {:type         :asha-request-failed
+       :endpoint-url config/asha-endpoint-url
+       :request
+       (select-keys request [:request-id :sender-id
+                             :name :description :identity
+                             :case-info :processing-action-info
+                             :proceed-operation])
+       :response     response
+       :cause        (ex-data cause)}
+      cause)))
+
+(defn- assert-status! [response]
+  (when-not (#{200 201 202 203 204 205 206 207 300 301 302 303 304 307} (:status response))
+    (exception/illegal-argument! (str "Invalid response status: " (:status response))))
+  response)
+
+(defn- read-response [request response response-reader coerce-response!]
   (try
-    (make-send-request! request)
-    (catch Throwable t
-      (exception/throw-ex-info! :asha-request-failed (str "Sending xml failed: " (.getMessage t))))))
+    (some-> response assert-status! :body response->xml response-reader coerce-response!)
+    (catch Throwable t (throw-ex-info! request response t))))
 
-(defn- request-handler! [data resource parser-fn schema]
-  (let [request-xml (request-create-xml resource data)
-        response-xml (:body (send-request! request-xml))]
-    (when-let [response-parser (when (and response-xml parser-fn)
-                                 (parser-fn response-xml))]
-      (read-response response-parser schema))))
+(defn- send-request! [request request-template response-reader schema]
+  (try
+    (let [request-xml (request-create-xml request-template request)
+          response (post! request-xml)]
+      (when (some? response-reader)
+        (read-response request response response-reader
+                       (sc/coercer schema sc/string-coercion-matcher))))
+    (catch Throwable t (throw-ex-info! request nil t))))
 
-(defn response-parser-case-create [response-soap]
-  (let [response-xml (read-response->xml response-soap)]
-    {:id          (xml/get-content response-xml [:return :object-identity :id])
-     :case-number (xml/get-content response-xml [:return :case-number])}))
+(defn read-response-case-create [response-xml]
+  {:id          (xml/get-content response-xml [:return :object-identity :id])
+   :case-number (xml/get-content response-xml [:return :case-number])})
 
-(defn response-parser-case-info [response-soap]
-  (let [response-xml (read-response->xml response-soap)]
-    {:id             (xml/get-content response-xml [:return :case-info-response :object-identity :id])
-     :case-number    (xml/get-content response-xml [:return :case-info-response :case-number])
-     :status         (xml/get-content response-xml [:return :case-info-response :status])
-     :classification (xml/get-content response-xml [:return :case-info-response :classification :code])
-     :name           (xml/get-content response-xml [:return :case-info-response :name])
-     :description    (xml/get-content response-xml [:return :case-info-response :description])
-     :created        (xml/get-content response-xml [:return :case-info-response :created])}))
+(defn read-response-case-info [response-xml]
+  {:id             (xml/get-content response-xml [:return :case-info-response :object-identity :id])
+   :case-number    (xml/get-content response-xml [:return :case-info-response :case-number])
+   :status         (xml/get-content response-xml [:return :case-info-response :status])
+   :classification (xml/get-content response-xml [:return :case-info-response :classification :code])
+   :name           (xml/get-content response-xml [:return :case-info-response :name])
+   :description    (xml/get-content response-xml [:return :case-info-response :description])
+   :created        (xml/get-content response-xml [:return :case-info-response :created])})
 
-(defn response-parser-action-info [response-soap]
-  (let [response-xml (read-response->xml response-soap)
-        action-info (fn [path]
-                      {:object-class         (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:object-identity :object-class])))
-                       :id                   (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:object-identity :id])))
-                       :version              (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:object-identity :version])))
-                       :contacting-direction (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:contacting-direction])))
-                       :name                 (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:name])))
-                       :description          (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:description])))
-                       :status               (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:status])))
-                       :created              (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:created])))})]
-    {:processing-action (action-info [:processing-action])
-     :assignee          (xml/get-content response-xml [:return :action-info-response :assignee])
-     :queue             (xml/get-content response-xml [:return :action-info-response :queue])
-     :selected-decision {:decision               (xml/get-content response-xml [:return :action-info-response :selected-decision :decision])
-                         :next-processing-action (action-info [:selected-decision :next-processing-action])}}))
+(defn read-action-info-action [path response-xml]
+  {:object-class         (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:object-identity :object-class])))
+   :id                   (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:object-identity :id])))
+   :version              (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:object-identity :version])))
+   :contacting-direction (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:contacting-direction])))
+   :name                 (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:name])))
+   :description          (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:description])))
+   :status               (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:status])))
+   :created              (xml/get-content response-xml (vec (concat [:return :action-info-response] path [:created])))})
+
+(defn read-response-action-info [response-xml]
+  {:processing-action (read-action-info-action [:processing-action] response-xml)
+   :assignee          (xml/get-content response-xml [:return :action-info-response :assignee])
+   :queue             (xml/get-content response-xml [:return :action-info-response :queue])
+   :selected-decision {:decision
+                       (xml/get-content response-xml [:return :action-info-response :selected-decision :decision])
+                       :next-processing-action
+                       (read-action-info-action [:selected-decision :next-processing-action] response-xml)}})
 
 (defn open-case! [case]
-  (-> (request-handler! case "case-create" response-parser-case-create asha-schema/CaseCreateResponse) :case-number))
+  (-> (send-request! case "case-create" read-response-case-create asha-schema/CaseCreateResponse) :case-number))
 
-(defn execute-operation! [data & [response-parser schema]]
-  (request-handler! data "execute-operation" response-parser schema))
+(defn execute-operation! [data & [response-reader schema]]
+  (send-request! data "execute-operation" response-reader schema))
 
 (defn case-info [sender-id request-id case-number]
   (execute-operation! {:request-id request-id
                        :sender-id  sender-id
                        :case-info  {:case-number case-number}}
-                      response-parser-case-info
+                      read-response-case-info
                       asha-schema/CaseInfoResponse))
 
 (defn action-info [sender-id request-id case-number processing-action-name]
@@ -101,7 +118,7 @@
                        :sender-id              sender-id
                        :processing-action-info {:case-number                     case-number
                                                 :processing-action-name-identity processing-action-name}}
-                      response-parser-action-info
+                      read-response-action-info
                       asha-schema/ActionInfoResponse))
 
 (defn proceed-operation! [sender-id request-id case-number processing-action decision]
@@ -174,15 +191,15 @@
                        :identity          (:identity processing-action)
                        :processing-action (:processing-action processing-action)})
 
-   (doseq [document documents]
-     (add-documents-to-processing-action!
-        sender-id
-        request-id
-        case-number
-        (-> processing-action :processing-action :name)
-        [{:content (bytes->base64 document)
-          :type    (-> processing-action :document :type)
-          :name    (-> processing-action :document :filename)}]))
+  (doseq [document documents]
+    (add-documents-to-processing-action!
+      sender-id
+      request-id
+      case-number
+      (-> processing-action :processing-action :name)
+      [{:content (bytes->base64 document)
+        :type    (-> processing-action :document :type)
+        :name    (-> processing-action :document :filename)}]))
   (take-processing-action! sender-id request-id case-number (-> processing-action :processing-action :name))
   (mark-processing-action-as-ready!
     sender-id
