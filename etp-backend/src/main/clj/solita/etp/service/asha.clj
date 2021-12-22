@@ -34,10 +34,10 @@
       (log/info "Missing asha endpoint url. Skip request to asha...")
       {:status 200})))
 
-(defn- throw-ex-info! [request response cause]
+(defn- throw-ex-info! [request response details cause]
   (throw
     (ex-info
-      (str "Sending asiahallinta request failed.")
+      (str "Asiahallinta request failed. " details)
       {:type         :asha-request-failed
        :endpoint-url config/asha-endpoint-url
        :request
@@ -49,24 +49,27 @@
        :cause        (ex-data cause)}
       cause)))
 
-(defn- assert-status! [response]
+(defn- assert-status! [request response]
   (when-not (#{200 201 202 203 204 205 206 207 300 301 302 303 304 307} (:status response))
-    (exception/illegal-argument! (str "Invalid response status: " (:status response))))
-  response)
+    (throw-ex-info!
+      request response
+      (str "Invalid response status: " (:status response)) nil)))
 
 (defn- read-response [request response response-reader coerce-response!]
   (try
-    (some-> response assert-status! :body response->xml response-reader coerce-response!)
-    (catch Throwable t (throw-ex-info! request response t))))
+    (some-> response :body response->xml response-reader coerce-response!)
+    (catch Throwable t (throw-ex-info! request response "Reading the response failed." t))))
 
 (defn- send-request! [request request-template response-reader schema]
-  (try
-    (let [request-xml (request-create-xml request-template request)
-          response (post! request-xml)]
-      (when (some? response-reader)
-        (read-response request response response-reader
-                       (sc/coercer schema sc/string-coercion-matcher))))
-    (catch Throwable t (throw-ex-info! request nil t))))
+  (let [request-xml (request-create-xml request-template request)
+        response (try
+                   (post! request-xml)
+                   (catch Throwable t
+                     (throw-ex-info! request nil "Posting the request failed." t)))]
+    (assert-status! request response)
+    (when (some? response-reader)
+      (read-response request response response-reader
+                     (sc/coercer schema sc/string-coercion-matcher)))))
 
 (defn read-response-case-create [response-xml]
   {:id          (xml/get-content response-xml [:return :object-identity :id])

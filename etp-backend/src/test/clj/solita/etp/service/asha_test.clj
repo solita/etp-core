@@ -77,7 +77,7 @@
                                                400
                                                "clj-http: status 400")]
     (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
-                            #"Sending asiahallinta request failed."
+                            #"Asiahallinta request failed. Posting the request failed."
                             (asha-service/open-case!
                               {:request-id     "ETP-1"
                                :classification "05.03.02"
