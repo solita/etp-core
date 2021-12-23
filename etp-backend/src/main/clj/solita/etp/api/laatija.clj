@@ -51,7 +51,18 @@
                           (-> (kayttaja-laatija-service/upsert-kayttaja-laatijat!
                                 db (:body parameters))
                               (api-response/get-response
-                               "Käyttäjien / laatijoiden lisääminen tai päivittäminen epäonnistui")))}}]
+                               "Käyttäjien / laatijoiden lisääminen tai päivittäminen epäonnistui")))}
+      :post {:summary "Lisää yksittäinen laatija rekisteriin"
+             :parameters {:body laatija-schema/KayttajaLaatijaAdd}
+             :responses {201 {:body common-schema/Id}}
+             :access rooli-service/paakayttaja?
+             :handler (fn [{:keys [db parameters]}]
+                        (-> (kayttaja-laatija-service/upsert-kayttaja-laatijat!
+                              db [(:body parameters)])
+                            first
+                            (api-response/get-response
+                               "Käyttäjän / laatijan lisääminen tai päivittäminen epäonnistui")
+                            ))}}]
     ["/:id"
      [""
       {:put {:summary "Päivitä laatijan ja laatijaan liittyvän käyttäjän tiedot"

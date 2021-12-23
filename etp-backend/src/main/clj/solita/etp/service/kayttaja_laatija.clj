@@ -20,8 +20,14 @@
     (flat/tree->flat "$" (dissoc kayttaja :rooli))
     ["rooli_id = 0 and id = ?" id]))
 
-(defn- add-kayttaja [db kayttaja]
+(defn- add-kayttaja! [db kayttaja]
   (kayttaja-service/add-kayttaja! db (assoc kayttaja :rooli 0)))
+
+(defn add-laatija! [db kayttaja-laatija]
+  (let [kayttaja (st/select-schema kayttaja-laatija laatija-schema/KayttajaAdd)
+        laatija (st/select-schema kayttaja-laatija laatija-schema/LaatijaAdd)
+        id (add-kayttaja! db kayttaja)]
+    (laatija-service/add-laatija! db (assoc laatija :id id))))
 
 (defn- diff [new-laatija existing-laatija]
   (cond
@@ -43,7 +49,7 @@
         (update-kayttaja! db id (dissoc kayttaja :henkilotunnus))
         (laatija-service/update-laatija-by-id! db id laatija)
         {:id id :type (diff laatija existing-laatija) :email email})
-      (let [id (add-kayttaja db kayttaja)]
+      (let [id (add-kayttaja! db kayttaja)]
         (laatija-service/add-laatija! db (assoc laatija :id id))
         {:id id :type :new :email email}))))
 
