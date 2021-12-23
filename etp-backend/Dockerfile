@@ -9,6 +9,12 @@ tar -xzvf LibreOffice_7.1.0_Linux_x86-64_deb.tar.gz && \
 dpkg -i LibreOffice_7.1.0.3_Linux_x86-64_deb/DEBS/*.deb && \
 ln -s /usr/local/bin/libreoffice7.1 /usr/local/bin/libreoffice
 
+# Extra certificates
+COPY certificates/ /opt/etp/certificates/
+RUN keytool -importcert -alias asha-CA \
+  -cacerts -storepass 'changeit' \
+  -file /opt/etp/certificates/asha.crt
+
 # The application
 COPY libreoffice/ /opt/etp/libreoffice/
 COPY target/etp-backend.jar /opt/etp/target/
