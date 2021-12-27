@@ -5,6 +5,7 @@
     [solita.etp.service.valvonta-oikeellisuus.asha :as asha-valvonta-oikeellisuus]
     [solita.etp.service.valvonta-oikeellisuus.toimenpide :as toimenpide]
     [solita.etp.service.valvonta-oikeellisuus.email :as email]
+    [solita.etp.service.csv :as csv-service]
     [clojure.data.csv :as csv]
     [clojure.java.jdbc :as jdbc]
     [solita.common.map :as map]
@@ -43,7 +44,11 @@
 (def ^:private default-filters
   {:valvoja-id nil
    :has-valvoja nil
-   :include-closed false})
+   :include-closed false
+   :keyword nil
+   :toimenpidetype-id nil
+   :laatija-id nil
+   :kayttotarkoitus-id nil})
 
 (def ^:private default-window {:limit 10 :offset 0})
 
@@ -271,13 +276,16 @@
            db/default-opts)))
 
 (defn update-toimenpide! [db whoami id toimenpide-id toimenpide-update]
-  (jdbc/with-db-transaction [db db]
-    (when (toimenpide/audit-report? (find-toimenpide db whoami id toimenpide-id ))
-      (valvonta-oikeellisuus-db/delete-toimenpide-virheet! db {:toimenpide-id toimenpide-id})
-      (insert-virheet! db toimenpide-id (:virheet toimenpide-update))
-
-      (valvonta-oikeellisuus-db/delete-toimenpide-tiedoksi! db {:toimenpide-id toimenpide-id})
-      (insert-tiedoksi! db toimenpide-id (:tiedoksi toimenpide-update)))
+  (jdbc/with-db-transaction
+    [db db]
+    (when ((every-pred toimenpide/audit-report? toimenpide/draft?)
+           (find-toimenpide db whoami id toimenpide-id))
+      (when (contains? toimenpide-update :virheet)
+        (valvonta-oikeellisuus-db/delete-toimenpide-virheet! db {:toimenpide-id toimenpide-id})
+        (insert-virheet! db toimenpide-id (:virheet toimenpide-update)))
+      (when (contains? toimenpide-update :tiedoksi)
+        (valvonta-oikeellisuus-db/delete-toimenpide-tiedoksi! db {:toimenpide-id toimenpide-id})
+        (insert-tiedoksi! db toimenpide-id (:tiedoksi toimenpide-update))))
     (update-toimenpide-row! db toimenpide-id (dissoc toimenpide-update :virheet :tiedoksi))))
 
 (defn delete-draft-toimenpide! [db toimenpide-id]
@@ -346,3 +354,31 @@
            jdbc/update! db :vo-note
            {:description description} ["id = ?" id]
            db/default-opts)))
+
+(def ^:private csv-header
+  (csv-service/csv-line
+    ["energiatodistus-id", "ktl", "ala-ktl"
+     "toimenpide-id" "toimenpidetyyppi" "aika" "valvoja"]))
+(defn csv [db]
+  (fn [write!]
+    (write! csv-header)
+    (jdbc/query
+      db
+      "select
+         energiatodistus.id, ktl.label_fi, alaktl.label_fi,
+         toimenpide.id, toimenpidetype.label_fi, toimenpide.publish_time,
+         fullname(kayttaja)
+       from energiatodistus
+         inner join alakayttotarkoitusluokka alaktl
+           on alaktl.id = energiatodistus.pt$kayttotarkoitus and alaktl.versio = energiatodistus.versio
+         inner join kayttotarkoitusluokka ktl
+           on ktl.id = alaktl.kayttotarkoitusluokka_id and ktl.versio = energiatodistus.versio
+         inner join vo_toimenpide toimenpide on toimenpide.energiatodistus_id = energiatodistus.id
+         inner join vo_toimenpidetype toimenpidetype on toimenpidetype.id = toimenpide.type_id
+         left join kayttaja on kayttaja.id = energiatodistus.valvonta$valvoja_id"
+      {:row-fn        (comp write! csv-service/csv-line)
+       :as-arrays?    :cols-as-is
+       :result-set-fn dorun
+       :result-type   :forward-only
+       :concurrency   :read-only
+       :fetch-size    100})))

@@ -21,6 +21,22 @@ from energiatodistus
   left join energiatodistus korvaava_energiatodistus on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
   left join vo_last_toimenpide_v1 last_toimenpide on last_toimenpide.energiatodistus_id = energiatodistus.id
 where
+  (:toimenpidetype-id::int is null or :toimenpidetype-id = last_toimenpide.type_id) and
+  (:keyword::text is null                                            or
+   energiatodistus.pt$rakennustunnus                  ilike :keyword or
+   energiatodistus.pt$nimi                            ilike :keyword or
+   energiatodistus.pt$katuosoite_fi                   ilike :keyword or
+   energiatodistus.pt$katuosoite_sv                   ilike :keyword or
+   lpad(energiatodistus.pt$postinumero::text, 5, '0') ilike :keyword or
+   last_toimenpide.diaarinumero                       ilike :keyword or
+   last_toimenpide.description                        ilike :keyword) and
+  (:kayttotarkoitus-id::int is null or
+   (energiatodistus.pt$kayttotarkoitus, energiatodistus.versio) in
+     (select alakayttotarkoitusluokka_id, versio
+      from   stat_ktluokka_alaktluokka
+      where  stat_kayttotarkoitusluokka_id = :kayttotarkoitus-id)) and
+  (:laatija-id::int is null or
+   energiatodistus.laatija_id = :laatija-id) and
   (energiatodistus.valvonta$pending or
     last_toimenpide.ongoing or
     (:include-closed and last_toimenpide.id is not null)) and
@@ -65,6 +81,22 @@ select count(*)
 from energiatodistus
   left join vo_last_toimenpide_v1 last_toimenpide on last_toimenpide.energiatodistus_id = energiatodistus.id
 where
+  (:toimenpidetype-id::int is null or :toimenpidetype-id = last_toimenpide.type_id) and
+  (:keyword::text is null                                            or
+   energiatodistus.pt$rakennustunnus                  ilike :keyword or
+   energiatodistus.pt$nimi                            ilike :keyword or
+   energiatodistus.pt$katuosoite_fi                   ilike :keyword or
+   energiatodistus.pt$katuosoite_sv                   ilike :keyword or
+   lpad(energiatodistus.pt$postinumero::text, 5, '0') ilike :keyword or
+   last_toimenpide.diaarinumero                       ilike :keyword or
+   last_toimenpide.description                        ilike :keyword) and
+  (:kayttotarkoitus-id::int is null or
+   (energiatodistus.pt$kayttotarkoitus, energiatodistus.versio) in
+     (select alakayttotarkoitusluokka_id, versio
+      from   stat_ktluokka_alaktluokka
+      where  stat_kayttotarkoitusluokka_id = :kayttotarkoitus-id)) and
+  (:laatija-id::int is null or
+   energiatodistus.laatija_id = :laatija-id) and
   (energiatodistus.valvonta$pending or
     last_toimenpide.ongoing or
     (:include-closed and last_toimenpide.id is not null)) and

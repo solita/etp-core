@@ -11,7 +11,8 @@
             [solita.etp.schema.valvonta :as valvonta-schema]
             [solita.etp.schema.valvonta-kaytto :as valvonta-kaytto-schema]
             [solita.etp.schema.liite :as liite-schema]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [solita.etp.api.stream :as api-stream]))
 
 (def routes
   [["/valvonta/kaytto"
@@ -53,7 +54,7 @@
     ["/count"
      {:conflicting true
       :get         {:summary    "Hae käytönvalvontojen lukumäärä."
-                    :parameters {:query valvonta-schema/ValvontaQuery}
+                    :parameters {:query valvonta-kaytto-schema/ValvontaQuery}
                     :responses  {200 {:body {:count schema/Int}}}
                     :access     rooli-service/paakayttaja?
                     :handler    (fn [{{:keys [query]} :parameters :keys [db]}]
@@ -61,7 +62,7 @@
     [""
      {:conflicting true
       :get         {:summary    "Hae käytönvalvonnat (työjono)."
-                    :parameters {:query (merge valvonta-schema/ValvontaQuery
+                    :parameters {:query (merge valvonta-kaytto-schema/ValvontaQuery
                                                valvonta-schema/ValvontaQueryWindow)}
                     :responses  {200 {:body [valvonta-kaytto-schema/ValvontaStatus]}}
                     :access     rooli-service/paakayttaja?
@@ -78,6 +79,18 @@
                                        {:id (valvonta-service/add-valvonta! db body)})
                                     [{:constraint :vk-valvonta-postinumero-fkey
                                       :response   404}]))}}]
+
+    ["/csv/valvonta.csv"
+     {:get {:summary   "Hae valvontojen tiedot CSV-tiedostona"
+            :responses {200 {:body nil}}
+            :access    rooli-service/paakayttaja?
+            :handler   (fn [{:keys [db] :as request}]
+                         (let [result (valvonta-service/csv db)]
+                           (api-stream/result->async-channel
+                             request
+                             (api-response/csv-response-headers "valvonta.csv" false)
+                             result)))}}]
+
     ["/:id"
      [""
       {:conflicting true

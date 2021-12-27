@@ -9,7 +9,8 @@
             [schema.core :as schema]
             [schema-tools.core :as schema-tools]
             [reitit.ring.schema :as reitit-schema]
-            [solita.etp.schema.liite :as liite-schema]))
+            [solita.etp.schema.liite :as liite-schema]
+            [solita.etp.api.stream :as api-stream]))
 
 (defn toimenpide-404-msg [valvonta-id toimenpide-id]
   (api-response/msg-404 "toimenpide" valvonta-id toimenpide-id))
@@ -23,6 +24,16 @@
                     :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                     :handler   (fn [{:keys [db]}]
                                  (r/response (valvonta-service/find-toimenpidetyypit db)))}}]
+    ["/csv/valvonta.csv"
+     {:get {:summary   "Hae valvontojen tiedot CSV-tiedostona"
+            :responses {200 {:body nil}}
+            :access    rooli-service/paakayttaja?
+            :handler   (fn [{:keys [db] :as request}]
+                         (let [result (valvonta-service/csv db)]
+                           (api-stream/result->async-channel
+                             request
+                             (api-response/csv-response-headers "valvonta.csv" false)
+                             result)))}}]
     ["/virhetypes"
      [""
       {:conflicting true
@@ -81,7 +92,7 @@
      {:conflicting true
       :get         {:summary    "Hae energiatodistusten oikeellisuuden valvontojen lukumäärä."
                     :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
-                    :parameters {:query valvonta-schema/ValvontaQuery}
+                    :parameters {:query oikeellisuus-schema/ValvontaQuery}
                     :responses  {200 {:body {:count schema/Int}}}
                     :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
                                   (r/response (valvonta-service/count-valvonnat db whoami query)))}}]
@@ -97,7 +108,7 @@
     [""
      {:conflicting true
       :get         {:summary   "Hae energiatodistusten oikeellisuuden valvonnat (työjono)."
-                    :parameters {:query (merge valvonta-schema/ValvontaQuery
+                    :parameters {:query (merge oikeellisuus-schema/ValvontaQuery
                                                valvonta-schema/ValvontaQueryWindow)}
                     :responses {200 {:body [oikeellisuus-schema/ValvontaStatus]}}
                     :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)

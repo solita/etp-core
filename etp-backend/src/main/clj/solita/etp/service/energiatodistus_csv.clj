@@ -1,24 +1,11 @@
 (ns solita.etp.service.energiatodistus-csv
   (:require [clojure.string :as str]
+            [solita.etp.service.csv :as csv]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.energiatodistus-search :as
              energiatodistus-search-service]
             [solita.etp.service.complete-energiatodistus
-             :as complete-energiatodistus-service]
-            [solita.etp.schema.public-energiatodistus
-             :as public-energiatodistus-schema])
-  (:import (java.util Locale)
-           (java.text DecimalFormat DecimalFormatSymbols)
-           (java.time Instant LocalDateTime ZoneId)))
-
-(def tmp-dir "tmp-csv/")
-(def column-separator ";")
-(def locale (Locale. "fi" "FI"))
-(def decimal-format-symbol (doto (DecimalFormatSymbols. locale)
-                             (.setMinusSign \-)))
-(def ^DecimalFormat decimal-format (doto (DecimalFormat. "#.###")
-                      (.setDecimalFormatSymbols decimal-format-symbol)))
-(def timezone (ZoneId/of "Europe/Helsinki"))
+             :as complete-energiatodistus-service]))
 
 (def private-columns
   (concat
@@ -224,28 +211,15 @@
        (map str/capitalize)
        (str/join #" / ")))
 
-(defn format-value [v]
-  (cond
-    (string? v) (format "\"%s\"" (str/replace v #"\"" "\"\""))
-    (number? v) (.format decimal-format v)
-    (= Instant (type v)) (str (LocalDateTime/ofInstant v timezone))
-    :else (str v)))
-
-(defn csv-line [coll]
-  (as-> coll $
-    (map format-value $)
-    (str/join column-separator $)
-    (str $ "\n")))
-
 (defn energiatodistus->csv-line [columns energiatodistus]
   (->> columns
        (map #(get-in energiatodistus %))
-       csv-line))
+       csv/csv-line))
 
 (defn headers-csv-line [columns]
   (->> columns
        (map column-ks->str)
-       csv-line))
+       csv/csv-line))
 
 (defn energiatodistukset-csv [db whoami query columns]
   (let [luokittelut (complete-energiatodistus-service/luokittelut db)
