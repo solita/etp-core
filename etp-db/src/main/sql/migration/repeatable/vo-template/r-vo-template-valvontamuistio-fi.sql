@@ -25,8 +25,10 @@ $$
     {{/energiatodistus}}
 </p>
 
-
-<p>Asumisen rahoitus- ja kehittämiskeskus (ARA) on energiatodistuslain (50/2013) <span class="nowrap">18 §:n</span> nojalla tarkastanut laatimanne energiatodistuksen. Oikeellisuustarkastus on kohdistunut energiatodistuksen lähtötietoihin, energiatehokkuusluvun laskentaan sekä säästösuositusten oikeellisuuteen. Tarkastuksen perusteella kiinnitettiin huomiota seuraaviin asioihin:</p>
+<p>Asumisen rahoitus- ja kehittämiskeskus (ARA) on energiatodistuslain (50/2013) <span class="nowrap">18 §:n</span>
+    nojalla tarkastanut laatimanne energiatodistuksen. Oikeellisuustarkastus on kohdistunut energiatodistuksen
+    lähtötietoihin, energiatehokkuusluvun laskentaan sekä säästösuositusten oikeellisuuteen. Tarkastuksen perusteella
+    kiinnitettiin huomiota seuraaviin asioihin:</p>
 
 <ul>
     {{#valvontamuistio}}
@@ -54,9 +56,15 @@ $$
 {{/valvontamuistio}}
 
 
-<p>Jos energiatodistuksen laatija ei täytä säädettyjä velvollisuuksia, ARA kehottaa korjaamaan asian ja antaa määräajan korjaukselle. Jos asiaa ei korjata määräajassa, ARA antaa laatijalle varoituksen ja uuden määräajan. Jos asiaa ei edelleenkään korjata, ARA laittaa todistuksen käyttökieltoon ja velvoittaa energiatodistuksen laatijan korvaamaan virheellisen todistuksen uudella todistuksella. Energiatodistus voidaan tarvittaessa teettää myös toisella energiatodistuksen laatijalla. Uuden todistuksen kustannuksista vastaa virheellisen todistuksen laatinut energiatodistuksen laatija. </p>
+<p>Jos energiatodistuksen laatija ei täytä säädettyjä velvollisuuksia, ARA kehottaa korjaamaan asian ja antaa määräajan
+    korjaukselle. Jos asiaa ei korjata määräajassa, ARA antaa laatijalle varoituksen ja uuden määräajan. Jos asiaa ei
+    edelleenkään korjata, ARA laittaa todistuksen käyttökieltoon ja velvoittaa energiatodistuksen laatijan korvaamaan
+    virheellisen todistuksen uudella todistuksella. Energiatodistus voidaan tarvittaessa teettää myös toisella
+    energiatodistuksen laatijalla. Uuden todistuksen kustannuksista vastaa virheellisen todistuksen laatinut
+    energiatodistuksen laatija. </p>
 
-<p>ARAlla on myös mahdollisuus antaa laatijalle laatimiskielto, jos laatija on toiminut olennaisella tai merkittävällä tavalla säännösten vastaisesti.</p>
+<p>ARAlla on myös mahdollisuus antaa laatijalle laatimiskielto, jos laatija on toiminut olennaisella tai merkittävällä
+    tavalla säännösten vastaisesti.</p>
 
 <p>
     {{#valvoja}}

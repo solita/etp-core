@@ -1,9 +1,9 @@
 insert into vo_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, content)
-values (3, 'Tietopyyntö / varoitus (sv)', 'Begäran om inlämning / varning (sv)', 3, 6, 'sv', 
+values (5, 'Valvontamuistio / kehotus (sv)', 'Övervaknings-pm / uppmaning (sv)', 5, 9, 'sv',
 $$
 <div class="otsikko">
-    <b>VARNING</b> <br/>
-    <b>{{päivä}}</b> <br/>
+    <b>UPPMANING</b> <br />
+    <b>{{päivä}}</b> <br />
     {{diaarinumero}}
 </div>
 
@@ -13,39 +13,26 @@ $$
     {{#energiatodistus}}
     <table class="sarake">
         <tr>
-            <td>Objekt:</td> 
+            <td>Objekt:</td>
             <td>
                 <div class="nowrap">{{nimi}}</div>
-                <div class="nowrap">{{katuosoite-fi}}</div>  
-                <div class="nowrap">{{postinumero}} {{postitoimipaikka-fi}}</div>  
+                <div class="nowrap">{{katuosoite-fi}}</div>
+                <div class="nowrap">{{postinumero}} {{postitoimipaikka-fi}}</div>
             </td>
         </tr>
     </table>
-    Certifikatets beteckning: {{tunnus}} <br/>
-    Datum för begäran om inlämning: {{#tietopyynto}} {{tietopyynto-pvm}} {{/tietopyynto}} <br />
-    Datum för uppmaning: {{#tietopyynto}} {{tietopyynto-kehotus-pvm}} {{/tietopyynto}}
+    Certifikatets beteckning: {{tunnus}} <br />
+    Datum för övervaknings-PM: {{#valvontamuistio}} {{valvontamuistio-pvm}} {{/valvontamuistio}}
     {{/energiatodistus}}
 </p>
-
 
 <p>Finansierings- och utvecklingscentralen för boendet (ARA) har till uppgift att övervaka riktigheten hos
     energicertifikat. Riktighetskontrollerna rör energicertifikatens utgångsuppgifter, beräkningen av
     energieffektivitetstal och riktigheten hos besparingsrekommendationer.</p>
 
-<p>ARA har sänt er en begäran och uppmaning om inlämning av bakgrundsmaterial till detta energicertifikat. ARA utfärdar
-    en varning och kräver att ni lämnar in bakgrundsmaterialet inom en månad från datumet för denna varning. <b>ARA
-        kommer att kontrollera certifikatets riktighet på basis av detta material.</b> Skicka följande bakgrundsmaterial
-    som använts vid upprättandet av certifikatet till ARA:s energicertifikatsregister senast {{määräpäivä}}</p>
-
-<ul>
-    <li>Huvudritningar (plan-, fasad- och sektionsritningar samt U-värden).</li>
-    <li>Beräkningar av ventilations-, kylnings- och värmesystem samt tekniska uppgifter (ej planritningar) som påverkar
-        beräkningen av E-talet</li>
-    <li>Belysningsberäkningar, om nödvändig belysning använts vid beräkningen av E-talet</li>
-    <li>Täthetsmätningsrapport, om mätning har utförts</li>
-    <li>Energiutredning (nyobjekt)</li>
-    <li>Observationsprotokoll och annat material från besök på plats (befintliga byggnader)</li>
-</ul>
+<p>ARA har sänt er ett övervaknings-PM om detta energicertifikat. ARA har i övervaknings-PM:et konstaterat att
+    energicertifikatet kan betydande felaktigheter. ARA uppmanar er att korrigera energicertifikatet senast
+    {{määräpäivä}}. </p>
 
 <p>ARA har rätt att få de uppgifter och dokument som behövs för övervakning, inklusive uppgifter om uppdraget.
     Upprättaren ska bevara beredningshandlingarna, beräkningarna och övriga uppgifter som han eller hon har utarbetat
@@ -55,15 +42,18 @@ $$
 
 <p>Om upprättaren av energicertifikatet inte uppfyller de reglerade skyldigheterna uppmanar ARA upprättaren att
     korrigera saken och ställer upp en tidsfrist för korrigeringen. Om saken inte korrigeras inom tidsfristen tilldelar
-    ARA upprättaren en varning och en ny tidsfrist. Om saken alltjämt inte korrigeras kan ARA ge upprättaren ett
-    förpliktande beslut om order/beslut om användningsförbud, som kan förenas med vite. ARA kan också ge upprättaren ett
-    förbud om upprättande, om upprättaren har agerat i strid med bestämmelserna på ett väsentligt eller betydande sätt.
-</p>
+    ARA upprättaren en varning och en ny tidsfrist. Om saken alltjämt inte korrigeras utfärdar ARA ett förbud att
+    använda certifikatet och förpliktar upprättaren av energicertifikatet att ersätta det felaktiga certifikatet med ett
+    nytt. Energicertifikatet kan vid behov också låta upprättas av en annan upprättare av energicertifikat. Den som
+    upprättat det felaktiga certifikatet svarar för kostnaderna för det nya certifikatet.</p>
+
+<p>ARA kan också ge upprättaren ett förbud om upprättande, om upprättaren har agerat i strid med bestämmelserna på ett
+    väsentligt eller betydande sätt.</p>
 
 <p>
     {{#valvoja}}
     {{etunimi}} {{sukunimi}}
-    {{/valvoja}}<br/>
+    {{/valvoja}}<br />
     energiexpert
 </p>
 
