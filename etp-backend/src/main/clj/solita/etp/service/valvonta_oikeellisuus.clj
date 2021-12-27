@@ -203,25 +203,26 @@
         db {:whoami-id (:id whoami) :id id}))))
 
 (defn add-toimenpide! [db aws-s3-client whoami id toimenpide-add]
-  (jdbc/with-db-transaction [tx db]
-                            (let [diaarinumero (if (toimenpide/case-open? toimenpide-add)
-                                                 (asha-valvonta-oikeellisuus/open-case! tx whoami id)
-                                                 (find-diaarinumero tx id toimenpide-add))
-                                  toimenpide (insert-toimenpide! tx id diaarinumero (dissoc toimenpide-add :virheet :tiedoksi))
-                                  toimenpide-id (:id toimenpide)]
-                              (insert-virheet! tx toimenpide-id (:virheet toimenpide-add))
-                              (insert-tiedoksi! tx toimenpide-id (:tiedoksi toimenpide-add))
-                              (when-not (toimenpide/draft-support? toimenpide)
-                                (valvonta-oikeellisuus-db/update-toimenpide-published! tx {:id toimenpide-id})
-                                (case (-> toimenpide :type-id toimenpide/type-key)
-                                  :closed (asha-valvonta-oikeellisuus/close-case! whoami id toimenpide)
-                                  (when (toimenpide/asha-toimenpide? toimenpide)
-                                    (asha-valvonta-oikeellisuus/log-toimenpide! tx aws-s3-client whoami id toimenpide)))
-                                (send-toimenpide-email! db aws-s3-client id toimenpide))
-                              (when (toimenpide/anomaly? toimenpide)
-                                (add-anomaly-viestiketju! tx whoami id toimenpide))
-                              (update-valvonta-state! tx whoami id toimenpide)
-                              {:id toimenpide-id})))
+  (jdbc/with-db-transaction
+    [tx db]
+    (let [diaarinumero (if (toimenpide/case-open? toimenpide-add)
+                         (asha-valvonta-oikeellisuus/open-case! tx whoami id)
+                         (find-diaarinumero tx id toimenpide-add))
+          toimenpide (insert-toimenpide! tx id diaarinumero (dissoc toimenpide-add :virheet :tiedoksi))
+          toimenpide-id (:id toimenpide)]
+      (insert-virheet! tx toimenpide-id (:virheet toimenpide-add))
+      (insert-tiedoksi! tx toimenpide-id (:tiedoksi toimenpide-add))
+      (when-not (toimenpide/draft-support? toimenpide)
+        (valvonta-oikeellisuus-db/update-toimenpide-published! tx {:id toimenpide-id})
+        (case (-> toimenpide :type-id toimenpide/type-key)
+          :closed (asha-valvonta-oikeellisuus/close-case! whoami id toimenpide)
+          (when (toimenpide/asha-toimenpide? toimenpide)
+            (asha-valvonta-oikeellisuus/log-toimenpide! tx aws-s3-client whoami id toimenpide)))
+        (send-toimenpide-email! db aws-s3-client id toimenpide))
+      (when (toimenpide/anomaly? toimenpide)
+        (add-anomaly-viestiketju! tx whoami id toimenpide))
+      (update-valvonta-state! tx whoami id toimenpide)
+      {:id toimenpide-id})))
 
 (defn- assoc-virheet [db toimenpide]
   (assoc toimenpide :virheet (valvonta-oikeellisuus-db/select-toimenpide-virheet
