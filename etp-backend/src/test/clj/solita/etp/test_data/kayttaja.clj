@@ -37,3 +37,9 @@
 (defn generate-and-insert! [n]
   (let [kayttaja-adds (generate-adds n)]
     (zipmap (insert! kayttaja-adds) kayttaja-adds)))
+
+(defn insert-paakayttaja! []
+  (->> (generate-adds 1)
+       (map #(assoc % :rooli 2))
+       insert!
+       first))

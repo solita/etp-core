@@ -30,6 +30,8 @@
 (defn insert! [kayttaja-laatija-adds]
   (kayttaja-laatija-service/upsert-kayttaja-laatijat! ts/*db* kayttaja-laatija-adds))
 
-(defn generate-and-insert! [n]
-  (let [kayttaja-laatija-adds (generate-adds n)]
-    (zipmap (insert! kayttaja-laatija-adds) kayttaja-laatija-adds)))
+(defn generate-and-insert!
+  ([] (first (generate-and-insert! 1)))
+  ([n]
+   (let [kayttaja-laatija-adds (generate-adds n)]
+     (zipmap (insert! kayttaja-laatija-adds) kayttaja-laatija-adds))))
