@@ -1,5 +1,5 @@
 insert into vo_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, content)
-values (6, 'Valvontamuistio / varoitus (fi)', 'Övervaknings-pm  / varning (fi)', 6, 10, 'fi', 
+values (6, 'Valvontamuistio / varoitus (fi)', 'Övervaknings-pm  / varning (fi)', 1, 10, 'fi', 
 $$
 <div class="otsikko">
     <b>VAROITUS</b> <br/>

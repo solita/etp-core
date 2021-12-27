@@ -1,5 +1,5 @@
 insert into vo_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, content)
-values (2, 'Tietopyyntö / kehotus (sv)', 'Begäran om inlämning / uppmaning (sv)', 2, 5, 'sv', 
+values (8, 'Tietopyyntö / kehotus (sv)', 'Begäran om inlämning / uppmaning (sv)', 2, 5, 'sv', 
 $$
 <div class="otsikko">
     <b>UPPMANING</b> <br/>
@@ -33,10 +33,10 @@ $$
 <p>ARA har sänt er en begäran om inlämning av bakgrundsmaterial till detta energicertifikat. ARA ber er lämna in
     bakgrundsmaterialet inom en månad från datumet för denna uppmaning. <b>ARA kommer att kontrollera certifikatets
         riktighet på basis av detta material.</b> Vi ber er skicka följande bakgrundsmaterial som använts vid
-    upprättandet av certifikatet till ARA:s energicertifikatsregister senast {{määräpäivä}}:</>
+    upprättandet av certifikatet till ARA:s energicertifikatsregister senast {{määräpäivä}}:</p>
 
 <ul>
-    <li>Huvudritningar (plan-, fasad- och sektionsritningar samt U-värden).</li>
+    <li>Huvudritningar (plan-, fasad- och sektionsritningar samt U-värden)</li>
     <li>Beräkningar av ventilations-, kylnings- och värmesystem samt tekniska uppgifter (ej planritningar) som påverkar
         beräkningen av E-talet</li>
     <li>Belysningsberäkningar, om nödvändig belysning använts vid beräkningen av E-talet</li>

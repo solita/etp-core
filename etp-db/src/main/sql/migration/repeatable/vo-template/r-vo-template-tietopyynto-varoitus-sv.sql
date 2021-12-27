@@ -1,5 +1,5 @@
 insert into vo_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, content)
-values (3, 'Tietopyyntö / varoitus (sv)', 'Begäran om inlämning / varning (sv)', 3, 6, 'sv', 
+values (9, 'Tietopyyntö / varoitus (sv)', 'Begäran om inlämning / varning (sv)', 2, 6, 'sv', 
 $$
 <div class="otsikko">
     <b>VARNING</b> <br/>
@@ -38,7 +38,7 @@ $$
     som använts vid upprättandet av certifikatet till ARA:s energicertifikatsregister senast {{määräpäivä}}</p>
 
 <ul>
-    <li>Huvudritningar (plan-, fasad- och sektionsritningar samt U-värden).</li>
+    <li>Huvudritningar (plan-, fasad- och sektionsritningar samt U-värden)</li>
     <li>Beräkningar av ventilations-, kylnings- och värmesystem samt tekniska uppgifter (ej planritningar) som påverkar
         beräkningen av E-talet</li>
     <li>Belysningsberäkningar, om nödvändig belysning använts vid beräkningen av E-talet</li>

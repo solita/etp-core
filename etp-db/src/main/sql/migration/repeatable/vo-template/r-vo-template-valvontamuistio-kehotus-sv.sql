@@ -1,5 +1,5 @@
 insert into vo_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, content)
-values (5, 'Valvontamuistio / kehotus (sv)', 'Övervaknings-pm / uppmaning (sv)', 5, 9, 'sv',
+values (11, 'Valvontamuistio / kehotus (sv)', 'Övervaknings-pm / uppmaning (sv)', 2, 9, 'sv',
 $$
 <div class="otsikko">
     <b>UPPMANING</b> <br />
@@ -31,8 +31,8 @@ $$
     energieffektivitetstal och riktigheten hos besparingsrekommendationer.</p>
 
 <p>ARA har sänt er ett övervaknings-PM om detta energicertifikat. ARA har i övervaknings-PM:et konstaterat att
-    energicertifikatet kan betydande felaktigheter. ARA uppmanar er att korrigera energicertifikatet senast
-    {{määräpäivä}}. </p>
+    energicertifikatet kan betydande felaktigheter. <b>ARA uppmanar er att korrigera energicertifikatet senast
+    {{määräpäivä}}.</b></p>
 
 <p>ARA har rätt att få de uppgifter och dokument som behövs för övervakning, inklusive uppgifter om uppdraget.
     Upprättaren ska bevara beredningshandlingarna, beräkningarna och övriga uppgifter som han eller hon har utarbetat
