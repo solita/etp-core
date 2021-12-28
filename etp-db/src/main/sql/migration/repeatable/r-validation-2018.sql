@@ -27,7 +27,7 @@ values
 (2018, 'lt$rakennusvaippa$ulkoseinat$U', 21, false),
 (2018, 'lt$rakennusvaippa$ylapohja$U', 22, false),
 (2018, 'lt$rakennusvaippa$alapohja$U', 23, false),
-(2018, 'lt$rakennusvaippa$ikkunat$U', 24), false,
+(2018, 'lt$rakennusvaippa$ikkunat$U', 24, false),
 (2018, 'lt$rakennusvaippa$ulkoovet$U', 25, false),
 (2018, 'lt$rakennusvaippa$kylmasillat_UA', 26, false),
 
