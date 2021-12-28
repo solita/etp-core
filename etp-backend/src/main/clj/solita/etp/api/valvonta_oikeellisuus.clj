@@ -122,9 +122,9 @@
                      :parameters {:path {:id common-schema/Key}}
                      :responses  {200 {:body oikeellisuus-schema/Valvonta}}
                      :access     rooli-service/energiatodistus-reader?
-                     :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                     :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                                    (api-response/get-response
-                                     (valvonta-service/find-valvonta db id)
+                                     (valvonta-service/find-valvonta db whoami id)
                                      (api-response/msg-404 "energiatodistus" id)))}
 
        :put         {:summary    "Muuta valvonnan yleisiä tietoja."
