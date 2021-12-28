@@ -8,7 +8,7 @@
                [:katuosoite-fi :katuosoite-sv :valmistumisvuosi
                 :havainnointikaynti :rakennustunnus :postinumero
                 :keskeiset-suositukset-fi :keskeiset-suositukset-sv
-                :laatimisvaihe :yritys :kieli :nimi :kayttotarkoitus]))
+                :laatimisvaihe :yritys :kieli :nimi-fi :nimi-sv :kayttotarkoitus]))
 
 (def LahtotiedotIlmanvaihto
   (select-keys energiatodistus-schema/LahtotiedotIlmanvaihto

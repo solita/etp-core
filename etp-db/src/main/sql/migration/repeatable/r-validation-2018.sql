@@ -6,8 +6,8 @@ values
 (2018, 'pt$havainnointikaynti', 2, false),
 (2018, 't$laskentatyokalu', 3, false),
 
-(2018, 'pt$nimi-fi', 4, false),
-(2018, 'pt$nimi-sv', 5, false),
+(2018, 'pt$nimi_fi', 4, false),
+(2018, 'pt$nimi_sv', 5, false),
 (2018, 'pt$valmistumisvuosi', 6, false),
 (2018, 'pt$katuosoite_fi', 7, false),
 (2018, 'pt$katuosoite_sv', 8, false),
@@ -77,6 +77,7 @@ values
 (2018, 'h$ymparys$teksti_sv', 66, false)
 
 on conflict (column_name, versio) do update set
+  column_name = excluded.column_name,
   ordinal = excluded.ordinal,
   bypass_allowed = excluded.bypass_allowed;
 

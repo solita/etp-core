@@ -4,7 +4,7 @@ values
 (2013, 'pt$kieli', 0, false),
 (2013, 't$laskentatyokalu', 1, false),
 
-(2013, 'pt$nimi', 2, false),
+(2013, 'pt$nimi_fi', 2, false),
 (2013, 'pt$nimi_sv', 3, false),
 (2013, 'pt$valmistumisvuosi', 4, false),
 (2013, 'pt$katuosoite_fi', 5, false),
@@ -70,6 +70,7 @@ values
 (2013, 'lt$lkvn_kaytto$lammitysenergian_nettotarve', 60, false)
 
 on conflict (column_name, versio) do update set
+  column_name = excluded.column_name,
   ordinal = excluded.ordinal,
   bypass_allowed = excluded.bypass_allowed;
 
