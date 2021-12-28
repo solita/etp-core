@@ -14,8 +14,8 @@
 (defn toimenpide-type->document [type-id]
   (let [type-key (toimenpide/type-key type-id )
         documents {:rfi-request {:type "Pyyntö" :filename "tietopyynto.pdf"}
-                   :rfi-order {:type "Kirje" :filename "tietopyynto_kehotus.pdf"}
-                   :rfi-warning {:type "Kirje" :filename "tietopyynto_varoitus.pdf"}}]
+                   :rfi-order {:type "Kirje" :filename "kehotus.pdf"}
+                   :rfi-warning {:type "Kirje" :filename "varoitus.pdf"}}]
     (get documents type-key)))
 
 (defn find-kaytto-valvonta-documents [db valvonta-id]
@@ -25,8 +25,10 @@
                 {type (:publish-time toimenpide)})))
        (into {})))
 
-(defn- find-ilmoituspaikka [ilmoituspaikat ilmoituspaikka-id]
-  (->> ilmoituspaikat (filter #(= (:id %) ilmoituspaikka-id)) first :label-fi))
+(defn- find-ilmoituspaikka [ilmoituspaikat valvonta]
+  (if (osapuoli/ilmoituspaikka-other? valvonta)
+    (:ilmoituspaikka-description valvonta)
+    (->> ilmoituspaikat (filter #(= (:id %) (:ilmoituspaikka-id valvonta))) first :label-fi)))
 
 (defn- find-postitoimipaikka [db postinumero]
   (-> (geo-db/select-postinumero-by-id db {:id (formats/string->int postinumero)}) first :label-fi ))
@@ -44,7 +46,7 @@
    :kohde            {:katuosoite       (:katuosoite valvonta)
                       :postinumero      (:postinumero valvonta)
                       :postitoimipaikka (find-postitoimipaikka db (:postinumero valvonta))
-                      :ilmoituspaikka   (find-ilmoituspaikka ilmoituspaikat (:ilmoituspaikka-id valvonta))
+                      :ilmoituspaikka   (find-ilmoituspaikka ilmoituspaikat valvonta)
                       :ilmoitustunnus   (:ilmoitustunnus valvonta)
                       :havaintopäivä    (-> valvonta :havaintopaiva time/format-date)}
    :tietopyynto      {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
@@ -109,7 +111,7 @@
                                                             (asha/string-join " " [(:postinumero valvonta)
                                                                                    (find-postitoimipaikka db (:postinumero valvonta))])])
 
-                    :description    (asha/string-join "\r" [(find-ilmoituspaikka ilmoituspaikat (:ilmoituspaikka-id valvonta))
+                    :description    (asha/string-join "\r" [(find-ilmoituspaikka ilmoituspaikat valvonta)
                                                             (:ilmoitustunnus valvonta)])
                     :attach         {:contact (map osapuoli->contact osapuolet)}}))
 
@@ -118,7 +120,7 @@
   (let [template-id (:template-id toimenpide)
         template (-> (valvonta-kaytto-db/select-template db {:id template-id}) first :content)
         documents (find-kaytto-valvonta-documents db (:id valvonta))
-        tiedoksi (filter osapuoli/tiedoksi? osapuolet)]
+        tiedoksi (if (toimenpide/send-tiedoksi? toimenpide) (filter osapuoli/tiedoksi? osapuolet) [])]
     (let [template-data (template-data db whoami valvonta toimenpide osapuoli documents ilmoituspaikat tiedoksi)]
       (pdf/generate-pdf->bytes {:template template
                                 :data     template-data}))))

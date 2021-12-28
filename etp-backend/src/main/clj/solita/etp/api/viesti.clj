@@ -4,7 +4,11 @@
             [solita.etp.schema.viesti :as viesti-schema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.service.viesti :as viesti-service]
-            [schema.core :as schema]))
+            [schema.core :as schema]
+            [clojure.java.io :as io]
+            [solita.etp.schema.liite :as liite-schema]))
+
+(defn ketju-404 [id] (api-response/msg-404 "ketju" id))
 
 (def routes
   [["/viestit"
@@ -54,7 +58,7 @@
                      :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                                    (api-response/get-response
                                      (viesti-service/find-ketju! db whoami id)
-                                     (str "Ketju " id " does not exists.")))}
+                                     (ketju-404 id)))}
        :put         {:summary    "Päivitä viestiketjun tiedot"
                      :access     viesti-service/kasittelija?
                      :parameters {:path {:id common-schema/Key}
@@ -65,7 +69,7 @@
                                    (api-response/response-with-exceptions
                                      #(api-response/ok|not-found
                                         (viesti-service/update-ketju! db id (:body parameters))
-                                        (str "Ketju " id " does not exists."))
+                                        (ketju-404 id))
                                      [{:type :foreign-key-violation :response 400}]))}}]
      ["/viestit"
       {:post {:summary    "Lisää ketjuun uusi viesti"
@@ -76,7 +80,75 @@
               :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami parameters]}]
                             (api-response/ok|not-found
                               (viesti-service/add-viesti! db whoami id (:body parameters))
-                              (str "Ketju " id " does not exists.")))}}]]]
+                              (ketju-404 id)))}}]
+     ["/liitteet"
+      [""
+       {:get {:summary    "Hae viestiketjun liitteet."
+              :parameters {:path {:id common-schema/Key}}
+              :responses  {200 {:body [liite-schema/Liite]}
+                           404 {:body schema/Str}}
+              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+                            (api-response/get-response
+                              (viesti-service/find-liitteet db id)
+                              (ketju-404 id)))}}]
+      ["/files"
+       {:conflicting true
+        :post        {:summary    "Viestiketjun liitteiden lisäys tiedostoista."
+                      :parameters {:path      {:id common-schema/Key}
+                                   :multipart liite-schema/MultipartFiles}
+                      :responses  {201 {:body [common-schema/Key]}
+                                   404 {:body common-schema/ConstraintError}}
+                      :handler    (fn [{{{:keys [id]} :path {:keys [files]} :multipart}
+                                        :parameters :keys [db aws-s3-client]}]
+                                    (api-response/response-with-exceptions
+                                      201
+                                      #(viesti-service/add-liitteet-from-files!
+                                         db aws-s3-client id
+                                         (if (vector? files) files [files]))
+                                      [{:constraint :viesti-liite-viestiketju-id-fkey :response 404}]))}}]
+      ["/link"
+       {:conflicting true
+        :post        {:summary    "Liite-linkin lisäys viestiketjuun."
+                      :parameters {:path {:id common-schema/Key}
+                                   :body liite-schema/LiiteLinkAdd}
+                      :responses  {201 {:body common-schema/Id}
+                                   404 {:body common-schema/ConstraintError}}
+                      :handler    (fn [{{{:keys [id]} :path :keys [body]}
+                                        :parameters :keys [db uri]}]
+                                    (api-response/with-exceptions
+                                      #(api-response/created
+                                         uri
+                                         {:id (viesti-service/add-liite-from-link! db id body)})
+                                      [{:constraint :viesti-liite-viestiketju-id-fkey :response 404}]))}}]
+      ["/:liite-id"
+       [""
+        {:conflicting true
+         :delete      {:summary    "Poista viestiketjun liite."
+                       :parameters {:path {:id       common-schema/Key
+                                           :liite-id common-schema/Key}}
+                       :responses  {200 {:body nil}
+                                    404 {:body schema/Str}}
+                       :handler    (fn [{{{:keys [id liite-id]} :path} :parameters :keys [db]}]
+                                     (api-response/ok|not-found
+                                       (viesti-service/delete-liite! db liite-id)
+                                       (api-response/msg-404 "liite " id liite-id)))}}]
+       ["/:filename"
+        {:conflicting true
+         :get         {:summary    "Hae viestiketjun liitteen sisältö."
+                       :parameters {:path {:id       common-schema/Key
+                                           :liite-id common-schema/Key
+                                           :filename schema/Str}}
+                       :responses  {200 {:body nil}
+                                    404 {:body schema/Str}}
+                       :handler    (fn [{{{:keys [id liite-id filename]} :path} :parameters
+                                         :keys                                  [db aws-s3-client]}]
+                                     (let [{:keys [tempfile contenttype] :as file}
+                                           (viesti-service/find-liite db aws-s3-client id liite-id)]
+                                       (if (= (:filename file) filename)
+                                         (api-response/file-response
+                                           (io/input-stream tempfile) filename contenttype false
+                                           (api-response/msg-404 "liite " id liite-id))
+                                         (api-response/bad-request "Filename is invalid."))))}}]]]]]
    ["/vastaanottajaryhmat"
     {:get {:summary   "Hae kaikki vastaanottajaryhmat."
            :responses {200 {:body [common-schema/Luokittelu]}}

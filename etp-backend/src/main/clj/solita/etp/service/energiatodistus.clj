@@ -205,11 +205,13 @@
 
 (defn- validate-laskutettava-yritys-id! [db laatija-id energiatodistus]
   (if-let [laskutettava-yritys-id (:laskutettava-yritys-id energiatodistus)]
-    (let [laskutusosoitteet (set (map :id (laatija-service/find-laatija-laskutusosoitteet db laatija-id)))]
+    (let [laskutusosoitteet (->> (laatija-service/find-laatija-laskutusosoitteet db laatija-id)
+                                 (filter :valid) (map :id) set)]
       (when-not (contains? laskutusosoitteet laskutettava-yritys-id)
-        (exception/throw-forbidden!
+        (exception/throw-ex-info!
+          :invalid-laskutusosoite
           (str "Laatija: " laatija-id " does not belong to yritys: "
-               laskutettava-yritys-id))))))
+               laskutettava-yritys-id " or yritys is deleted."))))))
 
 (defn- save-laskutusosoite-id [energiatodistus]
   (-> energiatodistus
@@ -275,10 +277,16 @@
   (schema->db-row->energiatodistus
     energiatodistus-schema/EnergiatodistusForAnyLaatija))
 
-(defn find-energiatodistus-any-laatija
-  ([db id]
-   (first (map db-row->energiatodistus-for-any-laatija
-               (energiatodistus-db/select-energiatodistus db {:id id})))))
+(defn find-energiatodistus-any-laatija [db id]
+  (first (map db-row->energiatodistus-for-any-laatija
+              (energiatodistus-db/select-energiatodistus db {:id id}))))
+
+(defn find-korvattavat [db query]
+  (map db-row->energiatodistus-for-any-laatija
+       (energiatodistus-db/select-korvattavat
+         db (merge {:rakennustunnus nil :postinumero nil
+                    :katuosoite-fi nil :katuosoite-sv nil}
+                   query))))
 
 (defn- throw-invalid-replace! [id msg]
   (exception/throw-ex-info! :invalid-replace (str "Replaceable energiatodistus " id msg)))
@@ -437,16 +445,17 @@
            " update conflicts with other concurrent update."))
     result))
 
-(defn find-required-properties [db versio]
+(defn find-required-properties [db versio bypass-validation]
   (cons
     "laskutusosoite-id"
     (map (comp to-property-name :column-name)
-         (energiatodistus-db/select-required-columns db {:versio versio}))))
+         (energiatodistus-db/select-required-columns
+           db {:versio versio :bypass-validation bypass-validation}))))
 
 (defn find-required-constraints [db energiatodistus]
-  (->> energiatodistus
-      :versio
-      (find-required-properties db)
+  (-> (find-required-properties
+        db (:versio energiatodistus)
+        (:bypass-validation-limits energiatodistus))
       validation/required-constraints))
 
 (defn validate-required!

@@ -4,6 +4,7 @@
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.schema.public-energiatodistus :as public-energiatodistus-schema]
+            [solita.etp.schema.valvonta-oikeellisuus :as valvonta-schema]
             [solita.etp.api.energiatodistus-crud :as crud-api]
             [solita.etp.api.energiatodistus-xml :as xml-api]
             [solita.etp.api.energiatodistus-liite :as liite-api]
@@ -60,18 +61,19 @@
            :invalid-arguments
            (str "Invalid json in where: " where)))))
 
-(def search-route
+(defn search-route [schema]
   [""
    {:get {:summary    "Hae energiatodistuksia"
           :parameters {:query energiatodistus-schema/EnergiatodistusSearch}
-          :responses  {200 {:body [public-energiatodistus-schema/Energiatodistus]}}
+          :responses  {200 {:body [schema]}}
           :access     rooli-service/energiatodistus-reader?
           :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
                         (api-response/response-with-exceptions
                          #(energiatodistus-search-service/search
                            db
                            whoami
-                           (update query :where parse-where))
+                           (update query :where parse-where)
+                           schema)
                          search-exceptions))}}])
 
 (def search-count-route
@@ -89,7 +91,7 @@
 
 
 
-(defn csv-route [energiatodistukset-csv]
+(defn csv-route [energiatodistukset-csv cache-ttl-seconds]
   ["/csv/energiatodistukset.csv"
    {:get {:summary    "Hae energiatodistusten tiedot CSV-tiedostona"
           :parameters {:query energiatodistus-schema/EnergiatodistusSearch}
@@ -101,24 +103,25 @@
                                          db whoami (update query :where json/read-value))]
                              (api-stream/result->async-channel
                               request
-                              (api-response/csv-response-headers "energiatodistukset.csv" false)
+                              (merge (api-response/csv-response-headers "energiatodistukset.csv" false)
+                                     (api-response/async-cache-headers cache-ttl-seconds))
                               result))
                           search-exceptions))}}])
 
 (def public-routes
   (concat
    [["/energiatodistukset"
-     search-route
+     (search-route public-energiatodistus-schema/Energiatodistus)
      search-count-route
-     (csv-route energiatodistus-csv-service/energiatodistukset-public-csv)
+     (csv-route energiatodistus-csv-service/energiatodistukset-public-csv 43200)
      luokittelut-api/routes]]))
 
 (def private-routes
   (concat
     [["/energiatodistukset"
-      search-route
+      (search-route valvonta-schema/Energiatodistus+Valvonta)
       search-count-route
-      (csv-route energiatodistus-csv-service/energiatodistukset-private-csv)
+      (csv-route energiatodistus-csv-service/energiatodistukset-private-csv 900)
 
       ["/xlsx/energiatodistukset.xlsx"
        {:get {:summary    "Hae energiatodistusten tiedot XLSX-tiedostona"
@@ -135,6 +138,18 @@
                                 "energiatodistukset.xlsx"
                                 "Not found.")
                               search-exceptions))}}]
+      ["/korvattavat"
+       {:get {:summary    "Hae energiatodistukseen liittyvät energiatodistukset,
+                           jotka mahdollisesti pitäisi korvata"
+              :parameters {:query
+                           {(schema/optional-key :rakennustunnus) schema/Str
+                            (schema/optional-key :postinumero)    schema/Int
+                            (schema/optional-key :katuosoite-fi)  schema/Str
+                            (schema/optional-key :katuosoite-sv)  schema/Str}}
+              :responses  {200 {:body [energiatodistus-schema/EnergiatodistusForAnyLaatija]}}
+              :access     rooli-service/energiatodistus-reader?
+              :handler    (fn [{{:keys [query]} :parameters :keys [db]}]
+                            (r/response (energiatodistus-service/find-korvattavat db query)))}}]
       ["/all"
        ["/:id"
         [""
@@ -186,13 +201,31 @@
                            (r/response (energiatodistus-service/find-numeric-validations
                                          db versio)))}}]
 
-     ["/validation/required/:versio"
-      {:get {:summary    "Hae voimassaolevan energiatodistuksen pakolliset kentät"
+     ["/validation/required/:versio/bypass"
+      {:get {:summary    "Hae voimassaolevan energiatodistuksen pakolliset kentät,
+                          joita ei voi ohittaa allekirjoituksessa"
              :parameters {:path {:versio common-schema/Key}}
              :responses  {200 {:body [schema/Str]}}
              :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
                            (r/response (energiatodistus-service/find-required-properties
-                                         db versio)))}}]
+                                         db versio true)))}}]
+
+     ["/validation/required/:versio/all"
+      {:get {:summary    "Hae voimassaolevan energiatodistuksen kaikki pakolliset kentät.
+                          Osa näistä on mahdollista ohittaa allekirjoituksessa."
+             :parameters {:path {:versio common-schema/Key}}
+             :responses  {200 {:body [schema/Str]}}
+             :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
+                           (r/response (energiatodistus-service/find-required-properties
+                                         db versio false)))}}]
+
+     ["/validation/required/:versio"
+      {:get {:summary    "Depraceted - same as /validation/required/:versio/all"
+             :parameters {:path {:versio common-schema/Key}}
+             :responses  {200 {:body [schema/Str]}}
+             :handler    (fn [{{{:keys [versio]} :path} :parameters :keys [db]}]
+                           (r/response (energiatodistus-service/find-required-properties
+                                         db versio false)))}}]
 
      ["/validation/sisaiset-kuormat/:versio"
       {:get {:summary    "Hae voimassaolevan energiatodistuksen pakolliset kentät"

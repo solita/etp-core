@@ -4,6 +4,7 @@
   solita.etp.schema.kayttaja
   (:require [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]
+            [solita.etp.schema.audit :as audit-schema]
             [schema-tools.core :as st]))
 
 (def VirtuId
@@ -30,14 +31,21 @@
 (def Kayttaja
   "Schema representing any persistent kayttaja (any role)"
   (merge common-schema/Id
-         {:login             (schema/maybe common-schema/Instant)
-          :cognitoid         (schema/maybe schema/Str)
-          :virtu             (schema/maybe VirtuId)
-          :henkilotunnus     (schema/maybe common-schema/Henkilotunnus)
-          :rooli             (schema/enum 0 1 2 3)
-          :ensitallennus     schema/Bool
-          :passivoitu        schema/Bool
-          :etunimi           schema/Str
-          :sukunimi          schema/Str
-          :puhelin           schema/Str
-          :email             schema/Str}))
+         {:login         (schema/maybe common-schema/Instant)
+          :cognitoid     (schema/maybe schema/Str)
+          :virtu         (schema/maybe VirtuId)
+          :henkilotunnus (schema/maybe common-schema/Henkilotunnus)
+          :rooli         (schema/enum 0 1 2 3)
+          :verifytime    (schema/maybe common-schema/Instant)
+          :passivoitu    schema/Bool
+          :etunimi       schema/Str
+          :sukunimi      schema/Str
+          :puhelin       schema/Str
+          :email         schema/Str}))
+
+(def Whoami (dissoc Kayttaja :passivoitu :puhelin :login))
+
+(def KayttajaHistory
+  (-> Kayttaja
+      (merge audit-schema/Audit)
+      (dissoc :login :verifytime)))

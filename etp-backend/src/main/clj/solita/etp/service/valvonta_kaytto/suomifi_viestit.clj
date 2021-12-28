@@ -19,8 +19,8 @@
                 :postitoimipaikka "Lahti"})
 
 (defn- tunniste [toimenpide osapuoli]
-  (str/join "-" [(:diaarinumero toimenpide)
-                 "ETP"
+  (str/join "-" [(or (:diaarinumero toimenpide) "ARA")
+                 "ETP" "KV"
                  (:valvonta-id toimenpide)
                  (:id toimenpide)
                  (cond
@@ -50,7 +50,7 @@
             :postitoimipaikka (:postitoimipaikka yritys)
             :maa              (:maa yritys)}})
 
-(defn- osaapuoli->asiakas [osapuoli]
+(defn- osapuoli->asiakas [osapuoli]
   (cond
     (osapuoli/henkilo? osapuoli) (henkilo->asiakas osapuoli)
     (osapuoli/yritys? osapuoli) (yritys->asiakas osapuoli)))
@@ -81,31 +81,39 @@
 (defn- toimenpide->tiedosto [type-key]
   (get {:rfi-request {:nimi   "tietopyynto.pdf"
                       :kuvaus "Tietopyyntö liitteenä"}
-        :rfi-order   {:nimi   "tietopyynto_kehtotus.pdf"
+        :rfi-order   {:nimi   "kehotus.pdf"
                       :kuvaus "Tietopyynnön kehotus liitteenä"}
-        :rfi-warning {:nimi   "tietopyynto_varoitus.pdf"
+        :rfi-warning {:nimi   "varoitus.pdf"
                       :kuvaus "Tietopyynnön varoitus liitteenä"}}
        type-key))
 
-(defn- add-cover-page [document osapuoli]
-  (with-open [baos (ByteArrayOutputStream.)]
-    (pdf/merge-pdf
-      [(pdf/generate-pdf->input-stream {:layout "pdf/ipost-address-page.html"
-                                        :data   {:lahettaja     lahettaja
-                                                 :vastaanottaja {:nimi             (str (:etunimi osapuoli) " " (:sukunimi osapuoli))
-                                                                 :jakeluosoite     (:jakeluosoite osapuoli)
-                                                                 :postinumero      (:postinumero osapuoli)
-                                                                 :postitoimipaikka (:postitoimipaikka osapuoli)}}})
-       (io/input-stream document)]
-      baos)
-    (.toByteArray baos)))
+
+(defn- create-cover-page [osapuoli]
+  (pdf/generate-pdf->input-stream
+    {:layout "pdf/ipost-address-page.html"
+     :data   {:lahettaja lahettaja
+              :vastaanottaja
+              {:tarkenne?        (-> osapuoli :vastaanottajan-tarkenne str/blank? not)
+               :tarkenne         (:vastaanottajan-tarkenne osapuoli)
+               :nimi             (if (osapuoli/henkilo? osapuoli)
+                                   (str (:etunimi osapuoli) " " (:sukunimi osapuoli))
+                                   (:nimi osapuoli))
+               :jakeluosoite     (:jakeluosoite osapuoli)
+               :postinumero      (:postinumero osapuoli)
+               :postitoimipaikka (:postitoimipaikka osapuoli)}}}))
+
+(defn- tiedosto-sisalto [document osapuoli]
+  (pdf/merge-pdf
+    [(create-cover-page osapuoli)
+     (io/input-stream document)
+     (store/info-letter)]))
 
 (defn- ^:dynamic bytes->base64 [bytes]
   (String. (b64/encode bytes) "UTF-8"))
 
-(defn- dokumentti->tiedosto [type-key osapuoli dokumentti]
+(defn- document->tiedosto [type-key osapuoli document]
   (let [{:keys [nimi kuvaus]} (toimenpide->tiedosto type-key)
-        tiedosto (add-cover-page dokumentti osapuoli)]
+        tiedosto (tiedosto-sisalto document osapuoli)]
     {:nimi    nimi
      :kuvaus  kuvaus
      :sisalto (bytes->base64 tiedosto)
@@ -114,24 +122,24 @@
 (defn- ^:dynamic now []
   (Instant/now))
 
-(defn- ->kohde [valvonta toimenpide osapuoli tiedosto]
+(defn- ->kohde [valvonta toimenpide osapuoli document]
   (let [type-key (toimenpide/type-key (:type-id toimenpide))
         {:keys [nimike kuvaus]} (toimenpide->kohde type-key valvonta toimenpide)]
     {:viranomaistunniste (tunniste toimenpide osapuoli)
      :nimike             nimike
      :kuvaus-teksti      kuvaus
      :lahetys-pvm        (now)
-     :asiakas            (osaapuoli->asiakas osapuoli)
-     :tiedostot          (dokumentti->tiedosto type-key osapuoli tiedosto)}))
+     :asiakas            (osapuoli->asiakas osapuoli)
+     :tiedostot          (document->tiedosto type-key osapuoli document)}))
 
 (defn send-message-to-osapuoli! [valvonta
                                  toimenpide
                                  osapuoli
-                                 dokumentti
+                                 document
                                  & [config]]
   (suomifi/send-message!
     (->sanoma toimenpide osapuoli)
-    (->kohde valvonta toimenpide osapuoli dokumentti)
+    (->kohde valvonta toimenpide osapuoli document)
     config))
 
 (defn send-suomifi-viestit! [aws-s3-client

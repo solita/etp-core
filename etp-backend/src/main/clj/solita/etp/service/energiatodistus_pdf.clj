@@ -540,8 +540,12 @@
                {:path [:lahtotiedot :ilmanvaihto :tuloilma-lampotila] :dp 1}
                {:path [:lahtotiedot :lammitys :tilat-ja-iv :lampopumppu-tuotto-osuus] :dp 0 :percent? true}
                {:path [:lahtotiedot :lammitys :lammin-kayttovesi :lampopumppu-tuotto-osuus] :dp 0 :percent? true}
-               {:path [:lahtotiedot :lammitys :tilat-ja-iv :lampohavio-lammittamaton-tila] :dp 1}
-               {:path [:lahtotiedot :lammitys :lammin-kayttovesi :lampohavio-lammittamaton-tila] :dp 1}]
+               {:path [:lahtotiedot :lammitys :lampohavio-lammittamaton-tila] :dp 1}
+               ;; The repeating item below is just to fill in some
+               ;; value, to keep the next items starting at cell
+               ;; A11. A10 was expected to be required, but the value
+               ;; inserted there turned out to be unnecessary.
+               {:path [:lahtotiedot :lammitys :lampohavio-lammittamaton-tila] :dp 1}]
               (flatten (for [i (range 12)]
                          [{:path [:tulokset :kuukausierittely i :tuotto :aurinkosahko] :dp 0}
                           {:path [:tulokset :kuukausierittely i :tuotto :tuulisahko] :dp 0}

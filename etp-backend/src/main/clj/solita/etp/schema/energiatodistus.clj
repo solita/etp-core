@@ -366,6 +366,14 @@
     (partial versio? 2018) Energiatodistus2018
     (partial versio? 2013) Energiatodistus2013))
 
+(defn assoc-energiatodistus
+  "Extend energiatodistus schema by associating new key value pairs."
+  [& kvs]
+  (schema/->ConditionalSchema
+    (map #(update % 1 (fn [schema] (apply assoc schema kvs)))
+         (:preds-and-schemas Energiatodistus))
+    (:error-symbol Energiatodistus)))
+
 (def Signature {:signature schema/Str :chain [schema/Str]})
 
 (def Range

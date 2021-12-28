@@ -1,6 +1,6 @@
 insert into vk_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, content)
 values
-(0, 'Tietopyyntö', 'Tietopyyntö (sv)', 1, 1, 'fi',
+(0, 'Tietopyyntö', 'Begäran om uppgifter', 1, 1, 'fi',
 $$
 <div class="otsikko">
     <b>TIETOPYYNTÖ/ <br/>

@@ -4,7 +4,6 @@ SELECT k.id,
        k.sukunimi,
        k.puhelin,
        k.email,
-       k.ensitallennus,
        k.henkilotunnus,
        k.login,
        l.patevyystaso,
@@ -23,7 +22,7 @@ SELECT k.id,
        l.julkinen_puhelin julkinenpuhelin,
        l.julkinen_wwwosoite julkinenwwwosoite,
        l.julkinen_osoite julkinenosoite,
-       array(select yritys_id from laatija_yritys where laatija_id = l.id) as yritys,
+       array(select yritys_id from laatija_yritys where laatija_id = l.id and tila_id = 1) as yritys,
        coalesce(current_timestamp < login + interval '6 month', false) as aktiivinen
 FROM laatija l
 INNER JOIN kayttaja k
@@ -82,7 +81,8 @@ select
   -1 id, null ytunnus, k.etunimi || ' ' || k.sukunimi nimi,
   l.vastaanottajan_tarkenne, l.jakeluosoite,
   l.postinumero, l.postitoimipaikka, l.maa,
-  null verkkolaskuoperaattori, null verkkolaskuosoite
+  null verkkolaskuoperaattori, null verkkolaskuosoite,
+  true as valid
 from laatija l inner join kayttaja k on l.id = k.id
 where l.id = :id
 union all
@@ -90,10 +90,38 @@ select
   y.id, y.ytunnus, y.nimi,
   y.vastaanottajan_tarkenne, y.jakeluosoite,
   y.postinumero, y.postitoimipaikka, y.maa,
-  y.verkkolaskuoperaattori, y.verkkolaskuosoite
-from yritys y
-where exists (
-  select 1 from laatija_yritys
-  where laatija_yritys.laatija_id = :id and
-        laatija_yritys.yritys_id = y.id and
-        laatija_yritys.tila_id = 1);
+  y.verkkolaskuoperaattori, y.verkkolaskuosoite,
+  not y.deleted and laatija_yritys.tila_id = 1 as valid
+from yritys y inner join laatija_yritys
+  on laatija_yritys.laatija_id = :id and
+     laatija_yritys.yritys_id = y.id;
+
+-- name: select-count-public-laatijat
+select
+  count(*)
+from
+  laatija inner join kayttaja on laatija.id = kayttaja.id
+where
+  kayttaja.login is not null and
+  patevyys_voimassa(laatija) and
+  not laatija.laatimiskielto;
+
+-- name: select-laatija-history
+select
+  l.id, l.patevyystaso,
+  l.toteamispaivamaara, l.toteaja, l.laatimiskielto,
+  l.toimintaalue, l.muut_toimintaalueet as muuttoimintaalueet,
+  l.julkinen_puhelin as julkinenpuhelin,
+  l.julkinen_email as julkinenemail,
+  l.julkinen_osoite as julkinenosoite,
+  l.julkinen_wwwosoite as julkinenwwwosoite,
+  l.laskutuskieli,
+  l.vastaanottajan_tarkenne, l.jakeluosoite,
+  l.postinumero, l.postitoimipaikka, l.wwwosoite, l.maa,
+  l.modifytime,
+  fullname(modifier) modifiedby_name
+from
+  audit.laatija l
+  join kayttaja modifier on l.modifiedby_id = modifier.id
+where l.id = :id
+order by modifytime, event_id;

@@ -4,6 +4,15 @@
             [schema-tools.core :as schema-tools]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]))
 
+(def ValvontaQuery
+  {(schema/optional-key :valvoja-id) common-schema/Key
+   (schema/optional-key :has-valvoja) schema/Bool
+   (schema/optional-key :include-closed) schema/Bool
+   (schema/optional-key :keyword) schema/Str
+   (schema/optional-key :toimenpidetype-id) common-schema/Key
+   (schema/optional-key :laatija-id) common-schema/Key
+   (schema/optional-key :kayttotarkoitus-id) common-schema/Key})
+
 (def ValvontaSave
   {:pending    schema/Bool
    :valvoja-id (schema/maybe common-schema/Key)})
@@ -72,3 +81,9 @@
 
 (def laatija? #(and (contains? % :etunimi) (contains? % :sukunimi)))
 (def tiedoksi? #(and (contains? % :name)))
+
+(def Energiatodistus+Valvonta
+  (energiatodistus-schema/assoc-energiatodistus
+    :valvonta (assoc ValvontaSave
+                :ongoing schema/Bool
+                :type-id (schema/maybe common-schema/Key))))

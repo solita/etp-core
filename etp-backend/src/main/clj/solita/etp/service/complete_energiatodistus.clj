@@ -490,7 +490,12 @@
                         [:toteutunut-ostoenergiankulutus :sahko-vuosikulutus-yhteensa-nettoala]
                         [:toteutunut-ostoenergiankulutus :kaukolampo-vuosikulutus-yhteensa-nettoala]
                         [:toteutunut-ostoenergiankulutus :polttoaineet-vuosikulutus-yhteensa-nettoala]
-                        [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala])))))
+                        [:toteutunut-ostoenergiankulutus :kaukojaahdytys-vuosikulutus-yhteensa-nettoala])
+          (combine-keys +
+                        0
+                        [:lahtotiedot :lammitys :lampohavio-lammittamaton-tila]
+                        [:lahtotiedot :lammitys :tilat-ja-iv :lampohavio-lammittamaton-tila]
+                        [:lahtotiedot :lammitys :lammin-kayttovesi :lampohavio-lammittamaton-tila])))))
 
 (defn luokittelut [db]
   {:postinumerot          (geo/find-all-postinumerot db)

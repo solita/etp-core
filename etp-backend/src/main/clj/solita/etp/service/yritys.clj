@@ -15,8 +15,23 @@
 (defn find-all-yritykset [db]
   (yritys-db/select-all-yritykset db))
 
-(defn find-laatijat [db id]
-  (yritys-db/select-laatijat db {:id id}))
+(defn- laatija-in-yritys-laatijat? [laatija-id yritys-laatijat]
+  (some #(= laatija-id (:id %))
+        (filter laatija-yritys/accepted? yritys-laatijat)))
+
+(defn- assert-permission! [whoami yritys-id yritys-laatijat]
+  (if (or (rooli-service/paakayttaja? whoami)
+          (laatija-in-yritys-laatijat? (:id whoami) yritys-laatijat))
+    yritys-laatijat
+    (exception/throw-forbidden!
+      (str "User " (:id whoami) " is not paakayttaja or "
+           "does not belong to organization: " yritys-id))))
+
+(defn find-laatijat
+  ([db id] (yritys-db/select-laatijat db {:id id}))
+  ([db whoami id] (assert-permission! whoami id (find-laatijat db id))))
+
+(defn db-assert-permission! [db whoami id] (find-laatijat db whoami id))
 
 (defn find-all-laskutuskielet [db]
   (yritys-db/select-all-laskutuskielet db))
@@ -25,24 +40,16 @@
   (yritys-db/select-all-verkkolaskuoperaattorit db))
 
 (defn laatija-in-yritys? [db laatija-id yritys-id]
-  (some #(= laatija-id (:id %))
-        (filter laatija-yritys/accepted? (find-laatijat db yritys-id))))
-
-(defn assert-modify-permission! [db whoami yritys-id]
-  (when-not (or (laatija-in-yritys? db (:id whoami) yritys-id)
-                (rooli-service/paakayttaja? whoami))
-    (exception/throw-forbidden!
-      (str "User " (:id whoami) " is not paakayttaja or "
-           "does not belong to organization: " yritys-id))))
+  (laatija-in-yritys-laatijat? laatija-id (find-laatijat db yritys-id)))
 
 (defn update-yritys!
   [db whoami id yritys]
-  (assert-modify-permission! db whoami id)
+  (db-assert-permission! db whoami id)
   (yritys-db/update-yritys! db (assoc yritys :id id)))
 
 (defn add-laatija-yritys!
   ([db whoami laatija-id yritys-id]
-   (assert-modify-permission! db whoami yritys-id)
+   (db-assert-permission! db whoami yritys-id)
    (add-laatija-yritys! db laatija-id yritys-id))
   ([db laatija-id yritys-id]
    (yritys-db/insert-laatija-yritys!
@@ -51,7 +58,12 @@
 
 (defn add-yritys!
   ([db whoami yritys]
-    (jdbc/with-db-transaction [db db]
-      (let [id (:id (yritys-db/insert-yritys<! db yritys))]
-        (add-laatija-yritys! db (:id whoami) id)
-        id))))
+   (jdbc/with-db-transaction
+     [db db]
+     (let [id (:id (yritys-db/insert-yritys<! db yritys))]
+       (add-laatija-yritys! db (:id whoami) id)
+       id))))
+
+(defn set-yritys-deleted! [db whoami id deleted]
+  (db-assert-permission! db whoami id)
+  (yritys-db/update-yritys-deleted! db {:id id :deleted deleted}))

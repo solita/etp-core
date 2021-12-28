@@ -11,3 +11,6 @@
 
 (def henkilo? #(and (contains? % :etunimi) (contains? % :sukunimi)))
 (def yritys? #(contains? % :nimi))
+
+(defn ilmoituspaikka-other? [valvonta]
+  (= (:ilmoituspaikka-id valvonta) 2))

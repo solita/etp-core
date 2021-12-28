@@ -15,7 +15,9 @@
             [solita.etp.service.valvonta-kaytto.store :as store]
             [solita.etp.service.valvonta-kaytto.email :as email]
             [solita.etp.exception :as exception]
-            [solita.etp.service.concurrent :as concurrent])
+            [solita.etp.service.concurrent :as concurrent]
+            [solita.etp.service.liite :as liite-service]
+            [solita.etp.service.csv :as csv-service])
   (:import (java.time Instant)))
 
 (db/require-queries 'valvonta-kaytto)
@@ -30,8 +32,13 @@
   (update valvonta-db-row :postinumero (maybe/lift1 #(format "%05d" %))))
 
 (def ^:private default-valvonta-query
-  {:valvoja-id nil :has-valvoja nil :include-closed false
-   :limit 10 :offset 0})
+  {:valvoja-id nil
+   :has-valvoja nil
+   :include-closed false
+   :keyword nil
+   :toimenpidetype-id nil
+   :limit 10
+   :offset 0})
 
 (defn- nil-if-not-exists [key object]
   (update object key (logic/when* (comp nil? :id) (constantly nil))))
@@ -141,10 +148,8 @@
 (defn add-liitteet-from-files! [db aws-s3-client valvonta-id liitteet]
   (doseq [liite liitteet]
     (let [liite-id (insert-liite! db (-> liite
-                                         (dissoc :tempfile :size)
-                                         (assoc :valvonta-id valvonta-id)
-                                         (set/rename-keys {:content-type :contenttype
-                                                           :filename     :nimi})))]
+                                         liite-service/temp-file->liite
+                                         (assoc :valvonta-id valvonta-id)))]
       (file-service/upsert-file-from-file
         aws-s3-client
         (file-path valvonta-id liite-id)
@@ -230,7 +235,7 @@
                               osapuolet]
   (concurrent/run-background
     #(suomifi-viestit/send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
-    "Suomifi viestit sending failed"))
+    (str "Sending suomifi-viestit failed for toimenpide: " (:id valvonta) "/" (:id toimenpide))))
 
 (defn add-toimenpide! [db aws-s3-client whoami valvonta-id toimenpide-add]
   (jdbc/with-db-transaction
@@ -299,11 +304,6 @@
 (defn find-toimenpide-yritys-document [db aws-s3-client valvonta-id toimenpide-id yritys-id]
   (store/find-document aws-s3-client valvonta-id toimenpide-id (find-yritys db yritys-id)))
 
-(defn find-toimenpide-document [aws-s3-client valvonta-id toimenpide-id osapuoli ostream]
-  (when-let [document (store/find-document aws-s3-client valvonta-id toimenpide-id osapuoli)]
-    (with-open [output (io/output-stream ostream)]
-      (io/copy document output))))
-
 (defn find-notes [db id]
   (valvonta-kaytto-db/select-valvonta-notes
     db {:valvonta-id id}))
@@ -322,3 +322,31 @@
            jdbc/update! db :vk-note
            {:description description} ["id = ?" id]
            db/default-opts)))
+
+(def ^:private csv-header
+  (csv-service/csv-line
+    ["id" "rakennustunnus", "diaarinumero"
+     "katuosoite" "postinumero" "postitoimipaikka"
+     "toimenpide-id" "toimenpidetyyppi" "aika" "valvoja"]))
+(defn csv [db]
+  (fn [write!]
+    (write! csv-header)
+    (jdbc/query
+      db
+      "select
+         valvonta.id, valvonta.rakennustunnus, toimenpide.diaarinumero,
+         valvonta.katuosoite, lpad(valvonta.postinumero::text, 5, '0'), postinumero.label_fi,
+         toimenpide.id, toimenpidetype.label_fi, toimenpide.publish_time,
+         fullname(kayttaja)
+       from vk_valvonta valvonta
+         inner join postinumero on postinumero.id = valvonta.postinumero
+         inner join vk_toimenpide toimenpide on toimenpide.valvonta_id = valvonta.id
+         inner join vk_toimenpidetype toimenpidetype on toimenpidetype.id = toimenpide.type_id
+         left join kayttaja on kayttaja.id = valvonta.valvoja_id
+       where not deleted"
+      {:row-fn        (comp write! csv-service/csv-line)
+       :as-arrays?    :cols-as-is
+       :result-set-fn dorun
+       :result-type   :forward-only
+       :concurrency   :read-only
+       :fetch-size    100})))

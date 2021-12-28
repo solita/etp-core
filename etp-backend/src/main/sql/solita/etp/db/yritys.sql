@@ -4,17 +4,20 @@ VALUES (:ytunnus, :nimi, :verkkolaskuoperaattori, :verkkolaskuosoite, :laskutusk
 RETURNING id
 
 -- name: update-yritys!
-UPDATE yritys SET nimi = :nimi, ytunnus = :ytunnus, verkkolaskuoperaattori = :verkkolaskuoperaattori, verkkolaskuosoite = :verkkolaskuosoite, laskutuskieli = :laskutuskieli, jakeluosoite = :jakeluosoite, vastaanottajan_tarkenne = :vastaanottajan-tarkenne, postinumero = :postinumero, postitoimipaikka = :postitoimipaikka, maa = :maa
-WHERE id = :id
+update yritys set nimi = :nimi, ytunnus = :ytunnus, verkkolaskuoperaattori = :verkkolaskuoperaattori, verkkolaskuosoite = :verkkolaskuosoite, laskutuskieli = :laskutuskieli,
+       jakeluosoite = :jakeluosoite, vastaanottajan_tarkenne = :vastaanottajan-tarkenne, postinumero = :postinumero, postitoimipaikka = :postitoimipaikka, maa = :maa
+where id = :id
 
 -- name: select-yritys
-SELECT id, ytunnus, nimi, verkkolaskuoperaattori, verkkolaskuosoite, laskutuskieli, jakeluosoite, vastaanottajan_tarkenne as "vastaanottajan-tarkenne", postinumero, postitoimipaikka, maa
-FROM yritys
-WHERE id = :id
+select id, ytunnus, nimi, verkkolaskuoperaattori, verkkolaskuosoite, laskutuskieli, deleted,
+       jakeluosoite, vastaanottajan_tarkenne as "vastaanottajan-tarkenne", postinumero, postitoimipaikka, maa
+from yritys
+where id = :id
 
 -- name: select-all-yritykset
-SELECT id, ytunnus, nimi, verkkolaskuoperaattori, verkkolaskuosoite, laskutuskieli, jakeluosoite, vastaanottajan_tarkenne as "vastaanottajan-tarkenne", postinumero, postitoimipaikka, maa
-FROM yritys
+select id, ytunnus, nimi, verkkolaskuoperaattori, verkkolaskuosoite, laskutuskieli, deleted,
+       jakeluosoite, vastaanottajan_tarkenne as "vastaanottajan-tarkenne", postinumero, postitoimipaikka, maa
+from yritys
 
 --name: select-all-laskutuskielet
 SELECT id, label_fi as "label-fi", label_sv as "label-sv", valid FROM laskutuskieli;
@@ -51,3 +54,6 @@ where laatija_yritys.yritys_id = :id
 insert into laatija_yritys (laatija_id, yritys_id, tila_id)
 values (:laatija-id, :yritys-id, 1)
 on conflict (laatija_id, yritys_id) do update set tila_id = 1
+
+-- name: update-yritys-deleted!
+update yritys set deleted = :deleted where id = :id;

@@ -8,7 +8,7 @@
                [:katuosoite-fi :katuosoite-sv :valmistumisvuosi
                 :havainnointikaynti :rakennustunnus :postinumero
                 :keskeiset-suositukset-fi :keskeiset-suositukset-sv
-                :laatimisvaihe :yritys :kieli :nimi-fi :nimi-sv :kayttotarkoitus]))
+                :laatimisvaihe :yritys :kieli :nimi :kayttotarkoitus]))
 
 (def LahtotiedotIlmanvaihto
   (select-keys energiatodistus-schema/LahtotiedotIlmanvaihto
@@ -32,10 +32,12 @@
   (-> (energiatodistus-schema/energiatodistus-versio
        versio
        (energiatodistus-schema/optional-properties
-         {:perustiedot Perustiedot
-          :lahtotiedot Lahtotiedot
-          :tulokset    Tulokset}))
-      (dissoc :laskutusaika)))
+        {:perustiedot Perustiedot
+         :lahtotiedot Lahtotiedot
+         :tulokset    Tulokset}))
+      (dissoc :laatija-fullname
+              :laatija-id
+              :laskutusaika)))
 
 (def Energiatodistus2013
   (-> (energiatodistus-versio 2013)

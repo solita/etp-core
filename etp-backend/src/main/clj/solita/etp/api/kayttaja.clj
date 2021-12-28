@@ -5,7 +5,6 @@
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
             [solita.etp.schema.laatija :as laatija-schema]
-            [solita.etp.schema.whoami :as whoami-schema]
             [solita.etp.schema.rooli :as rooli-schema]
             [solita.etp.service.whoami :as whoami-service]
             [solita.etp.service.kayttaja :as kayttaja-service]
@@ -15,8 +14,8 @@
 (def routes
   [["/whoami"
     {:get {:summary "Kirjautuneen käyttäjän tiedot"
-           :responses {200 {:body whoami-schema/Whoami}}
-           :handler (fn [{:keys [whoami jwt-payloads db]}]
+           :responses {200 {:body kayttaja-schema/Whoami}}
+           :handler (fn [{:keys [whoami db]}]
                       (whoami-service/update-kayttaja-with-whoami! db whoami)
                       (r/response whoami))}}]
    ["/kayttajat"
@@ -57,6 +56,13 @@
                          (kayttaja-service/update-kayttaja!
                           db whoami id (:body parameters))
                          (str "Käyttäjä " id " does not exists or käyttäjä is laatija.")))}}]
+     ["/history"
+      {:get {:summary "Hae käyttäjän muutoshistoria"
+             :parameters {:path {:id common-schema/Key}}
+             :responses {200 {:body [kayttaja-schema/KayttajaHistory]}}
+             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+                        (r/response
+                         (kayttaja-service/find-history db whoami id)))}}]
      ["/laatija"
       {:get {:summary "Hae käyttäjään liittyvät laatijatiedot."
              :parameters {:path {:id common-schema/Key}}

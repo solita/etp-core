@@ -9,7 +9,8 @@
             [schema.core :as schema]
             [schema-tools.core :as schema-tools]
             [reitit.ring.schema :as reitit-schema]
-            [solita.etp.schema.liite :as liite-schema]))
+            [solita.etp.schema.liite :as liite-schema]
+            [solita.etp.api.stream :as api-stream]))
 
 (defn toimenpide-404-msg [valvonta-id toimenpide-id]
   (api-response/msg-404 "toimenpide" valvonta-id toimenpide-id))
@@ -23,6 +24,16 @@
                     :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                     :handler   (fn [{:keys [db]}]
                                  (r/response (valvonta-service/find-toimenpidetyypit db)))}}]
+    ["/csv/valvonta.csv"
+     {:get {:summary   "Hae valvontojen tiedot CSV-tiedostona"
+            :responses {200 {:body nil}}
+            :access    rooli-service/paakayttaja?
+            :handler   (fn [{:keys [db] :as request}]
+                         (let [result (valvonta-service/csv db)]
+                           (api-stream/result->async-channel
+                             request
+                             (api-response/csv-response-headers "valvonta.csv" false)
+                             result)))}}]
     ["/virhetypes"
      [""
       {:conflicting true
@@ -40,6 +51,14 @@
                                    (api-response/created
                                      uri (valvonta-service/add-virhetype!
                                            db (:body parameters))))}}]
+     ["/statistics/virhetilastot.csv"
+      {:get {:summary "Hae virhetyyppien tilastot"
+             :access rooli-service/paakayttaja?
+             :responses {200 {:body schema/Str}}
+             :handler (fn [{:keys [db]}]
+                        (-> (valvonta-service/virhetilastot db)
+                            valvonta-service/virhetilastot->csv
+                            (api-response/csv-response "virhetilastot.csv" "")))}}]
      ["/:id"
       {:conflicting true
        :put         {:summary    "Muuta virhetyypin tietoja."
@@ -73,7 +92,7 @@
      {:conflicting true
       :get         {:summary    "Hae energiatodistusten oikeellisuuden valvontojen lukumäärä."
                     :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
-                    :parameters {:query valvonta-schema/ValvontaQuery}
+                    :parameters {:query oikeellisuus-schema/ValvontaQuery}
                     :responses  {200 {:body {:count schema/Int}}}
                     :handler    (fn [{{:keys [query]} :parameters :keys [db whoami]}]
                                   (r/response (valvonta-service/count-valvonnat db whoami query)))}}]
@@ -89,7 +108,7 @@
     [""
      {:conflicting true
       :get         {:summary   "Hae energiatodistusten oikeellisuuden valvonnat (työjono)."
-                    :parameters {:query (merge valvonta-schema/ValvontaQuery
+                    :parameters {:query (merge oikeellisuus-schema/ValvontaQuery
                                                valvonta-schema/ValvontaQueryWindow)}
                     :responses {200 {:body [oikeellisuus-schema/ValvontaStatus]}}
                     :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
@@ -106,7 +125,7 @@
                      :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                                    (api-response/get-response
                                      (valvonta-service/find-valvonta db id)
-                                     (str "Energiatodistus " id " does not exists.")))}
+                                     (api-response/msg-404 "energiatodistus" id)))}
 
        :put         {:summary    "Muuta valvonnan yleisiä tietoja."
                      :access     rooli-service/paakayttaja?
@@ -114,9 +133,9 @@
                                   :body (schema-tools/optional-keys-schema oikeellisuus-schema/ValvontaSave)}
                      :responses  {200 {:body nil}}
                      :handler    (fn [{{{:keys [id]} :path :keys [body]}
-                                       :parameters :keys [db]}]
+                                       :parameters :keys [db whoami]}]
                                    (api-response/ok|not-found
-                                     (valvonta-service/save-valvonta! db id body)
+                                     (valvonta-service/save-valvonta! db whoami id body)
                                      (api-response/msg-404 "energiatodistus" id)))}}]
 
      ["/toimenpiteet"
@@ -187,7 +206,18 @@
                             (api-response/ok|not-found
                               (valvonta-service/update-toimenpide!
                                 db whoami id toimenpide-id body)
-                              (toimenpide-404-msg id toimenpide-id)))}}]
+                              (toimenpide-404-msg id toimenpide-id)))}
+         :delete    {:summary    "Poistaa luonnostilaisen toimenpiteen."
+                     :access     rooli-service/paakayttaja?
+                     :parameters {:path {:id            common-schema/Key
+                                         :toimenpide-id common-schema/Key}}
+                     :responses  {200 {:body nil}
+                                  404 {:body schema/Str}}
+                     :handler    (fn [{{{:keys [id toimenpide-id]} :path}
+                                       :parameters :keys [db]}]
+                                   (api-response/ok|not-found
+                                     (valvonta-service/delete-draft-toimenpide! db toimenpide-id)
+                                     (toimenpide-404-msg id toimenpide-id)))}}]
        ["/liitteet"
         [""
         {:get {:summary    "Hae toimenpiteen liitteet."

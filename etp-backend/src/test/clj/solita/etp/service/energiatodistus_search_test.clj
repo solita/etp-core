@@ -1,33 +1,46 @@
 (ns solita.etp.service.energiatodistus-search-test
   (:require [clojure.test :as t]
             [clojure.java.jdbc :as jdbc]
-            [schema-tools.core :as st]
             [solita.common.map :as xmap]
             [solita.etp.test-system :as ts]
             [solita.etp.test :as etp-test]
             [solita.etp.test-data.kayttaja :as kayttaja-test-data]
             [solita.etp.test-data.laatija :as laatija-test-data]
             [solita.etp.test-data.energiatodistus :as energiatodistus-test-data]
+            [solita.etp.schema.energiatodistus :as energiatodistus-schema]
+            [solita.etp.schema.public-energiatodistus :as energiatodistus-public-schema]
+            [solita.etp.schema.valvonta-oikeellisuus :as valvonta-schema]
             [solita.etp.service.energiatodistus-search :as service]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
+            [solita.etp.service.valvonta-oikeellisuus :as valvonta-service]
             [solita.etp.service.laatija :as laatija-service]
-            [solita.etp.service.e-luokka :as e-luokka-service])
-  (:import (clojure.lang ExceptionInfo)
-           (java.time LocalDate Instant ZoneId)))
+            [solita.etp.service.e-luokka :as e-luokka-service]
+            [solita.common.logic :as logic])
+  (:import (java.time Instant LocalDate)))
 
 (t/use-fixtures :each ts/fixture)
+
+(t/deftest select
+  (t/is (= (service/select {})
+           "select energiatodistus.*"))
+  (t/is (= (service/select energiatodistus-schema/Energiatodistus)
+           "select energiatodistus.*,\nfullname(kayttaja.*) laatija_fullname,\nkorvaava_energiatodistus.id as korvaava_energiatodistus_id"))
+  (t/is (= (service/select energiatodistus-public-schema/Energiatodistus)
+           "select energiatodistus.*,\nkorvaava_energiatodistus.id as korvaava_energiatodistus_id"))
+  (t/is (= (service/select valvonta-schema/Energiatodistus+Valvonta)
+           "select energiatodistus.*,\nfullname(kayttaja.*) laatija_fullname,\nkorvaava_energiatodistus.id as korvaava_energiatodistus_id,\ncoalesce(last_toimenpide.ongoing, false) valvonta$ongoing,\nlast_toimenpide.type_id valvonta$type_id")))
 
 (defn test-data-set []
   (let [laatijat (laatija-test-data/generate-and-insert! 3)
         laatija-ids (-> laatijat keys sort)
         energiatodistus-adds (->> (concat
-                                   (energiatodistus-test-data/generate-adds
-                                    2
-                                    2018
-                                    true)
-                                   (energiatodistus-test-data/generate-adds-with-zeros
-                                    2
-                                    2018))
+                                    (energiatodistus-test-data/generate-adds
+                                      2
+                                      2018
+                                      true)
+                                    (energiatodistus-test-data/generate-adds-with-zeros
+                                      2
+                                      2018))
                                   (map #(assoc-in %
                                                   [:perustiedot :postinumero]
                                                   "33100"))
@@ -38,38 +51,39 @@
                                              energiatodistus-adds)
                                  (partition 2)
                                  (mapcat #(energiatodistus-test-data/insert!
-                                           [(second %)]
-                                           (first %)))
+                                            [(second %)]
+                                            (first %)))
                                  sort)]
     (doseq [[laatija-id energiatodistus-id] (->> (interleave
-                                                  (cycle laatija-ids)
-                                                  (take 2 energiatodistus-ids))
+                                                   (cycle laatija-ids)
+                                                   (take 2 energiatodistus-ids))
                                                  (partition 2))]
       (energiatodistus-service/start-energiatodistus-signing!
-       ts/*db*
-       {:id laatija-id}
-       energiatodistus-id)
+        ts/*db*
+        {:id laatija-id}
+        energiatodistus-id)
       (energiatodistus-service/end-energiatodistus-signing!
-       ts/*db*
-       ts/*aws-s3-client*
-       {:id laatija-id}
-       energiatodistus-id
-       {:skip-pdf-signed-assert? true}))
+        ts/*db*
+        ts/*aws-s3-client*
+        {:id laatija-id}
+        energiatodistus-id
+        {:skip-pdf-signed-assert? true}))
     (energiatodistus-service/delete-energiatodistus-luonnos!
-     ts/*db*
-     {:id (last laatija-ids)}
-     (last energiatodistus-ids))
-    {:laatijat laatijat
+      ts/*db*
+      {:id (last laatija-ids)}
+      (last energiatodistus-ids))
+    {:laatijat           laatijat
      :energiatodistukset (zipmap energiatodistus-ids energiatodistus-adds)}))
 
 (defn search [whoami where keyword sort order]
   (service/search ts/*db*
                   whoami
                   (cond-> {}
-                    where (assoc :where where)
-                    keyword (assoc :keyword keyword)
-                    sort (assoc :sort sort)
-                    order (assoc :order order))))
+                          where (assoc :where where)
+                          keyword (assoc :keyword keyword)
+                          sort (assoc :sort sort)
+                          order (assoc :order order))
+                  energiatodistus-schema/Energiatodistus))
 
 (defn search-and-assert
   ([test-data-set id where]
@@ -111,28 +125,31 @@
         one-day (. java.time.Duration (ofDays 1))
         two-days (. java.time.Duration (ofDays 2))]
     (t/is (nil? (-> (service/search
-                     ts/*db*
-                     {:rooli 0 :id laatija-id}
-                     {:where [[["=" "energiatodistus.id" id]
-                               ["between" "laatija.voimassaolo-paattymisaika"
-                                (.minus voimassaolo-paattymisaika two-days)
-                                (.minus voimassaolo-paattymisaika one-day)]]]})
+                      ts/*db*
+                      {:rooli 0 :id laatija-id}
+                      {:where [[["=" "energiatodistus.id" id]
+                                ["between" "laatija.voimassaolo-paattymisaika"
+                                 (.minus voimassaolo-paattymisaika two-days)
+                                 (.minus voimassaolo-paattymisaika one-day)]]]}
+                      energiatodistus-schema/Energiatodistus)
                     first :id)))
     (t/is (= id (-> (service/search
-                     ts/*db*
-                     {:rooli 0 :id laatija-id}
-                     {:where [[["=" "energiatodistus.id" id]
-                               ["between" "laatija.voimassaolo-paattymisaika"
-                                (.minus voimassaolo-paattymisaika one-day)
-                                (.plus voimassaolo-paattymisaika one-day)]]]})
+                      ts/*db*
+                      {:rooli 0 :id laatija-id}
+                      {:where [[["=" "energiatodistus.id" id]
+                                ["between" "laatija.voimassaolo-paattymisaika"
+                                 (.minus voimassaolo-paattymisaika one-day)
+                                 (.plus voimassaolo-paattymisaika one-day)]]]}
+                      energiatodistus-schema/Energiatodistus)
                     first :id)))
     (t/is (nil? (-> (service/search
-                     ts/*db*
-                     {:rooli 0 :id laatija-id}
-                     {:where [[["=" "energiatodistus.id" id]
-                               ["between" "laatija.voimassaolo-paattymisaika"
-                                (.plus voimassaolo-paattymisaika one-day)
-                                (.plus voimassaolo-paattymisaika two-days)]]]})
+                      ts/*db*
+                      {:rooli 0 :id laatija-id}
+                      {:where [[["=" "energiatodistus.id" id]
+                                ["between" "laatija.voimassaolo-paattymisaika"
+                                 (.plus voimassaolo-paattymisaika one-day)
+                                 (.plus voimassaolo-paattymisaika two-days)]]]}
+                      energiatodistus-schema/Energiatodistus)
                     first :id)))))
 
 (t/deftest search-by-id-null-nettoala-test
@@ -140,13 +157,14 @@
         id (-> energiatodistukset keys sort first)
         laatija-id (-> laatijat keys clojure.core/sort first)]
     (jdbc/execute!
-     ts/*db*
-     ["UPDATE energiatodistus SET lt$lammitetty_nettoala = NULL where id = ?" id])
+      ts/*db*
+      ["UPDATE energiatodistus SET lt$lammitetty_nettoala = NULL where id = ?" id])
     (let [found-id (-> (service/search
-                        ts/*db*
-                        {:rooli 0 :id laatija-id}
-                        {:where [[["=" "energiatodistus.id" id]
-                                  ["nil?" "energiatodistus.tulokset.nettotarve.tilojen-lammitys-neliovuosikulutus"]]]})
+                         ts/*db*
+                         {:rooli 0 :id laatija-id}
+                         {:where [[["=" "energiatodistus.id" id]
+                                   ["nil?" "energiatodistus.tulokset.nettotarve.tilojen-lammitys-neliovuosikulutus"]]]}
+                         energiatodistus-schema/Energiatodistus)
                        first :id)]
 
       (t/is (= id found-id)))))
@@ -157,14 +175,15 @@
         laatija-id (-> laatijat keys clojure.core/sort first)]
 
     (jdbc/execute!
-     ts/*db*
-     ["UPDATE energiatodistus SET lt$lammitetty_nettoala = 0 where id = ?" id])
+      ts/*db*
+      ["UPDATE energiatodistus SET lt$lammitetty_nettoala = 0 where id = ?" id])
 
     (let [found-id (-> (service/search
-                        ts/*db*
-                        {:rooli 0 :id laatija-id}
-                        {:where [[["=" "energiatodistus.id" id]
-                                  ["nil?" "energiatodistus.tulokset.nettotarve.tilojen-lammitys-neliovuosikulutus"]]]})
+                         ts/*db*
+                         {:rooli 0 :id laatija-id}
+                         {:where [[["=" "energiatodistus.id" id]
+                                   ["nil?" "energiatodistus.tulokset.nettotarve.tilojen-lammitys-neliovuosikulutus"]]]}
+                         energiatodistus-schema/Energiatodistus)
                        first :id)]
 
       (t/is (= id found-id)))))
@@ -223,30 +242,30 @@
                                :perustiedot
                                :havainnointikaynti)]
     (t/is (not (search-and-assert
-                test-data-set
-                id
-                [[["="
-                   "energiatodistus.perustiedot.havainnointikaynti"
-                   (.plusDays havainnointikaynti 1)]]])))
+                 test-data-set
+                 id
+                 [[["="
+                    "energiatodistus.perustiedot.havainnointikaynti"
+                    (.plusDays havainnointikaynti 1)]]])))
     (t/is (search-and-assert
-           test-data-set
-           id
-           [[["="
-              "energiatodistus.perustiedot.havainnointikaynti"
-              havainnointikaynti]]]))))
+            test-data-set
+            id
+            [[["="
+               "energiatodistus.perustiedot.havainnointikaynti"
+               havainnointikaynti]]]))))
 
 (t/deftest search-by-toimintaalue-test
   (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
         id (-> energiatodistukset keys sort first)]
     (t/is (not (search-and-assert
-                test-data-set
-                id
-                [[["like" "toimintaalue.label-fi" "Kain%"]]])))
+                 test-data-set
+                 id
+                 [[["like" "toimintaalue.label-fi" "Kain%"]]])))
     (t/is (not (search-and-assert test-data-set id nil "Kain")))
     (t/is (search-and-assert
-           test-data-set
-           id
-           [[["like" "toimintaalue.label-fi" "Pirkanma%"]]]))
+            test-data-set
+            id
+            [[["like" "toimintaalue.label-fi" "Pirkanma%"]]]))
     (t/is (search-and-assert test-data-set id nil "Pirkan"))))
 
 (t/deftest search-by-postinumero-test
@@ -269,13 +288,13 @@
   (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
         id (-> energiatodistukset keys sort first)]
     (t/is (not (search-and-assert
-                test-data-set
-                id
-                [[["=" "energiatodistus.perustiedot.yritys.nimi" "a"]]])))
+                 test-data-set
+                 id
+                 [[["=" "energiatodistus.perustiedot.yritys.nimi" "a"]]])))
     (t/is (search-and-assert
-           test-data-set
-           id
-           [[["nil?" "energiatodistus.perustiedot.yritys.nimi"]]]))))
+            test-data-set
+            id
+            [[["nil?" "energiatodistus.perustiedot.yritys.nimi"]]]))))
 
 (t/deftest search-by-ostettu-energia
   (let [nettoala 100M
@@ -296,44 +315,47 @@
         target-et-id (-> (energiatodistus-test-data/insert! [target-et] laatija-id)
                          first)]
     (t/is (contains? (->> (service/search
-                           ts/*db*
-                           kayttaja-test-data/paakayttaja
-                           {:where [[["=" "energiatodistus.toteutunut-ostoenergiankulutus.ostettu-energia.kaukolampo-neliovuosikulutus"
-                                      expected-kwh-per-year-m2
-                                      ]]]})
+                            ts/*db*
+                            kayttaja-test-data/paakayttaja
+                            {:where [[["=" "energiatodistus.toteutunut-ostoenergiankulutus.ostettu-energia.kaukolampo-neliovuosikulutus"
+                                       expected-kwh-per-year-m2
+                                       ]]]}
+                            energiatodistus-schema/Energiatodistus)
                           (map :id)
                           set)
                      target-et-id))
     (t/is (not (contains? (->> (service/search
-                                ts/*db*
-                                kayttaja-test-data/paakayttaja
-                                {:where [[["<" "energiatodistus.toteutunut-ostoenergiankulutus.ostettu-energia.kaukolampo-neliovuosikulutus"
-                                           (dec expected-kwh-per-year-m2)
-                                           ]]]})
+                                 ts/*db*
+                                 kayttaja-test-data/paakayttaja
+                                 {:where [[["<" "energiatodistus.toteutunut-ostoenergiankulutus.ostettu-energia.kaukolampo-neliovuosikulutus"
+                                            (dec expected-kwh-per-year-m2)
+                                            ]]]}
+                                 energiatodistus-schema/Energiatodistus)
                                (map :id)
                                set)
-                         target-et-id)))
+                          target-et-id)))
     (t/is (not (contains? (->> (service/search
-                                ts/*db*
-                                kayttaja-test-data/paakayttaja
-                                {:where [[[">" "energiatodistus.toteutunut-ostoenergiankulutus.ostettu-energia.kaukolampo-neliovuosikulutus"
-                                           (inc expected-kwh-per-year-m2)
-                                           ]]]})
+                                 ts/*db*
+                                 kayttaja-test-data/paakayttaja
+                                 {:where [[[">" "energiatodistus.toteutunut-ostoenergiankulutus.ostettu-energia.kaukolampo-neliovuosikulutus"
+                                            (inc expected-kwh-per-year-m2)
+                                            ]]]}
+                                 energiatodistus-schema/Energiatodistus)
                                (map :id)
                                set)
-                         target-et-id)))))
+                          target-et-id)))))
 
 (t/deftest search-by-allekirjoitusaika-test
   (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
         id (-> energiatodistukset keys sort first)]
     (t/is (not (search-and-assert
-                test-data-set
-                id
-                [[[">" "energiatodistus.allekirjoitusaika" (Instant/now)]]])))
+                 test-data-set
+                 id
+                 [[[">" "energiatodistus.allekirjoitusaika" (Instant/now)]]])))
     (t/is (search-and-assert
-           test-data-set
-           id
-           [[["<" "energiatodistus.allekirjoitusaika" (Instant/now)]]]))
+            test-data-set
+            id
+            [[["<" "energiatodistus.allekirjoitusaika" (Instant/now)]]]))
     (t/is (= id (-> (search kayttaja-test-data/paakayttaja
                             [[["<" "energiatodistus.allekirjoitusaika" (Instant/now)]]]
                             nil
@@ -351,17 +373,17 @@
         sahko-kertoimella (* sahko (get-in e-luokka-service/energiamuotokerroin
                                            [2018 :sahko]))]
     (t/is (search-and-assert
-           test-data-set
-           id
-           [[["="
-              "energiatodistus.tulokset.kaytettavat-energiamuodot.sahko"
-              sahko]
-             ["="
-              "energiatodistus.tulokset.kaytettavat-energiamuodot.sahko-painotettu"
-              sahko-kertoimella]
-             ["="
-              "energiatodistus.tulokset.kaytettavat-energiamuodot.sahko-painotettu-neliovuosikulutus"
-              (/ sahko-kertoimella nettoala)]]]))))
+            test-data-set
+            id
+            [[["="
+               "energiatodistus.tulokset.kaytettavat-energiamuodot.sahko"
+               sahko]
+              ["="
+               "energiatodistus.tulokset.kaytettavat-energiamuodot.sahko-painotettu"
+               sahko-kertoimella]
+              ["="
+               "energiatodistus.tulokset.kaytettavat-energiamuodot.sahko-painotettu-neliovuosikulutus"
+               (/ sahko-kertoimella nettoala)]]]))))
 
 (t/deftest search-by-uusiutuvat-omavaraisenergiat-aurinkosahko-test
   (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
@@ -373,14 +395,14 @@
                          :uusiutuvat-omavaraisenergiat
                          :aurinkosahko)]
     (t/is (search-and-assert
-           test-data-set
-           id
-           [[["="
-              "energiatodistus.tulokset.uusiutuvat-omavaraisenergiat.aurinkosahko"
-              aurinkosahko]
-             ["="
-              "energiatodistus.tulokset.uusiutuvat-omavaraisenergiat.aurinkosahko-neliovuosikulutus"
-              (/ aurinkosahko nettoala)]]]))))
+            test-data-set
+            id
+            [[["="
+               "energiatodistus.tulokset.uusiutuvat-omavaraisenergiat.aurinkosahko"
+               aurinkosahko]
+              ["="
+               "energiatodistus.tulokset.uusiutuvat-omavaraisenergiat.aurinkosahko-neliovuosikulutus"
+               (/ aurinkosahko nettoala)]]]))))
 
 (t/deftest search-by-rakennusvaippa-ikkunat-osuus-lampohaviosta-test
   (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
@@ -394,12 +416,12 @@
         ikkunat-ua (first ua-list)
         ua-summa (reduce + ua-list)]
     (t/is (search-and-assert
-           test-data-set
-           id
-           [[["=" "energiatodistus.lahtotiedot.rakennusvaippa.ikkunat.UA" ikkunat-ua]
-             ["="
-              "energiatodistus.lahtotiedot.rakennusvaippa.ikkunat.osuus-lampohaviosta"
-              (with-precision 20 (/ ikkunat-ua ua-summa))]]]))))
+            test-data-set
+            id
+            [[["=" "energiatodistus.lahtotiedot.rakennusvaippa.ikkunat.UA" ikkunat-ua]
+              ["="
+               "energiatodistus.lahtotiedot.rakennusvaippa.ikkunat.osuus-lampohaviosta"
+               (with-precision 20 (/ ikkunat-ua ua-summa))]]]))))
 
 (t/deftest search-by-ostetut-polttoaineet
   (let [nettoala 100M
@@ -420,32 +442,35 @@
         target-et-id (-> (energiatodistus-test-data/insert! [target-et] laatija-id)
                          first)]
     (t/is (contains? (->> (service/search
-                           ts/*db*
-                           kayttaja-test-data/paakayttaja
-                           {:where [[["=" "energiatodistus.toteutunut-ostoenergiankulutus.ostetut-polttoaineet.kevyt-polttooljy-neliovuosikulutus"
-                                      expected-kwh-per-year-m2
-                                      ]]]})
+                            ts/*db*
+                            kayttaja-test-data/paakayttaja
+                            {:where [[["=" "energiatodistus.toteutunut-ostoenergiankulutus.ostetut-polttoaineet.kevyt-polttooljy-neliovuosikulutus"
+                                       expected-kwh-per-year-m2
+                                       ]]]}
+                            energiatodistus-schema/Energiatodistus)
                           (map :id)
                           set)
                      target-et-id))
     (t/is (not (contains? (->> (service/search
-                                ts/*db*
-                                kayttaja-test-data/paakayttaja
-                                {:where [[["<" "energiatodistus.toteutunut-ostoenergiankulutus.ostetut-polttoaineet.kevyt-polttooljy-neliovuosikulutus"
-                                           (dec expected-kwh-per-year-m2)
-                                           ]]]})
+                                 ts/*db*
+                                 kayttaja-test-data/paakayttaja
+                                 {:where [[["<" "energiatodistus.toteutunut-ostoenergiankulutus.ostetut-polttoaineet.kevyt-polttooljy-neliovuosikulutus"
+                                            (dec expected-kwh-per-year-m2)
+                                            ]]]}
+                                 energiatodistus-schema/Energiatodistus)
                                (map :id)
                                set)
-                         target-et-id)))
+                          target-et-id)))
     (t/is (not (contains? (->> (service/search
-                                ts/*db*
-                                kayttaja-test-data/paakayttaja
-                                {:where [[[">" "energiatodistus.toteutunut-ostoenergiankulutus.ostetut-polttoaineet.kevyt-polttooljy-neliovuosikulutus"
-                                           (inc expected-kwh-per-year-m2)
-                                           ]]]})
+                                 ts/*db*
+                                 kayttaja-test-data/paakayttaja
+                                 {:where [[[">" "energiatodistus.toteutunut-ostoenergiankulutus.ostetut-polttoaineet.kevyt-polttooljy-neliovuosikulutus"
+                                            (inc expected-kwh-per-year-m2)
+                                            ]]]}
+                                 energiatodistus-schema/Energiatodistus)
                                (map :id)
                                set)
-                         target-et-id)))))
+                          target-et-id)))))
 
 (t/deftest laatija-cant-find-other-laatija-energiatodistukset-test
   (let [{:keys [laatijat energiatodistukset] :as test-data-set} (test-data-set)
@@ -483,25 +508,106 @@
     (t/is (= :schema.core/error
              (:type (etp-test/catch-ex-data #(search pk [[[1]]])))))
     (t/is (= :schema.core/error
-           (:type (etp-test/catch-ex-data #(search pk [[[]]])))))
-    (t/is (= {:type :invalid-arguments
+             (:type (etp-test/catch-ex-data #(search pk [[[]]])))))
+    (t/is (= {:type      :invalid-arguments
               :predicate "="
-              :message "Wrong number of arguments: () for predicate: ="}
+              :message   "Wrong number of arguments: () for predicate: ="}
              (etp-test/catch-ex-data #(search pk [[["="]]]))))
-    (t/is (= {:type :invalid-arguments
+    (t/is (= {:type      :invalid-arguments
               :predicate "="
-              :message "Wrong number of arguments: (\"id\") for predicate: ="}
+              :message   "Wrong number of arguments: (\"id\") for predicate: ="}
              (etp-test/catch-ex-data #(search pk [[["=" "id"]]]))))
-    (t/is (= {:type :unknown-predicate :predicate "asdf"
+    (t/is (= {:type    :unknown-predicate :predicate "asdf"
               :message "Unknown predicate: asdf"}
              (etp-test/catch-ex-data #(search pk [[["asdf" "id" 1]]]))))
-    (t/is (= {:type :unknown-field
-              :field "energiatodistus.perustiedot.tilaaja"
+    (t/is (= {:type    :unknown-field
+              :field   "energiatodistus.perustiedot.tilaaja"
               :message "Unknown field: energiatodistus.perustiedot.tilaaja"}
              (etp-test/catch-ex-data #(search nil [[["="
                                                      "energiatodistus.perustiedot.tilaaja"
                                                      "test"]]]))))
-    (t/is (= {:type :unknown-field
-              :field "asdf"
+    (t/is (= {:type    :unknown-field
+              :field   "asdf"
               :message "Unknown field: asdf"}
              (etp-test/catch-ex-data #(search pk [[["=" "asdf" "test"]]]))))))
+
+(defn compare-energiatodistus [id versio laatija-id laatija
+                               energiatodistus-add valvonta energiatodistus-search]
+  (= (-> energiatodistus-add
+         (assoc
+           :id id :versio versio :tila-id 0
+           :laatija-id laatija-id
+           :laatija-fullname (str (:sukunimi laatija) ", " (:etunimi laatija))
+           :valvonta valvonta
+           :korvaava-energiatodistus-id nil)
+         (update-in [:tulokset :kuukausierittely] (logic/when* nil? (constantly [])))
+         (dissoc :kommentti))
+     (-> energiatodistus-search
+         (dissoc
+           :kommentti :voimassaolo-paattymisaika
+           :allekirjoitusaika :laskutusaika)
+         (xmap/dissoc-in [:tulokset :e-luokka])
+         (xmap/dissoc-in [:tulokset :e-luku]))))
+
+(defn search-by-id [whoami id]
+  (service/search ts/*db*
+                  whoami
+                  {:where [[["=" "energiatodistus.id" id]]]}
+                  valvonta-schema/Energiatodistus+Valvonta))
+
+(t/deftest energiatodistus+valvonta
+  (let [[laatija-id laatija] (first (laatija-test-data/generate-and-insert! 1))
+        [id energiatodistus] (first (energiatodistus-test-data/generate-and-insert!
+                                      1
+                                      2018
+                                      true laatija-id))
+        whoami {:rooli 0 :id laatija-id}]
+
+    (t/is (= (count (search-by-id kayttaja-test-data/paakayttaja id)) 0))
+
+    (t/is (compare-energiatodistus
+            id 2018 laatija-id laatija energiatodistus
+            {:pending false, :valvoja-id nil, :ongoing false, :type-id nil}
+            (first (search-by-id whoami id))))
+
+    (energiatodistus-service/update-energiatodistus!
+      ts/*db* whoami id (assoc energiatodistus :draft-visible-to-paakayttaja true))
+
+    (t/is (compare-energiatodistus
+            id 2018 laatija-id laatija
+            (assoc energiatodistus :draft-visible-to-paakayttaja true)
+            {:pending false, :valvoja-id nil, :ongoing false, :type-id nil}
+            (first (search-by-id kayttaja-test-data/paakayttaja id))))
+
+    (valvonta-service/save-valvonta! ts/*db* kayttaja-test-data/paakayttaja id {:pending true})
+
+    (t/is (compare-energiatodistus
+            id 2018 laatija-id laatija
+            (assoc energiatodistus :draft-visible-to-paakayttaja true)
+            {:pending true, :valvoja-id nil, :ongoing false, :type-id nil}
+            (first (search-by-id kayttaja-test-data/paakayttaja id))))
+
+    (valvonta-service/add-toimenpide!
+      ts/*db* ts/*aws-s3-client* kayttaja-test-data/paakayttaja id
+      {:type-id     3   :deadline-date (LocalDate/now) :description nil
+       :severity-id nil :template-id 1 :virheet [] :tiedoksi []})
+
+    (t/is (compare-energiatodistus
+            id 2018 laatija-id laatija
+            (assoc energiatodistus :draft-visible-to-paakayttaja true)
+            {:pending true, :valvoja-id nil, :ongoing true, :type-id 3}
+            (first (search-by-id kayttaja-test-data/paakayttaja id))))
+
+    (valvonta-service/add-toimenpide!
+      ts/*db* ts/*aws-s3-client* kayttaja-test-data/paakayttaja id
+      {:type-id     4   :deadline-date (LocalDate/now) :description nil
+       :severity-id nil :template-id 1 :virheet [] :tiedoksi []})
+
+    (t/is (compare-energiatodistus
+            id 2018 laatija-id laatija
+            (assoc energiatodistus :draft-visible-to-paakayttaja true)
+            {:pending true, :valvoja-id nil, :ongoing true, :type-id 4}
+            (first (search-by-id kayttaja-test-data/paakayttaja id))))
+
+    ;; wait for emails to finish
+    (Thread/sleep 100)))

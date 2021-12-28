@@ -51,9 +51,11 @@
 (defn generate-pdf->input-stream [opts]
   (io/input-stream (generate-pdf->bytes opts)))
 
-(defn merge-pdf [pdfs output]
-  (let [pmu (PDFMergerUtility.)]
-    (doseq [pdf pdfs]
-      (.addSource pmu pdf))
-    (.setDestinationStream pmu output)
-    (.mergeDocuments pmu (MemoryUsageSetting/setupMainMemoryOnly))))
+(defn merge-pdf [pdfs]
+  (with-open [baos (ByteArrayOutputStream.)]
+    (let [pmu (PDFMergerUtility.)]
+      (doseq [pdf pdfs]
+        (.addSource pmu pdf))
+      (.setDestinationStream pmu baos)
+      (.mergeDocuments pmu (MemoryUsageSetting/setupMainMemoryOnly)))
+    (.toByteArray baos)))

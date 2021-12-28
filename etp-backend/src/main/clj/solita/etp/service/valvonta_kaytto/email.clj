@@ -4,13 +4,13 @@
             [solita.common.map :as map]
             [solita.common.time :as time]
             [solita.common.logic :as logic]
-            [solita.etp.service.valvonta-kaytto.asha :as asha]
             [solita.etp.email :as email]
             [solita.etp.service.valvonta-kaytto.osapuoli :as osapuoli]
             [solita.etp.service.geo :as geo-service]
             [solita.etp.service.luokittelu :as luokittelu-service]
             [solita.common.maybe :as maybe]
-            [solita.etp.service.valvonta-kaytto.store :as store])
+            [solita.etp.service.valvonta-kaytto.store :as store]
+            [solita.common.smtp :as smtp])
   (:import (java.time LocalDate)))
 
 (defn- paragraph [& body] (str "<p>" (str/join " " body) "</p>"))
@@ -104,8 +104,18 @@
                                                 :reply? true
                                                 :attachments documents))))
 
+(def document-prefix
+  {:rfi-request "tietopyynto"
+   :rfi-order   "kehotus"
+   :rfi-warning "varoitus"})
+
+(defn- find-document [aws-s3-client valvonta toimenpide osapuoli]
+  (logic/if-let* [document (store/find-document aws-s3-client (:id valvonta) (:id toimenpide) osapuoli)
+                  prefix (-> toimenpide :type-id toimenpide/type-key document-prefix)]
+    (smtp/input-stream->attachment document (str prefix ".pdf") "application/pdf")))
+
 (defn- send-email-to-omistaja! [aws-s3-client valvonta toimenpide osapuoli]
-  (if-let [document (store/find-document aws-s3-client (:id valvonta) (:id toimenpide) osapuoli)]
+  (when-let [document (find-document aws-s3-client valvonta toimenpide osapuoli)]
     (send-email! valvonta toimenpide osapuoli [document] templates-omistaja)))
 
 (defn send-toimenpide-email! [db aws-s3-client valvonta toimenpide osapuolet]
@@ -117,7 +127,7 @@
                    :postitoimipaikka-fi (:label-fi postinumero)
                    :postitoimipaikka-sv (:label-sv postinumero))
         email-osapuolet (filter osapuoli/email? osapuolet)
-        documents (mapv (partial store/find-document aws-s3-client (:id valvonta) (:id toimenpide))
+        documents (mapv (partial find-document aws-s3-client valvonta toimenpide)
                         (filter osapuoli/omistaja? osapuolet))]
     (doseq [vastaanottaja (filter osapuoli/omistaja? email-osapuolet)]
       (send-email-to-omistaja! aws-s3-client valvonta toimenpide vastaanottaja))

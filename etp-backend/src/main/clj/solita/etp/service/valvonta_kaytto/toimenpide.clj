@@ -20,6 +20,7 @@
 
 (def case-open? (partial type? :case))
 (def case-closed? (partial type? :closed))
+(def send-tiedoksi? (partial type? :rfi-request))
 
 (def asha-toimenpide?
   (partial some-type? #{:rfi-request :rfi-order :rfi-warning}))

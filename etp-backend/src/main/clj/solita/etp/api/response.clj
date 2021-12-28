@@ -57,11 +57,16 @@
 
 (defn file-response-headers [content-type inline? filename]
   {"Content-Type" (or content-type "application/octet-stream")
-   "Content-Disposition:" (str (if inline? "inline" "attachment")
-                               (str "; filename=\"" filename "\""))})
+   "Content-Disposition" (str (if inline? "inline" "attachment")
+                              (str "; filename=\"" filename "\""))})
 
 (defn csv-response-headers [filename inline?]
   (file-response-headers "text/csv" inline? filename))
+
+;; This is only intended for asynchronous responses. Otherwise, use
+;; the wrap-cache-control middleware.
+(defn async-cache-headers [ttl-seconds]
+  {"Cache-Control" (str "max-age=" ttl-seconds ",public")})
 
 (defn file-response [body filename content-type inline? not-found]
   (if (nil? body)
@@ -69,6 +74,9 @@
     {:status 200
      :headers (file-response-headers content-type inline? filename)
      :body body}))
+
+(defn csv-response [body filename not-found]
+  (file-response body filename "text/csv" true not-found))
 
 (defn pdf-response [body filename not-found]
   (file-response body filename "application/pdf" true not-found))

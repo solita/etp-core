@@ -5,6 +5,8 @@
     [solita.etp.service.valvonta-oikeellisuus.asha :as asha-valvonta-oikeellisuus]
     [solita.etp.service.valvonta-oikeellisuus.toimenpide :as toimenpide]
     [solita.etp.service.valvonta-oikeellisuus.email :as email]
+    [solita.etp.service.csv :as csv-service]
+    [clojure.data.csv :as csv]
     [clojure.java.jdbc :as jdbc]
     [solita.common.map :as map]
     [solita.etp.service.luokittelu :as luokittelu]
@@ -42,7 +44,11 @@
 (def ^:private default-filters
   {:valvoja-id nil
    :has-valvoja nil
-   :include-closed false})
+   :include-closed false
+   :keyword nil
+   :toimenpidetype-id nil
+   :laatija-id nil
+   :kayttotarkoitus-id nil})
 
 (def ^:private default-window {:limit 10 :offset 0})
 
@@ -74,13 +80,35 @@
         valvonta-oikeellisuus-db/count-unfinished-valvonnat-laatija)
       first))
 
+(defn virhetilastot [db]
+  (valvonta-oikeellisuus-db/select-virhetilastot db))
+
+(defn virhetilastot->csv [virhetilastot]
+  (let [col-keys (-> virhetilastot first keys)
+        col-titles (map name col-keys)
+        tilasto-db-row->csv-row (apply juxt col-keys)]
+    (with-open [writer (java.io.StringWriter.)]
+      (csv/write-csv writer
+                     (concat [col-titles]
+                             (map tilasto-db-row->csv-row virhetilastot))
+                     :separator \;)
+      (str writer))))
+
 (defn find-valvonta [db id] (first (valvonta-oikeellisuus-db/select-valvonta db {:id id})))
 
-(defn save-valvonta! [db id valvonta]
+(defn- update-energiatodistus! [db id valvonta]
   (first (db/with-db-exception-translation
            jdbc/update! db :energiatodistus
            (add-prefix "valvonta$" valvonta) ["id = ?" id]
            db/default-opts)))
+
+(defn save-valvonta! [db whoami id valvonta]
+  (jdbc/with-db-transaction
+    [tx db]
+    (when (and (nil? (:valvoja-id valvonta)) (:pending valvonta))
+      (valvonta-oikeellisuus-db/update-default-valvoja!
+        db {:whoami-id (:id whoami) :id id}))
+    (update-energiatodistus! db id valvonta)))
 
 (defn- insert-toimenpide! [db id diaarinumero toimenpide]
   (first (db/with-db-exception-translation
@@ -154,6 +182,13 @@
     #(email/send-toimenpide-email! db aws-s3-client id toimenpide)
     (str "Sending email failed for toimenpide: " id "/" (:id toimenpide))))
 
+(defn- update-valvonta-state! [db whoami id toimenpide]
+  (when (rooli-service/paakayttaja? whoami)
+    (if (toimenpide/close-valvonta? toimenpide)
+      (save-valvonta! db whoami id {:pending false})
+      (valvonta-oikeellisuus-db/update-default-valvoja!
+        db {:whoami-id (:id whoami) :id id}))))
+
 (defn add-toimenpide! [db aws-s3-client whoami id toimenpide-add]
   (jdbc/with-db-transaction [tx db]
     (let [diaarinumero (if (toimenpide/case-open? toimenpide-add)
@@ -172,8 +207,7 @@
           (send-toimenpide-email! db aws-s3-client id toimenpide))
         (when (toimenpide/anomaly? toimenpide)
           (add-anomaly-viestiketju! tx whoami id toimenpide))
-        (when (toimenpide/clears-from-tyojono? toimenpide)
-          (save-valvonta! tx id {:pending false}))
+        (update-valvonta-state! tx whoami id toimenpide)
         {:id toimenpide-id})))
 
 (defn- assoc-virheet [db toimenpide]
@@ -242,14 +276,20 @@
            db/default-opts)))
 
 (defn update-toimenpide! [db whoami id toimenpide-id toimenpide-update]
-  (jdbc/with-db-transaction [db db]
-    (when (toimenpide/audit-report? (find-toimenpide db whoami id toimenpide-id ))
-      (valvonta-oikeellisuus-db/delete-toimenpide-virheet! db {:toimenpide-id toimenpide-id})
-      (insert-virheet! db toimenpide-id (:virheet toimenpide-update))
-
-      (valvonta-oikeellisuus-db/delete-toimenpide-tiedoksi! db {:toimenpide-id toimenpide-id})
-      (insert-tiedoksi! db toimenpide-id (:tiedoksi toimenpide-update)))
+  (jdbc/with-db-transaction
+    [db db]
+    (when ((every-pred toimenpide/audit-report? toimenpide/draft?)
+           (find-toimenpide db whoami id toimenpide-id))
+      (when (contains? toimenpide-update :virheet)
+        (valvonta-oikeellisuus-db/delete-toimenpide-virheet! db {:toimenpide-id toimenpide-id})
+        (insert-virheet! db toimenpide-id (:virheet toimenpide-update)))
+      (when (contains? toimenpide-update :tiedoksi)
+        (valvonta-oikeellisuus-db/delete-toimenpide-tiedoksi! db {:toimenpide-id toimenpide-id})
+        (insert-tiedoksi! db toimenpide-id (:tiedoksi toimenpide-update))))
     (update-toimenpide-row! db toimenpide-id (dissoc toimenpide-update :virheet :tiedoksi))))
+
+(defn delete-draft-toimenpide! [db toimenpide-id]
+  (valvonta-oikeellisuus-db/delete-draft-toimenpide! db {:toimenpide-id toimenpide-id}))
 
 (defn publish-toimenpide! [db aws-s3-client whoami id toimenpide-id]
   (when-let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
@@ -314,3 +354,31 @@
            jdbc/update! db :vo-note
            {:description description} ["id = ?" id]
            db/default-opts)))
+
+(def ^:private csv-header
+  (csv-service/csv-line
+    ["energiatodistus-id", "ktl", "ala-ktl"
+     "toimenpide-id" "toimenpidetyyppi" "aika" "valvoja"]))
+(defn csv [db]
+  (fn [write!]
+    (write! csv-header)
+    (jdbc/query
+      db
+      "select
+         energiatodistus.id, ktl.label_fi, alaktl.label_fi,
+         toimenpide.id, toimenpidetype.label_fi, toimenpide.publish_time,
+         fullname(kayttaja)
+       from energiatodistus
+         inner join alakayttotarkoitusluokka alaktl
+           on alaktl.id = energiatodistus.pt$kayttotarkoitus and alaktl.versio = energiatodistus.versio
+         inner join kayttotarkoitusluokka ktl
+           on ktl.id = alaktl.kayttotarkoitusluokka_id and ktl.versio = energiatodistus.versio
+         inner join vo_toimenpide toimenpide on toimenpide.energiatodistus_id = energiatodistus.id
+         inner join vo_toimenpidetype toimenpidetype on toimenpidetype.id = toimenpide.type_id
+         left join kayttaja on kayttaja.id = energiatodistus.valvonta$valvoja_id"
+      {:row-fn        (comp write! csv-service/csv-line)
+       :as-arrays?    :cols-as-is
+       :result-set-fn dorun
+       :result-type   :forward-only
+       :concurrency   :read-only
+       :fetch-size    100})))

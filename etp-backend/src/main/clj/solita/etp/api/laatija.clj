@@ -2,7 +2,9 @@
   (:require [ring.util.response :as r]
             [schema.core :as schema]
             [solita.etp.api.response :as api-response]
+            [solita.etp.header-middleware :as header]
             [solita.etp.schema.common :as common-schema]
+            [solita.etp.schema.audit :as audit-schema]
             [solita.etp.schema.laatija :as laatija-schema]
             [solita.etp.service.laatija :as laatija-service]
             [solita.etp.service.kayttaja-laatija :as kayttaja-laatija-service]
@@ -20,10 +22,19 @@
    :handler   (fn [{:keys [db]}]
                 (r/response (laatija-service/find-patevyystasot db)))})
 
+(def get-count-public-laatijat
+  {:summary "Hae laatijahaussa näkyvien laatijoiden lukumäärä"
+   :responses {200 {:body {:count schema/Int}}}
+   :handler (fn [{:keys [db]}]
+              (r/response (laatija-service/count-public-laatijat db)))})
+
 (def public-routes
   [["/laatijat"
     [""
-     {:get get-laatijat}]]
+     {:get get-laatijat}]
+    ["/count"
+     {:get        get-count-public-laatijat
+      :middleware [[header/wrap-cache-control 3600]]}]]
    ["/patevyydet"
     {:get get-patevyydet}]])
 
@@ -54,6 +65,15 @@
                           db whoami id (:body parameters))
                          (str "Laatija " id " does not exists.")))}}]
 
+     ["/history"
+      {:get {:summary "Hae laatijan muutoshistoria"
+             :parameters {:path {:id common-schema/Key}}
+             :responses {200 {:body [(-> laatija-schema/Laatija
+                                         (merge audit-schema/Audit)
+                                         (dissoc :voimassa :voimassaolo-paattymisaika))]}}
+             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+                        (r/response
+                         (laatija-service/find-history db whoami id)))}}]
      ["/laskutusosoitteet"
       {:get {:summary    "Hae laatijan laskutusosoitteet"
              :parameters {:path {:id common-schema/Key}}

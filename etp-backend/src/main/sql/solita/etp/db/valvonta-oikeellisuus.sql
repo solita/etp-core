@@ -21,6 +21,22 @@ from energiatodistus
   left join energiatodistus korvaava_energiatodistus on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
   left join vo_last_toimenpide_v1 last_toimenpide on last_toimenpide.energiatodistus_id = energiatodistus.id
 where
+  (:toimenpidetype-id::int is null or :toimenpidetype-id = last_toimenpide.type_id) and
+  (:keyword::text is null                                            or
+   energiatodistus.pt$rakennustunnus                  ilike :keyword or
+   energiatodistus.pt$nimi                            ilike :keyword or
+   energiatodistus.pt$katuosoite_fi                   ilike :keyword or
+   energiatodistus.pt$katuosoite_sv                   ilike :keyword or
+   lpad(energiatodistus.pt$postinumero::text, 5, '0') ilike :keyword or
+   last_toimenpide.diaarinumero                       ilike :keyword or
+   last_toimenpide.description                        ilike :keyword) and
+  (:kayttotarkoitus-id::int is null or
+   (energiatodistus.pt$kayttotarkoitus, energiatodistus.versio) in
+     (select alakayttotarkoitusluokka_id, versio
+      from   stat_ktluokka_alaktluokka
+      where  stat_kayttotarkoitusluokka_id = :kayttotarkoitus-id)) and
+  (:laatija-id::int is null or
+   energiatodistus.laatija_id = :laatija-id) and
   (energiatodistus.valvonta$pending or
     last_toimenpide.ongoing or
     (:include-closed and last_toimenpide.id is not null)) and
@@ -28,6 +44,7 @@ where
     (energiatodistus.valvonta$valvoja_id is not null) = :has-valvoja or
     (:valvoja-id::int is null and :has-valvoja::boolean is null))
 order by
+  case when last_toimenpide.id is null then energiatodistus.id end desc nulls last,
   case when last_toimenpide.type_id in (4, 8, 12) then last_toimenpide.publish_time end desc nulls last,
   last_toimenpide$deadline_date asc nulls last,
   coalesce(last_toimenpide.publish_time, last_toimenpide.create_time) desc
@@ -64,6 +81,22 @@ select count(*)
 from energiatodistus
   left join vo_last_toimenpide_v1 last_toimenpide on last_toimenpide.energiatodistus_id = energiatodistus.id
 where
+  (:toimenpidetype-id::int is null or :toimenpidetype-id = last_toimenpide.type_id) and
+  (:keyword::text is null                                            or
+   energiatodistus.pt$rakennustunnus                  ilike :keyword or
+   energiatodistus.pt$nimi                            ilike :keyword or
+   energiatodistus.pt$katuosoite_fi                   ilike :keyword or
+   energiatodistus.pt$katuosoite_sv                   ilike :keyword or
+   lpad(energiatodistus.pt$postinumero::text, 5, '0') ilike :keyword or
+   last_toimenpide.diaarinumero                       ilike :keyword or
+   last_toimenpide.description                        ilike :keyword) and
+  (:kayttotarkoitus-id::int is null or
+   (energiatodistus.pt$kayttotarkoitus, energiatodistus.versio) in
+     (select alakayttotarkoitusluokka_id, versio
+      from   stat_ktluokka_alaktluokka
+      where  stat_kayttotarkoitusluokka_id = :kayttotarkoitus-id)) and
+  (:laatija-id::int is null or
+   energiatodistus.laatija_id = :laatija-id) and
   (energiatodistus.valvonta$pending or
     last_toimenpide.ongoing or
     (:include-closed and last_toimenpide.id is not null)) and
@@ -106,7 +139,7 @@ where energiatodistus.id = :id;
 
 --name: select-last-diaarinumero
 select diaarinumero from vo_toimenpide
-where energiatodistus_id = :id and diaarinumero is not null
+where energiatodistus_id = :id and diaarinumero is not null and deleted is false
 order by coalesce(publish_time, create_time) desc
 limit 1;
 
@@ -119,7 +152,7 @@ select
   author.etunimi author$etunimi, author.sukunimi author$sukunimi
 from vo_toimenpide toimenpide
   inner join kayttaja author on author.id = toimenpide.author_id
-where toimenpide.id = :id;
+where toimenpide.id = :id and toimenpide.deleted is false;
 
 -- name: select-toimenpiteet
 select
@@ -131,12 +164,14 @@ select
   from vo_toimenpide toimenpide
     inner join kayttaja author on author.id = toimenpide.author_id
 where toimenpide.energiatodistus_id = :energiatodistus-id and
-      (:paakayttaja? or etp.vo_toimenpide_visible_laatija(toimenpide));
+      (:paakayttaja? or etp.vo_toimenpide_visible_laatija(toimenpide)) and
+      toimenpide.deleted is false;
 
 -- name: select-energiatodistus-valvonta-documents
 select distinct on (type_id) *
 from vo_toimenpide
 where energiatodistus_id = :energiatodistus-id and type_id in (3, 5, 7, 9) and publish_time is not null
+      and deleted is false
 order by type_id, publish_time desc;
 
 -- name: select-templates
@@ -183,7 +218,7 @@ from (
 where vo_virhetype.id = ordered.id and vo_virhetype.ordinal <> ordered.ordinal;
 
 -- name: update-toimenpide-published!
-update vo_toimenpide set publish_time = transaction_timestamp() where id = :id;
+update vo_toimenpide set publish_time = transaction_timestamp() where id = :id and deleted is false;
 
 -- name: select-toimenpide-virheet
 select type_id, description from vo_virhe where toimenpide_id = :toimenpide-id;
@@ -213,3 +248,35 @@ select name, email from vo_tiedoksi where toimenpide_id = :toimenpide-id;
 
 -- name: delete-toimenpide-tiedoksi!
 delete from vo_tiedoksi where toimenpide_id = :toimenpide-id;
+
+-- name: delete-draft-toimenpide!
+update vo_toimenpide set deleted = true where id = :toimenpide-id and publish_time is null;
+
+-- name: update-default-valvoja!
+update energiatodistus set valvonta$valvoja_id = :whoami-id where id = :id and valvonta$valvoja_id is null;
+
+-- name: select-virhetilastot
+with last_valvontamuistio as (
+  select distinct on (toimenpide.energiatodistus_id)
+  toimenpide.id,
+  toimenpide.publish_time
+  from vo_toimenpide toimenpide
+  where
+    toimenpide.publish_time is not null and
+    -- valvontamuistio == 7, as definned in r-0-vo-toimenpide.sql
+    toimenpide.type_id = 7 and
+    not toimenpide.deleted
+  order by toimenpide.energiatodistus_id asc, toimenpide.publish_time desc
+)
+select
+  extract(year from t.publish_time)::int as year,
+  extract(month from t.publish_time)::int as month,
+  v.type_id as type_id,
+  count(*),
+  vt.label_fi as label_fi
+from
+  last_valvontamuistio t
+  inner join vo_virhe v on t.id = v.toimenpide_id
+  inner join vo_virhetype vt on v.type_id = vt.id
+group by year, month, v.type_id, vt.label_fi
+order by year, month, v.type_id;

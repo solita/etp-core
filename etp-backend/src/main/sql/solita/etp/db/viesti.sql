@@ -116,3 +116,20 @@ select
 from viestiketju
 where viestiketju.energiatodistus_id = :energiatodistus-id
 order by (select max(sent_time) from viesti where viestiketju_id = viestiketju.id) desc
+
+-- name: select-liite
+select nimi, viestiketju_id, contenttype, nimi as filename
+from viesti_liite
+where id = :id and deleted = false;
+
+-- name: select-liite-by-viestiketju-id
+select distinct on (l.id) l.id, a.modifytime createtime,
+  fullname(k.*) "author-fullname", l.nimi, l.contenttype, l.url
+from viesti_liite l
+     inner join audit.viesti_liite a on l.id = a.id
+     inner join kayttaja k on a.modifiedby_id = k.id
+where l.viestiketju_id = :viestiketju-id and l.deleted = false
+order by l.id, a.modifytime asc, a.event_id desc;
+
+-- name: delete-liite!
+update viesti_liite set deleted = true where id = :id;

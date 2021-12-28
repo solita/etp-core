@@ -8,7 +8,7 @@
                 <TilaKoodi>
                     <TilaKoodi>202</TilaKoodi>
                     <TilaKoodiKuvaus>Asia tallennettuna asiointitilipalvelun käsittelyjonoon, mutta se ei vielä näy asiakkaan asiointi-tilillä. Lopullinen vastaus on haettavissa erikseen erillisellä kutsulla.</TilaKoodiKuvaus>
-                    <SanomaTunniste>ARA-05.03.02-2021-31-ETP-1-2-PERSON-1</SanomaTunniste>
+                    <SanomaTunniste>ARA-05.03.02-2021-31-ETP-KV-1-2-PERSON-1</SanomaTunniste>
                 </TilaKoodi>
             </LahetaViestiResult>
         </LahetaViestiResponse>

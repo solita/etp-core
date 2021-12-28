@@ -8,7 +8,8 @@
             [solita.common.time :as time]
             [solita.common.logic :as logic]
             [solita.etp.service.valvonta-oikeellisuus.asha :as asha-valvonta-oikeellisuus]
-            [solita.etp.email :as email])
+            [solita.etp.email :as email]
+            [solita.common.smtp :as smtp])
   (:import (java.time LocalDate)))
 
 
@@ -193,7 +194,10 @@
     (email/send-multipart-email! (assoc message :to [email]
                                                 :subtype "html"
                                                 :reply? true
-                                                :attachments [valvontamuistio]))))
+                                                :attachments [(smtp/input-stream->attachment
+                                                                valvontamuistio
+                                                                "valvontamuistio.pdf"
+                                                                "application/pdf")]))))
 
 (defn send-toimenpide-email! [db aws-s3-client energiatodistus-id toimenpide]
   (send-email-to-laatija! db energiatodistus-id toimenpide)

@@ -34,7 +34,7 @@
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                            (api-response/get-response
                              (yritys-service/find-yritys db id)
-                             (str "Yritys " id " does not exists.")))}
+                             (api-response/msg-404 "yritys" id)))}
 
        :put {:summary    "Päivitä yrityksen perustiedot"
              :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
@@ -45,15 +45,26 @@
              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami parameters]}]
                            (api-response/ok|not-found
                              (yritys-service/update-yritys! db whoami id (:body parameters))
-                             (str "Yritys " id " does not exists.")))}}]
+                             (api-response/msg-404 "yritys" id)))}}]
+     ["/deleted"
+      {:put {:summary    "Päivitä yrityksen deleted-tila (poistettu)"
+             :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+             :parameters {:path {:id common-schema/Key}
+                          :body schema/Bool}
+             :responses  {200 {:body nil}
+                          404 {:body schema/Str}}
+             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami parameters]}]
+                           (api-response/ok|not-found
+                             (yritys-service/set-yritys-deleted! db whoami id (:body parameters))
+                             (api-response/msg-404 "yritys" id)))}}]
      ["/laatijat"
       [""
        {:get {:summary    "Hae yrityksen laatijat"
               :parameters {:path {:id common-schema/Key}}
               :responses  {200 {:body [yritys-schema/Laatija]}}
-              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                             (r/response
-                              (yritys-service/find-laatijat db id)))}}]
+                              (yritys-service/find-laatijat db whoami id)))}}]
       ["/:laatija-id"
        {:put {:summary    "Liitä laatija yritykseen - hyväksytty"
               :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)

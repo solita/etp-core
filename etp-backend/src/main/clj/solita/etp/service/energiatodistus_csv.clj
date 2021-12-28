@@ -1,24 +1,11 @@
 (ns solita.etp.service.energiatodistus-csv
   (:require [clojure.string :as str]
+            [solita.etp.service.csv :as csv]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.energiatodistus-search :as
              energiatodistus-search-service]
             [solita.etp.service.complete-energiatodistus
-             :as complete-energiatodistus-service]
-            [solita.etp.schema.public-energiatodistus
-             :as public-energiatodistus-schema])
-  (:import (java.util Locale)
-           (java.text DecimalFormat DecimalFormatSymbols)
-           (java.time Instant LocalDateTime ZoneId)))
-
-(def tmp-dir "tmp-csv/")
-(def column-separator ";")
-(def locale (Locale. "fi" "FI"))
-(def decimal-format-symbol (doto (DecimalFormatSymbols. locale)
-                             (.setMinusSign \-)))
-(def ^DecimalFormat decimal-format (doto (DecimalFormat. "#.###")
-                      (.setDecimalFormatSymbols decimal-format-symbol)))
-(def timezone (ZoneId/of "Europe/Helsinki"))
+             :as complete-energiatodistus-service]))
 
 (def private-columns
   (concat
@@ -43,7 +30,8 @@
      [:perustiedot child])
    [[:tulokset :e-luku]
     [:tulokset :e-luokka]
-    [:tulokset :e-luokka-rajat :raja-uusi-2018]]
+    [:tulokset :e-luokka-rajat :raja-uusi-2018]
+    [:tulokset :e-luokka-rajat :kayttotarkoitus :label-fi]]
    (for [child [:keskeiset-suositukset-fi :keskeiset-suositukset-sv]]
      [:perustiedot child])
    [[:lahtotiedot :lammitetty-nettoala]]
@@ -195,14 +183,20 @@
     [:lisamerkintoja-sv]]))
 
 (def public-columns
-  (let [extra-columns #{[:tulokset :e-luokka-rajat :raja-uusi-2018]
+  (let [extra-columns #{[:perustiedot :alakayttotarkoitus-fi]
+                        [:tulokset :e-luokka-rajat :kayttotarkoitus :label-fi]
+                        [:tulokset :e-luokka-rajat :raja-uusi-2018]
                         [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]
                         [:tulokset :kaytettavat-energiamuodot :sahko-kerroin]
                         [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin]
                         [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]}
-        hidden-columns #{[:laatija-id]
-                         [:laatija-fullname]}]
+        hidden-columns #{[:tila-id]
+                         [:kieli]
+                         [:korvaava-energiatodistus-id]
+                         [:laatija-id]
+                         [:laatija-fullname]
+                         [:perustiedot :yritys :nimi]}]
     (filter
      (fn [column]
        (and
@@ -217,28 +211,15 @@
        (map str/capitalize)
        (str/join #" / ")))
 
-(defn format-value [v]
-  (cond
-    (string? v) (format "\"%s\"" (str/replace v #"\"" "\"\""))
-    (number? v) (.format decimal-format v)
-    (= Instant (type v)) (str (LocalDateTime/ofInstant v timezone))
-    :else (str v)))
-
-(defn csv-line [coll]
-  (as-> coll $
-    (map format-value $)
-    (str/join column-separator $)
-    (str $ "\n")))
-
 (defn energiatodistus->csv-line [columns energiatodistus]
   (->> columns
        (map #(get-in energiatodistus %))
-       csv-line))
+       csv/csv-line))
 
 (defn headers-csv-line [columns]
   (->> columns
        (map column-ks->str)
-       csv-line))
+       csv/csv-line))
 
 (defn energiatodistukset-csv [db whoami query columns]
   (let [luokittelut (complete-energiatodistus-service/luokittelut db)

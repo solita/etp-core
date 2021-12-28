@@ -40,10 +40,11 @@
              :rfc-request}))
 
 (def published? #(-> % :publish-time some?))
+(def draft? (complement published?))
 
 (def audit-report? (partial type? :audit-report))
 
 (def audit-reply? (partial type? :audit-reply))
 
-(def clears-from-tyojono?
+(def close-valvonta?
   (partial some-type? #{:verified :anomaly :closed}))
