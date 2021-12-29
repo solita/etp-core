@@ -8,7 +8,10 @@
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.yritys :as yritys-service]
             [solita.etp.service.luokittelu :as luokittelu-service]
-            [solita.etp.schema.laatija :as laatija-schema]))
+            [solita.etp.schema.laatija :as laatija-schema]
+            [solita.etp.service.laatija.email :as email]
+            [clojure.java.io :as io]
+            [clojure.tools.logging :as log]))
 
 ;; *** Require sql functions ***
 (db/require-queries 'laatija)
@@ -140,10 +143,6 @@
 (defn count-public-laatijat [db]
   (first (laatija-db/select-count-public-laatijat db)))
 
-;;
-;; Pätevyydet
-;;
-
 (defn find-patevyystasot [db] (luokittelu-service/find-patevyystasot db))
 
 (defn find-history [db whoami laatija-id]
@@ -151,3 +150,26 @@
           (= laatija-id (:id whoami)))
     (laatija-db/select-laatija-history db {:id laatija-id})
     (exception/throw-forbidden!)))
+
+(def ^:private template (-> "viesti/patevyys-expiration.txt" io/resource slurp))
+
+(defn send-patevyys-expiration-messages!
+  [db {:keys [months-before-expiration fallback-window dryrun]
+       :as   options}]
+  (jdbc/with-db-transaction
+    [db db]
+    (let [options (merge {:dryrun false :fallback-window 10} options)
+          viestit (laatija-db/insert-patevyys-expiration-viestit
+                    db (assoc options
+                         :subject "Muistutus pätevyyden päättymisestä"
+                         :body (format template (str months-before-expiration))))]
+      (log/info "Sending " (count viestit)
+                " patevyys expiration messages - options: " options)
+
+      (if dryrun
+        (jdbc/db-set-rollback-only! db)
+        (email/send-emails! (map #(assoc %
+                                    :type :patevyys-expiration
+                                    :body (str months-before-expiration))
+                                 viestit)))
+      viestit)))

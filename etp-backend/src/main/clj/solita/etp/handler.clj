@@ -134,7 +134,8 @@
                               [security/wrap-db-application-name]]}
     (concat (tag "Energiatodistus API" energiatodistus-api/external-routes))]
    ["/internal"
-    (concat (tag "Laskutus API" laskutus-api/routes))]])
+    (concat (tag "Laskutus API" laskutus-api/routes)
+            (tag "Laatija Internal API" laatija-api/internal-routes))]])
 
 (def route-opts
   {;; Uncomment line below to see diffs of requests in middleware chain

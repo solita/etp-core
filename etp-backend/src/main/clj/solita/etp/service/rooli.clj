@@ -24,3 +24,7 @@
 (defn rooli-key [rooli-id] (nth rooli-keys rooli-id))
 
 (def energiatodistus-reader? (some-fn laatija? paakayttaja? laskuttaja?))
+
+(def system
+  {:communication -3
+   :laskutus -2})
