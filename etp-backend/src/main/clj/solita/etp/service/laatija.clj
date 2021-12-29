@@ -8,7 +8,8 @@
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.yritys :as yritys-service]
             [solita.etp.service.luokittelu :as luokittelu-service]
-            [solita.etp.schema.laatija :as laatija-schema]))
+            [solita.etp.schema.laatija :as laatija-schema]
+            [solita.etp.service.laatija.email :as email]))
 
 ;; *** Require sql functions ***
 (db/require-queries 'laatija)
@@ -140,10 +141,6 @@
 (defn count-public-laatijat [db]
   (first (laatija-db/select-count-public-laatijat db)))
 
-;;
-;; Pätevyydet
-;;
-
 (defn find-patevyystasot [db] (luokittelu-service/find-patevyystasot db))
 
 (defn find-history [db whoami laatija-id]
@@ -151,3 +148,24 @@
           (= laatija-id (:id whoami)))
     (laatija-db/select-laatija-history db {:id laatija-id})
     (exception/throw-forbidden!)))
+
+(def ^:private template
+  "Hei!
+
+   Pätevyytesi on päättymässä noin %s kuukauden kuluttua.
+   Pätevyyden uusiminen onnistuu vain muutaman kerran vuodessa.
+   Selvitä hyvissä ajoin seuraavan pätevyyslautakunnan kokoontumisaika, jos haluat jatkaa laatijana.
+   Lisätietoja asiasta löytyy osoitteesta [www.fise.fi](https://www.fise.fi) ja energiatodistusrekisterin kohdasta *laatijan ohjeet*.
+
+   Terveisin, ARAn energia-asiantuntijat")
+
+(defn send-patevyys-expiration-messages! [db
+                                          min-days-to-expiration
+                                          max-days-to-expiration]
+  (jdbc/with-db-transaction [db db]
+    (let [viestit (laatija-db/insert-patevyys-expiration-viestit
+                    db {:min-days-to-expiration min-days-to-expiration
+                        :max-days-to-expiration max-days-to-expiration
+                        :subject "Muistutus pätevyyden päättymisestä"
+                        :template template})]
+      (email/send-emails! (map #(assoc % :type :patevyys-expiration) viestit)))))

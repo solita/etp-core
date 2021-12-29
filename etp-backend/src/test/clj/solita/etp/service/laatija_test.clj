@@ -6,7 +6,9 @@
             [solita.etp.test-data.kayttaja :as kayttaja-test-data]
             [solita.etp.test-data.laatija :as laatija-test-data]
             [solita.etp.service.whoami :as whoami-service]
-            [solita.etp.service.laatija :as service])
+            [solita.etp.service.laatija :as service]
+            [solita.etp.service.viesti :as viesti-service]
+            [solita.etp.whoami :as test-whoami])
   (:import (java.time LocalDate ZoneId Instant)))
 
 (t/use-fixtures :each ts/fixture)
@@ -189,3 +191,17 @@
                 #(service/validate-laatija-patevyys! ts/*db* id))
                {:type          :patevyys-expired
                 :paattymisaika (patevyys-paattymisaika expired-yesterday)})))))
+
+(t/deftest send-patevyys-expiration-message!
+  (let [paakayttaja-id (kayttaja-test-data/insert-paakayttaja!)
+        [id laatija] (laatija-test-data/generate-and-insert!)
+        ^LocalDate now (LocalDate/now)]
+    (service/update-laatija-by-id!
+      ts/*db* id
+      {:toteamispaivamaara (-> now (.minusYears 7) (.plusDays 180)) })
+
+    (service/send-patevyys-expiration-messages! ts/*db* 175 185)
+    (let [viestit (viesti-service/find-ketjut
+      ts/*db* (test-whoami/paakayttaja paakayttaja-id)
+      {:include-kasitelty true})]
+      (t/is (= (count viestit) 1)))))

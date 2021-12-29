@@ -125,3 +125,44 @@ from
   join kayttaja modifier on l.modifiedby_id = modifier.id
 where l.id = :id
 order by modifytime, event_id;
+
+-- name: insert-patevyys-expiration-viestit
+with laatija_patevyys as (
+  select
+    kayttaja.id laatija_id, kayttaja.email,
+    patevyys_paattymisaika(laatija) - :min-days-to-expiration * interval '1' day as max,
+    patevyys_paattymisaika(laatija) - :max-days-to-expiration * interval '1' day as min,
+    round(extract (day from patevyys_paattymisaika(laatija) - transaction_timestamp())/30)
+      as months2expiration
+  from kayttaja inner join laatija on laatija.id = kayttaja.id
+), laatija_expiration_viesti as (
+  select row_number() over (order by laatija_id) row_id, laatija_patevyys.*
+  from laatija_patevyys
+  where transaction_timestamp() between laatija_patevyys.min and laatija_patevyys.max
+    and not exists (
+      select from viesti inner join vastaanottaja
+        on viesti.viestiketju_id = vastaanottaja.viestiketju_id
+      where
+        vastaanottaja.vastaanottaja_id = laatija_patevyys.laatija_id and
+        viesti.from_id = -3 and
+        viesti.sent_time between laatija_patevyys.min and laatija_patevyys.max
+    )
+), viestiketjut as (
+  insert into viestiketju (subject, kasitelty)
+  select :subject, true from laatija_expiration_viesti
+  returning id
+), laatija_viestiketju as (
+  select laatija.*, viestiketju.id viestiketju_id
+  from (
+    (select row_number() over (order by id) row_id, id from viestiketjut) viestiketju
+    inner join laatija_expiration_viesti laatija using (row_id))
+), vastaanottajat as (
+  insert into vastaanottaja (viestiketju_id, vastaanottaja_id)
+  select viestiketju_id, laatija_id from laatija_viestiketju
+), viestit as (
+  insert into viesti (viestiketju_id, body)
+  select viestiketju_id, format(:template, months2expiration)
+  from laatija_viestiketju
+)
+select laatija_id as id, email, months2expiration as body
+from laatija_viestiketju
