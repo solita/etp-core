@@ -80,9 +80,12 @@
                %))
         energiatodistus-adds))
 
-(defn generate-and-insert! [n versio ready-for-signing? laatija-id]
-  (let [energiatodistus-adds (generate-adds n versio ready-for-signing?)]
-    (zipmap (insert! energiatodistus-adds laatija-id) energiatodistus-adds)))
+(defn generate-and-insert!
+  ([versio ready-for-signing? laatija-id]
+   (first (generate-and-insert! 1 versio ready-for-signing? laatija-id)))
+  ([n versio ready-for-signing? laatija-id]
+   (let [energiatodistus-adds (generate-adds n versio ready-for-signing?)]
+     (zipmap (insert! energiatodistus-adds laatija-id) energiatodistus-adds))))
 
 (defn sign-pdf! [energiatodistus-id laatija-id]
   (let [language (-> (energiatodistus-service/find-energiatodistus
