@@ -1,5 +1,5 @@
 insert into vo_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, content)
-values (3, 'Tietopyyntö / varoitus (fi)', 'TODO', 3, 6, 'fi', 
+values (6, 'Valvontamuistio / varoitus (fi)', 'Övervaknings-pm / varning (fi)', 1, 10, 'fi', 
 $$
 <div class="otsikko">
     <b>VAROITUS</b> <br/>
@@ -11,19 +11,19 @@ $$
     <span class="isot-kirjaimet">{{#laatija}} {{etunimi}} {{sukunimi}} {{/laatija}}</span>
 
     {{#energiatodistus}}
-    <table class="sarake">
+     <table class="sarake">
         <tr>
             <td>Kohde:</td> 
             <td>
                 <div class="nowrap">{{nimi}}</div>
-                <div class="nowrap">{{katuosoite-fi}}</div>  
-                <div class="nowrap">{{postinumero}} {{postitoimipaikka-fi}}</div>  
+                <div class="nowrap">{{katuosoite}}</div>  
+                <div class="nowrap">{{postinumero}} {{postitoimipaikka}}</div>  
             </td>
         </tr>
     </table>
     Todistustunnus: {{tunnus}} <br/>
-    Tietopyynnön päivämäärä: {{#tietopyynto}} {{tietopyynto-pvm}} {{/tietopyynto}} <br />
-    Kehotuksen päivämäärä: {{#tietopyynto}} {{tietopyynto-kehotus-pvm}} {{/tietopyynto}}
+    Valvontamuistion päivämäärä: {{#valvontamuistio}} {{valvontamuistio-pvm}} {{/valvontamuistio}} <br />
+    Kehotuksen päivämäärä: {{#valvontamuistio}} {{valvontamuistio-kehotus-pvm}} {{/valvontamuistio}}
     {{/energiatodistus}}
 </p>
 
@@ -32,21 +32,10 @@ $$
     Oikeellisuustarkastukset kohdistuvat energiatodistusten lähtötietoihin, energiatehokkuusluvun laskentaan sekä
     säästösuositusten oikeellisuuteen.</p>
 
-<p>ARA on lähettänyt teille tästä energiatodistuksesta taustamateriaalin tietopyynnön ja kehotuksen. 
-    <b>ARA tulee tarkastamaan todistuksen oikeellisuuden tämän materiaalin pohjalta.</b> Pyydämme, että toimitatte
-    seuraavat todistuksen laadinnassa käytetyt taustamateriaalit ARAn energiatodistusrekisteriin {{määräpäivä}}
-    mennessä:</p>
+<p>ARA on lähettänyt teille tästä energiatodistuksesta valvontamuistion. ARA on valvontamuistiossa todennut, että
+    energiatodistus voi olla olennaisesti virheellinen. <b>ARA antaa teille varoituksen ja vaatii korjaamaan
+    energiatodistuksen {{määräpäivä}} mennessä.</b> </p>
 
-<ul>
-    <li>Pääpiirustukset (asema-, pohja-, julkisivu- ja leikkauspiirustukset sekä U-arvot)</li>
-    <li>E-lukulaskentaan vaikuttavat ilmanvaihto-, jäähdytys- ja lämmitysjärjestelmien laskelmat ja tekniset tiedot (ei
-        pohjakuvia)
-    </li>
-    <li>Valaistuslaskelmat, jos E-lukulaskennassa on käytetty tarpeenmukaista valaistusta</li>
-    <li>Tiiveysmittausraportti, jos mittaus on suoritettu</li>
-    <li>Energiaselvitys (uudiskohteet)</li>
-    <li>Havainnointipöytäkirja ja muu materiaali paikan päällä käynnistä (olemassa olevat rakennukset)</li>
-</ul>
 
 <p>ARAlla on oikeus saada valvontaa varten tarvittavat tiedot ja asiakirjat, mukaan lukien toimeksiantoja koskevat
     tiedot. Laatijan on säilytettävä valmisteluasiakirjat, laskelmat ja muut tiedot, jotka laatija on tehnyt tai
@@ -56,9 +45,13 @@ $$
 
 <p>Jos energiatodistuksen laatija ei täytä säädettyjä velvollisuuksia, ARA kehottaa korjaamaan asian ja antaa määräajan
     korjaukselle. Jos asiaa ei korjata määräajassa, ARA antaa laatijalle varoituksen ja uuden määräajan. Jos asiaa ei
-    edelleenkään korjata, ARA voi antaa laatijalle velvoittavan käskypäätöksen/käyttökieltopäätöksen, jota voidaan
-    tehostaa uhkasakolla. ARAlla on myös mahdollisuus antaa laatijalle laatimiskielto, jos laatija on toiminut
-    olennaisella tai merkittävällä tavalla säännösten vastaisesti.</p>
+    edelleenkään korjata, ARA laittaa todistuksen käyttökieltoon ja velvoittaa energiatodistuksen laatijan korvaamaan
+    virheellisen todistuksen uudella todistuksella. Energiatodistus voidaan tarvittaessa teettää myös toisella
+    energiatodistuksen laatijalla. Uuden todistuksen kustannuksista vastaa virheellisen todistuksen laatinut
+    energiatodistuksen laatija. </p>
+
+<p>ARAlla on myös mahdollisuus antaa laatijalle laatimiskielto, jos laatija on toiminut olennaisella tai merkittävällä
+    tavalla säännösten vastaisesti.</p>
 
 <p>
     {{#valvoja}}

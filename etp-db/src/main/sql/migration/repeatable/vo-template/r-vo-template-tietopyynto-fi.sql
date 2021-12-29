@@ -1,8 +1,9 @@
 insert into vo_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, content)
-values (2, 'Tietopyyntö / kehotus (fi)', 'TODO', 2, 5, 'fi', 
+values
+(1, 'Tietopyyntö (fi)', 'Begäran om inlämning (fi) ', 1, 3, 'fi',
 $$
 <div class="otsikko">
-    <b>KEHOTUS</b> <br/>
+    <b>Tietopyyntö</b> <br/>
     <b>{{päivä}}</b> <br/>
     {{diaarinumero}}
 </div>
@@ -16,13 +17,13 @@ $$
             <td>Kohde:</td> 
             <td>
                 <div class="nowrap">{{nimi}}</div>
-                <div class="nowrap">{{katuosoite-fi}}</div>  
-                <div class="nowrap">{{postinumero}} {{postitoimipaikka-fi}}</div>  
+                <div class="nowrap">{{katuosoite}}</div>  
+                <div class="nowrap">{{postinumero}} {{postitoimipaikka}}</div> 
             </td>
         </tr>
     </table>
+
     Todistustunnus: {{tunnus}} <br/>
-    Tietopyynnön päivämäärä: {{#tietopyynto}} {{tietopyynto-pvm}} {{/tietopyynto}}
     {{/energiatodistus}}
 </p>
 
@@ -31,9 +32,8 @@ $$
     Oikeellisuustarkastukset kohdistuvat energiatodistusten lähtötietoihin, energiatehokkuusluvun laskentaan sekä
     säästösuositusten oikeellisuuteen.</p>
 
-<p>ARA on lähettänyt teille tästä energiatodistuksesta taustamateriaalin tietopyynnön. <b>ARA tulee tarkastamaan todistuksen
-        oikeellisuuden tämän materiaalin pohjalta.</b> Pyydämme, että toimitatte seuraavat todistuksen laadinnassa
-    käytetyt taustamateriaalit ARAn energiatodistusrekisteriin {{määräpäivä}} mennessä:</p>
+<p><b>ARA tulee tarkastamaan tämän todistuksen oikeellisuuden.</b> Pyydämme, että toimitatte seuraavat todistuksen
+    laadinnassa käytetyt taustamateriaalit ARAn energiatodistusrekisteriin {{määräpäivä}} mennessä:</p>
 
 <ul>
     <li>Pääpiirustukset (asema-, pohja-, julkisivu- ja leikkauspiirustukset sekä U-arvot)</li>
@@ -45,6 +45,8 @@ $$
     <li>Energiaselvitys (uudiskohteet)</li>
     <li>Havainnointipöytäkirja ja muu materiaali paikan päällä käynnistä (olemassa olevat rakennukset)</li>
 </ul>
+
+<div class="sivunvaihto"></div>
 
 <p>ARAlla on oikeus saada valvontaa varten tarvittavat tiedot ja asiakirjat, mukaan lukien toimeksiantoja koskevat
     tiedot. Laatijan on säilytettävä valmisteluasiakirjat, laskelmat ja muut tiedot, jotka laatija on tehnyt tai
