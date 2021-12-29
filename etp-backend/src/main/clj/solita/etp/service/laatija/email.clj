@@ -63,7 +63,7 @@
     #(email/html
       (email/paragraph "Hei!")
       (email/paragraph
-        "Pätevyytesi on päättymässä " % " kuukauden kuluttua."
+        "Pätevyytesi on päättymässä noin " % " kuukauden kuluttua."
         "Pätevyyden uusiminen onnistuu vain muutaman kerran vuodessa."
         "Selvitä hyvissä ajoin seuraavan pätevyyslautakunnan kokoontumisaika, jos haluat jatkaa laatijana."
         "Lisätietoja asiasta löytyy osoitteesta www.fise.fi"
