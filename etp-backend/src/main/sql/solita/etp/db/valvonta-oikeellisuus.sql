@@ -129,7 +129,8 @@ select
   energiatodistus.id,
   energiatodistus.valvonta$pending pending,
   energiatodistus.valvonta$valvoja_id valvoja_id,
-  coalesce(vo_toimenpide_ongoing(last_toimenpide), false) ongoing
+  coalesce(vo_toimenpide_ongoing(last_toimenpide), false) ongoing,
+  energiatodistus.laatija_id
 from energiatodistus left join lateral (
   select * from vo_toimenpide toimenpide
   where energiatodistus.id = toimenpide.energiatodistus_id
