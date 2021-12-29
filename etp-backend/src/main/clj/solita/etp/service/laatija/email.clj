@@ -67,7 +67,7 @@
         "Pätevyyden uusiminen onnistuu vain muutaman kerran vuodessa."
         "Selvitä hyvissä ajoin seuraavan pätevyyslautakunnan kokoontumisaika, jos haluat jatkaa laatijana."
         "Lisätietoja asiasta löytyy osoitteesta www.fise.fi"
-        "ja energiatodistusrekisterin kohdasta <em>laatijan ohjeet</em>.")
+        "ja energiatodistusrekisterin kohdasta <em>Laatijan ohjeet</em>.")
       general-info
       signature)}
    })
