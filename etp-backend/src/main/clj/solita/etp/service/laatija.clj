@@ -9,7 +9,9 @@
             [solita.etp.service.yritys :as yritys-service]
             [solita.etp.service.luokittelu :as luokittelu-service]
             [solita.etp.schema.laatija :as laatija-schema]
-            [solita.etp.service.laatija.email :as email]))
+            [solita.etp.service.laatija.email :as email]
+            [clojure.java.io :as io]
+            [clojure.tools.logging :as log]))
 
 ;; *** Require sql functions ***
 (db/require-queries 'laatija)
@@ -149,23 +151,25 @@
     (laatija-db/select-laatija-history db {:id laatija-id})
     (exception/throw-forbidden!)))
 
-(def ^:private template
-  "Hei!
+(def ^:private template (-> "viesti/patevyys-expiration.txt" io/resource slurp))
 
-   Pätevyytesi on päättymässä noin %s kuukauden kuluttua.
-   Pätevyyden uusiminen onnistuu vain muutaman kerran vuodessa.
-   Selvitä hyvissä ajoin seuraavan pätevyyslautakunnan kokoontumisaika, jos haluat jatkaa laatijana.
-   Lisätietoja asiasta löytyy osoitteesta [www.fise.fi](https://www.fise.fi) ja energiatodistusrekisterin kohdasta *laatijan ohjeet*.
+(defn send-patevyys-expiration-messages!
+  [db {:keys [months-before-expiration fallback-window dryrun]
+       :as   options}]
+  (jdbc/with-db-transaction
+    [db db]
+    (let [options (merge {:dryrun false :fallback-window 10} options)
+          viestit (laatija-db/insert-patevyys-expiration-viestit
+                    db (assoc options
+                         :subject "Muistutus pätevyyden päättymisestä"
+                         :body (format template (str months-before-expiration))))]
+      (log/info "Sending " (count viestit)
+                " patevyys expiration messages - options: " options)
 
-   Terveisin, ARAn energia-asiantuntijat")
-
-(defn send-patevyys-expiration-messages! [db
-                                          min-days-to-expiration
-                                          max-days-to-expiration]
-  (jdbc/with-db-transaction [db db]
-    (let [viestit (laatija-db/insert-patevyys-expiration-viestit
-                    db {:min-days-to-expiration min-days-to-expiration
-                        :max-days-to-expiration max-days-to-expiration
-                        :subject "Muistutus pätevyyden päättymisestä"
-                        :template template})]
-      (email/send-emails! (map #(assoc % :type :patevyys-expiration) viestit)))))
+      (if dryrun
+        (jdbc/db-set-rollback-only! db)
+        (email/send-emails! (map #(assoc %
+                                    :type :patevyys-expiration
+                                    :body (str months-before-expiration))
+                                 viestit)))
+      viestit)))

@@ -8,7 +8,8 @@
             [solita.etp.service.whoami :as whoami-service]
             [solita.etp.service.laatija :as service]
             [solita.etp.service.viesti :as viesti-service]
-            [solita.etp.whoami :as test-whoami])
+            [solita.etp.whoami :as test-whoami]
+            [solita.etp.service.rooli :as rooli-service])
   (:import (java.time LocalDate ZoneId Instant)))
 
 (t/use-fixtures :each ts/fixture)
@@ -194,14 +195,28 @@
 
 (t/deftest send-patevyys-expiration-message!
   (let [paakayttaja-id (kayttaja-test-data/insert-paakayttaja!)
-        [id laatija] (laatija-test-data/generate-and-insert!)
-        ^LocalDate now (LocalDate/now)]
+        [id _] (laatija-test-data/generate-and-insert!)
+        ^LocalDate now (LocalDate/now)
+        system-id (rooli-service/system :communication)
+        options {:months-before-expiration 6 :fallback-window 0}]
     (service/update-laatija-by-id!
       ts/*db* id
-      {:toteamispaivamaara (-> now (.minusYears 7) (.plusDays 180)) })
+      {:toteamispaivamaara (-> now (.minusYears 7) (.plusMonths 6))})
 
-    (service/send-patevyys-expiration-messages! ts/*db* 175 185)
-    (let [viestit (viesti-service/find-ketjut
-      ts/*db* (test-whoami/paakayttaja paakayttaja-id)
-      {:include-kasitelty true})]
-      (t/is (= (count viestit) 1)))))
+    (service/send-patevyys-expiration-messages! (ts/db-user system-id) options)
+    ;; second time should not send anything
+    (service/send-patevyys-expiration-messages! (ts/db-user system-id) options)
+
+    ;; assert viesti
+    (let [viestiketjut (viesti-service/find-ketjut
+                         ts/*db* (test-whoami/paakayttaja paakayttaja-id)
+                         {:include-kasitelty true})
+          viestiketju (first viestiketjut)
+          vastaanottaja (-> viestiketju :vastaanottajat first)
+          viesti (-> viestiketju :viestit first)]
+      (t/is (= (count viestiketjut) 1))
+      (t/is (= (-> viestiketju :vastaanottajat count) 1))
+      (t/is (= (-> viestiketju :viestit count) 1))
+      (t/is (= (:id vastaanottaja) id))
+      (t/is (= (-> viesti :from :id) system-id))
+      (t/is (some? (:body viesti))))))

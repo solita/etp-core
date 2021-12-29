@@ -130,22 +130,23 @@ order by modifytime, event_id;
 with laatija_patevyys as (
   select
     kayttaja.id laatija_id, kayttaja.email,
-    patevyys_paattymisaika(laatija) - :min-days-to-expiration * interval '1' day as max,
-    patevyys_paattymisaika(laatija) - :max-days-to-expiration * interval '1' day as min,
-    round(extract (day from patevyys_paattymisaika(laatija) - transaction_timestamp())/30)
-      as months2expiration
+    date_trunc('day', patevyys_paattymisaika(laatija))
+      - :months-before-expiration * interval '1' month as begin,
+    date_trunc('day', patevyys_paattymisaika(laatija))
+      - :months-before-expiration * interval '1' month
+      + :fallback-window * interval '1' day as end
   from kayttaja inner join laatija on laatija.id = kayttaja.id
 ), laatija_expiration_viesti as (
   select row_number() over (order by laatija_id) row_id, laatija_patevyys.*
   from laatija_patevyys
-  where transaction_timestamp() between laatija_patevyys.min and laatija_patevyys.max
+  where date_trunc('day', transaction_timestamp()) between laatija_patevyys.begin and laatija_patevyys.end
     and not exists (
       select from viesti inner join vastaanottaja
         on viesti.viestiketju_id = vastaanottaja.viestiketju_id
       where
         vastaanottaja.vastaanottaja_id = laatija_patevyys.laatija_id and
         viesti.from_id = -3 and
-        viesti.sent_time between laatija_patevyys.min and laatija_patevyys.max
+        date_trunc('day', viesti.sent_time) between laatija_patevyys.begin and laatija_patevyys.end
     )
 ), viestiketjut as (
   insert into viestiketju (subject, kasitelty)
@@ -161,8 +162,8 @@ with laatija_patevyys as (
   select viestiketju_id, laatija_id from laatija_viestiketju
 ), viestit as (
   insert into viesti (viestiketju_id, body)
-  select viestiketju_id, format(:template, months2expiration)
+  select viestiketju_id, :body
   from laatija_viestiketju
 )
-select laatija_id as id, email, months2expiration as body
+select laatija_id as id, email
 from laatija_viestiketju
