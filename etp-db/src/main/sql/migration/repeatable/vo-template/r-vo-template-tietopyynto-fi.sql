@@ -17,8 +17,8 @@ $$
             <td>Kohde:</td> 
             <td>
                 <div class="nowrap">{{nimi}}</div>
-                <div class="nowrap">{{katuosoite-fi}}</div>  
-                <div class="nowrap">{{postinumero}} {{postitoimipaikka-fi}}</div> 
+                <div class="nowrap">{{katuosoite}}</div>  
+                <div class="nowrap">{{postinumero}} {{postitoimipaikka}}</div> 
             </td>
         </tr>
     </table>

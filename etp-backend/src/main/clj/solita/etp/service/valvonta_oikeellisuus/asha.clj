@@ -3,6 +3,7 @@
             [clojure.set :as set]
             [solita.common.time :as time]
             [solita.common.maybe :as maybe]
+            [solita.etp.service.kielisyys :as kielisyys]
             [solita.etp.service.asha :as asha]
             [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]
             [solita.etp.service.kayttaja :as kayttaja-service]
@@ -57,33 +58,36 @@
     (->> (clojure.string/replace content #"\n\n" "\n")
          (ch/markdown->html markdown-config))))
 
-(defn- template-data [whoami toimenpide laatija energiatodistus dokumentit]
-  {:päivä           (time/today)
-   :määräpäivä      (time/format-date (:deadline-date toimenpide))
-   :diaarinumero    (:diaarinumero toimenpide)
-   :valvoja         (select-keys whoami [:etunimi :sukunimi :email])
-   :laatija         (select-keys laatija [:etunimi :sukunimi :henkilotunnus :email :puhelin])
-   :energiatodistus {:tunnus              (:id energiatodistus)
-                     :rakennustunnus      (-> energiatodistus :perustiedot :rakennustunnus)
-                     :nimi                (-> energiatodistus :perustiedot :nimi)
-                     :katuosoite-fi       (-> energiatodistus :perustiedot :katuosoite-fi)
-                     :katuosoite-sv       (-> energiatodistus :perustiedot :katuosoite-sv)
-                     :postinumero         (-> energiatodistus :perustiedot :postinumero)
-                     :postitoimipaikka-fi (-> energiatodistus :perustiedot :postitoimipaikka-fi)
-                     :postitoimipaikka-sv (-> energiatodistus :perustiedot :postitoimipaikka-sv)}
-   :tietopyynto     {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
-                     :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
-   :valvontamuistio {:valvontamuistio-pvm         (time/format-date (:audit-report dokumentit))
-                     :valvontamuistio-kehotus-pvm (time/format-date (:audit-order dokumentit))
-                     :virheet                     (map
-                                                    #(update % :description markdown->html)
-                                                    (:virheet toimenpide))
-                     :vakavuus                    (when-let [luokka (:severity-id toimenpide)]
-                                                    (case luokka
-                                                      0 {:ei-huomioitavaa true}
-                                                      1 {:ei-toimenpiteitä true}
-                                                      2 {:virheellinen true}))}
-   :tiedoksi        (map #(set/rename-keys % {:name :nimi}) (:tiedoksi toimenpide))})
+(defn- template-data [whoami toimenpide laatija energiatodistus dokumentit template]
+  (let [language-kw (fn [key]
+                      (let [language (if (and (= (:language template) "sv") (kielisyys/sv? energiatodistus))
+                                       "sv"
+                                       "fi")]
+                        (keyword (str key "-" language))))]
+    {:päivä           (time/today)
+     :määräpäivä      (time/format-date (:deadline-date toimenpide))
+     :diaarinumero    (:diaarinumero toimenpide)
+     :valvoja         (select-keys whoami [:etunimi :sukunimi :email])
+     :laatija         (select-keys laatija [:etunimi :sukunimi :henkilotunnus :email :puhelin])
+     :energiatodistus {:tunnus           (:id energiatodistus)
+                       :rakennustunnus   (-> energiatodistus :perustiedot :rakennustunnus)
+                       :nimi             (-> energiatodistus :perustiedot :nimi)
+                       :katuosoite       (-> energiatodistus :perustiedot (partial (language-kw "katuosoite")))
+                       :postinumero      (-> energiatodistus :perustiedot :postinumero)
+                       :postitoimipaikka (-> energiatodistus :perustiedot (partial (language-kw "postitoimipaikka")))}
+     :tietopyynto     {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
+                       :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
+     :valvontamuistio {:valvontamuistio-pvm         (time/format-date (:audit-report dokumentit))
+                       :valvontamuistio-kehotus-pvm (time/format-date (:audit-order dokumentit))
+                       :virheet                     (map
+                                                      #(update % :description markdown->html)
+                                                      (:virheet toimenpide))
+                       :vakavuus                    (when-let [luokka (:severity-id toimenpide)]
+                                                      (case luokka
+                                                        0 {:ei-huomioitavaa true}
+                                                        1 {:ei-toimenpiteitä true}
+                                                        2 {:virheellinen true}))}
+     :tiedoksi        (map #(set/rename-keys % {:name :nimi}) (:tiedoksi toimenpide))}))
 
 (defn- find-resources [db energiatodistus-id]
   (when-let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db energiatodistus-id)]
@@ -100,12 +104,12 @@
      (generate-pdf-document db whoami toimenpide energiatodistus laatija)))
   ([db whoami toimenpide energiatodistus laatija]
     (let [template-id (:template-id toimenpide)
-          template (->> (valvonta-oikeellisuus-db/select-template db {:id template-id})
-                        first :content
+          template (first (valvonta-oikeellisuus-db/select-template db {:id template-id}))
+          content (->>  template :content
                         (exception/require-some! :template template-id))
           documents (find-energiatodistus-valvonta-documents db (:id energiatodistus))
-          template-data (template-data whoami toimenpide laatija energiatodistus documents)]
-      (pdf/generate-pdf->bytes {:template template
+          template-data (template-data whoami toimenpide laatija energiatodistus documents template)]
+      (pdf/generate-pdf->bytes {:template content
                                 :data     template-data}))))
 
 (defn- request-id [energiatodistus-id toimenpide-id]

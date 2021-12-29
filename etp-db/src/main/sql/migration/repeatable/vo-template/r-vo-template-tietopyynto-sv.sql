@@ -16,8 +16,8 @@ values (7, 'Tietopyyntö (sv)', 'Begäran om inlämning (sv)', 2, 3, 'sv',
             <td>Objekt:</td> 
             <td>
                 <div class="nowrap">{{nimi}}</div>
-                <div class="nowrap">{{katuosoite-fi}}</div>  
-                <div class="nowrap">{{postinumero}} {{postitoimipaikka-fi}}</div> 
+                <div class="nowrap">{{katuosoite}}</div>  
+                <div class="nowrap">{{postinumero}} {{postitoimipaikka}}</div> 
             </td>
         </tr>
     </table>
