@@ -14,7 +14,7 @@
 ;; XML API does not use External-version of schema, because energiatodistus is
 ;; created internally and fields not available in the XML schema are
 ;; initialized manually.
-(def coercer (sc/coercer energiatodistus-schema/EnergiatodistusSave2018 sc/string-coercion-matcher))
+(def coercer (sc/coercer energiatodistus-schema/Energiatodistus2018External sc/string-coercion-matcher))
 
 (def xsd-path "legacy-api/energiatodistus-2018.xsd")
 (def xsd-schema (xml/load-schema xsd-path true))
@@ -38,19 +38,9 @@
 (defn yritys [xml]
   (map-values-from-xml xml (schema->identity-map energiatodistus-schema/Yritys)))
 
-;FIXME
-(defn update-nimi [perustiedot xml]
-  (let [nimi (xml/get-content xml [:nimi])]
-    (cond-> perustiedot
-            (= (:kieli perustiedot) "0") (assoc :nimi-fi nimi)
-            (= (:kieli perustiedot) "1") (assoc :nimi-sv nimi)
-            (= (:kieli perustiedot) "2") (assoc :nimi-fi nimi
-                                                :nimi-sv nimi))))
-
 (defn perustiedot [xml]
   (-> xml
-      (map-values-from-xml (schema->identity-map energiatodistus-schema/Perustiedot))
-      (update-nimi xml)
+      (map-values-from-xml (schema->identity-map energiatodistus-schema/PerustiedotExternalApi))
       (assoc :rakennustunnus (maybe/map* str/upper-case (xml/get-content xml [:rakennustunnus])))
       (assoc :julkinen-rakennus (xml/get-content xml [:onko-julkinen-rakennus]))
       (assoc :yritys (yritys (xml/get-in-xml xml [:yritys])))))

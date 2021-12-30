@@ -4,6 +4,7 @@
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.schema.geo :as geo-schema]
             [solita.etp.service.json :as json]
+            [solita.etp.service.kielisyys :as kielisyys]
             [solita.etp.service.energiatodistus-tila :as energiatodistus-tila]
             [solita.etp.service.energiatodistus-validation :as validation]
             [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
@@ -313,15 +314,15 @@
   (assert-korvaavuus-draft! db id energiatodistus)
   (validate-sisainen-kuorma! db versio energiatodistus))
 
-; FIXME
-(defn update-nimi [energiatodistus]
-  (if (-> energiatodistus :perustiedot :nimi seq)
+(defn update-rakennuksen-nimi [energiatodistus]
+  (let [only-nimi? (and (-> energiatodistus :perustiedot :nimi seq boolean)
+                        (-> energiatodistus :perustiedot :nimi-fi seq not)
+                        (-> energiatodistus :perustiedot :nimi-sv seq not))]
     (cond-> (update energiatodistus :perustiedot #(dissoc % :nimi))
-            (= 0 (-> energiatodistus :perustiedot :kieli)) (assoc-in [:perustiedot :nimi-fi]  (-> energiatodistus :perustiedot :nimi))
-            (= 1 (-> energiatodistus :perustiedot :kieli)) (assoc-in [:perustiedot :nimi-sv]  (-> energiatodistus :perustiedot :nimi))
-            (= 2 (-> energiatodistus :perustiedot :kieli)) (->  (assoc-in [:perustiedot :nimi-fi]  (-> energiatodistus :perustiedot :nimi))
-                                                                (assoc-in [:perustiedot :nimi-sv] (-> energiatodistus :perustiedot :nimi))))
-    energiatodistus))
+            (and only-nimi? (kielisyys/only-fi? energiatodistus)) (assoc-in [:perustiedot :nimi-fi] (-> energiatodistus :perustiedot :nimi))
+            (and only-nimi? (kielisyys/only-sv? energiatodistus)) (assoc-in [:perustiedot :nimi-sv] (-> energiatodistus :perustiedot :nimi))
+            (and only-nimi? (kielisyys/bilingual? energiatodistus)) (update :perustiedot #(assoc % :nimi-fi (-> energiatodistus :perustiedot :nimi)
+                                                                                                   :nimi-sv (-> energiatodistus :perustiedot :nimi))))))
 
 (defn add-energiatodistus! [db whoami versio energiatodistus]
   (validate-draft! db nil versio energiatodistus)
@@ -331,7 +332,7 @@
                                    (dissoc :kommentti
                                            :bypass-validation-limits
                                            :bypass-validation-limits-reason)
-                                   update-nimi
+                                   update-rakennuksen-nimi
                                    energiatodistus->db-row)
         warnings (validate-db-row! db energiatodistus-db-row versio)]
     (validate-laskutettava-yritys-id! db (:id whoami) energiatodistus-db-row)
@@ -413,7 +414,6 @@
           energiatodistus-db-row (-> energiatodistus
                                      (assoc-e-tehokkuus db versio)
                                      (assoc :versio versio)
-                                     update-nimi
                                      energiatodistus->db-row
                                      (dissoc :versio)
                                      (select-energiatodistus-for-update id

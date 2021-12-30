@@ -60,6 +60,13 @@
    ;; Käyttötarkoitusluokka can be inferred from this
    :kayttotarkoitus          schema/Str})
 
+(def PerustiedotExternalApi
+  (merge
+      (assoc Perustiedot :nimi common-schema/String50)
+      (optional-properties
+        (select-keys Perustiedot
+                     [:nimi-fi :nimi-sv]))))
+
 (def Rakennusvaippa
   {:ala common-schema/NonNegative
    :U   common-schema/NonNegative})
@@ -314,6 +321,12 @@
       (assoc-in [:toteutunut-ostoenergiankulutus :ostettu-energia :muu]
                 [(optional-properties UserDefinedEnergia)])))
 
+(def Energiatodistus2018External
+  (update EnergiatodistusSave2018 :perustiedot #(optional-properties (merge % PerustiedotExternalApi))))
+
+(def Energiatodistus2013External
+  (update EnergiatodistusSave2013 :perustiedot #(optional-properties (merge % PerustiedotExternalApi))))
+
 (defn ->EnergiatodistusSaveExternal [schema]
   (-> schema
       (dissoc :kommentti
@@ -323,9 +336,9 @@
       xschema/optional-key-for-maybe))
 
 (def EnergiatodistusSave2013External
-  (->EnergiatodistusSaveExternal EnergiatodistusSave2013))
+  (->EnergiatodistusSaveExternal Energiatodistus2013External))
 (def EnergiatodistusSave2018External
-  (->EnergiatodistusSaveExternal EnergiatodistusSave2018))
+  (->EnergiatodistusSaveExternal Energiatodistus2018External))
 
 (def Energiatehokkuus
   {:e-luku (schema/maybe schema/Num)
@@ -402,6 +415,6 @@
       (select-keys Perustiedot
                    [:rakennustunnus
                     :kayttotarkoitus
-                    :nimi :nimi-fi :nimi-sv                 ;FIXME
+                    :nimi-fi :nimi-sv
                     :katuosoite-fi :katuosoite-sv
                     :postinumero]))))
