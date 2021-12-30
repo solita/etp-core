@@ -65,7 +65,7 @@
    (let [language (if (and (or (= language "sv") (nil? language)) (kielisyys/sv? energiatodistus))
                     "sv"
                     "fi")]
-     (keyword (str key "-" language)))))
+     (keyword (str (name key) "-" language)))))
 
 (defn- template-data [whoami toimenpide laatija energiatodistus dokumentit template]
   {:päivä           (time/today)
@@ -75,10 +75,10 @@
    :laatija         (select-keys laatija [:etunimi :sukunimi :henkilotunnus :email :puhelin])
    :energiatodistus {:tunnus           (:id energiatodistus)
                      :rakennustunnus   (-> energiatodistus :perustiedot :rakennustunnus)
-                     :nimi             (-> energiatodistus :perustiedot (partial (language-kw energiatodistus "nimi" (:language template))))
-                     :katuosoite       (-> energiatodistus :perustiedot (partial (language-kw energiatodistus "katuosoite" (:language template))))
+                     :nimi             (get-in energiatodistus [:perustiedot (language-kw energiatodistus :nimi (:language template))])
+                     :katuosoite       (get-in energiatodistus [:perustiedot (language-kw energiatodistus :katuosoite (:language template))])
                      :postinumero      (-> energiatodistus :perustiedot :postinumero)
-                     :postitoimipaikka (-> energiatodistus :perustiedot (partial (language-kw energiatodistus "postitoimipaikka" (:language template))))}
+                     :postitoimipaikka (get-in energiatodistus [:perustiedot (language-kw energiatodistus :postitoimipaikka (:language template))])}
    :tietopyynto     {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
                      :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
    :valvontamuistio {:valvontamuistio-pvm         (time/format-date (:audit-report dokumentit))
@@ -202,10 +202,10 @@
                       :name           (asha/string-join "; " [(-> energiatodistus :id)
                                                               (asha/string-join " " [(:etunimi laatija)
                                                                                      (:sukunimi laatija)])])
-                      :description    (asha/string-join "\r" [(-> energiatodistus :perustiedot (partial (language-kw energiatodistus "nimi")))
-                                                              (asha/string-join ", " [(-> energiatodistus :perustiedot (partial (language-kw energiatodistus "katuosoite")))
+                      :description    (asha/string-join "\r" [(get-in energiatodistus [:perustiedot (language-kw energiatodistus :nimi)])
+                                                              (asha/string-join ", " [(get-in energiatodistus [:perustiedot (language-kw energiatodistus :katuosoite)])
                                                                                       (asha/string-join " " [(-> energiatodistus :perustiedot :postinumero)
-                                                                                                             (partial (language-kw energiatodistus "postitoimipaikka"))])])
+                                                                                                             (get-in energiatodistus [:perustiedot (language-kw energiatodistus :postitoimipaikka)])])])
                                                               (-> energiatodistus :perustiedot :rakennustunnus)])
                       :attach         {:contact (osapuoli->contact laatija)}})))
 
