@@ -318,7 +318,7 @@
   (let [only-nimi? (and (-> energiatodistus :perustiedot :nimi seq boolean)
                         (-> energiatodistus :perustiedot :nimi-fi seq not)
                         (-> energiatodistus :perustiedot :nimi-sv seq not))
-        no-language? (-> energiatodistus :perustiedot :kieli seq not)]
+        no-language? (-> energiatodistus :perustiedot :kieli nil?)]
     (cond-> (update energiatodistus :perustiedot #(dissoc % :nimi))
             (and only-nimi? (or no-language? (kielisyys/only-fi? energiatodistus))) (assoc-in [:perustiedot :nimi-fi] (-> energiatodistus :perustiedot :nimi))
             (and only-nimi? (kielisyys/only-sv? energiatodistus)) (assoc-in [:perustiedot :nimi-sv] (-> energiatodistus :perustiedot :nimi))
