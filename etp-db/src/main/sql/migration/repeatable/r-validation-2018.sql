@@ -1,6 +1,5 @@
--- can be removed in the future
 update validation_required_column
-set column_name = 'pt$nimi_fi'
+set valid = false
 where versio = 2018 and column_name = 'pt$nimi';
 
 insert into validation_required_column (versio, column_name, ordinal, bypass_allowed)
