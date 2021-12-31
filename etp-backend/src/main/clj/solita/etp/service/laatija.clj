@@ -154,7 +154,8 @@
 (def ^:private template (-> "viesti/patevyys-expiration.txt" io/resource slurp))
 
 (defn send-patevyys-expiration-messages!
-  [db {:keys [months-before-expiration fallback-window dryrun]
+  [db {:keys [months-before-expiration dryrun]
+       :or {dryrun false}
        :as   options}]
   (jdbc/with-db-transaction
     [db db]
