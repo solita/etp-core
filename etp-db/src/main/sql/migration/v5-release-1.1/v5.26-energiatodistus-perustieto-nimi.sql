@@ -11,7 +11,7 @@ call audit.create_audit_procedure('energiatodistus'::name);
 
 update energiatodistus
 set pt$nimi_fi=pt$nimi
-where pt$kieli=0;
+where pt$kieli=0 or pt$kieli is null;
 
 update energiatodistus
 set pt$nimi_sv=pt$nimi
