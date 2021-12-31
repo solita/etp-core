@@ -1,3 +1,7 @@
+-- can be removed in the future
+update validation_required_column
+set column_name = 'pt$nimi_fi'
+where versio = 2013 and column_name = 'pt$nimi';
 
 insert into validation_required_column (versio, column_name, ordinal, bypass_allowed)
 values
@@ -70,7 +74,6 @@ values
 (2013, 'lt$lkvn_kaytto$lammitysenergian_nettotarve', 60, false)
 
 on conflict (column_name, versio) do update set
-  column_name = excluded.column_name,
   ordinal = excluded.ordinal,
   bypass_allowed = excluded.bypass_allowed;
 
