@@ -317,9 +317,10 @@
 (defn update-rakennuksen-nimi [energiatodistus]
   (let [only-nimi? (and (-> energiatodistus :perustiedot :nimi seq boolean)
                         (-> energiatodistus :perustiedot :nimi-fi seq not)
-                        (-> energiatodistus :perustiedot :nimi-sv seq not))]
+                        (-> energiatodistus :perustiedot :nimi-sv seq not))
+        no-language? (-> energiatodistus :perustiedot :kieli seq not)]
     (cond-> (update energiatodistus :perustiedot #(dissoc % :nimi))
-            (and only-nimi? (kielisyys/only-fi? energiatodistus)) (assoc-in [:perustiedot :nimi-fi] (-> energiatodistus :perustiedot :nimi))
+            (and only-nimi? (or no-language? (kielisyys/only-fi? energiatodistus))) (assoc-in [:perustiedot :nimi-fi] (-> energiatodistus :perustiedot :nimi))
             (and only-nimi? (kielisyys/only-sv? energiatodistus)) (assoc-in [:perustiedot :nimi-sv] (-> energiatodistus :perustiedot :nimi))
             (and only-nimi? (kielisyys/bilingual? energiatodistus)) (update :perustiedot #(assoc % :nimi-fi (-> energiatodistus :perustiedot :nimi)
                                                                                                    :nimi-sv (-> energiatodistus :perustiedot :nimi))))))
