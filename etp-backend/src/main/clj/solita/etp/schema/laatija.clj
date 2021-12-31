@@ -16,7 +16,7 @@
 
 (def MuutToimintaalueet (schema/constrained [common-schema/Key] valid-muut-toimintaalueet?))
 
-(def PatevyydenToteaja (schema/enum "FISE" "KIINKO"))
+(def PatevyydenToteaja (schema/enum "FISE" "KIINKO" "ARA"))
 
 (def LaatijaAdd
   "Only for internal use in laatija services.

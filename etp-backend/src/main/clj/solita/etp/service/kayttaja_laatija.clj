@@ -24,10 +24,14 @@
   (kayttaja-service/add-kayttaja! db (assoc kayttaja :rooli 0)))
 
 (defn add-laatija! [db kayttaja-laatija]
-  (let [kayttaja (st/select-schema kayttaja-laatija laatija-schema/KayttajaAdd)
-        laatija (st/select-schema kayttaja-laatija laatija-schema/LaatijaAdd)
-        id (add-kayttaja! db kayttaja)]
-    (laatija-service/add-laatija! db (assoc laatija :id id))))
+  (jdbc/with-db-transaction
+    [db db]
+    (let [kayttaja (st/select-schema kayttaja-laatija laatija-schema/KayttajaAdd)
+          laatija (st/select-schema kayttaja-laatija laatija-schema/LaatijaUpdate)
+          id (add-kayttaja! db kayttaja)]
+      (laatija-service/add-laatija!
+        db (assoc laatija :id id
+                          :toteaja "ARA")))))
 
 (defn- diff [new-laatija existing-laatija]
   (cond
@@ -74,4 +78,5 @@
         [db db]
         (update-kayttaja! db id (merge verification kayttaja))
         (laatija-service/update-laatija-by-id! db id laatija)))
-    (exception/throw-forbidden!)))
+    (exception/throw-forbidden!
+      (str "User " (:id whoami) " is not allowed to update laatija " id))))
