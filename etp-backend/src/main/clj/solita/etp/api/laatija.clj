@@ -8,7 +8,8 @@
             [solita.etp.schema.laatija :as laatija-schema]
             [solita.etp.service.laatija :as laatija-service]
             [solita.etp.service.kayttaja-laatija :as kayttaja-laatija-service]
-            [solita.etp.service.rooli :as rooli-service]))
+            [solita.etp.service.rooli :as rooli-service]
+            [solita.etp.security :as security]))
 
 (def get-laatijat
   {:summary    "Hae laatijat"
@@ -112,3 +113,19 @@
                                  (str "Laatija and yritys liitos " id "/" yritys-id " does not exist.")))}}]]]]
    ["/patevyydet"
     {:get get-patevyydet}]])
+
+(def internal-routes
+  [["/laatijat"
+    ["/patevyys-expiration-messages"
+     {:middleware [[security/wrap-db-application-name
+                    (rooli-service/system :communication)]]
+      :post       {:summary   "Käynnistä pätevyysmuistutusten lähetys"
+                   :parameters
+                   {:query {:months-before-expiration              schema/Int
+                            (schema/optional-key :fallback-window) schema/Int
+                            (schema/optional-key :dryrun)          schema/Bool}}
+                   :responses {200 {:body [{:id common-schema/Key
+                                            :email schema/Str}]}}
+                   :handler   (fn [{{:keys [query]} :parameters :keys [db]}]
+                                (r/response (laatija-service/send-patevyys-expiration-messages!
+                                  db query)))}}]]])

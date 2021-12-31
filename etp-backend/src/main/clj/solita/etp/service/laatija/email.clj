@@ -1,7 +1,8 @@
 (ns solita.etp.service.laatija.email
   (:require [solita.etp.email :as email]
             [solita.etp.service.concurrent :as concurrent]
-            [solita.common.logic :as logic]))
+            [solita.common.logic :as logic]
+            [solita.common.maybe :as maybe]))
 
 (def ^:private signature
   (str
@@ -52,11 +53,30 @@
       (email/paragraph
         "Sinun pätevyytesi on uusittu energiatodistusrekisterissä.")
       general-info
-      signature)}})
+      signature)}
+
+   :patevyys-expiration
+   {:reply? false :subtype "html"
+    :subject
+    "Muistutus energiatodistuksen laatijan pätevyyden päättymisestä"
+    :body
+    #(email/html
+      (email/paragraph "Hei!")
+      (email/paragraph
+        "Pätevyytesi on päättymässä noin " % " kuukauden kuluttua."
+        "Pätevyyden uusiminen onnistuu vain muutaman kerran vuodessa."
+        "Selvitä hyvissä ajoin seuraavan pätevyyslautakunnan kokoontumisaika, jos haluat jatkaa laatijana."
+        "Lisätietoja asiasta löytyy osoitteesta www.fise.fi"
+        "ja energiatodistusrekisterin kohdasta <em>Laatijan ohjeet</em>.")
+      general-info
+      signature)}
+   })
 
 (defn send-email! [recipient]
   (logic/if-let*
-    [message (some-> recipient :type messages)
+    [message-template (some-> recipient :type messages)
+     message (update message-template :body
+                     #(maybe/fold % % (:body recipient)))
      email (:email recipient)]
     (->
       #(email/send-text-email! (assoc message :to [email]))
