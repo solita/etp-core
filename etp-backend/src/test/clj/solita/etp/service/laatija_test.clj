@@ -198,7 +198,7 @@
         [id _] (laatija-test-data/generate-and-insert!)
         ^LocalDate now (LocalDate/now)
         system-id (rooli-service/system :communication)
-        options {:months-before-expiration 6 :fallback-window 0}]
+        options {:months-before-expiration 6 :fallback-window 5}]
     (service/update-laatija-by-id!
       ts/*db* id
       {:toteamispaivamaara (-> now (.minusYears 7) (.plusMonths 6))})
