@@ -9,7 +9,7 @@ VALUES
 (6, 'Maalämpöpumppu', 'Jordvärmepump', 7),
 (7, 'Vesi-ilmalämpöpumppu', 'Vatten-luftvärmepump', 8),
 (8, 'Poistoilmalämpöpumppu', 'Frånluftsvärmepump', 9),
-(9, 'Muu, mikä', 'Annat, vad?', 10)
+(9, 'Muu lämmitysjärjestelmä', 'Annat uppvärmningssystem', 10)
 ON CONFLICT (id) DO UPDATE
 SET
 label_fi = excluded.label_fi,

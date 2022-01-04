@@ -6,7 +6,7 @@ VALUES
 (3, 'Poistoilmalämpöpumppu (vain käyttötarkoitusluokka 1)', 'Frånluftsvärmepump (endast användningsklass 1)', 6),
 (4, 'Painovoimainen/koneellinen poisto', 'Naturlig/maskinell frånluftsventilation', 7),
 (5, 'Painovoimainen/koneellinen tulo- ja poisto', 'Naturlig/maskinell till- och frånluftsventilation', 8),
-(6, 'Muu, mikä', 'Annat, vad?', 9),
+(6, 'Muu ilmanvaihtojärjestelmä', 'Annat ventilationssystem', 9),
 (7, 'Koneellinen poistoilmanvaihtojärjestelmä lämmöntalteenotolla', 'Mekaniskt frånluftsventilationssystem med värmeåtervinning', 3),
 (8, 'Koneellinen tulo- ja poistoilmanvaihtojärjestelmä lämmöntalteenotolla', 'Mekaniskt till- och frånluftsventilationssystem med värmeåtervinning', 5)
 

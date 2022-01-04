@@ -12,7 +12,7 @@ VALUES
 (9, 'Vesikiertoinen lämmitys/ märkätiloissa sähköinen lattialämmitys', 'Vattenburen värme/elburen golvvärme i våtutrymmen', 10),
 (10, 'Ilmalämmitys/vesikiertoinen patterilämmitys', 'Luftuppvärmning/vattenburen elementvärme', 11),
 (11, 'Ilmalämmitys/sähköpatterilämmitys', 'Luftuppvärmning', 12),
-(12, 'Muu, mikä', 'Annat, vad?', 13)
+(12, 'Muu lämmönjako', 'Annat värmedistribution', 13)
 ON CONFLICT (id) DO UPDATE
 SET
 label_fi = excluded.label_fi,
