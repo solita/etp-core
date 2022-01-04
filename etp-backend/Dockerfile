@@ -9,9 +9,7 @@ tar -xzvf LibreOffice_7.1.0_Linux_x86-64_deb.tar.gz && \
 dpkg -i LibreOffice_7.1.0.3_Linux_x86-64_deb/DEBS/*.deb && \
 ln -s /usr/local/bin/libreoffice7.1 /usr/local/bin/libreoffice
 
-# Import intermediate certificate of
-# C = GB, ST = Greater Manchester, L = Salford, O = Sectigo Limited, CN = Sectigo RSA Organization Validation Secure Server CA
-# to root certificate store, to work around missing intermediates in the test environment
+# Extra certificates
 COPY certificates/ /opt/etp/certificates/
 RUN keytool -importcert -alias asha-CA \
   -cacerts -storepass 'changeit' \
