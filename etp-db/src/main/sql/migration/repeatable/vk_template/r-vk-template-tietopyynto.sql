@@ -92,15 +92,20 @@ $$
     <tr>
         <td colspan="2"><b>Tiedoksi/För kännedom:</b></td>
     </tr>
-    {{#tiedoksi}}
+
     <tr>
       <td colspan="2">
-        {{#rooli}}<span class="list-item">{{.}}</span>{{/rooli}}
-        <span class="list-item nowrap">{{nimi}}</span>
-        {{#email}}<span class="list-item nowrap">{{.}}</span>{{/email}}
+      <ul class="mt-0">
+        {{#tiedoksi}}
+          <li class="mt-0 tiedoksi">
+          {{#rooli}}<span class="list-item">{{.}}</span>{{/rooli}}
+          <span class="list-item nowrap">{{nimi}}</span>
+          {{#email}}<span class="list-item nowrap">{{.}}</span>{{/email}}
+          </li>
+        {{/tiedoksi}}
+      </ul>
       </td>
     </tr>
-    {{/tiedoksi}}
 </table>
 $$)
 on conflict (id) do update set
