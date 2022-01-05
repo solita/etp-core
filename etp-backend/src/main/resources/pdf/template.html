@@ -62,8 +62,9 @@
 
         ul {
             margin-top: 1.28cm;
-            margin-left: -1cm;
             margin-bottom: 1.28cm;
+            margin-left: 0;
+            padding-left: 0;
             list-style-type: none;
         }
 
@@ -74,16 +75,18 @@
         }
 
         li:before {
+            margin-left: -0.78cm;
+            display: inline-block;
+            width: 0.78cm;
             content: '—';
-            position: absolute;
-            margin-left: 0.2cm;
         }
 
-        li.tiedoksi {
+        li.slim {
             margin-left: 0.4cm;
         }
-        li.tiedoksi:before {
-            margin-left: 0.3cm;
+        li.slim:before {
+            margin-left: -0.4cm;
+            width: 0.4cm;
         }
 
         p {

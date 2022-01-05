@@ -97,7 +97,7 @@ $$
       <td colspan="2">
       <ul class="mt-0">
         {{#tiedoksi}}
-          <li class="mt-0 tiedoksi">
+          <li class="mt-0 slim">
           {{#rooli}}<span class="list-item">{{.}}</span>{{/rooli}}
           <span class="list-item nowrap">{{nimi}}</span>
           {{#email}}<span class="list-item nowrap">{{.}}</span>{{/email}}
