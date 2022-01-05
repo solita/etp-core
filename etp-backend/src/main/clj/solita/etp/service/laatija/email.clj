@@ -27,7 +27,7 @@
       (email/paragraph "Hei!")
       (email/paragraph
       "Sinut on lisätty energiatodistusrekisteriin."
-      "Tarkemmat tiedot löytyvät energiatodistusrekisterissä.")
+      "Tarkemmat tiedot löytyvät energiatodistusrekisteristä.")
       general-info
       signature)}
 
@@ -39,7 +39,7 @@
     (email/html
       (email/paragraph "Hei!")
       (email/paragraph
-        "Sinun pätevyystasoa on muutettu energiatodistusrekisterissä.")
+        "Pätevyystasoasi on muutettu energiatodistusrekisterissä.")
       general-info
       signature)}
 
@@ -51,7 +51,7 @@
     (email/html
       (email/paragraph "Hei!")
       (email/paragraph
-        "Sinun pätevyytesi on uusittu energiatodistusrekisterissä.")
+        "Pätevyytesi on uusittu energiatodistusrekisterissä.")
       general-info
       signature)}
 
