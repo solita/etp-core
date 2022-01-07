@@ -2,6 +2,7 @@
 
 (def omistaja? #(= (:rooli-id %) 0))
 (def tiedoksi? (complement omistaja?))
+(def other-rooli? #(= (:rooli-id %) 2))
 
 (defn- toimitustapa? [toimitustapa-id] #(= (:toimitustapa-id %) toimitustapa-id))
 
