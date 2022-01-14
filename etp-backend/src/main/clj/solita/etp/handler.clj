@@ -112,7 +112,7 @@
             (tag "Energiatodistus Public API"
                  energiatodistus-api/public-routes)
             (tag "Tilastointi Public API"
-                 statistics-api/routes))]
+                 (statistics-api/routes true)))]
    ["/private" {:middleware [[security/wrap-jwt-payloads]
                              [security/wrap-whoami-from-jwt-payloads]
                              [security/wrap-access]
@@ -127,7 +127,7 @@
             (tag "Valvonta API" valvonta-api/routes)
             (tag "Viesti API" viesti-api/routes)
             (tag "Sivu API" sivu-api/routes)
-            (tag "Tilastointi API" statistics-api/routes))]
+            (tag "Tilastointi API" (statistics-api/routes false)))]
    ["/external" {:middleware [[security/wrap-whoami-from-basic-auth
                                "Access to external API"]
                               [security/wrap-access]
