@@ -24,7 +24,7 @@
 (defn- only-first! [query users]
   (when-not (empty? (rest users))
     (exception/throw-ex-info! {:type :whoami-duplicate
-                               :message "More than one user matched query"
+                               :message "Resolving whoami failed. More than one user matched the whoami query."
                                :users users
                                :query query}))
   (first users))
