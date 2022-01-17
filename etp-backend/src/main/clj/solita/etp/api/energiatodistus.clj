@@ -86,7 +86,7 @@
                         (api-response/response-with-exceptions
                           #(energiatodistus-search-service/search-count
                              db whoami
-                             (update query :where json/read-value))
+                             (update query :where parse-where))
                           search-exceptions))}}])
 
 
