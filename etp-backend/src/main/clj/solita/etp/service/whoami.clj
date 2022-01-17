@@ -4,6 +4,7 @@
             [buddy.hashers :as hashers]
             [flathead.flatten :as flat]
             [solita.etp.db :as db]
+            [solita.etp.exception :as exception]
             [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.schema.kayttaja :as kayttaja-schema]))
 
@@ -20,6 +21,14 @@
     (assoc kayttaja-schema/Whoami
       :api-key-hash (schema/maybe schema/Str))))
 
+(defn- only-first! [query users]
+  (when-not (empty? (rest users))
+    (exception/throw-ex-info! {:type :whoami-duplicate
+                               :message "Resolving whoami failed. More than one user matched the whoami query."
+                               :users users
+                               :query query}))
+  (first users))
+
 (defn- find-whoami-with-api-key-hash [db query]
   (some->> (merge {:email nil
                    :cognitoid nil
@@ -29,7 +38,8 @@
                   query)
            (flat/tree->flat "_")
            (whoami-db/select-whoami db)
-           first db-row->whoami))
+           (only-first! query)
+           db-row->whoami))
 
 (defn find-whoami [db query]
   (some-> (find-whoami-with-api-key-hash db query)
