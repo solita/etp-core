@@ -312,8 +312,40 @@
                      :invalid-replace response/bad-request
                      :invalid-sisainen-kuorma response/bad-request
                      :invalid-value response/bad-request
+                     :xml-not-well-formed response/bad-request
                      :invalid-xml response/bad-request
                      :schema-tools.coerce/error response/bad-request})
+
+(def error-label {:invalid-xml "XSD validation did not pass"
+                  :xml-not-well-formed "XML could not be parsed"})
+
+(defn- handle-post [db whoami body versio]
+  (let [xml (-> body xml/input-stream->xml xml/without-soap-envelope)
+        validation-result (xml/schema-validation xml xsd-schema)]
+    (when-not (:valid validation-result)
+      (throw (ex-info (:error validation-result)
+                      {:type :invalid-xml})))
+
+    (let [energiatodistus (xml->energiatodistus xml)
+          {:keys [id warnings]} (energiatodistus-service/add-energiatodistus! db
+                                                                              whoami
+                                                                              versio
+                                                                              energiatodistus)]
+      (-> (success-body id warnings)
+          r/response))))
+
+(defn- xml-error-response [error]
+  (let [{:keys [type]} (ex-data error)
+        msg (.getMessage error)
+        response-fn (get error-response type)
+        label (get error-label type)]
+    (if response-fn
+      (do
+        (log/warn "Failed to load ET in legacy API:" msg)
+        (-> (filter not-empty [label msg])
+            error-body
+            response-fn))
+      (throw error))))
 
 ;; TODO 2013 versio
 (defn post [versio]
@@ -324,29 +356,6 @@
           :handler    (fn [{:keys [db whoami body]}]
                         (response/->xml-response
                          (try
-                           (let [xml (-> body xml/input-stream->xml xml/without-soap-envelope)
-                                 validation-result (xml/schema-validation xml xsd-schema)]
-                             (if (:valid? validation-result)
-                               (let [energiatodistus (xml->energiatodistus xml)
-                                     {:keys [id warnings]} (energiatodistus-service/add-energiatodistus! db
-                                                                                                         whoami
-                                                                                                         versio
-                                                                                                         energiatodistus)]
-                                 (-> (success-body id warnings)
-                                     r/response))
-
-                               (-> ["XSD validation did not pass"
-                                    (:error validation-result)]
-                                   error-body
-                                   response/bad-request)))
+                           (handle-post db whoami body versio)
                            (catch clojure.lang.ExceptionInfo e
-                             (let [{:keys [type]} (ex-data e)
-                                   msg (.getMessage e)
-                                   response-fn (get error-response type)]
-                               (if response-fn
-                                 (do
-                                   (log/warn "Failed to load ET in legacy API:" msg)
-                                   (-> [msg]
-                                       error-body
-                                       response-fn))
-                                 (throw e)))))))}})
+                             (xml-error-response e)))))}})

@@ -9,6 +9,7 @@
   (:import (java.net URL)
            (java.io StringReader)
            (javax.xml XMLConstants)
+           (javax.xml.stream XMLStreamException)
            (javax.xml.transform.stream StreamSource)
            (javax.xml.validation SchemaFactory)
            (org.xml.sax SAXException)))
@@ -27,7 +28,7 @@
   (try
     (xml/parse is)
     (catch Exception e
-      (throw (ex-info (.getMessage e) {:type :invalid-xml} e)))))
+      (throw (ex-info (.getMessage e) {:type :xml-not-well-formed} e)))))
 
 (defn string->xml [string]
   (xml/parse-str string))
@@ -73,10 +74,11 @@
   (try
     (when (-> schema .newValidator (.validate (xml->stream-source xml)) nil?)
       {:valid? true})
+    (catch XMLStreamException e
+      ;; Could happen if the lazy document loader did not perform full
+      ;; parsing in the parse function.
+      (throw (ex-info (.getMessage e) {:type :xml-not-well-formed} e)))
     (catch SAXException e
-      ;; TODO should we expose validation error outside?
-      (log/warn (format "XSD validation failed. Exception message was: %s"
-                        (.getMessage e)))
       {:valid? false
        :error (.getMessage e)})))
 
