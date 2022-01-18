@@ -103,7 +103,7 @@
                        :body headers})}}]])
 
 (def routes
-  ["/api" {:middleware [[header-middleware/wrap-disable-cache]
+  ["/api" {:middleware [[header-middleware/wrap-default-cache]
                         [header-middleware/wrap-default-content-type]]}
    system-routes
    ["/public" {:middleware [[security/wrap-db-application-name]]}
@@ -113,7 +113,8 @@
                  energiatodistus-api/public-routes)
             (tag "Tilastointi Public API"
                  statistics-api/routes))]
-   ["/private" {:middleware [[security/wrap-jwt-payloads]
+   ["/private" {:middleware [[header-middleware/wrap-disable-cache]
+                             [security/wrap-jwt-payloads]
                              [security/wrap-whoami-from-jwt-payloads]
                              [security/wrap-access]
                              [security/wrap-db-application-name]]}
