@@ -22,8 +22,11 @@
           (assoc-in [:headers header-k] header-v)))
 
 (defn wrap-default-content-type [handler]
-  #(-> (handler %)
-       (with-default-header content-type text-plain)))
+  (fn [req]
+    (let [resp (handler req)]
+      (cond-> resp
+              (-> resp :body string?)
+              (with-default-header content-type text-plain)))))
 
 (defn wrap-default-cache [handler]
   #(-> (handler %)
