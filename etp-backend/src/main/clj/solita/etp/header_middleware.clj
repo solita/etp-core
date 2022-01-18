@@ -12,34 +12,30 @@
 (defn contains-header? [{:keys [headers]} header]
   (->> headers
        (filter (fn [[header-k]] (= (str/lower-case header-k)
-                                  (str/lower-case header))))
+                                   (str/lower-case header))))
        empty?
        not))
 
-(defn with-default-header [{:keys [headers] :as resp} header-k header-v]
-  (cond-> resp
-    (not (contains-header? resp header-k))
-    (assoc-in [:headers header-k] header-v)))
+(defn with-default-header [response header-k header-v]
+  (cond-> response
+          (not (contains-header? response header-k))
+          (assoc-in [:headers header-k] header-v)))
 
 (defn wrap-default-content-type [handler]
-  (fn [req]
-    (let [resp (handler req)]
-      (cond-> resp
-        (-> resp :body string?)
-        (with-default-header content-type text-plain)))))
+  #(-> (handler %)
+       (with-default-header content-type text-plain)))
+
+(defn wrap-default-cache [handler]
+  #(-> (handler %)
+       (with-default-header cache-control no-store)
+       (with-default-header pragma no-cache)))
 
 (defn wrap-disable-cache [handler]
-  (fn [req]
-    (let [resp (handler req)]
-      (cond-> resp
-        (not (contains-header? resp cache-control))
-        (-> (with-default-header cache-control no-store)
-            (with-default-header pragma no-cache))))))
+  #(-> (handler %)
+       (assoc-in [:headers cache-control] no-store)
+       (assoc-in [:headers pragma] no-cache)))
 
 (defn wrap-cache-control [handler seconds]
-  (fn [req]
-    (let [resp (handler req)]
-      (cond-> resp
-        (not (contains-header? resp cache-control))
-        (-> (with-default-header cache-control (str "max-age=" seconds ",public"))
-            (with-default-header pragma nil))))))
+  #(-> (handler %)
+       (with-default-header cache-control (str "max-age=" seconds ",public"))
+       (with-default-header pragma nil)))

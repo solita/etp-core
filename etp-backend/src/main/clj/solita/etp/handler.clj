@@ -103,7 +103,7 @@
                        :body headers})}}]])
 
 (def routes
-  ["/api" {:middleware [[header-middleware/wrap-disable-cache]
+  ["/api" {:middleware [[header-middleware/wrap-default-cache]
                         [header-middleware/wrap-default-content-type]]}
    system-routes
    ["/public" {:middleware [[security/wrap-db-application-name]]}
@@ -112,8 +112,9 @@
             (tag "Energiatodistus Public API"
                  energiatodistus-api/public-routes)
             (tag "Tilastointi Public API"
-                 (statistics-api/routes true)))]
-   ["/private" {:middleware [[security/wrap-jwt-payloads]
+                 statistics-api/routes))]
+   ["/private" {:middleware [[header-middleware/wrap-disable-cache]
+                             [security/wrap-jwt-payloads]
                              [security/wrap-whoami-from-jwt-payloads]
                              [security/wrap-access]
                              [security/wrap-db-application-name]]}
@@ -127,7 +128,7 @@
             (tag "Valvonta API" valvonta-api/routes)
             (tag "Viesti API" viesti-api/routes)
             (tag "Sivu API" sivu-api/routes)
-            (tag "Tilastointi API" (statistics-api/routes false)))]
+            (tag "Tilastointi API" statistics-api/routes))]
    ["/external" {:middleware [[security/wrap-whoami-from-basic-auth
                                "Access to external API"]
                               [security/wrap-access]
