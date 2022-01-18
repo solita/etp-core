@@ -24,7 +24,10 @@
 (def emit-str xml/emit-str)
 
 (defn input-stream->xml [is]
-  (xml/parse is))
+  (try
+    (xml/parse is)
+    (catch Exception e
+      (throw (ex-info (.getMessage e) {:type :invalid-xml} e)))))
 
 (defn string->xml [string]
   (xml/parse-str string))

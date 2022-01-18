@@ -312,6 +312,7 @@
                      :invalid-replace response/bad-request
                      :invalid-sisainen-kuorma response/bad-request
                      :invalid-value response/bad-request
+                     :invalid-xml response/bad-request
                      :schema-tools.coerce/error response/bad-request})
 
 ;; TODO 2013 versio
@@ -321,11 +322,11 @@
           :swagger    {:consumes ["application/xml"]
                        :produces ["application/xml"]}
           :handler    (fn [{:keys [db whoami body]}]
-                        (let [xml (-> body xml/input-stream->xml xml/without-soap-envelope)
-                              validation-result (xml/schema-validation xml xsd-schema)]
-                          (response/->xml-response
-                           (if (:valid? validation-result)
-                             (try
+                        (response/->xml-response
+                         (try
+                           (let [xml (-> body xml/input-stream->xml xml/without-soap-envelope)
+                                 validation-result (xml/schema-validation xml xsd-schema)]
+                             (if (:valid? validation-result)
                                (let [energiatodistus (xml->energiatodistus xml)
                                      {:keys [id warnings]} (energiatodistus-service/add-energiatodistus! db
                                                                                                          whoami
@@ -333,18 +334,19 @@
                                                                                                          energiatodistus)]
                                  (-> (success-body id warnings)
                                      r/response))
-                               (catch clojure.lang.ExceptionInfo e
-                                 (let [{:keys [type]} (ex-data e)
-                                       msg (.getMessage e)
-                                       response-fn (get error-response type)]
-                                   (if response-fn
-                                     (do
-                                       (log/warn "ET validation failed:" msg)
-                                       (-> [msg]
-                                           error-body
-                                           response-fn))
-                                     (throw e)))))
-                             (-> ["XSD validation did not pass"
-                                  (:error validation-result)]
-                                 error-body
-                                 response/bad-request)))))}})
+
+                               (-> ["XSD validation did not pass"
+                                    (:error validation-result)]
+                                   error-body
+                                   response/bad-request)))
+                           (catch clojure.lang.ExceptionInfo e
+                             (let [{:keys [type]} (ex-data e)
+                                   msg (.getMessage e)
+                                   response-fn (get error-response type)]
+                               (if response-fn
+                                 (do
+                                   (log/warn "Failed to load ET in legacy API:" msg)
+                                   (-> [msg]
+                                       error-body
+                                       response-fn))
+                                 (throw e)))))))}})
