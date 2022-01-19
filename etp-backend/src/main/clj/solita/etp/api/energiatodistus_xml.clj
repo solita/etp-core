@@ -319,21 +319,6 @@
 (def error-label {:invalid-xml "XSD validation did not pass"
                   :xml-not-well-formed "XML could not be parsed"})
 
-(defn- handle-post [db whoami body versio]
-  (let [xml (-> body xml/input-stream->xml xml/without-soap-envelope)
-        validation-result (xml/schema-validation xml xsd-schema)]
-    (when-not (:valid validation-result)
-      (throw (ex-info (:error validation-result)
-                      {:type :invalid-xml})))
-
-    (let [energiatodistus (xml->energiatodistus xml)
-          {:keys [id warnings]} (energiatodistus-service/add-energiatodistus! db
-                                                                              whoami
-                                                                              versio
-                                                                              energiatodistus)]
-      (-> (success-body id warnings)
-          r/response))))
-
 (defn- error->xml-response [error]
   (let [{:keys [type]} (ex-data error)
         msg (.getMessage error)
@@ -347,15 +332,30 @@
             response-fn))
       (throw error))))
 
+(defn handle-post [versio]
+  (fn [{:keys [db whoami body]}]
+    (response/->xml-response
+     (try
+       (let [xml (-> body xml/input-stream->xml xml/without-soap-envelope)
+             validation-result (xml/schema-validation xml xsd-schema)]
+         (when-not (:valid? validation-result)
+           (throw (ex-info (or (:error validation-result))
+                           {:type :invalid-xml})))
+
+         (let [energiatodistus (xml->energiatodistus xml)
+               {:keys [id warnings]} (energiatodistus-service/add-energiatodistus! db
+                                                                              whoami
+                                                                              versio
+                                                                              energiatodistus)]
+           (-> (success-body id warnings)
+               r/response)))
+       (catch clojure.lang.ExceptionInfo e
+         (error->xml-response e))))))
+
 ;; TODO 2013 versio
 (defn post [versio]
   {:post {:summary    "Lisää luonnostilaisen energiatodistuksen"
           :parameters {:body schema/Any}
           :swagger    {:consumes ["application/xml"]
                        :produces ["application/xml"]}
-          :handler    (fn [{:keys [db whoami body]}]
-                        (response/->xml-response
-                         (try
-                           (handle-post db whoami body versio)
-                           (catch clojure.lang.ExceptionInfo e
-                             (error->xml-response e)))))}})
+          :handler    (handle-post versio)}})
