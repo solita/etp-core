@@ -334,7 +334,7 @@
       (-> (success-body id warnings)
           r/response))))
 
-(defn- xml-error-response [error]
+(defn- error->xml-response [error]
   (let [{:keys [type]} (ex-data error)
         msg (.getMessage error)
         response-fn (get error-response type)
@@ -358,4 +358,4 @@
                          (try
                            (handle-post db whoami body versio)
                            (catch clojure.lang.ExceptionInfo e
-                             (xml-error-response e)))))}})
+                             (error->xml-response e)))))}})
