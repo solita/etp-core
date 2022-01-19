@@ -29,7 +29,7 @@
 (t/deftest xml-post-test
   (let [{:keys [laatija-id]} (test-data-set)
         response
-        (with-open [body (FileInputStream. "src/test/resources/legacy-api/esimerkki-2018.xml")]
+        (with-open [body (-> "legacy-api/esimerkki-2018.xml" io/resource io/input-stream)]
           (let [handler (xml-api/handle-post 2018)
                 request {:db ts/*db*
                          :whoami {:id laatija-id :rooli 0}
