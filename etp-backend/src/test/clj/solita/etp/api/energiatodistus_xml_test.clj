@@ -37,3 +37,13 @@
             (handler request)))]
     (t/is (= 200 (:status response)))
     (t/is (= 1 (-> (re-matches #".*<b:TodistusTunnus>(\d+)</b:TodistusTunnus>.*" (:body response)) second Integer/parseInt)))))
+
+(t/deftest xml-post-sansbody-test
+  (let [{:keys [laatija-id]} (test-data-set)
+        response
+        (let [handler (xml-api/handle-post 2018)
+              request {:db ts/*db*
+                       :whoami {:id laatija-id :rooli 0}
+                       :body nil}]
+          (handler request))]
+    (t/is (= 400 (:status response)))))
