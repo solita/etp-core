@@ -2,7 +2,12 @@
   (:require [integrant.core :as ig]
             [org.httpkit.server :as http-kit]
             [solita.etp.handler :as handler]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log])
+  (:import (com.openhtmltopdf.util XRLog)
+           (com.openhtmltopdf.slf4j Slf4jLogger)))
+
+(defn config-openhtmltopdf-logging! []
+  (XRLog/setLoggerImpl (Slf4jLogger.)))
 
 (defn wrap-ctx [ctx handler]
   (fn [req]
@@ -10,6 +15,7 @@
 
 (defmethod ig/init-key :solita.etp/http-server
   [_ {:keys [ctx] :as opts}]
+  (config-openhtmltopdf-logging!)
   (http-kit/run-server (wrap-ctx ctx #'handler/handler)
                        (-> opts
                            (dissoc :ctx)
