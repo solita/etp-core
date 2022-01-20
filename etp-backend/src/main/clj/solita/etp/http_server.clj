@@ -6,7 +6,7 @@
   (:import (com.openhtmltopdf.util XRLog)
            (com.openhtmltopdf.slf4j Slf4jLogger)))
 
-(defn config-openhtml-logging! []
+(defn config-openhtmltopdf-logging! []
   (XRLog/setLoggerImpl (Slf4jLogger.)))
 
 (defn wrap-ctx [ctx handler]
@@ -15,7 +15,7 @@
 
 (defmethod ig/init-key :solita.etp/http-server
   [_ {:keys [ctx] :as opts}]
-  (config-openhtml-logging!)
+  (config-openhtmltopdf-logging!)
   (http-kit/run-server (wrap-ctx ctx #'handler/handler)
                        (-> opts
                            (dissoc :ctx)
