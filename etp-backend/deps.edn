@@ -44,6 +44,7 @@
 
         com.openhtmltopdf/openhtmltopdf-pdfbox {:mvn/version "1.0.8"}
         com.openhtmltopdf/openhtmltopdf-svg-support {:mvn/version "1.0.8"}
+        com.openhtmltopdf/openhtmltopdf-slf4j {:mvn/version "1.0.10"}
 
         ;; Non-alpha version does not support xml namespaces
         org.clojure/data.xml {:mvn/version "0.2.0-alpha6"}
