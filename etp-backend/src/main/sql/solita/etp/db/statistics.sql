@@ -110,3 +110,10 @@ AND (:valmistumisvuosi-min::numeric IS NULL OR e.pt$valmistumisvuosi >= :valmist
 AND (:valmistumisvuosi-max::numeric IS NULL OR e.pt$valmistumisvuosi <= :valmistumisvuosi-max)
 AND (:lammitetty-nettoala-min::numeric IS NULL OR e.lt$lammitetty_nettoala >= :lammitetty-nettoala-min)
 AND (:lammitetty-nettoala-max::numeric IS NULL OR e.lt$lammitetty_nettoala <= :lammitetty-nettoala-max);
+
+-- name: select-count
+select count(*) as count
+from energiatodistus
+where
+  tila_id = (select allekirjoitettu from et_tilat) and
+  now() < voimassaolo_paattymisaika;

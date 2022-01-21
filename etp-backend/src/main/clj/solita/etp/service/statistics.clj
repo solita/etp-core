@@ -75,3 +75,6 @@
      :common-averages @common-averages
      :uusiutuvat-omavaraisenergiat-counts
      {2018 @uusiutuvat-omavaraisenergiat-counts-2018}}))
+
+(defn find-count [db]
+  (first (statistics-db/select-count db)))
