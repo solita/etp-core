@@ -22,7 +22,7 @@
                 :uudisrakennus]]
      [:perustiedot child])
    [[:tulokset :laskentatyokalu]]
-   (for [child [:nimi :valmistumisvuosi :rakennusosa :katuosoite-fi
+   (for [child [:nimi-fi :nimi-sv :valmistumisvuosi :rakennusosa :katuosoite-fi
                 :katuosoite-sv :postinumero :postitoimipaikka-fi
                 :postitoimipaikka-sv :rakennustunnus :kiinteistotunnus
                 :kayttotarkoitus :alakayttotarkoitus-fi :alakayttotarkoitus-sv

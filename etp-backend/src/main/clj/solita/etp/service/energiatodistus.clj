@@ -4,6 +4,7 @@
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.schema.geo :as geo-schema]
             [solita.etp.service.json :as json]
+            [solita.etp.service.kielisyys :as kielisyys]
             [solita.etp.service.energiatodistus-tila :as energiatodistus-tila]
             [solita.etp.service.energiatodistus-validation :as validation]
             [solita.etp.service.kayttotarkoitus :as kayttotarkoitus-service]
@@ -313,6 +314,19 @@
   (assert-korvaavuus-draft! db id energiatodistus)
   (validate-sisainen-kuorma! db versio energiatodistus))
 
+(defn- assoc-in-default [m keys default-value]
+  (if (nil? (get-in m keys))
+    (assoc-in m keys default-value) m))
+
+(defn update-perustiedot-nimi [energiatodistus]
+  (let [nimi (-> energiatodistus :perustiedot :nimi)
+        no-language? (-> energiatodistus :perustiedot :kieli nil?)]
+    (cond-> (map/dissoc-in energiatodistus [:perustiedot :nimi])
+            (or no-language? (kielisyys/fi? energiatodistus))
+            (assoc-in-default [:perustiedot :nimi-fi] nimi)
+            (or no-language? (kielisyys/sv? energiatodistus))
+            (assoc-in-default [:perustiedot :nimi-sv] nimi))))
+
 (defn add-energiatodistus! [db whoami versio energiatodistus]
   (validate-draft! db nil versio energiatodistus)
   (let [energiatodistus-db-row (-> energiatodistus
@@ -321,6 +335,7 @@
                                    (dissoc :kommentti
                                            :bypass-validation-limits
                                            :bypass-validation-limits-reason)
+                                   update-perustiedot-nimi
                                    energiatodistus->db-row)
         warnings (validate-db-row! db energiatodistus-db-row versio)]
     (validate-laskutettava-yritys-id! db (:id whoami) energiatodistus-db-row)

@@ -63,7 +63,7 @@
 
 (def mappings
   {0 [{:path [:id]}
-      {:path [:perustiedot :nimi]}
+      {:path [:perustiedot :nimi-fi]}
       {:path [:perustiedot :katuosoite-fi]}
       {:path [:perustiedot :katuosoite-sv]}
       {:f #(str (-> % :perustiedot :postinumero)
@@ -102,7 +102,8 @@
       {:f (fn [_] (.format date-formatter (LocalDate/now)))}
       {:f (fn [{:keys [tila-id]}]
             (when (and tila-id (= (energiatodistus-tila/tila-key tila-id) :in-signing))
-              (.format date-formatter (.plusYears (LocalDate/now) 10))))}]
+              (.format date-formatter (.plusYears (LocalDate/now) 10))))}
+      {:path [:perustiedot :nimi-sv]}]
    1 [{:path [:id]}
       {:f #(-> % :lahtotiedot :lammitetty-nettoala (formats/format-number 1 false) (str " m²"))}
       {:path [:lahtotiedot :lammitys :lammitysmuoto-label-fi]}

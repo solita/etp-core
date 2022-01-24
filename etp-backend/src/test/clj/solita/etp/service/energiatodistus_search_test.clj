@@ -214,25 +214,25 @@
 (t/deftest search-by-nimi-test
   (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
         id (-> energiatodistukset keys sort first)
-        nimi (-> energiatodistukset (get id) :perustiedot :nimi)]
+        nimi (-> energiatodistukset (get id) :perustiedot :nimi-fi)]
     (t/is (not (search-and-assert
-                 test-data-set
-                 id
-                 [[["=" "energiatodistus.perustiedot.nimi" (str "a" nimi)]]])))
+                test-data-set
+                id
+                [[["=" "energiatodistus.perustiedot.nimi-fi" (str "a" nimi)]]])))
     (t/is (search-and-assert
-            test-data-set
-            id
-            [[["=" "energiatodistus.perustiedot.nimi" nimi]]]))))
+           test-data-set
+           id
+           [[["=" "energiatodistus.perustiedot.nimi-fi" nimi]]]))))
 
 (t/deftest search-by-id-and-nimi-test
   (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
         id (-> energiatodistukset keys sort first)
-        nimi (-> energiatodistukset (get id) :perustiedot :nimi)]
+        nimi (-> energiatodistukset (get id) :perustiedot :nimi-fi)]
     (t/is (search-and-assert
-            test-data-set
-            id
-            [[["=" "energiatodistus.id" id]
-              ["=" "energiatodistus.perustiedot.nimi" nimi]]]))))
+           test-data-set
+           id
+           [[["=" "energiatodistus.id" id]
+             ["=" "energiatodistus.perustiedot.nimi-fi" nimi]]]))))
 
 (t/deftest search-by-havainnointikaynti-test
   (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)

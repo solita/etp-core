@@ -11,10 +11,8 @@
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.energiatodistus :as energiatodistus-service]))
 
-;; XML API does not use External-version of schema, because energiatodistus is
-;; created internally and fields not available in the XML schema are
-;; initialized manually.
-(def coercer (sc/coercer energiatodistus-schema/EnergiatodistusSave2018 sc/string-coercion-matcher))
+(def coercer (sc/coercer energiatodistus-schema/EnergiatodistusSave2018External
+                         sc/string-coercion-matcher))
 
 (def xsd-path "legacy-api/energiatodistus-2018.xsd")
 (def xsd-schema (xml/load-schema xsd-path true))
@@ -40,7 +38,9 @@
 
 (defn perustiedot [xml]
   (-> xml
-      (map-values-from-xml (schema->identity-map energiatodistus-schema/Perustiedot))
+      (map-values-from-xml (-> energiatodistus-schema/Perustiedot
+                               schema->identity-map
+                               (assoc :nimi :nimi)))
       (assoc :rakennustunnus (maybe/map* str/upper-case (xml/get-content xml [:rakennustunnus])))
       (assoc :julkinen-rakennus (xml/get-content xml [:onko-julkinen-rakennus]))
       (assoc :yritys (yritys (xml/get-in-xml xml [:yritys])))))
@@ -269,10 +269,6 @@
          :laskutettava-yritys-id          nil
          :laskutusosoite-id               nil
          :laskuriviviite                  nil
-         :kommentti                       nil
-         :draft-visible-to-paakayttaja    false
-         :bypass-validation-limits        false
-         :bypass-validation-limits-reason nil
          :perustiedot                     (perustiedot (f :perustiedot))
          :lahtotiedot                     (lahtotiedot (f :lahtotiedot))
          :tulokset                        (tulokset (f :tulokset))

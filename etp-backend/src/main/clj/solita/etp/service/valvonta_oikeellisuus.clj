@@ -153,6 +153,7 @@
         first :diaarinumero)))
 
 (defn add-anomaly-viestiketju! [db whoami id toimenpide]
+  ;TODO: Fix to use language that used for communication
   (let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db id)]
     (viesti-service/add-ketju!
       db whoami
@@ -164,7 +165,7 @@
        :kasittelija-id        (:id whoami)
        :subject               (str "Poikkeamailmoitus ET " (:energiatodistus-id toimenpide))
        :body
-       (str (-> energiatodistus :perustiedot :nimi) "\n"
+       (str (or (-> energiatodistus :perustiedot :nimi-fi) (-> energiatodistus :perustiedot :nimi-sv)) "\n"
             (or (-> energiatodistus :perustiedot :katuosoite-fi)
                 (-> energiatodistus :perustiedot :katuosoite-sv)) "\n"
             (-> energiatodistus :perustiedot :postinumero) " "

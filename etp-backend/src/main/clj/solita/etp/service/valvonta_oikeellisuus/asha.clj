@@ -58,36 +58,39 @@
     (->> (clojure.string/replace content #"\n\n" "\n")
          (ch/markdown->html markdown-config))))
 
+(defn- get-localized
+  ([energiatodistus key] (get-localized energiatodistus key "fi"))
+  ([energiatodistus key preferred-language]
+   (let [language (if (kielisyys/bilingual? energiatodistus)
+                    (if (= preferred-language "sv") "sv" "fi")
+                    (if (kielisyys/only-sv? energiatodistus) "sv" "fi"))]
+     (get energiatodistus (keyword (str (name key) "-" language))))))
+
 (defn- template-data [whoami toimenpide laatija energiatodistus dokumentit template]
-  (let [language-kw (fn [key]
-                      (let [language (if (and (= (:language template) "sv") (kielisyys/sv? energiatodistus))
-                                       "sv"
-                                       "fi")]
-                        (keyword (str key "-" language))))]
-    {:päivä           (time/today)
-     :määräpäivä      (time/format-date (:deadline-date toimenpide))
-     :diaarinumero    (:diaarinumero toimenpide)
-     :valvoja         (select-keys whoami [:etunimi :sukunimi :email])
-     :laatija         (select-keys laatija [:etunimi :sukunimi :henkilotunnus :email :puhelin])
-     :energiatodistus {:tunnus           (:id energiatodistus)
-                       :rakennustunnus   (-> energiatodistus :perustiedot :rakennustunnus)
-                       :nimi             (-> energiatodistus :perustiedot :nimi)
-                       :katuosoite       (-> energiatodistus :perustiedot (partial (language-kw "katuosoite")))
-                       :postinumero      (-> energiatodistus :perustiedot :postinumero)
-                       :postitoimipaikka (-> energiatodistus :perustiedot (partial (language-kw "postitoimipaikka")))}
-     :tietopyynto     {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
-                       :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
-     :valvontamuistio {:valvontamuistio-pvm         (time/format-date (:audit-report dokumentit))
-                       :valvontamuistio-kehotus-pvm (time/format-date (:audit-order dokumentit))
-                       :virheet                     (map
-                                                      #(update % :description markdown->html)
-                                                      (:virheet toimenpide))
-                       :vakavuus                    (when-let [luokka (:severity-id toimenpide)]
-                                                      (case luokka
-                                                        0 {:ei-huomioitavaa true}
-                                                        1 {:ei-toimenpiteitä true}
-                                                        2 {:virheellinen true}))}
-     :tiedoksi        (map #(set/rename-keys % {:name :nimi}) (:tiedoksi toimenpide))}))
+  {:päivä           (time/today)
+   :määräpäivä      (time/format-date (:deadline-date toimenpide))
+   :diaarinumero    (:diaarinumero toimenpide)
+   :valvoja         (select-keys whoami [:etunimi :sukunimi :email])
+   :laatija         (select-keys laatija [:etunimi :sukunimi :henkilotunnus :email :puhelin])
+   :energiatodistus {:tunnus           (:id energiatodistus)
+                     :rakennustunnus   (-> energiatodistus :perustiedot :rakennustunnus)
+                     :nimi             (-> energiatodistus :perustiedot (get-localized :nimi (:language template)))
+                     :katuosoite       (-> energiatodistus :perustiedot (get-localized :katuosoite (:language template)))
+                     :postinumero      (-> energiatodistus :perustiedot :postinumero)
+                     :postitoimipaikka (-> energiatodistus :perustiedot (get-localized :postitoimipaikka (:language template)))}
+   :tietopyynto     {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
+                     :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
+   :valvontamuistio {:valvontamuistio-pvm         (time/format-date (:audit-report dokumentit))
+                     :valvontamuistio-kehotus-pvm (time/format-date (:audit-order dokumentit))
+                     :virheet                     (map
+                                                    #(update % :description markdown->html)
+                                                    (:virheet toimenpide))
+                     :vakavuus                    (when-let [luokka (:severity-id toimenpide)]
+                                                    (case luokka
+                                                      0 {:ei-huomioitavaa true}
+                                                      1 {:ei-toimenpiteitä true}
+                                                      2 {:virheellinen true}))}
+   :tiedoksi        (map #(set/rename-keys % {:name :nimi}) (:tiedoksi toimenpide))})
 
 (defn- find-resources [db energiatodistus-id]
   (when-let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db energiatodistus-id)]
@@ -198,10 +201,10 @@
                       :name           (asha/string-join "; " [(-> energiatodistus :id)
                                                               (asha/string-join " " [(:etunimi laatija)
                                                                                      (:sukunimi laatija)])])
-                      :description    (asha/string-join "\r" [(-> energiatodistus :perustiedot :nimi)
-                                                              (asha/string-join ", " [(-> energiatodistus :perustiedot :katuosoite-fi)
+                      :description    (asha/string-join "\r" [(-> energiatodistus :perustiedot (get-localized :nimi))
+                                                              (asha/string-join ", " [(-> energiatodistus :perustiedot (get-localized :katuosoite))
                                                                                       (asha/string-join " " [(-> energiatodistus :perustiedot :postinumero)
-                                                                                                             (-> energiatodistus :perustiedot :postitoimipaikka-fi)])])
+                                                                                                             (-> energiatodistus :perustiedot (get-localized :postitoimipaikka))])])
                                                               (-> energiatodistus :perustiedot :rakennustunnus)])
                       :attach         {:contact (osapuoli->contact laatija)}})))
 

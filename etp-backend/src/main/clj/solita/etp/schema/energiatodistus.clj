@@ -53,7 +53,8 @@
    :tilaaja                  common-schema/String200
    :rakennusosa              common-schema/String100
    :kieli                    common-schema/Key
-   :nimi                     common-schema/String50
+   :nimi-fi                  common-schema/String50
+   :nimi-sv                  common-schema/String50
 
    ;; This is alakäyttötarkoitusluokka
    ;; Käyttötarkoitusluokka can be inferred from this
@@ -319,6 +320,7 @@
               :draft-visible-to-paakayttaja
               :bypass-validation-limits
               :bypass-validation-limits-reason)
+      (assoc-in [:perustiedot :nimi] (schema/maybe common-schema/String50))
       xschema/optional-key-for-maybe))
 
 (def EnergiatodistusSave2013External
@@ -401,6 +403,6 @@
       (select-keys Perustiedot
                    [:rakennustunnus
                     :kayttotarkoitus
-                    :nimi
+                    :nimi-fi :nimi-sv
                     :katuosoite-fi :katuosoite-sv
                     :postinumero]))))
