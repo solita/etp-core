@@ -60,13 +60,6 @@
    ;; Käyttötarkoitusluokka can be inferred from this
    :kayttotarkoitus          schema/Str})
 
-(def PerustiedotExternalApi
-  (merge
-      (assoc Perustiedot :nimi common-schema/String50)
-      (optional-properties
-        (select-keys Perustiedot
-                     [:nimi-fi :nimi-sv]))))
-
 (def Rakennusvaippa
   {:ala common-schema/NonNegative
    :U   common-schema/NonNegative})
@@ -321,24 +314,19 @@
       (assoc-in [:toteutunut-ostoenergiankulutus :ostettu-energia :muu]
                 [(optional-properties UserDefinedEnergia)])))
 
-(def Energiatodistus2018External
-  (update EnergiatodistusSave2018 :perustiedot #(optional-properties (merge % PerustiedotExternalApi))))
-
-(def Energiatodistus2013External
-  (update EnergiatodistusSave2013 :perustiedot #(optional-properties (merge % PerustiedotExternalApi))))
-
 (defn ->EnergiatodistusSaveExternal [schema]
   (-> schema
       (dissoc :kommentti
               :draft-visible-to-paakayttaja
               :bypass-validation-limits
               :bypass-validation-limits-reason)
+      (assoc-in [:perustiedot :nimi] (schema/maybe common-schema/String50))
       xschema/optional-key-for-maybe))
 
 (def EnergiatodistusSave2013External
-  (->EnergiatodistusSaveExternal Energiatodistus2013External))
+  (->EnergiatodistusSaveExternal EnergiatodistusSave2013))
 (def EnergiatodistusSave2018External
-  (->EnergiatodistusSaveExternal Energiatodistus2018External))
+  (->EnergiatodistusSaveExternal EnergiatodistusSave2018))
 
 (def Energiatehokkuus
   {:e-luku (schema/maybe schema/Num)

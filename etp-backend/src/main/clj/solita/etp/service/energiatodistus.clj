@@ -314,16 +314,18 @@
   (assert-korvaavuus-draft! db id energiatodistus)
   (validate-sisainen-kuorma! db versio energiatodistus))
 
-(defn update-rakennuksen-nimi [energiatodistus]
-  (let [only-nimi? (and (-> energiatodistus :perustiedot :nimi seq boolean)
-                        (-> energiatodistus :perustiedot :nimi-fi seq not)
-                        (-> energiatodistus :perustiedot :nimi-sv seq not))
+(defn- assoc-in-default [m keys default-value]
+  (if (nil? (get-in m keys))
+    (assoc-in m keys default-value) m))
+
+(defn update-perustiedot-nimi [energiatodistus]
+  (let [nimi (-> energiatodistus :perustiedot :nimi)
         no-language? (-> energiatodistus :perustiedot :kieli nil?)]
-    (cond-> (update energiatodistus :perustiedot #(dissoc % :nimi))
-            (and only-nimi? (or no-language? (kielisyys/only-fi? energiatodistus))) (assoc-in [:perustiedot :nimi-fi] (-> energiatodistus :perustiedot :nimi))
-            (and only-nimi? (kielisyys/only-sv? energiatodistus)) (assoc-in [:perustiedot :nimi-sv] (-> energiatodistus :perustiedot :nimi))
-            (and only-nimi? (kielisyys/bilingual? energiatodistus)) (update :perustiedot #(assoc % :nimi-fi (-> energiatodistus :perustiedot :nimi)
-                                                                                                   :nimi-sv (-> energiatodistus :perustiedot :nimi))))))
+    (cond-> (map/dissoc-in energiatodistus [:perustiedot :nimi])
+            (or no-language? (kielisyys/fi? energiatodistus))
+            (assoc-in-default [:perustiedot :nimi-fi] nimi)
+            (or no-language? (kielisyys/sv? energiatodistus))
+            (assoc-in-default [:perustiedot :nimi-sv] nimi))))
 
 (defn add-energiatodistus! [db whoami versio energiatodistus]
   (validate-draft! db nil versio energiatodistus)
@@ -333,7 +335,7 @@
                                    (dissoc :kommentti
                                            :bypass-validation-limits
                                            :bypass-validation-limits-reason)
-                                   update-rakennuksen-nimi
+                                   update-perustiedot-nimi
                                    energiatodistus->db-row)
         warnings (validate-db-row! db energiatodistus-db-row versio)]
     (validate-laskutettava-yritys-id! db (:id whoami) energiatodistus-db-row)
