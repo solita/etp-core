@@ -58,14 +58,13 @@
     (->> (clojure.string/replace content #"\n\n" "\n")
          (ch/markdown->html markdown-config))))
 
-(defn- language-kw
-  ([energiatodistus key]
-   (language-kw energiatodistus key nil))
-  ([energiatodistus key language]
-   (let [language (if (and (or (= language "sv") (nil? language)) (kielisyys/sv? energiatodistus))
-                    "sv"
-                    "fi")]
-     (keyword (str (name key) "-" language)))))
+(defn- get-localized
+  ([energiatodistus key] (get-localized energiatodistus key "fi"))
+  ([energiatodistus key preferred-language]
+   (let [language (if (kielisyys/bilingual? energiatodistus)
+                    (if (= preferred-language "sv") "sv" "fi")
+                    (if (kielisyys/only-sv? energiatodistus) "sv" "fi"))]
+     (get energiatodistus (keyword (str (name key) "-" language))))))
 
 (defn- template-data [whoami toimenpide laatija energiatodistus dokumentit template]
   {:päivä           (time/today)
@@ -75,10 +74,10 @@
    :laatija         (select-keys laatija [:etunimi :sukunimi :henkilotunnus :email :puhelin])
    :energiatodistus {:tunnus           (:id energiatodistus)
                      :rakennustunnus   (-> energiatodistus :perustiedot :rakennustunnus)
-                     :nimi             (get-in energiatodistus [:perustiedot (language-kw energiatodistus :nimi (:language template))])
-                     :katuosoite       (get-in energiatodistus [:perustiedot (language-kw energiatodistus :katuosoite (:language template))])
+                     :nimi             (-> energiatodistus :perustiedot (get-localized :nimi (:language template)))
+                     :katuosoite       (-> energiatodistus :perustiedot (get-localized :katuosoite (:language template)))
                      :postinumero      (-> energiatodistus :perustiedot :postinumero)
-                     :postitoimipaikka (get-in energiatodistus [:perustiedot (language-kw energiatodistus :postitoimipaikka (:language template))])}
+                     :postitoimipaikka (-> energiatodistus :perustiedot (get-localized :postitoimipaikka (:language template)))}
    :tietopyynto     {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
                      :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
    :valvontamuistio {:valvontamuistio-pvm         (time/format-date (:audit-report dokumentit))
@@ -202,10 +201,10 @@
                       :name           (asha/string-join "; " [(-> energiatodistus :id)
                                                               (asha/string-join " " [(:etunimi laatija)
                                                                                      (:sukunimi laatija)])])
-                      :description    (asha/string-join "\r" [(get-in energiatodistus [:perustiedot (language-kw energiatodistus :nimi)])
-                                                              (asha/string-join ", " [(get-in energiatodistus [:perustiedot (language-kw energiatodistus :katuosoite)])
+                      :description    (asha/string-join "\r" [(-> energiatodistus :perustiedot (get-localized :nimi))
+                                                              (asha/string-join ", " [(-> energiatodistus :perustiedot (get-localized :katuosoite))
                                                                                       (asha/string-join " " [(-> energiatodistus :perustiedot :postinumero)
-                                                                                                             (get-in energiatodistus [:perustiedot (language-kw energiatodistus :postitoimipaikka)])])])
+                                                                                                             (-> energiatodistus :perustiedot (get-localized :postitoimipaikka))])])
                                                               (-> energiatodistus :perustiedot :rakennustunnus)])
                       :attach         {:contact (osapuoli->contact laatija)}})))
 
