@@ -31,7 +31,6 @@
 
 (defn- find-whoami-with-api-key-hash [db query]
   (some->> (merge {:email nil
-                   :cognitoid nil
                    :henkilotunnus nil
                    :virtu {:localid nil
                            :organisaatio nil}}
