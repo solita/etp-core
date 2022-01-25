@@ -9,8 +9,9 @@
   (:import (java.net URL)
            (java.io StringReader)
            (javax.xml XMLConstants)
+           (javax.xml.stream XMLStreamException)
            (javax.xml.transform.stream StreamSource)
-           (javax.xml.validation SchemaFactory)
+           (javax.xml.validation SchemaFactory Schema)
            (org.xml.sax SAXException)))
 
 (def envelope-url "http://schemas.xmlsoap.org/soap/envelope/")
@@ -23,8 +24,14 @@
 (def emit xml/emit)
 (def emit-str xml/emit-str)
 
+(defn- xml-not-well-formed [e]
+  (ex-info (.getMessage e) {:type :xml-not-well-formed} e))
+
 (defn input-stream->xml [is]
-  (xml/parse is))
+  (try
+    (xml/parse is)
+    (catch Exception e
+      (throw (xml-not-well-formed e)))))
 
 (defn string->xml [string]
   (xml/parse-str string))
@@ -66,16 +73,15 @@
 (defn xml->stream-source [xml]
   (-> xml xml/emit-str StringReader. StreamSource.))
 
-(defn schema-validation [xml schema]
+(defn validate-xsd! [xml ^Schema schema]
   (try
-    (when (-> schema .newValidator (.validate (xml->stream-source xml)) nil?)
-      {:valid? true})
+    (-> schema .newValidator (.validate (xml->stream-source xml)))
+    (catch XMLStreamException e
+      ;; Could happen if the lazy document loader did not perform full
+      ;; parsing in the parse function.
+      (throw (xml-not-well-formed e)))
     (catch SAXException e
-      ;; TODO should we expose validation error outside?
-      (log/warn (format "XSD validation failed. Exception message was: %s"
-                        (.getMessage e)))
-      {:valid? false
-       :error (.getMessage e)})))
+      (throw (ex-info (.getMessage e) {:type :xml-xsd-validation-failed} e)))))
 
 (defn get-in-xml
   "Similar to get-in in core but works with xml. Keywords filter elements by

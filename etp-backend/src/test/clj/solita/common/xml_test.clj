@@ -1,7 +1,8 @@
 (ns solita.common.xml-test
   (:require [clojure.test :as t]
             [clojure.java.io :as io]
-            [solita.common.xml :as xml]))
+            [solita.common.xml :as xml]
+            [solita.etp.test :as etp-test]))
 
 (def xml-path "legacy-api/esimerkki-2018.xml")
 (def raw-xml (-> xml-path io/resource io/input-stream xml/input-stream->xml))
@@ -45,10 +46,9 @@
                    (xml/xml->stream-source raw-xml))))
 
 (t/deftest schema-validation-test
-  (t/is (= {:valid? true}
-           (xml/schema-validation xml-without-soap-envelope test-schema)))
-  (t/is (contains? (xml/schema-validation sanitized-xml test-schema)
-                   :error)))
+  (xml/validate-xsd! xml-without-soap-envelope test-schema)
+  (t/is (= (etp-test/catch-ex-data #(xml/validate-xsd! sanitized-xml test-schema))
+           {:type :xml-xsd-validation-failed})))
 
 (t/deftest get-in-xml-test
   (t/is (= "Kilpikonna"
