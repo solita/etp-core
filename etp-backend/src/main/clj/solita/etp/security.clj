@@ -32,18 +32,15 @@
 (defn wrap-whoami-from-jwt-payloads [handler]
   (fn [{:keys [db jwt-payloads] :as req}]
     (let [{:keys [data]} jwt-payloads
-          email (:email data)
           cognitoid (:sub data)
-          whoami-opts {:email         email
-                       :cognitoid     cognitoid
-                       :henkilotunnus (:custom:FI_nationalIN data)
+          whoami-opts {:henkilotunnus (:custom:FI_nationalIN data)
                        :virtu         {:localid     (:custom:VIRTU_localID data)
                                        :organisaatio (:custom:VIRTU_localOrg data)}}
           whoami (whoami-service/find-whoami db whoami-opts)]
       (if whoami
         (->> (cond-> whoami
-               email (assoc :email email)
-               cognitoid (assoc :cognitoid cognitoid))
+                     (some? cognitoid)
+                     (assoc :cognitoid cognitoid))
              (assoc req :whoami)
              handler)
         (do
