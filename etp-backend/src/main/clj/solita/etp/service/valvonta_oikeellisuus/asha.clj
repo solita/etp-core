@@ -58,13 +58,20 @@
     (->> (clojure.string/replace content #"\n\n" "\n")
          (ch/markdown->html markdown-config))))
 
-(defn- get-localized
-  ([energiatodistus key] (get-localized energiatodistus key "fi"))
-  ([energiatodistus key preferred-language]
+(defn- localized-key [language key]
+  (keyword (str (name key) "-" (if (= language "sv") "sv" "fi"))))
+
+(defn- get-in-localized [m keys language]
+  (get-in m (update keys (-> keys count dec)
+                    (partial localized-key language))))
+
+(defn- get-in-et-localized
+  ([energiatodistus keys] (get-in-et-localized energiatodistus keys "fi"))
+  ([energiatodistus keys preferred-language]
    (let [language (if (kielisyys/bilingual? energiatodistus)
-                    (if (= preferred-language "sv") "sv" "fi")
+                    preferred-language
                     (if (kielisyys/only-sv? energiatodistus) "sv" "fi"))]
-     (get energiatodistus (keyword (str (name key) "-" language))))))
+     (get-in-localized energiatodistus keys language))))
 
 (defn- template-data [whoami toimenpide laatija energiatodistus dokumentit template]
   {:päivä           (time/today)
@@ -74,10 +81,10 @@
    :laatija         (select-keys laatija [:etunimi :sukunimi :henkilotunnus :email :puhelin])
    :energiatodistus {:tunnus           (:id energiatodistus)
                      :rakennustunnus   (-> energiatodistus :perustiedot :rakennustunnus)
-                     :nimi             (-> energiatodistus :perustiedot (get-localized :nimi (:language template)))
-                     :katuosoite       (-> energiatodistus :perustiedot (get-localized :katuosoite (:language template)))
+                     :nimi             (get-in-et-localized energiatodistus [:perustiedot :nimi] (:language template))
+                     :katuosoite       (get-in-et-localized energiatodistus [:perustiedot :katuosoite] (:language template))
                      :postinumero      (-> energiatodistus :perustiedot :postinumero)
-                     :postitoimipaikka (-> energiatodistus :perustiedot (get-localized :postitoimipaikka (:language template)))}
+                     :postitoimipaikka (get-in-localized energiatodistus [:perustiedot :postitoimipaikka] (:language template))}
    :tietopyynto     {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
                      :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
    :valvontamuistio {:valvontamuistio-pvm         (time/format-date (:audit-report dokumentit))
@@ -201,10 +208,10 @@
                       :name           (asha/string-join "; " [(-> energiatodistus :id)
                                                               (asha/string-join " " [(:etunimi laatija)
                                                                                      (:sukunimi laatija)])])
-                      :description    (asha/string-join "\r" [(-> energiatodistus :perustiedot (get-localized :nimi))
-                                                              (asha/string-join ", " [(-> energiatodistus :perustiedot (get-localized :katuosoite))
+                      :description    (asha/string-join "\r" [(get-in-et-localized energiatodistus [:perustiedot :nimi])
+                                                              (asha/string-join ", " [(get-in-et-localized energiatodistus [:perustiedot :katuosoite])
                                                                                       (asha/string-join " " [(-> energiatodistus :perustiedot :postinumero)
-                                                                                                             (-> energiatodistus :perustiedot (get-localized :postitoimipaikka))])])
+                                                                                                             (get-in-et-localized energiatodistus [:perustiedot :postitoimipaikka])])])
                                                               (-> energiatodistus :perustiedot :rakennustunnus)])
                       :attach         {:contact (osapuoli->contact laatija)}})))
 
