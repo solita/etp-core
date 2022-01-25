@@ -9,13 +9,15 @@
             [solita.etp.api.response :as response]
             [solita.common.map :as xmap]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
-            [solita.etp.service.energiatodistus :as energiatodistus-service]))
+            [solita.etp.service.energiatodistus :as energiatodistus-service])
+  (:import (clojure.lang ExceptionInfo)
+           (javax.xml.validation Schema)))
 
 (def coercer (sc/coercer energiatodistus-schema/EnergiatodistusSave2018External
                          sc/string-coercion-matcher))
 
 (def xsd-path "legacy-api/energiatodistus-2018.xsd")
-(def xsd-schema (xml/load-schema xsd-path true))
+(def ^Schema xsd-schema (xml/load-schema xsd-path true))
 
 (def types-ns "http://www.energiatodistusrekisteri.fi/ws/energiatodistustypes-2018")
 (def xsi-url "http://www.w3.org/2001/XMLSchema-instance")
@@ -313,11 +315,11 @@
                      :invalid-sisainen-kuorma response/bad-request
                      :invalid-value response/bad-request
                      :xml-not-well-formed response/bad-request
-                     :invalid-xml response/bad-request
+                     :xml-xsd-validation-failed response/bad-request
                      :schema-tools.coerce/error response/bad-request})
 
-(def error-label {:invalid-xml "XSD validation did not pass"
-                  :xml-not-well-formed "XML could not be parsed"})
+(def error-label {:xml-xsd-validation-failed "XML XSD validation did not pass."
+                  :xml-not-well-formed "XML is not well formed."})
 
 (defn- error->xml-response [error]
   (let [{:keys [type]} (ex-data error)
@@ -335,22 +337,17 @@
 (defn handle-post [versio]
   (fn [{:keys [db whoami body]}]
     (response/->xml-response
-     (try
-       (let [xml (-> body xml/input-stream->xml xml/without-soap-envelope)
-             validation-result (xml/schema-validation xml xsd-schema)]
-         (when-not (:valid? validation-result)
-           (throw (ex-info (or (:error validation-result))
-                           {:type :invalid-xml})))
-
-         (let [energiatodistus (xml->energiatodistus xml)
-               {:keys [id warnings]} (energiatodistus-service/add-energiatodistus! db
-                                                                              whoami
-                                                                              versio
-                                                                              energiatodistus)]
-           (-> (success-body id warnings)
-               r/response)))
-       (catch clojure.lang.ExceptionInfo e
-         (error->xml-response e))))))
+      (try
+        (let [xml (-> body xml/input-stream->xml xml/without-soap-envelope)]
+          (xml/validate-xsd! xml xsd-schema)
+          (let [energiatodistus (xml->energiatodistus xml)
+                {:keys [id warnings]} (energiatodistus-service/add-energiatodistus! db
+                                                                                    whoami
+                                                                                    versio
+                                                                                    energiatodistus)]
+            (r/response (success-body id warnings))))
+        (catch ExceptionInfo e
+          (error->xml-response e))))))
 
 ;; TODO 2013 versio
 (defn post [versio]
