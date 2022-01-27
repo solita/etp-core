@@ -148,10 +148,16 @@
         matcher (fn [language] #(= % (str field "-" language)))]
     (some-fn (matcher "fi") (matcher "sv"))))
 
+(defn- validate-match! [pattern fields]
+  (when (empty? fields)
+    (throw-ex-info {:type :unknown-field :field pattern
+                    :message (str "Field glob pattern: " pattern " does not match any fields.")})))
+
 (defn- globbing [predicate]
   (fn [search-schema operator field & values]
     (if (str/includes? field "*")
       (let [fields (filter (glob-pattern-matcher field) (->> search-schema keys (map name)))]
+        (validate-match! field fields)
         (expression-seq->sql "or" #(apply predicate search-schema operator % values) fields))
       (apply predicate search-schema operator field values))))
 
