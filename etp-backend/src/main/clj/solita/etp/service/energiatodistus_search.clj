@@ -158,7 +158,9 @@
     (if (str/includes? field "*")
       (let [fields (filter (glob-pattern-matcher field) (->> search-schema keys (map name)))]
         (validate-match! field fields)
-        (expression-seq->sql "or" #(apply predicate search-schema operator % values) fields))
+        (update
+          (vec (expression-seq->sql "or" #(apply predicate search-schema operator % values) fields)) 0
+          #(str "(" % ")")))
       (apply predicate search-schema operator field values))))
 
 (def predicates
