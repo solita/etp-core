@@ -122,21 +122,46 @@
       (search-fields/field->db-column field-parts)
       (first computed-field))))
 
-(defn infix-notation [operator field value search-schema]
+(defn infix-notation [search-schema operator field value]
   [(str (field->sql field search-schema) " " operator " ?")
    (coerce-value! field value search-schema)])
 
-(defn between-expression [_ field value1 value2 search-schema]
+(defn between-expression [search-schema _ field value1 value2]
   [(str (field->sql field search-schema) " between ? and ?")
    (coerce-value! field value1 search-schema)
    (coerce-value! field value2 search-schema)])
 
-(defn is-null-expression [operator field search-schema]
+(defn is-null-expression [search-schema _ field]
   [(str (field->sql field search-schema) " is null")])
 
-(defn in-expression [_ field values search-schema]
+(defn in-expression [search-schema _ field values]
   [(str (field->sql field search-schema) " = any (?)")
    (mapv #(coerce-value! field % search-schema) values)])
+
+(defn expression-seq->sql [logic-operator expression->sql expressions]
+  (let [sql-expressions (map expression->sql expressions)]
+    (cons (str/join (format " %s " logic-operator) (map first sql-expressions))
+          (mapcat rest sql-expressions))))
+
+(defn- glob-pattern-matcher [pattern]
+  (let [field (subs pattern 0 (- (count pattern) 2))
+        matcher (fn [language] #(= % (str field "-" language)))]
+    (some-fn (matcher "fi") (matcher "sv"))))
+
+(defn- validate-match! [pattern fields]
+  (when (empty? fields)
+    (throw-ex-info {:type :unknown-field :field pattern
+                    :message (str "Field glob pattern: " pattern " does not match any fields.")})))
+
+(defn- globbing [predicate]
+  (fn [search-schema operator field & values]
+    (if (str/includes? field "*")
+      (let [fields (filter (glob-pattern-matcher field) (->> search-schema keys (map name)))]
+        (validate-match! field fields)
+        (update
+          (vec (expression-seq->sql "or" #(apply predicate search-schema operator % values) fields)) 0
+          #(str "(" % ")")))
+      (apply predicate search-schema operator field values))))
 
 (def predicates
   {"="  infix-notation
@@ -144,8 +169,8 @@
    "<=" infix-notation
    ">"  infix-notation
    "<"  infix-notation
-   "like"  infix-notation
-   "ilike"  infix-notation
+   "like"  (globbing infix-notation)
+   "ilike"  (globbing infix-notation)
    "not ilike" infix-notation
    "between" between-expression
    "nil?" is-null-expression
@@ -160,16 +185,11 @@
 (defn predicate-expression->sql [search-schema expression]
   (let [predicate (first expression)]
     (try
-      (apply (sql-formatter! predicate) (concat expression [search-schema]))
+      (apply (sql-formatter! predicate) (concat [search-schema] expression))
       (catch ArityException _
         (throw-ex-info {:type :invalid-arguments :predicate predicate
                         :message (str "Wrong number of arguments: " (rest expression)
                                       " for predicate: " predicate)})))))
-
-(defn expression-seq->sql [logic-operator expression->sql expressions]
-  (let [sql-expressions (map expression->sql expressions)]
-    (cons (str/join (format " %s " logic-operator) (map first sql-expressions))
-          (mapcat rest sql-expressions))))
 
 (defn where->sql [where search-schema]
   (expression-seq->sql
