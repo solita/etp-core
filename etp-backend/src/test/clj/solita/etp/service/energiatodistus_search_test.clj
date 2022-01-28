@@ -15,7 +15,8 @@
             [solita.etp.service.valvonta-oikeellisuus :as valvonta-service]
             [solita.etp.service.laatija :as laatija-service]
             [solita.etp.service.e-luokka :as e-luokka-service]
-            [solita.common.logic :as logic])
+            [solita.common.logic :as logic]
+            [solita.etp.whoami :as test-whoami])
   (:import (java.time Instant LocalDate)))
 
 (t/use-fixtures :each ts/fixture)
@@ -233,6 +234,29 @@
            id
            [[["=" "energiatodistus.id" id]
              ["=" "energiatodistus.perustiedot.nimi-fi" nimi]]]))))
+
+(t/deftest search-by-nimi-*-test
+  (let [[laatija-id laatija] (laatija-test-data/generate-and-insert!)
+        [id energiatodistus] (energiatodistus-test-data/generate-and-insert! 2018 true laatija-id)
+        nimi-fi (-> energiatodistus :perustiedot :nimi-fi)
+        nimi-sv (-> energiatodistus :perustiedot :nimi-fi)
+        test-data-set {:laatijat {laatija-id laatija}
+                       :energiatodistukset {id energiatodistus}}]
+
+    (t/is (empty?
+            (search (test-whoami/laatija laatija-id)
+                    [[["like" "energiatodistus.perustiedot.nimi-*" (str nimi-fi nimi-sv)]]]
+                    nil nil nil)))
+
+    (t/is (search-and-assert
+            test-data-set
+            id
+            [[["like" "energiatodistus.perustiedot.nimi-*" nimi-fi]]]))
+
+    (t/is (search-and-assert
+            test-data-set
+            id
+            [[["like" "energiatodistus.perustiedot.nimi-*" nimi-sv]]]))))
 
 (t/deftest search-by-havainnointikaynti-test
   (let [{:keys [energiatodistukset] :as test-data-set} (test-data-set)
