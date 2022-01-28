@@ -22,9 +22,13 @@
   (t/test-vars [var-name]))
 
 (defn run-tests []
-  (require 'eftest.runner)
-  (-> ((resolve 'eftest.runner/find-tests) "src/test")
-      ((resolve 'eftest.runner/run-tests))))
+  (let [cpu-count (.availableProcessors (Runtime/getRuntime))
+        thread-count (if-let [thread-limit (System/getenv "ETP_THREAD_LIMIT")]
+                       (min (Integer/parseInt thread-limit) cpu-count)
+                       cpu-count)]
+    (require 'eftest.runner)
+    (-> ((resolve 'eftest.runner/find-tests) "src/test")
+        ((resolve 'eftest.runner/run-tests) {:thread-count thread-count}))))
 
 (defn run-tests-and-exit! []
   (let [{:keys [fail error]} (run-tests)]
