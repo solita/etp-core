@@ -104,6 +104,9 @@
           {:type :patevyys-expired
            :paattymisaika (:voimassaolo-paattymisaika laatija)
            :message (str "Laatija: " user-id " pätevyys has expired.")}))
+      (when (not (= false (:ispartner laatija)))
+        (exception/throw-ex-info!
+         :laatimiskielto (str "Laatija: " user-id " is expected to only test.")))
       (when (:laatimiskielto laatija)
         (exception/throw-ex-info!
           :laatimiskielto (str "Laatija: " user-id " has laatimiskielto."))))
