@@ -52,7 +52,8 @@
           :julkinenwwwosoite  schema/Bool
           :wwwosoite          (schema/maybe common-schema/Url)
           :laskutuskieli      (schema/enum 0 1 2)
-          :api-key            (schema/maybe Password)}))
+          :api-key            (schema/maybe Password)
+          :ispartner          schema/Bool}))
 
 (def Laatija
   "Schema representing the persistent laatija.

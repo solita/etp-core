@@ -22,6 +22,7 @@ SELECT k.id,
        l.julkinen_puhelin julkinenpuhelin,
        l.julkinen_wwwosoite julkinenwwwosoite,
        l.julkinen_osoite julkinenosoite,
+       l.is_partner as ispartner,
        array(select yritys_id from laatija_yritys where laatija_id = l.id and tila_id = 1) as yritys,
        coalesce(current_timestamp < login + interval '6 month', false) as aktiivinen
 FROM laatija l
@@ -42,7 +43,8 @@ select
   l.julkinen_wwwosoite as julkinenwwwosoite,
   l.laskutuskieli,
   l.vastaanottajan_tarkenne, l.jakeluosoite,
-  l.postinumero, l.postitoimipaikka, l.wwwosoite, l.maa
+  l.postinumero, l.postitoimipaikka, l.wwwosoite, l.maa,
+  l.is_partner as ispartner
 from laatija l where l.id = :id
 
 --name: select-laatija-by-henkilotunnus
@@ -50,6 +52,7 @@ SELECT l.id, k.henkilotunnus, l.patevyystaso,
        l.toteamispaivamaara, l.toteaja, l.laatimiskielto,
        l.toimintaalue, l.muut_toimintaalueet as muuttoimintaalueet,
        l.julkinen_puhelin as julkinenpuhelin, l.julkinen_email as julkinenemail, l.julkinen_osoite as julkinenosoite, l.julkinen_wwwosoite as julkinenwwwosoite,
+       l.is_partner as ispartner,
        l.laskutuskieli, l.vastaanottajan_tarkenne,
        l.jakeluosoite, l.postinumero, l.postitoimipaikka, l.wwwosoite, l.maa
 FROM laatija l INNER JOIN kayttaja k ON l.id = k.id WHERE k.henkilotunnus = :henkilotunnus
