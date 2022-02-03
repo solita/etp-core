@@ -9,8 +9,13 @@
 (defn public? [whoami]
   (nil? whoami))
 
+(defn- partner? [{:keys [ispartner]}]
+  ispartner)
+
 (defn laatija? [{:keys [rooli]}]
   (= rooli 0))
+
+(def non-partner-laatija? (every-pred laatija? (comp not partner?)))
 
 (defn patevyydentoteaja? [{:keys [rooli]}]
   (= rooli 1))

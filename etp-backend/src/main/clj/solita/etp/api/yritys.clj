@@ -11,7 +11,8 @@
   [["/yritykset"
     [""
      {:post {:summary    "Lisää uuden yrityksen tiedot yritysrekisteriin"
-             :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+             :access     (some-fn rooli-service/paakayttaja?
+                                  rooli-service/non-partner-laatija?)
              :parameters {:body yritys-schema/YritysSave}
              :responses  {201 {:body common-schema/Id}}
              :handler    (fn [{:keys [db whoami parameters uri]}]
@@ -37,7 +38,8 @@
                              (api-response/msg-404 "yritys" id)))}
 
        :put {:summary    "Päivitä yrityksen perustiedot"
-             :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+             :access     (some-fn rooli-service/paakayttaja?
+                                  rooli-service/non-partner-laatija?)
              :parameters {:path {:id common-schema/Key}
                           :body yritys-schema/YritysSave}
              :responses  {200 {:body nil}
@@ -48,7 +50,8 @@
                              (api-response/msg-404 "yritys" id)))}}]
      ["/deleted"
       {:put {:summary    "Päivitä yrityksen deleted-tila (poistettu)"
-             :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+             :access     (some-fn rooli-service/paakayttaja?
+                                  rooli-service/non-partner-laatija?)
              :parameters {:path {:id common-schema/Key}
                           :body schema/Bool}
              :responses  {200 {:body nil}
@@ -67,7 +70,8 @@
                               (yritys-service/find-laatijat db whoami id)))}}]
       ["/:laatija-id"
        {:put {:summary    "Liitä laatija yritykseen - hyväksytty"
-              :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+              :access     (some-fn rooli-service/paakayttaja?
+                                   rooli-service/non-partner-laatija?)
               :parameters {:path {:id         common-schema/Key
                                   :laatija-id common-schema/Key}}
               :responses  {200 {:body nil}
@@ -78,7 +82,9 @@
                               [{:constraint :laatija-yritys-laatija-id-fkey
                                 :response   404}
                                {:constraint :laatija-yritys-yritys-id-fkey
-                                :response   404}]))}}]]]]
+                                :response   404}
+                               {:type :partner-unsupported-feature
+                                :response   400}]))}}]]]]
    ["/laskutuskielet/"
     {:get {:summary    "Hae laskutuskielet -luokittelu"
            :responses  {200 {:body [common-schema/Luokittelu]}}
