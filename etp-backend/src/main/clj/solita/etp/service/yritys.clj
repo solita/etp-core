@@ -31,6 +31,14 @@
   ([db id] (yritys-db/select-laatijat db {:id id}))
   ([db whoami id] (assert-permission! whoami id (find-laatijat db id))))
 
+(defn- assert-not-partner! [db laatija-id]
+  (let [{:keys [ispartner]} (first (yritys-db/select-laatija-by-id db {:id laatija-id}))]
+    (when ispartner
+      (exception/throw-forbidden!
+       (str "User "
+            laatija-id
+            " is a partner user, not allowed for this operation" )))))
+
 (defn db-assert-permission! [db whoami id] (find-laatijat db whoami id))
 
 (defn find-all-laskutuskielet [db]
@@ -52,6 +60,7 @@
    (db-assert-permission! db whoami yritys-id)
    (add-laatija-yritys! db laatija-id yritys-id))
   ([db laatija-id yritys-id]
+   (assert-not-partner! db laatija-id)
    (yritys-db/insert-laatija-yritys!
      db (map/bindings->map laatija-id yritys-id))
    nil))
