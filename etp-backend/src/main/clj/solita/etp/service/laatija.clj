@@ -73,7 +73,8 @@
                 :julkinenpuhelin :julkinen_puhelin
                 :julkinenemail :julkinen_email
                 :julkinenosoite :julkinen_osoite
-                :julkinenwwwosoite :julkinen_wwwosoite})
+                :julkinenwwwosoite :julkinen_wwwosoite
+                :ispartner :is_partner})
 
 (defn- api-key-hash [laatija]
   (if-let [api-key (:api-key laatija)]
