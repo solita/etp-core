@@ -21,6 +21,7 @@
 
 (defn- assert-permission! [whoami yritys-id yritys-laatijat]
   (if (or (rooli-service/paakayttaja? whoami)
+          (rooli-service/laskuttaja? whoami)
           (laatija-in-yritys-laatijat? (:id whoami) yritys-laatijat))
     yritys-laatijat
     (exception/throw-forbidden!

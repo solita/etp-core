@@ -21,7 +21,9 @@
      {:conflicting true
       :get         {:summary   "Hae energiatodistusten oikeellisuuden valvonnan toimenpidetyypit."
                     :responses {200 {:body [common-schema/Luokittelu]}}
-                    :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
+                    :access    (some-fn rooli-service/paakayttaja?
+                                        rooli-service/laatija?
+                                        rooli-service/laskuttaja?)
                     :handler   (fn [{:keys [db]}]
                                  (r/response (valvonta-service/find-toimenpidetyypit db)))}}]
     ["/csv/valvonta.csv"
