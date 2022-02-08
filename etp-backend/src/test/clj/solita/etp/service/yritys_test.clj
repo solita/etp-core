@@ -68,10 +68,9 @@
   (let [{:keys [laskuttajat laatijat yritykset]} (test-data-set)
         laskuttaja-id (-> laskuttajat keys sort first)
         laatija-id (-> laatijat keys sort last)
-        yritys-id (-> yritykset keys sort first)]
-    (doseq [update (yritys-test-data/generate-updates 50)
-            :let [whoami (rand-nth [{:rooli 3 :id laskuttaja-id}
-                                    {:rooli 0 :id laatija-id}])]]
+        yritys-id (-> yritykset keys sort first)
+        whoami {:rooli 0 :id laatija-id}]
+    (doseq [update (yritys-test-data/generate-updates 50)]
       (t/is (= (-> (etp-test/catch-ex-data #(service/update-yritys!
                                              ts/*db*
                                              whoami
