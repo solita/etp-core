@@ -102,7 +102,7 @@
                               (laatija-service/find-laatija-yritykset db whoami id)))}}]
       ["/:yritys-id"
        {:put    {:summary    "Liitä laatija yritykseen - liittämispyyntö"
-                 :access     rooli-service/non-partner-laatija?
+                 :access     rooli-service/accredited-laatija?
                  :parameters {:path {:id        common-schema/Key
                                      :yritys-id common-schema/Key}}
                  :responses  {200 {:body nil}

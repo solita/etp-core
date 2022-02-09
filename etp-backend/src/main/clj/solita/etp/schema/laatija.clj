@@ -24,8 +24,7 @@
   (st/merge (st/select-keys geo-schema/Postiosoite [:jakeluosoite :postinumero :postitoimipaikka :maa])
             {:patevyystaso       common-schema/Key
              :toteamispaivamaara common-schema/Date
-             :toteaja            PatevyydenToteaja
-             :ispartner          schema/Bool}))
+             :toteaja            PatevyydenToteaja}))
 
 (def LaatijaAdminUpdate
   "Only for internal use in laatija services.
@@ -53,8 +52,7 @@
           :julkinenwwwosoite  schema/Bool
           :wwwosoite          (schema/maybe common-schema/Url)
           :laskutuskieli      (schema/enum 0 1 2)
-          :api-key            (schema/maybe Password)
-          :ispartner          schema/Bool}))
+          :api-key            (schema/maybe Password)}))
 
 (def Laatija
   "Schema representing the persistent laatija.
@@ -62,7 +60,8 @@
   (merge (dissoc LaatijaUpdate :api-key)
          common-schema/Id
          {:voimassaolo-paattymisaika common-schema/Instant
-          :voimassa schema/Bool}))
+          :voimassa schema/Bool
+          :ispartner schema/Bool}))
 
 (def KayttajaAdminUpdate
   "Only for internal use in laatija services.

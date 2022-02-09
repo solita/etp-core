@@ -19,7 +19,7 @@
 (defn public-laatija [{:keys [login voimassa laatimiskielto ispartner julkinenpuhelin
                               julkinenemail julkinenwwwosoite julkinenosoite]
                        :as laatija}]
-  (when (and voimassa (= false ispartner) (not laatimiskielto) (not (nil? login)))
+  (when (and voimassa (not ispartner) (not laatimiskielto) (not (nil? login)))
     (select-keys laatija
                  (cond-> laatija-schema/always-public-kayttaja-laatija-ks
                    julkinenpuhelin (conj :puhelin)
@@ -106,9 +106,9 @@
           {:type :patevyys-expired
            :paattymisaika (:voimassaolo-paattymisaika laatija)
            :message (str "Laatija: " user-id " pätevyys has expired.")}))
-      (when (not (= false (:ispartner laatija)))
+      (when (:ispartner laatija)
         (exception/throw-ex-info!
-         :laatimiskielto (str "Laatija: " user-id " is expected to only test.")))
+         :laatimiskielto (str "Laatija: " user-id " is expected to only test services.")))
       (when (:laatimiskielto laatija)
         (exception/throw-ex-info!
           :laatimiskielto (str "Laatija: " user-id " has laatimiskielto."))))

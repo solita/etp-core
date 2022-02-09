@@ -12,7 +12,7 @@
     [""
      {:post {:summary    "Lisää uuden yrityksen tiedot yritysrekisteriin"
              :access     (some-fn rooli-service/paakayttaja?
-                                  rooli-service/non-partner-laatija?)
+                                  rooli-service/accredited-laatija?)
              :parameters {:body yritys-schema/YritysSave}
              :responses  {201 {:body common-schema/Id}}
              :handler    (fn [{:keys [db whoami parameters uri]}]
@@ -39,7 +39,7 @@
 
        :put {:summary    "Päivitä yrityksen perustiedot"
              :access     (some-fn rooli-service/paakayttaja?
-                                  rooli-service/non-partner-laatija?)
+                                  rooli-service/accredited-laatija?)
              :parameters {:path {:id common-schema/Key}
                           :body yritys-schema/YritysSave}
              :responses  {200 {:body nil}
@@ -51,7 +51,7 @@
      ["/deleted"
       {:put {:summary    "Päivitä yrityksen deleted-tila (poistettu)"
              :access     (some-fn rooli-service/paakayttaja?
-                                  rooli-service/non-partner-laatija?)
+                                  rooli-service/accredited-laatija?)
              :parameters {:path {:id common-schema/Key}
                           :body schema/Bool}
              :responses  {200 {:body nil}
@@ -71,7 +71,7 @@
       ["/:laatija-id"
        {:put {:summary    "Liitä laatija yritykseen - hyväksytty"
               :access     (some-fn rooli-service/paakayttaja?
-                                   rooli-service/non-partner-laatija?)
+                                   rooli-service/accredited-laatija?)
               :parameters {:path {:id         common-schema/Key
                                   :laatija-id common-schema/Key}}
               :responses  {200 {:body nil}

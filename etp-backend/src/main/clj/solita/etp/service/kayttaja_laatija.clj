@@ -24,8 +24,6 @@
   (kayttaja-service/add-kayttaja! db (assoc kayttaja :rooli 0)))
 
 (defn add-laatija! [db kayttaja-laatija]
-  (when-not (:ispartner kayttaja-laatija)
-    (exception/throw-forbidden! "Only a partner laatija can be added"))
   (jdbc/with-db-transaction
     [db db]
     (let [kayttaja (st/select-schema kayttaja-laatija laatija-schema/KayttajaAdd)
@@ -33,7 +31,8 @@
           id (add-kayttaja! db kayttaja)]
       (laatija-service/add-laatija!
         db (assoc laatija :id id
-                          :toteaja "ARA")))))
+                          :toteaja "ARA"
+                          :ispartner true)))))
 
 (defn- diff [new-laatija existing-laatija]
   (cond
