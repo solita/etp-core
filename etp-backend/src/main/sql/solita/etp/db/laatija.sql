@@ -113,7 +113,7 @@ where
 -- name: select-laatija-history
 select
   l.id, l.patevyystaso,
-  l.toteamispaivamaara, l.toteaja, l.laatimiskielto,
+  l.toteamispaivamaara, l.toteaja, l.laatimiskielto, l.partner,
   l.toimintaalue, l.muut_toimintaalueet as muuttoimintaalueet,
   l.julkinen_puhelin as julkinenpuhelin,
   l.julkinen_email as julkinenemail,
