@@ -61,5 +61,5 @@ update yritys set deleted = :deleted where id = :id;
 --name: select-laatija-by-id
 select
   l.id,
-  l.is_partner as ispartner
+  l.partner
 from laatija l where l.id = :id

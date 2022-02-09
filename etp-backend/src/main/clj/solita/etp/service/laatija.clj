@@ -16,10 +16,10 @@
 ;; *** Require sql functions ***
 (db/require-queries 'laatija)
 
-(defn public-laatija [{:keys [login voimassa laatimiskielto ispartner julkinenpuhelin
+(defn public-laatija [{:keys [login voimassa laatimiskielto partner julkinenpuhelin
                               julkinenemail julkinenwwwosoite julkinenosoite]
                        :as laatija}]
-  (when (and voimassa (not ispartner) (not laatimiskielto) (not (nil? login)))
+  (when (and voimassa (not partner) (not laatimiskielto) (not (nil? login)))
     (select-keys laatija
                  (cond-> laatija-schema/always-public-kayttaja-laatija-ks
                    julkinenpuhelin (conj :puhelin)
@@ -73,8 +73,7 @@
                 :julkinenpuhelin :julkinen_puhelin
                 :julkinenemail :julkinen_email
                 :julkinenosoite :julkinen_osoite
-                :julkinenwwwosoite :julkinen_wwwosoite
-                :ispartner :is_partner})
+                :julkinenwwwosoite :julkinen_wwwosoite})
 
 (defn- api-key-hash [laatija]
   (if-let [api-key (:api-key laatija)]
@@ -106,7 +105,7 @@
           {:type :patevyys-expired
            :paattymisaika (:voimassaolo-paattymisaika laatija)
            :message (str "Laatija: " user-id " pätevyys has expired.")}))
-      (when (:ispartner laatija)
+      (when (:partner laatija)
         (exception/throw-ex-info!
          :laatimiskielto (str "Laatija: " user-id " is expected to only test services.")))
       (when (:laatimiskielto laatija)

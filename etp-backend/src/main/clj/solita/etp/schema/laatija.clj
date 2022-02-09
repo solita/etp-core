@@ -61,7 +61,7 @@
          common-schema/Id
          {:voimassaolo-paattymisaika common-schema/Instant
           :voimassa schema/Bool
-          :ispartner schema/Bool}))
+          :partner schema/Bool}))
 
 (def KayttajaAdminUpdate
   "Only for internal use in laatija services.

@@ -32,7 +32,7 @@
       (laatija-service/add-laatija!
         db (assoc laatija :id id
                           :toteaja "ARA"
-                          :ispartner true)))))
+                          :partner true)))))
 
 (defn- diff [new-laatija existing-laatija]
   (cond

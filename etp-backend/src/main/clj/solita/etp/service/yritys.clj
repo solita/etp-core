@@ -32,8 +32,8 @@
   ([db whoami id] (assert-permission! whoami id (find-laatijat db id))))
 
 (defn- assert-not-partner! [db laatija-id]
-  (let [{:keys [ispartner]} (first (yritys-db/select-laatija-by-id db {:id laatija-id}))]
-    (when ispartner
+  (let [{:keys [partner]} (first (yritys-db/select-laatija-by-id db {:id laatija-id}))]
+    (when partner
       (exception/throw-forbidden!
        (str "User "
             laatija-id

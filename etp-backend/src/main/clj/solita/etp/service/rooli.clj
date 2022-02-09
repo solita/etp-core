@@ -8,7 +8,7 @@
 
 (defn public? [whoami] (nil? whoami))
 
-(defn- partner? [{:keys [ispartner]}] ispartner)
+(defn- partner? [{:keys [partner]}] partner)
 
 (defn laatija? [{:keys [rooli]}]
   (= rooli 0))

@@ -45,7 +45,7 @@
 
 (def Whoami (-> Kayttaja
                 (dissoc :passivoitu :puhelin :login)
-                (assoc :ispartner schema/Bool)))
+                (assoc :partner schema/Bool)))
 
 (def KayttajaHistory
   (-> Kayttaja
