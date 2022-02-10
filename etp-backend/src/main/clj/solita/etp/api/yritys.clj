@@ -83,7 +83,7 @@
                                 :response   404}
                                {:constraint :laatija-yritys-yritys-id-fkey
                                 :response   404}
-                               {:type :partner-unsupported-feature
+                               {:type :partner-not-allowed
                                 :response   400}]))}}]]]]
    ["/laskutuskielet/"
     {:get {:summary    "Hae laskutuskielet -luokittelu"

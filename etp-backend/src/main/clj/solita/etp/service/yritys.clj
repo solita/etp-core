@@ -34,10 +34,9 @@
 (defn- assert-not-partner! [db laatija-id]
   (let [{:keys [partner]} (first (yritys-db/select-laatija-by-id db {:id laatija-id}))]
     (when partner
-      (exception/throw-forbidden!
-       (str "User "
-            laatija-id
-            " is a partner user, not allowed for this operation" )))))
+      (exception/throw-ex-info!
+        :partner-not-allowed
+        (str "Partner user " laatija-id " is not allowed for yritys")))))
 
 (defn db-assert-permission! [db whoami id] (find-laatijat db whoami id))
 
