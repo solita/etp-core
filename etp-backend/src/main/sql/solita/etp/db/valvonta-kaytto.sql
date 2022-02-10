@@ -26,6 +26,14 @@ from vk_valvonta valvonta
     where valvonta.id = toimenpide.valvonta_id
     order by coalesce(toimenpide.publish_time, toimenpide.create_time) desc
     limit 1) last_toimenpide on true
+  left join lateral (
+    select string_agg(etunimi || ' ' || sukunimi, ';') as nimet
+    from vk_henkilo
+    where valvonta.id = vk_henkilo.valvonta_id) henkilo on true
+  left join lateral (
+    select string_agg(nimi, ';') as nimet
+    from vk_yritys
+    where valvonta.id = vk_yritys.valvonta_id) yritys on true
 where
   not valvonta.deleted and
   (last_toimenpide.id is null or last_toimenpide.type_id <> 5 or :include-closed) and
@@ -37,7 +45,9 @@ where
    valvonta.ilmoituspaikka_description      ilike :keyword or
    valvonta.ilmoitustunnus                  ilike :keyword or
    last_toimenpide.diaarinumero             ilike :keyword or
-   last_toimenpide.description              ilike :keyword) and
+   last_toimenpide.description              ilike :keyword or
+   henkilo.nimet                            ilike :keyword or
+   yritys.nimet                             ilike :keyword) and
   (valvonta.valvoja_id = :valvoja-id or
     (valvonta.valvoja_id is not null) = :has-valvoja or
     (:valvoja-id::int is null and :has-valvoja::boolean is null))
@@ -58,6 +68,14 @@ left join lateral (
   where valvonta.id = toimenpide.valvonta_id
   order by coalesce(toimenpide.publish_time, toimenpide.create_time) desc
   limit 1) last_toimenpide on true
+left join lateral (
+  select string_agg(etunimi || ' ' || sukunimi, ';') as nimet
+  from vk_henkilo
+  where valvonta.id = vk_henkilo.valvonta_id) henkilo on true
+left join lateral (
+  select string_agg(nimi, ';') as nimet
+  from vk_yritys
+  where valvonta.id = vk_yritys.valvonta_id) yritys on true
 where
   not valvonta.deleted and
   (last_toimenpide.id is null or last_toimenpide.type_id <> 5 or :include-closed) and
@@ -69,7 +87,9 @@ where
    valvonta.ilmoituspaikka_description      ilike :keyword or
    valvonta.ilmoitustunnus                  ilike :keyword or
    last_toimenpide.diaarinumero             ilike :keyword or
-   last_toimenpide.description              ilike :keyword) and
+   last_toimenpide.description              ilike :keyword or
+   henkilo.nimet                            ilike :keyword or
+   yritys.nimet                             ilike :keyword) and
   (valvonta.valvoja_id = :valvoja-id or
    (valvonta.valvoja_id is not null) = :has-valvoja or
    (:valvoja-id::int is null and :has-valvoja::boolean is null));
