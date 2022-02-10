@@ -68,6 +68,7 @@
    Represents kayttaja information which can be updated by admins."
   {:etunimi  schema/Str
    :sukunimi schema/Str
+   :passivoitu schema/Bool
    :henkilotunnus common-schema/Henkilotunnus})
 
 (def KayttajaUpdate
