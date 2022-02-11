@@ -57,3 +57,9 @@ on conflict (laatija_id, yritys_id) do update set tila_id = 1
 
 -- name: update-yritys-deleted!
 update yritys set deleted = :deleted where id = :id;
+
+--name: select-laatija-by-id
+select
+  l.id,
+  l.partner
+from laatija l where l.id = :id

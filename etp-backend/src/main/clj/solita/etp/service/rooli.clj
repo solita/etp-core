@@ -6,11 +6,17 @@
 
 (defn find-roolit [db] (luokittelu-service/find-roolit db))
 
-(defn public? [whoami]
-  (nil? whoami))
+(defn public? [whoami] (nil? whoami))
+
+(defn- partner? [{:keys [partner]}] partner)
 
 (defn laatija? [{:keys [rooli]}]
   (= rooli 0))
+
+(def accredited-laatija?
+  "Accredited laatijan pätevyyden on todentanut virallinen pätevyyden toteaja.
+   Partner-laatijalla ei ole oikeasti laatijan pätevyyttä ja hän voi lähinnä kokeilla tai testata järjestelmää."
+  (every-pred laatija? (complement partner?)))
 
 (defn patevyydentoteaja? [{:keys [rooli]}]
   (= rooli 1))

@@ -43,7 +43,9 @@
           :puhelin       schema/Str
           :email         schema/Str}))
 
-(def Whoami (dissoc Kayttaja :passivoitu :puhelin :login))
+(def Whoami (-> Kayttaja
+                (dissoc :passivoitu :puhelin :login)
+                (assoc :partner schema/Bool)))
 
 (def KayttajaHistory
   (-> Kayttaja

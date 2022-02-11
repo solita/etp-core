@@ -38,7 +38,7 @@
                             :julkinenemail   true
                             :julkinenosoite  false}))]
     (t/is (every? #(contains? (service/public-laatija laatija) %)
-                  [:email :etunimi]))
+                  [:email :etunimi]) (str "Failure processing " (service/public-laatija laatija)))
     (t/is (not-every? #(contains? (service/public-laatija laatija) %)
                       [:puhelin :jakeluosoite :postinumero
                        :postitoimipaikka :maa]))

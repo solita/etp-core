@@ -16,10 +16,10 @@
 ;; *** Require sql functions ***
 (db/require-queries 'laatija)
 
-(defn public-laatija [{:keys [login voimassa laatimiskielto julkinenpuhelin
+(defn public-laatija [{:keys [login voimassa laatimiskielto partner julkinenpuhelin
                               julkinenemail julkinenwwwosoite julkinenosoite]
                        :as laatija}]
-  (when (and voimassa (not laatimiskielto) (not (nil? login)))
+  (when (and voimassa (not partner) (not laatimiskielto) (not (nil? login)))
     (select-keys laatija
                  (cond-> laatija-schema/always-public-kayttaja-laatija-ks
                    julkinenpuhelin (conj :puhelin)
@@ -75,25 +75,26 @@
                 :julkinenosoite :julkinen_osoite
                 :julkinenwwwosoite :julkinen_wwwosoite})
 
-(defn add-laatija! [db laatija]
-  (->> (set/rename-keys laatija db-keymap)
-       (jdbc/insert! db :laatija)
-       first
-       :id))
-
 (defn- api-key-hash [laatija]
   (if-let [api-key (:api-key laatija)]
     (assoc laatija :api-key-hash
                    (hashers/derive api-key {:alg :bcrypt+sha512}))
     laatija))
 
+(defn- laatija->db-row [laatija]
+  (-> laatija
+      (set/rename-keys db-keymap)
+      api-key-hash
+      (dissoc :api-key)))
+
+(defn add-laatija! [db laatija]
+  (-> (db/with-db-exception-translation
+        jdbc/insert! db :laatija (laatija->db-row laatija) db/default-opts)
+      first :id))
+
 (defn update-laatija-by-id! [db id laatija]
-  (jdbc/update! db
-                :laatija
-                (-> laatija
-                    (set/rename-keys db-keymap)
-                    api-key-hash
-                    (dissoc :api-key))
+  (jdbc/update! db :laatija
+                (laatija->db-row laatija)
                 ["id = ?" id] db/default-opts))
 
 (defn validate-laatija-patevyys! [db user-id]
@@ -104,6 +105,9 @@
           {:type :patevyys-expired
            :paattymisaika (:voimassaolo-paattymisaika laatija)
            :message (str "Laatija: " user-id " pätevyys has expired.")}))
+      (when (:partner laatija)
+        (exception/throw-ex-info!
+         :laatimiskielto (str "Laatija: " user-id " is expected to only test services.")))
       (when (:laatimiskielto laatija)
         (exception/throw-ex-info!
           :laatimiskielto (str "Laatija: " user-id " has laatimiskielto."))))

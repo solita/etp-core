@@ -113,9 +113,10 @@
                                     {:rooli 0 :id (inc id)}])
                   update (-> (laatija-test-data/generate-updates 1 false)
                              first)]]
-      (t/is (= {:type :forbidden}
-               (etp-test/catch-ex-data
-                #(service/update-kayttaja-laatija! ts/*db* whoami id update))))
+      (t/is (= :forbidden
+               (:type
+                (etp-test/catch-ex-data
+                 #(service/update-kayttaja-laatija! ts/*db* whoami id update)))))
       (t/is (-> laatijat
                 (get id)
                 (st/select-schema laatija-schema/LaatijaAdd)

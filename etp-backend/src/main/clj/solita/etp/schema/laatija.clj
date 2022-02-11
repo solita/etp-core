@@ -16,7 +16,7 @@
 
 (def MuutToimintaalueet (schema/constrained [common-schema/Key] valid-muut-toimintaalueet?))
 
-(def PatevyydenToteaja (schema/enum "FISE" "KIINKO"))
+(def PatevyydenToteaja (schema/enum "FISE" "KIINKO" "ARA"))
 
 (def LaatijaAdd
   "Only for internal use in laatija services.
@@ -60,13 +60,15 @@
   (merge (dissoc LaatijaUpdate :api-key)
          common-schema/Id
          {:voimassaolo-paattymisaika common-schema/Instant
-          :voimassa schema/Bool}))
+          :voimassa schema/Bool
+          :partner schema/Bool}))
 
 (def KayttajaAdminUpdate
   "Only for internal use in laatija services.
    Represents kayttaja information which can be updated by admins."
   {:etunimi  schema/Str
    :sukunimi schema/Str
+   :passivoitu schema/Bool
    :henkilotunnus common-schema/Henkilotunnus})
 
 (def KayttajaUpdate
@@ -101,7 +103,7 @@
       (st/assoc :aktiivinen schema/Bool)
       (st/assoc :henkilotunnus schema/Str)
       (st/assoc :yritys [common-schema/Key])
-      (st/dissoc :cognitoid :virtu :rooli :passivoitu)
+      (st/dissoc :cognitoid :virtu :rooli)
 
       ;; Pätevyydentoteajat do not see the last part of hetu
       (st/optional-keys)

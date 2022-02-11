@@ -42,16 +42,26 @@
 (def private-routes
   [["/laatijat"
     [""
-     {:get get-laatijat
-      :put {:summary    "Lisää laatijat laatijarekisteriin (luo myös käyttäjä)"
-            :parameters {:body [laatija-schema/KayttajaLaatijaAdd]}
-            :responses  {200 {:body [common-schema/Key]}}
-            :access     rooli-service/patevyydentoteaja?
-            :handler    (fn [{:keys [db parameters]}]
-                          (-> (kayttaja-laatija-service/upsert-kayttaja-laatijat!
-                                db (:body parameters))
-                              (api-response/get-response
-                               "Käyttäjien / laatijoiden lisääminen tai päivittäminen epäonnistui")))}}]
+     {:get  get-laatijat
+      :put  {:summary    (str
+                           "Lisää uusia laatijoita ja päivitä olemassaolevien laatijoiden tietoa. "
+                           "Laatijan yksilöinti perustuu hetuun.")
+             :parameters {:body [laatija-schema/KayttajaLaatijaAdd]}
+             :responses  {200 {:body [common-schema/Key]}}
+             :access     rooli-service/patevyydentoteaja?
+             :handler    (fn [{:keys [db parameters]}]
+                           (r/response
+                             (kayttaja-laatija-service/upsert-kayttaja-laatijat!
+                               db (:body parameters))))}
+
+      :post {:summary    "Lisää yksittäinen laatija"
+             :parameters {:body laatija-schema/KayttajaLaatijaUpdate}
+             :responses  {201 {:body common-schema/Id}}
+             :access     rooli-service/paakayttaja?
+             :handler    (fn [{:keys [db parameters uri]}]
+                           (api-response/created
+                             uri {:id (kayttaja-laatija-service/add-laatija!
+                                        db (:body parameters))}))}}]
     ["/:id"
      [""
       {:put {:summary "Päivitä laatijan ja laatijaan liittyvän käyttäjän tiedot"
@@ -92,6 +102,7 @@
                               (laatija-service/find-laatija-yritykset db whoami id)))}}]
       ["/:yritys-id"
        {:put    {:summary    "Liitä laatija yritykseen - liittämispyyntö"
+                 :access     rooli-service/accredited-laatija?
                  :parameters {:path {:id        common-schema/Key
                                      :yritys-id common-schema/Key}}
                  :responses  {200 {:body nil}
