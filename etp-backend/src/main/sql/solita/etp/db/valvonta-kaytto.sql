@@ -34,6 +34,7 @@ from vk_valvonta valvonta
     select string_agg(nimi, ';') as nimet
     from vk_yritys
     where valvonta.id = vk_yritys.valvonta_id) yritys on true
+  left join postinumero on valvonta.postinumero = postinumero.id
 where
   not valvonta.deleted and
   (last_toimenpide.id is null or last_toimenpide.type_id <> 5 or :include-closed) and
@@ -47,7 +48,9 @@ where
    last_toimenpide.diaarinumero             ilike :keyword or
    last_toimenpide.description              ilike :keyword or
    henkilo.nimet                            ilike :keyword or
-   yritys.nimet                             ilike :keyword) and
+   yritys.nimet                             ilike :keyword or
+   postinumero.label_fi                     ilike :keyword or
+   postinumero.label_sv                     ilike :keyword) and
   (valvonta.valvoja_id = :valvoja-id or
     (valvonta.valvoja_id is not null) = :has-valvoja or
     (:valvoja-id::int is null and :has-valvoja::boolean is null))
@@ -76,6 +79,7 @@ left join lateral (
   select string_agg(nimi, ';') as nimet
   from vk_yritys
   where valvonta.id = vk_yritys.valvonta_id) yritys on true
+left join postinumero on valvonta.postinumero = postinumero.id
 where
   not valvonta.deleted and
   (last_toimenpide.id is null or last_toimenpide.type_id <> 5 or :include-closed) and
@@ -89,7 +93,9 @@ where
    last_toimenpide.diaarinumero             ilike :keyword or
    last_toimenpide.description              ilike :keyword or
    henkilo.nimet                            ilike :keyword or
-   yritys.nimet                             ilike :keyword) and
+   yritys.nimet                             ilike :keyword or
+   postinumero.label_fi                     ilike :keyword or
+   postinumero.label_sv                     ilike :keyword) and
   (valvonta.valvoja_id = :valvoja-id or
    (valvonta.valvoja_id is not null) = :has-valvoja or
    (:valvoja-id::int is null and :has-valvoja::boolean is null));
