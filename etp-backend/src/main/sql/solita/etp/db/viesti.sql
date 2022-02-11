@@ -87,7 +87,8 @@ on conflict (viesti_id, reader_id) do nothing
 -- name: select-count-unread-for-kasittelija
 select count(*)
 from viestiketju
-where (kasittelija_id is null or kasittelija_id = :kayttaja-id) and exists(
+where (kasittelija_id is null or kasittelija_id = :kayttaja-id) and
+  not kasitelty and exists(
   select from viesti where viesti.viestiketju_id = viestiketju.id and not exists(
     select from viesti_reader where viesti_reader.viesti_id = viesti.id and
                                     viesti_reader.reader_id = :kayttaja-id
