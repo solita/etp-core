@@ -10,6 +10,8 @@
             :contenttype     (schema/maybe schema/Str)
             :url             (schema/maybe common-schema/Url)})
 
+(def Liite+Deleted (assoc Liite :deleted schema/Bool))
+
 (def LiiteLinkAdd {:nimi schema/Str
                    :url common-schema/Url})
 
