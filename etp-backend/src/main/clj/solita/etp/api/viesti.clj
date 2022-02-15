@@ -6,7 +6,8 @@
             [solita.etp.service.viesti :as viesti-service]
             [schema.core :as schema]
             [clojure.java.io :as io]
-            [solita.etp.schema.liite :as liite-schema]))
+            [solita.etp.schema.liite :as liite-schema]
+            [solita.common.maybe :as maybe]))
 
 (defn ketju-404 [id] (api-response/msg-404 "ketju" id))
 
@@ -57,7 +58,7 @@
                                   404 {:body schema/Str}}
                      :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                                    (api-response/get-response
-                                     (viesti-service/find-ketju! db whoami id)
+                                     (viesti-service/read-ketju! db whoami id)
                                      (ketju-404 id)))}
        :put         {:summary    "Päivitä viestiketjun tiedot"
                      :access     viesti-service/kasittelija?
@@ -87,9 +88,9 @@
               :parameters {:path {:id common-schema/Key}}
               :responses  {200 {:body [liite-schema/Liite]}
                            404 {:body schema/Str}}
-              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
+              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                             (api-response/get-response
-                              (viesti-service/find-liitteet db id)
+                              (viesti-service/find-liitteet db whoami id)
                               (ketju-404 id)))}}]
       ["/files"
        {:conflicting true
@@ -128,10 +129,10 @@
                                            :liite-id common-schema/Key}}
                        :responses  {200 {:body nil}
                                     404 {:body schema/Str}}
-                       :handler    (fn [{{{:keys [id liite-id]} :path} :parameters :keys [db]}]
+                       :handler    (fn [{{{:keys [id liite-id]} :path} :parameters :keys [db whoami]}]
                                      (api-response/ok|not-found
-                                       (viesti-service/delete-liite! db liite-id)
-                                       (api-response/msg-404 "liite " id liite-id)))}}]
+                                       (viesti-service/delete-liite! db whoami liite-id)
+                                       (api-response/msg-404 "liite" id liite-id)))}}]
        ["/:filename"
         {:conflicting true
          :get         {:summary    "Hae viestiketjun liitteen sisältö."
@@ -141,13 +142,13 @@
                        :responses  {200 {:body nil}
                                     404 {:body schema/Str}}
                        :handler    (fn [{{{:keys [id liite-id filename]} :path} :parameters
-                                         :keys                                  [db aws-s3-client]}]
-                                     (let [{:keys [tempfile contenttype] :as file}
-                                           (viesti-service/find-liite db aws-s3-client id liite-id)]
-                                       (if (= (:filename file) filename)
+                                         :keys                                  [db whoami aws-s3-client]}]
+                                     (let [{:keys [content contenttype] :as file}
+                                           (viesti-service/find-liite db whoami aws-s3-client id liite-id)]
+                                       (if (or (= (:filename file) filename) (nil? file))
                                          (api-response/file-response
-                                           (io/input-stream tempfile) filename contenttype false
-                                           (api-response/msg-404 "liite " id liite-id))
+                                           (maybe/map* io/input-stream content) filename contenttype false
+                                           (api-response/msg-404 "liite" id liite-id))
                                          (api-response/bad-request "Filename is invalid."))))}}]]]]]
    ["/vastaanottajaryhmat"
     {:get {:summary   "Hae kaikki vastaanottajaryhmat."

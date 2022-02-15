@@ -100,23 +100,23 @@
       (-> ketju :viestit first :from :id (= (:id whoami)))
       (= (builtin-vastaanottajaryhma-id whoami) (:vastaanottajaryhma-id ketju))))
 
-(defn- assert-visibility [whoami ketju]
+(defn- assert-visibility! [whoami ketju]
   (if (visible-for? whoami ketju) ketju
     (exception/throw-forbidden!
       (str "Kayttaja " (:id whoami)
            " is not allowed to see viestiketju " (:id ketju)))))
 
-(defn find-ketju [db whoami id]
+(defn find-ketju! [db whoami id]
   (let [kayttajat (find-kayttajat db)]
     (->> (viesti-db/select-viestiketju db {:id id})
          (map (comp (partial assoc-join-viestit db whoami)
                  (partial assoc-join-vastaanottajat kayttajat)))
-         (map #(assert-visibility whoami %))
+         (map #(assert-visibility! whoami %))
          first)))
 
-(defn find-ketju! [db whoami id]
+(defn read-ketju! [db whoami id]
   (viesti-db/read-ketju! db {:viestiketju-id id})
-  (find-ketju db whoami id))
+  (find-ketju! db whoami id))
 
 (defn- query-for-other-users [whoami]
   {:kayttaja-id           (:id whoami)
@@ -153,8 +153,9 @@
       first))
 
 (defn add-viesti! [db whoami id body]
-  (when (find-ketju db whoami id)
-    (jdbc/with-db-transaction [tx db]
+  (when (find-ketju! db whoami id)
+    (jdbc/with-db-transaction
+      [tx db]
       (insert-viesti! tx id body)
       (update-ketju! tx id {:kasitelty false})
       (viesti-db/read-ketju! tx {:viestiketju-id id}))))
@@ -176,7 +177,8 @@
 
 ;; Vietiketjun liitteet
 
-(defn find-liitteet [db viestiketju-id]
+(defn find-liitteet [db whoami viestiketju-id]
+  (find-ketju! db whoami viestiketju-id)
   (viesti-db/select-liite-by-viestiketju-id db {:viestiketju-id viestiketju-id}))
 
 (defn file-path [viestiketju-id liite-id]
@@ -188,24 +190,35 @@
       first
       :id))
 
-(defn add-liitteet-from-files! [db aws-s3-client valvonta-id liitteet]
+(defn add-liitteet-from-files! [db aws-s3-client viestiketju-id liitteet]
   (doseq [liite liitteet]
     (let [liite-id (insert-liite! db (-> liite
                                          liite-service/temp-file->liite
-                                         (assoc :viestiketju-id valvonta-id)))]
+                                         (assoc :viestiketju-id viestiketju-id)))]
       (file-service/upsert-file-from-file
         aws-s3-client
-        (file-path valvonta-id liite-id)
+        (file-path viestiketju-id liite-id)
         (:tempfile liite)))))
 
 (defn add-liite-from-link! [db viestiketju-id liite]
   (insert-liite! db (assoc liite :contenttype "text/uri-list"
                                  :viestiketju-id viestiketju-id)))
 
-(defn delete-liite! [db liite-id]
+(defn assert-owner! [db whoami liite-id error-msg]
+  (if-let [owner (first (viesti-db/select-owner db {:id liite-id}))]
+    (when-not (= (:modifiedby-id owner) (:id whoami))
+      (exception/throw-forbidden!
+        (str error-msg " User: " (:id whoami) " is not the owner of liite: " liite-id)))))
+
+(defn delete-liite! [db whoami liite-id]
+  (when-not (rooli-service/paakayttaja? whoami)
+    (assert-owner! db whoami liite-id "Delete liite is not allowed."))
   (viesti-db/delete-liite! db {:id liite-id}))
 
-(defn find-liite [db aws-s3-client valvonta-id liite-id]
+(defn find-liite [db whoami aws-s3-client viestiketju-id liite-id]
+  (find-ketju! db whoami viestiketju-id)
   (when-let [liite (first (viesti-db/select-liite db {:id liite-id}))]
-    (assoc liite :tempfile
-                 (file-service/find-file aws-s3-client (file-path valvonta-id liite-id)))))
+    (when (or (not (:deleted liite)) (rooli-service/paakayttaja? whoami))
+      (assoc liite :content
+                   (file-service/find-file
+                     aws-s3-client (file-path viestiketju-id liite-id))))))

@@ -229,12 +229,13 @@ delete from vo_virhe where toimenpide_id = :toimenpide-id;
 
 -- name: select-toimenpide-liitteet
 select distinct on (l.id) l.id, a.modifytime createtime,
-  fullname(k) "author-fullname", l.nimi, l.contenttype, l.url
+  fullname(k) "author-fullname",
+  l.nimi, l.contenttype, l.url, l.deleted
 from liite l
      inner join audit.liite a on l.id = a.id
      inner join kayttaja k on a.modifiedby_id = k.id
 where l.vo_toimenpide_id = :toimenpide-id and l.deleted = false
-order by l.id, a.modifytime asc, a.event_id desc
+order by l.id, a.modifytime asc, a.event_id asc
 
 -- name: select-valvonta-notes
 select distinct on (note.id) note.id,
