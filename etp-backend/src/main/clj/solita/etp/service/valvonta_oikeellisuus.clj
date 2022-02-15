@@ -97,7 +97,8 @@
 
 (defn- assert-read-access! [whoami laatija-id]
   (when-not (or (= laatija-id (:id whoami))
-                (rooli-service/paakayttaja? whoami))
+                (rooli-service/paakayttaja? whoami)
+                (rooli-service/laskuttaja? whoami))
     (exception/throw-forbidden!
       (str "User " (:id whoami)
            " is not allowed to access laatija: "
