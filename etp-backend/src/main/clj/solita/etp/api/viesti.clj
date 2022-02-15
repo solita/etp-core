@@ -86,7 +86,7 @@
       [""
        {:get {:summary    "Hae viestiketjun liitteet."
               :parameters {:path {:id common-schema/Key}}
-              :responses  {200 {:body [liite-schema/Liite+Deleted]}
+              :responses  {200 {:body [liite-schema/Liite]}
                            404 {:body schema/Str}}
               :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
                             (api-response/get-response
