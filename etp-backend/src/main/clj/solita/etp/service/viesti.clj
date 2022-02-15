@@ -158,8 +158,7 @@
       [tx db]
       (insert-viesti! tx id body)
       (update-ketju! tx id {:kasitelty false})
-      (viesti-db/read-ketju! tx {:viestiketju-id id})
-      1)))
+      (viesti-db/read-ketju! tx {:viestiketju-id id}))))
 
 (defn find-vastaanottajaryhmat [db]
   (luokittelu-service/find-vastaanottajaryhmat db))
