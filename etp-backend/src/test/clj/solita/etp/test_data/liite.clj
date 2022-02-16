@@ -23,7 +23,6 @@
        (range n)))
 
 (defn insert-files! [file-adds laatija-id energiatodistus-id]
-  (valvonta-service/update-valvonta! ts/*db* energiatodistus-id true)
   (liite-service/add-liitteet-from-files! (ts/db-user laatija-id)
                                           ts/*aws-s3-client*
                                           {:id laatija-id :rooli 0}
@@ -31,7 +30,6 @@
                                           file-adds))
 
 (defn insert-links! [link-adds laatija-id energiatodistus-id]
-  (valvonta-service/update-valvonta! ts/*db* energiatodistus-id true)
   (mapv #(liite-service/add-liite-from-link! (ts/db-user laatija-id)
                                              {:id laatija-id :rooli 0}
                                              energiatodistus-id

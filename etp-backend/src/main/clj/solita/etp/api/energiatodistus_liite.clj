@@ -15,7 +15,7 @@
    ["/files"
     {:conflicting true
      :post {:summary    "Energiatodistuksen liitteiden lisäys tiedostoista."
-            :access     liite-access
+            :access     rooli-service/paakayttaja?
             :parameters {:path {:id common-schema/Key}
                          :multipart {:files (schema/conditional
                                               vector? [reitit-schema/TempFilePart]
@@ -39,7 +39,7 @@
    ["/link"
     {:conflicting true
      :post {:summary    "Liite linkin lisäys energiatodistukseen."
-            :access     liite-access
+            :access     rooli-service/paakayttaja?
             :parameters {:path {:id common-schema/Key}
                          :body liite-schema/LiiteLinkAdd}
             :responses  {201 {:body nil}
@@ -67,7 +67,7 @@
    ["/:liite-id"
     {:conflicting true
      :delete {:summary    "Poista liite energiatodistuksesta."
-              :access     liite-access
+              :access     rooli-service/paakayttaja?
               :parameters {:path {:id common-schema/Key
                                   :liite-id common-schema/Key}}
               :responses  {200 {:body nil}
