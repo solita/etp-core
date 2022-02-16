@@ -1,22 +1,24 @@
 -- name: insert-yritys<!
-INSERT INTO yritys (ytunnus, nimi, verkkolaskuoperaattori, verkkolaskuosoite, laskutuskieli, jakeluosoite, vastaanottajan_tarkenne, postinumero, postitoimipaikka, maa)
-VALUES (:ytunnus, :nimi, :verkkolaskuoperaattori, :verkkolaskuosoite, :laskutuskieli, :jakeluosoite, :vastaanottajan-tarkenne, :postinumero, :postitoimipaikka, :maa)
+INSERT INTO yritys (ytunnus, nimi, verkkolaskuoperaattori, verkkolaskuosoite, laskutuskieli, jakeluosoite, vastaanottajan_tarkenne, postinumero, postitoimipaikka, maa, type_id)
+VALUES (:ytunnus, :nimi, :verkkolaskuoperaattori, :verkkolaskuosoite, :laskutuskieli, :jakeluosoite, :vastaanottajan-tarkenne, :postinumero, :postitoimipaikka, :maa, :type-id)
 RETURNING id
 
 -- name: update-yritys!
 update yritys set nimi = :nimi, ytunnus = :ytunnus, verkkolaskuoperaattori = :verkkolaskuoperaattori, verkkolaskuosoite = :verkkolaskuosoite, laskutuskieli = :laskutuskieli,
-       jakeluosoite = :jakeluosoite, vastaanottajan_tarkenne = :vastaanottajan-tarkenne, postinumero = :postinumero, postitoimipaikka = :postitoimipaikka, maa = :maa
+       jakeluosoite = :jakeluosoite, vastaanottajan_tarkenne = :vastaanottajan-tarkenne,
+       postinumero = :postinumero, postitoimipaikka = :postitoimipaikka, maa = :maa,
+       type_id = :type-id
 where id = :id
 
 -- name: select-yritys
 select id, ytunnus, nimi, verkkolaskuoperaattori, verkkolaskuosoite, laskutuskieli, deleted,
-       jakeluosoite, vastaanottajan_tarkenne as "vastaanottajan-tarkenne", postinumero, postitoimipaikka, maa
+       jakeluosoite, vastaanottajan_tarkenne as "vastaanottajan-tarkenne", postinumero, postitoimipaikka, maa, type_id
 from yritys
 where id = :id
 
 -- name: select-all-yritykset
 select id, ytunnus, nimi, verkkolaskuoperaattori, verkkolaskuosoite, laskutuskieli, deleted,
-       jakeluosoite, vastaanottajan_tarkenne as "vastaanottajan-tarkenne", postinumero, postitoimipaikka, maa
+       jakeluosoite, vastaanottajan_tarkenne as "vastaanottajan-tarkenne", postinumero, postitoimipaikka, maa, type_id
 from yritys
 
 --name: select-all-laskutuskielet
@@ -24,6 +26,9 @@ SELECT id, label_fi as "label-fi", label_sv as "label-sv", valid FROM laskutuski
 
 -- name: select-all-verkkolaskuoperaattorit
 SELECT id, valittajatunnus, nimi FROM verkkolaskuoperaattori order by nimi collate "fi-FI-x-icu", valittajatunnus;
+
+--name: select-all-yritystyypit
+SELECT id, label_fi as "label-fi", label_sv as "label-sv", valid FROM yritystype;
 
 -- name: select-laatijat
 with audit as (

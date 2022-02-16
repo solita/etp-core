@@ -94,4 +94,9 @@
     {:get {:summary    "Hae verkkolaskuoperaattorit -luokittelu"
            :responses  {200 {:body [yritys-schema/Verkkolaskuoperaattori]}}
            :handler    (fn [{:keys [db]}]
-                         (r/response (yritys-service/find-all-verkkolaskuoperaattorit db)))}}]])
+                         (r/response (yritys-service/find-all-verkkolaskuoperaattorit db)))}}]
+   ["/yritystyypit"
+    {:get {:summary "Hae yritystyypit -luokittelu"
+           :responses {200 {:body [common-schema/Luokittelu]}}
+           :handler (fn [{:keys [db]}]
+                      (r/response (yritys-service/find-all-yritystyypit db)))}}]])

@@ -54,10 +54,16 @@
 (defn mark-as-laskutettu! [db laskutus]
   (laskutus-db/mark-as-laskutettu! db {:ids (mapv :energiatodistus-id laskutus)}))
 
+
+(defn asiakasluokituskoodi [type-id]
+  (case type-id
+    1 "03"
+    2 "01"))
+
 (def fields-for-asiakastieto
   #{:laskutus-asiakastunnus :laatija-id :nimi :henkilotunnus :laskutuskieli
     :yritys-id :ytunnus :valittajatunnus :verkkolaskuosoite :jakeluosoite
-    :vastaanottajan-tarkenne :postinumero :postitoimipaikka :maa})
+    :vastaanottajan-tarkenne :postinumero :postitoimipaikka :maa :type-id})
 
 (defn asiakastiedot [laskutus]
   (->> laskutus
@@ -73,12 +79,15 @@
 (defn asiakastieto-xml
   [{:keys [laskutus-asiakastunnus nimi henkilotunnus laskutuskieli ytunnus
            valittajatunnus verkkolaskuosoite jakeluosoite
-           vastaanottajan-tarkenne postinumero postitoimipaikka maa yritys-id]}]
+           vastaanottajan-tarkenne postinumero postitoimipaikka maa yritys-id type-id]}]
   (let [verkkolaskutus? (and valittajatunnus verkkolaskuosoite)
-        long-jakeluosoite? (> (count jakeluosoite) 35)]
+        long-jakeluosoite? (> (count jakeluosoite) 35)
+        luokituskoodi (if yritys-id
+                        (asiakasluokituskoodi type-id)
+                        "02")]
     (->> [["AsiakasTunnus" laskutus-asiakastunnus]
           ["TiliryhmaAsiakasKoodi" "Z700"]
-          ["AsiakasluokitusKoodi" (if yritys-id "03" "02")]
+          ["AsiakasluokitusKoodi" luokituskoodi]
           ["MaaKoodi" maa]
           ["Nimi1Nimi" (safe-subs nimi 0 35)]
           ["Nimi2Nimi" (safe-subs vastaanottajan-tarkenne 0 35)]
@@ -124,7 +133,7 @@
            ["JakelutieKoodi" "01"]
            ["SektoriKoodi" "01"]
            ["ValuuttaKoodi" "EUR"]
-           ["AsiakasTiliointiryhmaKoodi" (if yritys-id "03" "02")]
+           ["AsiakasTiliointiryhmaKoodi" luokituskoodi]
            ["MaksuehtoavainKoodi" "ZM21"]]
           ["AsiakasSanomaPerustietoTyyppi"
            ["YleinenLahettajaInformaatioTyyppi"

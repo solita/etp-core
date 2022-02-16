@@ -3,6 +3,7 @@ SELECT e.id energiatodistus_id, e.allekirjoitusaika, e.laskuriviviite,
        k.id laatija_id, k.etunimi || ' ' || k.sukunimi laatija_nimi,
        k.henkilotunnus,
        y.id yritys_id, y.ytunnus, v.valittajatunnus, y.verkkolaskuosoite,
+       y.type_id,
 
        -- Fields depending on who should be invoiced.
        CASE WHEN e.laskutettava_yritys_id IS NULL THEN k.etunimi ||

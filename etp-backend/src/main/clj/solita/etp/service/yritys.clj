@@ -47,6 +47,9 @@
 (defn find-all-verkkolaskuoperaattorit [db]
   (yritys-db/select-all-verkkolaskuoperaattorit db))
 
+(defn find-all-yritystyypit [db]
+  (yritys-db/select-all-yritystyypit db))
+
 (defn laatija-in-yritys? [db laatija-id yritys-id]
   (laatija-in-yritys-laatijat? laatija-id (find-laatijat db yritys-id)))
 
