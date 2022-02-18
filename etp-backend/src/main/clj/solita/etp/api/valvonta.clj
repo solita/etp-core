@@ -16,27 +16,4 @@
                                                    :passivoitu schema/Bool)]}}
                     :access    (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                     :handler   (fn [{:keys [db]}]
-                                 (r/response (valvonta-service/find-valvojat db)))}}]
-    ["/:id"
-     {:conflicting true
-      :get         {:summary    "Hae energiatodistuksen valvonnan tila"
-                    :parameters {:path {:id common-schema/Key}}
-                    :responses  {200 {:body valvonta-schema/Valvonta}
-                                 404 {:body schema/Str}}
-                    :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
-                    :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
-                                  (api-response/get-response
-                                    (valvonta-service/find-valvonta db id)
-                                    (str "Energiatodistus " id " does not exists.")))}
-
-      :put         {:summary    "Päivitä energiatodistuksen valvonnan tila"
-                    :parameters {:path {:id common-schema/Key}
-                                 :body valvonta-schema/Valvonta}
-                    :access     rooli-service/paakayttaja?
-                    :responses  {200 {:body nil}
-                                 404 {:body schema/Str}}
-                    :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db parameters]}]
-                                  (api-response/ok|not-found
-                                    (valvonta-service/update-valvonta!
-                                      db id (-> parameters :body :active))
-                                    (str "Energiatodistus " id " does not exists.")))}}]]])
+                                 (r/response (valvonta-service/find-valvojat db)))}}]]])

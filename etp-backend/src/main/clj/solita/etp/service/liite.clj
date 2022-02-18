@@ -7,9 +7,7 @@
             [solita.etp.exception :as exception]
             [schema.coerce :as coerce]
             [clojure.java.jdbc :as jdbc]
-            [clojure.set :as set]
-            [solita.etp.service.valvonta :as valvonta-service]
-            [solita.etp.service.rooli :as rooli-service]))
+            [clojure.set :as set]))
 
 ; *** Require sql functions ***
 (db/require-queries 'liite)
@@ -29,20 +27,8 @@
   (file-service/upsert-file-from-file aws-s3-client key file))
 
 (defn assert-permission! [db whoami energiatodistus-id]
-  (when-not (energiatodistus-service/find-energiatodistus db
-                                                          whoami
-                                                          energiatodistus-id)
-    (exception/throw-forbidden!)))
-
-(defn assert-liite-insert-permission! [db whoami energiatodistus-id]
-  (assert-permission! db whoami energiatodistus-id)
-  (when-not (:active (valvonta-service/find-valvonta db energiatodistus-id))
-    (exception/throw-forbidden!)))
-
-(defn assert-liite-delete-permission! [db whoami energiatodistus-id]
-  (assert-permission! db whoami energiatodistus-id)
-  (when-not (or (:active (valvonta-service/find-valvonta db energiatodistus-id))
-                (rooli-service/paakayttaja? whoami))
+  (when-not (energiatodistus-service/find-energiatodistus
+              db whoami energiatodistus-id)
     (exception/throw-forbidden!)))
 
 (defn temp-file->liite [temp-file]
@@ -62,7 +48,7 @@
 
 (defn add-liitteet-from-files! [db aws-s3-client whoami energiatodistus-id files]
   (jdbc/with-db-transaction [db db]
-    (assert-liite-insert-permission! db whoami energiatodistus-id)
+    (assert-permission! db whoami energiatodistus-id)
     (mapv #(add-liite-from-file!
             db aws-s3-client energiatodistus-id %)
           files)))
@@ -74,7 +60,7 @@
         (assoc :contenttype "text/uri-list")
         (insert-liite! db)))
   ([db whoami energiatodistus-id liite]
-   (assert-liite-insert-permission! db whoami energiatodistus-id)
+   (assert-permission! db whoami energiatodistus-id)
    (add-liite-from-link! db energiatodistus-id liite)))
 
 (defn find-energiatodistus-liitteet [db whoami energiatodistus-id]
@@ -97,5 +83,5 @@
                                       (liite-db/select-liite db)
                                       first
                                       :energiatodistus-id)]
-      (assert-liite-delete-permission! db whoami energiatodistus-id)
+      (assert-permission! db whoami energiatodistus-id)
       (delete-liite! db liite-id))))

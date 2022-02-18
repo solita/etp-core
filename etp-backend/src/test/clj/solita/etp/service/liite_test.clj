@@ -7,7 +7,7 @@
             [solita.etp.test-data.liite :as liite-test-data]
             [solita.etp.service.liite :as service]
             [solita.etp.service.file :as file-service]
-            [solita.etp.service.valvonta :as valvonta-service]))
+            [solita.etp.whoami :as test-whoami]))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -88,16 +88,23 @@
                         ts/*aws-s3-client*
                         id)))))))
 
-(t/deftest delete-liite-not-in-valvonta-test
+(t/deftest find-liite-other-user
   (let [{:keys [laatijat energiatodistukset
                 file-liitteet link-liitteet]} (test-data-set)
         laatija-id (-> laatijat keys sort first)
-        energiatodistus-id (-> energiatodistukset keys sort first)
-        liitteet (merge file-liitteet link-liitteet)]
-    (valvonta-service/update-valvonta! ts/*db* energiatodistus-id false)
+        [energiatodistus-id _] (-> energiatodistukset first)
+        liitteet (merge file-liitteet link-liitteet)
+        [other-laatija-id _] (laatija-test-data/generate-and-insert!)]
+
+    (t/is (= (etp-test/catch-ex-data
+               #(service/find-energiatodistus-liitteet
+                  (ts/db-user other-laatija-id) (test-whoami/laatija other-laatija-id)
+                  energiatodistus-id))
+             {:type :forbidden}))
+
     (doseq [id (keys liitteet)]
       (t/is (= (etp-test/catch-ex-data
-                #(service/delete-liite! (ts/db-user laatija-id)
-                                        {:id laatija-id :rooli 0}
-                                        id))
+                 #(service/find-energiatodistus-liite-content
+                    (ts/db-user other-laatija-id) (test-whoami/laatija other-laatija-id)
+                    ts/*aws-s3-client* id))
                {:type :forbidden})))))
