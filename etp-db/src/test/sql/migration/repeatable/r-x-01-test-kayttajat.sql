@@ -1,7 +1,7 @@
 INSERT INTO kayttaja (etunimi, sukunimi, email, puhelin, rooli_id, henkilotunnus) VALUES
 ('Pauli', 'Pätevyyden toteaja', 'patevyydentoteaja@solita.fi', '0451234567', 1, '010280-952L'),
 ('Liisa', 'Specimen-Potex', 'laatija@solita.fi', '0451234567', 0, '010469-999W'),
-('Kalevi', 'Specimen-Potex', 'kumppani@solita.fi', '0451234567', 0, '010469-998V'),
+('Kalevi', 'Specimen-Potex', 'kumppani@solita.fi', '0451234567', 0, '141199-999N'),
 ('Harri', 'Specimen-Potex', 'harri.lindberg@solita.fi', '0451234567', 0, '010675-9981'),
 ('Aleksi', 'Kallan', 'aleksi.kallan@solita.fi', '0451234567', 0, '261298-998X'),
 ('Ulla', 'Specimen-Pirix', 'ulla.laapotti@ara.fi', '0451234567', 0, '040265-9985'),
