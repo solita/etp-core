@@ -10,7 +10,8 @@
             [solita.etp.test-data.energiatodistus :as energiatodistus-test-data]
             [solita.etp.service.energiatodistus-tila :as energiatodistus-tila]
             [solita.etp.service.energiatodistus :as service]
-            [solita.etp.whoami :as test-whoami]))
+            [solita.etp.whoami :as test-whoami]
+            [solita.common.map :as map]))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -104,6 +105,25 @@
               :value    0M :max 999999M, :min 0.1M,
               :property "lahtotiedot.rakennusvaippa.kylmasillat-UA"
               :message  "Property: lahtotiedot.rakennusvaippa.kylmasillat-UA has an invalid value: 0"}))))
+
+(t/deftest validation-test-invalid-sisainen-kuorma
+  (let [{:keys [laatijat]} (test-data-set)
+        laatija-id (-> laatijat keys sort first)
+        energiatodistus (energiatodistus-test-data/generate-add 2018 false)]
+    (t/is (map/submap?
+            {:type         :invalid-sisainen-kuorma
+             :valid-kuorma {:henkilot {:kayttoaste 0.6M, :lampokuorma 2M},
+                            :kuluttajalaitteet {:kayttoaste 0.6M, :lampokuorma 3M},
+                            :valaistus {:kayttoaste 0.1M}}}
+            (etp-test/catch-ex-data
+              #(service/add-energiatodistus!
+                 (ts/db-user laatija-id)
+                 (test-whoami/laatija laatija-id)
+                 2018
+                 (-> energiatodistus
+                     (assoc-in [:perustiedot :kayttotarkoitus] "YAT")
+                     (assoc-in [:lahtotiedot :sis-kuorma :henkilot]
+                               {:kayttoaste 9999 :lampokuorma 9999}))))))))
 
 (t/deftest update-energiatodistus-test
   (let [{:keys [laatijat energiatodistukset]} (test-data-set)
