@@ -9,7 +9,8 @@
             [solita.etp.test-data.laatija :as laatija-test-data]
             [solita.etp.test-data.energiatodistus :as energiatodistus-test-data]
             [solita.etp.service.energiatodistus-tila :as energiatodistus-tila]
-            [solita.etp.service.energiatodistus :as service]))
+            [solita.etp.service.energiatodistus :as service]
+            [solita.etp.whoami :as test-whoami]))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -74,21 +75,35 @@
       (t/is (add-eq-found? update
                            (service/find-energiatodistus ts/*db* id))))))
 
-(t/deftest validation-test
+(t/deftest validation-test-invalid-value
   (let [{:keys [laatijat]} (test-data-set)
         laatija-id (-> laatijat keys sort first)
-        energiatodistus (-> (energiatodistus-test-data/generate-adds 1
-                                                                     2018
-                                                                     false)
-                            first
-                            (assoc-in [:lahtotiedot :ikkunat :etela :U] 99M))]
-    (t/is (= (etp-test/catch-ex-data
-              #(service/add-energiatodistus! (ts/db-user laatija-id)
-                                             {:id laatija-id}
-                                             2018
-                                             energiatodistus))
-             {:type :invalid-value
-              :message "Property: lahtotiedot.ikkunat.etela.U has an invalid value: 99"}))))
+        energiatodistus (energiatodistus-test-data/generate-add 2018 false)
+        add-energiatodistus
+        (fn [path value]
+          (etp-test/catch-ex-data
+            #(service/add-energiatodistus!
+               (ts/db-user laatija-id)
+               (test-whoami/laatija laatija-id)
+               2018
+               (assoc-in energiatodistus path value))))]
+    (t/is (= (add-energiatodistus [:lahtotiedot :ikkunat :etela :U] 99M)
+             {:type     :invalid-value
+              :value    99M :max 6.5M, :min 0.4M,
+              :property "lahtotiedot.ikkunat.etela.U"
+              :message  "Property: lahtotiedot.ikkunat.etela.U has an invalid value: 99"}))
+
+    (t/is (= (add-energiatodistus [:lahtotiedot :rakennusvaippa :alapohja :U] 99M)
+             {:type     :invalid-value
+              :value    99M :max 4M, :min 0.03M,
+              :property "lahtotiedot.rakennusvaippa.alapohja.U"
+              :message  "Property: lahtotiedot.rakennusvaippa.alapohja.U has an invalid value: 99"}))
+
+    (t/is (= (add-energiatodistus [:lahtotiedot :rakennusvaippa :kylmasillat-UA] 0M)
+             {:type     :invalid-value
+              :value    0M :max 999999M, :min 0.1M,
+              :property "lahtotiedot.rakennusvaippa.kylmasillat-UA"
+              :message  "Property: lahtotiedot.rakennusvaippa.kylmasillat-UA has an invalid value: 0"}))))
 
 (t/deftest update-energiatodistus-test
   (let [{:keys [laatijat energiatodistukset]} (test-data-set)
@@ -115,6 +130,8 @@
                                                 id
                                                 update-without-bypass))
              {:type :invalid-value
+              :value 99M :max 6.5M, :min 0.4M,
+              :property "lahtotiedot.ikkunat.etela.U"
               :message "Property: lahtotiedot.ikkunat.etela.U has an invalid value: 99"}))
     (t/is (not (add-eq-found? update-without-bypass
                               (service/find-energiatodistus ts/*db* id))))

@@ -59,15 +59,15 @@
 (defn generate-adds-with-zeros [n versio]
   (map #(assoc-in %
                   [:lahtotiedot :rakennusvaippa]
-                  {:alapohja {:ala 0 :U 0}
-                   :ikkunat {:ala 0 :U 0}
-                   :ylapohja {:ala 0 :U 0}
+                  {:alapohja {:ala 0 :U 0.03}
+                   :ikkunat {:ala 0 :U 0.4}
+                   :ylapohja {:ala 0 :U 0.03}
                    :ilmatilavuus 1M
                    :lampokapasiteetti 1M
                    :ilmanvuotoluku 1M
-                   :ulkoseinat {:ala 1M :U 0}
-                   :kylmasillat-UA 0
-                   :ulkoovet {:ala 0 :U 0}})
+                   :ulkoseinat {:ala 1M :U 0.05}
+                   :kylmasillat-UA 0.1
+                   :ulkoovet {:ala 0 :U 0.2}})
        (generate-adds n versio true)))
 
 (defn insert! [energiatodistus-adds laatija-id]

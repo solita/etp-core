@@ -190,26 +190,40 @@
       (t/is (= id found-id)))))
 
 (t/deftest search-by-id-zero-ua-test
-  (let [{:keys [laatijat energiatodistukset]} (test-data-set)
+  (let [paakayttaja-id (kayttaja-test-data/insert-paakayttaja!)
+        [laatija-id _] (laatija-test-data/generate-and-insert!)
+        [energiatodistus-id energiatodistus] (energiatodistus-test-data/generate-and-insert! 2018 false laatija-id)
+        whoami-laatija (test-whoami/laatija laatija-id)]
 
-        ;; Third laatija has inserted third todistus with zeros
-        id (-> energiatodistukset keys sort (nth 2))
-        laatija-id (-> laatijat keys sort (nth 2))
-        add (-> energiatodistukset (get id) (assoc :id id))
-        whoami {:rooli 0 :id laatija-id}]
-    (t/is (empty? (search whoami
+    (energiatodistus-service/update-energiatodistus!
+      (ts/db-user paakayttaja-id) (test-whoami/paakayttaja paakayttaja-id)
+      energiatodistus-id (assoc energiatodistus :bypass-validation-limits true))
+
+    (energiatodistus-service/update-energiatodistus!
+      (ts/db-user laatija-id) (test-whoami/laatija laatija-id)
+      energiatodistus-id
+      (assoc-in energiatodistus [:lahtotiedot :rakennusvaippa]
+                {:alapohja          {:ala 0 :U 0}
+                 :ikkunat           {:ala 0 :U 0}
+                 :ylapohja          {:ala 0 :U 0}
+                 :ulkoseinat        {:ala 1M :U 0}
+                 :kylmasillat-UA    0
+                 :ulkoovet          {:ala 0 :U 0}}))
+
+    (t/is (empty? (search whoami-laatija
                           [[["=" "energiatodistus.lahtotiedot.rakennusvaippa.kylmasillat-osuus-lampohaviosta" 123]]]
                           nil
                           nil
                           nil)))
-    (t/is (-> (search whoami
+
+    (t/is (-> (search whoami-laatija
                       [[["nil?" "energiatodistus.lahtotiedot.rakennusvaippa.kylmasillat-osuus-lampohaviosta"]]]
                       nil
                       nil
                       nil)
               first
               :perustiedot
-              (xmap/submap? (:perustiedot add))))))
+              (xmap/submap? (:perustiedot energiatodistus))))))
 
 
 (t/deftest search-by-nimi-test
