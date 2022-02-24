@@ -179,7 +179,7 @@
     "sis-kuorma": {
       "henkilot": {
         "kayttoaste": 0.65,
-        "lampokuorma": 99999999999
+        "lampokuorma": 9999999999
       },
       "kuluttajalaitteet": {
         "kayttoaste": 0.65,

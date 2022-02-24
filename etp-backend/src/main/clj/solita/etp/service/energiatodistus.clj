@@ -152,27 +152,29 @@
       (assoc-in-e-luokka
         [:tulokset :e-luokka] db versio)))
 
-(defn check-error! [column-name value {:keys [min max]}]
-  (when (and value (or (< value min) (> value max)))
-    (exception/throw-ex-info!
-     :invalid-value
-     (str "Property: " (to-property-name column-name)
-          " has an invalid value: " value))))
-
-(defn check-warning [column-name value {:keys [min max]}]
+(defn- check-value [column-name value {:keys [min max]}]
   (when (and value (or (< value min) (> value max)))
     {:property (to-property-name column-name)
      :value value
      :min min
      :max max}))
 
+(defn check-error! [column-name value interval]
+  (if-let [error (check-value column-name value interval)]
+    (exception/throw-ex-info!
+      (assoc error
+        :type :invalid-value
+        :message
+        (str "Property: " (to-property-name column-name)
+             " has an invalid value: " value)))))
+
 (defn validate-db-row! [db energiatodistus versio]
   (->> (find-numeric-column-validations db versio)
        (keep (fn [{:keys [column-name] :as validation}]
-               (let [value ((-> column-name db/kebab-case keyword)
+               (let [value ((-> column-name str/lower-case db/kebab-case keyword)
                             energiatodistus)]
                  (check-error! column-name value (:error validation))
-                 (check-warning column-name value (:warning validation)))))
+                 (check-value column-name value (:warning validation)))))
        doall))
 
 (defn flat->tree [energiatodistus]
