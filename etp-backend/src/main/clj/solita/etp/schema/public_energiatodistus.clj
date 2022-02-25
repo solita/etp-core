@@ -28,22 +28,31 @@
   (select-keys energiatodistus-schema/Tulokset
                [:kaytettavat-energiamuodot]))
 
-(defn energiatodistus-versio [versio]
+(def EnergiatodistusBase2018
+  {:perustiedot Perustiedot
+   :lahtotiedot Lahtotiedot
+   :tulokset    Tulokset})
+
+(def EnergiatodistusBase2013
+  (-> EnergiatodistusBase2018
+      (assoc-in [:tulokset :kaytettavat-energiamuodot :muu]
+                [(energiatodistus-schema/optional-properties
+                  energiatodistus-schema/UserDefinedEnergiamuoto)])))
+
+(defn energiatodistus-versio [versio base-schema]
   (-> (energiatodistus-schema/energiatodistus-versio
        versio
-       (energiatodistus-schema/optional-properties
-        {:perustiedot Perustiedot
-         :lahtotiedot Lahtotiedot
-         :tulokset    Tulokset}))
+       (energiatodistus-schema/optional-properties base-schema))
       (dissoc :laatija-fullname
               :laatija-id
               :laskutusaika)))
 
 (def Energiatodistus2013
-  (-> (energiatodistus-versio 2013)
+  (-> (energiatodistus-versio 2013 EnergiatodistusBase2013)
       energiatodistus-schema/dissoc-not-in-2013))
 
-(def Energiatodistus2018 (energiatodistus-versio 2018))
+(def Energiatodistus2018
+  (energiatodistus-versio 2018 EnergiatodistusBase2018))
 
 (def Energiatodistus
   (schema/conditional
