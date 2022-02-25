@@ -15,7 +15,8 @@
                :sahko 0
                :kaukojaahdytys nil
                :kaukolampo 25000
-               :uusiutuva-polttoaine 5000}}
+               :uusiutuva-polttoaine 5000
+               :muu []}}
    :tila-id 2
    :perustiedot {:havainnointikaynti (java.time.LocalDate/now)
                  :rakennustunnus "1035150826"
@@ -52,6 +53,7 @@
 (def example-2018
   (-> example-2013
       (assoc-in [:perustiedot :laatimisvaihe] 1)
+      (update-in [:tulokset :kaytettavat-energiamuodot] (fn [m] (dissoc m :muu)))
       (assoc :versio 2018)))
 
 (t/deftest Energiatodistus-test
