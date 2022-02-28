@@ -204,7 +204,15 @@
       (valvonta-oikeellisuus-db/update-default-valvoja!
         db {:whoami-id (:id whoami) :id id}))))
 
+(defn- assert-add-toimenpide-for-laatija! [db whoami id toimenpide-add]
+  (when (rooli-service/laatija? whoami)
+    ;; assert read access - laatija can only access own energiatodistus
+    (find-valvonta db whoami id)
+    (when-not (toimenpide/reply? toimenpide-add)
+      (exception/throw-forbidden! "Laatija can only add reply toimenpide."))))
+
 (defn add-toimenpide! [db aws-s3-client whoami id toimenpide-add]
+  (assert-add-toimenpide-for-laatija! db whoami id toimenpide-add)
   (jdbc/with-db-transaction
     [tx db]
     (let [diaarinumero (if (toimenpide/case-open? toimenpide-add)
@@ -297,15 +305,20 @@
 (defn update-toimenpide! [db whoami id toimenpide-id toimenpide-update]
   (jdbc/with-db-transaction
     [db db]
-    (when ((every-pred toimenpide/audit-report? toimenpide/draft?)
-           (find-toimenpide db whoami id toimenpide-id))
-      (when (contains? toimenpide-update :virheet)
-        (valvonta-oikeellisuus-db/delete-toimenpide-virheet! db {:toimenpide-id toimenpide-id})
-        (insert-virheet! db toimenpide-id (:virheet toimenpide-update)))
-      (when (contains? toimenpide-update :tiedoksi)
-        (valvonta-oikeellisuus-db/delete-toimenpide-tiedoksi! db {:toimenpide-id toimenpide-id})
-        (insert-tiedoksi! db toimenpide-id (:tiedoksi toimenpide-update))))
-    (update-toimenpide-row! db toimenpide-id (dissoc toimenpide-update :virheet :tiedoksi))))
+    (let [toimenpide (find-toimenpide db whoami id toimenpide-id)]
+      (when (rooli-service/laatija? whoami)
+        (when-not (toimenpide/reply? toimenpide)
+          (exception/throw-forbidden! "Laatija can only update reply toimenpide."))
+        (when-not (toimenpide/draft? toimenpide)
+          (exception/throw-forbidden! "Laatija can only update draft toimenpide.")))
+      (when ((every-pred toimenpide/audit-report? toimenpide/draft?) toimenpide)
+        (when (contains? toimenpide-update :virheet)
+          (valvonta-oikeellisuus-db/delete-toimenpide-virheet! db {:toimenpide-id toimenpide-id})
+          (insert-virheet! db toimenpide-id (:virheet toimenpide-update)))
+        (when (contains? toimenpide-update :tiedoksi)
+          (valvonta-oikeellisuus-db/delete-toimenpide-tiedoksi! db {:toimenpide-id toimenpide-id})
+          (insert-tiedoksi! db toimenpide-id (:tiedoksi toimenpide-update))))
+      (update-toimenpide-row! db toimenpide-id (dissoc toimenpide-update :virheet :tiedoksi)))))
 
 (defn delete-draft-toimenpide! [db toimenpide-id]
   (valvonta-oikeellisuus-db/delete-draft-toimenpide! db {:toimenpide-id toimenpide-id}))
