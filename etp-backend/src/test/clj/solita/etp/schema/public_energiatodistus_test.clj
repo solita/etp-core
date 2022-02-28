@@ -15,7 +15,8 @@
                :sahko 0
                :kaukojaahdytys nil
                :kaukolampo 25000
-               :uusiutuva-polttoaine 5000}}
+               :uusiutuva-polttoaine 5000
+               :muu []}}
    :tila-id 2
    :perustiedot {:havainnointikaynti (java.time.LocalDate/now)
                  :rakennustunnus "1035150826"

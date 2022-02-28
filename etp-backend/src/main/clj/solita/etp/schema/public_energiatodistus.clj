@@ -25,8 +25,11 @@
       (assoc :lammitys LahtotiedotLammitys)))
 
 (def Tulokset
-  (select-keys energiatodistus-schema/Tulokset
-               [:kaytettavat-energiamuodot]))
+  (-> energiatodistus-schema/Tulokset
+      (select-keys [:kaytettavat-energiamuodot])
+      (assoc-in [:kaytettavat-energiamuodot :muu]
+                [(energiatodistus-schema/optional-properties
+                  energiatodistus-schema/UserDefinedEnergiamuoto)])))
 
 (defn energiatodistus-versio [versio]
   (-> (energiatodistus-schema/energiatodistus-versio
