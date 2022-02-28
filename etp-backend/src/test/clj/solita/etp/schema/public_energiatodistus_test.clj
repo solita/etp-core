@@ -53,7 +53,6 @@
 (def example-2018
   (-> example-2013
       (assoc-in [:perustiedot :laatimisvaihe] 1)
-      (update-in [:tulokset :kaytettavat-energiamuodot] (fn [m] (dissoc m :muu)))
       (assoc :versio 2018)))
 
 (t/deftest Energiatodistus-test
