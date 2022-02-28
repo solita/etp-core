@@ -46,5 +46,8 @@
 
 (def audit-reply? (partial type? :audit-reply))
 
+(def reply?
+  (partial some-type? #{:rfi-reply :audit-reply :rfc-reply}))
+
 (def close-valvonta?
   (partial some-type? #{:verified :anomaly :closed}))

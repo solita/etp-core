@@ -161,8 +161,9 @@
                :handler    (fn [{{{:keys [id]} :path :keys [body]}
                                  :parameters :keys [db aws-s3-client whoami uri]}]
                              (api-response/with-exceptions
-                               #(api-response/created uri
-                                                      (valvonta-service/add-toimenpide! db aws-s3-client whoami id body))
+                               #(api-response/created
+                                  uri
+                                  (valvonta-service/add-toimenpide! db aws-s3-client whoami id body))
                                [{:constraint :toimenpide-energiatodistus-id-fkey
                                  :response   404}]))}}]
       ["/preview"
