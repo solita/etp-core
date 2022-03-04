@@ -15,6 +15,9 @@
 
 (defn- paragraph [& body] (str "<p>" (str/join " " body) "</p>"))
 
+(defn- mailto-link [email-address]
+  (str "<a href=\"mailto:" email-address "\">" email-address "</a>"))
+
 (def ^:private signature-reply
   (paragraph "Tämä on energiatodistuspalvelun lähettämä automaattinen viesti."))
 
@@ -69,9 +72,11 @@
     :body
     (html
       (paragraph
-        "Sähköpostin liitteenä on tiedoksi tietopyyntö rakennuksesta: {valvonta.rakennustunnus}"
+        "Sähköpostin liitteenä on tiedoksi energiatodistuvalvontaan liittyvä tietopyyntö rakennuksesta: {valvonta.rakennustunnus}"
         address)
-      (paragraph "Tietopyyntöön on vastattava {toimenpide.deadline-date} mennessä.")
+      (paragraph "Valvonta kohdistuu rakennuksen omistajaan ja tämä on vain teille tiedoksi.")
+      (paragraph "Tämä on energiatodistuspalvelun lähettämä automaattinen viesti. Tarvittaessa lisätietoja voi kysyä osoitteesta "
+                 (mailto-link "energiatodistus@ara.fi"))
       signature-reply)}})
 
 (defprotocol TemplateValue (view [value]))
