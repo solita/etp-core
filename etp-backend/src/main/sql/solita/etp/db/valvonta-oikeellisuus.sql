@@ -15,11 +15,26 @@ select
     else last_toimenpide.deadline_date
   end last_toimenpide$deadline_date,
   last_toimenpide.template_id last_toimenpide$template_id,
-  last_toimenpide.diaarinumero last_toimenpide$diaarinumero
+  last_toimenpide.diaarinumero last_toimenpide$diaarinumero,
+
+  (last_viesti.sender).id        last_viesti$from$id,
+  (last_viesti.sender).etunimi   last_viesti$from$etunimi,
+  (last_viesti.sender).sukunimi  last_viesti$from$sukunimi,
+  (last_viesti.sender).rooli_id  last_viesti$from$rooli_id,
+  (last_viesti.viesti).sent_time last_viesti$sent_time,
+  (last_viesti.viestiketju).kasitelty  last_viesti$kasitelty
 from energiatodistus
   inner join kayttaja on kayttaja.id = energiatodistus.laatija_id
   left join energiatodistus korvaava_energiatodistus on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
   left join vo_last_toimenpide_v1 last_toimenpide on last_toimenpide.energiatodistus_id = energiatodistus.id
+  left join lateral (
+    select viestiketju, viesti, sender from viestiketju
+      inner join viesti on viesti.viestiketju_id = viestiketju.id
+      inner join kayttaja sender on viesti.from_id = sender.id
+    where viestiketju.energiatodistus_id = energiatodistus.id
+    order by viesti.sent_time desc
+    limit 1
+  ) last_viesti on true
 where
   (:toimenpidetype-id::int is null or :toimenpidetype-id = last_toimenpide.type_id) and
   (:keyword::text is null                                            or
