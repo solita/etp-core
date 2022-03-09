@@ -29,17 +29,19 @@
 (defn- select-keys-prefix [prefix m]
   (into {} (filter (fn [[key _]] (-> key name (str/starts-with? prefix))) m)))
 
-(defn- remove-prefix [m] (map/map-keys #(-> % name (str/replace-first #".*\$" "") keyword) m))
+(defn- remove-prefix [m] (map/map-keys #(-> % name (str/replace-first #".*?\$" "") keyword) m))
 
 (defn- add-prefix [prefix m] (map/map-keys #(->> % name (str prefix) keyword) m))
 
 (defn- db-row->valvonta [row]
   (let [valvonta (->> row (select-keys-prefix "valvonta$") remove-prefix)
         energiatodistus (energiatodistus-service/db-row->energiatodistus row)
-        last-toimenpide (->> row (select-keys-prefix "last-toimenpide$") remove-prefix)]
+        last-toimenpide (->> row (select-keys-prefix "last-toimenpide$") remove-prefix)
+        last-viesti (->> row (select-keys-prefix "last-viesti$") remove-prefix (flat/flat->tree #"\$"))]
     (-> valvonta
         (assoc :id (:id energiatodistus))
         (assoc :last-toimenpide (when-not (-> last-toimenpide :id nil?) last-toimenpide))
+        (assoc :last-viesti (when-not (-> last-viesti :sent-time nil?) last-viesti))
         (assoc :energiatodistus energiatodistus))))
 
 (def ^:private default-filters

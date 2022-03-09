@@ -2,7 +2,8 @@
   (:require [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]
             [schema-tools.core :as schema-tools]
-            [solita.etp.schema.energiatodistus :as energiatodistus-schema]))
+            [solita.etp.schema.energiatodistus :as energiatodistus-schema]
+            [solita.etp.schema.viesti :as viesti-schema]))
 
 (def ValvontaQuery
   {(schema/optional-key :valvoja-id) common-schema/Key
@@ -57,12 +58,18 @@
     :publish-time (schema/maybe common-schema/Instant)
     :filename (schema/maybe schema/Str)))
 
+(def Viesti
+  {:from      viesti-schema/Kayttaja
+   :sent-time common-schema/Instant
+   :kasitelty schema/Bool})
+
 (def ValvontaStatus
   (assoc Valvonta
     :last-toimenpide
     (schema/maybe (dissoc Toimenpide
                           :author :description :virheet :tiedoksi
                           :severity-id :filename))
+    :last-viesti (schema/maybe Viesti)
     :energiatodistus energiatodistus-schema/Energiatodistus))
 
 (def Virhetype
