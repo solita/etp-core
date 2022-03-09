@@ -22,7 +22,8 @@
             [solita.etp.service.json :as json]
             [solita.etp.exception :as exception]
             [solita.etp.schema.viesti :as viesti-schema]
-            [solita.etp.service.viesti :as viesti-service])
+            [solita.etp.service.viesti :as viesti-service]
+            [solita.etp.schema.geo :as geo-schema])
   (:import (com.fasterxml.jackson.core JsonParseException)))
 
 (defn valid-pdf-filename? [filename id kieli]
@@ -144,7 +145,7 @@
                            jotka mahdollisesti pitäisi korvata"
               :parameters {:query
                            {(schema/optional-key :rakennustunnus) schema/Str
-                            (schema/optional-key :postinumero)    schema/Int
+                            (schema/optional-key :postinumero)    geo-schema/PostinumeroFI
                             (schema/optional-key :katuosoite-fi)  schema/Str
                             (schema/optional-key :katuosoite-sv)  schema/Str}}
               :responses  {200 {:body [energiatodistus-schema/EnergiatodistusForAnyLaatija]}}
