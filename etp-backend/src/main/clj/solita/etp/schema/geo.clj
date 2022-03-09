@@ -24,9 +24,9 @@
                   :toimintaalue-id
                   common-schema/Key))
 
-(def Postinumero (merge common-schema/Luokittelu
-                        {:kunta-id common-schema/Key
-                         :type-id (schema/maybe common-schema/Key)}))
+(def Postinumero (assoc common-schema/Luokittelu
+                        :kunta-id common-schema/Key
+                        :type-id (schema/maybe common-schema/Key)))
 
 (def Country (assoc common-schema/Luokittelu :id schema/Str))
 
