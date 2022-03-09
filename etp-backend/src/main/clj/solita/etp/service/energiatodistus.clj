@@ -23,7 +23,8 @@
             [solita.common.map :as map]
             [solita.common.logic :as logic]
             [schema-tools.coerce :as stc]
-            [solita.etp.service.file :as file-service])
+            [solita.etp.service.file :as file-service]
+            [solita.common.maybe :as maybe])
   (:import (org.apache.pdfbox.pdmodel PDDocument)))
 
 ; *** Require sql functions ***
@@ -288,8 +289,9 @@
   (map db-row->energiatodistus-for-any-laatija
        (energiatodistus-db/select-korvattavat
          db (merge {:rakennustunnus nil :postinumero nil
-                    :katuosoite-fi nil :katuosoite-sv nil}
-                   query))))
+                    :katuosoite-fi  nil :katuosoite-sv nil}
+                   (update query :postinumero
+                           (maybe/lift1 #(Integer/parseInt %)))))))
 
 (defn- throw-invalid-replace! [id msg]
   (exception/throw-ex-info! :invalid-replace (str "Replaceable energiatodistus " id msg)))
