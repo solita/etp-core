@@ -27,9 +27,6 @@ SELECT id, label_fi as "label-fi", label_sv as "label-sv", valid FROM laskutuski
 -- name: select-all-verkkolaskuoperaattorit
 SELECT id, valittajatunnus, nimi FROM verkkolaskuoperaattori order by nimi collate "fi-FI-x-icu", valittajatunnus;
 
---name: select-all-yritystyypit
-SELECT id, label_fi as "label-fi", label_sv as "label-sv", valid FROM yritystype;
-
 -- name: select-laatijat
 with audit as (
   select row_number() over (

@@ -9,6 +9,7 @@
 
 (def find-roolit #(select-luokittelu % "rooli"))
 (def find-patevyystasot #(select-luokittelu % "patevyystaso"))
+(def find-yritystypes #(select-luokittelu % "yritystype"))
 
 (def find-kielisyys #(select-luokittelu % "kielisyys"))
 (def find-laatimisvaiheet #(select-luokittelu % "laatimisvaihe"))
