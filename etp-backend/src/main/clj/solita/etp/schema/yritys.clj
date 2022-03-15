@@ -11,7 +11,8 @@
     :nimi                   schema/Str
     :verkkolaskuoperaattori (schema/maybe common-schema/Key)
     :verkkolaskuosoite      (schema/maybe common-schema/Verkkolaskuosoite)
-    :laskutuskieli          (schema/enum 0 1 2)))
+    :laskutuskieli          (schema/enum 0 1 2)
+    :type-id                common-schema/Key))
 
 (def Yritys
   "Yritys schema contains basic information about persistent yritys"

@@ -6,7 +6,8 @@
 
 (defn generate-adds [n]
   (take n (map #(generators/complete {:ytunnus %
-                                      :verkkolaskuoperaattori (rand-int 32)}
+                                      :verkkolaskuoperaattori (rand-int 32)
+                                      :type-id 1}
                                      yritys-schema/YritysSave)
                generators/unique-ytunnukset)))
 

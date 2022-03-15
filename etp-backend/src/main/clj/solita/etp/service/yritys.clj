@@ -2,6 +2,7 @@
   (:require [solita.etp.db :as db]
             [solita.etp.exception :as exception]
             [solita.etp.service.laatija-yritys :as laatija-yritys]
+            [solita.etp.service.luokittelu :as luokittelu]
             [solita.etp.service.rooli :as rooli-service]
             [solita.common.map :as map]
             [clojure.java.jdbc :as jdbc]))
@@ -46,6 +47,8 @@
 
 (defn find-all-verkkolaskuoperaattorit [db]
   (yritys-db/select-all-verkkolaskuoperaattorit db))
+
+(def find-all-yritystyypit luokittelu/find-yritystypes)
 
 (defn laatija-in-yritys? [db laatija-id yritys-id]
   (laatija-in-yritys-laatijat? laatija-id (find-laatijat db yritys-id)))
