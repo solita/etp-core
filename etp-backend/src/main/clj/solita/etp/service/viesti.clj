@@ -123,7 +123,9 @@
    :vastaanottajaryhma-id (builtin-vastaanottajaryhma-id whoami)})
 
 (def ^:private default-filters
-  {:has-kasittelija   nil
+  {:from-id nil
+   :vastaanottaja-id  nil
+   :has-kasittelija   nil
    :kasittelija-id    nil
    :include-kasitelty false})
 
@@ -165,6 +167,9 @@
 
 (defn find-kasittelijat [db]
   (viesti-db/select-kasittelijat db))
+
+(defn find-osapuolet [db]
+  (viesti-db/select-kayttajat db))
 
 (defn find-energiatodistus-ketjut [db whoami energiatodistus-id]
   (when-not (nil? (energiatodistus-service/find-energiatodistus
