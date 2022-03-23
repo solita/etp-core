@@ -75,7 +75,7 @@
         "Sähköpostin liitteenä on tiedoksi energiatodistuvalvontaan liittyvä tietopyyntö rakennuksesta: {valvonta.rakennustunnus}"
         address)
       (paragraph "Valvonta kohdistuu rakennuksen omistajaan ja tämä on vain teille tiedoksi.")
-      (paragraph "Tämä on energiatodistuspalvelun lähettämä automaattinen viesti. Tarvittaessa lisätietoja voi kysyä osoitteesta "
+      (paragraph "Tarvittaessa lisätietoja voi kysyä osoitteesta "
                  (mailto-link "energiatodistus@ara.fi"))
       signature-reply)}})
 
