@@ -53,7 +53,7 @@
     ["/osapuolet"
      {:conflicting true
       :get {:summary   "Hae kaikki viesteihin liittyvät osapuolet (lähettäjät tai vastaanottajat)."
-            :access    rooli-service/paakayttaja?
+            :access    viesti-service/kasittelija?
             :responses {200 {:body [viesti-schema/Kayttaja]}}
             :handler   (fn [{:keys [db]}]
                          (r/response (viesti-service/find-osapuolet db)))}}]
