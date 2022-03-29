@@ -7,7 +7,8 @@
             [schema.core :as schema]
             [clojure.java.io :as io]
             [solita.etp.schema.liite :as liite-schema]
-            [solita.common.maybe :as maybe]))
+            [solita.common.maybe :as maybe]
+            [solita.etp.service.rooli :as rooli-service]))
 
 (defn ketju-404 [id] (api-response/msg-404 "ketju" id))
 
@@ -49,6 +50,13 @@
                      :responses {200 {:body {:count schema/Int}}}
                      :handler   (fn [{:keys [db whoami]}]
                                   (r/response (viesti-service/count-unread-ketjut db whoami)))}}]]
+    ["/osapuolet"
+     {:conflicting true
+      :get {:summary   "Hae kaikki viesteihin liittyvät osapuolet (lähettäjät tai vastaanottajat)."
+            :access    viesti-service/kasittelija?
+            :responses {200 {:body [viesti-schema/Kayttaja]}}
+            :handler   (fn [{:keys [db]}]
+                         (r/response (viesti-service/find-osapuolet db)))}}]
     ["/:id"
      [""
       {:conflicting true

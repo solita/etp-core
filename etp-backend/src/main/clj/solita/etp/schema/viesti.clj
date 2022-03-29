@@ -44,6 +44,8 @@
    (schema/optional-key :offset) schema/Int})
 
 (def KetjuQuery
-  {(schema/optional-key :kasittelija-id)    common-schema/Key
+  {(schema/optional-key :from-id) common-schema/Key
+   (schema/optional-key :vastaanottaja-id)  common-schema/Key
+   (schema/optional-key :kasittelija-id)    common-schema/Key
    (schema/optional-key :has-kasittelija)   schema/Bool
    (schema/optional-key :include-kasitelty) schema/Bool})

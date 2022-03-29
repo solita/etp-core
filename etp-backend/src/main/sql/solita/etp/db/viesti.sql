@@ -3,10 +3,15 @@
 select
   viestiketju.id, viestiketju.kasittelija_id, viestiketju.kasitelty, viestiketju.subject,
   viestiketju.vastaanottajaryhma_id, viestiketju.energiatodistus_id, viestiketju.vo_toimenpide_id,
-  (select array_agg(vastaanottaja_id) from vastaanottaja
-    where vastaanottaja.viestiketju_id = viestiketju.id) vastaanottajat
+  vastaanottajat.ids vastaanottajat
   from viestiketju
+  left join lateral (
+    select array_agg(vastaanottaja_id) ids from vastaanottaja
+    where vastaanottaja.viestiketju_id = viestiketju.id
+  ) vastaanottajat on true
 where
+  (:from-id::int is null or viestiketju.from_id = :from-id) and
+  (:vastaanottaja-id::int is null or :vastaanottaja-id =ANY(vastaanottajat.ids)) and
   (not viestiketju.kasitelty or :include-kasitelty) and
   ((viestiketju.kasittelija_id = :kasittelija-id or
    (viestiketju.kasittelija_id is not null) = :has-kasittelija) or
@@ -32,10 +37,16 @@ limit :limit offset :offset;
 
 -- name: select-count-all-viestiketjut
 select count(*) count from viestiketju
+  left join lateral (
+    select array_agg(vastaanottaja_id) ids from vastaanottaja
+    where vastaanottaja.viestiketju_id = viestiketju.id
+  ) vastaanottajat on true
 where
+  (:from-id::int is null or viestiketju.from_id = :from-id) and
+  (:vastaanottaja-id::int is null or :vastaanottaja-id =ANY(vastaanottajat.ids)) and
   (not viestiketju.kasitelty or :include-kasitelty) and
   ((viestiketju.kasittelija_id = :kasittelija-id or
-   (viestiketju.kasittelija_id is not null) = :has-kasittelija) or
+    (viestiketju.kasittelija_id is not null) = :has-kasittelija) or
    (:kasittelija-id::int is null and :has-kasittelija::boolean is null));
 
 -- name: select-count-viestiketjut-for-kayttaja

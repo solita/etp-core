@@ -92,7 +92,8 @@
   (case (:rooli whoami)
     0 1            ;; laatija
     2 0            ;; paakayttaja
-    3 2))          ;; laskuttaja
+    3 2            ;; laskuttaja
+    (exception/throw-forbidden! (str "Viestit are not allowed for user: " (:id whoami)))))
 
 (defn- visible-for? [whoami ketju]
   (or (kasittelija? whoami)
@@ -123,7 +124,9 @@
    :vastaanottajaryhma-id (builtin-vastaanottajaryhma-id whoami)})
 
 (def ^:private default-filters
-  {:has-kasittelija   nil
+  {:from-id nil
+   :vastaanottaja-id  nil
+   :has-kasittelija   nil
    :kasittelija-id    nil
    :include-kasitelty false})
 
@@ -165,6 +168,9 @@
 
 (defn find-kasittelijat [db]
   (viesti-db/select-kasittelijat db))
+
+(defn find-osapuolet [db]
+  (viesti-db/select-kayttajat db))
 
 (defn find-energiatodistus-ketjut [db whoami energiatodistus-id]
   (when-not (nil? (energiatodistus-service/find-energiatodistus
