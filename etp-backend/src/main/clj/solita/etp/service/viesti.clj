@@ -92,7 +92,8 @@
   (case (:rooli whoami)
     0 1            ;; laatija
     2 0            ;; paakayttaja
-    3 2))          ;; laskuttaja
+    3 2            ;; laskuttaja
+    (exception/throw-forbidden! (str "Viestit are not allowed for user: " (:id whoami)))))
 
 (defn- visible-for? [whoami ketju]
   (or (kasittelija? whoami)
