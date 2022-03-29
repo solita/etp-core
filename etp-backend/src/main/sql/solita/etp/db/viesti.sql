@@ -85,7 +85,7 @@ where viesti.viestiketju_id = :id
  order by viesti.sent_time asc;
 
 -- name: select-kayttajat
-select id, etunimi, sukunimi, rooli_id from kayttaja where rooli_id <> -1;
+select id, etunimi, sukunimi, rooli_id from kayttaja;
 
 -- name: select-kasittelijat
 select id, etunimi, sukunimi, rooli_id from kayttaja WHERE rooli_id IN (2, 3);
