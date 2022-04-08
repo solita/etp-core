@@ -128,6 +128,7 @@
    :vastaanottaja-id  nil
    :has-kasittelija   nil
    :kasittelija-id    nil
+   :valvonta          nil
    :include-kasitelty false})
 
 (defn find-ketjut [db whoami q]
