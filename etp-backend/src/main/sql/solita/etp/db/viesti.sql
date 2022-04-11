@@ -13,6 +13,8 @@ where
   (:from-id::int is null or viestiketju.from_id = :from-id) and
   (:vastaanottaja-id::int is null or :vastaanottaja-id =ANY(vastaanottajat.ids)) and
   (:valvonta::bool is null or (viestiketju.energiatodistus_id is not null) = :valvonta) and
+  (:keyword::text is null or viestiketju.subject ilike :keyword or exists (
+    select from viesti where viesti.body ilike :keyword and viesti.viestiketju_id = viestiketju.id)) and
   (not viestiketju.kasitelty or :include-kasitelty) and
   ((viestiketju.kasittelija_id = :kasittelija-id or
    (viestiketju.kasittelija_id is not null) = :has-kasittelija) or
@@ -46,6 +48,8 @@ where
   (:from-id::int is null or viestiketju.from_id = :from-id) and
   (:vastaanottaja-id::int is null or :vastaanottaja-id =ANY(vastaanottajat.ids)) and
   (:valvonta::bool is null or (viestiketju.energiatodistus_id is not null) = :valvonta) and
+  (:keyword::text is null or viestiketju.subject ilike :keyword or exists (
+    select from viesti where viesti.body ilike :keyword and viesti.viestiketju_id = viestiketju.id)) and
   (not viestiketju.kasitelty or :include-kasitelty) and
   ((viestiketju.kasittelija_id = :kasittelija-id or
     (viestiketju.kasittelija_id is not null) = :has-kasittelija) or

@@ -51,4 +51,5 @@
      :kasittelija-id    common-schema/Key
      :has-kasittelija   schema/Bool
      :valvonta          schema/Bool
+     :keyword           schema/Str
      :include-kasitelty schema/Bool}))
