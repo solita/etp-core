@@ -1,6 +1,7 @@
 (ns solita.etp.schema.viesti
   (:require [schema.core :as schema]
-            [solita.etp.schema.common :as common-schema]))
+            [solita.etp.schema.common :as common-schema]
+            [schema-tools.core :as schema-tools]))
 
 (def KetjuAdd
   "Uuden viestiketjun luontitiedot"
@@ -44,8 +45,10 @@
    (schema/optional-key :offset) schema/Int})
 
 (def KetjuQuery
-  {(schema/optional-key :from-id) common-schema/Key
-   (schema/optional-key :vastaanottaja-id)  common-schema/Key
-   (schema/optional-key :kasittelija-id)    common-schema/Key
-   (schema/optional-key :has-kasittelija)   schema/Bool
-   (schema/optional-key :include-kasitelty) schema/Bool})
+  (schema-tools/optional-keys
+    {:from-id           common-schema/Key
+     :vastaanottaja-id  common-schema/Key
+     :kasittelija-id    common-schema/Key
+     :has-kasittelija   schema/Bool
+     :valvonta          schema/Bool
+     :include-kasitelty schema/Bool}))

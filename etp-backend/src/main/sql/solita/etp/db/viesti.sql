@@ -12,6 +12,7 @@ select
 where
   (:from-id::int is null or viestiketju.from_id = :from-id) and
   (:vastaanottaja-id::int is null or :vastaanottaja-id =ANY(vastaanottajat.ids)) and
+  (:valvonta::bool is null or (viestiketju.energiatodistus_id is not null) = :valvonta) and
   (not viestiketju.kasitelty or :include-kasitelty) and
   ((viestiketju.kasittelija_id = :kasittelija-id or
    (viestiketju.kasittelija_id is not null) = :has-kasittelija) or
@@ -44,6 +45,7 @@ select count(*) count from viestiketju
 where
   (:from-id::int is null or viestiketju.from_id = :from-id) and
   (:vastaanottaja-id::int is null or :vastaanottaja-id =ANY(vastaanottajat.ids)) and
+  (:valvonta::bool is null or (viestiketju.energiatodistus_id is not null) = :valvonta) and
   (not viestiketju.kasitelty or :include-kasitelty) and
   ((viestiketju.kasittelija_id = :kasittelija-id or
     (viestiketju.kasittelija_id is not null) = :has-kasittelija) or
