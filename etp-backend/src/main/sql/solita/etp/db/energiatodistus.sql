@@ -91,7 +91,7 @@ select energiatodistus.*,
 from energiatodistus
   inner join kayttaja on kayttaja.id = energiatodistus.laatija_id
   left join energiatodistus korvaava_energiatodistus on korvaava_energiatodistus.korvattu_energiatodistus_id = energiatodistus.id
-where energiatodistus.tila_id in (select allekirjoitettu from et_tilat union select hylatty from et_tilat) and (
+where energiatodistus.tila_id in (select allekirjoitettu from et_tilat) and (
   energiatodistus.pt$rakennustunnus = :rakennustunnus or
   (energiatodistus.pt$postinumero = :postinumero and
     (energiatodistus.pt$katuosoite_fi = :katuosoite-fi or
