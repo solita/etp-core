@@ -13,27 +13,41 @@
             [solita.common.smtp :as smtp])
   (:import (java.time LocalDate)))
 
+(defn- heading [text] (str "<h1>" text "</h1>"))
 (defn- paragraph [& body] (str "<p>" (str/join " " body) "</p>"))
 
 (defn- mailto-link [email-address]
   (str "<a href=\"mailto:" email-address "\">" email-address "</a>"))
 
-(def ^:private signature-reply
+(def ^:private signature-reply-fi
   (paragraph "Tämä on energiatodistuspalvelun lähettämä automaattinen viesti."))
+
+(def ^:private signature-reply-sv
+  (paragraph "Detta är ett automatiskt meddelande från energicertifikatstjänsten."))
 
 (defn- html [& body] (str "<html><body>"
                           (str/join "" body)
                           "</body></html>"))
 
-(def ^:private address
+(def ^:private address-fi
   (str "{valvonta.katuosoite}, "
        "{valvonta.postinumero} "
        "{valvonta.postitoimipaikka-fi}."))
 
-(def ^:private rfi-order-description
+(def ^:private address-sv
+  (str "{valvonta.katuosoite}, "
+       "{valvonta.postinumero} "
+       "{valvonta.postitoimipaikka-sv}."))
+
+(def ^:private rfi-order-description-fi
   (paragraph
     "Tämän sähköpostin liitteenä on tietopyyntö koskien rakennustasi: {valvonta.rakennustunnus}"
-    address))
+    address-fi))
+
+(def ^:private rfi-order-description-sv
+  (paragraph
+    "Som bilaga till detta e-postmeddelande finns en begäran om information som gäller din byggnad: {valvonta.rakennustunnus}"
+    address-sv))
 
 (def ^:private templates-omistaja
   {:rfi-request
@@ -41,29 +55,51 @@
     "Tietopyyntö"
     :body
     (html
-      rfi-order-description
+      (heading "Tietopyyntö")
+      rfi-order-description-fi
       (paragraph
         "Tietopyyntöön on vastattava {toimenpide.deadline-date} mennessä.")
-      signature-reply)}
+      signature-reply-fi
+
+      (heading "Begäran om information")
+      rfi-order-description-sv
+      (paragraph
+        "Du måste svara på begäran om information senast den {toimenpide.deadline-date}.")
+      signature-reply-sv)}
    :rfi-order
    {:subject
     "Kehotus vastata tietopyyntöön"
     :body
     (html
+      (heading "Kehotus vastata tietopyyntöön")
       (paragraph
         "Kehotamme vastaamaan tietopyyntöön {toimenpide.deadline-date} mennessä.")
-      rfi-order-description
-      signature-reply)}
+      rfi-order-description-fi
+      signature-reply-fi
+
+      (heading "Uppmaning om att svara på begäran om information")
+      (paragraph
+        "Vi uppmanar dig att svara på begäran om information senast den {toimenpite.deadline-date}.")
+      rfi-order-description-sv
+      signature-reply-sv)}
    :rfi-warning
    {:subject
     "Vastaa tietopyyntöön"
     :body
     (html
+      (heading "Vastaa tietopyyntöön")
       (paragraph
         "ARA on lähettänyt teille tietopyynnön ja kehotuksen."
         "ARA antaa varoituksen ja vaatii vastaamaan tietopyyntöön {toimenpide.deadline-date} mennessä.")
-      rfi-order-description
-      signature-reply)}})
+      rfi-order-description-fi
+      signature-reply-fi
+
+      (heading "Svara på begäran om information")
+      (paragraph
+        "ARA har skickat dig en begäran om information och uppmaning."
+        "ARA ger dig en varning och kräver att du svarar på begäran om information senast den {toimenpite.deadline-date}.")
+      rfi-order-description-sv
+      signature-reply-sv)}})
 
 (def ^:private templates-tiedoksi
   {:rfi-request
@@ -71,13 +107,23 @@
     "Tietopyyntö (tiedoksi)"
     :body
     (html
+      (heading "Tietopyyntö (tiedoksi)")
       (paragraph
         "Sähköpostin liitteenä on tiedoksi energiatodistuvalvontaan liittyvä tietopyyntö rakennuksesta: {valvonta.rakennustunnus}"
-        address)
+        address-fi)
       (paragraph "Valvonta kohdistuu rakennuksen omistajaan ja tämä on vain teille tiedoksi.")
       (paragraph "Tarvittaessa lisätietoja voi kysyä osoitteesta "
                  (mailto-link "energiatodistus@ara.fi"))
-      signature-reply)}})
+      signature-reply-fi
+
+      (heading "Begäran om information (för kännedom)")
+      (paragraph
+        "Som bilaga till e-postmeddelandet finns en begäran om information för kännedom om byggnaden som övervakningen av energicertifikatet gäller: {valvonta.rakennustunnus}"
+        address-sv)
+      (paragraph "Övervakningen gäller byggnadens ägare och är enbart till din kännedom.")
+      (paragraph "Mer information fås vid behov på adressen"
+                 (mailto-link "energiatodistus@ara.fi"))
+      signature-reply-sv)}})
 
 (defprotocol TemplateValue (view [value]))
 
