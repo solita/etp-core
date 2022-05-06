@@ -34,6 +34,8 @@
      :reply-to-email (and reply? config/email-reply-to-email)
      :reply-to-name  (and reply? config/email-reply-to-name)}))
 
+(defn heading [text] (str "<h1>" text "</h1>"))
+
 (defn paragraph [& body] (str "<p>" (str/join " " body) "</p>"))
 
 (defn html [& body] (str "<html><body>"
