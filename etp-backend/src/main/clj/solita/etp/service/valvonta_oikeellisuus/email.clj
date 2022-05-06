@@ -299,21 +299,6 @@
     (email/send-text-email! (assoc message :to [(:email laatija)]
                                            :subtype "html"))))
 
-(defn email-to-laatija [db energiatodistus-id toimenpide]
-  (logic/if-let*
-    [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus
-                       db energiatodistus-id)
-     laatija (kayttaja-service/find-kayttaja db (:laatija-id energiatodistus))
-     template-type (-> toimenpide :type-id toimenpide/type-key)
-     template-values
-     {:energiatodistus energiatodistus
-      :laatija         laatija
-      :toimenpide      toimenpide
-      :host            config/index-url}
-     template (template-type templates)
-     message (map/map-values #(interpolate % template-values) template)]
-    message))
-
 (defn- send-email-to-tiedoksi! [db aws-s3-client energiatodistus-id toimenpide-id email]
   (logic/if-let*
     [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus
@@ -329,15 +314,6 @@
                                                                 valvontamuistio
                                                                 "valvontamuistio.pdf"
                                                                 "application/pdf")]))))
-
-(defn email-to-tiedoksi [db energiatodistus-id toimenpide-id]
-  (logic/if-let*
-    [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus
-                       db energiatodistus-id)
-     template-values {:energiatodistus energiatodistus
-                      :host            config/index-url}
-     message (map/map-values #(interpolate % template-values) tiedoksi-template)]
-    message))
 
 (defn send-toimenpide-email! [db aws-s3-client energiatodistus-id toimenpide]
   (send-email-to-laatija! db energiatodistus-id toimenpide)
