@@ -15,6 +15,7 @@
   "Only administrators can update this information.
    Not intended for laatija-users."
   {:passivoitu schema/Bool
+   :valvoja    schema/Bool
    :rooli      (schema/enum 1 2 3)
    :henkilotunnus (schema/maybe common-schema/Henkilotunnus)
    :virtu (schema/maybe VirtuId)})
@@ -38,13 +39,14 @@
           :rooli         (schema/enum 0 1 2 3)
           :verifytime    (schema/maybe common-schema/Instant)
           :passivoitu    schema/Bool
+          :valvoja       schema/Bool
           :etunimi       schema/Str
           :sukunimi      schema/Str
           :puhelin       schema/Str
           :email         schema/Str}))
 
 (def Whoami (-> Kayttaja
-                (dissoc :passivoitu :puhelin :login)
+                (dissoc :passivoitu :valvoja :puhelin :login)
                 (assoc :partner schema/Bool)))
 
 (def KayttajaHistory

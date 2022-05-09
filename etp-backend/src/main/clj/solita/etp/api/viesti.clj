@@ -3,12 +3,12 @@
             [solita.etp.api.response :as api-response]
             [solita.etp.schema.viesti :as viesti-schema]
             [solita.etp.schema.common :as common-schema]
+            [solita.etp.schema.valvonta :as valvonta-schema]
             [solita.etp.service.viesti :as viesti-service]
             [schema.core :as schema]
             [clojure.java.io :as io]
             [solita.etp.schema.liite :as liite-schema]
-            [solita.common.maybe :as maybe]
-            [solita.etp.service.rooli :as rooli-service]))
+            [solita.common.maybe :as maybe]))
 
 (defn ketju-404 [id] (api-response/msg-404 "ketju" id))
 
@@ -165,6 +165,6 @@
                         (r/response (viesti-service/find-vastaanottajaryhmat db)))}}]
    ["/kasittelijat"
     {:get {:summary   "Hae kaikki kasittelijat."
-           :responses {200 {:body [viesti-schema/Kayttaja]}}
+           :responses {200 {:body [valvonta-schema/Valvoja]}}
            :handler   (fn [{:keys [db]}]
                         (r/response (viesti-service/find-kasittelijat db)))}}]])

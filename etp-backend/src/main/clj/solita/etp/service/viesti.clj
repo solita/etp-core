@@ -8,6 +8,7 @@
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.liite :as liite-service]
+            [solita.etp.service.valvonta :as valvonta-service]
             [solita.etp.service.file :as file-service]))
 
 (db/require-queries 'viesti)
@@ -168,11 +169,9 @@
 (defn find-vastaanottajaryhmat [db]
   (luokittelu-service/find-vastaanottajaryhmat db))
 
-(defn find-kasittelijat [db]
-  (viesti-db/select-kasittelijat db))
+(defn find-kasittelijat [db] (valvonta-service/find-valvojat db))
 
-(defn find-osapuolet [db]
-  (viesti-db/select-kayttajat db))
+(defn find-osapuolet [db] (viesti-db/select-kayttajat db))
 
 (defn find-energiatodistus-ketjut [db whoami energiatodistus-id]
   (when-not (nil? (energiatodistus-service/find-energiatodistus

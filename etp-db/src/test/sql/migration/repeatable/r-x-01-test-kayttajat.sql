@@ -33,7 +33,8 @@ on conflict (email) do update
       puhelin = excluded.puhelin,
       rooli_id = excluded.rooli_id,
       virtu$localid  = excluded.virtu$localid,
-      virtu$organisaatio = excluded.virtu$organisaatio;
+      virtu$organisaatio = excluded.virtu$organisaatio,
+      valvoja = true;
 
 INSERT INTO laatija (id, patevyystaso, toteamispaivamaara, toteaja, jakeluosoite, postinumero, postitoimipaikka, partner)
 SELECT id, 2, date '2020-01-01', 'KIINKO', 'Peltokatu 26', '33100', 'Tampere', email ilike '%kumppani%' FROM kayttaja WHERE email ILIKE '%solita.fi%' AND rooli_id = 0
