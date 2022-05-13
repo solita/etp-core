@@ -237,7 +237,11 @@ where vo_virhetype.id = ordered.id and vo_virhetype.ordinal <> ordered.ordinal;
 update vo_toimenpide set publish_time = transaction_timestamp() where id = :id and deleted is false;
 
 -- name: select-toimenpide-virheet
-select type_id, description from vo_virhe where toimenpide_id = :toimenpide-id;
+select virhe.type_id, virhe.description
+  from vo_virhe virhe
+  inner join vo_virhetype type on type.id = virhe.type_id
+where toimenpide_id = :toimenpide-id
+order by type.ordinal asc;
 
 -- name: delete-toimenpide-virheet!
 delete from vo_virhe where toimenpide_id = :toimenpide-id;
