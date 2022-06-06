@@ -1,5 +1,5 @@
 insert into vk_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, valid, content)
-values (2, 'Varoitus 2021', 'Varning 2021', 1, 3, 'fi', false,
+values (2, 'Varoitus 2021', 'Varning 2021', 1, 3, 'fi', true,
 $$
 <div class="otsikko">
     <b>VAROITUS/VARNING</b> <br/>
