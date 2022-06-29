@@ -65,7 +65,7 @@ $$
   energicertifikat vid försäljning och uthyrning. ARA har skickat er uppmaning angående marknadsföring av en
   byggnad/bostad utan energicertifikat. <b>ARA tilldelar er en varning.</b> Om den offentliga marknadsföringen
   av objektet fortsätter eller om det säljs <b>ber ARA er att skicka in ett energicertifikat senast
-  {{määräpäivä}} per e-post till energiatodistus@ara.fi eller per post.</b></p>
+  {{määräpäivä}} per e-post till energiatodistus@ara.fi eller per post.</b>
 </p>
 
 <p>
