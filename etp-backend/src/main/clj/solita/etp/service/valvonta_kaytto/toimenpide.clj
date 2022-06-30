@@ -19,8 +19,9 @@
   (contains? type-key-set (-> toimenpide :type-id type-key)))
 
 (def case-open? (partial type? :case))
-(def case-closed? (partial type? :closed))
 (def send-tiedoksi? (partial type? :rfi-request))
 
 (def asha-toimenpide?
   (partial some-type? #{:rfi-request :rfi-order :rfi-warning}))
+
+(def with-diaarinumero? (comp not (partial type? :case)))

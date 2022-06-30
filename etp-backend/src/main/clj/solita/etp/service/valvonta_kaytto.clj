@@ -208,8 +208,7 @@
            db/default-opts)))
 
 (defn find-diaarinumero [db id toimenpide]
-  (when (or (toimenpide/asha-toimenpide? toimenpide)
-            (toimenpide/case-closed? toimenpide))
+  (when (toimenpide/with-diaarinumero? toimenpide)
     (-> (valvonta-kaytto-db/select-last-diaarinumero db {:id id})
         first
         :diaarinumero)))
