@@ -212,10 +212,10 @@ where valvonta_id = :valvonta-id and type_id in (1, 2, 3) and publish_time is no
 order by type_id, publish_time desc;
 
 -- name: select-templates
-select id, toimenpidetype_id, label_fi, label_sv, valid, language from vk_template;
+select id, toimenpidetype_id, label_fi, label_sv, valid, language, tiedoksi from vk_template;
 
 -- name: select-template
-select id, toimenpidetype_id, label_fi, label_sv, valid, language, content
+select id, toimenpidetype_id, label_fi, label_sv, valid, language, tiedoksi, content
 from vk_template
 where id = :id;
 
