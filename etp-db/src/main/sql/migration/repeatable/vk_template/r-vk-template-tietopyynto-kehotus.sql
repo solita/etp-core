@@ -1,5 +1,14 @@
-insert into vk_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, content)
-values (3, 'Kehotus', 'Uppmaning', 1, 2, 'fi',
+insert into vk_template (
+    id,
+    label_fi,
+    label_sv,
+    ordinal,
+    toimenpidetype_id,
+    language,
+    tiedoksi,
+    content
+)
+values (3, 'Kehotus', 'Uppmaning', 1, 2, 'fi', true,
 $$
 <div class="otsikko">
     <b>KEHOTUS/UPPMANING</b> <br/>
@@ -114,4 +123,5 @@ on conflict (id) do update set
   ordinal = excluded.ordinal,
   toimenpidetype_id = excluded.toimenpidetype_id,
   language = excluded.language,
+  tiedoksi = excluded.tiedoksi,
   content = excluded.content;
