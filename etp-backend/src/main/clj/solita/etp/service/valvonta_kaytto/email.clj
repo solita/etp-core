@@ -123,6 +123,28 @@
       (paragraph "Övervakningen gäller byggnadens ägare och är enbart till din kännedom.")
       (paragraph "Mer information fås vid behov på adressen"
                  (mailto-link "energiatodistus@ara.fi"))
+      signature-reply-sv)}
+   :rfi-order
+   {:subject
+    "Energiatodistusvalvonnan kehotus (tiedoksi)"
+    :body
+    (html
+      (heading "Energiatodistusvalvonnan kehotus (tiedoksi)")
+      (paragraph
+        "Sähköpostin liitteenä on tiedoksi energiatodistuvalvontaan liittyvä kehotus rakennuksesta: {valvonta.rakennustunnus}"
+        address-fi)
+      (paragraph "Valvonta kohdistuu rakennuksen omistajaan ja tämä on vain teille tiedoksi.")
+      (paragraph "Tarvittaessa lisätietoja voi kysyä osoitteesta "
+                 (mailto-link "energiatodistus@ara.fi"))
+      signature-reply-fi
+
+      (heading "Uppmaning till tillsyn över energicertifikat (för kännedom)")
+      (paragraph
+        "Som bilaga till e-postmeddelandet finns en uppmaning om byggnaden som övervakningen av energicertifikatet gäller: {valvonta.rakennustunnus}"
+        address-sv)
+      (paragraph "Övervakningen gäller byggnadens ägare och är enbart till din kännedom.")
+      (paragraph "Mer information fås vid behov på adressen"
+                 (mailto-link "energiatodistus@ara.fi"))
       signature-reply-sv)}})
 
 (defprotocol TemplateValue (view [value]))
@@ -170,6 +192,7 @@
     (send-email! valvonta toimenpide osapuoli [document] templates-omistaja)))
 
 (defn send-toimenpide-email! [db aws-s3-client valvonta toimenpide osapuolet]
+  (def tmp-osapuolet osapuolet)
   (let [postinumero (maybe/map* #(luokittelu-service/find-luokka
                                    (Integer/parseInt %)
                                    (geo-service/find-all-postinumerot db))
@@ -178,10 +201,28 @@
                    :postitoimipaikka-fi (:label-fi postinumero)
                    :postitoimipaikka-sv (:label-sv postinumero))
         email-osapuolet (filter osapuoli/email? osapuolet)
+        ;; Omistajan (omistajien?) dokumentit
         documents (mapv (partial find-document aws-s3-client valvonta toimenpide)
-                        (filter osapuoli/omistaja? osapuolet))]
+                        (filter osapuoli/omistaja? osapuolet))
+        ;; Tän voinee lopuksi nakata pois. Mutta siis kuitenkin
+        ;; haetaan ilmeisesti sankosta jokainen omistajadoku
+        also-documents (->> osapuolet
+                            (filter osapuoli/omistaja?)
+                            (map (fn [osapuoli]
+                                   (find-document aws-s3-client valvonta toimenpide osapuoli))))]
+    ;; Näistä tulee aika läpinäkymättömiä olioita, en tiedä
+    ;; hyödyttääkö juuri ottaa kiinnikään.
+    (def tmp-documents documents)
+    (def tmp-also-documents also-documents)
+
     (doseq [vastaanottaja (filter osapuoli/omistaja? email-osapuolet)]
+      ;; Lähetetään omistajille jotain. Kiintoisasti tuo
+      ;; send-email-to-omistaja! hakee tahollaan uudestaan sankosta.
       (send-email-to-omistaja! aws-s3-client valvonta toimenpide vastaanottaja))
     (when-not (empty? documents)
+      ;; Miksihän tämä olisi tyhjä?
       (doseq [vastaanottaja (filter osapuoli/tiedoksi? email-osapuolet)]
+        ;; Lähetetään tiedoksisaajille tämä
+        ;; dokumenttilista. Kiintoisasti ei kuitenkaan tehdä mitään
+        ;; suodatusta toimenpiteen tyypillä.
         (send-email! valvonta toimenpide vastaanottaja documents templates-tiedoksi)))))
