@@ -127,13 +127,13 @@
 (defn generate-pdf-document
   [db whoami valvonta toimenpide ilmoituspaikat osapuoli osapuolet roolit]
   (let [template-id (:template-id toimenpide)
-        template (-> (valvonta-kaytto-db/select-template db {:id template-id}) first :content)
+        template (-> (valvonta-kaytto-db/select-template db {:id template-id}) first)
         documents (find-kaytto-valvonta-documents db (:id valvonta))
         tiedoksi (if (template/send-tiedoksi? template) (filter osapuoli/tiedoksi? osapuolet) [])
         template-data (template-data db whoami valvonta toimenpide
                                      osapuoli documents ilmoituspaikat
                                      tiedoksi roolit)]
-    (pdf/generate-pdf->bytes {:template template
+    (pdf/generate-pdf->bytes {:template (:content template)
                               :data     template-data})))
 
 (defn log-toimenpide! [db aws-s3-client whoami valvonta toimenpide osapuolet ilmoituspaikat roolit]
