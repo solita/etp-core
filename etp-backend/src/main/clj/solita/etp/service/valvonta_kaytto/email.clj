@@ -1,6 +1,7 @@
 (ns solita.etp.service.valvonta-kaytto.email
   (:require [clojure.string :as str]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
+            [solita.etp.service.valvonta-kaytto.template :as template]
             [solita.common.map :as map]
             [solita.common.time :as time]
             [solita.common.logic :as logic]
@@ -10,8 +11,11 @@
             [solita.etp.service.luokittelu :as luokittelu-service]
             [solita.common.maybe :as maybe]
             [solita.etp.service.valvonta-kaytto.store :as store]
+            [solita.etp.db :as db]
             [solita.common.smtp :as smtp])
   (:import (java.time LocalDate)))
+
+(db/require-queries 'valvonta-kaytto)
 
 (defn- heading [text] (str "<h1>" text "</h1>"))
 (defn- paragraph [& body] (str "<p>" (str/join " " body) "</p>"))
@@ -193,7 +197,10 @@
 
 (defn send-toimenpide-email! [db aws-s3-client valvonta toimenpide osapuolet]
   (def tmp-osapuolet osapuolet)
-  (let [postinumero (maybe/map* #(luokittelu-service/find-luokka
+  (let [tiedoksi (-> (valvonta-kaytto-db/select-template db {:id (:template-id toimenpide)})
+                     first
+                     :tiedoksi)
+        postinumero (maybe/map* #(luokittelu-service/find-luokka
                                    (Integer/parseInt %)
                                    (geo-service/find-all-postinumerot db))
                                 (:postinumero valvonta))
@@ -219,7 +226,8 @@
       ;; Lähetetään omistajille jotain. Kiintoisasti tuo
       ;; send-email-to-omistaja! hakee tahollaan uudestaan sankosta.
       (send-email-to-omistaja! aws-s3-client valvonta toimenpide vastaanottaja))
-    (when-not (empty? documents)
+    (when (and tiedoksi
+               (not (empty? documents)))
       ;; Miksihän tämä olisi tyhjä?
       (doseq [vastaanottaja (filter osapuoli/tiedoksi? email-osapuolet)]
         ;; Lähetetään tiedoksisaajille tämä
