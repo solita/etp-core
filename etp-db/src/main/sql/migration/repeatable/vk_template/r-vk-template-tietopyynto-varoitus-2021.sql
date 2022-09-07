@@ -1,5 +1,15 @@
-insert into vk_template (id, label_fi, label_sv, ordinal, toimenpidetype_id, language, valid, content)
-values (2, 'Varoitus 2021', 'Varning 2021', 1, 3, 'fi', true,
+insert into vk_template (
+    id,
+    label_fi,
+    label_sv,
+    ordinal,
+    toimenpidetype_id,
+    language,
+    valid,
+    tiedoksi,
+    content
+)
+values (2, 'Varoitus 2021', 'Varning 2021', 1, 3, 'fi', true, false,
 $$
 <div class="otsikko">
     <b>VAROITUS/VARNING</b> <br/>
@@ -105,4 +115,5 @@ on conflict (id) do update set
   toimenpidetype_id = excluded.toimenpidetype_id,
   language = excluded.language,
   valid = excluded.valid,
+  tiedoksi = excluded.tiedoksi,
   content = excluded.content;

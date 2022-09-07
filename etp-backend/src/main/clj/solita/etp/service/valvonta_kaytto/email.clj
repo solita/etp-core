@@ -1,6 +1,7 @@
 (ns solita.etp.service.valvonta-kaytto.email
   (:require [clojure.string :as str]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
+            [solita.etp.service.valvonta-kaytto.template :as template]
             [solita.common.map :as map]
             [solita.common.time :as time]
             [solita.common.logic :as logic]
@@ -10,8 +11,11 @@
             [solita.etp.service.luokittelu :as luokittelu-service]
             [solita.common.maybe :as maybe]
             [solita.etp.service.valvonta-kaytto.store :as store]
+            [solita.etp.db :as db]
             [solita.common.smtp :as smtp])
   (:import (java.time LocalDate)))
+
+(db/require-queries 'valvonta-kaytto)
 
 (defn- heading [text] (str "<h1>" text "</h1>"))
 (defn- paragraph [& body] (str "<p>" (str/join " " body) "</p>"))
@@ -123,6 +127,28 @@
       (paragraph "Övervakningen gäller byggnadens ägare och är enbart till din kännedom.")
       (paragraph "Mer information fås vid behov på adressen"
                  (mailto-link "energiatodistus@ara.fi"))
+      signature-reply-sv)}
+   :rfi-order
+   {:subject
+    "Energiatodistusvalvonnan kehotus (tiedoksi)"
+    :body
+    (html
+      (heading "Energiatodistusvalvonnan kehotus (tiedoksi)")
+      (paragraph
+        "Sähköpostin liitteenä on tiedoksi energiatodistuvalvontaan liittyvä kehotus rakennuksesta: {valvonta.rakennustunnus}"
+        address-fi)
+      (paragraph "Valvonta kohdistuu rakennuksen omistajaan ja tämä on vain teille tiedoksi.")
+      (paragraph "Tarvittaessa lisätietoja voi kysyä osoitteesta "
+                 (mailto-link "energiatodistus@ara.fi"))
+      signature-reply-fi
+
+      (heading "Uppmaning till tillsyn över energicertifikat (för kännedom)")
+      (paragraph
+        "Som bilaga till e-postmeddelandet finns en uppmaning om byggnaden som övervakningen av energicertifikatet gäller: {valvonta.rakennustunnus}"
+        address-sv)
+      (paragraph "Övervakningen gäller byggnadens ägare och är enbart till din kännedom.")
+      (paragraph "Mer information fås vid behov på adressen"
+                 (mailto-link "energiatodistus@ara.fi"))
       signature-reply-sv)}})
 
 (defprotocol TemplateValue (view [value]))
@@ -170,7 +196,10 @@
     (send-email! valvonta toimenpide osapuoli [document] templates-omistaja)))
 
 (defn send-toimenpide-email! [db aws-s3-client valvonta toimenpide osapuolet]
-  (let [postinumero (maybe/map* #(luokittelu-service/find-luokka
+  (let [tiedoksi (-> (valvonta-kaytto-db/select-template db {:id (:template-id toimenpide)})
+                     first
+                     :tiedoksi)
+        postinumero (maybe/map* #(luokittelu-service/find-luokka
                                    (Integer/parseInt %)
                                    (geo-service/find-all-postinumerot db))
                                 (:postinumero valvonta))
@@ -182,6 +211,7 @@
                         (filter osapuoli/omistaja? osapuolet))]
     (doseq [vastaanottaja (filter osapuoli/omistaja? email-osapuolet)]
       (send-email-to-omistaja! aws-s3-client valvonta toimenpide vastaanottaja))
-    (when-not (empty? documents)
+    (when (and tiedoksi
+               (not (empty? documents)))
       (doseq [vastaanottaja (filter osapuoli/tiedoksi? email-osapuolet)]
         (send-email! valvonta toimenpide vastaanottaja documents templates-tiedoksi)))))

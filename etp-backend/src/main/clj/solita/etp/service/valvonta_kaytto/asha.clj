@@ -2,6 +2,7 @@
   (:require [solita.common.time :as time]
             [solita.etp.service.asha :as asha]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
+            [solita.etp.service.valvonta-kaytto.template :as template]
             [solita.etp.service.valvonta-kaytto.store :as store]
             [solita.etp.service.valvonta-kaytto.osapuoli :as osapuoli]
             [solita.etp.service.pdf :as pdf]
@@ -126,13 +127,13 @@
 (defn generate-pdf-document
   [db whoami valvonta toimenpide ilmoituspaikat osapuoli osapuolet roolit]
   (let [template-id (:template-id toimenpide)
-        template (-> (valvonta-kaytto-db/select-template db {:id template-id}) first :content)
+        template (-> (valvonta-kaytto-db/select-template db {:id template-id}) first)
         documents (find-kaytto-valvonta-documents db (:id valvonta))
-        tiedoksi (if (toimenpide/send-tiedoksi? toimenpide) (filter osapuoli/tiedoksi? osapuolet) [])
+        tiedoksi (if (template/send-tiedoksi? template) (filter osapuoli/tiedoksi? osapuolet) [])
         template-data (template-data db whoami valvonta toimenpide
                                      osapuoli documents ilmoituspaikat
                                      tiedoksi roolit)]
-    (pdf/generate-pdf->bytes {:template template
+    (pdf/generate-pdf->bytes {:template (:content template)
                               :data     template-data})))
 
 (defn log-toimenpide! [db aws-s3-client whoami valvonta toimenpide osapuolet ilmoituspaikat roolit]
