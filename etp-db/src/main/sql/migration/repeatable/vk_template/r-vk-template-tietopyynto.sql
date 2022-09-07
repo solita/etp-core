@@ -5,11 +5,12 @@ insert into vk_template (
     ordinal,
     toimenpidetype_id,
     language,
+    valid,
     tiedoksi,
     content
 )
 values
-(0, 'Tietopyyntö', 'Begäran om uppgifter', 1, 1, 'fi', true,
+(0, 'Tietopyyntö', 'Begäran om uppgifter', 1, 1, 'fi', true, true,
 $$
 <div class="otsikko">
     <b>TIETOPYYNTÖ/ <br/>

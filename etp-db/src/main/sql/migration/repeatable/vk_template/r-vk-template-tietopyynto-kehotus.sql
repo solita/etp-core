@@ -5,10 +5,11 @@ insert into vk_template (
     ordinal,
     toimenpidetype_id,
     language,
+    valid,
     tiedoksi,
     content
 )
-values (3, 'Kehotus', 'Uppmaning', 1, 2, 'fi', true,
+values (3, 'Kehotus', 'Uppmaning', 1, 2, 'fi', true, true,
 $$
 <div class="otsikko">
     <b>KEHOTUS/UPPMANING</b> <br/>
