@@ -121,5 +121,6 @@ on conflict (id) do update set
   ordinal = excluded.ordinal,
   toimenpidetype_id = excluded.toimenpidetype_id,
   language = excluded.language,
+  valid = excluded.valid,
   tiedoksi = excluded.tiedoksi,
   content = excluded.content;
