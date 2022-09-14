@@ -7,6 +7,7 @@
             [solita.etp.service.file :as file-service]
             [solita.etp.db :as db]
             [clojure.java.jdbc :as jdbc]
+            [clojure.tools.logging :as log]
             [solita.etp.service.luokittelu :as luokittelu]
             [flathead.flatten :as flat]
             [solita.common.maybe :as maybe]
@@ -18,7 +19,8 @@
             [solita.etp.service.concurrent :as concurrent]
             [solita.etp.service.liite :as liite-service]
             [solita.etp.service.csv :as csv-service])
-  (:import (java.time Instant)))
+  (:import (java.time Instant)
+           (clojure.lang ExceptionInfo)))
 
 (db/require-queries 'valvonta-kaytto)
 
@@ -252,7 +254,15 @@
           toimenpide-id (:id toimenpide)]
       (insert-toimenpide-osapuolet! tx valvonta-id toimenpide-id)
       (case (-> toimenpide :type-id toimenpide/type-key)
-        :closed (asha/close-case! whoami valvonta-id toimenpide)
+        :closed (try
+                  (asha/close-case! whoami valvonta-id toimenpide)
+                  (catch ExceptionInfo e
+                    (case (-> e ex-data :type)
+                      ;; The database transaction to close the case should run to completion
+                      ;; even when Asha does not agree to close it.
+                      :asha-request-failed
+                      (log/warn e "Could not close the case in Asha - will only close locally")
+                      (throw e))))
         (when (toimenpide/asha-toimenpide? toimenpide)
           (let [find-toimenpide-osapuolet (comp flatten (juxt find-toimenpide-henkilot find-toimenpide-yritykset))
                 osapuolet (find-toimenpide-osapuolet tx (:id toimenpide))]
