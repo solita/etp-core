@@ -47,7 +47,7 @@
     ["/templates"
      {:conflicting true
       :get         {:summary   "Hae käytönvalvonnan asiakirjapohjat."
-                    :responses {200 {:body [valvonta-schema/Template]}}
+                    :responses {200 {:body [valvonta-kaytto-schema/Template]}}
                     :access    rooli-service/paakayttaja?
                     :handler   (fn [{:keys [db]}]
                                  (r/response (valvonta-service/find-templates db)))}}]

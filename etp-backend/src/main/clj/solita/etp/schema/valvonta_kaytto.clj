@@ -2,6 +2,7 @@
   (:require [schema.core :as schema]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.geo :as geo-schema]
+            [solita.etp.schema.valvonta :as valvonta-schema]
             [schema-tools.core :as schema-tools]))
 
 (defn complete-valvonta-related-schema [schema]
@@ -37,6 +38,10 @@
    :deadline-date (schema/maybe common-schema/Date)
    :template-id   (schema/maybe common-schema/Key)
    :description   (schema/maybe schema/Str)})
+
+(def Template
+  (assoc valvonta-schema/Template
+         :tiedoksi schema/Bool))
 
 (def OsapuoliBase
   (schema-tools/merge {:rooli-id                 (schema/maybe common-schema/Key)

@@ -9,8 +9,7 @@
 (def Template
   (assoc common-schema/Luokittelu
     :toimenpidetype-id common-schema/Key
-    :language schema/Str
-    :tiedoksi schema/Bool))
+    :language schema/Str))
 
 (def Valvoja
   "Any kayttaja who can be valvoja"
