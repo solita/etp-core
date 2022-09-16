@@ -146,7 +146,7 @@
                        :attach     {:document documents}}))
 
 (defn resolve-case-processing-action-state [sender-id request-id case-number]
-  (->> ["Vireillepano" "Käsittely" "Päätöksenteko"]
+  (->> ["Vireillepano" "Käsittely" "Päätöksenteko" "Tiedoksianto ja toimeenpano"]
        (map (fn [processing-action]
               (try
                 {processing-action (-> (action-info sender-id request-id case-number processing-action) :processing-action :status)}
