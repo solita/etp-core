@@ -34,6 +34,21 @@
                                (valvonta-service/add-toimenpide! db aws-s3-client whoami id body))
                             [{:constraint :toimenpide-vk-valvonta-id-fkey
                               :response   404}]))}}]
+   ["/bypassing-asha"
+    {:conflicting true
+     :post {:summary    "Lisää käytönvalvonnan toimenpide ilman AsHa -integraatiota."
+            :access     rooli-service/paakayttaja?
+            :parameters {:path {:id common-schema/Key}
+                         :body kaytto-schema/ToimenpideAdd}
+            :responses  {201 {:body common-schema/Id}
+                         404 common-schema/ConstraintError}
+            :handler    (fn [{{{:keys [id]} :path :keys [body]}
+                              :parameters :keys [db uri]}]
+                          (api-response/with-exceptions
+                            #(api-response/created uri
+                               (valvonta-service/add-toimenpide-bypassing-asha! db id body))
+                            [{:constraint :toimenpide-vk-valvonta-id-fkey
+                              :response   404}]))}}]
    ["/henkilot/:henkilo-id/preview"
     {:conflicting true
      :post        {:summary    "Henkilö-osapuolen toimenpiteen esikatselu"

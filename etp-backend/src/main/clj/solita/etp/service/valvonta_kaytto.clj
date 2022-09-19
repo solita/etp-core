@@ -263,6 +263,20 @@
             (send-toimenpide-email! db aws-s3-client valvonta toimenpide osapuolet))))
       {:id toimenpide-id})))
 
+(defn add-toimenpide-bypassing-asha! [db valvonta-id toimenpide-add]
+  (when-not (toimenpide/case-close? toimenpide-add)
+    (exception/illegal-argument!
+     "Asha bypass is implemented only for closing cases"))
+
+  (jdbc/with-db-transaction
+    [tx db]
+    (let [valvonta (find-valvonta tx valvonta-id)
+          diaarinumero (find-diaarinumero tx valvonta-id toimenpide-add)
+          toimenpide (insert-toimenpide! tx valvonta-id diaarinumero toimenpide-add)
+          toimenpide-id (:id toimenpide)]
+      (insert-toimenpide-osapuolet! tx valvonta-id toimenpide-id)
+      {:id toimenpide-id})))
+
 (defn update-toimenpide! [db toimenpide-id toimenpide]
   (first (db/with-db-exception-translation
            jdbc/update! db :vk_toimenpide
