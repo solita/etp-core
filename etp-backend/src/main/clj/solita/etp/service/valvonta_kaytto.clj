@@ -201,10 +201,12 @@
 (defn- insert-toimenpide! [db valvonta-id diaarinumero toimenpide-add]
   (first (db/with-db-exception-translation
            jdbc/insert! db :vk-toimenpide
-           (assoc toimenpide-add
-             :diaarinumero diaarinumero
-             :valvonta-id valvonta-id
-             :publish-time (Instant/now))
+           (-> toimenpide-add
+               (dissoc :bypass-asha)
+               (assoc
+                :diaarinumero diaarinumero
+                :valvonta-id valvonta-id
+                :publish-time (Instant/now)))
            db/default-opts)))
 
 (defn find-diaarinumero [db id toimenpide]
@@ -251,8 +253,9 @@
           toimenpide (insert-toimenpide! tx valvonta-id diaarinumero toimenpide-add)
           toimenpide-id (:id toimenpide)]
       (insert-toimenpide-osapuolet! tx valvonta-id toimenpide-id)
-      (case (-> toimenpide :type-id toimenpide/type-key)
-        :closed (asha/close-case! whoami valvonta-id toimenpide)
+      (if (toimenpide/case-close? toimenpide)
+        (when-not (-> toimenpide-add :bypass-asha)
+          (asha/close-case! whoami valvonta-id toimenpide))
         (when (toimenpide/asha-toimenpide? toimenpide)
           (let [find-toimenpide-osapuolet (comp flatten (juxt find-toimenpide-henkilot find-toimenpide-yritykset))
                 osapuolet (find-toimenpide-osapuolet tx (:id toimenpide))]
@@ -261,20 +264,6 @@
               osapuolet ilmoituspaikat roolit)
             (send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
             (send-toimenpide-email! db aws-s3-client valvonta toimenpide osapuolet))))
-      {:id toimenpide-id})))
-
-(defn add-toimenpide-bypassing-asha! [db valvonta-id toimenpide-add]
-  (when-not (toimenpide/case-close? toimenpide-add)
-    (exception/illegal-argument!
-     "Asha bypass is implemented only for closing cases"))
-
-  (jdbc/with-db-transaction
-    [tx db]
-    (let [valvonta (find-valvonta tx valvonta-id)
-          diaarinumero (find-diaarinumero tx valvonta-id toimenpide-add)
-          toimenpide (insert-toimenpide! tx valvonta-id diaarinumero toimenpide-add)
-          toimenpide-id (:id toimenpide)]
-      (insert-toimenpide-osapuolet! tx valvonta-id toimenpide-id)
       {:id toimenpide-id})))
 
 (defn update-toimenpide! [db toimenpide-id toimenpide]
