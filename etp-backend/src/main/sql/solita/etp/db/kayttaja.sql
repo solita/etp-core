@@ -27,6 +27,7 @@ select k.id,
        k.virtu$organisaatio,
        k.henkilotunnus,
        k.modifytime,
+       k.valvoja,
        fullname(modifier) modifiedby_name
 from
   audit.kayttaja k
