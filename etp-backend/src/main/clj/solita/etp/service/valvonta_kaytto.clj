@@ -201,10 +201,12 @@
 (defn- insert-toimenpide! [db valvonta-id diaarinumero toimenpide-add]
   (first (db/with-db-exception-translation
            jdbc/insert! db :vk-toimenpide
-           (assoc toimenpide-add
-             :diaarinumero diaarinumero
-             :valvonta-id valvonta-id
-             :publish-time (Instant/now))
+           (-> toimenpide-add
+               (dissoc :bypass-asha)
+               (assoc
+                :diaarinumero diaarinumero
+                :valvonta-id valvonta-id
+                :publish-time (Instant/now)))
            db/default-opts)))
 
 (defn find-diaarinumero [db id toimenpide]
@@ -251,8 +253,9 @@
           toimenpide (insert-toimenpide! tx valvonta-id diaarinumero toimenpide-add)
           toimenpide-id (:id toimenpide)]
       (insert-toimenpide-osapuolet! tx valvonta-id toimenpide-id)
-      (case (-> toimenpide :type-id toimenpide/type-key)
-        :closed (asha/close-case! whoami valvonta-id toimenpide)
+      (if (toimenpide/case-close? toimenpide)
+        (when-not (-> toimenpide-add :bypass-asha)
+          (asha/close-case! whoami valvonta-id toimenpide))
         (when (toimenpide/asha-toimenpide? toimenpide)
           (let [find-toimenpide-osapuolet (comp flatten (juxt find-toimenpide-henkilot find-toimenpide-yritykset))
                 osapuolet (find-toimenpide-osapuolet tx (:id toimenpide))]

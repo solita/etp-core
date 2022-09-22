@@ -19,6 +19,7 @@
   (contains? type-key-set (-> toimenpide :type-id type-key)))
 
 (def case-open? (partial type? :case))
+(def case-close? (partial type? :closed))
 (def send-tiedoksi? (partial type? :rfi-request))
 
 (def asha-toimenpide?
