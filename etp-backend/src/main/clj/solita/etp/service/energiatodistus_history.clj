@@ -2,7 +2,8 @@
   (:require [clojure.string :as str]
             [flathead.flatten :as flat]
             [solita.etp.db :as db]
-            [solita.etp.service.energiatodistus :as energiatodistus-service])
+            [solita.etp.service.energiatodistus :as energiatodistus-service]
+            [solita.etp.schema.energiatodistus-history :as energiatodistus-history-schema])
   (:import (java.time Instant)))
 
 (db/require-queries 'energiatodistus-history)
@@ -12,9 +13,13 @@
 
 (def omitted-fields #{:kommentti})
 
+(def db-row->energiatodistus
+  (energiatodistus-service/schema->db-row->energiatodistus
+   energiatodistus-history-schema/Energiatodistus))
+
 (defn audit-row->flat-energiatodistus [audit-row]
   (->> audit-row
-       energiatodistus-service/db-row->energiatodistus
+       db-row->energiatodistus
        flat/sequence->map
        (flat/tree->flat ".")))
 
