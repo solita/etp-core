@@ -72,16 +72,16 @@
       signature-reply-sv)}
    :rfi-order
    {:subject
-    "Kehotus vastata tietopyyntöön"
+    "Energiatodistusvalvonnan kehotus"
     :body
     (html
-      (heading "Kehotus vastata tietopyyntöön")
+      (heading "Energiatodistusvalvonnan kehotus")
       (paragraph
         "Kehotamme vastaamaan tietopyyntöön {toimenpide.deadline-date} mennessä.")
       rfi-order-description-fi
       signature-reply-fi
 
-      (heading "Uppmaning om att svara på begäran om information")
+      (heading "Uppmaning till tillsyn över energicertifikat")
       (paragraph
         "Vi uppmanar dig att svara på begäran om information senast den {toimenpite.deadline-date}.")
       rfi-order-description-sv
@@ -93,15 +93,15 @@
     (html
       (heading "Vastaa tietopyyntöön")
       (paragraph
-        "ARA on lähettänyt teille tietopyynnön ja kehotuksen."
-        "ARA antaa varoituksen ja vaatii vastaamaan tietopyyntöön {toimenpide.deadline-date} mennessä.")
+        "ARA on lähettänyt teille kehotuksen."
+        "ARA antaa varoituksen ja vaatii vastaamaan kehotukseen {toimenpide.deadline-date} mennessä.")
       rfi-order-description-fi
       signature-reply-fi
 
-      (heading "Svara på begäran om information")
+      (heading "Svara på uppmaningen")
       (paragraph
-        "ARA har skickat dig en begäran om information och uppmaning."
-        "ARA ger dig en varning och kräver att du svarar på begäran om information senast den {toimenpite.deadline-date}.")
+        "ARA har skickat dig en uppmaning."
+        "ARA ger dig en varning och kräver att du svarar på uppmaningen senast den {toimenpite.deadline-date}.")
       rfi-order-description-sv
       signature-reply-sv)}})
 
