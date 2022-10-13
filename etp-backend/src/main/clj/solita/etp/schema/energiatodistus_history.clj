@@ -16,7 +16,7 @@
    :form-history [AuditEvent]})
 
 (defn- et-schema->et-history-schema [s]
-  (assoc-in s [:perustiedot :rakennustunnus] schema/Str))
+  (assoc-in s [:perustiedot :rakennustunnus] (schema/maybe schema/Str)))
 
 (def Energiatodistus2018
   (et-schema->et-history-schema energiatodistus-schema/Energiatodistus2018))
