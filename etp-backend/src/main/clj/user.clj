@@ -30,11 +30,15 @@
   (let [cpu-count (.availableProcessors (Runtime/getRuntime))
         thread-count (if-let [thread-limit (System/getenv "ETP_THREAD_LIMIT")]
                        (min (Integer/parseInt thread-limit) cpu-count)
-                       cpu-count)]
+                       cpu-count)
+        repeat-count (if-let [cnt (System/getenv "ETP_TEST_REPEATS")]
+                       (Integer/parseInt cnt)
+                       1)]
     (require 'eftest.runner)
-    (->> ((resolve 'eftest.runner/find-tests) "src/test")
-         (filter (matching-test test-searches))
-         ((resolve 'eftest.runner/run-tests)))))
+    (as-> ((resolve 'eftest.runner/find-tests) "src/test") $
+      (filter (matching-test test-searches) $)
+      (reduce concat [] (repeat repeat-count $))
+      ((resolve 'eftest.runner/run-tests) $ {:thread-count thread-count}))))
 
 (defn run-tests-and-exit! []
   (let [{:keys [fail error]} (run-tests (map re-pattern *command-line-args*))]
