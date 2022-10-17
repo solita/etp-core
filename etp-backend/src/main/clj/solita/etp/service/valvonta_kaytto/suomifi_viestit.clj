@@ -60,7 +60,7 @@
                          "{{katuosoite}}, {{postinumero}} {{postitoimipaikka-fi}}\n"
                          "{{#rfi-request}}Tietopyyntöön on vastattava {{deadline-date}} mennessä.{{/rfi-request}}"
                          "{{#rfi-order}}Kehotamme vastaamaan tietopyyntöön {{deadline-date}} mennessä.{{/rfi-order}}"
-                         "{{#rfi-warning}}ARA on lähettänyt teille tietopyynnön ja kehotuksen. "
+                         "{{#rfi-warning}}ARA on lähettänyt teille kehotuksen. "
                          "ARA antaa varoituksen ja vaatii vastaamaan tietopyyntöön {{deadline-date}} mennessä.{{/rfi-warning}}")
                     {:rakennustunnus      (:rakennustunnus valvonta)
                      :katuosoite          (:katuosoite valvonta)
