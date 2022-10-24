@@ -11,7 +11,7 @@ VALUES
 (8, 'Vesikiertoinen lattia-/patterilämmitys', 'Vattenburen golv-/elementvärme', 9),
 (9, 'Vesikiertoinen lämmitys/ märkätiloissa sähköinen lattialämmitys', 'Vattenburen värme/elburen golvvärme i våtutrymmen', 10),
 (10, 'Ilmalämmitys/vesikiertoinen patterilämmitys', 'Luftuppvärmning/vattenburen elementvärme', 11),
-(11, 'Ilmalämmitys/sähköpatterilämmitys', 'Luftuppvärmning', 12),
+(11, 'Ilmalämmitys/sähköpatterilämmitys', 'Luftuppvärmning/uppvärmning med elelement', 12),
 (12, 'Muu lämmönjako', 'Annat värmedistribution', 13)
 ON CONFLICT (id) DO UPDATE
 SET
