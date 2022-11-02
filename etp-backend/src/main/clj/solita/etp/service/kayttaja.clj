@@ -84,4 +84,5 @@
 
 (def system-kayttaja
   {:communication -3
-   :laskutus -2})
+   :laskutus -2
+   :pregenerator -4})
