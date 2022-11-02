@@ -8,6 +8,7 @@
             [solita.etp.schema.laatija :as laatija-schema]
             [solita.etp.service.laatija :as laatija-service]
             [solita.etp.service.kayttaja-laatija :as kayttaja-laatija-service]
+            [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.security :as security]))
 
@@ -129,7 +130,7 @@
   [["/laatijat"
     ["/patevyys-expiration-messages"
      {:middleware [[security/wrap-db-application-name
-                    (rooli-service/system :communication)]]
+                    (kayttaja-service/system-kayttaja :communication)]]
       :post       {:summary   "Käynnistä pätevyysmuistutusten lähetys"
                    :parameters
                    {:query {:months-before-expiration              schema/Int
