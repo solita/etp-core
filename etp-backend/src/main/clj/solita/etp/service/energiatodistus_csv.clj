@@ -182,28 +182,35 @@
    [[:lisamerkintoja-fi]
     [:lisamerkintoja-sv]]))
 
-(def public-columns
-  (let [extra-columns #{[:perustiedot :alakayttotarkoitus-fi]
-                        [:tulokset :e-luokka-rajat :kayttotarkoitus :label-fi]
-                        [:tulokset :e-luokka-rajat :raja-uusi-2018]
-                        [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]
-                        [:tulokset :kaytettavat-energiamuodot :sahko-kerroin]
-                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin]
-                        [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]
-                        [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]}
-        hidden-columns #{[:tila-id]
-                         [:kieli]
-                         [:korvaava-energiatodistus-id]
-                         [:laatija-id]
-                         [:laatija-fullname]
-                         [:perustiedot :yritys :nimi]}]
-    (filter
+(defn derive-columns [columns schema extra-columns hidden-columns]
+  (filter
      (fn [column]
        (and
         (or (contains? extra-columns column)
-            (schema-tools.core/get-in solita.etp.schema.public-energiatodistus/Energiatodistus2018 column))
+            (schema-tools.core/get-in schema column))
         (not (contains? hidden-columns column))))
-     private-columns)))
+     columns))
+
+(def public-extra-columns #{[:perustiedot :alakayttotarkoitus-fi]
+                            [:tulokset :e-luokka-rajat :kayttotarkoitus :label-fi]
+                            [:tulokset :e-luokka-rajat :raja-uusi-2018]
+                            [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]
+                            [:tulokset :kaytettavat-energiamuodot :sahko-kerroin]
+                            [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin]
+                            [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]
+                            [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]})
+
+(def public-hidden-columns #{[:tila-id]
+                             [:kieli]
+                             [:korvaava-energiatodistus-id]
+                             [:laatija-id]
+                             [:laatija-fullname]
+                             [:perustiedot :yritys :nimi]})
+
+(def public-columns (derive-columns private-columns
+                                    solita.etp.schema.public-energiatodistus/Energiatodistus2018
+                                    public-extra-columns
+                                    public-hidden-columns))
 
 (defn column-ks->str [ks]
   (->> ks
