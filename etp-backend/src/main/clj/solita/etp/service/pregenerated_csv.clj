@@ -10,7 +10,10 @@
                           :rooli -1})
 
 (def packages
-  [{:destination "energiatodistukset-banks.csv"
+  [{:destination "energiatodistukset-ids.csv" ;; TODO Remove, this is only for convenience of development
+    :columns [[:id]]
+    :query {:where nil}}
+   {:destination "energiatodistukset-banks.csv"
     :columns energiatodistus-csv-service/public-columns ;; TODO Add kiinteistötunnus, postitoimipaikka
     :query {:where nil}}
    {:destination "energiatodistukset-tilastokeskus.csv"
