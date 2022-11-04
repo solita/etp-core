@@ -1,6 +1,7 @@
 (ns solita.etp.api.energiatodistus
   (:require [ring.util.response :as r]
             [schema.core :as schema]
+            [solita.etp.security :as security]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.schema.public-energiatodistus :as public-energiatodistus-schema]
@@ -16,6 +17,7 @@
             [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf-service]
             [solita.etp.service.energiatodistus-csv :as energiatodistus-csv-service]
             [solita.etp.service.energiatodistus-xlsx :as energiatodistus-xlsx-service]
+            [solita.etp.service.pregenerated-csv :as pregenerated-csv-service]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.api.response :as api-response]
             [solita.etp.api.stream :as api-stream]
@@ -23,7 +25,8 @@
             [solita.etp.exception :as exception]
             [solita.etp.schema.viesti :as viesti-schema]
             [solita.etp.service.viesti :as viesti-service]
-            [solita.etp.schema.geo :as geo-schema])
+            [solita.etp.schema.geo :as geo-schema]
+            [solita.etp.service.concurrent :as concurrent])
   (:import (com.fasterxml.jackson.core JsonParseException)))
 
 (defn valid-pdf-filename? [filename id kieli]
@@ -246,3 +249,14 @@
     ["/legacy"
      ["/2013" (xml-api/post 2013)]
      ["/2018" (xml-api/post 2018)]]]])
+(def internal-routes
+  [["/pregenerate-csv"
+    {:middleware [[security/wrap-db-application-name -2]]
+     :post {:summary "Tuota rajapinta-aineisto"
+            :responses {200 {:body nil}}
+            :handler (fn [{:keys [db aws-s3-client]}]
+                       (concurrent/run-background
+                        (fn []
+                          (pregenerated-csv-service/pregenerate db aws-s3-client))
+                        "Pregeneration failed")
+                       (r/response {}))}}]])

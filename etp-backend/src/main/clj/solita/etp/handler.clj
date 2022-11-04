@@ -136,6 +136,7 @@
     (concat (tag "Energiatodistus API" energiatodistus-api/external-routes))]
    ["/internal"
     (concat (tag "Laskutus API" laskutus-api/routes)
+            (tag "Energiatodistus Internal API" energiatodistus-api/internal-routes)
             (tag "Laatija Internal API" laatija-api/internal-routes))]])
 
 (def route-opts
