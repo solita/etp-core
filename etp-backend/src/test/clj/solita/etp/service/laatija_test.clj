@@ -9,7 +9,7 @@
             [solita.etp.service.laatija :as service]
             [solita.etp.service.viesti :as viesti-service]
             [solita.etp.whoami :as test-whoami]
-            [solita.etp.service.rooli :as rooli-service])
+            [solita.etp.service.kayttaja :as kayttaja-service])
   (:import (java.time LocalDate ZoneId Instant)))
 
 (t/use-fixtures :each ts/fixture)
@@ -197,7 +197,7 @@
   (let [paakayttaja-id (kayttaja-test-data/insert-paakayttaja!)
         [id _] (laatija-test-data/generate-and-insert!)
         ^LocalDate now (LocalDate/now)
-        system-id (rooli-service/system :communication)
+        system-id (kayttaja-service/system-kayttaja :communication)
         options {:months-before-expiration 6 :fallback-window 5}]
     (service/update-laatija-by-id!
       ts/*db* id

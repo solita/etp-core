@@ -81,3 +81,7 @@
     (->> (kayttaja-db/select-kayttaja-history db {:id kayttaja-id})
          (map (db-row->kayttaja kayttaja-schema/KayttajaHistory)))
     (exception/throw-forbidden!)))
+
+(def system-kayttaja
+  {:communication -3
+   :laskutus -2})
