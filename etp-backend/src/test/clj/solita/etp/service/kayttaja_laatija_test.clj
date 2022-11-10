@@ -38,6 +38,7 @@
       (schema/validate laatija-schema/Laatija found-laatija)
       (t/is (-> add
                 (st/select-schema laatija-schema/KayttajaAdd)
+                (dissoc :api-key)
                 (xmap/submap? found-kayttaja)))
       (t/is (-> add
                 (st/select-schema laatija-schema/LaatijaAdd)
