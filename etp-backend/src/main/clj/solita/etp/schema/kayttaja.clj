@@ -3,6 +3,7 @@
        Schemas specific only for laatija are in laatija namespace."}
   solita.etp.schema.kayttaja
   (:require [schema.core :as schema]
+            [clojure.string :as str]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.audit :as audit-schema]
             [schema-tools.core :as st]))
@@ -20,6 +21,11 @@
    :henkilotunnus (schema/maybe common-schema/Henkilotunnus)
    :virtu (schema/maybe VirtuId)})
 
+(def Password
+  (schema/constrained schema/Str
+                      #(<= 8 (count (str/trim %)) 200)
+                      "password"))
+
 (def KayttajaUpdate
   "Schema to update all other users (kayttaja) except laatija."
   (merge
@@ -27,7 +33,8 @@
     {:etunimi       schema/Str
      :sukunimi      schema/Str
      :email         schema/Str
-     :puhelin       schema/Str}))
+     :puhelin       schema/Str
+     :api-key       (schema/maybe Password)}))
 
 (def Kayttaja
   "Schema representing any persistent kayttaja (any role)"
@@ -46,7 +53,7 @@
           :email         schema/Str}))
 
 (def Whoami (-> Kayttaja
-                (dissoc :passivoitu :valvoja :puhelin :login)
+                (dissoc :passivoitu :valvoja :puhelin :login :api-key)
                 (assoc :partner schema/Bool)))
 
 (def KayttajaHistory

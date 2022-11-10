@@ -4,8 +4,7 @@
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.geo :as geo-schema]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
-            [schema-tools.core :as st]
-            [clojure.string :as str]))
+            [schema-tools.core :as st]))
 
 (def Patevyystaso common-schema/Luokittelu)
 
@@ -34,11 +33,6 @@
    :toteaja            PatevyydenToteaja
    :laatimiskielto     schema/Bool})
 
-(def Password
-  (schema/constrained schema/Str
-                      #(<= 8 (count (str/trim %)) 200)
-                      "password"))
-
 (def LaatijaUpdate
   "Only for internal use in laatija services.
    Represents laatija information which is stored in laatija-table."
@@ -51,8 +45,7 @@
           :julkinenosoite     schema/Bool
           :julkinenwwwosoite  schema/Bool
           :wwwosoite          (schema/maybe common-schema/Url)
-          :laskutuskieli      (schema/enum 0 1 2)
-          :api-key            (schema/maybe Password)}))
+          :laskutuskieli      (schema/enum 0 1 2)}))
 
 (def Laatija
   "Schema representing the persistent laatija.
@@ -76,7 +69,8 @@
    Represents kayttaja information which is stored in kayttaja-table."
   (merge (st/optional-keys KayttajaAdminUpdate)
          {:email   schema/Str
-          :puhelin schema/Str}))
+          :puhelin schema/Str
+          :api-key (schema/maybe kayttaja-schema/Password)}))
 
 (def KayttajaAdd (st/required-keys KayttajaUpdate))
 
