@@ -1,7 +1,6 @@
 (ns solita.etp.service.laatija
   (:require [clojure.set :as set]
             [clojure.java.jdbc :as jdbc]
-            [buddy.hashers :as hashers]
             [solita.common.map :as map]
             [solita.etp.exception :as exception]
             [solita.etp.db :as db]
@@ -75,17 +74,9 @@
                 :julkinenosoite :julkinen_osoite
                 :julkinenwwwosoite :julkinen_wwwosoite})
 
-(defn- api-key-hash [laatija]
-  (if-let [api-key (:api-key laatija)]
-    (assoc laatija :api-key-hash
-                   (hashers/derive api-key {:alg :bcrypt+sha512}))
-    laatija))
-
 (defn- laatija->db-row [laatija]
   (-> laatija
-      (set/rename-keys db-keymap)
-      api-key-hash
-      (dissoc :api-key)))
+      (set/rename-keys db-keymap)))
 
 (defn add-laatija! [db laatija]
   (-> (db/with-db-exception-translation

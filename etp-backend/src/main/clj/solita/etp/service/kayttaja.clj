@@ -1,5 +1,6 @@
 (ns solita.etp.service.kayttaja
   (:require [clojure.java.jdbc :as jdbc]
+            [buddy.hashers :as hashers]
             [schema.coerce :as coerce]
             [solita.etp.exception :as exception]
             [solita.etp.db :as db]
@@ -49,8 +50,16 @@
     (assoc kayttaja :virtu {:organisaatio nil :localid nil})
     kayttaja))
 
+(defn api-key-hash [kayttaja]
+  (if-let [api-key (:api-key kayttaja)]
+    (assoc kayttaja :api-key-hash
+                   (hashers/derive api-key {:alg :bcrypt+sha512}))
+    kayttaja))
+
 (defn- kayttaja->db-row [kayttaja]
   (-> kayttaja
+      api-key-hash
+      (dissoc :api-key)
       (set/rename-keys {:rooli :rooli-id})
       empty-virtuid
       (->> (flat/tree->flat "$"))
