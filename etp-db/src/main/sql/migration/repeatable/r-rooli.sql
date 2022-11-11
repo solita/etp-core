@@ -4,7 +4,8 @@ values
 (0, 'Laatija', 'Laatija SV'),
 (1, 'Pätevyyden toteaja', 'Pätevyyden toteaja SV'),
 (2, 'Pääkäyttäjä', 'Pääkäyttäjä SV'),
-(3, 'Laskuttaja', 'Fakturare')
+(3, 'Laskuttaja', 'Fakturare'),
+(4, 'Aineistoasiakas', 'Material kund')
 on conflict (id) do update set
   label_fi = excluded.label_fi,
-  label_sv = excluded.label_sv
+  label_sv = excluded.label_sv;

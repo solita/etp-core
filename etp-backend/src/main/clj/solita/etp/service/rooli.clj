@@ -2,7 +2,7 @@
   (:require [solita.etp.service.luokittelu :as luokittelu-service]))
 
 (def ^:private rooli-keys
-  [:laatija :patevyyden-toteaja :paakayttaja :laskuttaja])
+  [:laatija :patevyyden-toteaja :paakayttaja :laskuttaja :aineistokayttaja])
 
 (defn find-roolit [db] (luokittelu-service/find-roolit db))
 
@@ -26,6 +26,9 @@
 
 (defn laskuttaja? [{:keys [rooli]}]
   (= rooli 3))
+
+(defn aineistokayttaja? [{:keys [rooli]}]
+  (= rooli 4))
 
 (defn rooli-key [rooli-id] (nth rooli-keys rooli-id))
 
