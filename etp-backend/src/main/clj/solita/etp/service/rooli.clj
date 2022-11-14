@@ -30,6 +30,9 @@
 (defn aineistokayttaja? [{:keys [rooli]}]
   (= rooli 4))
 
+(defn system? [{:keys [rooli]}]
+  (= rooli -1))
+
 (defn rooli-key [rooli-id] (nth rooli-keys rooli-id))
 
 (def energiatodistus-reader? (some-fn laatija? paakayttaja? laskuttaja?))
