@@ -3,6 +3,7 @@
             [solita.etp.jwt :as jwt]
             [solita.etp.basic-auth :as basic-auth]
             [solita.etp.api.response :as response]
+            [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.service.whoami :as whoami-service]
             [solita.common.maybe :as maybe]
             [solita.etp.exception :as exception]))
@@ -62,6 +63,11 @@
           (-> response/unauthorized
               (merge {:headers {"WWW-Authenticate" (format "Basic realm=\"%s\""
                                                            realm)}})))))))
+
+(defn wrap-whoami-assume-presigned [handler]
+  (fn [req]
+    (handler (assoc req :whoami {:id (:presigned kayttaja-service/system-kayttaja)
+                                 :rooli -1}))))
 
 (defn wrap-access [handler]
   (fn [{:keys [request-method whoami] :as req}]
