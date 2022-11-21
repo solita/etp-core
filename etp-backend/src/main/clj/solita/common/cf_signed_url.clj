@@ -33,7 +33,7 @@
     (-> parsed-pem
         PrivateKeyFactory/createKey)
     :else
-    (PrivateKeyFactory/createKey parsed-pem)))
+    (throw (ex-info "Unexpected object from decoded PEM" {}))))
 
 (defn pem-string->private-key [pem-str]
   (-> pem-str
