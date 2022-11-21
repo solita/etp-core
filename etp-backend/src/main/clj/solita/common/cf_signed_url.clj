@@ -1,4 +1,5 @@
-(ns solita.etp.signature
+(ns solita.common.cf-signed-url
+  (:require [solita.etp.service.json :as json])
   (:import
    (java.io FileInputStream InputStreamReader StringReader)
    (java.util Base64)
@@ -8,21 +9,14 @@
    (org.bouncycastle.crypto.util PrivateKeyFactory)
    (org.bouncycastle.openssl PEMKeyPair PEMParser)))
 
-(defn- reader->parsed-pem [reader]
-  (-> reader
-      PEMParser.
-      .readObject))
+;; Namespace for producing a signed URL for CloudFront canned policy, as defined at
+;; https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-creating-signed-url-canned-policy.html
 
-(defn- path->parsed-pem [path]
-  (with-open [stream (FileInputStream. path)]
-    (-> stream
-        (InputStreamReader. "UTF-8")
-        reader->parsed-pem)))
-
-(defn- str->parsed-pem [s]
+(defn str->parsed-pem [s]
   (-> s
       StringReader.
-      reader->parsed-pem))
+      PEMParser.
+      .readObject))
 
 (defn- pem->key [parsed-pem]
   ;; Not sure why it is defined that way, but the type of object
@@ -41,14 +35,9 @@
     :else
     (PrivateKeyFactory/createKey parsed-pem)))
 
-(defn load-private-key-str [pem-str]
+(defn pem-string->private-key [pem-str]
   (-> pem-str
       str->parsed-pem
-      pem->key))
-
-(defn load-private-key-from [path]
-  (-> path
-      path->parsed-pem
       pem->key))
 
 (defn- bytes->base64 [b]
@@ -71,3 +60,17 @@
         bytes->base64
         String.
         base64->querystring-safe-str)))
+
+(defn unix-time []
+  (quot (System/currentTimeMillis) 1000))
+
+(defn policy-document [url end-time]
+  {"Statement" [{"Resource" url
+                 "Condition" {"DateLessThan" {"AWS:EpochTime" end-time}}}]})
+
+(defn url->signed-url [url expires {:keys [key-pair-id private-key]}]
+  (str url
+       "?Expires=" expires
+       "&Signature=" (sign-document (-> (policy-document url expires)
+                                        json/write-value-as-string) private-key)
+       "&Key-Pair-Id=" key-pair-id))
