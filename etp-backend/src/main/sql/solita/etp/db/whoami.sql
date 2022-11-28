@@ -2,7 +2,7 @@
 SELECT k.id id, k.etunimi etunimi, k.sukunimi sukunimi, k.email email,
        k.rooli_id rooli, k.cognito_id cognitoid, k.virtu$localid,
        k.virtu$organisaatio, k.henkilotunnus henkilotunnus,
-       l.api_key_hash api_key_hash, k.verifytime,
+       k.api_key_hash api_key_hash, k.verifytime,
        coalesce(l.partner, false) as partner
 FROM kayttaja k
 LEFT JOIN laatija l ON l.id = k.id

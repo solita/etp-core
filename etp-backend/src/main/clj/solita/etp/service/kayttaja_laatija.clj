@@ -12,13 +12,20 @@
             [flathead.flatten :as flat])
   (:import (java.time Instant)))
 
+(defn- kayttaja->db-row [kayttaja]
+  (-> kayttaja
+      kayttaja-service/api-key-hash
+      (dissoc :api-key :rooli)
+      (->> (flat/tree->flat "$"))))
+
 (defn- update-kayttaja! [db id kayttaja]
   (db/with-db-exception-translation
     jdbc/update!
     db
     :kayttaja
-    (flat/tree->flat "$" (dissoc kayttaja :rooli))
-    ["rooli_id = 0 and id = ?" id]))
+    (kayttaja->db-row kayttaja)
+    ["rooli_id = 0 and id = ?" id]
+    db/default-opts))
 
 (defn- add-kayttaja! [db kayttaja]
   (kayttaja-service/add-kayttaja! db (assoc kayttaja :rooli 0)))

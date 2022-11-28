@@ -23,7 +23,7 @@
                                     {:id id}])
                   found (service/find-kayttaja ts/*db* whoami id)]]
       (schema/validate kayttaja-schema/Kayttaja found)
-      (t/is (map/submap? kayttaja found)))))
+      (t/is (map/submap? (dissoc kayttaja :api-key) found)))))
 
 (t/deftest add-and-find-no-permissions-test
   (let [{:keys [kayttajat]} (test-data-set)]
@@ -51,7 +51,7 @@
                               kayttaja-test-data/laskuttaja])
                    id)]
         (schema/validate kayttaja-schema/Kayttaja found)
-        (t/is (map/submap? update found))))))
+        (t/is (map/submap? (dissoc update :api-key) found))))))
 
 (t/deftest update-and-find-no-permissions-test
   (let [{:keys [kayttajat]} (test-data-set)

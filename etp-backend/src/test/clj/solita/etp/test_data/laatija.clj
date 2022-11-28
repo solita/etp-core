@@ -8,7 +8,8 @@
 (defn generate-adds [n]
   (map #(generators/complete {:henkilotunnus %1
                               :email %2
-                              :patevyystaso (rand-nth [1 2])}
+                              :patevyystaso (rand-nth [1 2])
+                              :api-key nil}
                              laatija-schema/KayttajaLaatijaAdd)
        (generators/unique-henkilotunnukset n)
        (generators/unique-emails n)))
