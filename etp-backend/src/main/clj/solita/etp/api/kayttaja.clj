@@ -3,9 +3,11 @@
             [schema.core :as schema]
             [solita.etp.api.response :as api-response]
             [solita.etp.schema.common :as common-schema]
+            [solita.etp.schema.aineisto :as aineisto-schema]
             [solita.etp.schema.kayttaja :as kayttaja-schema]
             [solita.etp.schema.laatija :as laatija-schema]
             [solita.etp.schema.rooli :as rooli-schema]
+            [solita.etp.service.aineisto :as aineisto-service]
             [solita.etp.service.whoami :as whoami-service]
             [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.service.rooli :as rooli-service]
@@ -72,9 +74,34 @@
                         (-> (laatija-service/find-laatija-by-id
                              db whoami id)
                             (api-response/get-response
-                             (str "No laatija information for käyttäjä id " id))))}}]]]
+                             (str "No laatija information for käyttäjä id " id))))}}]
+     ["/aineistot"
+      {:get {:summary "Hae luettelo käyttäjän käytettävissä olevista aineistoista"
+             :parameters {:path {:id common-schema/Key}}
+             :access rooli-service/paakayttaja?
+             :responses {200 {:body [aineisto-schema/KayttajaAineisto]}}
+             :handler (fn [{{{:keys [id]} :path} :parameters :keys [db whoami]}]
+                        (r/response (aineisto-service/find-kayttaja-aineistot db id)))}
+       :put {:summary "Aseta käyttäjälle pääsy aineistoon"
+             :parameters {:path {:id common-schema/Key}
+                          :body [aineisto-schema/KayttajaAineisto]}
+             :access rooli-service/paakayttaja?
+             :responses {200 {:body nil}
+                         404 {:body schema/Str}}
+             :handler (fn [{{{:keys [id]} :path :keys [body]} :parameters :keys [db]}]
+                        (api-response/with-exceptions
+                          #(api-response/ok|not-found
+                            (aineisto-service/set-kayttaja-aineistot! db id body)
+                            (str "Käyttäjä " id " does not exist"))
+                          [{:type :foreign-key-violation :response 400}]))}}]]]
    ["/roolit"
     {:get {:summary    "Hae roolit -luokittelu"
            :responses  {200 {:body [rooli-schema/Rooli]}}
            :handler    (fn [{:keys [db]}]
-                         (r/response (rooli-service/find-roolit db)))}}]])
+                         (r/response (rooli-service/find-roolit db)))}}]
+   ["/aineistot"
+    {:get {:summary "Hae luettelo tunnetuista aineistopaketeista"
+           :responses {200 {:body [aineisto-schema/Aineisto]}}
+           :access rooli-service/paakayttaja?
+           :handler (fn [{:keys [db]}]
+                      (r/response (aineisto-service/find-aineistot db)))}}]])
