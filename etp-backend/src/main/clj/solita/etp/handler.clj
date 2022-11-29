@@ -17,6 +17,7 @@
             [reitit.dev.pretty :as pretty]
             [muuntaja.core :as m]
             [schema.core :as s]
+            [solita.etp.api.aineisto :as aineisto-api]
             [solita.etp.api.kayttaja :as kayttaja-api]
             [solita.etp.api.yritys :as yritys-api]
             [solita.etp.api.laatija :as laatija-api]
@@ -133,7 +134,12 @@
                                "Access to external API"]
                               [security/wrap-access]
                               [security/wrap-db-application-name]]}
-    (concat (tag "Energiatodistus API" energiatodistus-api/external-routes))]
+    (concat (tag "Energiatodistus API" energiatodistus-api/external-routes)
+            (tag "Aineisto API" aineisto-api/external-routes))]
+   ["/signed" {:middleware [[security/wrap-whoami-assume-presigned]
+                               [security/wrap-access]
+                               [security/wrap-db-application-name]]}
+    (concat (tag "Aineisto API" aineisto-api/signed-routes))]
    ["/internal"
     (concat (tag "Laskutus API" laskutus-api/routes)
             (tag "Laatija Internal API" laatija-api/internal-routes))]])
