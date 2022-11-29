@@ -1,5 +1,6 @@
 (ns solita.etp.config
   (:require [clojure.string :as str]
+            [clojure.java.io :as io]
             [integrant.core :as ig]
             [cognitect.aws.credentials :as credentials]
             [clojure.edn :as edn]))
@@ -11,6 +12,10 @@
 
 (defn env [name default]
   (or (System/getenv name) default))
+
+(defn env-or-resource [env-name resource-path]
+  (or (System/getenv env-name)
+      (-> resource-path io/resource slurp)))
 
 ;;
 ;; For Integrant components
@@ -127,3 +132,8 @@
 (def suomifi-viestit-keystore-file (env "SUOMIFI_VIESTIT_KEYSTORE_FILE" nil))
 (def suomifi-viestit-keystore-password (env "SUOMIFI_VIESTIT_KEYSTORE_PASSWORD" nil))
 (def suomifi-viestit-keystore-alias (env "SUOMIFI_VIESTIT_KEYSTORE_ALIAS" nil))
+
+;; Url signing
+(def url-signing-key-id (env "URL_SIGNING_KEY_ID" "DEVENV_KEY_ID"))
+(def url-signing-public-key (env-or-resource "URL_SIGNING_PUBLIC_KEY" "cf-signed-url/example.pub.pem"))
+(def url-signing-private-key (env-or-resource "URL_SIGNING_PRIVATE_KEY" "cf-signed-url/example.key.pem"))

@@ -54,5 +54,14 @@
                         (when-not (aineisto-service/check-access db (:id whoami) "127.0.0.1" aineisto-id)
                           (exception/throw-forbidden!
                            (str "User " whoami " not permitted to access aineisto " aineisto-id)))
-                        {:status 302
-                         :headers {"Location" (str config/index-url "/api/signed/aineistot/" aineisto-id "/energiatodistukset.csv")}})}}]]]])
+                        (let [url (str config/index-url
+                                       "/api/signed/aineistot/"
+                                       aineisto-id
+                                       "/energiatodistukset.csv")
+                              expires (+ 60 (signed-url/unix-time))
+                              private-key (signed-url/pem-string->private-key config/url-signing-private-key)
+                              signing-keys {:key-pair-id config/url-signing-key-id
+                                            :private-key private-key}
+                              signed-url (signed-url/url->signed-url url expires signing-keys)]
+                          {:status 302
+                           :headers {"Location" signed-url}}))}}]]]])
