@@ -9,6 +9,9 @@
 (def ^:private aineisto-keys
   [:banks :tilastokeskus :anonymized-set])
 
+(defn aineisto-key [aineisto-id]
+  (->> aineisto-id dec (nth aineisto-keys)))
+
 (def find-aineistot luokittelu-service/find-aineistot)
 
 (defn set-access! [db kayttaja-id {:keys [aineisto-id valid-until ip-address]}]
