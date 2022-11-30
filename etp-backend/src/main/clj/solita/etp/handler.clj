@@ -35,6 +35,7 @@
             [solita.etp.jwt :as jwt]
             [solita.etp.header-middleware :as header-middleware]
             [solita.etp.exception :as exception]
+            [solita.common.cf-signed-url :as signed-url]
             [solita.common.map :as map]))
 
 (defn tag [tag routes]
@@ -136,9 +137,13 @@
                               [security/wrap-db-application-name]]}
     (concat (tag "Energiatodistus API" energiatodistus-api/external-routes)
             (tag "Aineisto API" aineisto-api/external-routes))]
-   ["/signed" {:middleware [[security/wrap-whoami-assume-presigned]
-                               [security/wrap-access]
-                               [security/wrap-db-application-name]]}
+   ["/signed" {:middleware [[security/wrap-whoami-from-signed
+                             config/index-url
+                             {:key-pair-id config/url-signing-key-id
+                              :public-key (signed-url/pem-string->public-key
+                                           config/url-signing-public-key)}]
+                            [security/wrap-access]
+                            [security/wrap-db-application-name]]}
     (concat (tag "Aineisto API" aineisto-api/signed-routes))]
    ["/internal"
     (concat (tag "Laskutus API" laskutus-api/routes)

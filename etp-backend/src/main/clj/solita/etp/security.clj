@@ -5,6 +5,7 @@
             [solita.etp.api.response :as response]
             [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.service.whoami :as whoami-service]
+            [solita.common.cf-signed-url :as signed-url]
             [solita.common.maybe :as maybe]
             [solita.etp.exception :as exception]))
 
@@ -64,10 +65,13 @@
               (merge {:headers {"WWW-Authenticate" (format "Basic realm=\"%s\""
                                                            realm)}})))))))
 
-(defn wrap-whoami-assume-presigned [handler]
+(defn wrap-whoami-from-signed [handler index-url key-map]
   (fn [req]
-    (handler (assoc req :whoami {:id (:presigned kayttaja-service/system-kayttaja)
-                                 :rooli -1}))))
+    (let [signed-url (str index-url (-> req :uri) "?" (-> req :query-string))]
+      (if (nil? (signed-url/signed-url-problem signed-url key-map))
+        (handler (assoc req :whoami {:id (:presigned kayttaja-service/system-kayttaja)
+                                     :rooli -1}))
+        response/forbidden))))
 
 (defn wrap-access [handler]
   (fn [{:keys [request-method whoami] :as req}]
