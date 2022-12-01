@@ -54,7 +54,7 @@
                         (when-not (aineisto-service/check-access db (:id whoami) aineisto-id)
                           (exception/throw-forbidden!
                            (str "User " whoami " not permitted to access aineisto " aineisto-id)))
-                        (let [url (str config/index-url
+                        (let [url (str config/public-index-url
                                        "/api/signed/aineistot/"
                                        aineisto-id
                                        "/energiatodistukset.csv")

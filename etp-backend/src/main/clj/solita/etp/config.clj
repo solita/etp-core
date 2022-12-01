@@ -73,9 +73,12 @@
 
 ;; Base URLs
 (def service-host (env "SERVICE_HOST" "localhost:3000"))
-(def index-url (str (if (str/starts-with? service-host "localhost")
-                      (str "https://" service-host)
-                      (str "https://private." service-host))))
+(def index-url (if (str/starts-with? service-host "localhost")
+                 (str "https://" service-host)
+                 (str "https://private." service-host)))
+
+(def public-service-host (env "PUBLIC_SERVICE_HOST" service-host))
+(def public-index-url (str "https://" public-service-host))
 
 ;; JWT
 (def trusted-jwt-iss (env "TRUSTED_JWT_ISS" "https://raw.githubusercontent.com/solita/etp-core/develop/etp-backend/src/test/resources/"))
