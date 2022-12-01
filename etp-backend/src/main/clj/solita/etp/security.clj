@@ -68,10 +68,12 @@
 (defn wrap-whoami-from-signed [handler index-url key-map]
   (fn [req]
     (let [signed-url (str index-url (-> req :uri) "?" (-> req :query-string))]
-      (if (nil? (signed-url/signed-url-problem signed-url key-map))
+      (if-let [problem (signed-url/signed-url-problem signed-url key-map)]
+        (do
+          (log/warn "Failed to validate signed URL:" problem)
+          (assoc response/forbidden :body (str problem)))
         (handler (assoc req :whoami {:id (:presigned kayttaja-service/system-kayttaja)
-                                     :rooli -1}))
-        response/forbidden))))
+                                     :rooli -1}))))))
 
 (defn wrap-access [handler]
   (fn [{:keys [request-method whoami] :as req}]
