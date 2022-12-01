@@ -8,8 +8,6 @@
             [solita.etp.schema.audit :as audit-schema]
             [schema-tools.core :as st]))
 
-(def Rooli (schema/enum 1 2 3 4))
-
 (def VirtuId
   {:localid schema/Str
    :organisaatio schema/Str})
@@ -19,7 +17,7 @@
    Not intended for laatija-users."
   {:passivoitu schema/Bool
    :valvoja    schema/Bool
-   :rooli      Rooli
+   :rooli      (schema/enum 1 2 3 4)
    :henkilotunnus (schema/maybe common-schema/Henkilotunnus)
    :virtu (schema/maybe VirtuId)})
 
@@ -45,7 +43,7 @@
           :cognitoid     (schema/maybe schema/Str)
           :virtu         (schema/maybe VirtuId)
           :henkilotunnus (schema/maybe common-schema/Henkilotunnus)
-          :rooli         Rooli
+          :rooli         (schema/enum 0 1 2 3 4)
           :verifytime    (schema/maybe common-schema/Instant)
           :passivoitu    schema/Bool
           :valvoja       schema/Bool
