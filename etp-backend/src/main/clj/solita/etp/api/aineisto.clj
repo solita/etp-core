@@ -51,7 +51,7 @@
              :access rooli-service/aineistokayttaja?
              :parameters {:path {:aineisto-id common-schema/Key}}
              :handler (fn [{{{:keys [aineisto-id]} :path} :parameters :keys [db whoami]}]
-                        (when-not (aineisto-service/check-access db (:id whoami) "127.0.0.1" aineisto-id)
+                        (when-not (aineisto-service/check-access db (:id whoami) aineisto-id)
                           (exception/throw-forbidden!
                            (str "User " whoami " not permitted to access aineisto " aineisto-id)))
                         (let [url (str config/index-url
