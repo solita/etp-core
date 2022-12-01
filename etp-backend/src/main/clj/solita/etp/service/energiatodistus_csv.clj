@@ -205,6 +205,31 @@
         (not (contains? hidden-columns column))))
      private-columns)))
 
+(def bank-columns
+  (let [extra-columns #{[:perustiedot :alakayttotarkoitus-fi]
+                        [:perustiedot :kiinteistotunnus]
+                        [:perustiedot :postitoimipaikka-fi]
+                        [:tulokset :e-luokka-rajat :kayttotarkoitus :label-fi]
+                        [:tulokset :e-luokka-rajat :raja-uusi-2018]
+                        [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]
+                        [:tulokset :kaytettavat-energiamuodot :sahko-kerroin]
+                        [:tulokset :kaytettavat-energiamuodot :uusiutuva-polttoaine-kerroin]
+                        [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]
+                        [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]}
+        hidden-columns #{[:tila-id]
+                         [:kieli]
+                         [:korvaava-energiatodistus-id]
+                         [:laatija-id]
+                         [:laatija-fullname]
+                         [:perustiedot :yritys :nimi]}]
+    (filter
+     (fn [column]
+       (and
+        (or (contains? extra-columns column)
+            (schema-tools.core/get-in solita.etp.schema.public-energiatodistus/Energiatodistus2018 column))
+        (not (contains? hidden-columns column))))
+     private-columns)))
+
 (defn column-ks->str [ks]
   (->> ks
        (map #(if (keyword? %) (name %) %))
@@ -242,3 +267,6 @@
 
 (defn energiatodistukset-public-csv [db whoami query]
   (energiatodistukset-csv db whoami query public-columns))
+
+(defn energiatodistukset-bank-csv [db whoami]
+  (energiatodistukset-csv db whoami {:where nil} bank-columns))

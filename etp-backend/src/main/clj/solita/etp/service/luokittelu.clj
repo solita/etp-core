@@ -7,6 +7,7 @@
               [(format "SELECT id, label_fi, label_sv, valid FROM %s ORDER BY ordinal ASC" table-name)]
               db/default-opts))
 
+(def find-aineistot #(select-luokittelu % "aineisto"))
 (def find-roolit #(select-luokittelu % "rooli"))
 (def find-patevyystasot #(select-luokittelu % "patevyystaso"))
 (def find-yritystypes #(select-luokittelu % "yritystype"))

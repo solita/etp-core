@@ -3,7 +3,9 @@
             [solita.etp.jwt :as jwt]
             [solita.etp.basic-auth :as basic-auth]
             [solita.etp.api.response :as response]
+            [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.service.whoami :as whoami-service]
+            [solita.common.cf-signed-url :as signed-url]
             [solita.common.maybe :as maybe]
             [solita.etp.exception :as exception]))
 
@@ -62,6 +64,14 @@
           (-> response/unauthorized
               (merge {:headers {"WWW-Authenticate" (format "Basic realm=\"%s\""
                                                            realm)}})))))))
+
+(defn wrap-whoami-from-signed [handler index-url key-map]
+  (fn [req]
+    (let [signed-url (str index-url (-> req :uri) "?" (-> req :query-string))]
+      (if (nil? (signed-url/signed-url-problem signed-url key-map))
+        (handler (assoc req :whoami {:id (:presigned kayttaja-service/system-kayttaja)
+                                     :rooli -1}))
+        response/forbidden))))
 
 (defn wrap-access [handler]
   (fn [{:keys [request-method whoami] :as req}]

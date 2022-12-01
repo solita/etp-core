@@ -12,6 +12,7 @@
                          "Laatija"
                          "Pätevyyden toteaja"
                          "Pääkäyttäjä"
+                         "Aineistoasiakas"
                          "Laskuttaja"}))
     ;; TODO test swedish labels when they exist
     ))
