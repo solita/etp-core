@@ -70,7 +70,7 @@
     (let [signed-url (str index-url (-> req :uri) "?" (-> req :query-string))]
       (if-let [problem (signed-url/signed-url-problem signed-url key-map)]
         (do
-          (log/warn "Failed to validate signed URL:" problem)
+          (log/warn "Failed to validate signed URL" signed-url problem)
           (assoc response/forbidden :body (str problem)))
         (handler (assoc req :whoami {:id (:presigned kayttaja-service/system-kayttaja)
                                      :rooli -1}))))))
