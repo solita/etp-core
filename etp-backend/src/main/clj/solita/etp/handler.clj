@@ -138,7 +138,7 @@
     (concat (tag "Energiatodistus API" energiatodistus-api/external-routes)
             (tag "Aineisto API" aineisto-api/external-routes))]
    ["/signed" {:middleware [[security/wrap-whoami-from-signed
-                             config/index-url
+                             config/public-index-url
                              {:key-pair-id config/url-signing-key-id
                               :public-key (signed-url/pem-string->public-key
                                            config/url-signing-public-key)}]
