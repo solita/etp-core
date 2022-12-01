@@ -12,7 +12,7 @@ call create_classification('aineisto'::name);
 call audit.activate('aineisto'::name);
 
 create table kayttaja_aineisto (
-  kayttaja_id int not null references kayttaja(id) not null,
+  kayttaja_id int not null references kayttaja(id),
   aineisto_id int not null references aineisto(id),
   valid_until timestamp with time zone not null,
   ip_address text not null,
