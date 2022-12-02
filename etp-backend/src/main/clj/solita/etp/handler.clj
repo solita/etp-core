@@ -137,11 +137,20 @@
                               [security/wrap-db-application-name]]}
     (concat (tag "Energiatodistus API" energiatodistus-api/external-routes)
             (tag "Aineisto API" aineisto-api/external-routes))]
-   ["/signed" {:middleware [[security/wrap-whoami-from-signed
-                             config/public-index-url
-                             {:key-pair-id config/url-signing-key-id
-                              :public-key (signed-url/pem-string->public-key
-                                           config/url-signing-public-key)}]
+   ["/signed" {:middleware [(if (every? (comp not empty?)
+                                        [config/public-index-url
+                                         config/url-signing-public-key])
+                              ;; Parameters for checking the signature are available,
+                              ;; so make use of them
+                              [security/wrap-whoami-from-signed
+                               config/public-index-url
+                               {:key-pair-id config/url-signing-key-id
+                                :public-key (signed-url/pem-string->public-key
+                                             config/url-signing-public-key)}]
+                              ;; Otherwise, assume that the reverse
+                              ;; proxies on front of the backend
+                              ;; service have verified the signature.
+                              [security/wrap-whoami-assume-verified-signature])
                             [security/wrap-access]
                             [security/wrap-db-application-name]]}
     (concat (tag "Aineisto API" aineisto-api/signed-routes))]

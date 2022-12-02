@@ -65,6 +65,11 @@
               (merge {:headers {"WWW-Authenticate" (format "Basic realm=\"%s\""
                                                            realm)}})))))))
 
+(defn wrap-whoami-assume-verified-signature [handler]
+  (fn [req]
+    (handler (assoc req :whoami {:id (:presigned kayttaja-service/system-kayttaja)
+                                 :rooli -1}))))
+
 (defn wrap-whoami-from-signed [handler index-url key-map]
   (fn [req]
     (let [signed-url (str index-url (-> req :uri) "?" (-> req :query-string))]
