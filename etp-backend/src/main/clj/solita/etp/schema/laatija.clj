@@ -50,7 +50,7 @@
 (def Laatija
   "Schema representing the persistent laatija.
   This defines only the laatija specific kayttaja information."
-  (merge (dissoc LaatijaUpdate :api-key)
+  (merge LaatijaUpdate
          common-schema/Id
          {:voimassaolo-paattymisaika common-schema/Instant
           :voimassa schema/Bool
