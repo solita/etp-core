@@ -52,7 +52,9 @@
       {:get {:summary "Hae aineisto"
              :access rooli-service/aineistokayttaja?
              :parameters {:path {:aineisto-id common-schema/Key}}
-             :handler (fn [{{{:keys [aineisto-id]} :path} :parameters :keys [db headers remote-addr whoami]}]
+             :handler (fn [{{{:keys [aineisto-id]} :path} :parameters
+                            {:strs [x-forwarded-for]} :headers
+                            :keys [db remote-addr whoami]}]
                         (when-not (aineisto-service/check-access db (:id whoami) aineisto-id)
                           (exception/throw-forbidden!
                            (str "User " whoami " not permitted to access aineisto " aineisto-id)))
@@ -67,7 +69,7 @@
                               signed-url (signed-url/url->signed-url url expires signing-keys)]
                           (log/info "Issued" signed-url
                                     "to" (select-keys whoami [:id :email])
-                                    "x-forwarded-for" (-> headers (get "x-forwarded-for"))
+                                    "x-forwarded-for" x-forwarded-for
                                     "remote-addr" remote-addr)
                           {:status 302
                            :headers {"Location" signed-url}}))}}]]]])
