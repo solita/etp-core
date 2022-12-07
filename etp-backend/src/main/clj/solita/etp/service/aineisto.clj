@@ -28,9 +28,9 @@
                                              :aineisto-id aineisto-id}))
 
 
-(defn check-access [db kayttaja-id aineisto-id]
+(defn check-access [db kayttaja-id aineisto-id ip-address]
   (contains? (into #{} (->> (aineisto-db/select-kayttaja-aineistot db {:kayttaja-id kayttaja-id
-                                                                       :ip-address nil})
+                                                                       :ip-address ip-address})
                             (map :aineisto-id)))
              aineisto-id))
 

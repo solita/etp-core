@@ -1,5 +1,6 @@
 (ns solita.etp.api.aineisto
-  (:require [clojure.tools.logging :as log]
+  (:require [clojure.string :as str]
+            [clojure.tools.logging :as log]
             [solita.etp.config :as config]
             [solita.etp.exception :as exception]
             [solita.common.cf-signed-url :as signed-url]
@@ -20,6 +21,9 @@
   x)
 
 (def search-exceptions [{:type :nil-aineisto-source :response 404}])
+
+(defn first-address [x-forwarded-for]
+  (-> x-forwarded-for (str/split #"[\s,]+") first))
 
 (def signed-routes
   [["/aineistot"
@@ -55,7 +59,8 @@
              :handler (fn [{{{:keys [aineisto-id]} :path} :parameters
                             {:strs [x-forwarded-for]} :headers
                             :keys [db whoami]}]
-                        (when-not (aineisto-service/check-access db (:id whoami) aineisto-id)
+                        (when-not (aineisto-service/check-access db (:id whoami) aineisto-id
+                                                                 (first-address x-forwarded-for))
                           (exception/throw-forbidden!
                            (str "User " whoami " not permitted to access aineisto " aineisto-id)))
                         (let [url (str config/public-index-url
