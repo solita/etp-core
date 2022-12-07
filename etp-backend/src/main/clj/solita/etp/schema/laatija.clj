@@ -72,7 +72,9 @@
           :puhelin schema/Str
           :api-key (schema/maybe kayttaja-schema/Password)}))
 
-(def KayttajaAdd (st/required-keys KayttajaUpdate))
+(def KayttajaAdd (-> KayttajaUpdate
+                     (dissoc :api-key)
+                     st/required-keys))
 
 (def KayttajaLaatijaAdd
   "A schema for adding new or updating existing laatija.
