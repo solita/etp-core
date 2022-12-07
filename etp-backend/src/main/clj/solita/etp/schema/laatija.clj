@@ -50,7 +50,7 @@
 (def Laatija
   "Schema representing the persistent laatija.
   This defines only the laatija specific kayttaja information."
-  (merge (dissoc LaatijaUpdate :api-key)
+  (merge LaatijaUpdate
          common-schema/Id
          {:voimassaolo-paattymisaika common-schema/Instant
           :voimassa schema/Bool
@@ -72,7 +72,9 @@
           :puhelin schema/Str
           :api-key (schema/maybe kayttaja-schema/Password)}))
 
-(def KayttajaAdd (st/required-keys KayttajaUpdate))
+(def KayttajaAdd (-> KayttajaUpdate
+                     (dissoc :api-key)
+                     st/required-keys))
 
 (def KayttajaLaatijaAdd
   "A schema for adding new or updating existing laatija.
