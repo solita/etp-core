@@ -1,5 +1,6 @@
 (ns solita.etp.api.aineisto
-  (:require [solita.etp.config :as config]
+  (:require [clojure.tools.logging :as log]
+            [solita.etp.config :as config]
             [solita.etp.exception :as exception]
             [solita.common.cf-signed-url :as signed-url]
             [solita.etp.schema.common :as common-schema]
@@ -30,6 +31,7 @@
              :access rooli-service/system?
              :parameters {:path {:aineisto-id common-schema/Key}}
              :handler (fn [{{{:keys [aineisto-id]} :path} :parameters :keys [db whoami] :as request}]
+                        (log/info "Producing aineisto" aineisto-id)
                         (api-response/with-exceptions
                           #(let [energiatodistukset-csv (-> aineisto-id
                                                             aineisto-service/aineisto-key
@@ -50,7 +52,9 @@
       {:get {:summary "Hae aineisto"
              :access rooli-service/aineistokayttaja?
              :parameters {:path {:aineisto-id common-schema/Key}}
-             :handler (fn [{{{:keys [aineisto-id]} :path} :parameters :keys [db whoami]}]
+             :handler (fn [{{{:keys [aineisto-id]} :path} :parameters
+                            {:strs [x-forwarded-for]} :headers
+                            :keys [db whoami]}]
                         (when-not (aineisto-service/check-access db (:id whoami) aineisto-id)
                           (exception/throw-forbidden!
                            (str "User " whoami " not permitted to access aineisto " aineisto-id)))
@@ -63,5 +67,8 @@
                               signing-keys {:key-pair-id config/url-signing-key-id
                                             :private-key private-key}
                               signed-url (signed-url/url->signed-url url expires signing-keys)]
+                          (log/info "Issued" signed-url
+                                    "to" (select-keys whoami [:id])
+                                    "x-forwarded-for" x-forwarded-for)
                           {:status 302
                            :headers {"Location" signed-url}}))}}]]]])
