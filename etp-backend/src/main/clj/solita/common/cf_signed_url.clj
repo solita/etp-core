@@ -91,18 +91,19 @@
 (defn unix-time []
   (quot (System/currentTimeMillis) 1000))
 
-(defn policy-document [url expires]
-  {"Statement" [{"Resource" url
-                 "Condition" {"DateLessThan" {"AWS:EpochTime" expires}}}]})
+(defn policy-document [url ip-address expires]
+  {:Statement [{:Resource url
+                :Condition {:DateLessThan {:AWS:EpochTime expires}
+                            :IpAddress {:AWS:SourceIp ip-address}}}]})
 
-(defn url->signed-url [url expires {:keys [key-pair-id private-key]}]
-  (str url
-       "?Expires=" expires
-       "&Signature=" (sign-document (-> (policy-document url expires)
-                                        json/write-value-as-string
-                                        .getBytes)
-                                    private-key)
-       "&Key-Pair-Id=" key-pair-id))
+(defn url->signed-url [url expires ip-address {:keys [key-pair-id private-key]}]
+  (let [policy-bytes (-> (policy-document url ip-address expires)
+                         json/write-value-as-string
+                         .getBytes)]
+    (str url
+         "?Policy=" (bytes->querystring-safe-base64 policy-bytes)
+         "&Signature=" (sign-document policy-bytes private-key)
+         "&Key-Pair-Id=" key-pair-id)))
 
 (defn split-at-char [s c]
   (let [index-of-c (str/index-of s c)]
@@ -124,32 +125,37 @@
 (defn- signed-url->components [signed-url]
   (let [[base-url params-text] (split-at-char signed-url \?)
         params (query->map params-text)]
-    (when (-> params keys set (= #{"Expires" "Signature" "Key-Pair-Id"}) not)
+    (when (-> params keys set (= #{"Policy" "Signature" "Key-Pair-Id"}) not)
       (throw (ex-info "Unexpected query parameters in signed URL"
                       {:type :extra-query-params})))
     {:base-url base-url
-     :expires (try
-                (-> params (get "Expires") Integer/parseInt)
-                (catch NumberFormatException e
-                  (throw (ex-info "bad expires stamp" {:type :bad-expire-stamp}))))
+     :policy (get params "Policy")
      :signature (get params "Signature")
      :key-pair-id (-> params (get "Key-Pair-Id"))}))
 
-(defn signed-url-problem-at [signed-url time {:keys [key-pair-id public-key]}]
+(defn signed-url-problem [signed-url source-addr time {:keys [key-pair-id public-key]}]
   (try
-    (let [{:keys [base-url expires signature] :as components} (signed-url->components signed-url)
+    (let [{:keys [base-url policy signature] :as components} (signed-url->components signed-url)
           ;; Assuming no query parameters
-          reconstructed-policy-doc (policy-document base-url expires)]
+          policy-bytes (querystring-safe-base64->bytes policy)
+          policy-doc (json/read-value policy-bytes)
+          policy-url (-> policy-doc (get-in [:Statement 0 :Resource]))
+          policy-expires (-> policy-doc (get-in [:Statement 0 :Condition :DateLessThan :AWS:EpochTime]))
+          policy-ip-address (-> policy-doc (get-in [:Statement 0 :Condition :IpAddress :AWS:SourceIp]))]
       (cond
-        (-> reconstructed-policy-doc
-            json/write-value-as-string
-            .getBytes
+        (-> policy-bytes
             (verify-document-signature public-key signature)
             not)
         :invalid-signature
+        (not (= policy-doc (policy-document base-url policy-ip-address policy-expires)))
+        :unsupported-policy-features
         (-> components :key-pair-id (= key-pair-id) not)
         :invalid-key-pair-id
-        (< expires time)
+        (not (= source-addr policy-ip-address))
+        :invalid-ip-address
+        (not (= policy-url base-url))
+        :invalid-url
+        (< policy-expires time)
         :expired-url))
     (catch ExceptionInfo e
       (case (-> e ex-data :type)
@@ -158,5 +164,5 @@
         :bad-argument-list-format :format
         (throw e)))))
 
-(defn signed-url-problem [signed-url {:keys [key-pair-id public-key] :as k}]
-  (signed-url-problem-at signed-url (unix-time) k))
+(defn signed-url-problem-now [signed-url source-addr {:keys [key-pair-id public-key] :as k}]
+  (signed-url-problem signed-url source-addr (unix-time) k))

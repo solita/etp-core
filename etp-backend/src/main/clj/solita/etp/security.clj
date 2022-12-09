@@ -1,5 +1,6 @@
 (ns solita.etp.security
-  (:require [clojure.tools.logging :as log]
+  (:require [clojure.string :as str]
+            [clojure.tools.logging :as log]
             [solita.etp.jwt :as jwt]
             [solita.etp.basic-auth :as basic-auth]
             [solita.etp.api.response :as response]
@@ -70,10 +71,17 @@
     (handler (assoc req :whoami {:id (:presigned kayttaja-service/system-kayttaja)
                                  :rooli -1}))))
 
+(defn first-address [x-forwarded-for]
+  (-> x-forwarded-for (str/split #"[\s,]+") first))
+
 (defn wrap-whoami-from-signed [handler index-url key-map]
-  (fn [req]
-    (let [signed-url (str index-url (-> req :uri) "?" (-> req :query-string))]
-      (if-let [problem (signed-url/signed-url-problem signed-url key-map)]
+  (fn [{:as req
+        :keys [uri query-string]
+        {:strs [x-forwarded-for]} :headers}]
+    (let [signed-url (str index-url uri "?" query-string)]
+      (if-let [problem (signed-url/signed-url-problem-now signed-url
+                                                          (first-address x-forwarded-for)
+                                                          key-map)]
         (do
           (log/warn "Failed to validate signed URL" signed-url problem)
           (assoc response/forbidden :body (str problem)))

@@ -71,7 +71,10 @@
                               private-key (signed-url/pem-string->private-key config/url-signing-private-key)
                               signing-keys {:key-pair-id config/url-signing-key-id
                                             :private-key private-key}
-                              signed-url (signed-url/url->signed-url url expires signing-keys)]
+                              signed-url (signed-url/url->signed-url url
+                                                                     expires
+                                                                     (first-address x-forwarded-for)
+                                                                     signing-keys)]
                           (log/info "Issued" signed-url
                                     "to" (select-keys whoami [:id])
                                     "x-forwarded-for" x-forwarded-for)
