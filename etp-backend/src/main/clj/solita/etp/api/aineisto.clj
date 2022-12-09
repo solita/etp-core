@@ -1,5 +1,6 @@
 (ns solita.etp.api.aineisto
-  (:require [clojure.tools.logging :as log]
+  (:require [clojure.string :as str]
+            [clojure.tools.logging :as log]
             [solita.etp.config :as config]
             [solita.etp.exception :as exception]
             [solita.common.cf-signed-url :as signed-url]
@@ -20,6 +21,9 @@
   x)
 
 (def search-exceptions [{:type :nil-aineisto-source :response 404}])
+
+(defn first-address [x-forwarded-for]
+  (-> x-forwarded-for (str/split #"[\s,]+") first))
 
 (def signed-routes
   [["/aineistot"
@@ -55,7 +59,8 @@
              :handler (fn [{{{:keys [aineisto-id]} :path} :parameters
                             {:strs [x-forwarded-for]} :headers
                             :keys [db whoami]}]
-                        (when-not (aineisto-service/check-access db (:id whoami) aineisto-id)
+                        (when-not (aineisto-service/check-access db (:id whoami) aineisto-id
+                                                                 (first-address x-forwarded-for))
                           (exception/throw-forbidden!
                            (str "User " whoami " not permitted to access aineisto " aineisto-id)))
                         (let [url (str config/public-index-url
@@ -66,7 +71,10 @@
                               private-key (signed-url/pem-string->private-key config/url-signing-private-key)
                               signing-keys {:key-pair-id config/url-signing-key-id
                                             :private-key private-key}
-                              signed-url (signed-url/url->signed-url url expires signing-keys)]
+                              signed-url (signed-url/url->signed-url url
+                                                                     expires
+                                                                     (first-address x-forwarded-for)
+                                                                     signing-keys)]
                           (log/info "Issued" signed-url
                                     "to" (select-keys whoami [:id])
                                     "x-forwarded-for" x-forwarded-for)
