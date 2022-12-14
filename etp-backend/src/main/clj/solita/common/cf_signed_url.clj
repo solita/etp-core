@@ -101,16 +101,23 @@
                          json/write-value-as-string
                          .getBytes)]
     (str url
-         "?Policy=" (bytes->querystring-safe-base64 policy-bytes)
+         (if (.contains url "?")
+           "&" "?")
+         "Policy=" (bytes->querystring-safe-base64 policy-bytes)
          "&Signature=" (sign-document policy-bytes private-key)
          "&Key-Pair-Id=" key-pair-id)))
 
-(defn split-at-char [s c]
-  (let [index-of-c (str/index-of s c)]
-    (if (nil? index-of-c)
-      [s ""]
-      [(.substring s 0 index-of-c)
-       (.substring s (inc index-of-c))])))
+(defn trim-trailing-? [s]
+  (if (.endsWith s "?")
+    (.substring s 0 (dec (.length s)))
+    s))
+
+(defn url->base-url+sig-params [url]
+  (let [index-of-policy (or (str/index-of url "?Policy=")
+                            (str/index-of url "&Policy="))]
+    [(-> (.substring url 0 index-of-policy)
+         trim-trailing-?)
+     (-> (.substring url (inc index-of-policy)))]))
 
 (defn- query->map [query]
   (try
@@ -123,7 +130,7 @@
       (throw (ex-info "bad argument list format" {:type :bad-argument-list-format})))))
 
 (defn- signed-url->components [signed-url]
-  (let [[base-url params-text] (split-at-char signed-url \?)
+  (let [[base-url params-text] (url->base-url+sig-params signed-url)
         params (query->map params-text)]
     (when (-> params keys set (= #{"Policy" "Signature" "Key-Pair-Id"}) not)
       (throw (ex-info "Unexpected query parameters in signed URL"
@@ -147,8 +154,6 @@
             (verify-document-signature public-key signature)
             not)
         :invalid-signature
-        (not (= policy-doc (policy-document base-url policy-ip-address policy-expires)))
-        :unsupported-policy-features
         (-> components :key-pair-id (= key-pair-id) not)
         :invalid-key-pair-id
         (not (= source-addr policy-ip-address))
@@ -156,7 +161,9 @@
         (not (= policy-url base-url))
         :invalid-url
         (< policy-expires time)
-        :expired-url))
+        :expired-url
+        (not (= policy-doc (policy-document base-url policy-ip-address policy-expires)))
+        :unsupported-policy-features))
     (catch ExceptionInfo e
       (case (-> e ex-data :type)
         :extra-query-params :format
