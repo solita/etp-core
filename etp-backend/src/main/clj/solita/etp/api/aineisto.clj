@@ -23,7 +23,7 @@
 (def search-exceptions [{:type :nil-aineisto-source :response 404}])
 
 (defn first-address [x-forwarded-for]
-  (-> x-forwarded-for (str/split #"[\s,]+") first))
+  (some-> x-forwarded-for (str/split #"[\s,]+") first))
 
 (def signed-routes
   [["/aineistot"
@@ -59,10 +59,16 @@
              :handler (fn [{{{:keys [aineisto-id]} :path} :parameters
                             {:strs [x-forwarded-for]} :headers
                             :keys [db whoami]}]
+
+                        (when (nil? x-forwarded-for)
+                          (exception/throw-forbidden!
+                           "This functionality is only available behind a reverse proxy"))
+
                         (when-not (aineisto-service/check-access db (:id whoami) aineisto-id
                                                                  (first-address x-forwarded-for))
                           (exception/throw-forbidden!
                            (str "User " whoami " not permitted to access aineisto " aineisto-id)))
+
                         (let [url (str config/public-index-url
                                        "/api/signed/aineistot/"
                                        aineisto-id
