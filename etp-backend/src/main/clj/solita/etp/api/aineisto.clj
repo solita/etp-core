@@ -66,7 +66,8 @@
                         (let [url (str config/public-index-url
                                        "/api/signed/aineistot/"
                                        aineisto-id
-                                       "/energiatodistukset.csv")
+                                       "/energiatodistukset.csv"
+                                       "?kayttaja-id=" (:id whoami))
                               expires (+ 60 (signed-url/unix-time))
                               private-key (signed-url/pem-string->private-key config/url-signing-private-key)
                               signing-keys {:key-pair-id config/url-signing-key-id
