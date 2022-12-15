@@ -72,7 +72,7 @@
                                  :rooli -1}))))
 
 (defn first-address [x-forwarded-for]
-  (-> x-forwarded-for (str/split #"[\s,]+") first))
+  (some-> x-forwarded-for (str/split #"[\s,]+") first))
 
 (defn wrap-whoami-from-signed [handler index-url key-map]
   (fn [{:as req
