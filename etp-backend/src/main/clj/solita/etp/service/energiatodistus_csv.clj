@@ -26,6 +26,7 @@
                 :katuosoite-sv :postinumero :postitoimipaikka-fi
                 :postitoimipaikka-sv :rakennustunnus :kiinteistotunnus
                 :kayttotarkoitus :alakayttotarkoitus-fi :alakayttotarkoitus-sv
+                :paakayttotarkoitus-id :paakayttotarkoitus-fi :paakayttotarkoitus-sv
                 :julkinen-rakennus]]
      [:perustiedot child])
    [[:tulokset :e-luku]

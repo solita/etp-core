@@ -148,7 +148,12 @@
                                     :perustiedot
                                     :kayttotarkoitus)
           alakayttotarkoitus (-> (get alakayttotarkoitukset versio)
-                                 (find-by-id alakayttotarkoitus-id))]
+                                 (find-by-id alakayttotarkoitus-id))
+          paakayttotarkoitus-id (->> alakayttotarkoitus-id
+                                     (find-by-id (alakayttotarkoitukset versio))
+                                     :kayttotarkoitusluokka-id)
+          paakayttotarkoitus (-> (get kayttotarkoitukset versio)
+                                 (find-by-id paakayttotarkoitus-id))]
       (-> energiatodistus
           (assoc-in [:perustiedot :postitoimipaikka-fi] (:label-fi postinumero))
           (assoc-in [:perustiedot :postitoimipaikka-sv] (:label-sv postinumero))
@@ -158,6 +163,9 @@
           (assoc-in [:perustiedot :laatimisvaihe-sv] (:label-sv laatimisvaihe))
           (assoc-in [:perustiedot :alakayttotarkoitus-fi] (:label-fi alakayttotarkoitus))
           (assoc-in [:perustiedot :alakayttotarkoitus-sv] (:label-sv alakayttotarkoitus))
+          (assoc-in [:perustiedot :paakayttotarkoitus-id] paakayttotarkoitus-id)
+          (assoc-in [:perustiedot :paakayttotarkoitus-fi] (:label-fi paakayttotarkoitus))
+          (assoc-in [:perustiedot :paakayttotarkoitus-sv] (:label-sv paakayttotarkoitus))
           (update-in [:tulokset :kaytettavat-energiamuodot] (partial merge (energiamuotokertoimet versio)))
           (update-in [:tulokset :kuukausierittely] kuukausierittely-hyodynnetty)
           (assoc-kuukausierittely-summat)
