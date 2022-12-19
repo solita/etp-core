@@ -230,6 +230,8 @@
         (not (contains? hidden-columns column))))
      private-columns)))
 
+(def tilastokeskus-columns private-columns)
+
 (defn column-ks->str [ks]
   (->> ks
        (map #(if (keyword? %) (name %) %))
@@ -270,3 +272,6 @@
 
 (defn energiatodistukset-bank-csv [db whoami]
   (energiatodistukset-csv db whoami {:where nil} bank-columns))
+
+(defn energiatodistukset-tilastokeskus-csv [db whoami]
+  (energiatodistukset-csv db whoami {:where nil} tilastokeskus-columns))

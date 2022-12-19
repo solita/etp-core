@@ -12,7 +12,8 @@
             [solita.etp.api.stream :as api-stream]))
 
 (def aineisto-sources
-  {:banks energiatodistus-csv/energiatodistukset-bank-csv})
+  {:banks energiatodistus-csv/energiatodistukset-bank-csv
+   :tilastokeskus energiatodistus-csv/energiatodistukset-tilastokeskus-csv})
 
 (defn not-nil-aineisto-source! [x]
   (when (nil? x)
