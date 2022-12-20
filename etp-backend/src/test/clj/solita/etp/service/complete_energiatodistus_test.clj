@@ -59,7 +59,17 @@
      (= (:tulo-poisto erillispoistot)
         (str (formats/format-number (:tulo erillispoistot) 3 false)
              " / "
-             (formats/format-number (:poisto erillispoistot) 3 false))) )))
+             (formats/format-number (:poisto erillispoistot) 3 false)))
+     (-> complete-energiatodistus
+         :perustiedot
+         keys
+         set
+         (contains? :kayttotarkoitus))
+     (-> complete-energiatodistus
+         :perustiedot
+         keys
+         set
+         (contains? :paakayttotarkoitus-id)))))
 
 (t/deftest complete-energiatodistus-test
   (let [{:keys [energiatodistukset]} (test-data-set)
