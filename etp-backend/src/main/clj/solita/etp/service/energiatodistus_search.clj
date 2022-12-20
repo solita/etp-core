@@ -228,7 +228,7 @@
       (energiatodistus.versio = 2018 AND
        energiatodistus.pt$kayttotarkoitus NOT IN ('YAT', 'KAT', 'KREP')))"]
     (rooli-service/system? whoami)
-    ["energiatodistus.tila_id = 2"]))
+    ["energiatodistus.tila_id IN (2, 4)"]))
 
 (defn search-schema [whoami]
   (if (rooli-service/public? whoami)
