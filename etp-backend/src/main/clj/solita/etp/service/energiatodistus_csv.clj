@@ -441,7 +441,7 @@
   (energiatodistukset-csv db whoami query public-columns))
 
 (defn energiatodistukset-bank-csv [db whoami]
-  (energiatodistukset-csv db whoami {:where nil} bank-columns))
+  (energiatodistukset-csv db whoami {:where [[["=" "energiatodistus.tila-id" 2]]]} bank-columns))
 
 (defn energiatodistukset-tilastokeskus-csv [db whoami]
   (energiatodistukset-csv db whoami {:where nil} tilastokeskus-columns))
