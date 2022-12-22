@@ -19,7 +19,8 @@
    :valvoja    schema/Bool
    :rooli      (schema/enum 1 2 3 4)
    :henkilotunnus (schema/maybe common-schema/Henkilotunnus)
-   :virtu (schema/maybe VirtuId)})
+   :virtu (schema/maybe VirtuId)
+   :organisaatio schema/Str})
 
 (def Password
   (schema/constrained schema/Str
@@ -50,7 +51,8 @@
           :etunimi       schema/Str
           :sukunimi      schema/Str
           :puhelin       schema/Str
-          :email         schema/Str}))
+          :email         schema/Str
+          :organisaatio  schema/Str}))
 
 (def Whoami (-> Kayttaja
                 (dissoc :passivoitu :valvoja :puhelin :login :api-key)

@@ -3,7 +3,8 @@ select
   id, etunimi, sukunimi, email, puhelin,
   valvoja, passivoitu, rooli_id as rooli,
   login, verifytime, cognito_id as cognitoid,
-  virtu$localid, virtu$organisaatio, henkilotunnus
+  virtu$localid, virtu$organisaatio, henkilotunnus,
+  organisaatio
 from kayttaja where id = :id
 
 -- name: select-kayttajat
@@ -11,8 +12,9 @@ select
   id, etunimi, sukunimi, email, puhelin,
   valvoja, passivoitu, rooli_id as rooli,
   login, verifytime, cognito_id as cognitoid,
-  virtu$localid, virtu$organisaatio, henkilotunnus
-from kayttaja where rooli_id in (1, 2, 3)
+  virtu$localid, virtu$organisaatio, henkilotunnus,
+  organisaatio
+from kayttaja where rooli_id in (1, 2, 3, 4)
 
 -- name: select-kayttaja-history
 select k.id,
@@ -28,6 +30,7 @@ select k.id,
        k.henkilotunnus,
        k.modifytime,
        k.valvoja,
+       k.organisaatio,
        fullname(modifier) modifiedby_name
 from
   audit.kayttaja k
