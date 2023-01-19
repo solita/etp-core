@@ -30,7 +30,7 @@ select k.id,
        k.henkilotunnus,
        k.modifytime,
        k.valvoja,
-       k.organisaatio,
+       coalesce(k.organisaatio, '') as organisaatio,
        fullname(modifier) modifiedby_name
 from
   audit.kayttaja k
