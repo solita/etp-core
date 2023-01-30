@@ -193,7 +193,6 @@
                         [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]}
         hidden-columns #{[:tila-id]
-                         [:kieli]
                          [:korvaava-energiatodistus-id]
                          [:laatija-id]
                          [:laatija-fullname]
@@ -218,7 +217,6 @@
                         [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]}
         hidden-columns #{[:tila-id]
-                         [:kieli]
                          [:korvaava-energiatodistus-id]
                          [:laatija-id]
                          [:laatija-fullname]
