@@ -204,11 +204,18 @@
             (schema-tools.core/get-in solita.etp.schema.public-energiatodistus/Energiatodistus2018 column))
         (not (contains? hidden-columns column))))
      private-columns)))
-
 (def bank-columns
-  (let [extra-columns #{[:perustiedot :alakayttotarkoitus-fi]
+  (let [extra-columns #{[:perustiedot :kieli-fi]
+                        [:perustiedot :laatimisvaihe-fi]
+                        [:perustiedot :paakayttotarkoitus-id]
+                        [:perustiedot :paakayttotarkoitus-fi]
+                        [:perustiedot :alakayttotarkoitus-fi]
                         [:perustiedot :kiinteistotunnus]
                         [:perustiedot :postitoimipaikka-fi]
+                        [:perustiedot :postitoimipaikka-sv]
+                        [:lahtotiedot :ilmanvaihto :label-fi]
+                        [:lahtotiedot :lammitys :lammitysmuoto-label-fi]
+                        [:lahtotiedot :lammitys :lammonjako-label-fi]
                         [:tulokset :e-luokka-rajat :kayttotarkoitus :label-fi]
                         [:tulokset :e-luokka-rajat :raja-uusi-2018]
                         [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]
