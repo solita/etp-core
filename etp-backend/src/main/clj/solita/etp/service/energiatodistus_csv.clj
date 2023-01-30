@@ -25,8 +25,8 @@
    (for [child [:nimi-fi :nimi-sv :valmistumisvuosi :rakennusosa :katuosoite-fi
                 :katuosoite-sv :postinumero :postitoimipaikka-fi
                 :postitoimipaikka-sv :rakennustunnus :kiinteistotunnus
-                :kayttotarkoitus :alakayttotarkoitus-fi :alakayttotarkoitus-sv
                 :paakayttotarkoitus-id :paakayttotarkoitus-fi :paakayttotarkoitus-sv
+                :kayttotarkoitus :alakayttotarkoitus-fi :alakayttotarkoitus-sv
                 :julkinen-rakennus]]
      [:perustiedot child])
    [[:tulokset :e-luku]
