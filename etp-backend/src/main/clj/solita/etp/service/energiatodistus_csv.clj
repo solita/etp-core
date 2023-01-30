@@ -25,8 +25,8 @@
    (for [child [:nimi-fi :nimi-sv :valmistumisvuosi :rakennusosa :katuosoite-fi
                 :katuosoite-sv :postinumero :postitoimipaikka-fi
                 :postitoimipaikka-sv :rakennustunnus :kiinteistotunnus
-                :kayttotarkoitus :alakayttotarkoitus-fi :alakayttotarkoitus-sv
                 :paakayttotarkoitus-id :paakayttotarkoitus-fi :paakayttotarkoitus-sv
+                :kayttotarkoitus :alakayttotarkoitus-fi :alakayttotarkoitus-sv
                 :julkinen-rakennus]]
      [:perustiedot child])
    [[:tulokset :e-luku]
@@ -193,7 +193,6 @@
                         [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]}
         hidden-columns #{[:tila-id]
-                         [:kieli]
                          [:korvaava-energiatodistus-id]
                          [:laatija-id]
                          [:laatija-fullname]
@@ -205,11 +204,18 @@
             (schema-tools.core/get-in solita.etp.schema.public-energiatodistus/Energiatodistus2018 column))
         (not (contains? hidden-columns column))))
      private-columns)))
-
 (def bank-columns
-  (let [extra-columns #{[:perustiedot :alakayttotarkoitus-fi]
+  (let [extra-columns #{[:perustiedot :kieli-fi]
+                        [:perustiedot :laatimisvaihe-fi]
+                        [:perustiedot :paakayttotarkoitus-id]
+                        [:perustiedot :paakayttotarkoitus-fi]
+                        [:perustiedot :alakayttotarkoitus-fi]
                         [:perustiedot :kiinteistotunnus]
                         [:perustiedot :postitoimipaikka-fi]
+                        [:perustiedot :postitoimipaikka-sv]
+                        [:lahtotiedot :ilmanvaihto :label-fi]
+                        [:lahtotiedot :lammitys :lammitysmuoto-label-fi]
+                        [:lahtotiedot :lammitys :lammonjako-label-fi]
                         [:tulokset :e-luokka-rajat :kayttotarkoitus :label-fi]
                         [:tulokset :e-luokka-rajat :raja-uusi-2018]
                         [:tulokset :kaytettavat-energiamuodot :kaukolampo-kerroin]
@@ -218,7 +224,6 @@
                         [:tulokset :kaytettavat-energiamuodot :fossiilinen-polttoaine-kerroin]
                         [:tulokset :kaytettavat-energiamuodot :kaukojaahdytys-kerroin]}
         hidden-columns #{[:tila-id]
-                         [:kieli]
                          [:korvaava-energiatodistus-id]
                          [:laatija-id]
                          [:laatija-fullname]
