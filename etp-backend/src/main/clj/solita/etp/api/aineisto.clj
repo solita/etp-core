@@ -13,7 +13,8 @@
 
 (def aineisto-sources
   {:banks energiatodistus-csv/energiatodistukset-bank-csv
-   :tilastokeskus energiatodistus-csv/energiatodistukset-tilastokeskus-csv})
+   :tilastokeskus energiatodistus-csv/energiatodistukset-tilastokeskus-csv
+   :anonymized-set energiatodistus-csv/energiatodistukset-anonymized-csv})
 
 (defn not-nil-aineisto-source! [x]
   (when (nil? x)

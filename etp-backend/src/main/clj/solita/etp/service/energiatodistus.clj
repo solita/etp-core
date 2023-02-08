@@ -30,6 +30,13 @@
 ; *** Require sql functions ***
 (db/require-queries 'energiatodistus)
 
+(defn find-protected-postinumerot [db min-count]
+  (-> (energiatodistus-db/select-protected-postinumero-versio-kayttotarkoitus
+       db
+       {:min-count min-count})
+      (->> (map #(select-keys % [:postinumero :versio :kayttotarkoitus])))
+      set))
+
 ; *** Conversions from database data types ***
 (defn coerce-energiatodistus [energiatodistus-schema]
   (coerce/coercer! energiatodistus-schema

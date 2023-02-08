@@ -238,7 +238,6 @@
         (not (contains? hidden-columns column))))
      private-columns)))
 
-
 (def tilastokeskus-columns
   (concat
    (for [k [:id :versio :tila-id :laatija-id
@@ -425,21 +424,25 @@
        (map column-ks->str)
        csv/csv-line))
 
-(defn energiatodistukset-csv [db whoami query columns]
+(defn energiatodistukset-csv-with-filter [db whoami query columns pred]
   (let [luokittelut (complete-energiatodistus-service/luokittelut db)
         energiatodistukset (energiatodistus-search-service/reducible-search
-                             db whoami query {:raw false
-                                              :result-type :forward-only
-                                              :concurrency :read-only
-                                              :fetch-size  100})]
+                            db whoami query {:raw false
+                                             :result-type :forward-only
+                                             :concurrency :read-only
+                                             :fetch-size  100})]
     (fn [write!]
       (write! (headers-csv-line columns))
-      (run! (comp write!
-                  (partial energiatodistus->csv-line columns)
+      (run! (comp (fn [et]
+                    (when (or (nil? pred) (pred et))
+                      (write! (energiatodistus->csv-line columns et))))
                   #(complete-energiatodistus-service/complete-energiatodistus
-                     % luokittelut)
+                    % luokittelut)
                   energiatodistus-service/db-row->energiatodistus)
             energiatodistukset))))
+
+(defn energiatodistukset-csv [db whoami query columns]
+  (energiatodistukset-csv-with-filter db whoami query columns nil))
 
 (defn energiatodistukset-private-csv [db whoami query]
   (energiatodistukset-csv db whoami query private-columns))
@@ -452,3 +455,13 @@
 
 (defn energiatodistukset-tilastokeskus-csv [db whoami]
   (energiatodistukset-csv db whoami {:where nil} tilastokeskus-columns))
+
+(defn energiatodistukset-anonymized-csv [db whoami]
+  (let [protected (energiatodistus-service/find-protected-postinumerot db 4)]
+    (energiatodistukset-csv-with-filter
+     db whoami {:where nil} bank-columns
+     (fn [{{:keys [kayttotarkoitus postinumero]} :perustiedot
+           :keys [versio]}]
+       (not (contains? protected {:versio versio
+                                  :kayttotarkoitus kayttotarkoitus
+                                  :postinumero postinumero}))))))
