@@ -1,7 +1,9 @@
 (ns solita.etp.service.energiatodistus-csv
   (:require [clojure.string :as str]
+            [schema-tools.core :as schema-tools]
             [solita.etp.service.csv :as csv]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
+            [solita.etp.schema.public-energiatodistus :as public-energiatodistus-schema]
             [solita.etp.service.energiatodistus-search :as
              energiatodistus-search-service]
             [solita.etp.service.complete-energiatodistus
@@ -201,7 +203,7 @@
      (fn [column]
        (and
         (or (contains? extra-columns column)
-            (schema-tools.core/get-in solita.etp.schema.public-energiatodistus/Energiatodistus2018 column))
+            (schema-tools/get-in public-energiatodistus-schema/Energiatodistus2018 column))
         (not (contains? hidden-columns column))))
      private-columns)))
 (def bank-columns
@@ -232,7 +234,7 @@
      (fn [column]
        (and
         (or (contains? extra-columns column)
-            (schema-tools.core/get-in solita.etp.schema.public-energiatodistus/Energiatodistus2018 column))
+            (schema-tools/get-in public-energiatodistus-schema/Energiatodistus2018 column))
         (not (contains? hidden-columns column))))
      private-columns)))
 
