@@ -65,7 +65,8 @@
     {:energiatodistus public-energiatodistus-schema/Energiatodistus2018}
     {:energiatodistus
      {:perustiedot
-      {:postinumero schema/Int}}}
+      {:nimi schema/Str
+       :postinumero schema/Int}}}
     geo-schema/Search))
 
 (defn- schema-contains? [key schema]
@@ -122,6 +123,10 @@
       (search-fields/field->db-column field-parts)
       (first computed-field))))
 
+(defn icontains-expression [search-schema _ field value]
+  [(str "0 != position(lower(?) in lower(" (field->sql field search-schema) "))")
+   (coerce-value! field value search-schema)])
+
 (defn infix-notation [search-schema operator field value]
   [(str (field->sql field search-schema) " " operator " ?")
    (coerce-value! field value search-schema)])
@@ -169,6 +174,7 @@
    "<=" infix-notation
    ">"  infix-notation
    "<"  infix-notation
+   "icontains" icontains-expression
    "like"  (globbing infix-notation)
    "ilike"  (globbing infix-notation)
    "not ilike" infix-notation
