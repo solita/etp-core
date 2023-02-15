@@ -100,3 +100,24 @@ order by
   case when energiatodistus.pt$rakennustunnus = :rakennustunnus then 1 end nulls last,
   energiatodistus.allekirjoitusaika desc
 limit 10;
+
+-- name: select-protected-postinumero-versio-kayttotarkoitus
+select
+  versio,
+  pt$kayttotarkoitus as kayttotarkoitus,
+  lpad(pt$postinumero::text, 5, '0') as postinumero
+from energiatodistus
+where tila_id in (2, 4)
+group by versio,pt$kayttotarkoitus, pt$postinumero
+having
+  count(*) < :min-count and
+  (versio, pt$kayttotarkoitus) in (
+    (2013, 'YAT'),
+    (2013, 'KAT'),
+    (2013, 'MEP'),
+    (2013, 'MAEP'),
+    (2018, 'YAT'),
+    (2018, 'KAT'),
+    (2018, 'KREP')
+  )
+order by pt$postinumero;
