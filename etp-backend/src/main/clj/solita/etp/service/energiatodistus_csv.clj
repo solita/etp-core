@@ -625,7 +625,7 @@
 (defn energiatodistukset-anonymized-csv [db whoami]
   (let [protected (energiatodistus-service/find-protected-postinumerot db 4)]
     (energiatodistukset-csv-with-filter
-     db whoami {:where nil} bank-columns
+     db whoami {:where nil} anonymized-columns
      (fn [{{:keys [kayttotarkoitus postinumero]} :perustiedot
            :keys [versio]}]
        (not (contains? protected {:versio versio
