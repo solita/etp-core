@@ -5,6 +5,9 @@ on: [push, pull_request]
 jobs:
   nvd:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./etp-backend
     container:
       image: clojure:openjdk-11-tools-deps
 
