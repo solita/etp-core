@@ -20,5 +20,5 @@ jobs:
         if: success() || failure()
         with:
           name: NVD Results
-          path: target/nvd/dependency-check-junit.xml
+          path: etp-backend/target/nvd/dependency-check-junit.xml
           reporter: java-junit
