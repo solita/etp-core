@@ -16,7 +16,7 @@ The backend contains the following components:
 User interface
 ---------------
 
-Separate repository at https://github.com/solita/etp-front
+Separate repositories at https://github.com/solita/etp-front and https://github.com/solita/etp-public
 
 Installing the development environment
 -----------------------------
