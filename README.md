@@ -69,13 +69,17 @@ command:
 Tests can be run (parallel) with
 
     cd etp-backend
-    clojure -A:dev:test
+    clojure -M:dev:test
 
 Test coverage report (without API layer) can be generated with
 
     cd etp-backend
-    clojure -A:dev:coverage
+    clojure -M:dev:coverage
 
+Check dependencies for vulnerabilities
+
+    cd etp-backend
+    ./nvd.sh
 About database usage
 --------------------
 
