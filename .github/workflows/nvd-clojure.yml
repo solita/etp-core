@@ -15,11 +15,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Run nvd
         run: ./nvd.sh
-      - name: Test Report
-        uses: dorny/test-reporter@v1
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v3
         if: success() || failure()
         with:
-          name: NVD Results
-          working-directory: ./etp-backend
-          path: target/nvd/dependency-check-junit.xml
-          reporter: jest-junit
+          report_paths: 'target/nvd/dependency-check-junit.xml'
