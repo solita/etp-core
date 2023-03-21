@@ -22,4 +22,4 @@ jobs:
           name: NVD Results
           working-directory: ./etp-backend
           path: target/nvd/dependency-check-junit.xml
-          reporter: java-junit
+          reporter: jest-junit
