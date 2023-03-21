@@ -80,6 +80,11 @@ Check dependencies for vulnerabilities
 
     cd etp-backend
     ./nvd.sh
+
+Check outdated dependencies
+    cd etp-backend
+    clojure -M:outdated
+
 About database usage
 --------------------
 
