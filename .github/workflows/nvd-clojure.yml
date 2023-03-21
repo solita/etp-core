@@ -1,6 +1,8 @@
 name: nvd-clojure
 
-on: [push, pull_request]
+on:
+  schedule:
+    - cron: '0 2 * * 1'
 
 jobs:
   nvd:
