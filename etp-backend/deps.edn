@@ -76,4 +76,6 @@
                     :main-opts ["-m" "deps-deploy.deps-deploy" "deploy"
                                 "target/etp-backend.jar"]}
            :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "2.2.1017"}}
-                      :main-opts ["-m" "antq.core"]}}}
+                      :main-opts ["-m" "antq.core"]}
+           :lint {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2023.03.17"}}
+                  :main-opts ["-m" "clj-kondo.main" "--lint" "src"]}}}
