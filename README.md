@@ -117,6 +117,6 @@ Other environments
 
 ### Uberjars
 
-Both projects contain script ```build-docker-container.sh``` which can be
+Both projects contain script ```build-docker-image.sh``` which can be
 used to build the uberjars and related docker containers. The build containers
 can be executed by running ```docker run [etp-db or etp-backend]```.
