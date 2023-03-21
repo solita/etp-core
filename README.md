@@ -54,12 +54,12 @@ Start [the required services](/docker) (database etc):
 
     cd docker
     ./start.sh
-    
+
 Start script starts docker-compose, creates template and dev databases
 and runs migrations for both of them.
 
 Start [the backend](/etp-backend). Backend developers should start the REPL from
-their IDE and start the services from there by calling the ´´´reset´´´ function.
+their IDE and start the services from there by calling the `reset` function.
 The application can be also started from the command line with the following
 command:
 
