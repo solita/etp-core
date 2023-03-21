@@ -19,4 +19,4 @@ jobs:
         uses: mikepenz/action-junit-report@v3
         if: success() || failure()
         with:
-          report_paths: 'target/nvd/dependency-check-junit.xml'
+          report_paths: 'etp-backend/target/nvd/dependency-check-junit.xml'
