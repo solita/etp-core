@@ -4,14 +4,14 @@
  :deps {org.clojure/clojure {:mvn/version "1.10.1"}
         ch.qos.logback/logback-classic {:mvn/version "1.2.3"}
         org.slf4j/log4j-over-slf4j {:mvn/version "1.7.30"}
-        flathead {:mvn/version "0.0.4"}
-        integrant {:mvn/version "0.8.0"}
+        flathead/flathead {:mvn/version "0.0.4"}
+        integrant/integrant {:mvn/version "0.8.0"}
         integrant/repl {:mvn/version "0.3.1"}
-        hikari-cp {:mvn/version "2.10.0"}
+        hikari-cp/hikari-cp {:mvn/version "2.10.0"}
         org.postgresql/postgresql {:mvn/version "42.2.9"}
         org.clojure/java.jdbc {:mvn/version "0.7.11"}
         org.clojure/data.csv {:mvn/version "1.0.0"}
-        http-kit {:mvn/version "2.4.0-alpha6"}
+        http-kit/http-kit {:mvn/version "2.4.0-alpha6"}
         ring/ring-core {:mvn/version "1.8.0"}
         javax.servlet/servlet-api {:mvn/version "2.5"}
         org.clojure/tools.logging {:mvn/version "1.0.0"}
@@ -28,19 +28,19 @@
         ;; https://github.com/metosin/reitit/issues/355
         metosin/spec-tools {:mvn/version "0.10.1"}
         webjure/jeesql {:mvn/version "0.4.7"}
-        clj-http {:mvn/version "3.10.0"}
+        clj-http/clj-http {:mvn/version "3.10.0"}
         buddy/buddy-sign {:mvn/version "3.3.0"}
         buddy/buddy-hashers {:mvn/version "1.7.0"}
         org.apache.poi/poi {:mvn/version "4.1.2"}
         org.apache.poi/poi-ooxml {:mvn/version "4.1.2"}
         org.apache.pdfbox/pdfbox {:mvn/version "2.0.24"}
-        puumerkki {:mvn/version "0.9.2"}
+        puumerkki/puumerkki {:mvn/version "0.9.2"}
         org.clojure/core.match {:mvn/version "1.0.0"}
         com.cognitect.aws/api {:mvn/version "0.8.474"}
         com.cognitect.aws/endpoints {:mvn/version "1.1.11.842"}
         com.cognitect.aws/s3 {:mvn/version "809.2.734.0"}
         de.ubercode.clostache/clostache {:mvn/version "1.4.0"}
-        commonmark-hiccup {:mvn/version "0.2.0"}
+        commonmark-hiccup/commonmark-hiccup {:mvn/version "0.2.0"}
 
         com.openhtmltopdf/openhtmltopdf-pdfbox {:mvn/version "1.0.8"}
         com.openhtmltopdf/openhtmltopdf-svg-support {:mvn/version "1.0.8"}
@@ -48,7 +48,7 @@
 
         ;; Non-alpha version does not support xml namespaces
         org.clojure/data.xml {:mvn/version "0.2.0-alpha6"}
-        camel-snake-kebab {:mvn/version "0.4.1"}
+        camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.1"}
         com.jcraft/jsch {:mvn/version "0.1.55"}
         com.sun.mail/javax.mail {:mvn/version "1.6.2"}
 
@@ -62,16 +62,16 @@
         commons-discovery/commons-discovery {:mvn/version "0.5"}}
  :aliases {:dev {:extra-paths ["src/test/clj"
                                "src/test/resources"]
-                 :extra-deps {eftest {:mvn/version "0.5.9"}
+                 :extra-deps {eftest/eftest {:mvn/version "0.5.9"}
                               prismatic/schema-generators {:mvn/version "0.1.3"}}
                  :jvm-opts ["-Djava.awt.headless=true"]}
            :test {:main-opts ["-e" "(run-tests-and-exit!)" "-A:dev"]}
-           :coverage {:extra-deps {cloverage {:mvn/version "1.2.0"}}
+           :coverage {:extra-deps {cloverage/cloverage {:mvn/version "1.2.0"}}
                       :main-opts ["-m" "cloverage.coverage -p src/main -s src/test -e solita.etp.api.* -e user"]}
            :jar {:extra-deps {seancorfield/depstar {:mvn/version "1.1.117"}}
                  :main-opts ["-m" "hf.depstar.jar" "target/etp-backend.jar"]}
-           :uberjar {:extra-deps {uberdeps {:mvn/version "0.1.8"}}
+           :uberjar {:extra-deps {uberdeps/uberdeps {:mvn/version "0.1.8"}}
                      :main-opts ["-m" "uberdeps.uberjar"]}
            :deploy {:extra-deps {slipset/deps-deploy {:mvn/version "0.1.0"}}
-                     :main-opts ["-m" "deps-deploy.deps-deploy" "deploy"
-                                 "target/etp-backend.jar"]}}}
+                    :main-opts ["-m" "deps-deploy.deps-deploy" "deploy"
+                                "target/etp-backend.jar"]}}}
