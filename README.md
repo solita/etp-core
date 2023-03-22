@@ -82,6 +82,7 @@ Check dependencies for vulnerabilities
     ./nvd.sh
 
 Check outdated dependencies
+
     cd etp-backend
     clojure -M:outdated
 
