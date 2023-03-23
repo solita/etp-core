@@ -16,7 +16,7 @@ The backend contains the following components:
 User interface
 ---------------
 
-Separate repository at https://github.com/solita/etp-front
+Separate repositories at https://github.com/solita/etp-front and https://github.com/solita/etp-public
 
 Installing the development environment
 -----------------------------
@@ -54,12 +54,12 @@ Start [the required services](/docker) (database etc):
 
     cd docker
     ./start.sh
-    
+
 Start script starts docker-compose, creates template and dev databases
 and runs migrations for both of them.
 
 Start [the backend](/etp-backend). Backend developers should start the REPL from
-their IDE and start the services from there by calling the ´´´reset´´´ function.
+their IDE and start the services from there by calling the `reset` function.
 The application can be also started from the command line with the following
 command:
 
@@ -69,12 +69,22 @@ command:
 Tests can be run (parallel) with
 
     cd etp-backend
-    clojure -A:dev:test
+    clojure -M:dev:test
 
 Test coverage report (without API layer) can be generated with
 
     cd etp-backend
-    clojure -A:dev:coverage
+    clojure -M:dev:coverage
+
+Check dependencies for vulnerabilities
+
+    cd etp-backend
+    ./nvd.sh
+
+Check outdated dependencies
+
+    cd etp-backend
+    clojure -M:outdated
 
 About database usage
 --------------------
@@ -113,6 +123,6 @@ Other environments
 
 ### Uberjars
 
-Both projects contain script ```build-docker-container.sh``` which can be
+Both projects contain script ```build-docker-image.sh``` which can be
 used to build the uberjars and related docker containers. The build containers
 can be executed by running ```docker run [etp-db or etp-backend]```.
