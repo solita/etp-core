@@ -240,7 +240,7 @@
 
 (def anonymized-columns
   (concat
-   (for [k [:id :versio :tila-id
+   (for [k [:versio :tila-id
             :allekirjoitusaika :voimassaolo-paattymisaika]]
      [k])
    (for [child [:kieli :laatimisvaihe
