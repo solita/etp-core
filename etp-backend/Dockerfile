@@ -1,4 +1,13 @@
-FROM openjdk:11
+# Build image
+FROM --platform=amd64 clojure:temurin-11-tools-deps-1.11.1.1257-alpine as builder
+
+COPY . /usr/src/app
+WORKDIR /usr/src/app
+RUN clojure -M:uberjar
+
+
+# Production image
+FROM --platform=amd64 eclipse-temurin:11.0.18_10-jdk-jammy
 
 # LibreOffice installation
 RUN apt-get update && \
@@ -11,7 +20,7 @@ ln -s /usr/local/bin/libreoffice7.1 /usr/local/bin/libreoffice
 
 # The application
 COPY libreoffice/ /opt/etp/libreoffice/
-COPY target/etp-backend.jar /opt/etp/target/
+COPY --from=builder /usr/src/app/target/etp-backend.jar /opt/etp/target/
 COPY start.sh /opt/etp/
 
 WORKDIR /opt/etp
