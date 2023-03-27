@@ -1,4 +1,4 @@
-FROM openjdk:11
+FROM --platform=amd64 eclipse-temurin:11.0.18_10-jdk-jammy
 
 # LibreOffice installation
 RUN apt-get update && \
