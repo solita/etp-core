@@ -39,10 +39,12 @@
                                              :ip-address nil}))
 
 (defn set-kayttaja-aineistot! [db kayttaja-id aineistot]
-  (jdbc/with-db-transaction [db db]
-    ;; Clear out any previously existing entries from the user
-    (let [res (aineisto-db/delete-kayttaja-access! db {:kayttaja-id kayttaja-id})]
-      ;; Fill in new ones
-      (doseq [aineisto aineistot]
-        (set-access! db kayttaja-id aineisto))
-      1)))
+  ;; Only 10 ip addresses are allowed to access the aineistot
+  (when (<= (count aineistot) 10)
+    (jdbc/with-db-transaction [db db]
+      ;; Clear out any previously existing entries from the user
+      (let [_ (aineisto-db/delete-kayttaja-access! db {:kayttaja-id kayttaja-id})]
+        ;; Fill in new ones
+        (doseq [aineisto aineistot]
+          (set-access! db kayttaja-id aineisto))
+        1))))
