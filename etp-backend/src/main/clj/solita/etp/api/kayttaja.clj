@@ -93,7 +93,8 @@
                           #(api-response/ok|not-found
                             (aineisto-service/set-kayttaja-aineistot! db id body)
                             (str "Käyttäjä " id " does not exist"))
-                          [{:type :foreign-key-violation :response 400}]))}}]]]
+                          [{:type :foreign-key-violation :response 400}
+                           {:type :too-many-permits :response 400}]))}}]]]
    ["/roolit"
     {:get {:summary    "Hae roolit -luokittelu"
            :responses  {200 {:body [rooli-schema/Rooli]}}

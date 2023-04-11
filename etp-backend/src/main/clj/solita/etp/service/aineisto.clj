@@ -39,9 +39,14 @@
                                              :ip-address nil}))
 
 (defn set-kayttaja-aineistot! [db kayttaja-id aineistot]
+  ;; Only 10 ip addresses are allowed to access the aineistot
+  (when (> (count aineistot) 10)
+    (throw (ex-info "Maximum of 10 permits allowed"
+                    {:type :too-many-permits})))
+
   (jdbc/with-db-transaction [db db]
     ;; Clear out any previously existing entries from the user
-    (let [res (aineisto-db/delete-kayttaja-access! db {:kayttaja-id kayttaja-id})]
+    (let [_ (aineisto-db/delete-kayttaja-access! db {:kayttaja-id kayttaja-id})]
       ;; Fill in new ones
       (doseq [aineisto aineistot]
         (set-access! db kayttaja-id aineisto))
