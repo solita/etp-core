@@ -10,7 +10,7 @@ fi
 
 cd ../etp-db
 # Don't run test migrations to template db
-clojure -m solita.etp.db.flywaydb $1
+clojure -M -m solita.etp.db.flywaydb $1
 
 # Run test migrations to etp_dev
-DB_URL="jdbc:postgresql://localhost:5432/etp_dev" clojure -A:test -m solita.etp.db.flywaydb $1
+DB_URL="jdbc:postgresql://localhost:5432/etp_dev" clojure -M:test -m solita.etp.db.flywaydb $1
