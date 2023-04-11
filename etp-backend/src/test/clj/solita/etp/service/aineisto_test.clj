@@ -16,7 +16,7 @@
     ;; Mock the actual database inserts as they are not necessary for these tests
     (with-redefs [aineisto/set-access! (fn [_ _ _] true)]
       (t/testing "11 results in nil"
-        (t/is (nil? (aineisto/set-kayttaja-aineistot! ts/*db* 1 (take 11 test-aineisto)))))
+        (t/is (thrown? Exception (aineisto/set-kayttaja-aineistot! ts/*db* 1 (take 11 test-aineisto)))))
       (t/testing "10 is allowed, return value 1 tells inserts succeeded"
         (t/is (= 1
                  (aineisto/set-kayttaja-aineistot! ts/*db* 1 (take 10 test-aineisto))))))))
