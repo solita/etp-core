@@ -3,7 +3,6 @@ select
   aineisto_id, valid_until, ip_address
 from kayttaja_aineisto
 where kayttaja_id = :kayttaja-id and
---       Null check pois?
       (:ip-address::inet is null or (:ip-address)::inet <<= ip_address::inet) and
       valid_until > now();
 
