@@ -35,8 +35,7 @@
              aineisto-id))
 
 (defn find-kayttaja-aineistot [db kayttaja-id]
-  (aineisto-db/select-kayttaja-aineistot db {:kayttaja-id kayttaja-id
-                                             :ip-address nil}))
+  (aineisto-db/select-all-kayttaja-aineistot db {:kayttaja-id kayttaja-id}))
 
 (defn set-kayttaja-aineistot! [db kayttaja-id aineistot]
   ;; Only 10 ip addresses are allowed to access the aineistot

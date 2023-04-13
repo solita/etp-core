@@ -6,6 +6,12 @@ where kayttaja_id = :kayttaja-id and
       (:ip-address::inet is null or (:ip-address)::inet <<= ip_address::inet) and
       valid_until > now();
 
+-- name: select-all-kayttaja-aineistot
+select
+    aineisto_id, valid_until, ip_address
+from kayttaja_aineisto
+where kayttaja_id = :kayttaja-id;
+
 -- name: insert-kayttaja-aineisto!
 insert into kayttaja_aineisto (kayttaja_id, aineisto_id, valid_until, ip_address)
 values (:kayttaja-id, :aineisto-id, :valid-until, ((:ip-address)::inet)::text);
