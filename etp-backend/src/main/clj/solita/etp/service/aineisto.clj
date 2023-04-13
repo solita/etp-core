@@ -29,8 +29,8 @@
 
 
 (defn check-access [db kayttaja-id aineisto-id ip-address]
-  (contains? (into #{} (->> (aineisto-db/select-kayttaja-aineistot db {:kayttaja-id kayttaja-id
-                                                                       :ip-address ip-address})
+  (contains? (into #{} (->> (aineisto-db/select-allowed-aineisto-id-for-ip db {:kayttaja-id kayttaja-id
+                                                                               :ip-address  ip-address})
                             (map :aineisto-id)))
              aineisto-id))
 
