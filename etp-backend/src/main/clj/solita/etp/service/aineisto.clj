@@ -29,14 +29,13 @@
 
 
 (defn check-access [db kayttaja-id aineisto-id ip-address]
-  (contains? (into #{} (->> (aineisto-db/select-kayttaja-aineistot db {:kayttaja-id kayttaja-id
-                                                                       :ip-address ip-address})
+  (contains? (into #{} (->> (aineisto-db/select-allowed-aineisto-id-for-ip db {:kayttaja-id kayttaja-id
+                                                                               :ip-address  ip-address})
                             (map :aineisto-id)))
              aineisto-id))
 
 (defn find-kayttaja-aineistot [db kayttaja-id]
-  (aineisto-db/select-kayttaja-aineistot db {:kayttaja-id kayttaja-id
-                                             :ip-address nil}))
+  (aineisto-db/select-all-kayttaja-aineistot db {:kayttaja-id kayttaja-id}))
 
 (defn set-kayttaja-aineistot! [db kayttaja-id aineistot]
   ;; Only 10 ip addresses are allowed to access the aineistot

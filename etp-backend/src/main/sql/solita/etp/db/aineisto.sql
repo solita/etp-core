@@ -1,10 +1,16 @@
--- name: select-kayttaja-aineistot
+-- name: select-allowed-aineisto-id-for-ip
 select
-  aineisto_id, valid_until, ip_address
+  aineisto_id
 from kayttaja_aineisto
 where kayttaja_id = :kayttaja-id and
-      (:ip-address::inet is null or (:ip-address)::inet <<= ip_address::inet) and
+      (:ip-address)::inet <<= ip_address::inet and
       valid_until > now();
+
+-- name: select-all-kayttaja-aineistot
+select
+    aineisto_id, valid_until, ip_address
+from kayttaja_aineisto
+where kayttaja_id = :kayttaja-id;
 
 -- name: insert-kayttaja-aineisto!
 insert into kayttaja_aineisto (kayttaja_id, aineisto_id, valid_until, ip_address)
