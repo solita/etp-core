@@ -21,13 +21,27 @@
 (defn run-test [var-name]
   (t/test-vars [var-name]))
 
-(defn run-tests []
-  (require 'eftest.runner)
-  (-> ((resolve 'eftest.runner/find-tests) "src/test")
-      ((resolve 'eftest.runner/run-tests))))
+(defn matching-test [test-searches]
+  (if (empty? test-searches) (fn [_] true)
+      (fn [test]
+        (some #(re-find % (str test)) test-searches))))
+
+(defn run-tests [test-searches]
+  (let [cpu-count (.availableProcessors (Runtime/getRuntime))
+        thread-count (if-let [thread-limit (System/getenv "ETP_THREAD_LIMIT")]
+                       (min (Integer/parseInt thread-limit) cpu-count)
+                       cpu-count)
+        repeat-count (if-let [cnt (System/getenv "ETP_TEST_REPEATS")]
+                       (Integer/parseInt cnt)
+                       1)]
+    (require 'eftest.runner)
+    (as-> ((resolve 'eftest.runner/find-tests) "src/test") $
+      (filter (matching-test test-searches) $)
+      (reduce concat [] (repeat repeat-count $))
+      ((resolve 'eftest.runner/run-tests) $ {:thread-count thread-count}))))
 
 (defn run-tests-and-exit! []
-  (let [{:keys [fail error]} (run-tests)]
+  (let [{:keys [fail error]} (run-tests (map re-pattern *command-line-args*))]
     (System/exit (if (and (zero? fail) (zero? error)) 0 1))))
 
 (defn- process-key [key] (if (schema/optional-key? key) (:k key) key))
