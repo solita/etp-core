@@ -12,7 +12,8 @@
             [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]
             [solita.etp.service.file :as file-service]
             [solita.common.formats :as formats])
-  (:import (java.time Instant LocalDate ZoneId)
+  (:import (java.util Date)
+           (java.time Instant LocalDate ZoneId)
            (java.time.format DateTimeFormatter)
            (org.apache.pdfbox.multipdf Overlay)
            (org.apache.pdfbox.multipdf Overlay$Position)
@@ -761,9 +762,8 @@
       str/lower-case
       (str/replace #"[^a-z]" "")))
 
-(defn validate-surname! [last-name certificate-str]
-  (let [surname (-> certificate-str
-                    certificates/pem-str->certificate
+(defn validate-surname! [last-name certificate]
+  (let [surname (-> certificate
                     certificates/subject
                     :surname)]
     (when-not (= (comparable-name last-name) (comparable-name surname))
@@ -773,6 +773,21 @@
         :message (format "Last names did not match. Whoami has '%s' and certificate has '%s'"
                          last-name
                          surname)}))))
+
+(defn validate-not-after! [now certificate]
+  (let [not-after (-> certificate certificates/not-after)]
+    (when (.before not-after now)
+      (log/warn "Signing certificate validity ended at" not-after)
+      (exception/throw-ex-info!
+       {:type :expired-signing-certificate
+        :message (format "ET Signing certificate expired at %s, would have needed to be valid at least until %s"
+                         not-after
+                         now)}))))
+
+(defn validate-certificate! [last-name now certificate-str]
+  (let [certificate (certificates/pem-str->certificate certificate-str)]
+    (validate-surname! last-name certificate)
+    (validate-not-after! now certificate)))
 
 (defn write-signature! [id language pdf pkcs7]
   (try
@@ -790,7 +805,7 @@
     (do-when-signing
       energiatodistus
       #(do
-         (validate-surname! (:sukunimi whoami) (first chain))
+         (validate-certificate! (:sukunimi whoami) (Date.) (first chain))
          (let [key (energiatodistus-service/file-key id language)
                content (file-service/find-file aws-s3-client key)
                content-bytes (.readAllBytes content)

@@ -22,3 +22,7 @@
                 (assoc acc (-> k csk/->kebab-case-keyword) v)))
             {}
             (-> certificate buddy/subject (str/split #",")))))
+
+(defn not-after [certificate]
+  (when (instance? org.bouncycastle.cert.X509CertificateHolder certificate)
+    (.getNotAfter certificate)))

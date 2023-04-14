@@ -52,7 +52,8 @@
                            (:body parameters))
                           (str id "/" language))
                         [{:type :name-does-not-match :response 403}
-                         {:type :signed-pdf-exists :response 409}]))}}]
+                         {:type :signed-pdf-exists :response 409}
+                         {:type :expired-signing-certificate :response 400}]))}}]
    ["/finish"
     {:post {:summary "Siirrä energiatodistus allekirjoitettu-tilaan"
             :parameters {:path {:id common-schema/Key}}
