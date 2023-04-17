@@ -9,7 +9,7 @@ insert into vk_template (
     tiedoksi,
     content
 )
-values (1, 'Kehotus 2021', 'Uppmaning 2021', 1, 2, 'fi', true, false,
+values (1, 'Kehotus 2021', 'Uppmaning 2021', 1, 2, 'fi', false, false,
 $$
 <div class="otsikko">
     <b>KEHOTUS/UPPMANING</b> <br/>
