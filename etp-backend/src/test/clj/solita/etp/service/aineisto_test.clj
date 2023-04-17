@@ -1,7 +1,8 @@
 (ns solita.etp.service.aineisto-test
   (:require [solita.etp.service.aineisto :as aineisto]
             [solita.etp.test-system :as ts]
-            [clojure.test :as t])
+            [clojure.test :as t]
+            [clojure.java.jdbc :as jdbc])
   (:import (java.time Instant)))
 
 (t/use-fixtures :each ts/fixture)
@@ -20,3 +21,18 @@
       (t/testing "10 is allowed, return value 1 tells inserts succeeded"
         (t/is (= 1
                  (aineisto/set-kayttaja-aineistot! ts/*db* 1 (take 10 test-aineisto))))))))
+
+
+(def user-id-with-allowed-ip 66666)
+(def allowed-ip "192.168.11.1/32")
+
+(t/deftest check-access-test
+  (t/testing "User has access with the given ip-address"
+
+    (jdbc/execute! ts/*db* ["insert into kayttaja (id, rooli_id, etunimi, sukunimi, email, puhelin) VALUES (?, 4, 'testiaineisto', 'testikäyttäjä', 'testi@solita.fi', '')", user-id-with-allowed-ip])
+    (jdbc/execute! ts/*db* ["insert into kayttaja_aineisto (kayttaja_id, aineisto_id, valid_until, ip_address) VALUES (?, 1, ?, ?)"
+                            user-id-with-allowed-ip
+                            (-> (Instant/now)
+                                (.plusSeconds 864000))
+                            allowed-ip])
+    (t/is (true? (aineisto/check-access ts/*db*, user-id-with-allowed-ip, 1, allowed-ip)))))
