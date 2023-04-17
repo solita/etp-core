@@ -49,4 +49,18 @@
   (t/testing "User can't access aineistot from an ip that is allowed for different user"
     (jdbc/execute! ts/*db* ["insert into kayttaja (id, rooli_id, etunimi, sukunimi, email, puhelin) VALUES (?, 4, 'Ei testiaineistoa', 'testikäyttäjä', 'testi2@solita.fi', '')", 666667])
 
-    (t/is (false? (aineisto/check-access ts/*db*, 666667, allowed-aineisto-type, allowed-ip)))))
+    (t/is (false? (aineisto/check-access ts/*db*, 666667, allowed-aineisto-type, allowed-ip))))
+
+  (t/testing "User can't access aineistot after access has been removed"
+    (aineisto/delete-kayttaja-access! ts/*db* user-id-with-allowed-ip)
+    (t/is (false? (aineisto/check-access ts/*db*, user-id-with-allowed-ip, allowed-aineisto-type, allowed-ip))))
+
+  (t/testing "User can't access aineistot when the access has expired"
+    ;; Add access that has valid_until in the past
+    (jdbc/execute! ts/*db* ["insert into kayttaja_aineisto (kayttaja_id, aineisto_id, valid_until, ip_address) VALUES (?, ?, ?, ?)"
+                            user-id-with-allowed-ip
+                            allowed-aineisto-type
+                            (-> (Instant/now)
+                                (.minusSeconds 5))
+                            allowed-ip])
+    (t/is (false? (aineisto/check-access ts/*db*, user-id-with-allowed-ip, allowed-aineisto-type, allowed-ip)))))
