@@ -1,0 +1,3 @@
+{:ns-groups    [{:pattern ".*-db$" :name db-namespaces}]
+ :linters
+ {:unresolved-namespace {:exclude [db-namespaces]}}}
