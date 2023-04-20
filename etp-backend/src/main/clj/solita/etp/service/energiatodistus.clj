@@ -487,7 +487,6 @@
      energiatodistus)))
 
 (defn update-energiatodistus! [db whoami id energiatodistus]
-  (println "energiatodistus" energiatodistus)
   (if-let [current-energiatodistus (find-energiatodistus db id)]
     (do
       (assert-laatija! whoami current-energiatodistus)
