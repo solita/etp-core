@@ -9,7 +9,8 @@
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
-            [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf-service]))
+            [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf-service])
+  (:import (java.time Instant)))
 
 (def generators {schema/Num                   (g/always 1.0M)
                  common-schema/Num1           (g/always 1.0M)
@@ -87,7 +88,7 @@
    (let [energiatodistus-adds (generate-adds n versio ready-for-signing?)]
      (zipmap (insert! energiatodistus-adds laatija-id) energiatodistus-adds))))
 
-(defn sign-pdf! [energiatodistus-id laatija-id]
+(defn sign-pdf-at-time! [energiatodistus-id laatija-id now]
   (let [language (-> (energiatodistus-service/find-energiatodistus
                       ts/*db*
                       energiatodistus-id)
@@ -103,6 +104,7 @@
        ts/*db*
        ts/*aws-s3-client*
        {:id laatija-id :sukunimi "Specimen-Potex"}
+       now
        energiatodistus-id
        language-code
        {:signature "IAMcrYCDqC0nprcI2aKTZGAqHurktQYjw6IBh4gDrvl5FKrKczRlE07x8iwWd66O11J/LXuWj3xdNz3UTcPzvUBurT0VH4KDy9oGxeMbMLrJoWmD3gvzUrrRox/oA8/wKuTnqo/PIkJzkZFxty3zeh5ahNQAZEqXnUP+oBi524WlPNcSXA4EnTNlTm7FfJlWIUw8Ljo1ZqaFgOw7omTEeYJgBLiYAZgTSxeNkDMTogAqQA9jXnukUMDu7s/0APsZpFEU/kbYZM3Sz5XfgGHbq4p/zUzskTKqeMDfiJg8hGkMXfViLwS4cyriW/VyCm87WCBqkOeHD7whOv4KyVA/cw==",
@@ -110,16 +112,25 @@
                     "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"
                     "MIIEHjCCAwagAwIBAgIDAdTAMA0GCSqGSIb3DQEBBQUAMIGlMQswCQYDVQQGEwJGSTEQMA4GA1UECBMHRmlubGFuZDEjMCEGA1UEChMaVmFlc3RvcmVraXN0ZXJpa2Vza3VzIFRFU1QxKTAnBgNVBAsTIENlcnRpZmljYXRpb24gQXV0aG9yaXR5IFNlcnZpY2VzMRkwFwYDVQQLExBWYXJtZW5uZXBhbHZlbHV0MRkwFwYDVQQDExBWUksgVEVTVCBSb290IENBMB4XDTAyMTIxNzE5MDA0NFoXDTIzMTIxNzE4NTg1MFowgaUxCzAJBgNVBAYTAkZJMRAwDgYDVQQIEwdGaW5sYW5kMSMwIQYDVQQKExpWYWVzdG9yZWtpc3RlcmlrZXNrdXMgVEVTVDEpMCcGA1UECxMgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgU2VydmljZXMxGTAXBgNVBAsTEFZhcm1lbm5lcGFsdmVsdXQxGTAXBgNVBAMTEFZSSyBURVNUIFJvb3QgQ0EwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDUxaN5pNBQqhtAm/XeVX+qbF2ILwiAumkt68A8JcrKOxOuUeXc3f6SWK/n+y0wZO/xr/c4ibElJTfvr+2Q33C5Z4gHS2NwJtK+/fbiwrZ667HUkCK11qehYC4dFeR7K01xKMGosDujp/ns6esldgBi0/30GNiFVKs7Kf19QjA+vGwMVtDdNVBdiJLtYxxV60gymHvD82Jwg1UFdvl1B2EkR5yrNdzBNbeeRGF6cBEbLJUvrHkNB5z8rng2qqz6rmuSBWl7SqChQRv/qP88Uz+nZaal3TCjg+IaGboURh1odW+u/JwQGVLzCutjVqyiqMMPwu65NUCDvoEnxeIVqPJLAgMBAAGjVTBTMA8GA1UdEwEB/wQFMAMBAf8wEQYJYIZIAYb4QgEBBAQDAgAHMA4GA1UdDwEB/wQEAwIBxjAdBgNVHQ4EFgQU3t5QCxdnwzepyZiINEjJMXnrbaEwDQYJKoZIhvcNAQEFBQADggEBAFSoft0eoN/19XnLGhWKLgveR/eTkaJX7ap63ffftnleky9exYSAFun5s8Rw7/Bf8WLftMa/YvGpfV64azcqzas2yo3HKKvTPHOegJbm5tMS3qVi8PGf6jxYcPeAFXMDg9SAex6GLxI5uoXflZ3TiDj64CvCSxHPCTwe2ybprVrRti6LwCO1iEOTGjvxuUSxVhRKcywZUgn1oVmcim63AvvfDcD8Ytx8xTlPPnibTkQzlwaWMCF+kDitksFbkOUdWYVoWFkb4vis/BYc6ZyjF1Wb1yEYNvVfL4/17kiZnZGxLNbM4Ygm2vUEZ8ualEtXfFCfv9DA8MeVIUfa2pTH6Tk="]}))))
 
-(defn sign! [energiatodistus-id laatija-id skip-pdf?]
+(defn sign-at-time! [energiatodistus-id laatija-id skip-pdf? now]
   (let [db (ts/db-user laatija-id)
         whoami {:id laatija-id}]
     (energiatodistus-service/start-energiatodistus-signing! db
                                                             whoami
                                                             energiatodistus-id)
     (when-not skip-pdf?
-      (sign-pdf! energiatodistus-id laatija-id))
+      (sign-pdf-at-time! energiatodistus-id laatija-id now))
     (energiatodistus-service/end-energiatodistus-signing! db
                                                           ts/*aws-s3-client*
                                                           whoami
                                                           energiatodistus-id
                                                           {:skip-pdf-signed-assert? true})))
+
+(def time-when-test-cert-not-expired (Instant/parse "2022-05-20T12:00:00Z"))
+(def time-when-test-cert-expired (Instant/parse "2022-05-25T12:00:00Z"))
+
+(defn sign-pdf! [energiatodistus-id laatija-id]
+  (sign-pdf-at-time! energiatodistus-id laatija-id time-when-test-cert-not-expired))
+
+(defn sign! [energiatodistus-id laatija-id skip-pdf?]
+  (sign-at-time! energiatodistus-id laatija-id skip-pdf? time-when-test-cert-not-expired))

@@ -5,7 +5,8 @@
             [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf-service]
             [solita.etp.schema.common :as common-schema]
             [schema.core :as schema]
-            [solita.etp.schema.energiatodistus :as energiatodistus-schema]))
+            [solita.etp.schema.energiatodistus :as energiatodistus-schema])
+  (:import (java.time Instant)))
 
 (def routes
   ["/signature"
@@ -48,6 +49,7 @@
                         #(api-response/signature-response
                           (energiatodistus-pdf-service/sign-energiatodistus-pdf
                            db aws-s3-client whoami
+                           (Instant/now)
                            id language
                            (:body parameters))
                           (str id "/" language))

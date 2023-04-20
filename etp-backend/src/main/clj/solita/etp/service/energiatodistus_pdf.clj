@@ -787,7 +787,7 @@
 (defn validate-certificate! [last-name now certificate-str]
   (let [certificate (certificates/pem-str->certificate certificate-str)]
     (validate-surname! last-name certificate)
-    (validate-not-after! now certificate)))
+    (validate-not-after! (-> now Instant/from Date/from) certificate)))
 
 (defn write-signature! [id language pdf pkcs7]
   (try
@@ -798,14 +798,16 @@
         (str "Signed PDF already exists for energiatodistus "
              id "/" language ". Get digest to sign again.")))))
 
-(defn sign-energiatodistus-pdf [db aws-s3-client whoami id language
+(defn sign-energiatodistus-pdf [db aws-s3-client whoami now id language
                                 {:keys [chain] :as signature-and-chain}]
   (when-let [energiatodistus
              (energiatodistus-service/find-energiatodistus db id)]
     (do-when-signing
       energiatodistus
       #(do
-         (validate-certificate! (:sukunimi whoami) (Date.) (first chain))
+         (validate-certificate! (:sukunimi whoami)
+                                now
+                                (first chain))
          (let [key (energiatodistus-service/file-key id language)
                content (file-service/find-file aws-s3-client key)
                content-bytes (.readAllBytes content)
