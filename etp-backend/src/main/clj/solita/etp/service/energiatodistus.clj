@@ -389,10 +389,14 @@
                                               [:laskutettava-yritys-id
                                                :laskuriviviite
                                                :pt$rakennustunnus
+                                               :pt$nimi-fi
+                                               :pt$nimi-sv
                                                :korvattu-energiatodistus-id
                                                :kommentti])
     [:signed :paakayttaja true] (select-keys energiatodistus-update
                                              [:pt$rakennustunnus
+                                              :pt$nimi-fi
+                                              :pt$nimi-sv
                                               :korvattu-energiatodistus-id
                                               :kommentti])
     [:replaced :paakayttaja _] (select-keys energiatodistus-update
