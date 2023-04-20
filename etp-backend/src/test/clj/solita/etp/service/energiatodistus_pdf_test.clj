@@ -155,9 +155,10 @@
       (t/is (instance? clojure.lang.ExceptionInfo ex))
       (t/is (= :expired-signing-certificate type))))
 
-  (t/is (nil? (service/validate-certificate! "Specimen-POtex"
-                                             energiatodistus-test-data/time-when-test-cert-not-expired
-                                             certificates-test/test-cert-str))))
+  (t/testing "With the expected name and within the validity period of the certificate, signing succeeds"
+   (service/validate-certificate! "Specimen-POtex"
+                                  energiatodistus-test-data/time-when-test-cert-not-expired
+                                  certificates-test/test-cert-str)))
 
 (t/deftest sign-energiatodistus-test
   (let [{:keys [laatijat energiatodistukset]} (test-data-set)
