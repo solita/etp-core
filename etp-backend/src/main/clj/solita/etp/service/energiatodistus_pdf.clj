@@ -774,9 +774,9 @@
                          last-name
                          surname)}))))
 
-(defn validate-not-after! [now certificate]
+(defn validate-not-after! [^Date now certificate]
   (let [not-after (-> certificate certificates/not-after)]
-    (when (.before not-after now)
+    (when (.after now not-after)
       (log/warn "Signing certificate validity ended at" not-after)
       (exception/throw-ex-info!
        {:type :expired-signing-certificate
