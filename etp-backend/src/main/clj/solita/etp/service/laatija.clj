@@ -16,7 +16,7 @@
 (db/require-queries 'laatija)
 
 (defn public-laatija [{:keys [login voimassa laatimiskielto partner julkinenpuhelin
-                              julkinenemail julkinenwwwosoite julkinenosoite]
+                              julkinenemail julkinenwwwosoite julkinenosoite julkinenpostinumero]
                        :as laatija}]
   (when (and voimassa (not partner) (not laatimiskielto) (not (nil? login)))
     (select-keys laatija
@@ -24,6 +24,7 @@
                    julkinenpuhelin (conj :puhelin)
                    julkinenemail (conj :email)
                    julkinenwwwosoite (conj :wwwosoite)
+                   julkinenpostinumero (conj :postinumero :postitoimipaikka)
                    julkinenosoite (conj :jakeluosoite
                                         :postinumero
                                         :postitoimipaikka
@@ -72,7 +73,8 @@
                 :julkinenpuhelin :julkinen_puhelin
                 :julkinenemail :julkinen_email
                 :julkinenosoite :julkinen_osoite
-                :julkinenwwwosoite :julkinen_wwwosoite})
+                :julkinenwwwosoite :julkinen_wwwosoite
+                :julkinenpostinumero :julkinen_postinumero})
 
 (defn- laatija->db-row [laatija]
   (-> laatija
