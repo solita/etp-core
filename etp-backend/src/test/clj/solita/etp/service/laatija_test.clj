@@ -25,18 +25,20 @@
         (service/update-laatija-by-id! ts/*db* id {:julkinenemail true
                                                    :julkinenpuhelin false
                                                    :julkinenwwwosoite true
-                                                   :julkinenosoite false})))
+                                                   :julkinenosoite false
+                                                   :julkinenpostinumero false})))
     {:laatijat laatijat}))
 
 (t/deftest public-laatija-test
   (let [laatija (-> (laatija-test-data/generate-adds 1)
                     first
-                    (merge {:login           (Instant/now)
-                            :voimassa        true
-                            :laatimiskielto  false
-                            :julkinenpuhelin false
-                            :julkinenemail   true
-                            :julkinenosoite  false}))]
+                    (merge {:login               (Instant/now)
+                            :voimassa            true
+                            :laatimiskielto      false
+                            :julkinenpuhelin     false
+                            :julkinenemail       true
+                            :julkinenosoite      false
+                            :julkinenpostinumero false}))]
     (t/is (every? #(contains? (service/public-laatija laatija) %)
                   [:email :etunimi]) (str "Failure processing " (service/public-laatija laatija)))
     (t/is (not-every? #(contains? (service/public-laatija laatija) %)

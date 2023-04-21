@@ -38,14 +38,15 @@
    Represents laatija information which is stored in laatija-table."
   (merge geo-schema/Postiosoite
          (st/optional-keys LaatijaAdminUpdate)
-         {:toimintaalue       (schema/maybe common-schema/Key)
-          :muuttoimintaalueet MuutToimintaalueet
-          :julkinenpuhelin    schema/Bool
-          :julkinenemail      schema/Bool
-          :julkinenosoite     schema/Bool
-          :julkinenwwwosoite  schema/Bool
-          :wwwosoite          (schema/maybe common-schema/Url)
-          :laskutuskieli      (schema/enum 0 1 2)}))
+         {:toimintaalue        (schema/maybe common-schema/Key)
+          :muuttoimintaalueet  MuutToimintaalueet
+          :julkinenpuhelin     schema/Bool
+          :julkinenemail       schema/Bool
+          :julkinenosoite      schema/Bool
+          :julkinenpostinumero schema/Bool
+          :julkinenwwwosoite   schema/Bool
+          :wwwosoite           (schema/maybe common-schema/Url)
+          :laskutuskieli       (schema/enum 0 1 2)}))
 
 (def Laatija
   "Schema representing the persistent laatija.
