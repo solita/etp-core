@@ -1,0 +1,17 @@
+name: pull-request
+
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./etp-backend
+    container:
+      image: clojure:openjdk-11-tools-deps
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build
+        run: clojure -M:uberjar
