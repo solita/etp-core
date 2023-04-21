@@ -12,7 +12,8 @@
             [solita.etp.service.complete-energiatodistus :as complete-energiatodistus-service]
             [solita.etp.service.file :as file-service]
             [solita.common.formats :as formats])
-  (:import (java.time Instant LocalDate ZoneId)
+  (:import (java.util Date)
+           (java.time Instant LocalDate ZoneId)
            (java.time.format DateTimeFormatter)
            (org.apache.pdfbox.multipdf Overlay)
            (org.apache.pdfbox.multipdf Overlay$Position)
@@ -761,9 +762,8 @@
       str/lower-case
       (str/replace #"[^a-z]" "")))
 
-(defn validate-surname! [last-name certificate-str]
-  (let [surname (-> certificate-str
-                    certificates/pem-str->certificate
+(defn validate-surname! [last-name certificate]
+  (let [surname (-> certificate
                     certificates/subject
                     :surname)]
     (when-not (= (comparable-name last-name) (comparable-name surname))
@@ -774,6 +774,21 @@
                          last-name
                          surname)}))))
 
+(defn validate-not-after! [^Date now certificate]
+  (let [not-after (-> certificate certificates/not-after)]
+    (when (.after now not-after)
+      (log/warn "Signing certificate validity ended at" not-after)
+      (exception/throw-ex-info!
+       {:type :expired-signing-certificate
+        :message (format "ET Signing certificate expired at %s, would have needed to be valid at least until %s"
+                         not-after
+                         now)}))))
+
+(defn validate-certificate! [last-name now certificate-str]
+  (let [certificate (certificates/pem-str->certificate certificate-str)]
+    (validate-surname! last-name certificate)
+    (validate-not-after! (-> now Instant/from Date/from) certificate)))
+
 (defn write-signature! [id language pdf pkcs7]
   (try
     (puumerkki/write-signature! pdf pkcs7)
@@ -783,14 +798,16 @@
         (str "Signed PDF already exists for energiatodistus "
              id "/" language ". Get digest to sign again.")))))
 
-(defn sign-energiatodistus-pdf [db aws-s3-client whoami id language
+(defn sign-energiatodistus-pdf [db aws-s3-client whoami now id language
                                 {:keys [chain] :as signature-and-chain}]
   (when-let [energiatodistus
              (energiatodistus-service/find-energiatodistus db id)]
     (do-when-signing
       energiatodistus
       #(do
-         (validate-surname! (:sukunimi whoami) (first chain))
+         (validate-certificate! (:sukunimi whoami)
+                                now
+                                (first chain))
          (let [key (energiatodistus-service/file-key id language)
                content (file-service/find-file aws-s3-client key)
                content-bytes (.readAllBytes content)
