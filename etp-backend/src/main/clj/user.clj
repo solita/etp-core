@@ -21,13 +21,25 @@
 (defn run-test [var-name]
   (t/test-vars [var-name]))
 
-(defn run-tests []
-  (require 'eftest.runner)
-  (-> ((resolve 'eftest.runner/find-tests) "src/test")
-      ((resolve 'eftest.runner/run-tests))))
+(defn run-tests
+  ([]
+   (require 'eftest.runner)
+   (-> ((resolve 'eftest.runner/find-tests) "src/test")
+       ((resolve 'eftest.runner/run-tests))))
+  ([config]
+   (require 'eftest.runner)
+   (-> ((resolve 'eftest.runner/find-tests) "src/test")
+       ((resolve 'eftest.runner/run-tests) config))))
 
 (defn run-tests-and-exit! []
   (let [{:keys [fail error]} (run-tests)]
+    (System/exit (if (and (zero? fail) (zero? error)) 0 1))))
+
+(defn run-tests-with-junit-reporter-and-exit! []
+  (require 'eftest.report)
+  (require 'eftest.report.junit)
+  (let [{:keys [fail error]} (run-tests {:report ((resolve 'eftest.report/report-to-file)
+                                                  (resolve 'eftest.report.junit/report) "target/test.xml")})]
     (System/exit (if (and (zero? fail) (zero? error)) 0 1))))
 
 (defn- process-key [key] (if (schema/optional-key? key) (:k key) key))
