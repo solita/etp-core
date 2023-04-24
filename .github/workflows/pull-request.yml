@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build
-        run: clojure -M:lint
+        run: clojure -M:lint --fail-level error
 
   test:
     runs-on: ubuntu-latest
