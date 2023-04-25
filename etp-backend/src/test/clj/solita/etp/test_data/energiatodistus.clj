@@ -1,5 +1,7 @@
 (ns solita.etp.test-data.energiatodistus
-  (:require [schema.core :as schema]
+  (:require [clojure.test.check.generators :as test-generators]
+            [clojure.string :as str]
+            [schema.core :as schema]
             [schema-generators.generators :as g]
             [flathead.deep :as deep]
             [solita.common.logic :as logic]
@@ -12,7 +14,17 @@
             [solita.etp.service.energiatodistus-pdf :as energiatodistus-pdf-service])
   (:import (java.time Instant)))
 
-(def generators {schema/Num                   (g/always 1.0M)
+(defn not-escaped-backslash? [generated-string]
+  (not (str/includes? generated-string "\\")))
+
+(def string-generator
+  "Pure string-ascii generator can generate \\ which breaks test
+   when the generated string goes to PostgreSQL like search"
+  (test-generators/such-that not-escaped-backslash?
+                             test-generators/string-ascii))
+
+(def generators {schema/Str                   string-generator
+                 schema/Num                   (g/always 1.0M)
                  common-schema/Num1           (g/always 1.0M)
                  common-schema/NonNegative    (g/always 1.0M)
                  common-schema/IntNonNegative (g/always 1)})
@@ -35,7 +47,7 @@
    {:perustiedot (merge
                   {:kieli (rand-int 2)
                    :kayttotarkoitus "YAT"}
-                  (if (= versio 2018)
+                  (when (= versio 2018)
                     {:laatimisvaihe (rand-int 2)}))
     :lahtotiedot {:ilmanvaihto {:tyyppi-id (rand-int 7)}
                   :lammitys {:lammitysmuoto-1 {:id (rand-int 10)}
