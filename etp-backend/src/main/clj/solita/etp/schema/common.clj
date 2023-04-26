@@ -198,3 +198,5 @@
                     (clojure.lang.MapEntry. (first x) (schema/maybe (second x)))
                     x))
                 schema))
+
+(def Language (schema/enum "fi" "sv"))

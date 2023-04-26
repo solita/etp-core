@@ -155,9 +155,16 @@
     (-> (valvonta-oikeellisuus-db/select-last-diaarinumero db {:id id})
         first :diaarinumero)))
 
-(defn add-anomaly-viestiketju! [db whoami id toimenpide]
-  ;TODO: Fix to use language that used for communication
-  (let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db id)]
+(defn anomaly-subject [language]
+  (condp  = language
+    "fi" "Poikkeamailmoitus ET "
+    "sv" "Anmälan om avvikelse EC "
+    (throw
+      (exception/illegal-argument! "No language provided for anomaly message"))))
+
+(defn add-anomaly-viestiketju! [db whoami id toimenpide language]
+  (let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db id)
+        subject (anomaly-subject language)]
     (viesti-service/add-ketju!
       db whoami
       {:vastaanottajat        [(:laatija-id energiatodistus)]
@@ -166,7 +173,7 @@
        :vo-toimenpide-id      (:id toimenpide)
        :kasitelty             true
        :kasittelija-id        (:id whoami)
-       :subject               (str "Poikkeamailmoitus ET " (:energiatodistus-id toimenpide))
+       :subject               (str subject (:energiatodistus-id toimenpide))
        :body
        (str (or (-> energiatodistus :perustiedot :nimi-fi) (-> energiatodistus :perustiedot :nimi-sv)) "\n"
             (or (-> energiatodistus :perustiedot :katuosoite-fi)
@@ -213,28 +220,31 @@
     (when-not (toimenpide/reply? toimenpide-add)
       (exception/throw-forbidden! "Laatija can only add reply toimenpide."))))
 
-(defn add-toimenpide! [db aws-s3-client whoami id toimenpide-add]
-  (assert-add-toimenpide-for-laatija! db whoami id toimenpide-add)
-  (jdbc/with-db-transaction
-    [tx db]
-    (let [diaarinumero (if (toimenpide/case-open? toimenpide-add)
-                         (asha-valvonta-oikeellisuus/open-case! tx whoami id)
-                         (find-diaarinumero tx id toimenpide-add))
-          toimenpide (insert-toimenpide! tx id diaarinumero (dissoc toimenpide-add :virheet :tiedoksi))
-          toimenpide-id (:id toimenpide)]
-      (insert-virheet! tx toimenpide-id (:virheet toimenpide-add))
-      (insert-tiedoksi! tx toimenpide-id (:tiedoksi toimenpide-add))
-      (when-not (toimenpide/draft-support? toimenpide)
-        (valvonta-oikeellisuus-db/update-toimenpide-published! tx {:id toimenpide-id})
-        (case (-> toimenpide :type-id toimenpide/type-key)
-          :closed (asha-valvonta-oikeellisuus/close-case! whoami id toimenpide)
-          (when (toimenpide/asha-toimenpide? toimenpide)
-            (asha-valvonta-oikeellisuus/log-toimenpide! tx aws-s3-client whoami id toimenpide)))
-        (send-toimenpide-email! db aws-s3-client id toimenpide))
-      (when (toimenpide/anomaly? toimenpide)
-        (add-anomaly-viestiketju! tx whoami id toimenpide))
-      (update-valvonta-state! tx whoami id toimenpide)
-      {:id toimenpide-id})))
+(defn add-toimenpide!
+  ([db aws-s3-client whoami id toimenpide-add]
+   (add-toimenpide! db aws-s3-client whoami id toimenpide-add nil))
+  ([db aws-s3-client whoami id toimenpide-add language]
+   (assert-add-toimenpide-for-laatija! db whoami id toimenpide-add)
+   (jdbc/with-db-transaction
+     [tx db]
+     (let [diaarinumero (if (toimenpide/case-open? toimenpide-add)
+                          (asha-valvonta-oikeellisuus/open-case! tx whoami id)
+                          (find-diaarinumero tx id toimenpide-add))
+           toimenpide (insert-toimenpide! tx id diaarinumero (dissoc toimenpide-add :virheet :tiedoksi))
+           toimenpide-id (:id toimenpide)]
+       (insert-virheet! tx toimenpide-id (:virheet toimenpide-add))
+       (insert-tiedoksi! tx toimenpide-id (:tiedoksi toimenpide-add))
+       (when-not (toimenpide/draft-support? toimenpide)
+         (valvonta-oikeellisuus-db/update-toimenpide-published! tx {:id toimenpide-id})
+         (case (-> toimenpide :type-id toimenpide/type-key)
+           :closed (asha-valvonta-oikeellisuus/close-case! whoami id toimenpide)
+           (when (toimenpide/asha-toimenpide? toimenpide)
+             (asha-valvonta-oikeellisuus/log-toimenpide! tx aws-s3-client whoami id toimenpide)))
+         (send-toimenpide-email! db aws-s3-client id toimenpide))
+       (when (toimenpide/anomaly? toimenpide)
+         (add-anomaly-viestiketju! tx whoami id toimenpide language))
+       (update-valvonta-state! tx whoami id toimenpide)
+       {:id toimenpide-id}))))
 
 (defn- assoc-virheet [db toimenpide]
   (assoc toimenpide :virheet (valvonta-oikeellisuus-db/select-toimenpide-virheet

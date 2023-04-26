@@ -155,15 +155,18 @@
         :post {:summary    "Lisää energiatodistuksen valvontatoimenpide."
                :access     (some-fn rooli-service/paakayttaja? rooli-service/laatija?)
                :parameters {:path {:id common-schema/Key}
+                            :query {(schema/optional-key :language) common-schema/Language}
                             :body oikeellisuus-schema/ToimenpideAdd}
                :responses  {201 {:body common-schema/Id}
                             404 common-schema/ConstraintError}
-               :handler    (fn [{{{:keys [id]} :path :keys [body]}
+               :handler    (fn [{{{:keys [id]}       :path
+                                  {:keys [language]} :query
+                                  :keys              [body]}
                                  :parameters :keys [db aws-s3-client whoami uri]}]
                              (api-response/with-exceptions
                                #(api-response/created
                                   uri
-                                  (valvonta-service/add-toimenpide! db aws-s3-client whoami id body))
+                                  (valvonta-service/add-toimenpide! db aws-s3-client whoami id body language))
                                [{:constraint :toimenpide-energiatodistus-id-fkey
                                  :response   404}]))}}]
       ["/preview"
