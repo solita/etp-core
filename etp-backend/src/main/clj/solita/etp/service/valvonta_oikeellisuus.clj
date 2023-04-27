@@ -296,7 +296,7 @@
     db id (assoc liite :vo-toimenpide-id toimenpide-id)))
 
 (defn delete-liite! [db whoami id toimenpide-id liite-id]
-  (liite-service/delete-liite! db liite-id))
+  (liite-service/delete-liite! db whoami liite-id))
 
 (defn- update-toimenpide-row! [db toimenpide-id toimenpide]
   (first (db/with-db-exception-translation
