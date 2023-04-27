@@ -62,31 +62,61 @@
                (-> add :tempfile file-service/file->byte-array vec))))))
 
 (t/deftest delete-liite!-test
-  (let [{:keys [laatijat energiatodistukset
-                file-liitteet link-liitteet]} (test-data-set)
-        laatija-id (-> laatijat keys sort first)
-        whoami {:id laatija-id :rooli 0}
-        energiatodistus-id (-> energiatodistukset keys sort first)
-        liitteet (merge file-liitteet link-liitteet)]
-    (doseq [id (keys liitteet)
-            :let [found-before (service/find-energiatodistus-liitteet
-                                ts/*db*
-                                whoami
-                                energiatodistus-id)
-                  _ (service/delete-liite! (ts/db-user laatija-id)
-                                           whoami
-                                           id)
-                  found-after (service/find-energiatodistus-liitteet
-                               ts/*db*
-                               whoami
-                               energiatodistus-id)]]
-      (t/is (= (-> found-before count dec) (count found-after)))
-      (t/is (-> (map :id found-after) set (contains? id) not))
-      (t/is (nil? (-> (service/find-energiatodistus-liite-content
-                        ts/*db*
-                        {:id laatija-id :rooli 0}
-                        ts/*aws-s3-client*
-                        id)))))))
+  (t/testing "Laatija can delete their liite"
+    (let [{:keys [laatijat energiatodistukset
+                  file-liitteet link-liitteet]} (test-data-set)
+          laatija-id (-> laatijat keys sort first)
+          whoami {:id laatija-id :rooli 0}
+          energiatodistus-id (-> energiatodistukset keys sort first)
+          liitteet (merge file-liitteet link-liitteet)]
+      (doseq [id (keys liitteet)
+              :let [found-before (service/find-energiatodistus-liitteet
+                                   ts/*db*
+                                   whoami
+                                   energiatodistus-id)
+                    _ (service/delete-liite! (ts/db-user laatija-id)
+                                             whoami
+                                             id)
+                    found-after (service/find-energiatodistus-liitteet
+                                  ts/*db*
+                                  whoami
+                                  energiatodistus-id)]]
+        (t/is (= (-> found-before count dec) (count found-after)))
+        (t/is (-> (map :id found-after) set (contains? id) not))
+        (t/is (nil? (-> (service/find-energiatodistus-liite-content
+                          ts/*db*
+                          {:id laatija-id :rooli 0}
+                          ts/*aws-s3-client*
+                          id)))))))
+
+  (t/testing "Laatija can't delete other laatija's liitteet"
+    (let [{:keys [laatijat energiatodistukset
+                  file-liitteet link-liitteet]} (test-data-set)
+          another-laatija (laatija-test-data/generate-and-insert! 1)
+          another-laatija-id (-> another-laatija keys sort first)
+          another-laatija-whoami {:id another-laatija-id :rooli 0}
+          original-laatija-id  (-> laatijat keys sort first)
+          original-laatija-whoami {:id original-laatija-id :rooli 0}
+          energiatodistus-id (-> energiatodistukset keys sort first)
+          liitteet (merge file-liitteet link-liitteet)]
+      (doseq [id (keys liitteet)
+              :let [found-before (service/find-energiatodistus-liitteet
+                                   ts/*db*
+                                   original-laatija-whoami
+                                   energiatodistus-id)]]
+
+        ;; Trying to delete liite results in exception
+        (t/is (thrown? Exception
+                       (service/delete-liite! (ts/db-user another-laatija-id)
+                                              another-laatija-whoami
+                                              id)))
+
+        ;; Liite is still there after failed deletion attempt
+        (t/is (= found-before
+                 (service/find-energiatodistus-liitteet
+                   ts/*db*
+                   original-laatija-whoami
+                   energiatodistus-id)))))))
 
 (t/deftest find-liite-other-user
   (let [{:keys [laatijat energiatodistukset

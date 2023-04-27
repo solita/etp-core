@@ -75,13 +75,10 @@
     (assert-permission! db whoami (:energiatodistus-id liite))
     (assoc liite :content (file-service/find-file aws-s3-client (file-key liite-id)))))
 
-(defn delete-liite!
-  ([db liite-id]
-   (liite-db/delete-liite! db {:id liite-id}))
-  ([db whoami liite-id]
-    (let [energiatodistus-id (some->> {:id liite-id}
-                                      (liite-db/select-liite db)
-                                      first
-                                      :energiatodistus-id)]
-      (assert-permission! db whoami energiatodistus-id)
-      (delete-liite! db liite-id))))
+(defn delete-liite! [db whoami liite-id]
+  (let [energiatodistus-id (some->> {:id liite-id}
+                                    (liite-db/select-liite db)
+                                    first
+                                    :energiatodistus-id)]
+    (assert-permission! db whoami energiatodistus-id)
+    (liite-db/delete-liite! db {:id liite-id})))
