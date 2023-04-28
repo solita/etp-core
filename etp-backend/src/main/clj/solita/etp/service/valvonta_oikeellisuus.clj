@@ -162,9 +162,17 @@
     (throw
       (exception/illegal-argument! "No language provided for anomaly message"))))
 
+(defn message-signature [language]
+  (condp  = language
+    "fi" "Energia-asiantuntija\n"
+    "sv" "Energiexpert\n"
+    (throw
+      (exception/illegal-argument! "No language provided for anomaly message"))))
+
 (defn add-anomaly-viestiketju! [db whoami id toimenpide language]
   (let [energiatodistus (complete-energiatodistus-service/find-complete-energiatodistus db id)
-        subject (anomaly-subject language)]
+        subject (anomaly-subject language)
+        signature (message-signature language)]
     (viesti-service/add-ketju!
       db whoami
       {:vastaanottajat        [(:laatija-id energiatodistus)]
@@ -181,7 +189,7 @@
             (-> energiatodistus :perustiedot :postinumero) " "
             (-> energiatodistus :perustiedot :postitoimipaikka-fi) "\n\n"
             (:description toimenpide) "\n\n"
-            "Energia-asiantuntija\n"
+            signature
             (:etunimi whoami) " " (:sukunimi whoami))})))
 
 (defn add-audit-reply-viestiketju! [db whoami valvonta toimenpide]
