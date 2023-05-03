@@ -354,3 +354,8 @@
        :result-type   :forward-only
        :concurrency   :read-only
        :fetch-size    100})))
+
+(defn find-valvonnat-by-rakennustunnus [db rakennustunnus]
+  (valvonta-kaytto-db/select-valvonta-by-rakennustunnus
+    db
+    {:rakennustunnus rakennustunnus}))

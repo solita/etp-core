@@ -306,3 +306,9 @@ from etp.vk_note note
 where note.valvonta_id = :valvonta-id
   and note.deleted = false
 order by note.id, a.modifytime asc, a.event_id desc
+
+
+-- name: select-valvonta-by-rakennustunnus
+select id
+from vk_valvonta
+where rakennustunnus = :rakennustunnus

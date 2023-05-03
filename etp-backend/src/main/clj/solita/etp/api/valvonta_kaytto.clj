@@ -90,7 +90,14 @@
                              request
                              (api-response/csv-response-headers "valvonta.csv" false)
                              result)))}}]
-
+    ["/rakennustunnus/:rakennustunnus/"
+     {:get         {:summary "Hae käytönvalvonnat rakennustunnuksella"
+                    :parameters {:path {:rakennustunnus schema/Str}}
+                    :handler (fn [{{{:keys [rakennustunnus]} :path} :parameters
+                                   :keys [db]}]
+                               (api-response/get-response
+                                 (valvonta-service/find-valvonnat-by-rakennustunnus db rakennustunnus)
+                                 (str "Käytönvalvontoja rakennustunnuksella " rakennustunnus " ei löytynyt.")))}}]
     ["/:id"
      [""
       {:conflicting true
