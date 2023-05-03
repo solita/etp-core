@@ -3,7 +3,6 @@
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
             [solita.etp.service.valvonta-kaytto.suomifi-viestit :as suomifi-viestit]
             [clojure.java.io :as io]
-            [clojure.set :as set]
             [solita.etp.service.file :as file-service]
             [solita.etp.db :as db]
             [clojure.java.jdbc :as jdbc]
