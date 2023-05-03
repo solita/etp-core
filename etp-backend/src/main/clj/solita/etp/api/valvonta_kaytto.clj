@@ -1,7 +1,6 @@
 (ns solita.etp.api.valvonta-kaytto
   (:require [ring.util.response :as r]
             [schema.core :as schema]
-            [schema-tools.core :as schema-tools]
             [reitit.ring.schema :as reitit-schema]
             [solita.etp.api.response :as api-response]
             [solita.etp.api.valvonta-kaytto-toimenpiteet :as toimenpiteet-api]
@@ -251,7 +250,7 @@
               :responses  {200 {:body [liite-schema/Liite]}
                            404 {:body schema/Str}}
               :access     rooli-service/paakayttaja?
-              :handler    (fn [{{{:keys [id valvonta-id]} :path} :parameters :keys [db]}]
+              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                             (api-response/get-response
                               (valvonta-service/find-liitteet db id)
                               (str "Käytönvalvonta " id " does not exists.")))}}]
