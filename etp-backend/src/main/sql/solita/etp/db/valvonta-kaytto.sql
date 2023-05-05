@@ -309,6 +309,13 @@ order by note.id, a.modifytime asc, a.event_id desc
 
 
 -- name: select-valvonta-by-rakennustunnus
-select id
-from vk_valvonta
+select valvonta.id, coalesce(last_toimenpide.publish_time, last_toimenpide.create_time) as end_time
+from vk_valvonta valvonta
+left join lateral (
+    select toimenpide.*
+    from vk_toimenpide toimenpide
+    where valvonta.id = toimenpide.valvonta_id
+    order by coalesce(toimenpide.publish_time, toimenpide.create_time) desc
+    limit 1) last_toimenpide on true
 where rakennustunnus = :rakennustunnus
+  and deleted is false;
