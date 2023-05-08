@@ -8,12 +8,19 @@
 
 (defn generate-adds [n]
   (let [generated-data
-        (take (* n 10000) (map #(generators/complete {:ytunnus                %
-                                            :verkkolaskuoperaattori (rand-int 32)
-                                            :type-id                1}
-                                           yritys-schema/YritysSave)
-                     generators/unique-ytunnukset))
-        return-value (take n (remove #(contains? @used-y-tunnukset (:ytunnus %)) generated-data))
+        ;; Generate more than needed so there
+        ;; are still enough after removing duplicates
+        ;; Each call starts the generation from 0000000-0 so this basically
+        ;; also sets the maximum amount that can be generated
+        (take (* n 10000)
+              (map #(generators/complete {:ytunnus                %
+                                          :verkkolaskuoperaattori (rand-int 32)
+                                          :type-id                1}
+                                         yritys-schema/YritysSave)
+                   generators/unique-ytunnukset))
+        return-value (take n
+                           (remove #(contains? @used-y-tunnukset (:ytunnus %))
+                                   generated-data))
         added-y-tunnukset (map :ytunnus return-value)]
     (swap! used-y-tunnukset into added-y-tunnukset)
     return-value))
