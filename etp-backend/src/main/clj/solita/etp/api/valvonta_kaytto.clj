@@ -93,6 +93,7 @@
      {:get         {:summary "Hae käytönvalvonnat rakennustunnuksella"
                     :parameters {:path {:rakennustunnus schema/Str}}
                     :responses {200 {:body [valvonta-kaytto-schema/ExistingValvonta]}}
+                    :access    rooli-service/paakayttaja?
                     :handler (fn [{{{:keys [rakennustunnus]} :path} :parameters
                                    :keys [db]}]
                                (api-response/get-response
