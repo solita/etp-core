@@ -1,7 +1,6 @@
 (ns solita.etp.api.valvonta-kaytto
   (:require [ring.util.response :as r]
             [schema.core :as schema]
-            [schema-tools.core :as schema-tools]
             [reitit.ring.schema :as reitit-schema]
             [solita.etp.api.response :as api-response]
             [solita.etp.api.valvonta-kaytto-toimenpiteet :as toimenpiteet-api]
@@ -90,7 +89,16 @@
                              request
                              (api-response/csv-response-headers "valvonta.csv" false)
                              result)))}}]
-
+    ["/rakennustunnus/:rakennustunnus/"
+     {:get         {:summary "Hae käytönvalvonnat rakennustunnuksella"
+                    :parameters {:path {:rakennustunnus schema/Str}}
+                    :responses {200 {:body [valvonta-kaytto-schema/ExistingValvonta]}}
+                    :access    rooli-service/paakayttaja?
+                    :handler (fn [{{{:keys [rakennustunnus]} :path} :parameters
+                                   :keys [db]}]
+                               (api-response/get-response
+                                 (valvonta-service/find-valvonnat-by-rakennustunnus db rakennustunnus)
+                                 (str "Käytönvalvontoja rakennustunnuksella " rakennustunnus " ei löytynyt.")))}}]
     ["/:id"
      [""
       {:conflicting true
@@ -244,7 +252,7 @@
               :responses  {200 {:body [liite-schema/Liite]}
                            404 {:body schema/Str}}
               :access     rooli-service/paakayttaja?
-              :handler    (fn [{{{:keys [id valvonta-id]} :path} :parameters :keys [db]}]
+              :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                             (api-response/get-response
                               (valvonta-service/find-liitteet db id)
                               (str "Käytönvalvonta " id " does not exists.")))}}]

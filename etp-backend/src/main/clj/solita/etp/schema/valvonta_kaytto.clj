@@ -97,3 +97,7 @@
    :author-id   common-schema/Key
    :create-time common-schema/Instant
    :description schema/Str})
+
+(def ExistingValvonta
+  {:id common-schema/Key
+   :end-time (schema/maybe common-schema/Instant)})
