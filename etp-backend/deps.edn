@@ -60,7 +60,7 @@
         com.jcraft/jsch {:mvn/version "0.1.55"}
         com.sun.mail/javax.mail {:mvn/version "1.6.2"}
 
-        org.apache.ws.security/wss4j {:mvn/version "1.6.9"}
+        org.apache.ws.security/wss4j {:mvn/version "1.6.19"}
         org.apache.axis/axis {:mvn/version "1.4"}
         commons-io/commons-io {:mvn/version "2.11.0"}
         ;; commons-discovery is needed by some other library dynamically at runtime
