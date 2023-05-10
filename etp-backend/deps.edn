@@ -56,7 +56,7 @@
         org.apache.axis/axis {:mvn/version "1.4"}
         org.apache.axis/axis-ant {:mvn/version "1.4"}
         javax.xml/webservices-api {:mvn/version "1.4"}
-        commons-io/commons-io {:mvn/version "1.4"}
+        commons-io/commons-io {:mvn/version "2.11.0"}
         com.sun.xml.ws/webservices-rt {:mvn/version "2.0"
                                        :exclusions ["javax.xml/webservices-api"]}
         commons-discovery/commons-discovery {:mvn/version "0.5"}}
