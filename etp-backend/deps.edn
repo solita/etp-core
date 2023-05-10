@@ -58,8 +58,7 @@
         javax.xml/webservices-api {:mvn/version "1.4"}
         commons-io/commons-io {:mvn/version "2.11.0"}
         com.sun.xml.ws/webservices-rt {:mvn/version "2.0"
-                                       :exclusions ["javax.xml/webservices-api"]}
-        commons-discovery/commons-discovery {:mvn/version "0.5"}}
+                                       :exclusions ["javax.xml/webservices-api"]}}
  :aliases {:dev {:extra-paths ["src/test/clj"
                                "src/test/resources"]
                  :extra-deps {eftest/eftest {:mvn/version "0.5.9"}
