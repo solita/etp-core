@@ -54,11 +54,12 @@
 
         org.apache.ws.security/wss4j {:mvn/version "1.6.9"}
         org.apache.axis/axis {:mvn/version "1.4"}
+        org.apache.axis/axis-ant {:mvn/version "1.4"}
+        javax.xml/webservices-api {:mvn/version "1.4"}
         commons-io/commons-io {:mvn/version "2.11.0"}
-        ;; commons-discovery is needed by some other library dynamically at runtime
-        ;; related to suomi.fi-viestit implementation
-        commons-discovery/commons-discovery {:mvn/version "0.5"}
-        com.sun.xml.ws/webservices-rt {:mvn/version "2.0.1"}}
+        com.sun.xml.ws/webservices-rt {:mvn/version "2.0"
+                                       :exclusions ["javax.xml/webservices-api"]}
+        commons-discovery/commons-discovery {:mvn/version "0.5"}}
  :aliases {:dev {:extra-paths ["src/test/clj"
                                "src/test/resources"]
                  :extra-deps {eftest/eftest {:mvn/version "0.5.9"}
