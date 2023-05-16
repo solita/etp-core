@@ -81,7 +81,8 @@
 (def LastToimenpide
   (schema-tools/select-keys Toimenpide
                             [:id :diaarinumero :type-id
-                             :deadline-date :create-time :publish-time]))
+                             :deadline-date :create-time
+                             :publish-time :template-id]))
 
 (def ValvontaStatus
   (assoc Valvonta

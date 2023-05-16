@@ -10,6 +10,7 @@ select
   last_toimenpide.publish_time last_toimenpide$publish_time,
   last_toimenpide.deadline_date last_toimenpide$deadline_date,
   last_toimenpide.diaarinumero last_toimenpide$diaarinumero,
+  last_toimenpide.template_id last_toimenpide$template_id,
   energiatodistus.id energiatodistus$id
 from vk_valvonta valvonta
   left join lateral (
