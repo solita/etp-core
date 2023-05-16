@@ -1,6 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
-  <!-- This is an automatically generated config file by nvd-clojure. -->
-  <!-- Feel free to tweak it, version-control it and remove any comment. -->
-  <!-- You can find suppression examples in https://jeremylong.github.io/DependencyCheck/general/suppression.html -->
+    <!-- This is an automatically generated config file by nvd-clojure. -->
+    <!-- Feel free to tweak it, version-control it and remove any comment. -->
+    <!-- You can find suppression examples in https://jeremylong.github.io/DependencyCheck/general/suppression.html -->
+
+    <!-- Axis-vulnerabilities: These affect when using it as a server,
+    we use it as a client to communicate with a trusted party (suomi.fi)-->
+    <suppress>
+        <notes><![CDATA[
+   file name: axis-1.4.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.axis/axis@.*$</packageUrl>
+        <cve>CVE-2019-0227</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: axis-1.4.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.axis/axis@.*$</packageUrl>
+        <cve>CVE-2018-8032</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: axis-1.4.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.axis/axis@.*$</packageUrl>
+        <cve>CVE-2012-5784</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: axis-1.4.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.axis/axis@.*$</packageUrl>
+        <cve>CVE-2014-3596</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: axis-1.4.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.axis/axis@.*$</packageUrl>
+        <vulnerabilityName>CVE-2007-2353</vulnerabilityName>
+    </suppress>
 </suppressions>
