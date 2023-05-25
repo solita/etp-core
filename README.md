@@ -47,6 +47,14 @@ For Ubuntu:
 
 https://clojure.org/guides/getting_started#_installation_on_linux
 
+### LibreOffice
+Install LibreOffice
+
+For MacOS:
+
+    brew install libreoffice
+    ln -s /opt/homebrew/bin/soffice /opt/homebrew/bin/libreoffice
+
 Starting the development environment
 --------------------------------
 
@@ -64,7 +72,7 @@ The application can be also started from the command line with the following
 command:
 
     cd etp-backend
-    clojure -m solita.etp.core
+    clojure -M:dev -m solita.etp.core
 
 Tests can be run (parallel) with
 

@@ -2,7 +2,6 @@
   (:require [clojure.string :as str]
             [clojure.java.jdbc :as jdbc]
             [integrant.core :as ig]
-            [solita.common.jdbc :as common-jdbc]
             [solita.etp.config :as config]
             [solita.etp.db]
             [solita.etp.aws-s3-client]
