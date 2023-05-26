@@ -65,7 +65,7 @@
             (str (if (:custom:VIRTU_localID data)
                     config/keycloak-virtu-logout-url
                     config/keycloak-suomifi-logout-url))))
-      (str config/index-url "/api/logout"))))
+      (str config/index-url "/uloskirjauduttu"))))
 
 (def empty-cookie {:value ""
                    :path "/"
