@@ -36,7 +36,9 @@
             [solita.etp.header-middleware :as header-middleware]
             [solita.etp.exception :as exception]
             [solita.common.cf-signed-url :as signed-url]
-            [solita.common.map :as map]))
+            [solita.common.map :as map])
+  (:import [java.net URLEncoder]
+           [java.nio.charset StandardCharsets]))
 
 (defn tag [tag routes]
   (w/prewalk
@@ -52,11 +54,17 @@
 (defn logout-location [req]
   (let [{:keys [data]} (req->jwt req)]
     (if data
-      (str config/cognito-logout-url
-           "&logout_uri="
-           (str (if (:custom:VIRTU_localID data)
-                  config/keycloak-virtu-logout-url
-                  config/keycloak-suomifi-logout-url)))
+      (if-let [id-token (:custom:id_token data)] ; TODO: Remove check when new keycloak version is in use
+        (str (if (:custom:VIRTU_localID data)
+               config/keycloak-virtu-logout-url
+               config/keycloak-suomifi-logout-url)
+             "?id_token_hint=" id-token
+             "&post_logout_redirect_uri=" (URLEncoder/encode config/cognito-logout-url StandardCharsets/UTF_8))
+        (str config/cognito-logout-url
+            "&logout_uri="
+            (str (if (:custom:VIRTU_localID data)
+                    config/keycloak-virtu-logout-url
+                    config/keycloak-suomifi-logout-url))))
       (str config/index-url "/api/logout"))))
 
 (def empty-cookie {:value ""
