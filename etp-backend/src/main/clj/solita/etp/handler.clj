@@ -55,11 +55,12 @@
   (let [{:keys [data]} (req->jwt req)]
     (if data
       (if-let [id-token (:custom:id_token data)] ; TODO: Remove check when new keycloak version is in use
-        (str (if (:custom:VIRTU_localID data)
-               config/keycloak-virtu-logout-url
-               config/keycloak-suomifi-logout-url)
-             "?id_token_hint=" id-token
-             "&post_logout_redirect_uri=" (URLEncoder/encode config/cognito-logout-url StandardCharsets/UTF_8))
+        (if (:custom:VIRTU_localID data)
+          (str config/cognito-virtu-logout-url
+               "&logout_uri="  config/keycloak-virtu-logout-url)
+          (str config/keycloak-suomifi-logout-url
+               "?id_token_hint=" id-token
+               "&post_logout_redirect_uri=" (URLEncoder/encode config/cognito-suomifi-logout-url StandardCharsets/UTF_8)))
         (str config/cognito-logout-url
             "&logout_uri="
             (str (if (:custom:VIRTU_localID data)
