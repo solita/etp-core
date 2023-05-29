@@ -14,7 +14,7 @@
            (java.io ByteArrayOutputStream File)))
 
 (def lahettaja {:nimi             "Asumisen rahoitus- ja kehittämiskeskus"
-                :jakeluosoite     "Vesijärvenkatu 11A / PL 30"
+                :jakeluosoite     "Kirkkokatu 12 / PL 30"
                 :postinumero      "15141"
                 :postitoimipaikka "Lahti"})
 
