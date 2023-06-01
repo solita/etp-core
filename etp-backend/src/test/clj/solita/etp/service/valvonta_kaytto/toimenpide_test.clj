@@ -24,4 +24,7 @@
 
   (t/testing "type-id 5 return the type-key :closed"
     (t/is (= (toimenpide/type-key 5)
-             :closed))))
+             :closed)))
+
+  (t/testing "unknown type-id results in an exception"
+    (t/is (thrown? Exception (toimenpide/type-key 666)))))
