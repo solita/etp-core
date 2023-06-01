@@ -26,5 +26,9 @@
     (t/is (= (toimenpide/type-key 5)
              :closed)))
 
+  (t/testing "type-id 7 return the type-key :decision-order-hearing-letter"
+    (t/is (= (toimenpide/type-key 7)
+             :decision-order-hearing-letter)))
+
   (t/testing "unknown type-id results in an exception"
     (t/is (thrown? Exception (toimenpide/type-key 666)))))

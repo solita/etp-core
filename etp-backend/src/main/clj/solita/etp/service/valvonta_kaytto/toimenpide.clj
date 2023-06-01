@@ -10,7 +10,9 @@
    ;; päätös
    4 :decision-order
    ;; valvonnan sulkeminen (case closed)
-   5 :closed})
+   5 :closed
+   ;; Uhkasakkoprosessi
+   7 :decision-order-hearing-letter})
 
 (defn type-key [type-id]
   (if-let [type-key (type-id->type-key type-id)]
