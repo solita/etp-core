@@ -1,16 +1,21 @@
 (ns solita.etp.service.valvonta-kaytto.toimenpide)
 
-(def ^:private type-keys
-  [;; käytönvalvonnan asia avataan ashaan (case open)
-   :case
+(def ^:private type-id->type-key
+  {;; käytönvalvonnan asia avataan ashaan (case open)
+   0 :case
    ;; tietopyynnön toimenpidetyypit
-   :rfi-request :rfi-order :rfi-warning
+   1 :rfi-request
+   2 :rfi-order
+   3 :rfi-warning
    ;; päätös
-   :decision-order
+   4 :decision-order
    ;; valvonnan sulkeminen (case closed)
-   :closed])
+   5 :closed})
 
-(defn type-key [type-id] (nth type-keys type-id))
+(defn type-key [type-id]
+  (if-let [type-key (type-id->type-key type-id)]
+    type-key
+    (throw (Exception.))))
 
 (defn type? [type toimenpide]
   (= (-> toimenpide :type-id type-key) type))
