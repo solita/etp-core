@@ -66,6 +66,9 @@ Start [the required services](/docker) (database etc):
 Start script starts docker-compose, creates template and dev databases
 and runs migrations for both of them.
 
+Docker-compose has a service for faking digital signatures, mpollux. It uses a self-signed certificate.
+Visit https://127.0.0.1:53952/ and trust the certificate to get the digital signatures working.
+
 Start [the backend](/etp-backend). Backend developers should start the REPL from
 their IDE and start the services from there by calling the `reset` function.
 The application can be also started from the command line with the following
