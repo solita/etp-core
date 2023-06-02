@@ -1,7 +1,6 @@
 (ns solita.etp.service.valvonta-kaytto.suomifi-viestit
   (:require [clostache.parser :as clostache]
             [clojure.data.codec.base64 :as b64]
-            [solita.etp.schema.valvonta-kaytto :as kaytto-schema]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
             [solita.etp.service.suomifi-viestit :as suomifi]
             [clojure.java.io :as io]
@@ -10,8 +9,7 @@
             [solita.etp.service.valvonta-kaytto.store :as store]
             [solita.etp.service.valvonta-kaytto.osapuoli :as osapuoli]
             [clojure.string :as str])
-  (:import (java.time Instant)
-           (java.io ByteArrayOutputStream File)))
+  (:import (java.time Instant)))
 
 (def lahettaja {:nimi             "Asumisen rahoitus- ja kehittämiskeskus"
                 :jakeluosoite     "Kirkkokatu 12 / PL 30"

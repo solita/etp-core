@@ -2,17 +2,14 @@
   (:require [clojure.string :as str]
             [clojure.walk :as w]
             [ring.middleware.cookies :as cookies]
-            [ring.util.codec :as codec]
             [reitit.ring :as ring]
             [reitit.swagger :as swagger]
             [reitit.swagger-ui :as swagger-ui]
             [reitit.coercion.schema]
             [reitit.ring.coercion :as coercion]
-            [reitit.ring.schema :as schema]
             [reitit.ring.middleware.parameters :as parameters]
             [reitit.ring.middleware.muuntaja :as muuntaja]
             [reitit.ring.middleware.multipart :as multipart]
-            [reitit.ring.middleware.dev :as dev]
             [reitit.spec :as rs]
             [reitit.dev.pretty :as pretty]
             [muuntaja.core :as m]
@@ -35,8 +32,7 @@
             [solita.etp.jwt :as jwt]
             [solita.etp.header-middleware :as header-middleware]
             [solita.etp.exception :as exception]
-            [solita.common.cf-signed-url :as signed-url]
-            [solita.common.map :as map])
+            [solita.common.cf-signed-url :as signed-url])
   (:import [java.net URLEncoder]
            [java.nio.charset StandardCharsets]))
 
