@@ -32,3 +32,10 @@
 
   (t/testing "unknown type-id results in an exception"
     (t/is (thrown? Exception (toimenpide/type-key 666)))))
+
+(t/deftest manually-sent?-test
+  (t/testing "Toimenpide-type 7 document is sent manually"
+    (t/is (true? (toimenpide/manually-sent? 7))))
+  (t/testing "Toimenpide-types 0 - 6 are not sent manually"
+    (doseq [toimenpide-type (range 7)]
+      (t/is (false? (toimenpide/manually-sent? toimenpide-type))))))

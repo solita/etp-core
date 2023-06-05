@@ -30,6 +30,9 @@
 (def send-tiedoksi? (partial type? :rfi-request))
 
 (def asha-toimenpide?
-  (partial some-type? #{:rfi-request :rfi-order :rfi-warning}))
+  (partial some-type? #{:rfi-request :rfi-order :rfi-warning :decision-order-hearing-letter}))
 
 (def with-diaarinumero? (comp not (partial type? :case)))
+
+(defn manually-sent? [type-id]
+  (contains? #{7} type-id))

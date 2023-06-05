@@ -152,12 +152,14 @@
                              toimenpide
                              osapuolet
                              & [config]]
-  (doseq [osapuoli (->> osapuolet
-                        (filter osapuoli/omistaja?)
-                        (filter osapuoli/suomi-fi?))]
-    (send-message-to-osapuoli!
-      valvonta
-      toimenpide
-      osapuoli
-      (store/find-document aws-s3-client (:valvonta-id toimenpide) (:id toimenpide) osapuoli)
-      config)))
+  (when-not (toimenpide/manually-sent? (:type-id toimenpide))
+    (doseq [osapuoli (->> osapuolet
+                          (filter osapuoli/omistaja?)
+                          (filter osapuoli/suomi-fi?))]
+
+      (send-message-to-osapuoli!
+        valvonta
+        toimenpide
+        osapuoli
+        (store/find-document aws-s3-client (:valvonta-id toimenpide) (:id toimenpide) osapuoli)
+        config))))
