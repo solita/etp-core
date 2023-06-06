@@ -5,7 +5,8 @@
             [solita.etp.schema.common :as common]
             [solita.etp.schema.geo :as geo]
             [solita.etp.schema.laatija :as laatija]
-            [solita.etp.schema.energiatodistus :as energiatodistus]))
+            [solita.etp.schema.energiatodistus :as energiatodistus]
+            [solita.etp.schema.kayttaja]))
 
 (defn unique-henkilotunnukset-f []
   (let [state (atom 0)]
@@ -26,6 +27,12 @@
        (map (partial format "%07d"))
        (filter #(not= (common/ytunnus-checksum %) 10))
        (map #(str % "-" (common/ytunnus-checksum %)))))
+
+(defn random-printable-ascii-char []
+  (char (+ 33 (rand-int 94))))
+
+(defn generate-password [_]
+  (apply str (take (+ 8 (rand-int 192)) (repeatedly random-printable-ascii-char))))
 
 (def kuukausierittely {:tuotto {:aurinkosahko 1M
                                 :tuulisahko   2M
@@ -60,7 +67,8 @@
    energiatodistus/YritysPostinumero        (g/always "33100")
    energiatodistus/OptionalKuukausierittely (test-generators/one-of
                                              [(g/always (vec (repeat 12 kuukausierittely)))
-                                              (g/always [])])})
+                                              (g/always [])])
+   solita.etp.schema.kayttaja/Password (test-generators/fmap generate-password test-generators/boolean)})
 
 (defn complete
   ([x schema]
