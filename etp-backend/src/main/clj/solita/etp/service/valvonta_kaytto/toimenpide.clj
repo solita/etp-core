@@ -1,4 +1,7 @@
-(ns solita.etp.service.valvonta-kaytto.toimenpide)
+(ns solita.etp.service.valvonta-kaytto.toimenpide
+  (:require [solita.etp.db :as db]))
+
+(db/require-queries 'valvonta-kaytto)
 
 (def ^:private type-id->type-key
   {;; käytönvalvonnan asia avataan ashaan (case open)
@@ -34,5 +37,10 @@
 
 (def with-diaarinumero? (comp not (partial type? :case)))
 
-(defn manually-sent? [type-id]
-  (contains? #{7} type-id))
+(defn manually-deliverable? [db type-id]
+  (let [manually-deliverable-toimenpidetypes
+        (->> db
+             valvonta-kaytto-db/select-manually-deliverable-toimenpidetypes
+             (map :id)
+             set)]
+    (contains? manually-deliverable-toimenpidetypes type-id)))

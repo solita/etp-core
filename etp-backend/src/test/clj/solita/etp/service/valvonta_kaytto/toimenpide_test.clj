@@ -1,6 +1,9 @@
 (ns solita.etp.service.valvonta-kaytto.toimenpide-test
   (:require [clojure.test :as t]
-            [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]))
+            [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
+            [solita.etp.test-system :as ts]))
+
+(t/use-fixtures :each ts/fixture)
 
 (t/deftest type-key-test
   (t/testing "type-id 0 returns the type-key :case"
@@ -33,9 +36,9 @@
   (t/testing "unknown type-id results in an exception"
     (t/is (thrown? Exception (toimenpide/type-key 666)))))
 
-(t/deftest manually-sent?-test
+(t/deftest manually-deliverable?-test
   (t/testing "Toimenpide-type 7 document is sent manually"
-    (t/is (true? (toimenpide/manually-sent? 7))))
+    (t/is (true? (toimenpide/manually-deliverable? ts/*db* 7))))
   (t/testing "Toimenpide-types 0 - 6 are not sent manually"
     (doseq [toimenpide-type (range 7)]
-      (t/is (false? (toimenpide/manually-sent? toimenpide-type))))))
+      (t/is (false? (toimenpide/manually-deliverable? ts/*db* toimenpide-type))))))

@@ -325,3 +325,8 @@ where rakennustunnus = :rakennustunnus
 SELECT id, label_fi, label_sv, valid
 FROM vk_toimenpidetype
 ORDER BY ordinal ASC;
+
+-- name: select-manually-deliverable-toimenpidetypes
+SELECT id
+FROM vk_toimenpidetype
+WHERE manually_deliverable is true;

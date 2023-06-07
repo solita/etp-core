@@ -271,8 +271,9 @@
             (asha/log-toimenpide!
               tx aws-s3-client whoami valvonta toimenpide
               osapuolet ilmoituspaikat roolit)
-            (send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
-            (send-toimenpide-email! db aws-s3-client valvonta toimenpide osapuolet))))
+            (when-not (toimenpide/manually-deliverable? db (:type-id toimenpide))
+              (send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
+              (send-toimenpide-email! db aws-s3-client valvonta toimenpide osapuolet)))))
       {:id toimenpide-id})))
 
 (defn update-toimenpide! [db toimenpide-id toimenpide]
