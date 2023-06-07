@@ -39,7 +39,7 @@
     ["/toimenpidetyypit"
      {:conflicting true
       :get         {:summary   "Hae käytönvalvonnan toimenpidetyypit."
-                    :responses {200 {:body [common-schema/Luokittelu]}}
+                    :responses {200 {:body [valvonta-kaytto-schema/Toimenpidetyypit]}}
                     :access    rooli-service/paakayttaja?
                     :handler   (fn [{:keys [db]}]
                                  (r/response (valvonta-service/find-toimenpidetyypit db)))}}]

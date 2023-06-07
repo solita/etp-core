@@ -102,3 +102,8 @@
 (def ExistingValvonta
   {:id common-schema/Key
    :end-time (schema/maybe common-schema/Instant)})
+
+(def Toimenpidetyypit
+  (assoc common-schema/Luokittelu
+    :manually-deliverable
+    schema/Bool))

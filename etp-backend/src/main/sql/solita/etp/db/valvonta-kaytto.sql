@@ -322,7 +322,7 @@ where rakennustunnus = :rakennustunnus
   and deleted is false;
 
 -- name: find-vk-toimenpidetypes
-SELECT id, label_fi, label_sv, valid
+SELECT id, label_fi, label_sv, valid, manually_deliverable
 FROM vk_toimenpidetype
 ORDER BY ordinal ASC;
 
