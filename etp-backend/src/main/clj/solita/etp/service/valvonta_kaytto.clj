@@ -168,7 +168,7 @@
                  (file-service/find-file aws-s3-client (file-path valvonta-id liite-id)))))
 
 (defn find-toimenpidetyypit [db]
-  (luokittelu/find-vk-toimenpidetypes db))
+  (valvonta-kaytto-db/find-vk-toimenpidetypes db))
 
 (defn find-templates [db]
   (valvonta-kaytto-db/select-templates db))

@@ -320,3 +320,8 @@ left join lateral (
     limit 1) last_toimenpide on true
 where rakennustunnus = :rakennustunnus
   and deleted is false;
+
+-- name: find-vk-toimenpidetypes
+SELECT id, label_fi, label_sv, valid
+FROM vk_toimenpidetype
+ORDER BY ordinal ASC;
