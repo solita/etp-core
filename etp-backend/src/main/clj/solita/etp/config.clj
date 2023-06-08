@@ -86,8 +86,7 @@
 ;; Logout
 (def keycloak-suomifi-logout-url (env "KEYCLOAK_SUOMIFI_LOGOUT_URL" index-url))
 (def keycloak-virtu-logout-url (env "KEYCLOAK_VIRTU_LOGOUT_URL" index-url))
-(def cognito-suomifi-logout-url (env "COGNITO_SUOMIFI_LOGOUT_URL" (str index-url "/uloskirjauduttu")))
-(def cognito-virtu-logout-url (env "COGNITO_VIRTU_LOGOUT_URL" (str index-url "/uloskirjauduttu")))
+(def cognito-logout-url (env "COGNITO_LOGOUT_URL" (str index-url "/uloskirjauduttu")))
 
 ;; Laskutus
 (def laskutus-sftp-host (env "LASKUTUS_SFTP_HOST" "localhost"))

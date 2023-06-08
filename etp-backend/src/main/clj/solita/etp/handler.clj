@@ -53,10 +53,10 @@
       (if (:custom:VIRTU_localID data)
         (str config/keycloak-virtu-logout-url
             "?id_token_hint=" id-token
-            "&post_logout_redirect_uri=" (URLEncoder/encode config/cognito-virtu-logout-url StandardCharsets/UTF_8))
+            "&post_logout_redirect_uri=" (URLEncoder/encode config/cognito-logout-url StandardCharsets/UTF_8))
         (str config/keycloak-suomifi-logout-url
               "?id_token_hint=" id-token
-              "&post_logout_redirect_uri=" (URLEncoder/encode config/cognito-suomifi-logout-url StandardCharsets/UTF_8)))
+              "&post_logout_redirect_uri=" (URLEncoder/encode config/cognito-logout-url StandardCharsets/UTF_8)))
       (str config/index-url "/uloskirjauduttu"))))
 
 (def empty-cookie {:value ""
