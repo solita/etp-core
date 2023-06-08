@@ -1,14 +1,10 @@
 (ns solita.etp.api.energiatodistus-xml-test
   (:require [clojure.test :as t]
             [clojure.java.io :as io]
-            [schema.core :as schema]
-            [schema-tools.coerce :as sc]
-            [solita.common.xml :as xml]
             [solita.common.xml-test :as xml-test]
             [solita.etp.test-system :as ts]
             [solita.etp.test-data.laatija :as laatija-test-data]
-            [solita.etp.api.energiatodistus-xml :as xml-api])
-  (:import (java.io FileInputStream)))
+            [solita.etp.api.energiatodistus-xml :as xml-api]))
 
 (t/use-fixtures :each ts/fixture)
 

@@ -1,7 +1,6 @@
 (ns solita.etp.service.valvonta-kaytto.suomifi-viestit
   (:require [clostache.parser :as clostache]
             [clojure.data.codec.base64 :as b64]
-            [solita.etp.schema.valvonta-kaytto :as kaytto-schema]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
             [solita.etp.service.suomifi-viestit :as suomifi]
             [clojure.java.io :as io]
@@ -10,8 +9,7 @@
             [solita.etp.service.valvonta-kaytto.store :as store]
             [solita.etp.service.valvonta-kaytto.osapuoli :as osapuoli]
             [clojure.string :as str])
-  (:import (java.time Instant)
-           (java.io ByteArrayOutputStream File)))
+  (:import (java.time Instant)))
 
 (def lahettaja {:nimi             "Asumisen rahoitus- ja kehittämiskeskus"
                 :jakeluosoite     "Kirkkokatu 12 / PL 30"
@@ -55,17 +53,24 @@
     (osapuoli/henkilo? osapuoli) (henkilo->asiakas osapuoli)
     (osapuoli/yritys? osapuoli) (yritys->asiakas osapuoli)))
 
-(defn kuvaus [type-key valvonta toimenpide]
+(defn- kuvaus [type-key valvonta toimenpide]
   (clostache/render (str "Tämän viestin liitteenä on tietopyyntö koskien rakennustasi: {{rakennustunnus}}\n"
                          "{{katuosoite}}, {{postinumero}} {{postitoimipaikka-fi}}\n"
                          "{{#rfi-request}}Tietopyyntöön on vastattava {{deadline-date}} mennessä.{{/rfi-request}}"
                          "{{#rfi-order}}Kehotamme vastaamaan tietopyyntöön {{deadline-date}} mennessä.{{/rfi-order}}"
                          "{{#rfi-warning}}ARA on lähettänyt teille kehotuksen. "
-                         "ARA antaa varoituksen ja vaatii vastaamaan tietopyyntöön {{deadline-date}} mennessä.{{/rfi-warning}}")
+                         "ARA antaa varoituksen ja vaatii vastaamaan tietopyyntöön {{deadline-date}} mennessä.{{/rfi-warning}}"
+                         "\n\n"
+                         "Som bilaga till detta meddelande finns en begäran om information som gäller din byggnad: {{rakennustunnus}}\n"
+                         "{{katuosoite}}, {{postinumero}} {{postitoimipaikka-sv}}\n"
+                         "{{#rfi-request}}Begäran om information ska besvaras senast den {{deadline-date}}.{{/rfi-request}}"
+                         "{{#rfi-order}}Vi uppmanar dig att besvara begäran om information senast den {{deadline-date}}.{{/rfi-order}}"
+                         "{{#rfi-warning}}ARA har skickat en uppmaning till dig. ARA ger en varning och kräver att du svarar på begäran om information senast den {{deadline-date}}.{{/rfi-warning}}")
                     {:rakennustunnus      (:rakennustunnus valvonta)
                      :katuosoite          (:katuosoite valvonta)
                      :postinumero         (:postinumero valvonta)
                      :postitoimipaikka-fi (:postitoimipaikka-fi valvonta)
+                     :postitoimipaikka-sv (:postitoimipaikka-sv valvonta)
                      :deadline-date       (time/format-date (:deadline-date toimenpide))
                      type-key             true}))
 

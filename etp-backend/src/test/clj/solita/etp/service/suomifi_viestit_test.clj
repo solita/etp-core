@@ -19,7 +19,9 @@
                :rakennustunnus      "103515074X"
                :katuosoite          "Hämeenkatu 10"
                :postinumero         "333100"
-               :postitoimipaikka-fi "Tampere"})
+               :postitoimipaikka-fi "Tampere"
+               :postitoimipaikka-sv "Tammerfors"
+               })
 
 (def toimenpide {:type-id       1
                  :id            2

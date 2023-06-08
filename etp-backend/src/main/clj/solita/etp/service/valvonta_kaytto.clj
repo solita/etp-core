@@ -16,6 +16,7 @@
             [solita.etp.exception :as exception]
             [solita.etp.service.concurrent :as concurrent]
             [solita.etp.service.liite :as liite-service]
+            [solita.etp.service.geo :as geo-service]
             [solita.etp.service.csv :as csv-service])
   (:import (java.time Instant)))
 
@@ -240,7 +241,16 @@
 (defn add-toimenpide! [db aws-s3-client whoami valvonta-id toimenpide-add]
   (jdbc/with-db-transaction
     [tx db]
-    (let [valvonta (find-valvonta tx valvonta-id)
+    (let [add-postitoimipaikka (fn [valvonta]
+                                 (let [postinumero (maybe/map* #(luokittelu/find-luokka
+                                                                  (Integer/parseInt %)
+                                                                  (geo-service/find-all-postinumerot db))
+                                                               (:postinumero valvonta))]
+                                   (assoc valvonta
+                                     :postitoimipaikka-fi (:label-fi postinumero)
+                                     :postitoimipaikka-sv (:label-sv postinumero))))
+          valvonta (-> (find-valvonta tx valvonta-id)
+                       (add-postitoimipaikka))
           ilmoituspaikat (find-ilmoituspaikat tx)
           roolit (find-roolit tx)
           diaarinumero (if (toimenpide/case-open? toimenpide-add)

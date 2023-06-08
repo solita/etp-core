@@ -5,7 +5,6 @@
             [solita.etp.schema.common :as common]
             [solita.etp.schema.geo :as geo]
             [solita.etp.schema.laatija :as laatija]
-            [solita.etp.schema.yritys :as yritys]
             [solita.etp.schema.energiatodistus :as energiatodistus]))
 
 (defn unique-henkilotunnukset-f []
