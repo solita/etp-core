@@ -65,8 +65,7 @@
                          "{{katuosoite}}, {{postinumero}} {{postitoimipaikka-sv}}\n"
                          "{{#rfi-request}}Begäran om information ska besvaras senast den {{deadline-date}}.{{/rfi-request}}"
                          "{{#rfi-order}}Vi uppmanar dig att besvara begäran om information senast den {{deadline-date}}.{{/rfi-order}}"
-                         "{{#rfi-warning}}ARA har skickat en uppmaning till dig. ARA ger en varning och kräver att du svarar på begäran om information senast den {{deadline-date}}.{{/rfi-warning}}"
-                         )
+                         "{{#rfi-warning}}ARA har skickat en uppmaning till dig. ARA ger en varning och kräver att du svarar på begäran om information senast den {{deadline-date}}.{{/rfi-warning}}")
                     {:rakennustunnus      (:rakennustunnus valvonta)
                      :katuosoite          (:katuosoite valvonta)
                      :postinumero         (:postinumero valvonta)

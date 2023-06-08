@@ -241,13 +241,14 @@
 (defn add-toimenpide! [db aws-s3-client whoami valvonta-id toimenpide-add]
   (jdbc/with-db-transaction
     [tx db]
-    (let [add-postitoimipaikka (fn [valvonta] (let [postinumero (maybe/map* #(luokittelu/find-luokka
-                                                                               (Integer/parseInt %)
-                                                                               (geo-service/find-all-postinumerot db))
-                                                                            (:postinumero valvonta))]
-                                                (assoc valvonta
-                                                  :postitoimipaikka-fi (:label-fi postinumero)
-                                                  :postitoimipaikka-sv (:label-sv postinumero))))
+    (let [add-postitoimipaikka (fn [valvonta]
+                                 (let [postinumero (maybe/map* #(luokittelu/find-luokka
+                                                                  (Integer/parseInt %)
+                                                                  (geo-service/find-all-postinumerot db))
+                                                               (:postinumero valvonta))]
+                                   (assoc valvonta
+                                     :postitoimipaikka-fi (:label-fi postinumero)
+                                     :postitoimipaikka-sv (:label-sv postinumero))))
           valvonta (-> (find-valvonta tx valvonta-id)
                        (add-postitoimipaikka))
           ilmoituspaikat (find-ilmoituspaikat tx)
