@@ -106,4 +106,6 @@
 (def Toimenpidetyypit
   (assoc common-schema/Luokittelu
     :manually-deliverable
+    schema/Bool
+    :allow-comments
     schema/Bool))
