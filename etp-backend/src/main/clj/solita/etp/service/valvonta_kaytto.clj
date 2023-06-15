@@ -202,7 +202,7 @@
   (first (db/with-db-exception-translation
            jdbc/insert! db :vk-toimenpide
            (-> toimenpide-add
-               (dissoc :bypass-asha)
+               (dissoc :bypass-asha :fine)
                (assoc
                 :diaarinumero diaarinumero
                 :valvonta-id valvonta-id

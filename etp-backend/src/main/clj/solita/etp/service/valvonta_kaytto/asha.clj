@@ -66,7 +66,8 @@
                       :havaintopäivä    (-> valvonta :havaintopaiva time/format-date)}
    :tietopyynto      {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
                       :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
-   :tiedoksi         (map (partial tiedoksi-saaja roolit) tiedoksi)})
+   :tiedoksi         (map (partial tiedoksi-saaja roolit) tiedoksi)
+   :sakko            (:fine toimenpide)})
 
 (defn- request-id [valvonta-id toimenpide-id]
   (str valvonta-id "/" toimenpide-id))
