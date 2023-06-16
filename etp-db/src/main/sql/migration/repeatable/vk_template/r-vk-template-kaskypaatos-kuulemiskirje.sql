@@ -51,14 +51,18 @@ values (5, 'Käskypäätös / kuulemiskirje', 'Käskypäätös / kuulemiskirje (
 
 {{#kohde}}
 <p>Omistamaanne omakotitaloa osoitteessa {{katuosoite}} {{postinumero}} {{postitoimipaikka}} on markkinoitu julkisesti
-    {{ilmoituspaikka}} -sivustolla ilman energiatodistusta. Tästä syystä ARA ryhtyi energiatodistuslain 24 §:n mukaisiin
-    toimenpiteisiin ja on lähettänyt Teille {{kehotus-pvm}} kehotuksen.</p>
-{{/kohde}}
-<p>Kehotuksessa Teitä on pyydetty {{kehotus-määräpäivä}} mennessä antamaan ARAlle tietoa mahdollisesta
+    {{ilmoituspaikka}} -sivustolla ilman energiatodistusta.
+    {{/kohde}}
+    {{#aiemmat-toimenpiteet}}Tästä syystä ARA ryhtyi energiatodistuslain 24 §:n
+    mukaisiin toimenpiteisiin ja on lähettänyt Teille {{kehotus-pvm}} kehotuksen.</p>
+
+<p>Kehotuksessa Teitä on pyydetty {{kehotus-maarapaiva}} mennessä antamaan ARAlle tietoa mahdollisesta
     energiatodistuksesta tai
     jos todistusta ei ole, sen laadinta-aikataulusta. Kun kehotusta ei noudatettu, ARA antoi Teille varoituksen, jonka
-    määräaika oli {{varoitus-määräpäivä}}. Asiantilaa ei kehotuksesta ja varoituksesta huolimatta korjattu, ja ARAn
+    määräaika oli {{varoitus-maarapaiva}}. Asiantilaa ei kehotuksesta ja varoituksesta huolimatta korjattu, ja ARAn
     energiatodistusrekisteristä ilmenee, ettei kohteelle ole edelleenkään laadittu energiatodistusta<sup>1</sup>.</p>
+{{/aiemmat-toimenpiteet}}
+
 
 <p>ARA voi energiatodistuslain 24 §:n mukaisena viimesijaisena keinona antaa käskypäätöksen, jolla Teidät velvoitetaan
     hankkimaan energiatodistus. Käskyä voidaan tehostaa uhkasakolla, jonka määrä on arviolta {{sakko}} euroa.</p>
