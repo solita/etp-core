@@ -25,7 +25,6 @@ values (5, 'Käskypäätös / kuulemiskirje', 'Käskypäätös / kuulemiskirje (
 
 <h1>Kuuleminen uhkasakon asettamisesta</h1>
 
-
 <div>
     <!--    TODO: Onko tässä tarpeen olla myös yritysomistaja? -->
     Rakennuksen omistaja: {{#omistaja-henkilo}} {{sukunimi}} {{etunimi}} {{/omistaja-henkilo}}<br/>
@@ -63,7 +62,6 @@ values (5, 'Käskypäätös / kuulemiskirje', 'Käskypäätös / kuulemiskirje (
     energiatodistusrekisteristä ilmenee, ettei kohteelle ole edelleenkään laadittu energiatodistusta<sup>1</sup>.</p>
 {{/aiemmat-toimenpiteet}}
 
-
 <p>ARA voi energiatodistuslain 24 §:n mukaisena viimesijaisena keinona antaa käskypäätöksen, jolla Teidät velvoitetaan
     hankkimaan energiatodistus. Käskyä voidaan tehostaa uhkasakolla, jonka määrä on arviolta {{sakko}} euroa.</p>
 
@@ -83,6 +81,81 @@ values (5, 'Käskypäätös / kuulemiskirje', 'Käskypäätös / kuulemiskirje (
 energia-asiantuntija
 
 <p><sup>1</sup> ARAn energiatodistusrekisterissä ovat 1.5.2015 jälkeen laaditut energiatodistukset.</p>
+
+<div class="sivunvaihto"></div>
+
+<div class="otsikko">
+    <b>Brew om hörande</b>
+    <b>{{päivä}}</b> <br/>
+    Dnro: {{diaarinumero}}
+</div>
+
+<!-- TODO: Tähän osoite oikeaan kohtaan kirjekuoren ikkunasta näkyväksi -->
+<div class="vastaanottaja">
+    {{#omistaja-henkilo}} {{sukunimi}} {{etunimi}} <br/>
+    {{jakeluosoite}} <br/>
+    {{postinumero}} {{postitoimipaikka}}
+    {{/omistaja-henkilo}}
+</div>
+
+<h1>Hörande om föreläggande av vite</h1>
+
+<div>
+    <!--    TODO: Onko tässä tarpeen olla myös yritysomistaja? -->
+    Byggnadens ägare: {{#omistaja-henkilo}} {{sukunimi}} {{etunimi}} {{/omistaja-henkilo}}<br/>
+    Byggnad: {{#kohde}}{{katuosoite}} {{postinumero}} {{postitoimipaikka}} {{/kohde}}
+</div>
+
+<h2>Ärendets bakgrund</h2>
+
+<p>Enligt 6 § i lagen om energicertifikat för byggnader (50/2013, lagen om energicertifikat för byggnader) ska det
+    finnas ett energicertifikat vid försäljning eller uthyrning av en byggnad eller lägenhet eller be-sittningsrätten
+    till dem. Energicertifikatet ska överlämnas till köpa-ren eller hyrestagaren antingen i original eller som kopia. I
+    en of-fentlig anmälan om försäljning eller uthyrning av ett objekt ska energieffektivitetsklassen för det objekt som
+    säljs eller hyrs ut nämnas. Byggnadens ägare eller innehavare ansvarar för att bygg-nadens energicertifikat skaffas
+    och används i de situationer som re-gleras i lagen (2 § i lagen om energicertifikat).</p>
+
+<p>Bestämmelser om påföljderna finns i 24 § i lagen om energicertifi-kat. Om byggnadens ägare inte fullgör sina
+    skyldigheter enligt lagen om energicertifikat eller i övrigt handlar i strid med lagen om ener-gicertifikat eller
+    bestämmelserna som utfärdats med stöd av den, ska ARA uppmana ägaren att rätta till situationen och ange en
+    tids-frist inom vilken situationen ska rättas till. Om saken inte rättas till inom tidsfristen ska ARA ge den som
+    saken gäller en varning och ange en ny tidsfrist. Om situationen inte rättas till inom tidsfristen ska ARA enligt
+    vad situationen kräver meddela beslut om föreläg-gande eller förbud. Vid allvarliga eller väsentliga överträdelser
+    kan ARA förena föreläggandet eller förbudet med vite eller med hot om tvångsutförande eller hot om avbrytande, om
+    vilka det bestäms i vi-teslagen (1113/1990).</p>
+
+{{#kohde}}
+<p>Ert egnahemshus på {{katuosoite}} {{postinumero}} {{postitoimipaikka}} har marknadsförts offentligt på webbplatsen
+    {{ilmoituspaikka}} utan energicertifikat.
+    {{/kohde}}
+    {{#aiemmat-toimenpiteet}}Därför vidtog ARA åtgärder enligt 24 § i lagen om energicertifikat och har skickat en
+    uppmaning till Er den {{kehotus-pvm}}.</p>
+
+<p>I uppmaningen har Ni ombetts att senast {{kehotus-maarapaiva}} ge ARA information om ett eventuellt energicertifikat
+    eller, om ett sådant inte finns, tidtabellen för upprättandet av certifikatet. När uppmaningen inte följdes gav ARA
+    Er en varning vars tidsfrist var {{varoitus-maarapaiva}}. Situationen korrigerades inte trots uppmaning och varning,
+    och av ARAs energicertifikatregister framgår att det fortfarande inte har upprättats något energicertifikat för
+    adressen<sup>2</sup>.</p>
+{{/aiemmat-toimenpiteet}}
+
+<p>ARA kan som sista utväg i enlighet med 24 § i lagen om energicerti-fikat meddela ett beslut genom vilket Ni åläggs
+    att skaffa ett energi-certifikat. Ordern kan förenas med vite som uppgår till uppskatt-ningsvis {{sakko}} euro.</p>
+
+<h2>Hörande av parter</h2>
+
+<p>Innan ärendet avgörs ger ARA Er tillfälle enligt 34 § i förvaltningsla-gen (434/2003) att uttala Er åsikt i ärendet
+    samt att ge en förklaring till sådana yrkanden och utredningar som kan inverka på avgöran-det av ärendet. Svaret ska
+    ges senast {{määräpäivä}}. Avsaknaden av svar hindrar inte att ärendet avgörs. </p>
+
+<p>Vi ber Er skicka svaret till ARAs registratorskontor antingen per e-post till kirjaamo.ara@ara.fi eller per post till
+    Finansierings- och ut-vecklingscentralen för boendet, PB 30, 15141 Lahtis.</p>
+
+{{#valvoja}}
+{{etunimi}} {{sukunimi}}
+{{/valvoja}}<br/>
+energiexpert
+
+<p><sup>2</sup> I ARAs energicertifikatregister finns energicertifikat som upprättats efter 1 maj 2015.</p>
 $$)
 on conflict (id) do update set label_fi          = excluded.label_fi,
                                label_sv          = excluded.label_sv,
