@@ -15,7 +15,6 @@ values (5, 'Käskypäätös / kuulemiskirje', 'Käskypäätös / kuulemiskirje (
     Dnro: {{diaarinumero}}
 </div>
 
-<!-- TODO: Tähän osoite oikeaan kohtaan kirjekuoren ikkunasta näkyväksi -->
 <div class="vastaanottaja">
     {{#omistaja-henkilo}} {{sukunimi}} {{etunimi}} <br/>
     {{jakeluosoite}} <br/>
@@ -90,7 +89,6 @@ energia-asiantuntija
     Dnro: {{diaarinumero}}
 </div>
 
-<!-- TODO: Tähän osoite oikeaan kohtaan kirjekuoren ikkunasta näkyväksi -->
 <div class="vastaanottaja">
     {{#omistaja-henkilo}} {{sukunimi}} {{etunimi}} <br/>
     {{jakeluosoite}} <br/>
