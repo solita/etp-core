@@ -7,7 +7,8 @@
             [solita.etp.service.valvonta-kaytto.osapuoli :as osapuoli]
             [solita.etp.service.pdf :as pdf]
             [solita.etp.db :as db]
-            [solita.common.formats :as formats]))
+            [solita.common.formats :as formats])
+  (:import (java.time Instant)))
 
 (db/require-queries 'valvonta-kaytto)
 (db/require-queries 'geo)
@@ -16,7 +17,9 @@
   (let [type-key (toimenpide/type-key type-id )
         documents {:rfi-request {:type "Pyyntö" :filename "tietopyynto.pdf"}
                    :rfi-order {:type "Kirje" :filename "kehotus.pdf"}
-                   :rfi-warning {:type "Kirje" :filename "varoitus.pdf"}}]
+                   :rfi-warning {:type "Kirje" :filename "varoitus.pdf"}
+                   :decision-order-hearing-letter {:type "Kirje"
+                                                   :filename "kuulemiskirje.pdf"}}]
     (get documents type-key)))
 
 (defn find-kaytto-valvonta-documents [db valvonta-id]
@@ -100,24 +103,31 @@
   {:rfi-request {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                      :processing-action {:name-identity "Vireillepano"}}
                  :processing-action {:name                 "Tietopyyntö"
-                                     :reception-date       (java.time.Instant/now)
+                                     :reception-date       (Instant/now)
                                      :contacting-direction "SENT"
                                      :contact              (map osapuoli->contact osapuolet)}
                  :document          (toimenpide-type->document (:type-id toimenpide))}
    :rfi-order   {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                      :processing-action {:name-identity "Käsittely"}}
                  :processing-action {:name                 "Kehotuksen antaminen"
-                                     :reception-date       (java.time.Instant/now)
+                                     :reception-date       (Instant/now)
                                      :contacting-direction "SENT"
                                      :contact              (map osapuoli->contact osapuolet)}
                  :document          (toimenpide-type->document (:type-id toimenpide))}
    :rfi-warning {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                      :processing-action {:name-identity "Käsittely"}}
                  :processing-action {:name                 "Varoituksen antaminen"
-                                     :reception-date       (java.time.Instant/now)
+                                     :reception-date       (Instant/now)
                                      :contacting-direction "SENT"
-                                     :contact             (map osapuoli->contact osapuolet)}
-                 :document          (toimenpide-type->document (:type-id toimenpide))}})
+                                     :contact              (map osapuoli->contact osapuolet)}
+                 :document          (toimenpide-type->document (:type-id toimenpide))}
+   :decision-order-hearing-letter {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                       :processing-action {:name-identity "Tiedoksianto ja toimeenpano"}}
+                                   :document (toimenpide-type->document (:type-id toimenpide))
+                                   :processing-action {:name                 "Kuulemiskirje"
+                                                       :reception-date       (Instant/now)
+                                                       :contacting-direction "SENT"
+                                                       :contact              (map osapuoli->contact osapuolet)}}})
 
 (defn- resolve-processing-action [toimenpide osapuolet]
   (let [processing-actions (available-processing-actions toimenpide osapuolet)
