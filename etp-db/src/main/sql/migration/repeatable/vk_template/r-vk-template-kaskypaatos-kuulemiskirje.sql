@@ -79,7 +79,8 @@ values (5, 'Käskypäätös / kuulemiskirje', 'Käskypäätös / kuulemiskirje (
 {{/valvoja}}<br/>
 energia-asiantuntija
 
-<p><sup>1</sup> ARAn energiatodistusrekisterissä ovat 1.5.2015 jälkeen laaditut energiatodistukset.</p>
+<hr />
+<p class="viittaus mb-0"><sup>1</sup> ARAn energiatodistusrekisterissä ovat 1.5.2015 jälkeen laaditut energiatodistukset.</p>
 
 <div class="sivunvaihto"></div>
 
@@ -153,7 +154,8 @@ energia-asiantuntija
 {{/valvoja}}<br/>
 energiexpert
 
-<p><sup>2</sup> I ARAs energicertifikatregister finns energicertifikat som upprättats efter 1 maj 2015.</p>
+<hr />
+<p class="viittaus mb-0"><sup>2</sup> I ARAs energicertifikatregister finns energicertifikat som upprättats efter 1 maj 2015.</p>
 $$)
 on conflict (id) do update set label_fi          = excluded.label_fi,
                                label_sv          = excluded.label_sv,
