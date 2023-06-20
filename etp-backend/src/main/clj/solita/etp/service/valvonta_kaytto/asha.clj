@@ -49,7 +49,8 @@
      :email (template-optional (:email osapuoli))}))
 
 (defn past-dates-for-kaskypaatos-kuulemiskirje
-  "Retrieves the dates of kehotus and varoitus toimenpiteet with the given valvonta-id"
+  "Retrieves the dates of kehotus and varoitus toimenpiteet with
+   the given valvonta-id and formats them for displaying in a document"
   [db valvonta-id]
   ;; TODO: Kun päivitetään Clojure 1.11:een, voidaan käyttää vain update-vals-funktiota
   (let [data (->> {:valvonta-id valvonta-id}
