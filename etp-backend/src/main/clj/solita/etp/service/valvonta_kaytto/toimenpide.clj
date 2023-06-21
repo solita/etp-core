@@ -31,6 +31,7 @@
 (def case-open? (partial type? :case))
 (def case-close? (partial type? :closed))
 (def send-tiedoksi? (partial type? :rfi-request))
+(def kaskypaatos-kuulemiskirje? (partial type? :decision-order-hearing-letter))
 
 (def asha-toimenpide?
   (partial some-type? #{:rfi-request :rfi-order :rfi-warning :decision-order-hearing-letter}))
