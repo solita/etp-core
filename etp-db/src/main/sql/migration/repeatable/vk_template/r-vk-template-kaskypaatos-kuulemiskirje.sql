@@ -16,8 +16,8 @@ values (5, 'Käskypäätös / kuulemiskirje', 'Käskypäätös / kuulemiskirje (
 </div>
 
 <div class="vastaanottaja">
-    {{#omistaja-henkilo}} {{sukunimi}} {{etunimi}} <br/>
-    {{jakeluosoite}} <br/>
+    {{#omistaja-henkilo}}{{sukunimi}} {{etunimi}}<br/>
+    {{jakeluosoite}}<br/>
     {{postinumero}} {{postitoimipaikka}}
     {{/omistaja-henkilo}}
 </div>
@@ -26,8 +26,8 @@ values (5, 'Käskypäätös / kuulemiskirje', 'Käskypäätös / kuulemiskirje (
 
 <div>
     <!--    TODO: Onko tässä tarpeen olla myös yritysomistaja? -->
-    Rakennuksen omistaja: {{#omistaja-henkilo}} {{sukunimi}} {{etunimi}} {{/omistaja-henkilo}}<br/>
-    Rakennus: {{#kohde}}{{katuosoite}} {{postinumero}} {{postitoimipaikka}} {{/kohde}}
+    Rakennuksen omistaja: {{#omistaja-henkilo}}{{sukunimi}} {{etunimi}}{{/omistaja-henkilo}}<br/>
+    Rakennus: {{#kohde}}{{katuosoite}} {{postinumero}} {{postitoimipaikka}}{{/kohde}}
 </div>
 
 <h2>Asian tausta</h2>
@@ -91,8 +91,8 @@ energia-asiantuntija
 </div>
 
 <div class="vastaanottaja">
-    {{#omistaja-henkilo}} {{sukunimi}} {{etunimi}} <br/>
-    {{jakeluosoite}} <br/>
+    {{#omistaja-henkilo}}{{sukunimi}} {{etunimi}}<br/>
+    {{jakeluosoite}}<br/>
     {{postinumero}} {{postitoimipaikka}}
     {{/omistaja-henkilo}}
 </div>
@@ -101,8 +101,8 @@ energia-asiantuntija
 
 <div>
     <!--    TODO: Onko tässä tarpeen olla myös yritysomistaja? -->
-    Byggnadens ägare: {{#omistaja-henkilo}} {{sukunimi}} {{etunimi}} {{/omistaja-henkilo}}<br/>
-    Byggnad: {{#kohde}}{{katuosoite}} {{postinumero}} {{postitoimipaikka}} {{/kohde}}
+    Byggnadens ägare: {{#omistaja-henkilo}}{{sukunimi}} {{etunimi}}{{/omistaja-henkilo}}<br/>
+    Byggnad: {{#kohde}}{{katuosoite}} {{postinumero}} {{postitoimipaikka}}{{/kohde}}
 </div>
 
 <h2>Ärendets bakgrund</h2>
