@@ -124,9 +124,9 @@
                                      :contact              (map osapuoli->contact osapuolet)}
                  :document          (toimenpide-type->document (:type-id toimenpide))}
    :decision-order-hearing-letter {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                       :processing-action {:name-identity "Tiedoksianto ja toimeenpano"}}
+                                                       :processing-action {:name-identity "Päätöksenteko"}}
                                    :document (toimenpide-type->document (:type-id toimenpide))
-                                   :processing-action {:name                 "Kuulemiskirje"
+                                   :processing-action {:name                 "Kuulemiskirje käskypäätöksestä"
                                                        :reception-date       (Instant/now)
                                                        :contacting-direction "SENT"
                                                        :contact              (map osapuoli->contact osapuolet)}}})
