@@ -22,7 +22,7 @@
     (clostache/render-resource layout {:content content})
     (clostache/render-resource layout data)))
 
-(defn html->pdf
+(defn ^:dynamic html->pdf
   [html-doc output-stream]
   (let [builder (PdfRendererBuilder.)]
     (.useFastMode builder)

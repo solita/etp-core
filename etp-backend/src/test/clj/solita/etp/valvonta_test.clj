@@ -5,6 +5,7 @@
     [clojure.test :as t]
     [jsonista.core :as j]
     [ring.mock.request :as mock]
+    [solita.common.time :as time]
     [solita.etp.handler :as handler]
     [solita.etp.schema.valvonta-kaytto :as valvonta-schema]
     [solita.etp.service.pdf :as pdf]
@@ -182,25 +183,27 @@
                                             :publish_time  varoitus-timestamp
                                             :deadline_date (LocalDate/of 2023 8 13)})
 
-      (with-redefs [pdf/html->pdf (fn [html-doc output-stream]
-                                    ;; Mocking the pdf rendering function so that the document contents can be asserted
-                                    ;; Compare the created document to the snapshot
-                                    (t/is (= html-doc
-                                             (slurp (io/resource "documents/kaskypaatoskuulemiskirje.html"))))
-                                    (reset! html->pdf-called? true)
-                                    ;;Calling original implementation to ensure the functionality doesn't change
-                                    (original-html->pdf html-doc output-stream))]
-        (let [new-toimenpide {:type-id       7
-                              :deadline-date (.toString (LocalDate/of 2023 7 22))
-                              :template-id   5
-                              :description   "Lähetetään kuulemiskirje, kun myyjä ei ole hankkinut energiatodistusta eikä vastannut kehotukseen tai varoitukseen"
-                              :fine          800}
-              response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
-                                    (mock/json-body new-toimenpide)
-                                    (mock/header "x-amzn-oidc-accesstoken" access-token)
-                                    (mock/header "x-amzn-oidc-identity" "paakayttaja@solita.fi")
-                                    (mock/header "x-amzn-oidc-data" oidc-data)
-                                    (mock/header "Accept" "application/json")
-                                    ))]
-          (t/is (true? @html->pdf-called?))
-          (t/is (= (:status response) 201)))))))
+      ;; Mock today to ensure that the document has a fixed date
+      (with-redefs [time/today (fn [] "26.06.2023")]
+        (with-bindings {#'pdf/html->pdf (fn [html-doc output-stream]
+                                          ;; Mocking the pdf rendering function so that the document contents can be asserted
+                                          ;; Compare the created document to the snapshot
+                                          (t/is (= html-doc
+                                                   (slurp (io/resource "documents/kaskypaatoskuulemiskirje.html"))))
+                                          (reset! html->pdf-called? true)
+                                          ;;Calling original implementation to ensure the functionality doesn't change
+                                          (original-html->pdf html-doc output-stream))}
+          (let [new-toimenpide {:type-id       7
+                                :deadline-date (.toString (LocalDate/of 2023 7 22))
+                                :template-id   5
+                                :description   "Lähetetään kuulemiskirje, kun myyjä ei ole hankkinut energiatodistusta eikä vastannut kehotukseen tai varoitukseen"
+                                :fine          800}
+                response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
+                                      (mock/json-body new-toimenpide)
+                                      (mock/header "x-amzn-oidc-accesstoken" access-token)
+                                      (mock/header "x-amzn-oidc-identity" "paakayttaja@solita.fi")
+                                      (mock/header "x-amzn-oidc-data" oidc-data)
+                                      (mock/header "Accept" "application/json")
+                                      ))]
+            (t/is (true? @html->pdf-called?))
+            (t/is (= (:status response) 201))))))))
