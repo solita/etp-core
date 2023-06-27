@@ -9,7 +9,7 @@
 
 (defn format-date [date]
   (when date
-    (.format date-formatter date)))
+    (.format ^DateTimeFormatter date-formatter date)))
 
 (defn today []
   (format-date (LocalDate/now clock)))
