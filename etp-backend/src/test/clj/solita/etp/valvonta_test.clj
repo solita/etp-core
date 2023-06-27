@@ -132,12 +132,12 @@
 (t/deftest kaytonvalvonta-kuulemiskirje-test
   (t/testing "Käytönvalvonta / Kuulemiskirje toimenpide is created successfully and document is generated with correct information"
     (first (test-kayttajat/insert!
-             [{:etunimi  "Asian",
-               :sukunimi "Tuntija",
-               :email    "testi@ara.fi",
-               :puhelin  "0504363675457",
-               :rooli    2,
-               :virtu    {:localid "vvirkamies"
+             [{:etunimi  "Asian"
+               :sukunimi "Tuntija"
+               :email    "testi@ara.fi"
+               :puhelin  "0504363675457"
+               :rooli    2
+               :virtu    {:localid      "vvirkamies"
                           :organisaatio "testivirasto.fi"}}]))
     ;; Add the valvonta and previous toimenpides
     ;; so that käytönvalvonta / kuulemiskirje toimenpide can be created
