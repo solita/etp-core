@@ -37,6 +37,7 @@
    :include-closed false
    :keyword nil
    :toimenpidetype-id nil
+   :asiakirjapohja-id nil
    :limit 10
    :offset 0})
 

@@ -40,6 +40,7 @@ where
   not valvonta.deleted and
   (last_toimenpide.id is null or last_toimenpide.type_id <> 5 or :include-closed) and
   (:toimenpidetype-id::int is null or :toimenpidetype-id = last_toimenpide.type_id) and
+  (:asiakirjapohja-id::int is null or :asiakirjapohja-id = last_toimenpide.template_id) and
   (:keyword::text is null or
    valvonta.rakennustunnus                  ilike :keyword or
    valvonta.katuosoite                      ilike :keyword or
@@ -85,6 +86,7 @@ where
   not valvonta.deleted and
   (last_toimenpide.id is null or last_toimenpide.type_id <> 5 or :include-closed) and
   (:toimenpidetype-id::int is null or :toimenpidetype-id = last_toimenpide.type_id) and
+  (:asiakirjapohja-id::int is null or :asiakirjapohja-id = last_toimenpide.template_id) and
   (:keyword::text is null or
    valvonta.rakennustunnus                  ilike :keyword or
    valvonta.katuosoite                      ilike :keyword or
