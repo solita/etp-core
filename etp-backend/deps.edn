@@ -30,8 +30,9 @@
         metosin/spec-tools {:mvn/version "0.10.1"}
         webjure/jeesql {:mvn/version "0.4.7"}
         clj-http/clj-http {:mvn/version "3.10.0"}
-        buddy/buddy-sign {:mvn/version "3.3.0"}
-        buddy/buddy-hashers {:mvn/version "1.7.0"}
+        buddy/buddy-core {:mvn/version "1.11.423"}
+        buddy/buddy-sign {:mvn/version "3.5.346"}
+        buddy/buddy-hashers {:mvn/version "2.0.162"}
         org.apache.poi/poi {:mvn/version "4.1.2"}
         org.apache.poi/poi-ooxml {:mvn/version "4.1.2"}
         org.apache.pdfbox/pdfbox {:mvn/version "2.0.28"}
