@@ -3,11 +3,12 @@
             [clojure.java.io :as io])
   (:import (org.apache.poi.ss.usermodel WorkbookFactory HorizontalAlignment)
            (org.apache.poi.ss.util CellAddress)
-           (org.apache.poi.xssf.usermodel XSSFWorkbook XSSFFormulaEvaluator)))
+           (org.apache.poi.xssf.usermodel XSSFWorkbook XSSFWorkbookFactory XSSFFormulaEvaluator)))
 
 ;;
 ;; Workbook, loading, saving
 ;;
+(WorkbookFactory/addProvider (XSSFWorkbookFactory.))
 
 (defn create-xlsx []
   (WorkbookFactory/create (boolean true)))
@@ -52,7 +53,7 @@
     (if (str/blank? v) nil v)))
 
 (defn row-and-column-idx [address]
-  (let [cell-address (CellAddress. address)]
+  (let [cell-address (CellAddress. ^String address)]
     {:row-idx (.getRow cell-address)
      :col-idx (.getColumn cell-address)}))
 
