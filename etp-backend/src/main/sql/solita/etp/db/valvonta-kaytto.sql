@@ -320,3 +320,33 @@ left join lateral (
     limit 1) last_toimenpide on true
 where rakennustunnus = :rakennustunnus
   and deleted is false;
+
+-- name: find-vk-toimenpidetypes
+SELECT id, label_fi, label_sv, valid, manually_deliverable, allow_comments
+FROM vk_toimenpidetype
+ORDER BY ordinal ASC;
+
+-- name: select-manually-deliverable-toimenpidetypes
+SELECT id
+FROM vk_toimenpidetype
+WHERE manually_deliverable is true;
+
+-- name: past-dates-for-kaskypaatos-kuulemiskirje
+with kehotus as (select create_time, deadline_date
+                 from vk_toimenpide
+                 where valvonta_id = :valvonta-id
+                   and type_id = 2
+                 order by create_time desc
+                 LIMIT 1),
+     varoitus as (select create_time, deadline_date
+                  from vk_toimenpide
+                  where valvonta_id = :valvonta-id
+                    and type_id = 3
+                  order by create_time desc
+                  LIMIT 1)
+select kehotus.create_time::date  as kehotus_pvm,
+       kehotus.deadline_date      as kehotus_maarapaiva,
+       varoitus.create_time::date as varoitus_pvm,
+       varoitus.deadline_date     as varoitus_maarapaiva
+from kehotus,
+     varoitus;

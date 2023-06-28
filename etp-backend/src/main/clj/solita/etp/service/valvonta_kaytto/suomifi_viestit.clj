@@ -155,6 +155,7 @@
   (doseq [osapuoli (->> osapuolet
                         (filter osapuoli/omistaja?)
                         (filter osapuoli/suomi-fi?))]
+
     (send-message-to-osapuoli!
       valvonta
       toimenpide

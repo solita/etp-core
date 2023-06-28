@@ -6,6 +6,9 @@
             [solita.common.logic :as logic]
             [solita.etp.email :as email]
             [solita.etp.service.valvonta-kaytto.osapuoli :as osapuoli]
+            [solita.etp.service.geo :as geo-service]
+            [solita.etp.service.luokittelu :as luokittelu-service]
+            [solita.common.maybe :as maybe]
             [solita.etp.service.valvonta-kaytto.store :as store]
             [solita.etp.db :as db]
             [solita.common.smtp :as smtp])
@@ -195,6 +198,13 @@
   (let [tiedoksi (-> (valvonta-kaytto-db/select-template db {:id (:template-id toimenpide)})
                      first
                      :tiedoksi)
+        postinumero (maybe/map* #(luokittelu-service/find-luokka
+                                   (Integer/parseInt %)
+                                   (geo-service/find-all-postinumerot db))
+                                (:postinumero valvonta))
+        valvonta (assoc valvonta
+                   :postitoimipaikka-fi (:label-fi postinumero)
+                   :postitoimipaikka-sv (:label-sv postinumero))
         email-osapuolet (filter osapuoli/email? osapuolet)
         documents (mapv (partial find-document aws-s3-client valvonta toimenpide)
                         (filter osapuoli/omistaja? osapuolet))]

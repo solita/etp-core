@@ -34,11 +34,12 @@
      :description   (schema/maybe schema/Str)}))
 
 (def ToimenpideAdd
-  {:type-id       common-schema/Key
-   :deadline-date (schema/maybe common-schema/Date)
-   :template-id   (schema/maybe common-schema/Key)
-   :description   (schema/maybe schema/Str)
-   (schema/optional-key :bypass-asha) schema/Bool})
+  {:type-id                           common-schema/Key
+   :deadline-date                     (schema/maybe common-schema/Date)
+   :template-id                       (schema/maybe common-schema/Key)
+   :description                       (schema/maybe schema/Str)
+   (schema/optional-key :bypass-asha) schema/Bool
+   (schema/optional-key :fine)        common-schema/NonNegative})
 
 (def Template
   (assoc valvonta-schema/Template
@@ -102,3 +103,10 @@
 (def ExistingValvonta
   {:id common-schema/Key
    :end-time (schema/maybe common-schema/Instant)})
+
+(def Toimenpidetyypit
+  (assoc common-schema/Luokittelu
+    :manually-deliverable
+    schema/Bool
+    :allow-comments
+    schema/Bool))

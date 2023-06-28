@@ -168,7 +168,7 @@
                  (file-service/find-file aws-s3-client (file-path valvonta-id liite-id)))))
 
 (defn find-toimenpidetyypit [db]
-  (luokittelu/find-vk-toimenpidetypes db))
+  (valvonta-kaytto-db/find-vk-toimenpidetypes db))
 
 (defn find-templates [db]
   (valvonta-kaytto-db/select-templates db))
@@ -202,7 +202,7 @@
   (first (db/with-db-exception-translation
            jdbc/insert! db :vk-toimenpide
            (-> toimenpide-add
-               (dissoc :bypass-asha)
+               (dissoc :bypass-asha :fine)
                (assoc
                 :diaarinumero diaarinumero
                 :valvonta-id valvonta-id
@@ -259,6 +259,7 @@
                            (find-osapuolet tx valvonta-id)
                            ilmoituspaikat)
                          (find-diaarinumero tx valvonta-id toimenpide-add))
+          sakko (:fine toimenpide-add)
           toimenpide (insert-toimenpide! tx valvonta-id diaarinumero toimenpide-add)
           toimenpide-id (:id toimenpide)]
       (insert-toimenpide-osapuolet! tx valvonta-id toimenpide-id)
@@ -269,10 +270,11 @@
           (let [find-toimenpide-osapuolet (comp flatten (juxt find-toimenpide-henkilot find-toimenpide-yritykset))
                 osapuolet (find-toimenpide-osapuolet tx (:id toimenpide))]
             (asha/log-toimenpide!
-              tx aws-s3-client whoami valvonta toimenpide
+              tx aws-s3-client whoami valvonta (assoc toimenpide :fine sakko)
               osapuolet ilmoituspaikat roolit)
-            (send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
-            (send-toimenpide-email! db aws-s3-client valvonta toimenpide osapuolet))))
+            (when-not (toimenpide/manually-deliverable? db (:type-id toimenpide))
+              (send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
+              (send-toimenpide-email! db aws-s3-client valvonta toimenpide osapuolet)))))
       {:id toimenpide-id})))
 
 (defn update-toimenpide! [db toimenpide-id toimenpide]

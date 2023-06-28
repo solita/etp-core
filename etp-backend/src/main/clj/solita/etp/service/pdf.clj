@@ -22,10 +22,9 @@
     (clostache/render-resource layout {:content content})
     (clostache/render-resource layout data)))
 
-(defn html->pdf
-  [template data layout output-stream]
-  (let [html-doc (render-template-with-content template data layout)
-        builder (PdfRendererBuilder.)]
+(defn ^:dynamic html->pdf
+  [html-doc output-stream]
+  (let [builder (PdfRendererBuilder.)]
     (.useFastMode builder)
     (.withHtmlContent builder html-doc nil)
 
@@ -44,7 +43,9 @@
 (defn generate-pdf->bytes [{:keys [layout template data]
                             :or {layout "pdf/template.html"}}]
    (with-open [baos (ByteArrayOutputStream.)]
-     (html->pdf template data layout baos)
+     (-> template
+         (render-template-with-content data layout)
+         (html->pdf baos))
      (.toByteArray baos)))
 
 

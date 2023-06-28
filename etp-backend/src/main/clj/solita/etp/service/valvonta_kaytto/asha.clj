@@ -7,7 +7,8 @@
             [solita.etp.service.valvonta-kaytto.osapuoli :as osapuoli]
             [solita.etp.service.pdf :as pdf]
             [solita.etp.db :as db]
-            [solita.common.formats :as formats]))
+            [solita.common.formats :as formats])
+  (:import (java.time Instant)))
 
 (db/require-queries 'valvonta-kaytto)
 (db/require-queries 'geo)
@@ -16,7 +17,9 @@
   (let [type-key (toimenpide/type-key type-id )
         documents {:rfi-request {:type "Pyyntö" :filename "tietopyynto.pdf"}
                    :rfi-order {:type "Kirje" :filename "kehotus.pdf"}
-                   :rfi-warning {:type "Kirje" :filename "varoitus.pdf"}}]
+                   :rfi-warning {:type "Kirje" :filename "varoitus.pdf"}
+                   :decision-order-hearing-letter {:type "Kirje"
+                                                   :filename "kuulemiskirje.pdf"}}]
     (get documents type-key)))
 
 (defn find-kaytto-valvonta-documents [db valvonta-id]
@@ -45,6 +48,16 @@
                 (when (some? rooli) (str (:label-fi rooli) "/" (:label-sv rooli)))))
      :email (template-optional (:email osapuoli))}))
 
+(defn past-dates-for-kaskypaatos-kuulemiskirje
+  "Retrieves the dates of kehotus and varoitus toimenpiteet with
+   the given valvonta-id and formats them for displaying in a document"
+  [db valvonta-id]
+  ;; TODO: Kun päivitetään Clojure 1.11:een, voidaan käyttää vain update-vals-funktiota
+  (let [data (->> {:valvonta-id valvonta-id}
+                  (valvonta-kaytto-db/past-dates-for-kaskypaatos-kuulemiskirje db)
+                  first)]
+    (zipmap (keys data) (map time/format-date (vals data)))))
+
 (defn- template-data [db whoami valvonta toimenpide osapuoli dokumentit ilmoituspaikat tiedoksi roolit]
   {:päivä            (time/today)
    :määräpäivä       (time/format-date (:deadline-date toimenpide))
@@ -52,7 +65,10 @@
    :valvoja          (select-keys whoami [:etunimi :sukunimi :email])
    :omistaja-henkilo (when (osapuoli/henkilo? osapuoli)
                        {:etunimi          (:etunimi osapuoli)
-                        :sukunimi         (:sukunimi osapuoli)})
+                        :sukunimi         (:sukunimi osapuoli)
+                        :jakeluosoite     (:jakeluosoite osapuoli)
+                        :postinumero      (:postinumero osapuoli)
+                        :postitoimipaikka (:postitoimipaikka osapuoli)})
    :omistaja-yritys  (when (osapuoli/yritys? osapuoli)
                        {:nimi             (:nimi osapuoli)})
    :kohde            {:katuosoite       (:katuosoite valvonta)
@@ -63,7 +79,10 @@
                       :havaintopäivä    (-> valvonta :havaintopaiva time/format-date)}
    :tietopyynto      {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
                       :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
-   :tiedoksi         (map (partial tiedoksi-saaja roolit) tiedoksi)})
+   :tiedoksi         (map (partial tiedoksi-saaja roolit) tiedoksi)
+   :sakko            (:fine toimenpide)
+   :aiemmat-toimenpiteet (when (toimenpide/kaskypaatos-kuulemiskirje? toimenpide)
+                           (past-dates-for-kaskypaatos-kuulemiskirje db (:id valvonta)))})
 
 (defn- request-id [valvonta-id toimenpide-id]
   (str valvonta-id "/" toimenpide-id))
@@ -86,24 +105,31 @@
   {:rfi-request {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                      :processing-action {:name-identity "Vireillepano"}}
                  :processing-action {:name                 "Tietopyyntö"
-                                     :reception-date       (java.time.Instant/now)
+                                     :reception-date       (Instant/now)
                                      :contacting-direction "SENT"
                                      :contact              (map osapuoli->contact osapuolet)}
                  :document          (toimenpide-type->document (:type-id toimenpide))}
    :rfi-order   {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                      :processing-action {:name-identity "Käsittely"}}
                  :processing-action {:name                 "Kehotuksen antaminen"
-                                     :reception-date       (java.time.Instant/now)
+                                     :reception-date       (Instant/now)
                                      :contacting-direction "SENT"
                                      :contact              (map osapuoli->contact osapuolet)}
                  :document          (toimenpide-type->document (:type-id toimenpide))}
    :rfi-warning {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                      :processing-action {:name-identity "Käsittely"}}
                  :processing-action {:name                 "Varoituksen antaminen"
-                                     :reception-date       (java.time.Instant/now)
+                                     :reception-date       (Instant/now)
                                      :contacting-direction "SENT"
-                                     :contact             (map osapuoli->contact osapuolet)}
-                 :document          (toimenpide-type->document (:type-id toimenpide))}})
+                                     :contact              (map osapuoli->contact osapuolet)}
+                 :document          (toimenpide-type->document (:type-id toimenpide))}
+   :decision-order-hearing-letter {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                       :processing-action {:name-identity "Päätöksenteko"}}
+                                   :document (toimenpide-type->document (:type-id toimenpide))
+                                   :processing-action {:name                 "Kuulemiskirje käskypäätöksestä"
+                                                       :reception-date       (Instant/now)
+                                                       :contacting-direction "SENT"
+                                                       :contact              (map osapuoli->contact osapuolet)}}})
 
 (defn- resolve-processing-action [toimenpide osapuolet]
   (let [processing-actions (available-processing-actions toimenpide osapuolet)

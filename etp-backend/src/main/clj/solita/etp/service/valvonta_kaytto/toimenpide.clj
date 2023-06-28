@@ -1,16 +1,26 @@
-(ns solita.etp.service.valvonta-kaytto.toimenpide)
+(ns solita.etp.service.valvonta-kaytto.toimenpide
+  (:require [solita.etp.db :as db]))
 
-(def ^:private type-keys
-  [;; käytönvalvonnan asia avataan ashaan (case open)
-   :case
+(db/require-queries 'valvonta-kaytto)
+
+(def ^:private type-id->type-key
+  {;; käytönvalvonnan asia avataan ashaan (case open)
+   0 :case
    ;; tietopyynnön toimenpidetyypit
-   :rfi-request :rfi-order :rfi-warning
+   1 :rfi-request
+   2 :rfi-order
+   3 :rfi-warning
    ;; päätös
-   :decision-order
+   4 :decision-order
    ;; valvonnan sulkeminen (case closed)
-   :closed])
+   5 :closed
+   ;; Uhkasakkoprosessi
+   7 :decision-order-hearing-letter})
 
-(defn type-key [type-id] (nth type-keys type-id))
+(defn type-key [type-id]
+  (if-let [type-key (type-id->type-key type-id)]
+    type-key
+    (throw (Exception.))))
 
 (defn type? [type toimenpide]
   (= (-> toimenpide :type-id type-key) type))
@@ -21,8 +31,17 @@
 (def case-open? (partial type? :case))
 (def case-close? (partial type? :closed))
 (def send-tiedoksi? (partial type? :rfi-request))
+(def kaskypaatos-kuulemiskirje? (partial type? :decision-order-hearing-letter))
 
 (def asha-toimenpide?
-  (partial some-type? #{:rfi-request :rfi-order :rfi-warning}))
+  (partial some-type? #{:rfi-request :rfi-order :rfi-warning :decision-order-hearing-letter}))
 
 (def with-diaarinumero? (comp not (partial type? :case)))
+
+(defn manually-deliverable? [db type-id]
+  (let [manually-deliverable-toimenpidetypes
+        (->> db
+             valvonta-kaytto-db/select-manually-deliverable-toimenpidetypes
+             (map :id)
+             set)]
+    (contains? manually-deliverable-toimenpidetypes type-id)))
