@@ -59,4 +59,13 @@
         <packageUrl regex="true">^pkg:maven/commons\-discovery/commons\-discovery@.*$</packageUrl>
         <cve>CVE-2022-0869</cve>
     </suppress>
+
+<!-- OpenSAML C++, not Java -->
+    <suppress>
+        <notes><![CDATA[
+   file name: opensaml-2.5.1-1.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.opensaml/opensaml@.*$</packageUrl>
+        <cve>CVE-2017-16853</cve>
+    </suppress>
 </suppressions>
