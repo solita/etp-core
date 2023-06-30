@@ -38,10 +38,10 @@
       (mock/header "x-amzn-oidc-identity" "paakayttaja@solita.fi")
       (mock/header "x-amzn-oidc-data" oidc-data)))
 
-(defn- add-valvonta-and-map-id [valvonta]
+(defn- add-valvonta-and-map-id! [valvonta]
   (assoc valvonta :id (valvonta-service/add-valvonta! ts/*db* valvonta)))
 
-(defn- add-toimenpide-and-map-id [valvonta-id toimenpide]
+(defn- add-toimenpide-and-map-id! [valvonta-id toimenpide]
   (merge toimenpide (valvonta-service/add-toimenpide! ts/*db* ts/*aws-s3-client* {} valvonta-id toimenpide)))
 
 (t/deftest adding-toimenpide
@@ -241,7 +241,7 @@
                                      (generators/complete valvonta-schema/ValvontaSave)
                                      (assoc :ilmoituspaikka-id 1
                                             :valvoja-id kayttaja-id)
-                                     add-valvonta-and-map-id))
+                                     add-valvonta-and-map-id!))
         ;; Create 6 toimenpide for each valvonta
         toimenpiteet (->> (repeatedly 12 (fn [] (generators/complete {} valvonta-schema/ToimenpideAdd)))
                           (map vector (flatten (repeatedly (constantly [1 2]))))
@@ -249,7 +249,7 @@
                           (map (fn [toimenpide] (assoc toimenpide :type-id 1)))
                           (map vector (flatten (repeat (map :id valvonnat)))))]
     (doseq [[valvonta-id toimenpide] toimenpiteet]
-      (add-toimenpide-and-map-id valvonta-id toimenpide))
+      (add-toimenpide-and-map-id! valvonta-id toimenpide))
     (t/testing "Valvonnalle palautetaan 6 toimenpidettä"
       (let [response (handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet" (-> valvonnat first :id)))
                                   (with-virtu-user)
@@ -266,14 +266,14 @@
                                      (generators/complete valvonta-schema/ValvontaSave)
                                      (assoc :ilmoituspaikka-id 1
                                             :valvoja-id kayttaja-id)
-                                     add-valvonta-and-map-id))
+                                     add-valvonta-and-map-id!))
         ;; Create a toimenpide for each valvonta
         toimenpiteet (->> (repeatedly 2 (fn [] (generators/complete {} valvonta-schema/ToimenpideAdd)))
                           (map (fn [toimenpide] (assoc toimenpide :type-id 1)))
                           (map vector (flatten (repeatedly (constantly [1 2])))) ; Use two different templates for every other toimenpide
                           (map (fn [[template-id toimenpide]] (assoc toimenpide :template-id template-id)))
                           (map vector (flatten (repeat (map :id valvonnat))))
-                          (mapv #(apply add-toimenpide-and-map-id %)))]
+                          (mapv #(apply add-toimenpide-and-map-id! %)))]
     (t/testing "Hae valvontojen määrä joissa on käytetty asiakirjapohjaa 1"
       (let [response (handler (-> (mock/request :get "/api/private/valvonta/kaytto/count")
                                   (mock/query-string {:asiakirjapohja-id 1})
