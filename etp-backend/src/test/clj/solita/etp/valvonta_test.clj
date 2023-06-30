@@ -1,7 +1,5 @@
 (ns solita.etp.valvonta-test
   (:require
-    [clojure.core]
-    [clojure.set]
     [clojure.java.io :as io]
     [clojure.java.jdbc :as jdbc]
     [clojure.test :as t]
@@ -25,7 +23,8 @@
   (handler/handler (merge req {:db ts/*db* :aws-s3-client ts/*aws-s3-client*})))
 
 (defn- non-null-key-to-string [m k]
-  (if (some? (k m)) (assoc m k (.toString (k m))) m))
+  (if (some? (k m))
+    (assoc m k (str (k m))) m))
 
 (def access-token
   "eyJraWQiOiJ0ZXN0LWtpZCIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiJwYWFrYXl0dGFqYUBzb2xpdGEuZmkiLCJ0b2tlbl91c2UiOiJhY2Nlc3MiLCJzY29wZSI6Im9wZW5pZCIsImF1dGhfdGltZSI6MTU4MzIzMDk2OSwiaXNzIjoiaHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL3NvbGl0YS9ldHAtY29yZS9mZWF0dXJlL0FFLTQzLWF1dGgtaGVhZGVycy1oYW5kbGluZy9ldHAtYmFja2VuZC9zcmMvbWFpbi9yZXNvdXJjZXMiLCJleHAiOjE4OTM0NTYwMDAsImlhdCI6MTU4MzQxMzQyNCwidmVyc2lvbiI6MiwianRpIjoiNWZkZDdhMjktN2VlYS00ZjNkLWE3YTYtYzIyODQyNmY2MTJiIiwiY2xpZW50X2lkIjoidGVzdC1jbGllbnRfaWQiLCJ1c2VybmFtZSI6InRlc3QtdXNlcm5hbWUifQ.PY5_jWcdxhCyn2EpFpss7Q0R3_xH1PvHi4mxDLorpppHnciGT2kFLeutebi7XeLtTYwmttTxxg2tyUyX0_UF7zj_P-tdq-kZQlud1ENmRaUxLXO5mTFKXD7zPb6BPFNe0ewRQ7Uuv3lDk_IxOf-6i86VDYB8luyesEXq7ra4S4l8akFodW_QYBSZQnUva_CVyzsTNcmgGTyrz2NI6seT1x6Pt1uFdYI97FHKlCCWVL1Z042omfujfta8j8XkTWdhKf3dfsHRWjrw31xqOkgD7uwPKcrC0U-wIj3U0uX0Rz2Tk4T-kIq4XTkKttYpkJqOmMFAYuhk6MDjfRkPWBZhUA")
@@ -38,6 +37,12 @@
       (mock/header "x-amzn-oidc-accesstoken" access-token)
       (mock/header "x-amzn-oidc-identity" "paakayttaja@solita.fi")
       (mock/header "x-amzn-oidc-data" oidc-data)))
+
+(defn- add-valvonta-and-map-id [valvonta]
+  (assoc valvonta :id (valvonta-service/add-valvonta! ts/*db* valvonta)))
+
+(defn- add-toimenpide-and-map-id [valvonta-id toimenpide]
+  (merge toimenpide (valvonta-service/add-toimenpide! ts/*db* ts/*aws-s3-client* {} valvonta-id toimenpide)))
 
 (t/deftest adding-toimenpide
   (t/testing "Kun uusi toimenpide lisätään, omistajille joilla on Suomi.fi-viestit käytössä lähtee viesti oikealla kuvauksella"
@@ -57,7 +62,7 @@
                                                  (:kuvaus-teksti kohde))
                                               )
                                         (deliver suomifi-message-sent true))]
-      (with-redefs [solita.etp.service.suomifi-viestit/send-message! assert-suomifi-message-sent]
+      (with-redefs [suomifi-viestit/send-message! assert-suomifi-message-sent]
         (let [kayttaja-id (test-kayttajat/insert-virtu-paakayttaja!)
               valvonta-id (valvonta-service/add-valvonta! ts/*db*
                                                           (-> {} (generators/complete valvonta-schema/ValvontaSave)
@@ -76,7 +81,7 @@
                                                                                })
                                                                        ))
               body {:type-id       2
-                    :deadline-date (.toString (LocalDate/of 2024 11 10))
+                    :deadline-date (str (LocalDate/of 2024 11 10))
                     :template-id   2
                     :description   "Tee jotain"
                     }
@@ -194,7 +199,7 @@
                                         ;;Calling original implementation to ensure the functionality doesn't change
                                         (original-html->pdf html-doc output-stream))}
         (let [new-toimenpide {:type-id       7
-                              :deadline-date (.toString (LocalDate/of 2023 7 22))
+                              :deadline-date (str (LocalDate/of 2023 7 22))
                               :template-id   5
                               :description   "Lähetetään kuulemiskirje, kun myyjä ei ole hankkinut energiatodistusta eikä vastannut kehotukseen tai varoitukseen"
                               :fine          800}
@@ -236,16 +241,16 @@
                                      (generators/complete valvonta-schema/ValvontaSave)
                                      (assoc :ilmoituspaikka-id 1
                                             :valvoja-id kayttaja-id)
-                                     ((fn [valvonta] (assoc valvonta :id (valvonta-service/add-valvonta! ts/*db* valvonta))))))
+                                     add-valvonta-and-map-id))
         ;; Create 6 toimenpide for each valvonta
-        _ (doall (->> (repeatedly 12 (fn [] (generators/complete {} valvonta-schema/ToimenpideAdd)))
-                      (map vector (flatten (repeatedly (constantly '(1 2)))))
-                      (map (fn [[template-id toimenpide]] (assoc toimenpide :template-id template-id)))
-                      (map (fn [toimenpide] (assoc toimenpide :type-id 1)))
-                      (map vector (flatten (repeat (map :id valvonnat))))
-                      (map (fn [[valvonta-id toimenpide]]
-                             (merge toimenpide (valvonta-service/add-toimenpide! ts/*db* ts/*aws-s3-client* {} valvonta-id toimenpide))))))]
-    (t/testing "Valvonnalle palautetataan 6 toimenpidettä"
+        toimenpiteet (->> (repeatedly 12 (fn [] (generators/complete {} valvonta-schema/ToimenpideAdd)))
+                          (map vector (flatten (repeatedly (constantly [1 2]))))
+                          (map (fn [[template-id toimenpide]] (assoc toimenpide :template-id template-id)))
+                          (map (fn [toimenpide] (assoc toimenpide :type-id 1)))
+                          (map vector (flatten (repeat (map :id valvonnat)))))]
+    (doseq [[valvonta-id toimenpide] toimenpiteet]
+      (add-toimenpide-and-map-id valvonta-id toimenpide))
+    (t/testing "Valvonnalle palautetaan 6 toimenpidettä"
       (let [response (handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet" (-> valvonnat first :id)))
                                   (with-virtu-user)
                                   (mock/header "Accept" "application/json")))
@@ -261,15 +266,14 @@
                                      (generators/complete valvonta-schema/ValvontaSave)
                                      (assoc :ilmoituspaikka-id 1
                                             :valvoja-id kayttaja-id)
-                                     ((fn [valvonta] (assoc valvonta :id (valvonta-service/add-valvonta! ts/*db* valvonta))))))
+                                     add-valvonta-and-map-id))
         ;; Create a toimenpide for each valvonta
-        toimenpiteet (doall (->> (repeatedly 2 (fn [] (generators/complete {} valvonta-schema/ToimenpideAdd)))
-                                 (map (fn [toimenpide] (assoc toimenpide :type-id 1)))
-                                 (map vector (flatten (repeatedly (constantly '(1 2)))))
-                                 (map (fn [[template-id toimenpide]] (assoc toimenpide :template-id template-id)))
-                                 (map vector (flatten (repeat (map :id valvonnat))))
-                                 (map (fn [[valvonta-id toimenpide]]
-                                        (merge toimenpide (valvonta-service/add-toimenpide! ts/*db* ts/*aws-s3-client* {} valvonta-id toimenpide))))))]
+        toimenpiteet (->> (repeatedly 2 (fn [] (generators/complete {} valvonta-schema/ToimenpideAdd)))
+                          (map (fn [toimenpide] (assoc toimenpide :type-id 1)))
+                          (map vector (flatten (repeatedly (constantly [1 2])))) ; Use two different templates for every other toimenpide
+                          (map (fn [[template-id toimenpide]] (assoc toimenpide :template-id template-id)))
+                          (map vector (flatten (repeat (map :id valvonnat))))
+                          (mapv #(apply add-toimenpide-and-map-id %)))]
     (t/testing "Hae valvontojen määrä joissa on käytetty asiakirjapohjaa 1"
       (let [response (handler (-> (mock/request :get "/api/private/valvonta/kaytto/count")
                                   (mock/query-string {:asiakirjapohja-id 1})
