@@ -48,11 +48,11 @@
                  :manually-deliverable false
                  :allow-comments       false}
                 {:id                   6
-                 :label-fi             "HaO käsittely"
-                 :label-sv             "HaO käsittely (sv)"
+                 :label-fi             "HaO-käsittely"
+                 :label-sv             "HaO-käsittely (sv)"
                  :valid                true
                  :manually-deliverable false
-                 :allow-comments       false}
+                 :allow-comments       true}
                 {:id                   7
                  :label-fi             "Käskypäätös / kuulemiskirje"
                  :label-sv             "Käskypäätös / kuulemiskirje (sv)"
