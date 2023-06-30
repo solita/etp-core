@@ -2,7 +2,7 @@
          "src/main/sql"
          "src/main/resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.1"}
-        ch.qos.logback/logback-classic {:mvn/version "1.2.3"}
+        ch.qos.logback/logback-classic {:mvn/version "1.4.8"}
         org.slf4j/log4j-over-slf4j {:mvn/version "1.7.30"}
         flathead/flathead {:mvn/version "0.0.4"}
         integrant/integrant {:mvn/version "0.8.0"}
@@ -12,7 +12,7 @@
         org.clojure/java.jdbc {:mvn/version "0.7.11"}
         org.clojure/data.csv {:mvn/version "1.0.0"}
         http-kit/http-kit {:mvn/version "2.4.0-alpha6"}
-        ring/ring-core {:mvn/version "1.8.0"}
+        ring/ring-core {:mvn/version "1.10.0"}
         javax.servlet/servlet-api {:mvn/version "2.5"}
         org.clojure/tools.logging {:mvn/version "1.0.0"}
         prismatic/schema {:mvn/version "1.1.12"}
@@ -29,11 +29,12 @@
         ;; https://github.com/metosin/reitit/issues/355
         metosin/spec-tools {:mvn/version "0.10.1"}
         webjure/jeesql {:mvn/version "0.4.7"}
-        clj-http/clj-http {:mvn/version "3.10.0"}
-        buddy/buddy-sign {:mvn/version "3.3.0"}
-        buddy/buddy-hashers {:mvn/version "1.7.0"}
-        org.apache.poi/poi {:mvn/version "4.1.2"}
-        org.apache.poi/poi-ooxml {:mvn/version "4.1.2"}
+        clj-http/clj-http {:mvn/version "3.12.3"}
+        buddy/buddy-core {:mvn/version "1.11.423"}
+        buddy/buddy-sign {:mvn/version "3.5.346"}
+        buddy/buddy-hashers {:mvn/version "2.0.162"}
+        org.apache.poi/poi {:mvn/version "5.2.3"}
+        org.apache.poi/poi-ooxml {:mvn/version "5.2.3"}
         org.apache.pdfbox/pdfbox {:mvn/version "2.0.28"}
         puumerkki/puumerkki {:mvn/version "0.9.2"
                              :exclusions  [ring/ring
@@ -51,8 +52,18 @@
         commonmark-hiccup/commonmark-hiccup {:mvn/version "0.2.0"}
 
         com.openhtmltopdf/openhtmltopdf-pdfbox {:mvn/version "1.0.10"}
-        com.openhtmltopdf/openhtmltopdf-svg-support {:mvn/version "1.0.10"}
         com.openhtmltopdf/openhtmltopdf-slf4j {:mvn/version "1.0.10"}
+
+        ;; Contains vulnerable version of batik-* libraries, exclude those
+        ;; and add direct dependency to newer versions
+        com.openhtmltopdf/openhtmltopdf-svg-support
+        {:mvn/version "1.0.10"
+         :exclusions  [org.apache.xmlgraphics/batik-transcoder
+                       org.apache.xmlgraphics/batik-codec
+                       org.apache.xmlgraphics/batik-ext]}
+        org.apache.xmlgraphics/batik-transcoder {:mvn/version "1.16"}
+        org.apache.xmlgraphics/batik-codec {:mvn/version "1.16"}
+        org.apache.xmlgraphics/batik-ext {:mvn/version "1.16"}
 
         ;; Non-alpha version does not support xml namespaces
         org.clojure/data.xml {:mvn/version "0.2.0-alpha6"}
