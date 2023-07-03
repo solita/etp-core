@@ -66,7 +66,7 @@
    :omistaja-henkilo (when (osapuoli/henkilo? osapuoli)
                        (select-keys osapuoli [:etunimi :sukunimi :jakeluosoite :postinumero :postitoimipaikka]))
    :omistaja-yritys  (when (osapuoli/yritys? osapuoli)
-                       {:nimi             (:nimi osapuoli)})
+                       (select-keys osapuoli [:nimi :jakeluosoite :postinumero :postitoimipaikka :vastaanottajan-tarkenne]))
    :kohde            {:katuosoite       (:katuosoite valvonta)
                       :postinumero      (:postinumero valvonta)
                       :postitoimipaikka (find-postitoimipaikka db (:postinumero valvonta))

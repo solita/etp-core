@@ -16,17 +16,23 @@ values (5, 'Käskypäätös / kuulemiskirje', 'Käskypäätös / kuulemiskirje (
 </div>
 
 <div class="vastaanottaja">
-    {{#omistaja-henkilo}}{{sukunimi}} {{etunimi}}<br/>
+{{#omistaja-henkilo}}
+    {{sukunimi}} {{etunimi}}<br/>
     {{jakeluosoite}}<br/>
     {{postinumero}} {{postitoimipaikka}}
-    {{/omistaja-henkilo}}
+{{/omistaja-henkilo}}
+{{#omistaja-yritys}}
+    {{nimi}}<br/>
+    {{vastaanottajan-tarkenne}}<br/>
+    {{jakeluosoite}}<br/>
+    {{postinumero}} {{postitoimipaikka}}
+{{/omistaja-yritys}}
 </div>
 
 <h1>Kuuleminen uhkasakon asettamisesta</h1>
 
 <div>
-    <!--    TODO: Onko tässä tarpeen olla myös yritysomistaja? -->
-    Rakennuksen omistaja: {{#omistaja-henkilo}}{{sukunimi}} {{etunimi}}{{/omistaja-henkilo}}<br/>
+    Rakennuksen omistaja: {{#omistaja-henkilo}}{{sukunimi}} {{etunimi}}{{/omistaja-henkilo}}{{#omistaja-yritys}}{{nimi}}{{/omistaja-yritys}}<br/>
     Rakennus: {{#kohde}}{{katuosoite}} {{postinumero}} {{postitoimipaikka}}{{/kohde}}
 </div>
 
@@ -91,17 +97,23 @@ energia-asiantuntija
 </div>
 
 <div class="vastaanottaja">
-    {{#omistaja-henkilo}}{{sukunimi}} {{etunimi}}<br/>
+{{#omistaja-henkilo}}
+    {{sukunimi}} {{etunimi}}<br/>
     {{jakeluosoite}}<br/>
     {{postinumero}} {{postitoimipaikka}}
-    {{/omistaja-henkilo}}
+{{/omistaja-henkilo}}
+{{#omistaja-yritys}}
+    {{nimi}}<br/>
+    {{vastaanottajan-tarkenne}}<br/>
+    {{jakeluosoite}}<br/>
+    {{postinumero}} {{postitoimipaikka}}
+{{/omistaja-yritys}}
 </div>
 
 <h1>Hörande om föreläggande av vite</h1>
 
 <div>
-    <!--    TODO: Onko tässä tarpeen olla myös yritysomistaja? -->
-    Byggnadens ägare: {{#omistaja-henkilo}}{{sukunimi}} {{etunimi}}{{/omistaja-henkilo}}<br/>
+    Byggnadens ägare: {{#omistaja-henkilo}}{{sukunimi}} {{etunimi}}{{/omistaja-henkilo}}{{#omistaja-yritys}}{{nimi}}{{/omistaja-yritys}}<br/>
     Byggnad: {{#kohde}}{{katuosoite}} {{postinumero}} {{postitoimipaikka}}{{/kohde}}
 </div>
 
