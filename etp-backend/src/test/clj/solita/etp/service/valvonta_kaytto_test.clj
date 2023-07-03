@@ -142,8 +142,8 @@
                  :label-sv             "Sakkoluettelon lähetys menossa (sv)"
                  :valid                true
                  :manually-deliverable false
-                 :allow-comments       false}]))
+                 :allow-comments       false}])))
 
-      (t/testing "Toimenpidetyypit matches the schema"
-        (t/is (nil? (schema/check [valvonta-kaytto-schema/Toimenpidetyypit]
-                                  toimenpidetyypit)))))))
+    (t/testing "Toimenpidetyypit matches the schema"
+      (t/is (nil? (schema/check [valvonta-kaytto-schema/Toimenpidetyypit]
+                                toimenpidetyypit))))))
