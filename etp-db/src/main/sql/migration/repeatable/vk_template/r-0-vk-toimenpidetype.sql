@@ -6,7 +6,7 @@ values
 (3, 'Varoitus', 'Varning', 4, true, false, false),
 (4, 'Käskypäätös', 'Käskypäätös (sv)', 5, true, false, false),
 (5, 'Valvonnan lopetus', 'Valvonnan lopetus (sv)', 6, true, false, false),
-(6, 'HaO käsittely', 'HaO käsittely (sv)', 7, true, false, false),
+(6, 'HaO-käsittely', 'HaO-käsittely (sv)', 7, true, false, true),
 (7, 'Käskypäätös / kuulemiskirje', 'Käskypäätös / kuulemiskirje (sv)', 8, true, true, true),
 (8, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsinainen päätös (sv)', 9, true, false, false),
 (9, 'Käskypäätös / tiedoksianto (ensimmäinen postitus)', 'Käskypäätös / tiedoksianto (ensimmäinen postitus) (sv)', 10, true, false, false),

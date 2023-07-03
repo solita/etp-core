@@ -15,6 +15,7 @@
    ;; valvonnan sulkeminen (case closed)
    5 :closed
    ;; Uhkasakkoprosessi
+   6 :court-hearing
    7 :decision-order-hearing-letter})
 
 (defn type-key [type-id]
