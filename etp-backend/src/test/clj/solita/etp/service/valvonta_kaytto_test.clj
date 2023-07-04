@@ -63,8 +63,8 @@
                  :label-fi             "Käskypäätös / varsinainen päätös"
                  :label-sv             "Käskypäätös / varsinainen päätös (sv)"
                  :valid                true
-                 :manually-deliverable false
-                 :allow-comments       false}
+                 :manually-deliverable true
+                 :allow-comments       true}
                 {:id                   9
                  :label-fi             "Käskypäätös / tiedoksianto (ensimmäinen postitus)"
                  :label-sv             "Käskypäätös / tiedoksianto (ensimmäinen postitus) (sv)"

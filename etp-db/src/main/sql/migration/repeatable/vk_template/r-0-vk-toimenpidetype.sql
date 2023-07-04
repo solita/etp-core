@@ -8,7 +8,7 @@ values
 (5, 'Valvonnan lopetus', 'Valvonnan lopetus (sv)', 6, true, false, false),
 (6, 'HaO-käsittely', 'HaO-käsittely (sv)', 7, true, false, true),
 (7, 'Käskypäätös / kuulemiskirje', 'Käskypäätös / kuulemiskirje (sv)', 8, true, true, true),
-(8, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsinainen päätös (sv)', 9, true, false, false),
+(8, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsinainen päätös (sv)', 9, true, true, true),
 (9, 'Käskypäätös / tiedoksianto (ensimmäinen postitus)', 'Käskypäätös / tiedoksianto (ensimmäinen postitus) (sv)', 10, true, false, false),
 (10, 'Käskypäätös / tiedoksianto (toinen postitus)', 'Käskypäätös / tiedoksianto (toinen postitus) (sv)', 11, true, false, false),
 (11, 'Käskypäätös / tiedoksianto (Haastemies)', 'Käskypäätös / tiedoksianto (Haastemies) (sv)', 12, true, false, false),
