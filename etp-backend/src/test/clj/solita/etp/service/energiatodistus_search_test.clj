@@ -31,6 +31,19 @@
   (t/is (= (service/select valvonta-schema/Energiatodistus+Valvonta)
            "select energiatodistus.*,\nfullname(kayttaja.*) laatija_fullname,\nkorvaava_energiatodistus.id as korvaava_energiatodistus_id,\ncoalesce(last_toimenpide.ongoing, false) valvonta$ongoing,\nlast_toimenpide.type_id valvonta$type_id")))
 
+(defn sign-energiatodistukset! [laatija-id-et-id-pairs]
+  (doseq [[laatija-id energiatodistus-id] laatija-id-et-id-pairs]
+    (energiatodistus-service/start-energiatodistus-signing!
+      ts/*db*
+      {:id laatija-id}
+      energiatodistus-id)
+    (energiatodistus-service/end-energiatodistus-signing!
+      ts/*db*
+      ts/*aws-s3-client*
+      {:id laatija-id}
+      energiatodistus-id
+      {:skip-pdf-signed-assert? true})))
+
 (defn test-data-set []
   (let [laatijat (laatija-test-data/generate-and-insert! 3)
         laatija-ids (-> laatijat keys sort)
@@ -55,20 +68,10 @@
                                             [(second %)]
                                             (first %)))
                                  sort)]
-    (doseq [[laatija-id energiatodistus-id] (->> (interleave
-                                                   (cycle laatija-ids)
-                                                   (take 2 energiatodistus-ids))
-                                                 (partition 2))]
-      (energiatodistus-service/start-energiatodistus-signing!
-        ts/*db*
-        {:id laatija-id}
-        energiatodistus-id)
-      (energiatodistus-service/end-energiatodistus-signing!
-        ts/*db*
-        ts/*aws-s3-client*
-        {:id laatija-id}
-        energiatodistus-id
-        {:skip-pdf-signed-assert? true}))
+    (sign-energiatodistukset! (->> (interleave
+                                     (cycle laatija-ids)
+                                     (take 2 energiatodistus-ids))
+                                   (partition 2)))
     (energiatodistus-service/delete-energiatodistus-luonnos!
       ts/*db*
       {:id (last laatija-ids)}
@@ -649,3 +652,40 @@
 
     ;; wait for emails to finish
     (Thread/sleep 100)))
+
+(t/deftest search-by-postitoimipaikka-test
+  (let [[laatija-id laatija] (-> (laatija-test-data/generate-and-insert! 1) first)
+        energiatodistus-adds (concat
+                               ;; Pyhtää / Pyttis
+                               (map #(assoc-in % [:perustiedot :postinumero] "49270")
+                                    (energiatodistus-test-data/generate-adds 2 2018 true))
+                               ;; Purola / Svartbäck
+                               (map #(assoc-in % [:perustiedot :postinumero] "49240")
+                                    (energiatodistus-test-data/generate-adds 3 2018 true)))
+        energiatodistus-ids (energiatodistus-test-data/insert!
+                              energiatodistus-adds
+                              laatija-id)]
+    (sign-energiatodistukset! (map #(vec [laatija-id %]) energiatodistus-ids))
+    {:laatija            (assoc laatija :id laatija-id)
+     :energiatodistukset (zipmap energiatodistus-ids energiatodistus-adds)}
+    (t/testing "Simple search in Finnish"
+      (let [results (search kayttaja-test-data/paakayttaja
+                            [[["bilingual-ieq" "postinumero.label" "purola"]]]
+                            nil nil nil)]
+        (t/is (= (count results) 3))
+        (doseq [et results]
+          (t/is (= (get-in et [:perustiedot :postinumero]) "49240")))))
+    (t/testing "Search in Swedish, using caps"
+      (let [results (search kayttaja-test-data/paakayttaja
+                            [[["bilingual-ieq" "postinumero.label" "PYTTIS"]]]
+                            nil nil nil)]
+        (t/is (= (count results) 2))
+        (doseq [et results]
+          (t/is (= (get-in et [:perustiedot :postinumero]) "49270")))))
+    (t/testing "Search with some other predicate should fail"
+      (let [results (search kayttaja-test-data/paakayttaja
+                            [[["=" "postinumero.label" "PYTTIS"]]]
+                            nil nil nil)]
+        (t/is (= (count results) 2))
+        (doseq [et results]
+          (t/is (= (get-in et [:perustiedot :postinumero]) "49270")))))))
