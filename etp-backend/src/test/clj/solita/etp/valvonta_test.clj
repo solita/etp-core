@@ -131,16 +131,26 @@
 
 (def original-html->pdf pdf/html->pdf)
 
+(defn html->pdf-with-assertion [doc-path-to-compare-to html->pdf-called? html-doc output-stream]
+  ;; Mocking the pdf rendering function so that the document contents can be asserted
+  ;; Compare the created document to the snapshot
+  (t/is (= html-doc
+           (slurp (io/resource doc-path-to-compare-to))))
+  (reset! html->pdf-called? true)
+  ;;Calling original implementation to ensure the functionality doesn't change
+  (original-html->pdf html-doc output-stream))
+
 (t/deftest kaytonvalvonta-kuulemiskirje-test
-  (t/testing "Käytönvalvonta / Kuulemiskirje toimenpide is created successfully and document is generated with correct information"
-    (first (test-kayttajat/insert!
-             [{:etunimi  "Asian"
-               :sukunimi "Tuntija"
-               :email    "testi@ara.fi"
-               :puhelin  "0504363675457"
-               :rooli    2
-               :virtu    {:localid      "vvirkamies"
-                          :organisaatio "testivirasto.fi"}}]))
+  ;; Add the main user for the following tests
+  (first (test-kayttajat/insert!
+           [{:etunimi  "Asian"
+             :sukunimi "Tuntija"
+             :email    "testi@ara.fi"
+             :puhelin  "0504363675457"
+             :rooli    2
+             :virtu    {:localid      "vvirkamies"
+                        :organisaatio "testivirasto.fi"}}]))
+  (t/testing "Käytönvalvonta / Kuulemiskirje toimenpide is created successfully for yksityishenkilö and document is generated with correct information"
     ;; Add the valvonta and previous toimenpides
     ;; so that käytönvalvonta / kuulemiskirje toimenpide can be created
     (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite        "Testitie 5"
@@ -190,19 +200,77 @@
                                                        (.atStartOfDay time/timezone)
                                                        .toInstant)
                                                    time/timezone)
-                      #'pdf/html->pdf (fn [html-doc output-stream]
-                                        ;; Mocking the pdf rendering function so that the document contents can be asserted
-                                        ;; Compare the created document to the snapshot
-                                        (t/is (= html-doc
-                                                 (slurp (io/resource "documents/kaskypaatoskuulemiskirje.html"))))
-                                        (reset! html->pdf-called? true)
-                                        ;;Calling original implementation to ensure the functionality doesn't change
-                                        (original-html->pdf html-doc output-stream))}
+                      #'pdf/html->pdf (partial html->pdf-with-assertion
+                                               "documents/kaskypaatoskuulemiskirje-yksityishenkilo.html"
+                                               html->pdf-called?)}
         (let [new-toimenpide {:type-id       7
                               :deadline-date (str (LocalDate/of 2023 7 22))
                               :template-id   5
                               :description   "Lähetetään kuulemiskirje, kun myyjä ei ole hankkinut energiatodistusta eikä vastannut kehotukseen tai varoitukseen"
                               :fine          800}
+              response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
+                                    (mock/json-body new-toimenpide)
+                                    (with-virtu-user)
+                                    (mock/header "Accept" "application/json")))]
+          (t/is (true? @html->pdf-called?))
+          (t/is (= (:status response) 201))))))
+
+  (t/testing "Käytönvalvonta / Kuulemiskirje toimenpide is created successfully for yritys and document is generated with correct information"
+    ;; Add the valvonta and previous toimenpides
+    ;; so that käytönvalvonta / kuulemiskirje toimenpide can be created
+    (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite        "Testitie 5"
+                                                               :postinumero       "90100"
+                                                               :ilmoituspaikka-id 0})
+          kehotus-timestamp (-> (LocalDate/of 2023 6 12)
+                                (.atStartOfDay (ZoneId/systemDefault))
+                                .toInstant)
+          varoitus-timestamp (-> (LocalDate/of 2023 7 13)
+                                 (.atStartOfDay (ZoneId/systemDefault))
+                                 .toInstant)
+          html->pdf-called? (atom false)]
+
+      ;; Add osapuoli to the valvonta
+      (valvonta-service/add-yritys! ts/*db*
+                                     valvonta-id
+                                     {:nimi                     "Yritysomistaja"
+                                      :toimitustapa-description nil
+                                      :toimitustapa-id          0
+                                      :email                    nil
+                                      :rooli-id                 0
+                                      :jakeluosoite             "Testikatu 12"
+                                      :vastaanottajan-tarkenne "Lisäselite C/O"
+                                      :postitoimipaikka         "Helsinki"
+                                      :puhelin                  nil
+                                      :postinumero              "00100"
+                                      :rooli-description        ""
+                                      :maa                      "FI"})
+
+      ;; Add kehotus-toimenpide to the valvonta
+      (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id   valvonta-id
+                                            :type_id       2
+                                            :create_time   kehotus-timestamp
+                                            :publish_time  kehotus-timestamp
+                                            :deadline_date (LocalDate/of 2023 7 12)})
+      ;; Add varoitus-toimenpide to the valvonta
+      (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id   valvonta-id
+                                            :type_id       3
+                                            :create_time   varoitus-timestamp
+                                            :publish_time  varoitus-timestamp
+                                            :deadline_date (LocalDate/of 2023 8 13)})
+
+      ;; Mock the current time to ensure that the document has a fixed date
+      (with-bindings {#'time/clock    (Clock/fixed (-> (LocalDate/of 2023 6 26)
+                                                       (.atStartOfDay time/timezone)
+                                                       .toInstant)
+                                                   time/timezone)
+                      #'pdf/html->pdf (partial html->pdf-with-assertion
+                                               "documents/kaskypaatoskuulemiskirje-yritys.html"
+                                               html->pdf-called?)}
+        (let [new-toimenpide {:type-id       7
+                              :deadline-date (str (LocalDate/of 2023 7 22))
+                              :template-id   5
+                              :description   "Lähetetään kuulemiskirje, kun myyjä ei ole hankkinut energiatodistusta eikä vastannut kehotukseen tai varoitukseen"
+                              :fine          9000}
               response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                     (mock/json-body new-toimenpide)
                                     (with-virtu-user)
