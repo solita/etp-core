@@ -143,6 +143,19 @@
   [(str (field->sql field search-schema) " = any (?)")
    (mapv #(coerce-value! field % search-schema) values)])
 
+(defn ->bilingual-expression [base-expression]
+  (fn [search-schema operator field value]
+    (let [field-fi (str field "-fi")
+          field-sv (str field "-sv")
+          [fi-expr fi-value] (base-expression search-schema operator field-fi value)
+          [sv-expr sv-value] (base-expression search-schema operator field-sv value)]
+      [(str "((" fi-expr ") OR (" sv-expr "))")
+       fi-value sv-value])))
+
+(defn ieq-expression [search-schema _ field value]
+  [(str "lower(" (field->sql field search-schema) ") = lower(?)")
+   (coerce-value! field value search-schema)])
+
 (defn expression-seq->sql [logic-operator expression->sql expressions]
   (let [sql-expressions (map expression->sql expressions)]
     (cons (str/join (format " %s " logic-operator) (map first sql-expressions))
@@ -169,18 +182,19 @@
       (apply predicate search-schema operator field values))))
 
 (def predicates
-  {"="  infix-notation
-   ">=" infix-notation
-   "<=" infix-notation
-   ">"  infix-notation
-   "<"  infix-notation
-   "icontains" icontains-expression
-   "like"  (globbing infix-notation)
-   "ilike"  (globbing infix-notation)
-   "not ilike" infix-notation
-   "between" between-expression
-   "nil?" is-null-expression
-   "in" in-expression})
+  {"="             infix-notation
+   ">="            infix-notation
+   "<="            infix-notation
+   ">"             infix-notation
+   "<"             infix-notation
+   "icontains"     icontains-expression
+   "like"          (globbing infix-notation)
+   "ilike"         (globbing infix-notation)
+   "not ilike"     infix-notation
+   "between"       between-expression
+   "nil?"          is-null-expression
+   "in"            in-expression
+   "bilingual-ieq" (->bilingual-expression ieq-expression)})
 
 (defn- sql-formatter! [predicate-name]
   (if-let [formatter (predicates predicate-name)]
