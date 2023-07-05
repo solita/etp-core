@@ -56,6 +56,7 @@
      {:patevyystaso common-schema/Key
       :toteamispaivamaara common-schema/Date
       :voimassaolo-paattymisaika common-schema/Instant}}
+    {:postinumero {:label common-schema/String50}}
     (deep/map-values second search-fields/computed-fields)
     geo-schema/Search))
 
@@ -188,10 +189,23 @@
     (throw-ex-info {:type :unknown-predicate :predicate predicate-name
                     :message (str "Unknown predicate: " predicate-name)})))
 
+(def bilingual-fields #{"postinumero.label"})
+
+(defn- bilingual-expression? [[_ field _]]
+  (contains? bilingual-fields field))
+
 (defn predicate-expression->sql [search-schema expression]
   (let [predicate (first expression)]
     (try
-      (apply (sql-formatter! predicate) (concat [search-schema] expression))
+      (if (bilingual-expression? expression)
+        (let [formatter (sql-formatter! predicate)
+              fi-expression (update expression 1 #(str % "-fi"))
+              sv-expression (update expression 1 #(str % "-sv"))
+              [fi-sql & fi-values] (apply formatter (concat [search-schema] fi-expression))
+              [sv-sql & sv-values] (apply formatter (concat [search-schema] sv-expression))]
+          (concat [(str "((" fi-sql ")or(" sv-sql "))")]
+                  fi-values sv-values))
+        (apply (sql-formatter! predicate) (concat [search-schema] expression)))
       (catch ArityException _
         (throw-ex-info {:type :invalid-arguments :predicate predicate
                         :message (str "Wrong number of arguments: " (rest expression)
