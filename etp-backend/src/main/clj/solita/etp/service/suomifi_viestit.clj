@@ -9,12 +9,14 @@
             [clj-http.conn-mgr :as conn-mgr]
             [clojure.string :as str]
             [solita.etp.exception :as exception])
-  (:import (org.apache.ws.security WSConstants WSEncryptionPart)
-           (org.apache.ws.security.components.crypto CryptoFactory)
-           (org.apache.ws.security.message WSSecSignature WSSecHeader WSSecTimestamp)
-           (java.util Properties)
-           (java.io ByteArrayInputStream)
+  (:import (java.util Properties)
+           (java.io ByteArrayInputStream ByteArrayOutputStream)
+           (org.apache.xml.security Init)
            (org.apache.axis.soap MessageFactoryImpl)
+           (org.apache.wss4j.common WSEncryptionPart)
+           (org.apache.wss4j.common.crypto CryptoFactory)
+           (org.apache.wss4j.dom WSConstants)
+           (org.apache.wss4j.dom.message WSSecHeader WSSecSignature WSSecTimestamp)
            (org.apache.xml.security.c14n Canonicalizer)
            (org.apache.axis.configuration NullProvider)
            (org.apache.axis.client AxisClient)
@@ -22,6 +24,7 @@
 
 ;; register default algorithms
 (Canonicalizer/registerDefaultAlgorithms)
+(Init/init)
 
 (defn- request-create-xml [data]
   (clostache/render-resource (str "suomifi/viesti.xml") data))
@@ -30,7 +33,7 @@
   (log/debug request)
   (if config/suomifi-viestit-endpoint-url
     (http/post config/suomifi-viestit-endpoint-url
-               (cond-> {:body request
+               (cond-> {:body             request
                         :throw-exceptions false}
                        config/suomifi-viestit-proxy?
                        (assoc
@@ -50,9 +53,9 @@
 
 (defn- document->signed-request [document]
   (let [c14n (Canonicalizer/getInstance Canonicalizer/ALGO_ID_C14N_WITH_COMMENTS)
-        canonicalMessage (.canonicalizeSubtree c14n document)
-        in (ByteArrayInputStream. canonicalMessage)]
-    (-> (.createMessage (MessageFactoryImpl.) nil in)
+        os (ByteArrayOutputStream.)]
+    (.canonicalizeSubtree c14n document os)
+    (-> (.createMessage (MessageFactoryImpl.) nil (ByteArrayInputStream. (.toByteArray os)))
         .getSOAPEnvelope .getAsString)))
 
 (defn- signSOAPEnvelope [request keystore-file keystore-password keystore-alias]
@@ -63,21 +66,21 @@
                      (.setProperty "signer.username" keystore-alias)
                      (.setProperty "signer.password" keystore-password))
         crypto (CryptoFactory/getInstance properties)
-        signer (doto (WSSecSignature.)
+        doc (raw-request->document request)
+        header (doto (WSSecHeader. doc)
+                 (.setMustUnderstand true)
+                 (.insertSecurityHeader))
+        signer (doto (WSSecSignature. header)
                  (.setUserInfo keystore-alias keystore-password)
                  (.setKeyIdentifierType WSConstants/BST_DIRECT_REFERENCE)
                  (.setUseSingleCertificate true))
-        doc (raw-request->document request)
-        header (doto (WSSecHeader.)
-                 (.setMustUnderstand true)
-                 (.insertSecurityHeader doc))
-        timestamp (doto (WSSecTimestamp.)
-                    (.setTimeToLive 60))
-        build-doc (.build timestamp doc header)
         timestampPart (WSEncryptionPart. "Timestamp", WSConstants/WSU_NS, "")
         bodyPart (WSEncryptionPart. WSConstants/ELEM_BODY, WSConstants/URI_SOAP11_ENV, "")]
-    (.setParts signer [timestampPart bodyPart])
-    (document->signed-request (.build signer build-doc crypto header))))
+    (doto (WSSecTimestamp. header)
+      (.setTimeToLive 60)
+      (.build))
+    (.addAll (.getParts signer) (list timestampPart bodyPart))
+    (document->signed-request (.build signer crypto))))
 
 (defn- read-response->xml [response]
   (-> response xml/string->xml xml/without-soap-envelope first xml/with-kebab-case-tags))
@@ -105,12 +108,12 @@
   (throw
     (ex-info
       (str "Sending suomifi message " (-> request :sanoma :tunniste) " failed.")
-      {:type     type
+      {:type         type
        :endpoint-url config/suomifi-viestit-endpoint-url
-       :request  (select-keys* request [[:sanoma :tunniste]
-                                        [:kysely :kohteet :nimike]])
-       :response response
-       :cause    (ex-data cause)}
+       :request      (select-keys* request [[:sanoma :tunniste]
+                                            [:kysely :kohteet :nimike]])
+       :response     response
+       :cause        (ex-data cause)}
       cause)))
 
 (defn- assert-status! [response]
@@ -121,8 +124,8 @@
 (defn- read-response [request response]
   (try
     (some-> response assert-status! :body response-parser coerce-response!)
-  (catch Throwable t
-    (throw-ex-info! :suomifi-viestit-invalid-response request response t))))
+    (catch Throwable t
+      (throw-ex-info! :suomifi-viestit-invalid-response request response t))))
 
 (defn- handle-request! [request keystore-file keystore-password keystore-alias]
   (try
