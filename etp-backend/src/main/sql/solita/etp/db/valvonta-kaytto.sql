@@ -333,22 +333,31 @@ SELECT id
 FROM vk_toimenpidetype
 WHERE manually_deliverable is true;
 
--- name: past-dates-for-kaskypaatos-kuulemiskirje
-with kehotus as (select create_time, deadline_date
+-- name: past-dates-for-kaskypaatos-toimenpiteet
+with kehotus as (select create_time, deadline_date, valvonta_id
                  from vk_toimenpide
                  where valvonta_id = :valvonta-id
                    and type_id = 2
                  order by create_time desc
                  LIMIT 1),
-     varoitus as (select create_time, deadline_date
+     varoitus as (select create_time, deadline_date, valvonta_id
                   from vk_toimenpide
                   where valvonta_id = :valvonta-id
                     and type_id = 3
                   order by create_time desc
-                  LIMIT 1)
-select kehotus.create_time::date  as kehotus_pvm,
-       kehotus.deadline_date      as kehotus_maarapaiva,
-       varoitus.create_time::date as varoitus_pvm,
-       varoitus.deadline_date     as varoitus_maarapaiva
-from kehotus,
-     varoitus;
+                  LIMIT 1),
+     kuulemiskirje as (select create_time, deadline_date, valvonta_id
+                       from vk_toimenpide
+                       where valvonta_id = :valvonta-id
+                         and type_id = 7
+                       order by create_time desc
+                       LIMIT 1)
+select kehotus.create_time::date       as kehotus_pvm,
+       kehotus.deadline_date           as kehotus_maarapaiva,
+       varoitus.create_time::date      as varoitus_pvm,
+       varoitus.deadline_date          as varoitus_maarapaiva,
+       kuulemiskirje.create_time::date as kuulemiskirje_pvm,
+       kuulemiskirje.deadline_date     as kuulemiskirje_maarapaiva
+from kehotus
+         left join varoitus on kehotus.valvonta_id = varoitus.valvonta_id
+         left join kuulemiskirje on kehotus.valvonta_id = kuulemiskirje.valvonta_id;

@@ -48,13 +48,13 @@
                 (when (some? rooli) (str (:label-fi rooli) "/" (:label-sv rooli)))))
      :email (template-optional (:email osapuoli))}))
 
-(defn past-dates-for-kaskypaatos-kuulemiskirje
-  "Retrieves the dates of kehotus and varoitus toimenpiteet with
+(defn past-dates-for-kaskypaatos-toimenpiteet
+  "Retrieves the dates of kehotus, varoitus and kuulemiskirje toimenpiteet with
    the given valvonta-id and formats them for displaying in a document"
   [db valvonta-id]
   ;; TODO: Kun päivitetään Clojure 1.11:een, voidaan käyttää vain update-vals-funktiota
   (let [data (->> {:valvonta-id valvonta-id}
-                  (valvonta-kaytto-db/past-dates-for-kaskypaatos-kuulemiskirje db)
+                  (valvonta-kaytto-db/past-dates-for-kaskypaatos-toimenpiteet db)
                   first)]
     (zipmap (keys data) (map time/format-date (vals data)))))
 
@@ -78,7 +78,7 @@
    :tiedoksi         (map (partial tiedoksi-saaja roolit) tiedoksi)
    :sakko            (:fine toimenpide)
    :aiemmat-toimenpiteet (when (toimenpide/kaskypaatos-kuulemiskirje? toimenpide)
-                           (past-dates-for-kaskypaatos-kuulemiskirje db (:id valvonta)))})
+                           (past-dates-for-kaskypaatos-toimenpiteet db (:id valvonta)))})
 
 (defn- request-id [valvonta-id toimenpide-id]
   (str valvonta-id "/" toimenpide-id))
