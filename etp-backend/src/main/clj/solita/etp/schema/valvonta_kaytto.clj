@@ -40,7 +40,7 @@
    :template-id                       (schema/maybe common-schema/Key)
    :description                       (schema/maybe schema/Str)
    (schema/optional-key :bypass-asha) schema/Bool
-   (schema/optional-key :fine)        common-schema/NonNegative})
+   (schema/optional-key :type-specific-data) {:fine common-schema/NonNegative}})
 
 (def Template
   (assoc valvonta-schema/Template

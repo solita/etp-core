@@ -203,7 +203,7 @@
   (first (db/with-db-exception-translation
            jdbc/insert! db :vk-toimenpide
            (-> toimenpide-add
-               (dissoc :bypass-asha :fine)
+               (dissoc :bypass-asha)
                (assoc
                 :diaarinumero diaarinumero
                 :valvonta-id valvonta-id
@@ -260,7 +260,7 @@
                            (find-osapuolet tx valvonta-id)
                            ilmoituspaikat)
                          (find-diaarinumero tx valvonta-id toimenpide-add))
-          sakko (:fine toimenpide-add)
+          sakko (-> toimenpide-add :type-specific-data :fine)
           toimenpide (insert-toimenpide! tx valvonta-id diaarinumero toimenpide-add)
           toimenpide-id (:id toimenpide)]
       (insert-toimenpide-osapuolet! tx valvonta-id toimenpide-id)

@@ -190,7 +190,7 @@
                               :deadline-date (str (LocalDate/of 2023 7 22))
                               :template-id   5
                               :description   "Lähetetään kuulemiskirje, kun myyjä ei ole hankkinut energiatodistusta eikä vastannut kehotukseen tai varoitukseen"
-                              :fine          800}
+                              :type-specific-data {:fine 800}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                     (mock/json-body new-toimenpide)
                                     (test-kayttajat/with-virtu-user)
@@ -253,7 +253,7 @@
                               :deadline-date (str (LocalDate/of 2023 7 22))
                               :template-id   5
                               :description   "Lähetetään kuulemiskirje, kun myyjä ei ole hankkinut energiatodistusta eikä vastannut kehotukseen tai varoitukseen"
-                              :fine          9000}
+                              :type-specific-data {:fine 9000}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                     (mock/json-body new-toimenpide)
                                     (test-kayttajat/with-virtu-user)
