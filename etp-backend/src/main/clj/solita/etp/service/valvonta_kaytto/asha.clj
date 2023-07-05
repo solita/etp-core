@@ -62,7 +62,7 @@
   {:päivä            (time/today)
    :määräpäivä       (time/format-date (:deadline-date toimenpide))
    :diaarinumero     (:diaarinumero toimenpide)
-   :valvoja          (select-keys whoami [:etunimi :sukunimi :email])
+   :valvoja          (select-keys whoami [:etunimi :sukunimi :email :puhelin])
    :omistaja-henkilo (when (osapuoli/henkilo? osapuoli)
                        (select-keys osapuoli [:etunimi :sukunimi :jakeluosoite :postinumero :postitoimipaikka]))
    :omistaja-yritys  (when (osapuoli/yritys? osapuoli)
