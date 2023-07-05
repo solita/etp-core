@@ -60,6 +60,8 @@
     (deep/map-values second search-fields/computed-fields)
     geo-schema/Search))
 
+(def bilingual-fields #{"postinumero.label"})
+
 (def public-search-schema
   (schemas->search-schema
     {:energiatodistus public-energiatodistus-schema/Energiatodistus2013}
@@ -189,23 +191,19 @@
     (throw-ex-info {:type :unknown-predicate :predicate predicate-name
                     :message (str "Unknown predicate: " predicate-name)})))
 
-(def bilingual-fields #{"postinumero.label"})
-
-(defn- bilingual-expression? [[_ field _]]
-  (contains? bilingual-fields field))
+(defn- expand-bilingual-expression [formatter search-schema predicate field & values]
+  (let [[fi-sql & fi-values] (apply formatter search-schema predicate (str field "-fi") values)
+        [sv-sql & sv-values] (apply formatter search-schema predicate (str field "-sv") values)]
+    (concat [(str "((" fi-sql ")or(" sv-sql "))")]
+            fi-values sv-values)))
 
 (defn predicate-expression->sql [search-schema expression]
-  (let [predicate (first expression)]
+  (let [[predicate field & values] expression
+        formatter (sql-formatter! predicate)]
     (try
-      (if (bilingual-expression? expression)
-        (let [formatter (sql-formatter! predicate)
-              fi-expression (update expression 1 #(str % "-fi"))
-              sv-expression (update expression 1 #(str % "-sv"))
-              [fi-sql & fi-values] (apply formatter (concat [search-schema] fi-expression))
-              [sv-sql & sv-values] (apply formatter (concat [search-schema] sv-expression))]
-          (concat [(str "((" fi-sql ")or(" sv-sql "))")]
-                  fi-values sv-values))
-        (apply (sql-formatter! predicate) (concat [search-schema] expression)))
+      (if (contains? bilingual-fields field)
+        (apply expand-bilingual-expression formatter search-schema predicate field values)
+        (apply formatter search-schema predicate field values))
       (catch ArityException _
         (throw-ex-info {:type :invalid-arguments :predicate predicate
                         :message (str "Wrong number of arguments: " (rest expression)
