@@ -16,7 +16,8 @@
    5 :closed
    ;; Uhkasakkoprosessi
    6 :court-hearing
-   7 :decision-order-hearing-letter})
+   7 :decision-order-hearing-letter
+   8 :decision-order-actual-decision})
 
 (defn type-key [type-id]
   (if-let [type-key (type-id->type-key type-id)]
