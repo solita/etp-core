@@ -39,6 +39,18 @@
 (t/deftest manually-deliverable?-test
   (t/testing "Toimenpide-type 7 document is sent manually"
     (t/is (true? (toimenpide/manually-deliverable? ts/*db* 7))))
+
   (t/testing "Toimenpide-types 0 - 6 are not sent manually"
     (doseq [toimenpide-type (range 7)]
       (t/is (false? (toimenpide/manually-deliverable? ts/*db* toimenpide-type))))))
+
+(t/deftest kaskypaatos-toimenpide?-test
+  (t/testing "Käskypäätös / kuulemiskirje is recognized as kaskypäätös-toimenpide?"
+    (t/is (true? (toimenpide/kaskypaatos-toimenpide? {:type-id 7}))))
+
+  (t/testing "Käskypäätös / varsinainen päätös is recognized as kaskypäätös-toimenpide?"
+    (t/is (true? (toimenpide/kaskypaatos-toimenpide? {:type-id 8}))))
+
+  (t/testing "Toimepidetypes with id 0-6 are not recognized as kaskypäätös-toimenpide?"
+    (doseq [toimenpide-type (range 7)]
+      (t/is (false? (toimenpide/kaskypaatos-toimenpide? {:type-id toimenpide-type}))))))

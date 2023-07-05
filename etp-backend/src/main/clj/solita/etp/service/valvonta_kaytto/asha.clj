@@ -77,7 +77,7 @@
                       :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
    :tiedoksi         (map (partial tiedoksi-saaja roolit) tiedoksi)
    :sakko            (:fine toimenpide)
-   :aiemmat-toimenpiteet (when (toimenpide/kaskypaatos-kuulemiskirje? toimenpide)
+   :aiemmat-toimenpiteet (when (toimenpide/kaskypaatos-toimenpide? toimenpide)
                            (past-dates-for-kaskypaatos-toimenpiteet db (:id valvonta)))})
 
 (defn- request-id [valvonta-id toimenpide-id]
