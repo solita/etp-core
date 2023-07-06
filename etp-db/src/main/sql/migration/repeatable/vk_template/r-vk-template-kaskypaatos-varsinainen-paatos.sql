@@ -54,9 +54,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     {{postinumero}} {{postitoimipaikka}}{{/kohde}} sijaitsevalle rakennukselle energiatodistuksen viimeistään
     {{määräpäivä}} ja
     esittämään energiatodistuksen ARAlle. ARA asettaa käskyn tehosteeksi uhkasakkolain (1113/1990) 6 §:ssä tarkoitetun
-    kiinteän uhkasakon.
-    <!--  TODO: Onko eri sakon suuruus kuin aiemmin ilmoitettu?  -->
-    Uhkasakon suuruus on {{sakko}} euroa. Uhkasakko tuomitaan maksettavaksi, mikäli ARAn käskyä ei
+    kiinteän uhkasakon. Uhkasakon suuruus on {{#tyyppikohtaiset-tiedot}}{{fine}}{{/tyyppikohtaiset-tiedot}} euroa. Uhkasakko tuomitaan maksettavaksi, mikäli ARAn käskyä ei
     ole annetussa määräajassa noudatettu.</p>
 
 <h2>Kuuleminen</h2>
@@ -66,10 +64,10 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     [ARA-05.03.01-202x-xxx]) Asianosaiselle uhkasakkolain 22 §:n ja
     siinä viitatun hallintolain (434/2003) 34 §:n mukaisesti ennen asian ratkaisemista tilaisuuden lausua
     mielipiteensä asiasta sekä antaa selityksensä sellaisista vaatimuksista ja selvityksistä, jotka saattavat
-    vaikuttaa asian ratkaisuun. Kuulemiskirjeessä ARA kertoi, että uhkasakon määrä on arviolta {{sakko}} euroa.</p>
+    vaikuttaa asian ratkaisuun. Kuulemiskirjeessä ARA kertoi, että uhkasakon määrä on arviolta {{#tyyppikohtaiset-tiedot}}{{kuulemiskirje-sakko}}{{/tyyppikohtaiset-tiedot}} euroa.</p>
 
 <!--TODO: Halutaanko tähän oikeasti se laatikko-->
-[Asianomaisen vastauksen tila ja vastaus]
+{{vastaus}}
 
 <h2>Päätöksen perustelut</h2>
 
@@ -109,7 +107,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     energiatodistus. Käskyä voidaan tehostaa uhkasakolla, josta säädetään uhkasakkolaissa.</p>
 
 <!--TODO: Halutaanko tähän oikeasti se laatikko-->
-[Kannanotto vastineeseen]
+{{kannanotto}}
 
 <h2>Sovelletut oikeusohjeet</h2>
 
@@ -121,7 +119,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 
 <h2>Muutoksenhaku</h2>
 
-<p>Tähän päätökseen tyytymätön saa hakea siihen muutosta [Maakunnan tms.]* hallinto-oikeudelta. Valitus on tehtävä ja
+<p>Tähän päätökseen tyytymätön saa hakea siihen muutosta {{hallinto-oikeus}} hallinto-oikeudelta. Valitus on tehtävä ja
     toimitettava edellä mainittuun hallinto-oikeuteen 30 päivän kuluessa tämän päätöksen tiedoksisaannista.</p>
 
 <hr/>
