@@ -192,9 +192,10 @@
                     :message (str "Unknown predicate: " predicate-name)})))
 
 (defn- expand-bilingual-expression [formatter search-schema predicate field & values]
-  (let [[fi-sql & fi-values] (apply formatter search-schema predicate (str field "-fi") values)
+  (let [logical-op (if (= predicate "not ilike") "and" "or")
+        [fi-sql & fi-values] (apply formatter search-schema predicate (str field "-fi") values)
         [sv-sql & sv-values] (apply formatter search-schema predicate (str field "-sv") values)]
-    (concat [(str "((" fi-sql ")or(" sv-sql "))")]
+    (concat [(str "((" fi-sql ")" logical-op "(" sv-sql "))")]
             fi-values sv-values)))
 
 (defn predicate-expression->sql [search-schema expression]
