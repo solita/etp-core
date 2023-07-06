@@ -96,9 +96,7 @@
 (def computed-fields
   "Computed field consists of sql expression and value schema [sql, schema]"
   {:energiatodistus
-   {:perustiedot
-    {:nimi ["energiatodistus.pt$nimi_fi || '__' || energiatodistus.pt$nimi_fi" schema/Str]}
-    :lahtotiedot
+   {:lahtotiedot
     {:rakennusvaippa (deep/deep-merge ua-fields osuus-lampohaviosta-fields)}
     :tulokset
     {:kaytettavat-energiamuodot

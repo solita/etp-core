@@ -51,7 +51,8 @@
     {:energiatodistus energiatodistus-schema/Energiatodistus2018}
     {:energiatodistus
      {:perustiedot
-      {:postinumero schema/Int}}}
+      {:nimi        schema/Str
+       :postinumero schema/Int}}}
     {:laatija
      {:patevyystaso common-schema/Key
       :toteamispaivamaara common-schema/Date
@@ -60,7 +61,8 @@
     (deep/map-values second search-fields/computed-fields)
     geo-schema/Search))
 
-(def bilingual-fields #{"postinumero.label"})
+(def bilingual-fields #{"energiatodistus.perustiedot.nimi"
+                        "postinumero.label"})
 
 (def public-search-schema
   (schemas->search-schema
