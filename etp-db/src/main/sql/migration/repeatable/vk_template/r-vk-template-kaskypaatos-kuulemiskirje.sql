@@ -68,7 +68,7 @@ values (5, 'Käskypäätös / kuulemiskirje', 'Käskypäätös / kuulemiskirje (
 {{/aiemmat-toimenpiteet}}
 
 <p>ARA voi energiatodistuslain 24 §:n mukaisena viimesijaisena keinona antaa käskypäätöksen, jolla Teidät velvoitetaan
-    hankkimaan energiatodistus. Käskyä voidaan tehostaa uhkasakolla, jonka määrä on arviolta {{sakko}} euroa.</p>
+    hankkimaan energiatodistus. Käskyä voidaan tehostaa uhkasakolla, jonka määrä on arviolta {{#tyyppikohtaiset-tiedot}}{{fine}}{{/tyyppikohtaiset-tiedot}} euroa.</p>
 
 <h2>Asianosaisen kuuleminen</h2>
 
@@ -150,7 +150,7 @@ energia-asiantuntija
 {{/aiemmat-toimenpiteet}}
 
 <p>ARA kan som sista utväg i enlighet med 24 § i lagen om energicerti-fikat meddela ett beslut genom vilket Ni åläggs
-    att skaffa ett energi-certifikat. Ordern kan förenas med vite som uppgår till uppskatt-ningsvis {{sakko}} euro.</p>
+    att skaffa ett energi-certifikat. Ordern kan förenas med vite som uppgår till uppskatt-ningsvis {{#tyyppikohtaiset-tiedot}}{{fine}}{{/tyyppikohtaiset-tiedot}} euro.</p>
 
 <h2>Hörande av parter</h2>
 

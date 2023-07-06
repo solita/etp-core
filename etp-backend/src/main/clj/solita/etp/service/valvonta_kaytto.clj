@@ -260,7 +260,6 @@
                            (find-osapuolet tx valvonta-id)
                            ilmoituspaikat)
                          (find-diaarinumero tx valvonta-id toimenpide-add))
-          sakko (-> toimenpide-add :type-specific-data :fine)
           toimenpide (insert-toimenpide! tx valvonta-id diaarinumero toimenpide-add)
           toimenpide-id (:id toimenpide)]
       (insert-toimenpide-osapuolet! tx valvonta-id toimenpide-id)
@@ -271,7 +270,7 @@
           (let [find-toimenpide-osapuolet (comp flatten (juxt find-toimenpide-henkilot find-toimenpide-yritykset))
                 osapuolet (find-toimenpide-osapuolet tx (:id toimenpide))]
             (asha/log-toimenpide!
-              tx aws-s3-client whoami valvonta (assoc toimenpide :fine sakko)
+              tx aws-s3-client whoami valvonta toimenpide
               osapuolet ilmoituspaikat roolit)
             (when-not (toimenpide/manually-deliverable? db (:type-id toimenpide))
               (send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
