@@ -70,11 +70,6 @@ services:
     build: ./sftp
     ports:
       - 127.0.0.1:2222:22
-    volumes:
-      - type: bind
-        source: ./sftp/ssh
-        target: /etc/ssh
-        read_only: true
 
   smtp:
     build: ./smtp
