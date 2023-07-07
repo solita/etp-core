@@ -52,11 +52,11 @@
       (-> axisMessage .getSOAPEnvelope .getAsDocument))))
 
 (defn- document->signed-request [document]
-  (let [c14n (Canonicalizer/getInstance Canonicalizer/ALGO_ID_C14N_WITH_COMMENTS)
-        os (ByteArrayOutputStream.)]
-    (.canonicalizeSubtree c14n document os)
-    (-> (.createMessage (MessageFactoryImpl.) nil (ByteArrayInputStream. (.toByteArray os)))
-        .getSOAPEnvelope .getAsString)))
+  (let [c14n (Canonicalizer/getInstance Canonicalizer/ALGO_ID_C14N_WITH_COMMENTS)]
+    (with-open [os (ByteArrayOutputStream.)]
+      (.canonicalizeSubtree c14n document os)
+      (-> (.createMessage (MessageFactoryImpl.) nil (ByteArrayInputStream. (.toByteArray os)))
+          .getSOAPEnvelope .getAsString))))
 
 (defn- signSOAPEnvelope [request keystore-file keystore-password keystore-alias]
   (let [properties (doto (Properties.)

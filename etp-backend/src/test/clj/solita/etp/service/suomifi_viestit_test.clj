@@ -2,7 +2,8 @@
   (:require [clojure.test :as t]
             [solita.etp.test-system :as ts]
             [clojure.java.io :as io]
-            [solita.etp.service.valvonta-kaytto.suomifi-viestit :as suomifi-viestit]
+            [solita.etp.service.valvonta-kaytto.suomifi-viestit :as valvonta-kaytto.suomifi-viestit]
+            [solita.etp.service.suomifi-viestit :as service.suomifi-viestit]
             [clojure.string :as str]
             [solita.etp.service.pdf :as pdf])
   (:import (java.time LocalDate)
@@ -34,7 +35,7 @@
 
 (defn- difference-listener []
   (reify ComparisonListener (comparisonPerformed [_ comparison _]
-                              (t/is false comparison))))
+                              (t/is false comparison))))    ; ComparisonListener is called when comparison fails. Fail the test
 
 (defn- empty-node? [^Comparison$Detail target]
   (str/blank? (-> target .getTarget .getTextContent)))
@@ -103,36 +104,36 @@
              :laskutus-salasana   "0000"})
 
 (t/deftest send-message-to-osapuoli-test
-  (with-bindings {#'solita.etp.service.suomifi-viestit/post! (handle-request "suomifi/viesti-request.xml"
+  (with-bindings {#'service.suomifi-viestit/post! (handle-request "suomifi/viesti-request.xml"
                                                                              "suomifi/viesti-response.xml"
                                                                              202)
-                  #'suomifi-viestit/now                      (fn [] "2021-09-08T06:21:03.625667Z")
-                  #'suomifi-viestit/bytes->base64            (fn [_] "dGVzdGk=")}
+                  #'valvonta-kaytto.suomifi-viestit/now                      (fn [] "2021-09-08T06:21:03.625667Z")
+                  #'valvonta-kaytto.suomifi-viestit/bytes->base64            (fn [_] "dGVzdGk=")}
 
-    (t/is (= (:sanoma-tunniste (suomifi-viestit/send-message-to-osapuoli! valvonta toimenpide osapuoli document config))
+    (t/is (= (:sanoma-tunniste (valvonta-kaytto.suomifi-viestit/send-message-to-osapuoli! valvonta toimenpide osapuoli document config))
              "ARA-05.03.02-2021-31-ETP-KV-1-2-PERSON-1"))))
 
 (t/deftest send-message-to-osapuoli-id-already-exists-test
-  (with-bindings {#'solita.etp.service.suomifi-viestit/post! (handle-request "suomifi/viesti-request.xml"
+  (with-bindings {#'service.suomifi-viestit/post! (handle-request "suomifi/viesti-request.xml"
                                                                              "suomifi/viesti-id-already-exists-response.xml"
                                                                              200)
-                  #'suomifi-viestit/now                      (fn []
+                  #'valvonta-kaytto.suomifi-viestit/now                      (fn []
                                                                "2021-09-08T06:21:03.625667Z")
-                  #'suomifi-viestit/bytes->base64            (fn [_]
+                  #'valvonta-kaytto.suomifi-viestit/bytes->base64            (fn [_]
                                                                "dGVzdGk=")}
     (t/is (thrown-with-msg?
             clojure.lang.ExceptionInfo
             #"Sending suomifi message ARA-05.03.02-2021-31-ETP-KV-1-2-PERSON-1 failed."
-            (suomifi-viestit/send-message-to-osapuoli! valvonta toimenpide osapuoli document config)))))
+            (valvonta-kaytto.suomifi-viestit/send-message-to-osapuoli! valvonta toimenpide osapuoli document config)))))
 
 (t/deftest send-message-to-osapuoli-with-signing-test
-  (with-bindings {#'solita.etp.service.suomifi-viestit/post! (handle-request-with-xml-compare "suomifi/viesti-request-signed.xml"
+  (with-bindings {#'service.suomifi-viestit/post! (handle-request-with-xml-compare "suomifi/viesti-request-signed.xml"
                                                                                               "suomifi/viesti-response.xml"
                                                                                               202)
-                  #'suomifi-viestit/now                      (fn [] "2021-09-08T06:21:03.625667Z")
-                  #'suomifi-viestit/bytes->base64            (fn [_] "dGVzdGk=")}
+                  #'valvonta-kaytto.suomifi-viestit/now                      (fn [] "2021-09-08T06:21:03.625667Z")
+                  #'valvonta-kaytto.suomifi-viestit/bytes->base64            (fn [_] "dGVzdGk=")}
     (let [config-with-keystore (merge config {:keystore-file     (.getPath (io/resource "suomifi/store.jks"))
                                               :keystore-password "password"
                                               :keystore-alias    "default"})]
-      (t/is (= (:sanoma-tunniste (suomifi-viestit/send-message-to-osapuoli! valvonta toimenpide osapuoli document config-with-keystore))
+      (t/is (= (:sanoma-tunniste (valvonta-kaytto.suomifi-viestit/send-message-to-osapuoli! valvonta toimenpide osapuoli document config-with-keystore))
                "ARA-05.03.02-2021-31-ETP-KV-1-2-PERSON-1")))))
