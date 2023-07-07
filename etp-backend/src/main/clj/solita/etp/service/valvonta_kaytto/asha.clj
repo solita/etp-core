@@ -19,7 +19,9 @@
                    :rfi-order {:type "Kirje" :filename "kehotus.pdf"}
                    :rfi-warning {:type "Kirje" :filename "varoitus.pdf"}
                    :decision-order-hearing-letter {:type "Kirje"
-                                                   :filename "kuulemiskirje.pdf"}}]
+                                                   :filename "kuulemiskirje.pdf"}
+                   :decision-order-actual-decision {:type "Kirje"
+                                                    :filename "varsinainen-paatos.pdf"}}]
     (get documents type-key)))
 
 (defn find-kaytto-valvonta-documents [db valvonta-id]
@@ -125,7 +127,14 @@
                                    :processing-action {:name                 "Kuulemiskirje käskypäätöksestä"
                                                        :reception-date       (Instant/now)
                                                        :contacting-direction "SENT"
-                                                       :contact              (map osapuoli->contact osapuolet)}}})
+                                                       :contact              (map osapuoli->contact osapuolet)}}
+   :decision-order-actual-decision {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                        :processing-action {:name-identity "Päätöksenteko"}}
+                                    :document (toimenpide-type->document (:type-id toimenpide))
+                                    :processing-action {:name                 "Käskypäätös"
+                                                        :reception-date       (Instant/now)
+                                                        :contacting-direction "SENT"
+                                                        :contact              (map osapuoli->contact osapuolet)}}})
 
 (defn- resolve-processing-action [toimenpide osapuolet]
   (let [processing-actions (available-processing-actions toimenpide osapuolet)
