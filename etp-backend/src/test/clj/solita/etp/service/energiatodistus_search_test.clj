@@ -666,8 +666,7 @@
                               energiatodistus-adds
                               laatija-id)]
     (sign-energiatodistukset! (map #(vec [laatija-id %]) energiatodistus-ids))
-    {:laatija            (assoc laatija :id laatija-id)
-     :energiatodistukset (zipmap energiatodistus-ids energiatodistus-adds)}
+
     (t/testing "Simple search in Finnish"
       (let [results (search kayttaja-test-data/paakayttaja
                             [[["ilike" "postinumero.label" "purola"]]]
@@ -689,3 +688,44 @@
         (t/is (= (count results) 2))
         (doseq [et results]
           (t/is (= (get-in et [:perustiedot :postinumero]) "49270")))))))
+
+(t/deftest search-by-nimi-both-languages-test
+  (let [[laatija-id _] (-> (laatija-test-data/generate-and-insert! 1) first)
+        energiatodistus-adds (concat
+                               (map (fn [et]
+                                      (-> et
+                                          (assoc-in [:perustiedot :nimi-fi] "Talo 12499")
+                                          (assoc-in [:perustiedot :nimi-sv] "Hus 12499")))
+                                    (energiatodistus-test-data/generate-adds 1 2018 true))
+                               (energiatodistus-test-data/generate-adds 3 2018 true))
+        energiatodistus-ids (energiatodistus-test-data/insert!
+                              energiatodistus-adds
+                              laatija-id)]
+    (sign-energiatodistukset! (map #(vec [laatija-id %]) energiatodistus-ids))
+
+    (t/testing "Simple search in Finnish"
+      (let [results (search kayttaja-test-data/paakayttaja
+                            [[["ilike" "energiatodistus.perustiedot.nimi" "%Talo 12499%"]]]
+                            nil nil nil)]
+        (t/is (= (count results) 1))
+        (doseq [et results]
+          (t/is (= (get-in et [:perustiedot :nimi-fi]) "Talo 12499"))
+          (t/is (= (get-in et [:perustiedot :nimi-sv]) "Hus 12499")))))
+    (t/testing "Search in Swedish, using caps"
+      (let [results (search kayttaja-test-data/paakayttaja
+                            [[["ilike" "energiatodistus.perustiedot.nimi" "%Hus 12499%"]]]
+                            nil nil nil)]
+        (t/is (= (count results) 1))
+        (doseq [et results]
+          (t/is (= (get-in et [:perustiedot :nimi-fi]) "Talo 12499"))
+          (t/is (= (get-in et [:perustiedot :nimi-sv]) "Hus 12499")))))
+    (t/testing "Negation"
+      (let [results (search kayttaja-test-data/paakayttaja
+                            [[["not ilike" "energiatodistus.perustiedot.nimi" "%12499%"]]]
+                            nil nil nil)]
+        (t/is (= (count results) 3))))
+    (t/testing "Negation so that it is hitting only one language"
+      (let [results (search kayttaja-test-data/paakayttaja
+                            [[["not ilike" "energiatodistus.perustiedot.nimi" "Hus 12499"]]]
+                            nil nil nil)]
+        (t/is (= (count results) 3))))))
