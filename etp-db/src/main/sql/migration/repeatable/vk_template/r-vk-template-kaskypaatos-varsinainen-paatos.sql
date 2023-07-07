@@ -17,7 +17,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 
 <div class="vastaanottaja">
     {{#omistaja-henkilo}}
-    {{sukunimi}} {{etunimi}}<br/>
+    {{etunimi}} {{sukunimi}}<br/>
     {{jakeluosoite}}<br/>
     {{postinumero}} {{postitoimipaikka}}
     {{/omistaja-henkilo}}
@@ -32,8 +32,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 <h1>Käsky hankkia energiatodistus ja uhkasakon asettaminen</h1>
 
 <div>
-    Vastaanottaja/asianosainen: {{#omistaja-henkilo}}{{sukunimi}}
-    {{etunimi}}{{/omistaja-henkilo}}{{#omistaja-yritys}}{{nimi}}{{/omistaja-yritys}}<br/>
+    Vastaanottaja/asianosainen: {{#omistaja-henkilo}}{{sukunimi}} {{etunimi}}{{/omistaja-henkilo}}{{#omistaja-yritys}}{{nimi}}{{/omistaja-yritys}}<br/>
 </div>
 
 <h2>Päätös</h2>
@@ -44,7 +43,8 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     {{/omistaja-henkilo}}
     {{#omistaja-yritys}}
     {{nimi}}
-    {{/omistaja-yritys}} (jäljempänä Asianosainen) on
+    {{/omistaja-yritys}}
+    (jäljempänä Asianosainen) on
     laiminlyönyt noudattaa rakennuksen energiatodistuksesta annetun lain (50/2013, energiatodistuslaki) 6 §:ssä
     säädettyä velvollisuutta käyttää energiatodistusta rakennuksen myyntitilanteessa. Energiatodistuslain 2 §:n mukaan
     rakennuksen omistaja vastaa siitä, että rakennuksen energiatodistus hankitaan ja että sitä tai siinä olevia tietoja
@@ -86,9 +86,8 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     säädetään uhkasakkolaissa (1113/1990).</p>
 
 <p>ARA on lähettänyt Asianosaiselle kehotuksen, sillä Asianosaisen omistamaa rakennusta osoitteessa
-    {{#kohde}}{{katuosoite}}
-    {{postinumero}} {{postitoimipaikka}}{{/kohde}} on
-    markkinoitu {{ilmoituspaikka}} -sivustolla ilman energiatodistusta.
+    {{#kohde}}{{katuosoite}} {{postinumero}} {{postitoimipaikka}} on
+    markkinoitu {{ilmoituspaikka}} -sivustolla ilman energiatodistusta.{{/kohde}}
     Kehotuksessa Asianosaista on pyydetty {{#aiemmat-toimenpiteet}}{{kehotus-maarapaiva}}{{/aiemmat-toimenpiteet}}
     mennessä antamaan ARAlle tietoa mahdollisesta energiatodistuksesta tai jos todistusta ei ole, sen
     laadinta-aikataulusta.</p>
