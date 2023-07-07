@@ -67,18 +67,19 @@
 (def YritysStatus Yritys)
 
 (def Toimenpide
-  (-> ToimenpideAdd
-      (dissoc (schema/optional-key :bypass-asha))
-      (assoc
-        :id common-schema/Key
-        :diaarinumero (schema/maybe schema/Str)
-        :author common-schema/Kayttaja
-        :create-time common-schema/Instant
-        :publish-time common-schema/Instant
-        :filename (schema/maybe schema/Str)
-        :valvonta-id common-schema/Key
-        :henkilot [Henkilo]
-        :yritykset [Yritys])))
+  {:type-id       common-schema/Key
+   :deadline-date (schema/maybe common-schema/Date)
+   :template-id   (schema/maybe common-schema/Key)
+   :description   (schema/maybe schema/Str)
+   :id            common-schema/Key
+   :diaarinumero  (schema/maybe schema/Str)
+   :author        common-schema/Kayttaja
+   :create-time   common-schema/Instant
+   :publish-time  common-schema/Instant
+   :filename      (schema/maybe schema/Str)
+   :valvonta-id   common-schema/Key
+   :henkilot      [Henkilo]
+   :yritykset     [Yritys]})
 
 (def LastToimenpide
   (schema-tools/select-keys Toimenpide
