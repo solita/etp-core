@@ -36,12 +36,14 @@
 
 (def kaskypaatos-kuulemiskirje? (partial type? :decision-order-hearing-letter))
 
+(def kaskypaatos-varsinainen-paatos? (partial type? :decision-order-actual-decision))
+
 (def kaskypaatos-toimenpide?
   (partial some-type? #{:decision-order-hearing-letter
                         :decision-order-actual-decision}))
 
 (def asha-toimenpide?
-  (partial some-type? #{:rfi-request :rfi-order :rfi-warning :decision-order-hearing-letter}))
+  (partial some-type? #{:rfi-request :rfi-order :rfi-warning :decision-order-hearing-letter :decision-order-actual-decision}))
 
 
 (def with-diaarinumero? (comp not (partial type? :case)))

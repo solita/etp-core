@@ -42,10 +42,17 @@
    :description                       (schema/maybe schema/Str)
    (schema/optional-key :bypass-asha) schema/Bool})
 
+(def KaskypaatosKuulemiskirjeData {:fine common-schema/NonNegative})
+
+(def KaskyPaatosVarsinainenPaatosData {:fine common-schema/NonNegative})
+
 (def ToimenpideAdd
   (schema/conditional
     toimenpide/kaskypaatos-kuulemiskirje?
-    (assoc ToimenpideAddBase :type-specific-data {:fine common-schema/NonNegative})
+    (assoc ToimenpideAddBase :type-specific-data KaskypaatosKuulemiskirjeData)
+
+    toimenpide/kaskypaatos-varsinainen-paatos?
+    (assoc ToimenpideAddBase :type-specific-data KaskyPaatosVarsinainenPaatosData)
     :else ToimenpideAddBase))
 
 (def Template
