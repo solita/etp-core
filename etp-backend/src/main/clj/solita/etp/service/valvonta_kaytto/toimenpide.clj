@@ -34,6 +34,8 @@
 (def case-close? (partial type? :closed))
 (def send-tiedoksi? (partial type? :rfi-request))
 
+(def kaskypaatos-kuulemiskirje? (partial type? :decision-order-hearing-letter))
+
 (def kaskypaatos-toimenpide?
   (partial some-type? #{:decision-order-hearing-letter
                         :decision-order-actual-decision}))

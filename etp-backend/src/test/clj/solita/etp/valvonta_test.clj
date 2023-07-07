@@ -294,10 +294,9 @@
                                             :valvoja-id kayttaja-id)
                                      add-valvonta-and-map-id!))
         ;; Create 6 toimenpide for each valvonta
-        toimenpiteet (->> (repeatedly 12 (fn [] (generators/complete {} valvonta-schema/ToimenpideAdd)))
+        toimenpiteet (->> (repeatedly 12 (fn [] (generators/complete {:type-id 1} valvonta-schema/ToimenpideAdd)))
                           (map vector (flatten (repeatedly (constantly [1 2]))))
                           (map (fn [[template-id toimenpide]] (assoc toimenpide :template-id template-id)))
-                          (map (fn [toimenpide] (assoc toimenpide :type-id 1)))
                           (map vector (flatten (repeat (map :id valvonnat)))))]
     (doseq [[valvonta-id toimenpide] toimenpiteet]
       (add-toimenpide-and-map-id! valvonta-id toimenpide))
@@ -319,8 +318,7 @@
                                             :valvoja-id kayttaja-id)
                                      add-valvonta-and-map-id!))
         ;; Create a toimenpide for each valvonta
-        toimenpiteet (->> (repeatedly 2 (fn [] (generators/complete {} valvonta-schema/ToimenpideAdd)))
-                          (map (fn [toimenpide] (assoc toimenpide :type-id 1)))
+        toimenpiteet (->> (repeatedly 2 (fn [] (generators/complete {:type-id 1} valvonta-schema/ToimenpideAdd)))
                           (map vector (flatten (repeatedly (constantly [1 2])))) ; Use two different templates for every other toimenpide
                           (map (fn [[template-id toimenpide]] (assoc toimenpide :template-id template-id)))
                           (map vector (flatten (repeat (map :id valvonnat))))

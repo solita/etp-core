@@ -3,6 +3,7 @@
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.geo :as geo-schema]
             [solita.etp.schema.valvonta :as valvonta-schema]
+            [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
             [schema-tools.core :as schema-tools]))
 
 (defn complete-valvonta-related-schema [schema]
@@ -34,13 +35,18 @@
      :template-id   (schema/maybe common-schema/Key)
      :description   (schema/maybe schema/Str)}))
 
-(def ToimenpideAdd
+(def ToimenpideAddBase
   {:type-id                           common-schema/Key
    :deadline-date                     (schema/maybe common-schema/Date)
    :template-id                       (schema/maybe common-schema/Key)
    :description                       (schema/maybe schema/Str)
-   (schema/optional-key :bypass-asha) schema/Bool
-   (schema/optional-key :type-specific-data) {:fine common-schema/NonNegative}})
+   (schema/optional-key :bypass-asha) schema/Bool})
+
+(def ToimenpideAdd
+  (schema/conditional
+    toimenpide/kaskypaatos-kuulemiskirje?
+    (assoc ToimenpideAddBase :type-specific-data {:fine common-schema/NonNegative})
+    :else ToimenpideAddBase))
 
 (def Template
   (assoc valvonta-schema/Template
