@@ -344,7 +344,70 @@
                                     (with-virtu-user)
                                     (mock/header "Accept" "application/json")))]
           (t/is (true? @html->pdf-called?))
-          (t/is (= (:status response) 201)))))))
+          (t/is (= (:status response) 201))))))
+
+  (t/testing "Preview api call for käskypäätös / varsinainen päätös toimenpide succeeds"
+    (t/testing "for yksityishenkilö"
+      (let [valvonta-id (valvonta-service/add-valvonta! ts/*db*
+                                                        {:katuosoite        "Testitie 5"
+                                                         :postinumero       "90100"
+                                                         :ilmoituspaikka-id 0})
+            osapuoli-id (valvonta-service/add-henkilo! ts/*db*
+                                                       valvonta-id
+                                                       {:toimitustapa-description nil
+                                                        :toimitustapa-id          0
+                                                        :email                    nil
+                                                        :rooli-id                 0
+                                                        :jakeluosoite             "Testikatu 12"
+                                                        :postitoimipaikka         "Helsinki"
+                                                        :puhelin                  nil
+                                                        :sukunimi                 "Talonomistaja"
+                                                        :postinumero              "00100"
+                                                        :henkilotunnus            "000000-0000"
+                                                        :rooli-description        ""
+                                                        :etunimi                  "Testi"
+                                                        :vastaanottajan-tarkenne  nil
+                                                        :maa                      "FI"})
+            new-toimenpide {:type-id            8
+                            :deadline-date      (str (LocalDate/of 2023 10 4))
+                            :template-id        6
+                            :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
+                            :type-specific-data {:fine 857}}
+            response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/henkilot/%s/preview" valvonta-id osapuoli-id))
+                                  (mock/json-body new-toimenpide)
+                                  (with-virtu-user)
+                                  (mock/header "Accept" "application/json")))]
+        (t/is (= (:status response) 200))))
+
+    (t/testing "for yritysomistaja"
+      (let [valvonta-id (valvonta-service/add-valvonta! ts/*db*
+                                                        {:katuosoite        "Testitie 5"
+                                                         :postinumero       "90100"
+                                                         :ilmoituspaikka-id 0})
+            osapuoli-id (valvonta-service/add-yritys! ts/*db*
+                                                      valvonta-id
+                                                      {:nimi                     "Yritysomistaja"
+                                                       :toimitustapa-description nil
+                                                       :toimitustapa-id          0
+                                                       :email                    nil
+                                                       :rooli-id                 0
+                                                       :jakeluosoite             "Testikatu 12"
+                                                       :vastaanottajan-tarkenne "Lisäselite C/O"
+                                                       :postitoimipaikka         "Helsinki"
+                                                       :puhelin                  nil
+                                                       :postinumero              "00100"
+                                                       :rooli-description        ""
+                                                       :maa                      "FI"})
+            new-toimenpide {:type-id            8
+                            :deadline-date      (str (LocalDate/of 2023 10 4))
+                            :template-id        6
+                            :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
+                            :type-specific-data {:fine 857}}
+            response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/yritykset/%s/preview" valvonta-id osapuoli-id))
+                                  (mock/json-body new-toimenpide)
+                                  (with-virtu-user)
+                                  (mock/header "Accept" "application/json")))]
+        (t/is (= (:status response) 200))))))
 
 (t/deftest adding-and-fetching-valvonta
   (let [kayttaja-id (test-kayttajat/insert-virtu-paakayttaja!)
