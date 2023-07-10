@@ -338,7 +338,8 @@
                               :deadline-date (str (LocalDate/of 2023 10 4))
                               :template-id   6
                               :description   "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
-                              :type-specific-data {:fine 857}}
+                              :type-specific-data {:fine 857
+                                                   :recipient-answered true}}
               response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                     (mock/json-body new-toimenpide)
                                     (with-virtu-user)
@@ -372,7 +373,8 @@
                             :deadline-date      (str (LocalDate/of 2023 10 4))
                             :template-id        6
                             :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
-                            :type-specific-data {:fine 857}}
+                            :type-specific-data {:fine 857
+                                                 :recipient-answered false}}
             response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/henkilot/%s/preview" valvonta-id osapuoli-id))
                                   (mock/json-body new-toimenpide)
                                   (with-virtu-user)
@@ -402,7 +404,8 @@
                             :deadline-date      (str (LocalDate/of 2023 10 4))
                             :template-id        6
                             :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
-                            :type-specific-data {:fine 857}}
+                            :type-specific-data {:fine 857
+                                                 :recipient-answered true}}
             response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/yritykset/%s/preview" valvonta-id osapuoli-id))
                                   (mock/json-body new-toimenpide)
                                   (with-virtu-user)
