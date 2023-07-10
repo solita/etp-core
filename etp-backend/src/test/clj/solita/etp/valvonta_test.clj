@@ -123,7 +123,7 @@
   ;;Calling original implementation to ensure the functionality doesn't change
   (original-html->pdf html-doc output-stream))
 
-(t/deftest kaytonvalvonta-kuulemiskirje-test
+(t/deftest kaskypaatos-kuulemiskirje-test
   ;; Add the main user for the following tests
   (first (test-kayttajat/insert!
            [{:etunimi  "Asian"
@@ -133,9 +133,9 @@
              :rooli    2
              :virtu    {:localid      "vvirkamies"
                         :organisaatio "testivirasto.fi"}}]))
-  (t/testing "Käytönvalvonta / Kuulemiskirje toimenpide is created successfully for yksityishenkilö and document is generated with correct information"
+  (t/testing "Käskypäätös / Kuulemiskirje toimenpide is created successfully for yksityishenkilö and document is generated with correct information"
     ;; Add the valvonta and previous toimenpides
-    ;; so that käytönvalvonta / kuulemiskirje toimenpide can be created
+    ;; so that käskypäätös / kuulemiskirje toimenpide can be created
     (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite        "Testitie 5"
                                                                :postinumero       "90100"
                                                                :ilmoituspaikka-id 0})
@@ -198,9 +198,9 @@
           (t/is (true? @html->pdf-called?))
           (t/is (= (:status response) 201))))))
 
-  (t/testing "Käytönvalvonta / Kuulemiskirje toimenpide is created successfully for yritys and document is generated with correct information"
+  (t/testing "Käskypäätös / Kuulemiskirje toimenpide is created successfully for yritys and document is generated with correct information"
     ;; Add the valvonta and previous toimenpides
-    ;; so that käytönvalvonta / kuulemiskirje toimenpide can be created
+    ;; so that käskypäätös / kuulemiskirje toimenpide can be created
     (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite        "Testitie 5"
                                                                :postinumero       "90100"
                                                                :ilmoituspaikka-id 0})
@@ -261,7 +261,7 @@
           (t/is (true? @html->pdf-called?))
           (t/is (= (:status response) 201)))))))
 
-(t/deftest kaytonvalvonta-varsinainen-paatos-test
+(t/deftest kaskypaatos-varsinainen-paatos-test
   ;; Add the main user for the following tests
   (first (test-kayttajat/insert!
            [{:etunimi  "Asian"
@@ -271,9 +271,9 @@
              :rooli    2
              :virtu    {:localid      "vvirkamies"
                         :organisaatio "testivirasto.fi"}}]))
-  (t/testing "Käytönvalvonta / varsinainen päätös toimenpide is created successfully for yksityishenkilö and document is generated with correct information"
+  (t/testing "Käskypäätös / varsinainen päätös toimenpide is created successfully for yksityishenkilö and document is generated with correct information"
     ;; Add the valvonta and previous toimenpides
-    ;; so that käytönvalvonta / kuulemiskirje toimenpide can be created
+    ;; so that käskypäätös / kuulemiskirje toimenpide can be created
     (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite        "Testitie 5"
                                                                :postinumero       "90100"
                                                                :ilmoituspaikka-id 0})
