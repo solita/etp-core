@@ -60,13 +60,23 @@
                   first)]
     (zipmap (keys data) (map time/format-date (vals data)))))
 
-(defn format-type-specific-data [toimenpide]
-  (-> toimenpide
-      :type-specific-data
-      (assoc :vastaus (str (if (-> toimenpide :type-specific-data :recipient-answered)
-                             "Asianosainen antoi vastineen kuulemiskirjeeseen. "
-                             "Asianosainen ei vastannut kuulemiskirjeeseen. ")
-                           (-> toimenpide :type-specific-data :answer-commentary)))))
+(defmulti format-type-specific-data
+          (fn [toimenpide] (-> toimenpide :type-id toimenpide/type-key)))
+
+(defmethod format-type-specific-data :decision-order-actual-decision [toimenpide]
+  (let [recipient-answered? (-> toimenpide :type-specific-data :recipient-answered)
+        answer-commentary (-> toimenpide :type-specific-data :answer-commentary)]
+    (-> toimenpide
+        :type-specific-data
+        (assoc :vastaus
+               (str (if recipient-answered?
+                      "Asianosainen antoi vastineen kuulemiskirjeeseen."
+                      "Asianosainen ei vastannut kuulemiskirjeeseen.")
+                    " "
+                    answer-commentary)))))
+
+(defmethod format-type-specific-data :default [toimenpide]
+  (:type-specific-data toimenpide))
 
 (defn- template-data [db whoami valvonta toimenpide osapuoli dokumentit ilmoituspaikat tiedoksi roolit]
   {:päivä            (time/today)

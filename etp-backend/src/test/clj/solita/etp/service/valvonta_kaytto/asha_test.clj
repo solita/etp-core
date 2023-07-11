@@ -137,3 +137,19 @@
                 :varoitus-maarapaiva      "13.08.2023"
                 :kuulemiskirje-pvm        "14.08.2023"
                 :kuulemiskirje-maarapaiva "28.08.2023"})))))
+
+(t/deftest format-type-specific-data-test
+  (t/testing "For käskypäätös / varsinainen toimenpide a new key vastaus is added and its value is based on values of :recipient-answered and :answer-commentary"
+    (t/is (= (asha/format-type-specific-data {:type-id            8
+                                              :type-specific-data {:fine               129
+                                                                   :recipient-answered true
+                                                                   :answer-commentary  "Voi anteeksi, en tiennyt."}})
+             {:fine               129
+              :recipient-answered true
+              :answer-commentary  "Voi anteeksi, en tiennyt."
+              :vastaus            "Asianosainen antoi vastineen kuulemiskirjeeseen. Voi anteeksi, en tiennyt."}))
+
+    (t/testing "For käskypäätös / kuulemiskirje toimenpide :type-spefic-data map is returned as is, as no special formatting is needed"
+      (t/is (= (asha/format-type-specific-data {:type-id            7
+                                                :type-specific-data {:fine 800}})
+               {:fine 800})))))
