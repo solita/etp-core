@@ -60,6 +60,14 @@
                   first)]
     (zipmap (keys data) (map time/format-date (vals data)))))
 
+(defn format-type-specific-data [toimenpide]
+  (-> toimenpide
+      :type-specific-data
+      (assoc :vastaus (str (if (-> toimenpide :type-specific-data :recipient-answered)
+                             "Asianosainen antoi vastineen kuulemiskirjeeseen. "
+                             "Asianosainen ei vastannut kuulemiskirjeeseen. ")
+                           (-> toimenpide :type-specific-data :answer-commentary)))))
+
 (defn- template-data [db whoami valvonta toimenpide osapuoli dokumentit ilmoituspaikat tiedoksi roolit]
   {:päivä            (time/today)
    :määräpäivä       (time/format-date (:deadline-date toimenpide))
@@ -78,12 +86,7 @@
    :tietopyynto      {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
                       :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
    :tiedoksi         (map (partial tiedoksi-saaja roolit) tiedoksi)
-   :tyyppikohtaiset-tiedot (-> toimenpide
-                               :type-specific-data
-                               (assoc :vastaus (str (if (-> toimenpide :type-specific-data :recipient-answered)
-                                                      "Asianosainen antoi vastineen kuulemiskirjeeseen. "
-                                                      "Asianosainen ei vastannut kuulemiskirjeeseen. ")
-                                                    (-> toimenpide :type-specific-data :answer-commentary))))
+   :tyyppikohtaiset-tiedot (format-type-specific-data toimenpide)
    :aiemmat-toimenpiteet (when (toimenpide/kaskypaatos-toimenpide? toimenpide)
                            (past-dates-for-kaskypaatos-toimenpiteet db (:id valvonta)))})
 
