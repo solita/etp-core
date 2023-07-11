@@ -339,7 +339,8 @@
                               :template-id   6
                               :description   "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                               :type-specific-data {:fine 857
-                                                   :recipient-answered true}}
+                                                   :recipient-answered true
+                                                   :answer-commentary "En tiennyt, että todistus tarvitaan :("}}
               response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                     (mock/json-body new-toimenpide)
                                     (with-virtu-user)
@@ -374,7 +375,8 @@
                             :template-id        6
                             :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                             :type-specific-data {:fine 857
-                                                 :recipient-answered false}}
+                                                 :recipient-answered false
+                                                 :answer-commentary "Hän ei vastannut ollenkaan"}}
             response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/henkilot/%s/preview" valvonta-id osapuoli-id))
                                   (mock/json-body new-toimenpide)
                                   (with-virtu-user)
@@ -405,7 +407,8 @@
                             :template-id        6
                             :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                             :type-specific-data {:fine 857
-                                                 :recipient-answered true}}
+                                                 :recipient-answered true
+                                                 :answer-commentary "Yritykseni on niin iso, ettei minun tarvitse välittää tällaisista asioista"}}
             response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/yritykset/%s/preview" valvonta-id osapuoli-id))
                                   (mock/json-body new-toimenpide)
                                   (with-virtu-user)

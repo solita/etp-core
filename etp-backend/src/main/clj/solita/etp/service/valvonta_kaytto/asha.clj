@@ -78,7 +78,11 @@
    :tietopyynto      {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
                       :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
    :tiedoksi         (map (partial tiedoksi-saaja roolit) tiedoksi)
-   :tyyppikohtaiset-tiedot (:type-specific-data toimenpide)
+   :tyyppikohtaiset-tiedot (-> toimenpide
+                               :type-specific-data
+                               (assoc :vastaus (str (if (-> toimenpide :type-specific-data :recipient-answered)
+                                                      "Asianosainen antoi vastineen kuulemiskirjeeseen. ")
+                                                    (-> toimenpide :type-specific-data :answer-commentary))))
    :aiemmat-toimenpiteet (when (toimenpide/kaskypaatos-toimenpide? toimenpide)
                            (past-dates-for-kaskypaatos-toimenpiteet db (:id valvonta)))})
 

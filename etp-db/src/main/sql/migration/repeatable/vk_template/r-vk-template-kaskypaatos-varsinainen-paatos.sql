@@ -59,7 +59,6 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 
 <h2>Kuuleminen</h2>
 
-<!--Kuulemiskirjeen päivämäärä-->
 <p>ARA varasi {{#aiemmat-toimenpiteet}}{{kuulemiskirje-pvm}}{{/aiemmat-toimenpiteet}} päivätyllä kirjeellään (dnro
     [ARA-05.03.01-202x-xxx]) Asianosaiselle uhkasakkolain 22 §:n ja
     siinä viitatun hallintolain (434/2003) 34 §:n mukaisesti ennen asian ratkaisemista tilaisuuden lausua
@@ -67,7 +66,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     vaikuttaa asian ratkaisuun. Kuulemiskirjeessä ARA kertoi, että uhkasakon määrä on arviolta {{#tyyppikohtaiset-tiedot}}{{kuulemiskirje-sakko}}{{/tyyppikohtaiset-tiedot}} euroa.</p>
 
 <!--TODO: Halutaanko tähän oikeasti se laatikko-->
-{{vastaus}}
+<p>{{#tyyppikohtaiset-tiedot}}{{vastaus}}{{/tyyppikohtaiset-tiedot}}</p>
 
 <h2>Päätöksen perustelut</h2>
 
