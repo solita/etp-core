@@ -81,7 +81,8 @@
    :tyyppikohtaiset-tiedot (-> toimenpide
                                :type-specific-data
                                (assoc :vastaus (str (if (-> toimenpide :type-specific-data :recipient-answered)
-                                                      "Asianosainen antoi vastineen kuulemiskirjeeseen. ")
+                                                      "Asianosainen antoi vastineen kuulemiskirjeeseen. "
+                                                      "Asianosainen ei vastannut kuulemiskirjeeseen. ")
                                                     (-> toimenpide :type-specific-data :answer-commentary))))
    :aiemmat-toimenpiteet (when (toimenpide/kaskypaatos-toimenpide? toimenpide)
                            (past-dates-for-kaskypaatos-toimenpiteet db (:id valvonta)))})
