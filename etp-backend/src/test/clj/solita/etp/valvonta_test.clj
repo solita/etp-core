@@ -10,6 +10,7 @@
     [solita.etp.service.pdf :as pdf]
     [solita.etp.service.suomifi-viestit :as suomifi-viestit]
     [solita.etp.service.valvonta-kaytto :as valvonta-service]
+    [solita.etp.test-api :refer [handler]]
     [solita.etp.test-data.generators :as generators]
     [solita.etp.test-data.kayttaja :as test-kayttajat]
     [solita.etp.test-system :as ts])
