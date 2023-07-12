@@ -126,14 +126,11 @@
 
 (t/deftest kaskypaatos-kuulemiskirje-test
   ;; Add the main user for the following tests
-  (first (test-kayttajat/insert!
-           [{:etunimi  "Asian"
-             :sukunimi "Tuntija"
-             :email    "testi@ara.fi"
-             :puhelin  "0504363675457"
-             :rooli    2
-             :virtu    {:localid      "vvirkamies"
-                        :organisaatio "testivirasto.fi"}}]))
+  (test-kayttajat/insert-virtu-paakayttaja!
+    {:etunimi  "Asian"
+     :sukunimi "Tuntija"
+     :email    "testi@ara.fi"
+     :puhelin  "0504363675457"})
   (t/testing "Käskypäätös / Kuulemiskirje toimenpide is created successfully for yksityishenkilö and document is generated with correct information"
     ;; Add the valvonta and previous toimenpides
     ;; so that käskypäätös / kuulemiskirje toimenpide can be created
@@ -264,14 +261,11 @@
 
 (t/deftest kaskypaatos-varsinainen-paatos-test
   ;; Add the main user for the following tests
-  (first (test-kayttajat/insert!
-           [{:etunimi  "Asian"
-             :sukunimi "Tuntija"
-             :email    "testi@ara.fi"
-             :puhelin  "0504363675457"
-             :rooli    2
-             :virtu    {:localid      "vvirkamies"
-                        :organisaatio "testivirasto.fi"}}]))
+  (test-kayttajat/insert-virtu-paakayttaja!
+    {:etunimi  "Asian"
+     :sukunimi "Tuntija"
+     :email    "testi@ara.fi"
+     :puhelin  "0504363675457"})
   (t/testing "Käskypäätös / varsinainen päätös toimenpide is created successfully for yksityishenkilö and document is generated with correct information"
     ;; Add the valvonta and previous toimenpides
     ;; so that käskypäätös / kuulemiskirje toimenpide can be created
