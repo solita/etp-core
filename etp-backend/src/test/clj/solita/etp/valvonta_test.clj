@@ -320,11 +320,11 @@
                                             :deadline_date (LocalDate/of 2023 8 13)})
 
       ;; Add käskypäätös / kuulemiskirje toimenpide to the valvonta
-      (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id   valvonta-id
-                                            :type_id       7
-                                            :create_time   kuulemiskirje-timestamp
-                                            :publish_time  kuulemiskirje-timestamp
-                                            :deadline_date (LocalDate/of 2023 8 27)
+      (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id        valvonta-id
+                                            :type_id            7
+                                            :create_time        kuulemiskirje-timestamp
+                                            :publish_time       kuulemiskirje-timestamp
+                                            :deadline_date      (LocalDate/of 2023 8 27)
                                             :type_specific_data {:fine 9000}})
       ;; Mock the current time to ensure that the document has a fixed date
       (with-bindings {#'time/clock    (Clock/fixed (-> (LocalDate/of 2023 8 28)
@@ -334,13 +334,14 @@
                       #'pdf/html->pdf (partial html->pdf-with-assertion
                                                "documents/kaskypaatos-varsinainen-paatos-yksityishenkilo.html"
                                                html->pdf-called?)}
-        (let [new-toimenpide {:type-id       8
-                              :deadline-date (str (LocalDate/of 2023 10 4))
-                              :template-id   6
-                              :description   "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
-                              :type-specific-data {:fine 857
+        (let [new-toimenpide {:type-id            8
+                              :deadline-date      (str (LocalDate/of 2023 10 4))
+                              :template-id        6
+                              :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
+                              :type-specific-data {:fine               857
                                                    :recipient-answered true
-                                                   :answer-commentary "En tiennyt, että todistus tarvitaan :("}}
+                                                   :answer-commentary  "En tiennyt, että todistus tarvitaan :("
+                                                   :statement          "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."}}
               response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                     (mock/json-body new-toimenpide)
                                     (with-virtu-user)
@@ -374,7 +375,7 @@
                                      :email                    nil
                                      :rooli-id                 0
                                      :jakeluosoite             "Testikatu 12"
-                                     :vastaanottajan-tarkenne "Lisäselite C/O"
+                                     :vastaanottajan-tarkenne  "Lisäselite C/O"
                                      :postitoimipaikka         "Helsinki"
                                      :puhelin                  nil
                                      :postinumero              "00100"
@@ -395,11 +396,11 @@
                                             :deadline_date (LocalDate/of 2023 8 13)})
 
       ;; Add käskypäätös / kuulemiskirje toimenpide to the valvonta
-      (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id   valvonta-id
-                                            :type_id       7
-                                            :create_time   kuulemiskirje-timestamp
-                                            :publish_time  kuulemiskirje-timestamp
-                                            :deadline_date (LocalDate/of 2023 8 27)
+      (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id        valvonta-id
+                                            :type_id            7
+                                            :create_time        kuulemiskirje-timestamp
+                                            :publish_time       kuulemiskirje-timestamp
+                                            :deadline_date      (LocalDate/of 2023 8 27)
                                             :type_specific_data {:fine 9000}})
       ;; Mock the current time to ensure that the document has a fixed date
       (with-bindings {#'time/clock    (Clock/fixed (-> (LocalDate/of 2023 8 28)
@@ -413,9 +414,10 @@
                               :deadline-date      (str (LocalDate/of 2023 10 4))
                               :template-id        6
                               :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
-                              :type-specific-data {:fine 857
+                              :type-specific-data {:fine               857
                                                    :recipient-answered false
-                                                   :answer-commentary "Yritys ei ollut tavoitettavissa ollenkaan asian tiimoilta."}}
+                                                   :answer-commentary  "Yritys ei ollut tavoitettavissa ollenkaan asian tiimoilta."
+                                                   :statement          "Yritys tuomitaan sakkoihin."}}
               response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                     (mock/json-body new-toimenpide)
                                     (with-virtu-user)
@@ -450,9 +452,10 @@
                             :deadline-date      (str (LocalDate/of 2023 10 4))
                             :template-id        6
                             :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
-                            :type-specific-data {:fine 857
+                            :type-specific-data {:fine               857
                                                  :recipient-answered false
-                                                 :answer-commentary "Hän ei vastannut ollenkaan"}}
+                                                 :answer-commentary  "Hän ei vastannut ollenkaan"
+                                                 :statement          "Koska hän ei vastannut ollenkaan hän joutuu maksamaan paljon sakkoja."}}
             response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/henkilot/%s/preview" valvonta-id osapuoli-id))
                                   (mock/json-body new-toimenpide)
                                   (with-virtu-user)
@@ -472,7 +475,7 @@
                                                        :email                    nil
                                                        :rooli-id                 0
                                                        :jakeluosoite             "Testikatu 12"
-                                                       :vastaanottajan-tarkenne "Lisäselite C/O"
+                                                       :vastaanottajan-tarkenne  "Lisäselite C/O"
                                                        :postitoimipaikka         "Helsinki"
                                                        :puhelin                  nil
                                                        :postinumero              "00100"
@@ -482,9 +485,10 @@
                             :deadline-date      (str (LocalDate/of 2023 10 4))
                             :template-id        6
                             :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
-                            :type-specific-data {:fine 857
+                            :type-specific-data {:fine               857
                                                  :recipient-answered true
-                                                 :answer-commentary "Yritykseni on niin iso, ettei minun tarvitse välittää tällaisista asioista"}}
+                                                 :answer-commentary  "Yritykseni on niin iso, ettei minun tarvitse välittää tällaisista asioista"
+                                                 :statement          "Vastaus oli väärä, joten saat isot sakot."}}
             response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/yritykset/%s/preview" valvonta-id osapuoli-id))
                                   (mock/json-body new-toimenpide)
                                   (with-virtu-user)

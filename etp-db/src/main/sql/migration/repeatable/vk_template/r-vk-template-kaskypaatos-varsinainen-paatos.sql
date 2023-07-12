@@ -105,7 +105,9 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     energiatodistus. Käskyä voidaan tehostaa uhkasakolla, josta säädetään uhkasakkolaissa.</p>
 
 <!--TODO: Halutaanko tähän oikeasti se laatikko-->
-{{kannanotto}}
+<h3>Kannanotto vastineeseen</h3>
+
+<p>{{#tyyppikohtaiset-tiedot}}{{statement}}{{/tyyppikohtaiset-tiedot}}</p>
 
 <h2>Sovelletut oikeusohjeet</h2>
 
