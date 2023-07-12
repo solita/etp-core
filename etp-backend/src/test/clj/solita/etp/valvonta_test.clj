@@ -10,7 +10,6 @@
     [solita.etp.service.pdf :as pdf]
     [solita.etp.service.suomifi-viestit :as suomifi-viestit]
     [solita.etp.service.valvonta-kaytto :as valvonta-service]
-    [solita.etp.test-api :refer [handler]]
     [solita.etp.test-data.generators :as generators]
     [solita.etp.test-data.kayttaja :as test-kayttajat]
     [solita.etp.test-system :as ts])
@@ -337,7 +336,7 @@
                                                    :recipient-answered true
                                                    :answer-commentary  "En tiennyt, että todistus tarvitaan :("
                                                    :statement          "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."}}
-              response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
+              response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                     (mock/json-body new-toimenpide)
                                     (with-virtu-user)
                                     (mock/header "Accept" "application/json")))]
@@ -413,7 +412,7 @@
                                                    :recipient-answered false
                                                    :answer-commentary  "Yritys ei ollut tavoitettavissa ollenkaan asian tiimoilta."
                                                    :statement          "Yritys tuomitaan sakkoihin."}}
-              response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
+              response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                     (mock/json-body new-toimenpide)
                                     (with-virtu-user)
                                     (mock/header "Accept" "application/json")))]
@@ -484,7 +483,7 @@
                                                  :recipient-answered true
                                                  :answer-commentary  "Yritykseni on niin iso, ettei minun tarvitse välittää tällaisista asioista"
                                                  :statement          "Vastaus oli väärä, joten saat isot sakot."}}
-            response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/yritykset/%s/preview" valvonta-id osapuoli-id))
+            response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/yritykset/%s/preview" valvonta-id osapuoli-id))
                                   (mock/json-body new-toimenpide)
                                   (with-virtu-user)
                                   (mock/header "Accept" "application/json")))]
