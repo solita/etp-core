@@ -114,6 +114,9 @@
 (defn find-toimitustavat [db]
   (luokittelu/find-vk-toimitustavat db))
 
+(defn find-hallinto-oikeudet [db]
+  (luokittelu/find-hallinto-oikeudet db))
+
 (defn find-yritys [db yritys-id]
   (first (valvonta-kaytto-db/select-yritys db {:id yritys-id})))
 
