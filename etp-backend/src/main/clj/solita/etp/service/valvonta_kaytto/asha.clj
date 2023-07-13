@@ -1,5 +1,6 @@
 (ns solita.etp.service.valvonta-kaytto.asha
   (:require [solita.common.time :as time]
+            [solita.etp.exception :as exception]
             [solita.etp.service.asha :as asha]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
             [solita.etp.service.valvonta-kaytto.template :as template]
@@ -67,7 +68,9 @@
     2 "Itä-Suomen hallinto-oikeudelta"
     3 "Pohjois-Suomen hallinto-oikeudelta"
     4 "Turun hallinto-oikeudelta"
-    5 "Vaasan hallinto-oikeudelta"))
+    5 "Vaasan hallinto-oikeudelta"
+    (exception/throw-ex-info!
+      {:message (str "Unknown hallinto-oikeus-id: " hallinto-oikeus-id)})))
 
 (defmulti format-type-specific-data
           (fn [toimenpide] (-> toimenpide :type-id toimenpide/type-key)))

@@ -180,4 +180,8 @@
              "Turun hallinto-oikeudelta")))
   (t/testing "id 5 results in Vaasan hallinto-oikeudelta"
     (t/is (= (asha/hallinto-oikeus-id->formatted-string 5)
-             "Vaasan hallinto-oikeudelta"))))
+             "Vaasan hallinto-oikeudelta")))
+  (t/testing "Unknown id results in exception"
+    (t/is (thrown-with-msg?
+            Exception
+            #"Unknown hallinto-oikeus-id: 6" (asha/hallinto-oikeus-id->formatted-string 6)))))
