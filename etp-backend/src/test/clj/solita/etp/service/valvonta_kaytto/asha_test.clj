@@ -1,6 +1,7 @@
 (ns solita.etp.service.valvonta-kaytto.asha-test
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.test :as t]
+            [solita.etp.service.luokittelu :as luokittelu]
             [solita.etp.service.valvonta-kaytto :as valvonta-service]
             [solita.etp.service.valvonta-kaytto.asha :as asha]
             [solita.etp.test-system :as ts])
@@ -178,10 +179,20 @@
   (t/testing "id 4 results in Turun hallinto-oikeudelta"
     (t/is (= (asha/hallinto-oikeus-id->formatted-string 4)
              "Turun hallinto-oikeudelta")))
+
   (t/testing "id 5 results in Vaasan hallinto-oikeudelta"
     (t/is (= (asha/hallinto-oikeus-id->formatted-string 5)
              "Vaasan hallinto-oikeudelta")))
+
   (t/testing "Unknown id results in exception"
     (t/is (thrown-with-msg?
             Exception
-            #"Unknown hallinto-oikeus-id: 6" (asha/hallinto-oikeus-id->formatted-string 6)))))
+            #"Unknown hallinto-oikeus-id: 6" (asha/hallinto-oikeus-id->formatted-string 6))))
+
+  (t/testing "All hallinto-oikeudet in database have a formatted string"
+    (let [hallinto-oikeudet (luokittelu/find-hallinto-oikeudet ts/*db*)]
+      (t/is (= (count hallinto-oikeudet)
+               6))
+
+      (doseq [hallinto-oikeus hallinto-oikeudet]
+        (t/is (not (nil? (asha/hallinto-oikeus-id->formatted-string (:id hallinto-oikeus)))))))))
