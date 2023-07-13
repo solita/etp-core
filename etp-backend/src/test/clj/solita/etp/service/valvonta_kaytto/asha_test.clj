@@ -139,17 +139,45 @@
                 :kuulemiskirje-maarapaiva "28.08.2023"})))))
 
 (t/deftest format-type-specific-data-test
-  (t/testing "For käskypäätös / varsinainen toimenpide a new key vastaus is added and its value is based on values of :recipient-answered and :answer-commentary"
-    (t/is (= (asha/format-type-specific-data {:type-id            8
-                                              :type-specific-data {:fine               129
-                                                                   :recipient-answered true
-                                                                   :answer-commentary  "Voi anteeksi, en tiennyt."}})
+  (t/testing "For käskypäätös / varsinainen päätös toimenpide a new key vastaus is added and its value is based on values of :recipient-answered and :answer-commentary"
+    (t/is (= (asha/format-type-specific-data
+               {:type-id            8
+                :type-specific-data {:fine               129
+                                     :recipient-answered true
+                                     :answer-commentary  "Voi anteeksi, en tiennyt."
+                                     :court              0}})
              {:fine               129
               :recipient-answered true
               :answer-commentary  "Voi anteeksi, en tiennyt."
-              :vastaus            "Asianosainen antoi vastineen kuulemiskirjeeseen. Voi anteeksi, en tiennyt."}))
+              :vastaus            "Asianosainen antoi vastineen kuulemiskirjeeseen. Voi anteeksi, en tiennyt."
+              :court              "Helsingin hallinto-oikeudelta"}))
 
     (t/testing "For käskypäätös / kuulemiskirje toimenpide :type-spefic-data map is returned as is, as no special formatting is needed"
-      (t/is (= (asha/format-type-specific-data {:type-id            7
-                                                :type-specific-data {:fine 800}})
+      (t/is (= (asha/format-type-specific-data
+                 {:type-id            7
+                  :type-specific-data {:fine 800}})
                {:fine 800})))))
+
+(t/deftest hallinto-oikeus-id->formatted-string-test
+  (t/testing "id 0 results in Helsingin hallinto-oikeudelta"
+    (t/is (= (asha/hallinto-oikeus-id->formatted-string 0)
+             "Helsingin hallinto-oikeudelta")))
+
+  (t/testing "id 1 results in Hämeenlinnan hallinto-oikeudelta"
+    (t/is (= (asha/hallinto-oikeus-id->formatted-string 1)
+             "Hämeenlinnan hallinto-oikeudelta")))
+
+  (t/testing "id 2 results in Itä-Suomen hallinto-oikeudelta"
+    (t/is (= (asha/hallinto-oikeus-id->formatted-string 2)
+             "Itä-Suomen hallinto-oikeudelta")))
+
+  (t/testing "id 3 results in Pohjois-Suomen hallinto-oikeudelta"
+    (t/is (= (asha/hallinto-oikeus-id->formatted-string 3)
+             "Pohjois-Suomen hallinto-oikeudelta")))
+
+  (t/testing "id 4 results in Turun hallinto-oikeudelta"
+    (t/is (= (asha/hallinto-oikeus-id->formatted-string 4)
+             "Turun hallinto-oikeudelta")))
+  (t/testing "id 5 results in Vaasan hallinto-oikeudelta"
+    (t/is (= (asha/hallinto-oikeus-id->formatted-string 5)
+             "Vaasan hallinto-oikeudelta"))))

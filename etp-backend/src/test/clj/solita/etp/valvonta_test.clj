@@ -335,7 +335,8 @@
                               :type-specific-data {:fine               857
                                                    :recipient-answered true
                                                    :answer-commentary  "En tiennyt, että todistus tarvitaan :("
-                                                   :statement          "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."}}
+                                                   :statement          "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."
+                                                   :court 1}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                     (mock/json-body new-toimenpide)
                                     (with-virtu-user)
@@ -411,7 +412,8 @@
                               :type-specific-data {:fine               857
                                                    :recipient-answered false
                                                    :answer-commentary  "Yritys ei ollut tavoitettavissa ollenkaan asian tiimoilta."
-                                                   :statement          "Yritys tuomitaan sakkoihin."}}
+                                                   :statement          "Yritys tuomitaan sakkoihin."
+                                                   :court 2}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                     (mock/json-body new-toimenpide)
                                     (with-virtu-user)
@@ -449,8 +451,9 @@
                             :type-specific-data {:fine               857
                                                  :recipient-answered false
                                                  :answer-commentary  "Hän ei vastannut ollenkaan"
-                                                 :statement          "Koska hän ei vastannut ollenkaan hän joutuu maksamaan paljon sakkoja."}}
-            response (handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/henkilot/%s/preview" valvonta-id osapuoli-id))
+                                                 :statement          "Koska hän ei vastannut ollenkaan hän joutuu maksamaan paljon sakkoja."
+                                                 :court 3}}
+            response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/henkilot/%s/preview" valvonta-id osapuoli-id))
                                   (mock/json-body new-toimenpide)
                                   (with-virtu-user)
                                   (mock/header "Accept" "application/json")))]
@@ -482,10 +485,11 @@
                             :type-specific-data {:fine               857
                                                  :recipient-answered true
                                                  :answer-commentary  "Yritykseni on niin iso, ettei minun tarvitse välittää tällaisista asioista"
-                                                 :statement          "Vastaus oli väärä, joten saat isot sakot."}}
+                                                 :statement          "Vastaus oli väärä, joten saat isot sakot."
+                                                 :court 5}}
             response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/yritykset/%s/preview" valvonta-id osapuoli-id))
                                   (mock/json-body new-toimenpide)
-                                  (with-virtu-user)
+                                  (test-kayttajat/with-virtu-user)
                                   (mock/header "Accept" "application/json")))]
         (t/is (= (:status response) 200))))))
 

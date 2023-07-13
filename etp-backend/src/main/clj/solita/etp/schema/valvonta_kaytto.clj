@@ -47,7 +47,8 @@
 (def KaskyPaatosVarsinainenPaatosData {:fine               common-schema/NonNegative
                                        :recipient-answered schema/Bool
                                        :answer-commentary  schema/Str
-                                       :statement          schema/Str})
+                                       :statement          schema/Str
+                                       :court              common-schema/Key})
 
 (def ToimenpideAdd
   (schema/conditional

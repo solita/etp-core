@@ -60,6 +60,15 @@
                   first)]
     (zipmap (keys data) (map time/format-date (vals data)))))
 
+(defn hallinto-oikeus-id->formatted-string [hallinto-oikeus-id]
+  (condp = hallinto-oikeus-id
+    0 "Helsingin hallinto-oikeudelta"
+    1 "Hämeenlinnan hallinto-oikeudelta"
+    2 "Itä-Suomen hallinto-oikeudelta"
+    3 "Pohjois-Suomen hallinto-oikeudelta"
+    4 "Turun hallinto-oikeudelta"
+    5 "Vaasan hallinto-oikeudelta"))
+
 (defmulti format-type-specific-data
           (fn [toimenpide] (-> toimenpide :type-id toimenpide/type-key)))
 
@@ -73,7 +82,8 @@
                       "Asianosainen antoi vastineen kuulemiskirjeeseen."
                       "Asianosainen ei vastannut kuulemiskirjeeseen.")
                     " "
-                    answer-commentary)))))
+                    answer-commentary))
+        (update :court hallinto-oikeus-id->formatted-string))))
 
 (defmethod format-type-specific-data :default [toimenpide]
   (:type-specific-data toimenpide))

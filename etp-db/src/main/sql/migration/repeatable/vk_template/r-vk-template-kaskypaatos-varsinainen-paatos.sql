@@ -119,7 +119,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 
 <h2>Muutoksenhaku</h2>
 
-<p>Tähän päätökseen tyytymätön saa hakea siihen muutosta {{hallinto-oikeus}} hallinto-oikeudelta. Valitus on tehtävä ja
+<p>Tähän päätökseen tyytymätön saa hakea siihen muutosta {{#tyyppikohtaiset-tiedot}}{{court}}{{/tyyppikohtaiset-tiedot}}. Valitus on tehtävä ja
     toimitettava edellä mainittuun hallinto-oikeuteen 30 päivän kuluessa tämän päätöksen tiedoksisaannista.</p>
 
 <hr/>
