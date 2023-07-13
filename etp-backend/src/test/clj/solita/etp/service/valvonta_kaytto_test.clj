@@ -147,3 +147,27 @@
     (t/testing "Toimenpidetyypit matches the schema"
       (t/is (nil? (schema/check [valvonta-kaytto-schema/Toimenpidetyypit]
                                 toimenpidetyypit))))))
+
+(t/deftest hallinto-oikeudet-id-schema-test
+  (t/testing "Ids for existing hallinto-oikeudet matches the values allowed in the schema"
+    (let [hallinto-oikeudet (valvonta-kaytto/find-hallinto-oikeudet ts/*db*)
+          ids (map :id hallinto-oikeudet)]
+      (t/is (= (count ids)
+               6))
+
+      (t/testing "Existing ids are valid according to the schema"
+        (doseq [id ids]
+          (t/is (nil? (schema/check valvonta-kaytto-schema/HallintoOikeusId id)))))
+
+      (t/testing "-1 is not valid according to the schema"
+        (t/is (not (nil? (schema/check valvonta-kaytto-schema/HallintoOikeusId -1)))))
+
+      (t/testing "bigger ids than the existing ones are not allowed"
+        (let [biggest-valid-id (apply max ids)
+              invalid-ids (range (inc biggest-valid-id) (+ biggest-valid-id 101))]
+          (t/is (= (count invalid-ids)
+                   100))
+
+          (doseq [id invalid-ids]
+            (t/is (not (nil? (schema/check valvonta-kaytto-schema/HallintoOikeusId id)))
+                  (str "Id " id " should not be valid"))))))))

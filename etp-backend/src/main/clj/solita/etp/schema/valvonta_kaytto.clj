@@ -44,11 +44,13 @@
 
 (def KaskypaatosKuulemiskirjeData {:fine common-schema/NonNegative})
 
+(def HallintoOikeusId (schema/enum 0 1 2 3 4 5))
+
 (def KaskyPaatosVarsinainenPaatosData {:fine               common-schema/NonNegative
                                        :recipient-answered schema/Bool
                                        :answer-commentary  schema/Str
                                        :statement          schema/Str
-                                       :court              common-schema/Key})
+                                       :court              HallintoOikeusId})
 
 (def ToimenpideAdd
   (schema/conditional
