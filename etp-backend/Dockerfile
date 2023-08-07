@@ -1,5 +1,5 @@
 # Build image
-FROM --platform=amd64 clojure:temurin-11-tools-deps-1.11.1.1257-alpine as builder
+FROM --platform=amd64 clojure:temurin-17-tools-deps-1.11.1.1347-alpine as builder
 
 COPY . /usr/src/app
 WORKDIR /usr/src/app
@@ -7,7 +7,7 @@ RUN clojure -M:uberjar
 
 
 # Production image
-FROM --platform=amd64 eclipse-temurin:11.0.18_10-jdk-jammy
+FROM --platform=amd64 eclipse-temurin:17.0.8_7-jre-jammy
 
 # LibreOffice installation
 RUN apt-get update && \

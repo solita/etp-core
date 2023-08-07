@@ -21,11 +21,11 @@ Separate repositories at https://github.com/solita/etp-front and https://github.
 Installing the development environment
 -----------------------------
 
-### Java 11
+### Java 17
 
 For Ubuntu:
 
-    sudo apt install openjdk-11-jdk
+    sudo apt install openjdk-17-jdk
 
 ### Docker
 
