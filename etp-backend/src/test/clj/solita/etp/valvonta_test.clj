@@ -319,7 +319,8 @@
                                             :create_time        kuulemiskirje-timestamp
                                             :publish_time       kuulemiskirje-timestamp
                                             :deadline_date      (LocalDate/of 2023 8 27)
-                                            :type_specific_data {:fine 9000}})
+                                            :type_specific_data {:fine 9000}
+                                            :diaarinumero "ARA-05.03.01-2023-159"})
       ;; Mock the current time to ensure that the document has a fixed date
       (with-bindings {#'time/clock    (Clock/fixed (-> (LocalDate/of 2023 8 28)
                                                        (.atStartOfDay time/timezone)
@@ -396,6 +397,7 @@
                                             :create_time        kuulemiskirje-timestamp
                                             :publish_time       kuulemiskirje-timestamp
                                             :deadline_date      (LocalDate/of 2023 8 27)
+                                            :diaarinumero "ARA-05.03.01-2023-132"
                                             :type_specific_data {:fine 9000}})
       ;; Mock the current time to ensure that the document has a fixed date
       (with-bindings {#'time/clock    (Clock/fixed (-> (LocalDate/of 2023 8 28)

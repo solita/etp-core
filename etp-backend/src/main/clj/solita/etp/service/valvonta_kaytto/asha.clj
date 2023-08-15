@@ -120,7 +120,9 @@
    :tiedoksi         (map (partial tiedoksi-saaja roolit) tiedoksi)
    :tyyppikohtaiset-tiedot (format-type-specific-data toimenpide)
    :aiemmat-toimenpiteet (when (toimenpide/kaskypaatos-toimenpide? toimenpide)
-                           (past-dates-for-kaskypaatos-toimenpiteet db (:id valvonta)))})
+                           (merge
+                             {:kuulemiskirje-diaari (valvonta-kuulemiskirje-diaari db (:id valvonta))}
+                             (past-dates-for-kaskypaatos-toimenpiteet db (:id valvonta))))})
 
 (defn- request-id [valvonta-id toimenpide-id]
   (str valvonta-id "/" toimenpide-id))
