@@ -13,7 +13,7 @@ jobs:
       run:
         working-directory: ./etp-backend
     container:
-      image: clojure:openjdk-11-tools-deps
+      image: clojure:openjdk-17-tools-deps
 
     steps:
       - uses: actions/checkout@v3
@@ -26,7 +26,7 @@ jobs:
       run:
         working-directory: ./etp-backend
     container:
-      image: clojure:openjdk-11-tools-deps
+      image: clojure:openjdk-17-tools-deps
 
     steps:
       - uses: actions/checkout@v3
