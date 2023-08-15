@@ -361,3 +361,11 @@ select kehotus.create_time::date       as kehotus_pvm,
 from kehotus
          left join varoitus on kehotus.valvonta_id = varoitus.valvonta_id
          left join kuulemiskirje on kehotus.valvonta_id = kuulemiskirje.valvonta_id;
+
+-- name: valvonta-kuulemiskirje-diaari
+select diaarinumero
+from vk_toimenpide
+where valvonta_id = :valvonta-id
+  and type_id = 7
+order by create_time desc
+limit 1;

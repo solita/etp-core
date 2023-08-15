@@ -51,6 +51,15 @@
                 (when (some? rooli) (str (:label-fi rooli) "/" (:label-sv rooli)))))
      :email (template-optional (:email osapuoli))}))
 
+(defn valvonta-kuulemiskirje-diaari
+  "Returns diaarinumero of the newest kuulemiskirje-toimenpide
+   associated with the given valvonta-id."
+  [db valvonta-id]
+  (->> {:valvonta-id valvonta-id}
+       (valvonta-kaytto-db/valvonta-kuulemiskirje-diaari db)
+       first
+       :diaarinumero))
+
 (defn past-dates-for-kaskypaatos-toimenpiteet
   "Retrieves the dates of kehotus, varoitus and kuulemiskirje toimenpiteet with
    the given valvonta-id and formats them for displaying in a document"
