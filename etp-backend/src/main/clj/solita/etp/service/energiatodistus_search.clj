@@ -1,7 +1,6 @@
 (ns solita.etp.service.energiatodistus-search
   (:require [clojure.string :as str]
             [clojure.java.jdbc :as jdbc]
-            [solita.etp.db :as db]
             [solita.etp.service.energiatodistus :as energiatodistus-service]
             [solita.etp.service.energiatodistus-search-fields :as search-fields]
             [schema.core :as schema]
@@ -63,6 +62,8 @@
 
 (def bilingual-fields #{"energiatodistus.perustiedot.nimi"
                         "postinumero.label"})
+
+(def multiplexed-fields #{"energiatodistus.lahtotiedot.lammitys.lammitysmuoto"})
 
 (def public-search-schema
   (schemas->search-schema
@@ -200,13 +201,22 @@
     (concat [(str "((" fi-sql ")" logical-op "(" sv-sql "))")]
             fi-values sv-values)))
 
+(defn- expand-multiplexed-expression [formatter search-schema predicate field multiplexed-field & values]
+  (let [logical-op "or"
+        [sql-1 & values-1] (apply formatter search-schema predicate (str multiplexed-field "-1" (last (str/split field (re-pattern multiplexed-field) 2))) values)
+        [sql-2 & values-2] (apply formatter search-schema predicate (str multiplexed-field "-2" (last (str/split field (re-pattern multiplexed-field) 2))) values)]
+    (concat [(str "((" sql-1 ")" logical-op "(" sql-2 "))")]
+            values-1 values-2)))
+
 (defn predicate-expression->sql [search-schema expression]
   (let [[predicate field & values] expression
-        formatter (sql-formatter! predicate)]
+        formatter (sql-formatter! predicate)
+        multiplexed-field (if (nil? field) nil (first (filter #(str/starts-with? field %) multiplexed-fields)))]
     (try
-      (if (contains? bilingual-fields field)
-        (apply expand-bilingual-expression formatter search-schema predicate field values)
-        (apply formatter search-schema predicate field values))
+      (cond
+        (contains? bilingual-fields field) (apply expand-bilingual-expression formatter search-schema predicate field values)
+        (some? multiplexed-field) (apply expand-multiplexed-expression formatter search-schema predicate field multiplexed-field values)
+        :else (apply formatter search-schema predicate field values))
       (catch ArityException _
         (throw-ex-info {:type :invalid-arguments :predicate predicate
                         :message (str "Wrong number of arguments: " (rest expression)

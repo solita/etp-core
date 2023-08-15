@@ -6,7 +6,6 @@
             [solita.etp.schema.energiatodistus :as energiatodistus-schema]
             [solita.etp.schema.laatija :as laatija-schema]
             [clojure.string :as str]
-            [schema.core :as schema]
             [flathead.deep :as deep]
             [solita.etp.schema.common :as common-schema])
   (:import (clojure.lang IPersistentVector)))
@@ -79,7 +78,7 @@
 
 (def ^:private ua-total-sql
   (->> ua-fields
-       (map (fn [[key value]] (-> value :UA first)))
+       (map (fn [[_ value]] (-> value :UA first)))
        (str/join " + ")
        (str "energiatodistus.lt$rakennusvaippa$kylmasillat_ua + ")))
 
