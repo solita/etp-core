@@ -201,7 +201,11 @@
     (concat [(str "((" fi-sql ")" logical-op "(" sv-sql "))")]
             fi-values sv-values)))
 
-(defn- expand-multiplexed-expression [formatter search-schema predicate field multiplexed-field & values]
+(defn- expand-multiplexed-expression
+  "Expands expressions for fields where the actual db field has suffixes -1 and -2 somewhere in the search path, such as
+  energiatodistus.lahtotiedot.lammitys.lammitysmuoto(-1|-2).id. Could be modified to use with other suffixes as well,
+  such as language options"
+  [formatter search-schema predicate field multiplexed-field & values]
   (let [logical-op "or"
         [sql-1 & values-1] (apply formatter search-schema predicate (str multiplexed-field "-1" (last (str/split field (re-pattern multiplexed-field) 2))) values)
         [sql-2 & values-2] (apply formatter search-schema predicate (str multiplexed-field "-2" (last (str/split field (re-pattern multiplexed-field) 2))) values)]
