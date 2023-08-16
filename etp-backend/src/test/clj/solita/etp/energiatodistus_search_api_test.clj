@@ -39,7 +39,7 @@
             response-body (j/read-value (:body response) j/keyword-keys-object-mapper)]
         (t/is (= (:status response) 200))
         (t/is (= (count response-body) 4))))
-    (t/testing "Haku löytää energiatodisukset, joissa kumpi tahansa lämmitysmuoto on haettu"
+    (t/testing "Haku löytää energiatodistukset, joissa kumpi tahansa lämmitysmuoto on haettu"
       (let [response (ts/handler (-> (mock/request :get "/api/private/energiatodistukset?where=%5B%5B%5B%22%3D%22%2C%22energiatodistus.lahtotiedot.lammitys.lammitysmuoto.id%22%2C1%5D%5D%5D")
                                   (test-kayttajat/with-virtu-user)
                                   (mock/header "Accept" "application/json")))

@@ -205,17 +205,20 @@
   "Expands expressions for fields where the actual db field has suffixes -1 and -2 somewhere in the search path, such as
   energiatodistus.lahtotiedot.lammitys.lammitysmuoto(-1|-2).id. Could be modified to use with other suffixes as well,
   such as language options"
-  [formatter search-schema predicate field multiplexed-field & values]
+  [formatter search-schema predicate search-field multiplexed-field & values]
   (let [logical-op "or"
-        [sql-1 & values-1] (apply formatter search-schema predicate (str multiplexed-field "-1" (last (str/split field (re-pattern multiplexed-field) 2))) values)
-        [sql-2 & values-2] (apply formatter search-schema predicate (str multiplexed-field "-2" (last (str/split field (re-pattern multiplexed-field) 2))) values)]
+        suffix (-> search-field (str/split (re-pattern multiplexed-field) 2) last)
+        [sql-1 & values-1] (apply formatter search-schema predicate (str multiplexed-field "-1" suffix) values)
+        [sql-2 & values-2] (apply formatter search-schema predicate (str multiplexed-field "-2" suffix) values)]
     (concat [(str "((" sql-1 ")" logical-op "(" sql-2 "))")]
             values-1 values-2)))
 
 (defn predicate-expression->sql [search-schema expression]
   (let [[predicate field & values] expression
         formatter (sql-formatter! predicate)
-        multiplexed-field (if (nil? field) nil (first (filter #(str/starts-with? field %) multiplexed-fields)))]
+        multiplexed-field (if (some? field)
+                            (first (filter #(str/starts-with? field %) multiplexed-fields))
+                            nil)]
     (try
       (cond
         (contains? bilingual-fields field) (apply expand-bilingual-expression formatter search-schema predicate field values)
