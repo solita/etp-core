@@ -729,3 +729,46 @@
                             [[["not ilike" "energiatodistus.perustiedot.nimi" "Hus 12499"]]]
                             nil nil nil)]
         (t/is (= (count results) 3))))))
+
+(t/deftest search-by-lammitysmuoto-test
+  (let [[laatija-id _] (-> (laatija-test-data/generate-and-insert! 1) first)
+        energiatodistus-adds (concat
+                               (map (fn [et]
+                                      (-> et
+                                          (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-1 :id] 1)
+                                          (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-2 :id] 2)))
+                                    (energiatodistus-test-data/generate-adds 1 2018 true))
+                               (map (fn [et]
+                                      (-> et
+                                          (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-1 :id] 9)
+                                          (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-2 :id] 9)
+                                          (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-1 :kuvaus-fi] "Lämmitetään puulla")
+                                          (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-1 :kuvaus-sv] "Värms med ved")
+                                          (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-2 :kuvaus-fi] "Lämmitetään atomivoimalla")
+                                          (assoc-in [:lahtotiedot :lammitys :lammitysmuoto-2 :kuvaus-sv] "Värms med atomkraft")))
+                                    (energiatodistus-test-data/generate-adds 1 2018 true)))
+        energiatodistus-ids (energiatodistus-test-data/insert!
+                              energiatodistus-adds
+                              laatija-id)]
+    (sign-energiatodistukset! (map #(vec [laatija-id %]) energiatodistus-ids))
+
+    (t/testing "Searching from lammitysmuoto-1"
+      (let [results (search kayttaja-test-data/paakayttaja
+                            [[["=" "energiatodistus.lahtotiedot.lammitys.lammitysmuoto.id" 1]]]
+                            nil nil nil)]
+        (t/is (= (count results) 1))))
+    (t/testing "Searching from lammitysmuoto-2"
+      (let [results (search kayttaja-test-data/paakayttaja
+                            [[["=" "energiatodistus.lahtotiedot.lammitys.lammitysmuoto.id" 2]]]
+                            nil nil nil)]
+        (t/is (= (count results) 1))))
+    (t/testing "Searching from Finnish description"
+      (let [results (search kayttaja-test-data/paakayttaja
+                            [[["ilike" "energiatodistus.lahtotiedot.lammitys.lammitysmuoto.kuvaus-fi" "%atomivoima%"]]]
+                            nil nil nil)]
+        (t/is (= (count results) 1))))
+    (t/testing "Searching from Swedish description"
+      (let [results (search kayttaja-test-data/paakayttaja
+                            [[["ilike" "energiatodistus.lahtotiedot.lammitys.lammitysmuoto.kuvaus-sv" "%med%"]]]
+                            nil nil nil)]
+        (t/is (= (count results) 1))))))

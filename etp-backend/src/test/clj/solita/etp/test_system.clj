@@ -5,7 +5,8 @@
             [solita.etp.config :as config]
             [solita.etp.db]
             [solita.etp.aws-s3-client]
-            [solita.common.aws :as aws]))
+            [solita.common.aws :as aws]
+            [solita.etp.handler :as handler]))
 
 (def ^:dynamic *db* nil)
 (def ^:dynamic *admin-db* nil)
@@ -91,3 +92,9 @@
         (drop-db! management-db db-name)
         (drop-bucket! management-aws-s3-client)
         (ig/halt! management-system)))))
+
+(defn handler
+  "Get a handler to use with ring-mock requests to test the api"
+  [req]
+  ; Mimics real handler usage with test assets
+  (handler/handler (merge req {:db *db* :aws-s3-client *aws-s3-client*})))
