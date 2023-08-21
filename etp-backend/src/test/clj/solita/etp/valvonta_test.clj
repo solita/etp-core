@@ -340,7 +340,7 @@
                                                    :court 1}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                     (mock/json-body new-toimenpide)
-                                    (with-virtu-user)
+                                    (test-kayttajat/with-virtu-user)
                                     (mock/header "Accept" "application/json")))]
           (t/is (true? @html->pdf-called?))
           (t/is (= (:status response) 201))))))
@@ -418,7 +418,7 @@
                                                    :court 2}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                     (mock/json-body new-toimenpide)
-                                    (with-virtu-user)
+                                    (test-kayttajat/with-virtu-user)
                                     (mock/header "Accept" "application/json")))]
           (t/is (true? @html->pdf-called?))
           (t/is (= (:status response) 201))))))
@@ -457,7 +457,7 @@
                                                  :court 3}}
             response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/henkilot/%s/preview" valvonta-id osapuoli-id))
                                   (mock/json-body new-toimenpide)
-                                  (with-virtu-user)
+                                  (test-kayttajat/with-virtu-user)
                                   (mock/header "Accept" "application/json")))]
         (t/is (= (:status response) 200))))
 

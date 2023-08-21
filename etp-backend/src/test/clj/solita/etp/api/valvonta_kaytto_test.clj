@@ -2,27 +2,26 @@
   (:require [clojure.test :as t]
             [jsonista.core :as j]
             [ring.mock.request :as mock]
-            [solita.etp.test-api :refer [handler with-virtu-user]]
-            [solita.etp.test-data.kayttaja :refer [insert-virtu-paakayttaja!]]
+            [solita.etp.test-data.kayttaja :as test-kayttaja]
             [solita.etp.test-system :as ts]))
 
 (defn user-fixture [f]
-  (insert-virtu-paakayttaja!)
+  (test-kayttaja/insert-virtu-paakayttaja!)
   (f))
 
 (t/use-fixtures :each ts/fixture user-fixture)
 
 (t/deftest hallinto-oikeudet-api-test
   (t/testing "/hallinto-oikeudet returns status 403 when not authenticated"
-    (let [{:keys [body status]} (handler (mock/request :get "/api/private/valvonta/kaytto/hallinto-oikeudet"))]
+    (let [{:keys [body status]} (ts/handler (mock/request :get "/api/private/valvonta/kaytto/hallinto-oikeudet"))]
       (t/is (= status 403))
       (t/is (= body "Forbidden"))))
 
   (t/testing "/hallinto-oikeudet returns status 200 and hallinto-oikeus data when properly authenticated"
     (let [{:keys [body status]} (->> "/api/private/valvonta/kaytto/hallinto-oikeudet"
                                      (mock/request :get)
-                                     with-virtu-user
-                                     handler)]
+                                     test-kayttaja/with-virtu-user
+                                     ts/handler)]
       (t/is (= status 200))
       (t/is (= (j/read-value body j/keyword-keys-object-mapper)
                [{:id       0
