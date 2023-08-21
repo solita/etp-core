@@ -98,7 +98,8 @@
    :filename      (schema/maybe schema/Str)
    :valvonta-id   common-schema/Key
    :henkilot      [Henkilo]
-   :yritykset     [Yritys]})
+   :yritykset     [Yritys]
+   :type-specific-data schema/Any})
 
 (def LastToimenpide
   (schema-tools/select-keys Toimenpide

@@ -244,7 +244,7 @@ update vk_valvonta_liite set deleted = true where id = :id;
 select
     toimenpide.id, toimenpide.type_id, toimenpide.valvonta_id,
     toimenpide.create_time, toimenpide.publish_time, toimenpide.deadline_date,
-    toimenpide.template_id, toimenpide.diaarinumero, toimenpide.description,
+    toimenpide.template_id, toimenpide.diaarinumero, toimenpide.description, toimenpide.type_specific_data,
     toimenpide.author_id author$id, author.rooli_id author$rooli_id,
     author.etunimi author$etunimi, author.sukunimi author$sukunimi
 from vk_toimenpide toimenpide
@@ -362,8 +362,8 @@ from kehotus
          left join varoitus on kehotus.valvonta_id = varoitus.valvonta_id
          left join kuulemiskirje on kehotus.valvonta_id = kuulemiskirje.valvonta_id;
 
--- name: valvonta-kuulemiskirje-diaari
-select diaarinumero
+-- name: kuulemiskirje-data
+select diaarinumero as kuulemiskirje_diaarinumero, type_specific_data->'fine' as kuulemiskirje_fine
 from vk_toimenpide
 where valvonta_id = :valvonta-id
   and type_id = 7

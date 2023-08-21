@@ -51,14 +51,13 @@
                 (when (some? rooli) (str (:label-fi rooli) "/" (:label-sv rooli)))))
      :email (template-optional (:email osapuoli))}))
 
-(defn valvonta-kuulemiskirje-diaari
-  "Returns diaarinumero of the newest kuulemiskirje-toimenpide
-   associated with the given valvonta-id."
+(defn kuulemiskirje-data
+  "Returns diaarinumero and fine amount of the newest
+   kuulemiskirje-toimenpide associated with the given valvonta-id."
   [db valvonta-id]
   (->> {:valvonta-id valvonta-id}
-       (valvonta-kaytto-db/valvonta-kuulemiskirje-diaari db)
-       first
-       :diaarinumero))
+       (valvonta-kaytto-db/kuulemiskirje-data db)
+       first))
 
 (defn past-dates-for-kaskypaatos-toimenpiteet
   "Retrieves the dates of kehotus, varoitus and kuulemiskirje toimenpiteet with
@@ -121,7 +120,7 @@
    :tyyppikohtaiset-tiedot (format-type-specific-data toimenpide)
    :aiemmat-toimenpiteet (when (toimenpide/kaskypaatos-toimenpide? toimenpide)
                            (merge
-                             {:kuulemiskirje-diaari (valvonta-kuulemiskirje-diaari db (:id valvonta))}
+                             (kuulemiskirje-data db (:id valvonta))
                              (past-dates-for-kaskypaatos-toimenpiteet db (:id valvonta))))})
 
 (defn- request-id [valvonta-id toimenpide-id]

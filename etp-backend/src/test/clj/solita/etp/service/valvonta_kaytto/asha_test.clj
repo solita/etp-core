@@ -139,7 +139,7 @@
                 :kuulemiskirje-pvm        "14.08.2023"
                 :kuulemiskirje-maarapaiva "28.08.2023"})))))
 
-(t/deftest valvonta-kuulemiskirje-diaari-test
+(t/deftest kuulemiskirje-data-test
   (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite "Testitie 5"})
         kuulemiskirje-timestamp (-> (LocalDate/of 2023 8 14)
                                     (.atStartOfDay (ZoneId/systemDefault))
@@ -151,11 +151,13 @@
                    :create_time   kuulemiskirje-timestamp
                    :publish_time  kuulemiskirje-timestamp
                    :deadline_date (LocalDate/of 2023 8 28)
-                   :diaarinumero  "ARA-05.03.01-2023-238"})
+                   :diaarinumero  "ARA-05.03.01-2023-238"
+                   :type_specific_data {:fine 6100}})
 
-    (t/testing "When kuulemiskirje exists for the given valvonta, correct diaari is returned"
-      (t/is (= (asha/valvonta-kuulemiskirje-diaari ts/*db* valvonta-id)
-               "ARA-05.03.01-2023-238")))
+    (t/testing "When kuulemiskirje exists for the given valvonta, correct diaarinumero and fine are returned"
+      (t/is (= (asha/kuulemiskirje-data ts/*db* valvonta-id)
+               {:kuulemiskirje-diaarinumero "ARA-05.03.01-2023-238"
+                :kuulemiskirje-fine         6100})))
 
     (t/testing "When multiple kuulemiskirje exists for the given valvonta, diaari of the newest is returned"
       (jdbc/insert! ts/*db*
@@ -169,7 +171,8 @@
                                         (.atStartOfDay (ZoneId/systemDefault))
                                         .toInstant)
                      :deadline_date (LocalDate/of 2023 8 28)
-                     :diaarinumero  "ARA-05.03.01-2023-235"})
+                     :diaarinumero  "ARA-05.03.01-2023-235"
+                     :type_specific_data {:fine 6100}})
 
       (jdbc/insert! ts/*db*
                     :vk_toimenpide
@@ -182,9 +185,11 @@
                                         (.atStartOfDay (ZoneId/systemDefault))
                                         .toInstant)
                      :deadline_date (LocalDate/of 2023 8 28)
-                     :diaarinumero  "ARA-05.03.01-2023-245"})
-      (t/is (= (asha/valvonta-kuulemiskirje-diaari ts/*db* valvonta-id)
-               "ARA-05.03.01-2023-245")))))
+                     :diaarinumero  "ARA-05.03.01-2023-245"
+                     :type_specific_data {:fine 3200}})
+      (t/is (= (asha/kuulemiskirje-data ts/*db* valvonta-id)
+               {:kuulemiskirje-diaarinumero "ARA-05.03.01-2023-245"
+                :kuulemiskirje-fine 3200})))))
 
 (t/deftest format-type-specific-data-test
   (t/testing "For käskypäätös / varsinainen päätös toimenpide a new key vastaus is added and its value is based on values of :recipient-answered and :answer-commentary"
