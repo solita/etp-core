@@ -48,7 +48,7 @@
     (cond
       (empty? all-aineistot) (do (log/info (str "User " kayttaja-id " has no access to any aineisto")) false)
       (empty? wanted-aineistot) (do (log/info (str "User " kayttaja-id "has no access to aineisto " aineisto-id)) false)
-      (empty? correct-ip) (do (log/info (str "User " kayttaja-id " has no access to aineisto " aineisto-id " from IP " ip-address)) false)
+      (empty? correct-ip) (do (log/info (str "User " kayttaja-id " has no access to aineisto " aineisto-id " from their IP")) false)
       (empty? is-valid-now) (do (log/info (str "User " kayttaja-id " access to aineisto " aineisto-id " has expired")) false)
       :else true)))
 
