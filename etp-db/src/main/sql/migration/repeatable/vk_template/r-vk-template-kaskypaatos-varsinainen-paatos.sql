@@ -66,7 +66,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     vaikuttaa asian ratkaisuun. Kuulemiskirjeessä ARA kertoi, että uhkasakon määrä on arviolta {{#aiemmat-toimenpiteet}}{{kuulemiskirje-fine}}{{/aiemmat-toimenpiteet}} euroa.</p>
 
 <!--TODO: Halutaanko tähän oikeasti se laatikko-->
-<p>{{#tyyppikohtaiset-tiedot}}{{vastaus}}{{/tyyppikohtaiset-tiedot}}</p>
+<p>{{#tyyppikohtaiset-tiedot}}{{vastaus-fi}}{{/tyyppikohtaiset-tiedot}}</p>
 
 <h2>Päätöksen perustelut</h2>
 
@@ -119,7 +119,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 
 <h2>Muutoksenhaku</h2>
 
-<p>Tähän päätökseen tyytymätön saa hakea siihen muutosta {{#tyyppikohtaiset-tiedot}}{{court}}{{/tyyppikohtaiset-tiedot}}. Valitus on tehtävä ja
+<p>Tähän päätökseen tyytymätön saa hakea siihen muutosta {{#tyyppikohtaiset-tiedot}}{{oikeus-fi}}{{/tyyppikohtaiset-tiedot}}. Valitus on tehtävä ja
     toimitettava edellä mainittuun hallinto-oikeuteen 30 päivän kuluessa tämän päätöksen tiedoksisaannista.</p>
 
 <hr/>
@@ -150,6 +150,195 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 </table>
 
 <div class="sivunvaihto"></div>
+
+<div class="otsikko">
+    <b>Beslut</b>
+    <b>{{päivä}}</b> <br/>
+    Dnr: {{diaarinumero}}
+</div>
+
+<div class="vastaanottaja">
+    {{#omistaja-henkilo}}
+    {{etunimi}} {{sukunimi}}<br/>
+    {{jakeluosoite}}<br/>
+    {{postinumero}} {{postitoimipaikka}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-yritys}}
+    {{nimi}}<br/>
+    {{vastaanottajan-tarkenne}}<br/>
+    {{jakeluosoite}}<br/>
+    {{postinumero}} {{postitoimipaikka}}
+    {{/omistaja-yritys}}
+</div>
+
+<h1>Order att skaffa energicertifikat och föreläg-gande av vite</h1>
+
+<div>
+    Mottagare: {{#omistaja-henkilo}}{{sukunimi}}
+    {{etunimi}}{{/omistaja-henkilo}}{{#omistaja-yritys}}{{nimi}}{{/omistaja-yritys}}<br/>
+</div>
+
+<h2>Beslut</h2>
+
+<p>Finansierings- och utvecklingscentralen för boendet (ARA) anser att
+    {{#omistaja-henkilo}}
+    {{etunimi}} {{sukunimi}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-yritys}}
+    {{nimi}}
+    {{/omistaja-yritys}}
+    har försummat skyldigheten enligt 6 § i lagen om energicertifikat för byggnader (50/2013, lagen om energicertifikat)
+    att använda energi-certifikat vid försäljning av byggnaden. Enligt 2 § i lagen om energi-certifikat ansvarar
+    byggnadens ägare för att byggnadens energicer-tifikat skaffas och att certifikatet eller uppgifterna i det används i
+    lagstadgade situationer.</p>
+
+<p>Med stöd av 24 § i lagen om energicertifikat beordrar ARA {{#omistaja-henkilo}}
+    {{sukunimi}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-yritys}}
+    {{nimi}}
+    {{/omistaja-yritys}} att skaffa ett energicertifikat för byggnaden på adressen {{#kohde}}{{katuosoite}}
+    {{postinumero}} {{postitoimipaikka}}{{/kohde}} senast
+    {{määräpäivä}} och visa upp energicertifikatet för ARA. ARA förenar förordnandet med ett sådant fast vite som avses
+    i 6 § i viteslagen (1113/1990). Vitesbeloppet är {{#tyyppikohtaiset-tiedot}}{{fine}}{{/tyyppikohtaiset-tiedot}}
+    euro.
+    Vitet döms ut om ARAs order inte har iakttagits inom utsatt tid.</p>
+
+<h2>Hörande</h2>
+
+<p>ARA gav i sitt brev (dnr
+    {{#aiemmat-toimenpiteet}}{{kuulemiskirje-diaarinumero}}) daterat {{kuulemiskirje-pvm}}{{/aiemmat-toimenpiteet}}
+
+    {{#omistaja-henkilo}}
+    {{sukunimi}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-yritys}}
+    {{nimi}}
+    {{/omistaja-yritys}}
+    i enlighet med 22 § i viteslagen och den hänvisade34 § i förvalt-ningslagen (434/2003) möjlighet
+    att yttra sig i ärendet samt ge sin förklaring till sådana yrkanden och utredningar som kan påverka avgörandet av
+    ärendet. I brevet om hörande berättade ARA att vi-tesbeloppet är uppskattningsvis
+    {{#aiemmat-toimenpiteet}}{{kuulemiskirje-fine}}{{/aiemmat-toimenpiteet}} euro.</p>
+
+<!--TODO: Halutaanko tähän oikeasti se laatikko-->
+<p>{{#omistaja-henkilo}}
+    {{sukunimi}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-yritys}}
+    {{nimi}}
+    {{/omistaja-yritys}}
+    {{#tyyppikohtaiset-tiedot}}{{vastaus-sv}}{{/tyyppikohtaiset-tiedot}}</p>
+
+<h2>Motivering av beslutet</h2>
+
+<p>Vid försäljning eller uthyrning av en byggnad eller lägenhet eller besittningsrätten till dem måste det finnas ett
+    energicertifikat enligt 6§ i lagen om energicertifikat. Energicertifikatet ska överlämnas till köparen eller
+    hyrestagaren antingen i original eller som kopia. I en offentlig anmälan om försäljning eller uthyrning av ett
+    objekt ska energieffektivitetsklassen för det objekt som säljs eller hyrs ut nämnas. Byggnadens ägare eller
+    innehavare ansvarar för att byggnadens energicertifikat skaffas och används i de situationer som re-gleras i lagen
+    (2 § i lagen om energicertifikat).</p>
+
+<p>Bestämmelser om påföljderna finns i 24 § i lagen om energicertifi-kat. Om byggnadens ägare inte fullgör sina
+    skyldigheter enligt lagen om energicertifikat eller i övrigt handlar i strid med lagen om ener-gicertifikat eller
+    bestämmelserna som utfärdats med stöd av den, ska ARA uppmana ägaren att rätta till situationen och ange en
+    tids-frist inom vilken situationen ska rättas till. Om saken inte rättas till inom tidsfristen ska ARA ge den som
+    saken gäller en varning och ange en ny tidsfrist. Om situationen inte rättas till inom tidsfristen ska ARA enligt
+    vad situationen kräver meddela beslut om föreläg-gande eller förbud. Vid allvarliga eller väsentliga överträdelser
+    kan ARA förena föreläggandet eller förbudet med vite eller med hot om tvångsutförande eller hot om avbrytande, om
+    vilka det bestäms i vi-teslagen (1113/1990).</p>
+
+<p>ARA har skickat en uppmaning till {{#omistaja-henkilo}}
+    {{sukunimi}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-yritys}}
+    {{nimi}}
+    {{/omistaja-yritys}}, eftersom den byggnaden som ägs av {{#omistaja-henkilo}}
+    {{sukunimi}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-yritys}}
+    {{nimi}}
+    {{/omistaja-yritys}} har marknadsförts på {{#kohde}}{{ilmoituspaikka}}{{/kohde}} utan energicertifikat. I uppmaningen har
+    {{#omistaja-henkilo}}
+    {{sukunimi}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-yritys}}
+    {{nimi}}
+    {{/omistaja-yritys} ombetts att senast {{#aiemmat-toimenpiteet}}{{kehotus-maarapaiva}}{{/aiemmat-toimenpiteet}} ge
+    ARA information om ett eventuellt energicertifikat eller, om ett sådant inte finns, tidtabellen för upprättandet av
+    certifikatet.</p>
+
+{{#aiemmat-toimenpiteet}}
+<p>Marknadsföringen av objektet fortsatte dock trots uppmaning och {{#omistaja-henkilo}}
+    {{sukunimi}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-yritys}}
+    {{nimi}}
+    {{/omistaja-yritys}} uppvisade inget energicertifikat för ARA. Därför vidtog ARA åtgärder enligt 24 § i lagen om
+    energicertifikat och varnade {{#omistaja-henkilo}}
+    {{sukunimi}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-yritys}}
+    {{nimi}}
+    {{/omistaja-yritys}} att visa upp energicertifikatet senast {{varoitus-maarapaiva}}.
+    Situationen korrigerades inte trots uppmaning och varning, och av ARAs energicertifikatregister framgår att det
+    fortfarande inte har upprättats något energicertifikat för adressen
+    <sup>2</sup>.</p>
+{{/aiemmat-toimenpiteet}}
+
+<p>ARA har alltså gett {{#omistaja-henkilo}}
+    {{sukunimi}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-yritys}}
+    {{nimi}}
+    {{/omistaja-yritys}} många möjligheter att korrigera sin verksamhet. ARA kan som sista utväg i enlighet
+    med 24 § i lagen om energicertifikat meddela ett beslut genom vilket byggnadens ägare åläggs att skaffa ett
+    energicertifikat. Ordern kan förenas med vite enligt viteslagen. </p>
+
+<!--TODO: Halutaanko tähän oikeasti se laatikko-->
+<h3>Ställningstagande till bemötandet</h3>
+
+<p>{{#tyyppikohtaiset-tiedot}}{{statement}}{{/tyyppikohtaiset-tiedot}}</p>
+
+<h2>Tillämpliga rättsnormer</h2>
+
+<ul>
+    <li class="no-indicator">2 §, 6 § och 24 § i lagen om energicertifikat för byggnader (50/2013)</li>
+    <li class="no-indicator">4 §, 6 §, 8 § och 22 § i viteslagen (1113/1990)</li>
+    <li class="no-indicator">34 § i förvaltningslagen (434/2003)</li>
+</ul>
+
+<h2>Ändringssökande</h2>
+
+<p> Den som är missnöjd med detta beslut kan söka ändring i det hos förvaltningsdomstolen i
+    {{#tyyppikohtaiset-tiedot}}{{oikeus-sv}}{{/tyyppikohtaiset-tiedot}}. Besvär måste göras och levereras till ovan nämnda
+    förvaltnings-domstol inom 30 dagar från delgivningen av det här beslutet.</p>
+
+<hr/>
+<p class="viittaus mb-0"><sup>2</sup> I ARAs energicertifikatregister finns i regel alla energicertifikat som upprät-tats
+    efter 1 maj 2015.</p>
+
+<p>Noggrannare anvisningar om inlämning av besvär finns med som bilaga till det här beslutet.</p>
+
+{{#valvoja}}
+<p>Mer information om besslutet ges av energiexpert {{etunimi}} {{sukunimi}}, tfn {{puhelin}} / e-post
+    {{email}}.</p>
+{{/valvoja}}
+
+<table class="max-width">
+    <tr>
+        <td>
+            <div>[Kimmo Huovinen]*</div>
+            <div>biträdande direktör</div>
+        </td>
+
+        <td>
+            {{#valvoja}}
+            <div>{{etunimi}} {{sukunimi}}</div>
+            {{/valvoja}}
+            <div>energiexpert</div>
+        </td>
+    </tr>
+</table>
 $$)
 on conflict (id) do update set label_fi          = excluded.label_fi,
                                label_sv          = excluded.label_sv,

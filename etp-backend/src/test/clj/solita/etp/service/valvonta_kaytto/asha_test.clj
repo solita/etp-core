@@ -198,12 +198,14 @@
                 :type-specific-data {:fine               129
                                      :recipient-answered true
                                      :answer-commentary  "Voi anteeksi, en tiennyt."
+                                     :statement "Olisi pitänyt tietää."
                                      :court              0}})
              {:fine               129
-              :recipient-answered true
-              :answer-commentary  "Voi anteeksi, en tiennyt."
-              :vastaus            "Asianosainen antoi vastineen kuulemiskirjeeseen. Voi anteeksi, en tiennyt."
-              :court              "Helsingin hallinto-oikeudelta"}))
+              :vastaus-fi            "Asianosainen antoi vastineen kuulemiskirjeeseen. Voi anteeksi, en tiennyt."
+              :oikeus-fi              "Helsingin hallinto-oikeudelta"
+              :vastaus-sv "gav ett bemötande till brevet om hörande. Voi anteeksi, en tiennyt."
+              :statement "Olisi pitänyt tietää."
+              :oikeus-sv "Helsingfors"}))
 
     (t/testing "For käskypäätös / kuulemiskirje toimenpide :type-spefic-data map is returned as is, as no special formatting is needed"
       (t/is (= (asha/format-type-specific-data
@@ -213,33 +215,45 @@
 
 (t/deftest hallinto-oikeus-id->formatted-string-test
   (t/testing "id 0 results in Helsingin hallinto-oikeudelta"
-    (t/is (= (asha/hallinto-oikeus-id->formatted-string 0)
-             "Helsingin hallinto-oikeudelta")))
+    (t/is (= (asha/hallinto-oikeus-id->formatted-fi-string 0)
+             "Helsingin hallinto-oikeudelta"))
+    (t/is (= (asha/hallinto-oikeus-id->formatted-sv-string 0)
+             "Helsingfors")))
 
   (t/testing "id 1 results in Hämeenlinnan hallinto-oikeudelta"
-    (t/is (= (asha/hallinto-oikeus-id->formatted-string 1)
-             "Hämeenlinnan hallinto-oikeudelta")))
+    (t/is (= (asha/hallinto-oikeus-id->formatted-fi-string 1)
+             "Hämeenlinnan hallinto-oikeudelta"))
+    (t/is (= (asha/hallinto-oikeus-id->formatted-sv-string 1)
+             "Tavastehus")))
 
   (t/testing "id 2 results in Itä-Suomen hallinto-oikeudelta"
-    (t/is (= (asha/hallinto-oikeus-id->formatted-string 2)
-             "Itä-Suomen hallinto-oikeudelta")))
+    (t/is (= (asha/hallinto-oikeus-id->formatted-fi-string 2)
+             "Itä-Suomen hallinto-oikeudelta"))
+    (t/is (= (asha/hallinto-oikeus-id->formatted-sv-string 2)
+             "Östra Finland")))
 
   (t/testing "id 3 results in Pohjois-Suomen hallinto-oikeudelta"
-    (t/is (= (asha/hallinto-oikeus-id->formatted-string 3)
-             "Pohjois-Suomen hallinto-oikeudelta")))
+    (t/is (= (asha/hallinto-oikeus-id->formatted-fi-string 3)
+             "Pohjois-Suomen hallinto-oikeudelta"))
+    (t/is (= (asha/hallinto-oikeus-id->formatted-sv-string 3)
+             "Norra Finland")))
 
   (t/testing "id 4 results in Turun hallinto-oikeudelta"
-    (t/is (= (asha/hallinto-oikeus-id->formatted-string 4)
-             "Turun hallinto-oikeudelta")))
+    (t/is (= (asha/hallinto-oikeus-id->formatted-fi-string 4)
+             "Turun hallinto-oikeudelta"))
+    (t/is (= (asha/hallinto-oikeus-id->formatted-sv-string 4)
+             "Åbo")))
 
   (t/testing "id 5 results in Vaasan hallinto-oikeudelta"
-    (t/is (= (asha/hallinto-oikeus-id->formatted-string 5)
-             "Vaasan hallinto-oikeudelta")))
+    (t/is (= (asha/hallinto-oikeus-id->formatted-fi-string 5)
+             "Vaasan hallinto-oikeudelta"))
+    (t/is (= (asha/hallinto-oikeus-id->formatted-sv-string 5)
+             "Vasa")))
 
   (t/testing "Unknown id results in exception"
     (t/is (thrown-with-msg?
             Exception
-            #"Unknown hallinto-oikeus-id: 6" (asha/hallinto-oikeus-id->formatted-string 6))))
+            #"Unknown hallinto-oikeus-id: 6" (asha/hallinto-oikeus-id->formatted-fi-string 6))))
 
   (t/testing "All hallinto-oikeudet in database have a formatted string"
     (let [hallinto-oikeudet (luokittelu/find-hallinto-oikeudet ts/*db*)]
@@ -247,4 +261,7 @@
                6))
 
       (doseq [hallinto-oikeus hallinto-oikeudet]
-        (t/is (not (nil? (asha/hallinto-oikeus-id->formatted-string (:id hallinto-oikeus)))))))))
+        (t/is (not (nil? (asha/hallinto-oikeus-id->formatted-fi-string (:id hallinto-oikeus))))))
+
+      (doseq [hallinto-oikeus hallinto-oikeudet]
+        (t/is (not (nil? (asha/hallinto-oikeus-id->formatted-sv-string (:id hallinto-oikeus)))))))))

@@ -69,7 +69,7 @@
                   first)]
     (zipmap (keys data) (map time/format-date (vals data)))))
 
-(defn hallinto-oikeus-id->formatted-string [hallinto-oikeus-id]
+(defn hallinto-oikeus-id->formatted-fi-string [hallinto-oikeus-id]
   (condp = hallinto-oikeus-id
     0 "Helsingin hallinto-oikeudelta"
     1 "Hämeenlinnan hallinto-oikeudelta"
@@ -80,21 +80,41 @@
     (exception/throw-ex-info!
       {:message (str "Unknown hallinto-oikeus-id: " hallinto-oikeus-id)})))
 
+(defn hallinto-oikeus-id->formatted-sv-string [hallinto-oikeus-id]
+  (condp = hallinto-oikeus-id
+    0 "Helsingfors"
+    1 "Tavastehus"
+    2 "Östra Finland"
+    3 "Norra Finland"
+    4 "Åbo"
+    5 "Vasa"
+    (exception/throw-ex-info!
+      {:message (str "Unknown hallinto-oikeus-id: " hallinto-oikeus-id)})))
+
 (defmulti format-type-specific-data
           (fn [toimenpide] (-> toimenpide :type-id toimenpide/type-key)))
 
 (defmethod format-type-specific-data :decision-order-actual-decision [toimenpide]
   (let [recipient-answered? (-> toimenpide :type-specific-data :recipient-answered)
         answer-commentary (-> toimenpide :type-specific-data :answer-commentary)]
-    (-> toimenpide
-        :type-specific-data
-        (assoc :vastaus
-               (str (if recipient-answered?
-                      "Asianosainen antoi vastineen kuulemiskirjeeseen."
-                      "Asianosainen ei vastannut kuulemiskirjeeseen.")
-                    " "
-                    answer-commentary))
-        (update :court hallinto-oikeus-id->formatted-string))))
+    {:vastaus-fi (str (if recipient-answered?
+                        "Asianosainen antoi vastineen kuulemiskirjeeseen."
+                        "Asianosainen ei vastannut kuulemiskirjeeseen.")
+                      " "
+                      answer-commentary)
+     :vastaus-sv (str (if recipient-answered?
+                        "gav ett bemötande till brevet om hörande."
+                        "svarade inte på brevet om hörande.")
+                      " "
+                      answer-commentary)
+     :oikeus-fi (hallinto-oikeus-id->formatted-fi-string (-> toimenpide
+                                                          :type-specific-data
+                                                          :court))
+     :oikeus-sv (hallinto-oikeus-id->formatted-sv-string (-> toimenpide
+                                                             :type-specific-data
+                                                             :court))
+     :fine (-> toimenpide :type-specific-data :fine)
+     :statement (-> toimenpide :type-specific-data :statement)}))
 
 (defmethod format-type-specific-data :default [toimenpide]
   (:type-specific-data toimenpide))
