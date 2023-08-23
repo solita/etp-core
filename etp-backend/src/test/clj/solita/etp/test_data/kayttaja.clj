@@ -10,6 +10,7 @@
 (def patevyyden-toteaja {:rooli 1})
 (def paakayttaja {:rooli 2})
 (def laskuttaja {:rooli 3})
+(def aineistoasiakas {:rooli 4})
 (def public nil)
 
 (def KayttajaAdd
