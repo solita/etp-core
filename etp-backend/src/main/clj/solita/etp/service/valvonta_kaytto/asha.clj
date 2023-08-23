@@ -1,7 +1,9 @@
 (ns solita.etp.service.valvonta-kaytto.asha
-  (:require [solita.common.time :as time]
+  (:require [clojure.java.io :as io]
+            [solita.common.time :as time]
             [solita.etp.exception :as exception]
             [solita.etp.service.asha :as asha]
+            [solita.etp.service.valvonta-kaytto.hallinto-oikeus-attachment :as hao-attachment]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
             [solita.etp.service.valvonta-kaytto.template :as template]
             [solita.etp.service.valvonta-kaytto.store :as store]
@@ -216,6 +218,12 @@
                                                             (:ilmoitustunnus valvonta)])
                     :attach         {:contact (map osapuoli->contact osapuolet)}}))
 
+(defn add-hallinto-oikeus-attachment
+  "Adds hallinto-oikeus specific attachment to the end of the given pdf"
+  [db pdf hallinto-oikeus-id]
+  (pdf/merge-pdf [(io/input-stream pdf)
+                  (hao-attachment/attachment-for-hallinto-oikeus-id db hallinto-oikeus-id)]))
+
 (defn generate-pdf-document
   [db whoami valvonta toimenpide ilmoituspaikat osapuoli osapuolet roolit]
   (let [template-id (:template-id toimenpide)
@@ -224,9 +232,12 @@
         tiedoksi (if (template/send-tiedoksi? template) (filter osapuoli/tiedoksi? osapuolet) [])
         template-data (template-data db whoami valvonta toimenpide
                                      osapuoli documents ilmoituspaikat
-                                     tiedoksi roolit)]
-    (pdf/generate-pdf->bytes {:template (:content template)
-                              :data     template-data})))
+                                     tiedoksi roolit)
+        generated-pdf (pdf/generate-pdf->bytes {:template (:content template)
+                                                :data     template-data})]
+    (if (toimenpide/kaskypaatos-varsinainen-paatos? toimenpide)
+      (add-hallinto-oikeus-attachment db generated-pdf (-> toimenpide :type-specific-data :court))
+      generated-pdf)))
 
 (defn log-toimenpide! [db aws-s3-client whoami valvonta toimenpide osapuolet ilmoituspaikat roolit]
   (let [request-id (request-id (:id valvonta) (:id toimenpide))
