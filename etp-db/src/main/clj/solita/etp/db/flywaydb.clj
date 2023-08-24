@@ -35,7 +35,11 @@
   (or (System/getenv name) default))
 
 (defn- add-application-name
-  "Add application to query parameters of the given url."
+  "Add ApplicationName to query parameters of the given url.
+
+  Example:
+  http://localhost:5763/db => http://localhost:5736?ApplicationName=0@database.etp
+  http://localhost:5763/db?other_param=value => http://localhost:5736?ApplicationName=0@database.etp&other_param=value"
   [url]
   (let [[base-url existing-query-string] (str/split url #"\?" 2)]
     (->> ["ApplicationName=0@database.etp" existing-query-string]
