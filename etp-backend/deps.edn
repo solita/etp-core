@@ -91,7 +91,7 @@
                  :jvm-opts    ["-Djava.awt.headless=true"]}
            :test {:main-opts ["-e" "(run-tests-and-exit!)" "-A:dev"]}
            :test-ci {:main-opts ["-e" "(run-tests-with-junit-reporter-and-exit!)" "-A:dev"]}
-           :coverage {:extra-deps {cloverage/cloverage {:mvn/version "1.2.0"}}
+           :coverage {:extra-deps {cloverage/cloverage {:mvn/version "1.2.4"}}
                       :main-opts ["-m" "cloverage.coverage -p src/main -s src/test -e solita.etp.api.* -e user"]}
            :jar {:extra-deps {seancorfield/depstar {:mvn/version "1.1.117"}}
                  :main-opts ["-m" "hf.depstar.jar" "target/etp-backend.jar"]}
