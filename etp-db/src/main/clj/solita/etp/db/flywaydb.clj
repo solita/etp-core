@@ -34,16 +34,19 @@
 (defn env [name default]
   (or (System/getenv name) default))
 
+(defn- add-application-name
+  "Add application to query parameters of the given url."
+  [url]
+  (let [[base-url existing-query-string] (str/split url #"\?" 2)]
+    (->> ["ApplicationName=0@database.etp" existing-query-string]
+         (remove nil?)
+         (str/join "&")
+         (str base-url "?"))))
+
 (defn read-configuration []
-  (let [url (env "DB_URL" "jdbc:postgresql://localhost:5432/postgres")
-        existing-query (-> url (str/split #"\?" 2) (get 1))
-        url-with-app-name (->> ["ApplicationName=0@database.etp" existing-query]
-                               (remove nil?)
-                               (str/join "&")
-                               (str url "?"))]
-    {:user     (env "DB_USER" "etp")
-     :password (env "DB_PASSWORD" "etp")
-     :url      url-with-app-name}))
+  {:user     (env "DB_USER" "etp")
+   :password (env "DB_PASSWORD" "etp")
+   :url      (-> (env "DB_URL" "jdbc:postgresql://localhost:5432/postgres") add-application-name)})
 
 (defn run [args]
   (let [command (str/trim (or (first args) "<empty string>"))
