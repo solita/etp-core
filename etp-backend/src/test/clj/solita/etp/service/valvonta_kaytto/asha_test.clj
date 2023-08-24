@@ -199,13 +199,17 @@
                                      :recipient-answered true
                                      :answer-commentary  "Voi anteeksi, en tiennyt."
                                      :statement "Olisi pitänyt tietää."
-                                     :court              0}})
+                                     :court              0
+                                     :department-head-name "Jorma Jormanen"
+                                     :department-head-title "Hallinto-oikeuden presidentti"}})
              {:fine               129
               :vastaus-fi            "Asianosainen antoi vastineen kuulemiskirjeeseen. Voi anteeksi, en tiennyt."
               :oikeus-fi              "Helsingin hallinto-oikeudelta"
               :vastaus-sv "gav ett bemötande till brevet om hörande. Voi anteeksi, en tiennyt."
               :statement "Olisi pitänyt tietää."
-              :oikeus-sv "Helsingfors"}))
+              :oikeus-sv "Helsingfors"
+              :department-head-name "Jorma Jormanen"
+              :department-head-title "Hallinto-oikeuden presidentti"}))
 
     (t/testing "For käskypäätös / kuulemiskirje toimenpide :type-spefic-data map is returned as is, as no special formatting is needed"
       (t/is (= (asha/format-type-specific-data

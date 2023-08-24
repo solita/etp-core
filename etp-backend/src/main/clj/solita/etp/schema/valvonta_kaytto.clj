@@ -50,7 +50,9 @@
                                        :recipient-answered schema/Bool
                                        :answer-commentary  schema/Str
                                        :statement          schema/Str
-                                       :court              HallintoOikeusId})
+                                       :court              HallintoOikeusId
+                                       :department-head-title schema/Str
+                                       :department-head-name schema/Str})
 
 (def ToimenpideAdd
   (schema/conditional

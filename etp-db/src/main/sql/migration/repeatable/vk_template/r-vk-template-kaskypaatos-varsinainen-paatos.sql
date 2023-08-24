@@ -136,8 +136,10 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 <table class="max-width">
     <tr>
         <td>
-            <div>[Kimmo Huovinen]*</div>
-            <div>apulaisjohtaja</div>
+            {{#tyyppikohtaiset-tiedot}}
+            <div>{{department-head-name}}</div>
+            <div>{{department-head-title}}</div>
+            {{/tyyppikohtaiset-tiedot}}
         </td>
 
         <td>
@@ -327,8 +329,10 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 <table class="max-width">
     <tr>
         <td>
-            <div>[Kimmo Huovinen]*</div>
-            <div>biträdande direktör</div>
+            {{#tyyppikohtaiset-tiedot}}
+            <div>{{department-head-name}}</div>
+            <div>{{department-head-title}}</div>
+            {{/tyyppikohtaiset-tiedot}}
         </td>
 
         <td>

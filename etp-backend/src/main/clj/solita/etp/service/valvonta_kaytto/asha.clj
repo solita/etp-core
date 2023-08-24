@@ -116,7 +116,9 @@
                                                              :type-specific-data
                                                              :court))
      :fine (-> toimenpide :type-specific-data :fine)
-     :statement (-> toimenpide :type-specific-data :statement)}))
+     :statement (-> toimenpide :type-specific-data :statement)
+     :department-head-name (-> toimenpide :type-specific-data :department-head-name)
+     :department-head-title (-> toimenpide :type-specific-data :department-head-title)}))
 
 (defmethod format-type-specific-data :default [toimenpide]
   (:type-specific-data toimenpide))

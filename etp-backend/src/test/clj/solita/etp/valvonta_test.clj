@@ -337,7 +337,9 @@
                                                    :recipient-answered true
                                                    :answer-commentary  "En tiennyt, että todistus tarvitaan :("
                                                    :statement          "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."
-                                                   :court 1}}
+                                                   :court 1
+                                                   :department-head-title "Apulaisjohtaja"
+                                                   :department-head-name "Yli Päällikkö"}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                     (mock/json-body new-toimenpide)
                                     (test-kayttajat/with-virtu-user)
@@ -415,7 +417,9 @@
                                                    :recipient-answered false
                                                    :answer-commentary  "Yritys ei ollut tavoitettavissa ollenkaan asian tiimoilta."
                                                    :statement          "Yritys tuomitaan sakkoihin."
-                                                   :court 2}}
+                                                   :court 2
+                                                   :department-head-title "Senior Vice President"
+                                                   :department-head-name "Jane Doe"}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                     (mock/json-body new-toimenpide)
                                     (test-kayttajat/with-virtu-user)
@@ -454,7 +458,9 @@
                                                  :recipient-answered false
                                                  :answer-commentary  "Hän ei vastannut ollenkaan"
                                                  :statement          "Koska hän ei vastannut ollenkaan hän joutuu maksamaan paljon sakkoja."
-                                                 :court 3}}
+                                                 :court 3
+                                                 :department-head-title "Johtaja"
+                                                 :department-head-name "Nimi Muutettu"}}
             response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/henkilot/%s/preview" valvonta-id osapuoli-id))
                                   (mock/json-body new-toimenpide)
                                   (test-kayttajat/with-virtu-user)
@@ -488,7 +494,9 @@
                                                  :recipient-answered true
                                                  :answer-commentary  "Yritykseni on niin iso, ettei minun tarvitse välittää tällaisista asioista"
                                                  :statement          "Vastaus oli väärä, joten saat isot sakot."
-                                                 :court 5}}
+                                                 :court 5
+                                                 :department-head-title "Titteli"
+                                                 :department-head-name "Nimi"}}
             response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/yritykset/%s/preview" valvonta-id osapuoli-id))
                                   (mock/json-body new-toimenpide)
                                   (test-kayttajat/with-virtu-user)
