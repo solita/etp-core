@@ -45,7 +45,7 @@
                                            clj-http/clj-http
                                            ring/ring-jetty-adapter
                                            org.clojure/data.json]}
-        org.clojure/core.match {:mvn/version "1.0.0"}
+        org.clojure/core.match {:mvn/version "1.0.1"}
         com.cognitect.aws/api {:mvn/version "0.8.666"}
         com.cognitect.aws/endpoints {:mvn/version "1.1.12.456"}
         com.cognitect.aws/s3 {:mvn/version "847.2.1365.0"}
