@@ -28,7 +28,7 @@
         metosin/schema-tools {:mvn/version "0.12.2"}
         ;; TODO Spec-tools can be removed when the issue below has been fixed:
         ;; https://github.com/metosin/reitit/issues/355
-        metosin/spec-tools {:mvn/version "0.10.1"}
+        metosin/spec-tools {:mvn/version "0.10.5"}
         webjure/jeesql {:mvn/version "0.4.7"}
         clj-http/clj-http {:mvn/version "3.12.3"}
         buddy/buddy-core {:mvn/version "1.11.423"}
