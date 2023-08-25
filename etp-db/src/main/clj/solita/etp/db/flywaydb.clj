@@ -21,7 +21,7 @@
                            ConfigUtils/REPEATABLE_SQL_MIGRATION_PREFIX "r"
                            ConfigUtils/LOCATIONS                       "classpath:migration"
                            "flyway.postgresql.transactional.lock"      "false"
-                           ConfigUtils/CLEAN_DISABLED                  "false"})
+                           ConfigUtils/CLEAN_DISABLED                  "false"}) ; Reverted to old default. There's a safety valve already in deployment scripts
 
 (defn map-keys [f m] (into {} (map (fn [[k, v]] [(f k) v]) m)))
 
