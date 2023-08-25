@@ -72,7 +72,7 @@
         com.jcraft/jsch {:mvn/version "0.1.55"}
         com.sun.mail/javax.mail {:mvn/version "1.6.2"}
 
-        org.apache.wss4j/wss4j-ws-security-dom {:mvn/version "3.0.0"}
+        org.apache.wss4j/wss4j-ws-security-dom {:mvn/version "3.0.1"}
         org.apache.wss4j/wss4j-ws-security-common {:mvn/version "3.0.1"}
         com.sun.xml.messaging.saaj/saaj-impl {:mvn/version "3.0.2"}
         org.apache.axis/axis {:mvn/version "1.4"}
