@@ -15,11 +15,13 @@
      "- repair   - attempt to fix migration checksum mismatches"]))
 
 (def flyway-configuration {
-   ConfigUtils/SCHEMAS                 "etp,audit"
-   ConfigUtils/SQL_MIGRATION_PREFIX    "v"
-   ConfigUtils/SQL_MIGRATION_SEPARATOR "-"
-   ConfigUtils/REPEATABLE_SQL_MIGRATION_PREFIX "r"
-   ConfigUtils/LOCATIONS "classpath:migration"})
+                           ConfigUtils/SCHEMAS                         "etp,audit"
+                           ConfigUtils/SQL_MIGRATION_PREFIX            "v"
+                           ConfigUtils/SQL_MIGRATION_SEPARATOR         "-"
+                           ConfigUtils/REPEATABLE_SQL_MIGRATION_PREFIX "r"
+                           ConfigUtils/LOCATIONS                       "classpath:migration"
+                           "flyway.postgresql.transactional.lock"      "false"})
+
 
 (defn map-keys [f m] (into {} (map (fn [[k, v]] [(f k) v]) m)))
 
@@ -32,10 +34,23 @@
 (defn env [name default]
   (or (System/getenv name) default))
 
+(defn- add-application-name
+  "Add ApplicationName to query parameters of the given url.
+
+  Example:
+  http://localhost:5763/db => http://localhost:5763/db?ApplicationName=0@database.etp
+  http://localhost:5763/db?other_param=value => http://localhost:5763/db?ApplicationName=0@database.etp&other_param=value"
+  [url]
+  (let [[base-url existing-query-string] (str/split url #"\?" 2)]
+    (->> ["ApplicationName=0@database.etp" existing-query-string]
+         (remove nil?)
+         (str/join "&")
+         (str base-url "?"))))
+
 (defn read-configuration []
-  {:user (env "DB_USER" "etp")
+  {:user     (env "DB_USER" "etp")
    :password (env "DB_PASSWORD" "etp")
-   :url (env "DB_URL" "jdbc:postgresql://localhost:5432/postgres")})
+   :url      (-> (env "DB_URL" "jdbc:postgresql://localhost:5432/postgres") add-application-name)})
 
 (defn run [args]
   (let [command (str/trim (or (first args) "<empty string>"))
