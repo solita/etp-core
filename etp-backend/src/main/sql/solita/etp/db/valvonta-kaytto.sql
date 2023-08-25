@@ -369,3 +369,12 @@ where valvonta_id = :valvonta-id
   and type_id = 7
 order by create_time desc
 limit 1;
+
+-- name: find-department-head-data
+select type_specific_data->'department-head-title' as department_head_title,
+         type_specific_data->'department-head-name'  as department_head_name
+from vk_toimenpide
+where type_id = 8
+order by create_time desc
+limit 1;
+

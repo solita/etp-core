@@ -373,3 +373,12 @@
   (valvonta-kaytto-db/select-valvonta-by-rakennustunnus
     db
     {:rakennustunnus rakennustunnus}))
+
+(defn department-head-data
+  "Finds the previously used department head title
+   and name from the newest käskypäätös / varsinainen päätös toimenpide specific data"
+  [db]
+  (if-let [latest-department-head (first (valvonta-kaytto-db/find-department-head-data db))]
+    latest-department-head
+    {:department-head-title nil
+     :department-head-name nil}))

@@ -1,9 +1,11 @@
 (ns solita.etp.service.valvonta-kaytto-test
-  (:require [clojure.test :as t]
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.test :as t]
             [schema.core :as schema]
             [solita.etp.schema.valvonta-kaytto :as valvonta-kaytto-schema]
             [solita.etp.service.valvonta-kaytto :as valvonta-kaytto]
-            [solita.etp.test-system :as ts]))
+            [solita.etp.test-system :as ts])
+  (:import (java.time LocalDate ZoneId)))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -171,3 +173,106 @@
           (doseq [id invalid-ids]
             (t/is (not (nil? (schema/check valvonta-kaytto-schema/HallintoOikeusId id)))
                   (str "Id " id " should not be valid"))))))))
+
+(t/deftest department-head-data-test
+  (t/testing "When there is no previous käskypäätös / varsinainen päätös toimenpide, map without values is returned"
+    (t/is (= (valvonta-kaytto/department-head-data ts/*db*)
+             {:department-head-title nil
+              :department-head-name  nil})))
+
+  (t/testing "When there is previous käskypäätös / varsinainen päätös toimenpide, the title and name used in it is returned"
+    (let [valvonta-id (valvonta-kaytto/add-valvonta! ts/*db* {:katuosoite "Testitie 5"})]
+      (jdbc/insert! ts/*db*
+                    :vk_toimenpide
+                    {:valvonta_id        valvonta-id
+                     :type_id            8
+                     :create_time        (-> (LocalDate/of 2023 8 10)
+                                             (.atStartOfDay (ZoneId/systemDefault))
+                                             .toInstant)
+                     :publish_time       (-> (LocalDate/of 2023 8 10)
+                                             (.atStartOfDay (ZoneId/systemDefault))
+                                             .toInstant)
+                     :deadline_date      (LocalDate/of 2023 8 28)
+                     :diaarinumero       "ARA-05.03.01-2023-235"
+                     :type_specific_data {:fine                  6100
+                                          :department-head-name  "Testi Testinen"
+                                          :department-head-title "Ylitarkastaja"}})
+
+      (t/is (= (valvonta-kaytto/department-head-data ts/*db*)
+               {:department-head-title "Ylitarkastaja"
+                :department-head-name  "Testi Testinen"}))))
+
+  (t/testing "When there are multiple previous käskypäätös / varsinainen päätös toimenpide, the title and name used in the latest one is returned"
+    (let [valvonta-id (valvonta-kaytto/add-valvonta! ts/*db* {:katuosoite "Testitie 5"})]
+      (jdbc/insert! ts/*db*
+                    :vk_toimenpide
+                    {:valvonta_id        valvonta-id
+                     :type_id            8
+                     :create_time        (-> (LocalDate/of 2022 8 10)
+                                             (.atStartOfDay (ZoneId/systemDefault))
+                                             .toInstant)
+                     :publish_time       (-> (LocalDate/of 2022 8 10)
+                                             (.atStartOfDay (ZoneId/systemDefault))
+                                             .toInstant)
+                     :deadline_date      (LocalDate/of 2022 8 28)
+                     :diaarinumero       "ARA-05.03.01-2022-235"
+                     :type_specific_data {:fine                  6100
+                                          :department-head-name  "Keskivanhan Tarkastaja"
+                                          :department-head-title "Keskitason tarkastaja"}})
+
+      (jdbc/insert! ts/*db*
+                    :vk_toimenpide
+                    {:valvonta_id        valvonta-id
+                     :type_id            8
+                     :create_time        (-> (LocalDate/of 2021 8 10)
+                                             (.atStartOfDay (ZoneId/systemDefault))
+                                             .toInstant)
+                     :publish_time       (-> (LocalDate/of 2021 8 10)
+                                             (.atStartOfDay (ZoneId/systemDefault))
+                                             .toInstant)
+                     :deadline_date      (LocalDate/of 2021 8 28)
+                     :diaarinumero       "ARA-05.03.01-2021-235"
+                     :type_specific_data {:fine                  6100
+                                          :department-head-name  "Vanhin Tarkastaja"
+                                          :department-head-title "Alimman tason tarkastaja"}})
+
+      (jdbc/insert! ts/*db*
+                    :vk_toimenpide
+                    {:valvonta_id        valvonta-id
+                     :type_id            8
+                     :create_time        (-> (LocalDate/of 2023 8 11)
+                                             (.atStartOfDay (ZoneId/systemDefault))
+                                             .toInstant)
+                     :publish_time       (-> (LocalDate/of 2023 8 11)
+                                             (.atStartOfDay (ZoneId/systemDefault))
+                                             .toInstant)
+                     :deadline_date      (LocalDate/of 2023 8 28)
+                     :diaarinumero       "ARA-05.03.01-2023-235"
+                     :type_specific_data {:fine                  6100
+                                          :department-head-name  "Uusin Tarkastaja"
+                                          :department-head-title "Yliylitarkastaja"}})
+
+      (t/is (= (valvonta-kaytto/department-head-data ts/*db*)
+               {:department-head-title "Yliylitarkastaja"
+                :department-head-name  "Uusin Tarkastaja"}))
+
+      (t/testing "related valvonta does not affect that the newest of them all is returned"
+        (let [valvonta-id-2 (valvonta-kaytto/add-valvonta! ts/*db* {:katuosoite "Testitie 5"})]
+          (jdbc/insert! ts/*db*
+                        :vk_toimenpide
+                        {:valvonta_id        valvonta-id-2
+                         :type_id            8
+                         :create_time        (-> (LocalDate/of 2023 8 12)
+                                                 (.atStartOfDay (ZoneId/systemDefault))
+                                                 .toInstant)
+                         :publish_time       (-> (LocalDate/of 2023 8 12)
+                                                 (.atStartOfDay (ZoneId/systemDefault))
+                                                 .toInstant)
+                         :deadline_date      (LocalDate/of 2023 8 28)
+                         :diaarinumero       "ARA-05.03.01-2023-235"
+                         :type_specific_data {:fine                  6100
+                                              :department-head-name  "Vielä Uudempi Tarkastaja"
+                                              :department-head-title "Yliyliylitarkastaja"}})
+          (t/is (= (valvonta-kaytto/department-head-data ts/*db*)
+                   {:department-head-title "Yliyliylitarkastaja"
+                    :department-head-name  "Vielä Uudempi Tarkastaja"})))))))
