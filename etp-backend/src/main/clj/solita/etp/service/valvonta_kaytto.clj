@@ -41,6 +41,15 @@
    :limit 10
    :offset 0})
 
+(defn department-head-data
+  "Finds the previously used department head title
+   and name from the newest käskypäätös / varsinainen päätös toimenpide specific data"
+  [db]
+  (if-let [latest-department-head (first (valvonta-kaytto-db/find-department-head-data db))]
+    latest-department-head
+    {:department-head-title nil
+     :department-head-name nil}))
+
 (defn- nil-if-not-exists [key object]
   (update object key (logic/when* (comp nil? :id) (constantly nil))))
 
@@ -61,7 +70,8 @@
 (defn find-valvonta [db valvonta-id]
   (->> (valvonta-kaytto-db/select-valvonta db {:id valvonta-id})
        (map db-row->valvonta)
-       first))
+       first
+       (merge (department-head-data db))))
 
 (defn- valvonta->db-row [valvonta]
   (update valvonta :postinumero (maybe/lift1 #(Integer/parseInt %))))
@@ -374,11 +384,3 @@
     db
     {:rakennustunnus rakennustunnus}))
 
-(defn department-head-data
-  "Finds the previously used department head title
-   and name from the newest käskypäätös / varsinainen päätös toimenpide specific data"
-  [db]
-  (if-let [latest-department-head (first (valvonta-kaytto-db/find-department-head-data db))]
-    latest-department-head
-    {:department-head-title nil
-     :department-head-name nil}))

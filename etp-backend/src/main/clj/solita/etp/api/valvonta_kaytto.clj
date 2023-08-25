@@ -112,7 +112,7 @@
       {:conflicting true
        :get         {:summary    "Hae yksittäisen käytönvalvonnan yleiset tiedot."
                      :parameters {:path {:id common-schema/Key}}
-                     :responses  {200 {:body valvonta-kaytto-schema/Valvonta}}
+                     :responses  {200 {:body valvonta-kaytto-schema/ValvontaGet}}
                      :access     rooli-service/paakayttaja?
                      :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                                    (api-response/get-response

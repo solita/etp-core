@@ -29,6 +29,9 @@
 
 (def Valvonta (assoc ValvontaSave :id common-schema/Key))
 
+(def ValvontaGet (assoc Valvonta :department-head-title (schema/maybe schema/Str)
+                                 :department-head-name (schema/maybe schema/Str)))
+
 (def ToimenpideUpdate
   (schema-tools/optional-keys
     {:deadline-date (schema/maybe common-schema/Date)

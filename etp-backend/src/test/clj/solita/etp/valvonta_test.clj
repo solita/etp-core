@@ -80,37 +80,74 @@
           )))))
 
 (t/deftest fetching-valvonta
-  (t/testing "Yksittäisen valvonnan hakeminen palauttaa vastauksen")
-  (let [
-        kayttaja-id (test-kayttajat/insert-virtu-paakayttaja!)
-        valvonta-id (valvonta-service/add-valvonta! ts/*db*
-                                                    (-> {}
-                                                        (generators/complete valvonta-schema/ValvontaSave)
-                                                        (merge {
-                                                                :ilmoitustunnus             nil
-                                                                :rakennustunnus             "1035150826"
-                                                                :katuosoite                 "katu"
-                                                                :postinumero                "65100"
-                                                                :valvoja-id                 kayttaja-id
-                                                                :ilmoituspaikka-id          2
-                                                                :ilmoituspaikka-description "Netissä"
-                                                                :havaintopaiva              (LocalDate/of 2023 6 1)
-                                                                })))
-        response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s" valvonta-id))
-                              (test-kayttajat/with-virtu-user)
-                              (mock/header "Accept" "application/json")))
-        response-body (j/read-value (:body response) j/keyword-keys-object-mapper)
-        ]
-    (t/is (= (:status response) 200))
-    (t/is (= response-body {:valvoja-id                 kayttaja-id
-                            :katuosoite                 "katu"
-                            :ilmoitustunnus             nil
-                            :rakennustunnus             "1035150826"
-                            :postinumero                "65100"
-                            :id                         1
-                            :ilmoituspaikka-description "Netissä"
-                            :ilmoituspaikka-id          2
-                            :havaintopaiva              "2023-06-01"}))))
+  (let [kayttaja-id (test-kayttajat/insert-virtu-paakayttaja!)
+        valvonta-id (valvonta-service/add-valvonta!
+                      ts/*db*
+                      (-> {}
+                          (generators/complete valvonta-schema/ValvontaSave)
+                          (merge {
+                                  :ilmoitustunnus             nil
+                                  :rakennustunnus             "1035150826"
+                                  :katuosoite                 "katu"
+                                  :postinumero                "65100"
+                                  :valvoja-id                 kayttaja-id
+                                  :ilmoituspaikka-id          2
+                                  :ilmoituspaikka-description "Netissä"
+                                  :havaintopaiva              (LocalDate/of 2023 6 1)
+                                  })))]
+    (t/testing "Yksittäisen valvonnan hakeminen palauttaa vastauksen"
+      (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s" valvonta-id))
+                                     (test-kayttajat/with-virtu-user)
+                                     (mock/header "Accept" "application/json")))
+            response-body (j/read-value (:body response) j/keyword-keys-object-mapper)]
+        (t/is (= (:status response) 200))
+        (t/is (= response-body {:valvoja-id                 kayttaja-id
+                                :katuosoite                 "katu"
+                                :ilmoitustunnus             nil
+                                :rakennustunnus             "1035150826"
+                                :postinumero                "65100"
+                                :id                         1
+                                :ilmoituspaikka-description "Netissä"
+                                :ilmoituspaikka-id          2
+                                :havaintopaiva              "2023-06-01"
+                                :department-head-name       nil
+                                :department-head-title      nil})))
+
+      (t/testing "käskypäätös / kuulemiskirje -toimenpiteen olemassaollessa osaston päällikön tiedot täydentyvät responseen"
+
+        ;; Add käskypäätös / varsinainen päätös toimenpide so department-head-name
+        ;; and department-head-title are populated in the response
+        (jdbc/insert! ts/*db*
+                      :vk_toimenpide
+                      {:valvonta_id        valvonta-id
+                       :type_id            8
+                       :create_time        (-> (LocalDate/of 2023 8 10)
+                                               (.atStartOfDay (ZoneId/systemDefault))
+                                               .toInstant)
+                       :publish_time       (-> (LocalDate/of 2023 8 10)
+                                               (.atStartOfDay (ZoneId/systemDefault))
+                                               .toInstant)
+                       :deadline_date      (LocalDate/of 2023 8 28)
+                       :diaarinumero       "ARA-05.03.01-2023-235"
+                       :type_specific_data {:fine                  6100
+                                            :department-head-name  "Testi Testinen"
+                                            :department-head-title "Ylitarkastaja"}})
+        (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s" valvonta-id))
+                                       (test-kayttajat/with-virtu-user)
+                                       (mock/header "Accept" "application/json")))
+              response-body (j/read-value (:body response) j/keyword-keys-object-mapper)]
+          (t/is (= (:status response) 200))
+          (t/is (= response-body {:valvoja-id                 kayttaja-id
+                                  :katuosoite                 "katu"
+                                  :ilmoitustunnus             nil
+                                  :rakennustunnus             "1035150826"
+                                  :postinumero                "65100"
+                                  :id                         1
+                                  :ilmoituspaikka-description "Netissä"
+                                  :ilmoituspaikka-id          2
+                                  :havaintopaiva              "2023-06-01"
+                                  :department-head-name       "Testi Testinen"
+                                  :department-head-title      "Ylitarkastaja"})))))))
 
 (def original-html->pdf pdf/html->pdf)
 
@@ -523,7 +560,9 @@
                                         (test-kayttajat/with-virtu-user)
                                         (mock/header "Accept" "application/json")))
             fetched-valvonta (j/read-value (:body fetch-response) j/keyword-keys-object-mapper)
-            expected-valvonta (assoc valvonta :id 1)]
+            expected-valvonta (assoc valvonta :id 1
+                                              :department-head-name nil
+                                              :department-head-title nil)]
         (t/is (= (:status fetch-response) 200))
         (t/is (= fetched-valvonta expected-valvonta))))))
 
