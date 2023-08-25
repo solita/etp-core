@@ -32,7 +32,7 @@
         webjure/jeesql {:mvn/version "0.4.7"}
         clj-http/clj-http {:mvn/version "3.12.3"}
         buddy/buddy-core {:mvn/version "1.11.423"}
-        buddy/buddy-sign {:mvn/version "3.5.346"}
+        buddy/buddy-sign {:mvn/version "3.5.351"}
         buddy/buddy-hashers {:mvn/version "2.0.167"}
         org.apache.poi/poi {:mvn/version "5.2.3"}
         org.apache.poi/poi-ooxml {:mvn/version "5.2.3"}
