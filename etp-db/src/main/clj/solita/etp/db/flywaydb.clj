@@ -20,8 +20,8 @@
                            ConfigUtils/SQL_MIGRATION_SEPARATOR         "-"
                            ConfigUtils/REPEATABLE_SQL_MIGRATION_PREFIX "r"
                            ConfigUtils/LOCATIONS                       "classpath:migration"
-                           "flyway.postgresql.transactional.lock"      "false"})
-
+                           "flyway.postgresql.transactional.lock"      "false"
+                           ConfigUtils/CLEAN_DISABLED                  "false"})
 
 (defn map-keys [f m] (into {} (map (fn [[k, v]] [(f k) v]) m)))
 
