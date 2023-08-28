@@ -107,7 +107,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 <!--TODO: Halutaanko tähän oikeasti se laatikko-->
 <h3>Kannanotto vastineeseen</h3>
 
-<p>{{#tyyppikohtaiset-tiedot}}{{statement}}{{/tyyppikohtaiset-tiedot}}</p>
+<p>{{#tyyppikohtaiset-tiedot}}{{statement-fi}}{{/tyyppikohtaiset-tiedot}}</p>
 
 <h2>Sovelletut oikeusohjeet</h2>
 
@@ -138,7 +138,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
         <td>
             {{#tyyppikohtaiset-tiedot}}
             <div>{{department-head-name}}</div>
-            <div>{{department-head-title}}</div>
+            <div>{{department-head-title-fi}}</div>
             {{/tyyppikohtaiset-tiedot}}
         </td>
 
@@ -299,7 +299,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 <!--TODO: Halutaanko tähän oikeasti se laatikko-->
 <h3>Ställningstagande till bemötandet</h3>
 
-<p>{{#tyyppikohtaiset-tiedot}}{{statement}}{{/tyyppikohtaiset-tiedot}}</p>
+<p>{{#tyyppikohtaiset-tiedot}}{{statement-sv}}{{/tyyppikohtaiset-tiedot}}</p>
 
 <h2>Tillämpliga rättsnormer</h2>
 
@@ -331,7 +331,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
         <td>
             {{#tyyppikohtaiset-tiedot}}
             <div>{{department-head-name}}</div>
-            <div>{{department-head-title}}</div>
+            <div>{{department-head-title-sv}}</div>
             {{/tyyppikohtaiset-tiedot}}
         </td>
 

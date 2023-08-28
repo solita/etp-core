@@ -29,7 +29,8 @@
 
 (def Valvonta (assoc ValvontaSave :id common-schema/Key))
 
-(def ValvontaGet (assoc Valvonta :department-head-title (schema/maybe schema/Str)
+(def ValvontaGet (assoc Valvonta :department-head-title-fi (schema/maybe schema/Str)
+                                 :department-head-title-sv (schema/maybe schema/Str)
                                  :department-head-name (schema/maybe schema/Str)))
 
 (def ToimenpideUpdate
@@ -51,10 +52,13 @@
 
 (def KaskyPaatosVarsinainenPaatosData {:fine               common-schema/NonNegative
                                        :recipient-answered schema/Bool
-                                       :answer-commentary  schema/Str
-                                       :statement          schema/Str
+                                       :answer-commentary-fi  schema/Str
+                                       :answer-commentary-sv  schema/Str
+                                       :statement-fi          schema/Str
+                                       :statement-sv          schema/Str
                                        :court              HallintoOikeusId
-                                       :department-head-title schema/Str
+                                       :department-head-title-fi schema/Str
+                                       :department-head-title-sv schema/Str
                                        :department-head-name schema/Str})
 
 (def ToimenpideAdd

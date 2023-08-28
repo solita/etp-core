@@ -177,7 +177,8 @@
 (t/deftest department-head-data-test
   (t/testing "When there is no previous käskypäätös / varsinainen päätös toimenpide, map without values is returned"
     (t/is (= (valvonta-kaytto/department-head-data ts/*db*)
-             {:department-head-title nil
+             {:department-head-title-fi nil
+              :department-head-title-sv nil
               :department-head-name  nil})))
 
   (t/testing "When there is previous käskypäätös / varsinainen päätös toimenpide, the title and name used in it is returned"
@@ -196,10 +197,12 @@
                      :diaarinumero       "ARA-05.03.01-2023-235"
                      :type_specific_data {:fine                  6100
                                           :department-head-name  "Testi Testinen"
-                                          :department-head-title "Ylitarkastaja"}})
+                                          :department-head-title-fi "Ylitarkastaja"
+                                          :department-head-title-sv "Övertillsyningsman"}})
 
       (t/is (= (valvonta-kaytto/department-head-data ts/*db*)
-               {:department-head-title "Ylitarkastaja"
+               {:department-head-title-fi "Ylitarkastaja"
+                :department-head-title-sv "Övertillsyningsman"
                 :department-head-name  "Testi Testinen"}))))
 
   (t/testing "When there are multiple previous käskypäätös / varsinainen päätös toimenpide, the title and name used in the latest one is returned"
@@ -218,7 +221,8 @@
                      :diaarinumero       "ARA-05.03.01-2022-235"
                      :type_specific_data {:fine                  6100
                                           :department-head-name  "Keskivanhan Tarkastaja"
-                                          :department-head-title "Keskitason tarkastaja"}})
+                                          :department-head-title-fi "Keskitason tarkastaja"
+                                          :department-head-title-sv "Keskitason tarkastaja ruotsiksi"}})
 
       (jdbc/insert! ts/*db*
                     :vk_toimenpide
@@ -234,7 +238,8 @@
                      :diaarinumero       "ARA-05.03.01-2021-235"
                      :type_specific_data {:fine                  6100
                                           :department-head-name  "Vanhin Tarkastaja"
-                                          :department-head-title "Alimman tason tarkastaja"}})
+                                          :department-head-title-fi "Alimman tason tarkastaja"
+                                          :department-head-title-sv "Alimman tason tarkastaja ruotsiksi"}})
 
       (jdbc/insert! ts/*db*
                     :vk_toimenpide
@@ -250,10 +255,12 @@
                      :diaarinumero       "ARA-05.03.01-2023-235"
                      :type_specific_data {:fine                  6100
                                           :department-head-name  "Uusin Tarkastaja"
-                                          :department-head-title "Yliylitarkastaja"}})
+                                          :department-head-title-fi "Yliylitarkastaja"
+                                          :department-head-title-sv "Yliylitarkastaja på svenska"}})
 
       (t/is (= (valvonta-kaytto/department-head-data ts/*db*)
-               {:department-head-title "Yliylitarkastaja"
+               {:department-head-title-fi "Yliylitarkastaja"
+                :department-head-title-sv "Yliylitarkastaja på svenska"
                 :department-head-name  "Uusin Tarkastaja"}))
 
       (t/testing "related valvonta does not affect that the newest of them all is returned"
@@ -272,7 +279,9 @@
                          :diaarinumero       "ARA-05.03.01-2023-235"
                          :type_specific_data {:fine                  6100
                                               :department-head-name  "Vielä Uudempi Tarkastaja"
-                                              :department-head-title "Yliyliylitarkastaja"}})
+                                              :department-head-title-fi "Yliyliylitarkastaja"
+                                              :department-head-title-sv "Yliyliylitarkastaja på svenska"}})
           (t/is (= (valvonta-kaytto/department-head-data ts/*db*)
-                   {:department-head-title "Yliyliylitarkastaja"
+                   {:department-head-title-fi "Yliyliylitarkastaja"
+                    :department-head-title-sv "Yliyliylitarkastaja på svenska"
                     :department-head-name  "Vielä Uudempi Tarkastaja"})))))))

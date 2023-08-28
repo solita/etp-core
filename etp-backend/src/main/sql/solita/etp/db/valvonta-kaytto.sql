@@ -371,8 +371,9 @@ order by create_time desc
 limit 1;
 
 -- name: find-department-head-data
-select type_specific_data->'department-head-title' as department_head_title,
-         type_specific_data->'department-head-name'  as department_head_name
+select type_specific_data->'department-head-title-fi' as department_head_title_fi,
+       type_specific_data->'department-head-title-sv' as department_head_title_sv,
+       type_specific_data->'department-head-name'  as department_head_name
 from vk_toimenpide
 where type_id = 8
 order by create_time desc

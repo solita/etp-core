@@ -47,7 +47,8 @@
   [db]
   (if-let [latest-department-head (first (valvonta-kaytto-db/find-department-head-data db))]
     latest-department-head
-    {:department-head-title nil
+    {:department-head-title-fi nil
+     :department-head-title-sv nil
      :department-head-name nil}))
 
 (defn- nil-if-not-exists [key object]

@@ -197,19 +197,24 @@
                {:type-id            8
                 :type-specific-data {:fine               129
                                      :recipient-answered true
-                                     :answer-commentary  "Voi anteeksi, en tiennyt."
-                                     :statement "Olisi pitänyt tietää."
+                                     :answer-commentary-fi  "Voi anteeksi, en tiennyt."
+                                     :answer-commentary-sv  "Jag vet inte, förlåt."
+                                     :statement-fi "Olisi pitänyt tietää."
+                                     :statement-sv "Du måste ha visst."
                                      :court              0
                                      :department-head-name "Jorma Jormanen"
-                                     :department-head-title "Hallinto-oikeuden presidentti"}})
+                                     :department-head-title-fi "Hallinto-oikeuden presidentti"
+                                     :department-head-title-sv "Hallinto-oikeuden kuningas"}})
              {:fine               129
               :vastaus-fi            "Asianosainen antoi vastineen kuulemiskirjeeseen. Voi anteeksi, en tiennyt."
               :oikeus-fi              "Helsingin hallinto-oikeudelta"
-              :vastaus-sv "gav ett bemötande till brevet om hörande. Voi anteeksi, en tiennyt."
-              :statement "Olisi pitänyt tietää."
+              :vastaus-sv "gav ett bemötande till brevet om hörande. Jag vet inte, förlåt."
+              :statement-fi "Olisi pitänyt tietää."
+              :statement-sv "Du måste ha visst."
               :oikeus-sv "Helsingfors"
               :department-head-name "Jorma Jormanen"
-              :department-head-title "Hallinto-oikeuden presidentti"}))
+              :department-head-title-fi "Hallinto-oikeuden presidentti"
+              :department-head-title-sv "Hallinto-oikeuden kuningas"}))
 
     (t/testing "For käskypäätös / kuulemiskirje toimenpide :type-spefic-data map is returned as is, as no special formatting is needed"
       (t/is (= (asha/format-type-specific-data

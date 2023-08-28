@@ -97,18 +97,17 @@
           (fn [toimenpide] (-> toimenpide :type-id toimenpide/type-key)))
 
 (defmethod format-type-specific-data :decision-order-actual-decision [toimenpide]
-  (let [recipient-answered? (-> toimenpide :type-specific-data :recipient-answered)
-        answer-commentary (-> toimenpide :type-specific-data :answer-commentary)]
+  (let [recipient-answered? (-> toimenpide :type-specific-data :recipient-answered)]
     {:vastaus-fi (str (if recipient-answered?
                         "Asianosainen antoi vastineen kuulemiskirjeeseen."
                         "Asianosainen ei vastannut kuulemiskirjeeseen.")
                       " "
-                      answer-commentary)
+                      (-> toimenpide :type-specific-data :answer-commentary-fi))
      :vastaus-sv (str (if recipient-answered?
                         "gav ett bemötande till brevet om hörande."
                         "svarade inte på brevet om hörande.")
                       " "
-                      answer-commentary)
+                      (-> toimenpide :type-specific-data :answer-commentary-sv))
      :oikeus-fi (hallinto-oikeus-id->formatted-fi-string (-> toimenpide
                                                           :type-specific-data
                                                           :court))
@@ -116,9 +115,11 @@
                                                              :type-specific-data
                                                              :court))
      :fine (-> toimenpide :type-specific-data :fine)
-     :statement (-> toimenpide :type-specific-data :statement)
+     :statement-fi (-> toimenpide :type-specific-data :statement-fi)
+     :statement-sv (-> toimenpide :type-specific-data :statement-sv)
      :department-head-name (-> toimenpide :type-specific-data :department-head-name)
-     :department-head-title (-> toimenpide :type-specific-data :department-head-title)}))
+     :department-head-title-fi (-> toimenpide :type-specific-data :department-head-title-fi)
+     :department-head-title-sv (-> toimenpide :type-specific-data :department-head-title-sv)}))
 
 (defmethod format-type-specific-data :default [toimenpide]
   (:type-specific-data toimenpide))

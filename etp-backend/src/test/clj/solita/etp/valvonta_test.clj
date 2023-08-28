@@ -111,7 +111,8 @@
                                 :ilmoituspaikka-id          2
                                 :havaintopaiva              "2023-06-01"
                                 :department-head-name       nil
-                                :department-head-title      nil})))
+                                :department-head-title-fi   nil
+                                :department-head-title-sv   nil})))
 
       (t/testing "käskypäätös / kuulemiskirje -toimenpiteen olemassaollessa osaston päällikön tiedot täydentyvät responseen"
 
@@ -131,7 +132,8 @@
                        :diaarinumero       "ARA-05.03.01-2023-235"
                        :type_specific_data {:fine                  6100
                                             :department-head-name  "Testi Testinen"
-                                            :department-head-title "Ylitarkastaja"}})
+                                            :department-head-title-fi "Ylitarkastaja"
+                                            :department-head-title-sv "Ylitarkastaja på svenska"}})
         (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s" valvonta-id))
                                        (test-kayttajat/with-virtu-user)
                                        (mock/header "Accept" "application/json")))
@@ -147,7 +149,8 @@
                                   :ilmoituspaikka-id          2
                                   :havaintopaiva              "2023-06-01"
                                   :department-head-name       "Testi Testinen"
-                                  :department-head-title      "Ylitarkastaja"})))))))
+                                  :department-head-title-fi   "Ylitarkastaja"
+                                  :department-head-title-sv   "Ylitarkastaja på svenska"})))))))
 
 (def original-html->pdf pdf/html->pdf)
 
@@ -372,10 +375,13 @@
                               :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                               :type-specific-data {:fine               857
                                                    :recipient-answered true
-                                                   :answer-commentary  "En tiennyt, että todistus tarvitaan :("
-                                                   :statement          "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."
+                                                   :answer-commentary-fi  "En tiennyt, että todistus tarvitaan :("
+                                                   :answer-commentary-sv "Jag visste inte att ett intyg behövs :("
+                                                   :statement-fi          "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."
+                                                   :statement-sv "Han vet inte. Vi förlotar."
                                                    :court 1
-                                                   :department-head-title "Apulaisjohtaja"
+                                                   :department-head-title-fi "Apulaisjohtaja"
+                                                   :department-head-title-sv "Apulaisjohtaja på svenska"
                                                    :department-head-name "Yli Päällikkö"}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                     (mock/json-body new-toimenpide)
@@ -436,7 +442,7 @@
                                             :create_time        kuulemiskirje-timestamp
                                             :publish_time       kuulemiskirje-timestamp
                                             :deadline_date      (LocalDate/of 2023 8 27)
-                                            :diaarinumero "ARA-05.03.01-2023-132"
+                                            :diaarinumero       "ARA-05.03.01-2023-132"
                                             :type_specific_data {:fine 9000}})
       ;; Mock the current time to ensure that the document has a fixed date
       (with-bindings {#'time/clock    (Clock/fixed (-> (LocalDate/of 2023 8 28)
@@ -450,17 +456,20 @@
                               :deadline-date      (str (LocalDate/of 2023 10 4))
                               :template-id        6
                               :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
-                              :type-specific-data {:fine               857
-                                                   :recipient-answered false
-                                                   :answer-commentary  "Yritys ei ollut tavoitettavissa ollenkaan asian tiimoilta."
-                                                   :statement          "Yritys tuomitaan sakkoihin."
-                                                   :court 2
-                                                   :department-head-title "Senior Vice President"
-                                                   :department-head-name "Jane Doe"}}
+                              :type-specific-data {:fine                     857
+                                                   :recipient-answered       false
+                                                   :answer-commentary-fi     "Yritys ei ollut tavoitettavissa ollenkaan asian tiimoilta."
+                                                   :answer-commentary-sv     "Företaget var inte nåbar alls angående ärendet."
+                                                   :statement-fi             "Yritys tuomitaan sakkoihin."
+                                                   :statement-sv             "Företaget döms till böter."
+                                                   :court                    2
+                                                   :department-head-title-fi "Senior Vice President"
+                                                   :department-head-title-sv "Kungen"
+                                                   :department-head-name     "Jane Doe"}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
-                                    (mock/json-body new-toimenpide)
-                                    (test-kayttajat/with-virtu-user)
-                                    (mock/header "Accept" "application/json")))]
+                                       (mock/json-body new-toimenpide)
+                                       (test-kayttajat/with-virtu-user)
+                                       (mock/header "Accept" "application/json")))]
           (t/is (true? @html->pdf-called?))
           (t/is (= (:status response) 201))))))
 
@@ -493,10 +502,13 @@
                             :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                             :type-specific-data {:fine               857
                                                  :recipient-answered false
-                                                 :answer-commentary  "Hän ei vastannut ollenkaan"
-                                                 :statement          "Koska hän ei vastannut ollenkaan hän joutuu maksamaan paljon sakkoja."
+                                                 :answer-commentary-fi  "Hän ei vastannut ollenkaan"
+                                                 :answer-commentary-sv "Han svarade inte alls"
+                                                 :statement-fi          "Koska hän ei vastannut ollenkaan hän joutuu maksamaan paljon sakkoja."
+                                                 :statement-sv "Eftersom han inte svarade alls måste han betala mycket böter."
                                                  :court 3
-                                                 :department-head-title "Johtaja"
+                                                 :department-head-title-fi "Johtaja"
+                                                 :department-head-title-sv "Ledar"
                                                  :department-head-name "Nimi Muutettu"}}
             response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/henkilot/%s/preview" valvonta-id osapuoli-id))
                                   (mock/json-body new-toimenpide)
@@ -529,10 +541,13 @@
                             :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                             :type-specific-data {:fine               857
                                                  :recipient-answered true
-                                                 :answer-commentary  "Yritykseni on niin iso, ettei minun tarvitse välittää tällaisista asioista"
-                                                 :statement          "Vastaus oli väärä, joten saat isot sakot."
+                                                 :answer-commentary-fi  "Yritykseni on niin iso, ettei minun tarvitse välittää tällaisista asioista"
+                                                 :answer-commentary-sv "Mitt företag är så stort att jag inte behöver bry mig om sådana saker"
+                                                 :statement-fi          "Vastaus oli väärä, joten saat isot sakot."
+                                                 :statement-sv "Svaret var fel, så du får stora böter."
                                                  :court 5
-                                                 :department-head-title "Titteli"
+                                                 :department-head-title-fi "Titteli"
+                                                 :department-head-title-sv "Tittel"
                                                  :department-head-name "Nimi"}}
             response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/yritykset/%s/preview" valvonta-id osapuoli-id))
                                   (mock/json-body new-toimenpide)
@@ -562,7 +577,8 @@
             fetched-valvonta (j/read-value (:body fetch-response) j/keyword-keys-object-mapper)
             expected-valvonta (assoc valvonta :id 1
                                               :department-head-name nil
-                                              :department-head-title nil)]
+                                              :department-head-title-fi nil
+                                              :department-head-title-sv nil)]
         (t/is (= (:status fetch-response) 200))
         (t/is (= fetched-valvonta expected-valvonta))))))
 
