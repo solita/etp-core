@@ -10,8 +10,8 @@
                   :bytes (byte-array (map byte "Some text"))})
 
 (def file-info-2 {:id "id-2"
-                  :path "src/main/clj/user.clj"
-                  :bytes (-> "src/main/clj/user.clj"
+                  :path "src/dev/clj/user.clj"
+                  :bytes (-> "src/dev/clj/user.clj"
                              io/input-stream
                              .readAllBytes)})
 
