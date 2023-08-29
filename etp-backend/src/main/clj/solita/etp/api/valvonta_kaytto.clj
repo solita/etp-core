@@ -44,6 +44,13 @@
                     :access    rooli-service/paakayttaja?
                     :handler   (fn [{:keys [db]}]
                                  (r/response (valvonta-service/find-hallinto-oikeudet db)))}}]
+    ["/johtaja"
+     {:conflicting true
+      :get {:summary   "Hae viimeksi käskypäätös / varsinainen päätös -toimenpiteellä käytetyn johtajan tiedot"
+            :responses {200 {:body valvonta-kaytto-schema/Johtaja}}
+            :access    rooli-service/paakayttaja?
+            :handler   (fn [{:keys [db]}]
+                         (r/response (valvonta-service/department-head-data db)))}}]
     ["/toimenpidetyypit"
      {:conflicting true
       :get         {:summary   "Hae käytönvalvonnan toimenpidetyypit."
@@ -112,7 +119,7 @@
       {:conflicting true
        :get         {:summary    "Hae yksittäisen käytönvalvonnan yleiset tiedot."
                      :parameters {:path {:id common-schema/Key}}
-                     :responses  {200 {:body valvonta-kaytto-schema/ValvontaGet}}
+                     :responses  {200 {:body valvonta-kaytto-schema/Valvonta}}
                      :access     rooli-service/paakayttaja?
                      :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                                    (api-response/get-response

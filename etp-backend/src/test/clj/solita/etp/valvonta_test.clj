@@ -109,13 +109,35 @@
                                 :id                         1
                                 :ilmoituspaikka-description "Netissä"
                                 :ilmoituspaikka-id          2
-                                :havaintopaiva              "2023-06-01"
-                                :department-head-name       nil
-                                :department-head-title-fi   nil
-                                :department-head-title-sv   nil})))
+                                :havaintopaiva              "2023-06-01"}))))))
 
-      (t/testing "käskypäätös / kuulemiskirje -toimenpiteen olemassaollessa osaston päällikön tiedot täydentyvät responseen"
+(t/deftest fetching-johtaja-test
+  (let [kayttaja-id (test-kayttajat/insert-virtu-paakayttaja!)]
+    (t/testing "Kun käskypäätös / varsinainen päätös - toimenpidettä ei ole, osaston päällikön tietoja ei löydy"
+      (let [response (ts/handler (-> (mock/request :get "/api/private/valvonta/kaytto/johtaja")
+                                     (test-kayttajat/with-virtu-user)
+                                     (mock/header "Accept" "application/json")))
+            response-body (j/read-value (:body response) j/keyword-keys-object-mapper)]
+        (t/is (= (:status response) 200))
+        (t/is (= response-body {:department-head-name     nil
+                                :department-head-title-fi nil
+                                :department-head-title-sv nil}))))
 
+    (t/testing "käskypäätös / varsinainen päätös -toimenpiteen olemassaollessa osaston päällikön tiedot täydentyvät responseen"
+      (let [valvonta-id (valvonta-service/add-valvonta!
+                          ts/*db*
+                          (-> {}
+                              (generators/complete valvonta-schema/ValvontaSave)
+                              (merge {
+                                      :ilmoitustunnus             nil
+                                      :rakennustunnus             "1035150826"
+                                      :katuosoite                 "katu"
+                                      :postinumero                "65100"
+                                      :valvoja-id                 kayttaja-id
+                                      :ilmoituspaikka-id          2
+                                      :ilmoituspaikka-description "Netissä"
+                                      :havaintopaiva              (LocalDate/of 2023 6 1)
+                                      })))]
         ;; Add käskypäätös / varsinainen päätös toimenpide so department-head-name
         ;; and department-head-title are populated in the response
         (jdbc/insert! ts/*db*
@@ -130,27 +152,18 @@
                                                .toInstant)
                        :deadline_date      (LocalDate/of 2023 8 28)
                        :diaarinumero       "ARA-05.03.01-2023-235"
-                       :type_specific_data {:fine                  6100
-                                            :department-head-name  "Testi Testinen"
+                       :type_specific_data {:fine                     6100
+                                            :department-head-name     "Testi Testinen"
                                             :department-head-title-fi "Ylitarkastaja"
                                             :department-head-title-sv "Ylitarkastaja på svenska"}})
-        (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s" valvonta-id))
+        (let [response (ts/handler (-> (mock/request :get "/api/private/valvonta/kaytto/johtaja")
                                        (test-kayttajat/with-virtu-user)
                                        (mock/header "Accept" "application/json")))
               response-body (j/read-value (:body response) j/keyword-keys-object-mapper)]
           (t/is (= (:status response) 200))
-          (t/is (= response-body {:valvoja-id                 kayttaja-id
-                                  :katuosoite                 "katu"
-                                  :ilmoitustunnus             nil
-                                  :rakennustunnus             "1035150826"
-                                  :postinumero                "65100"
-                                  :id                         1
-                                  :ilmoituspaikka-description "Netissä"
-                                  :ilmoituspaikka-id          2
-                                  :havaintopaiva              "2023-06-01"
-                                  :department-head-name       "Testi Testinen"
-                                  :department-head-title-fi   "Ylitarkastaja"
-                                  :department-head-title-sv   "Ylitarkastaja på svenska"})))))))
+          (t/is (= response-body {:department-head-name     "Testi Testinen"
+                                  :department-head-title-fi "Ylitarkastaja"
+                                  :department-head-title-sv "Ylitarkastaja på svenska"})))))))
 
 (def original-html->pdf pdf/html->pdf)
 
@@ -575,10 +588,7 @@
                                         (test-kayttajat/with-virtu-user)
                                         (mock/header "Accept" "application/json")))
             fetched-valvonta (j/read-value (:body fetch-response) j/keyword-keys-object-mapper)
-            expected-valvonta (assoc valvonta :id 1
-                                              :department-head-name nil
-                                              :department-head-title-fi nil
-                                              :department-head-title-sv nil)]
+            expected-valvonta (assoc valvonta :id 1)]
         (t/is (= (:status fetch-response) 200))
         (t/is (= fetched-valvonta expected-valvonta))))))
 

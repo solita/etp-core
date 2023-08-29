@@ -29,10 +29,6 @@
 
 (def Valvonta (assoc ValvontaSave :id common-schema/Key))
 
-(def ValvontaGet (assoc Valvonta :department-head-title-fi (schema/maybe schema/Str)
-                                 :department-head-title-sv (schema/maybe schema/Str)
-                                 :department-head-name (schema/maybe schema/Str)))
-
 (def ToimenpideUpdate
   (schema-tools/optional-keys
     {:deadline-date (schema/maybe common-schema/Date)
@@ -141,3 +137,8 @@
     schema/Bool
     :allow-comments
     schema/Bool))
+
+(def Johtaja
+  {:department-head-title-fi (schema/maybe schema/Str)
+   :department-head-title-sv (schema/maybe schema/Str)
+   :department-head-name (schema/maybe schema/Str)})

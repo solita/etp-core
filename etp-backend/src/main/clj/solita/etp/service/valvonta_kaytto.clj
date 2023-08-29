@@ -71,8 +71,7 @@
 (defn find-valvonta [db valvonta-id]
   (->> (valvonta-kaytto-db/select-valvonta db {:id valvonta-id})
        (map db-row->valvonta)
-       first
-       (merge (department-head-data db))))
+       first))
 
 (defn- valvonta->db-row [valvonta]
   (update valvonta :postinumero (maybe/lift1 #(Integer/parseInt %))))
