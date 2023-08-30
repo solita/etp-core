@@ -66,7 +66,7 @@
         org.apache.xmlgraphics/batik-ext {:mvn/version "1.16"}
 
         ;; Non-alpha version does not support xml namespaces
-        org.clojure/data.xml {:mvn/version "0.2.0-alpha6"}
+        org.clojure/data.xml {:mvn/version "0.2.0-alpha8"}
         camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.3"}
         com.jcraft/jsch {:mvn/version "0.1.55"}
         com.sun.mail/javax.mail {:mvn/version "1.6.2"}
