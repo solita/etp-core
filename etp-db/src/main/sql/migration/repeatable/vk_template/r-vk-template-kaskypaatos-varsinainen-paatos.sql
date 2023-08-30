@@ -65,7 +65,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     mielipiteensä asiasta sekä antaa selityksensä sellaisista vaatimuksista ja selvityksistä, jotka saattavat
     vaikuttaa asian ratkaisuun. Kuulemiskirjeessä ARA kertoi, että uhkasakon määrä on arviolta {{#aiemmat-toimenpiteet}}{{kuulemiskirje-fine}}{{/aiemmat-toimenpiteet}} euroa.</p>
 
-<p>{{#tyyppikohtaiset-tiedot}}{{vastaus-fi}}{{/tyyppikohtaiset-tiedot}}</p>
+<p class="respect-new-lines">{{#tyyppikohtaiset-tiedot}}{{vastaus-fi}}{{/tyyppikohtaiset-tiedot}}</p>
 
 <h2>Päätöksen perustelut</h2>
 
@@ -105,7 +105,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 
 <h3>Kannanotto vastineeseen</h3>
 
-<p>{{#tyyppikohtaiset-tiedot}}{{statement-fi}}{{/tyyppikohtaiset-tiedot}}</p>
+<p class="respect-new-lines">{{#tyyppikohtaiset-tiedot}}{{statement-fi}}{{/tyyppikohtaiset-tiedot}}</p>
 
 <h2>Sovelletut oikeusohjeet</h2>
 
@@ -123,6 +123,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 <hr/>
 <p class="viittaus mb-0"><sup>1</sup> ARAn energiatodistusrekisterissä ovat 1.5.2015 jälkeen laaditut
     energiatodistukset.</p>
+<div class="sivunvaihto"></div>
 
 <p>Tarkemmat ohjeet valituksen tekemisestä ovat tämän päätöksen liitteenä.</p>
 
@@ -220,7 +221,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     ärendet. I brevet om hörande berättade ARA att vi-tesbeloppet är uppskattningsvis
     {{#aiemmat-toimenpiteet}}{{kuulemiskirje-fine}}{{/aiemmat-toimenpiteet}} euro.</p>
 
-<p>{{#omistaja-henkilo}}
+<p class="respect-new-lines">{{#omistaja-henkilo}}
     {{sukunimi}}
     {{/omistaja-henkilo}}
     {{#omistaja-yritys}}
@@ -295,7 +296,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 
 <h3>Ställningstagande till bemötandet</h3>
 
-<p>{{#tyyppikohtaiset-tiedot}}{{statement-sv}}{{/tyyppikohtaiset-tiedot}}</p>
+<p class="respect-new-lines">{{#tyyppikohtaiset-tiedot}}{{statement-sv}}{{/tyyppikohtaiset-tiedot}}</p>
 
 <h2>Tillämpliga rättsnormer</h2>
 
@@ -314,6 +315,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 <hr/>
 <p class="viittaus mb-0"><sup>2</sup> I ARAs energicertifikatregister finns i regel alla energicertifikat som upprät-tats
     efter 1 maj 2015.</p>
+<div class="sivunvaihto"></div>
 
 <p>Noggrannare anvisningar om inlämning av besvär finns med som bilaga till det här beslutet.</p>
 
