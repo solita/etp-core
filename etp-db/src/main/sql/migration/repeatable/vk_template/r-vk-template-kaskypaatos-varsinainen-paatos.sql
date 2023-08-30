@@ -65,7 +65,6 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     mielipiteensä asiasta sekä antaa selityksensä sellaisista vaatimuksista ja selvityksistä, jotka saattavat
     vaikuttaa asian ratkaisuun. Kuulemiskirjeessä ARA kertoi, että uhkasakon määrä on arviolta {{#aiemmat-toimenpiteet}}{{kuulemiskirje-fine}}{{/aiemmat-toimenpiteet}} euroa.</p>
 
-<!--TODO: Halutaanko tähän oikeasti se laatikko-->
 <p>{{#tyyppikohtaiset-tiedot}}{{vastaus-fi}}{{/tyyppikohtaiset-tiedot}}</p>
 
 <h2>Päätöksen perustelut</h2>
@@ -104,7 +103,6 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     mukaisena viimesijaisena keinona antaa käskypäätöksen, jolla rakennuksen omistaja velvoitetaan hankkimaan
     energiatodistus. Käskyä voidaan tehostaa uhkasakolla, josta säädetään uhkasakkolaissa.</p>
 
-<!--TODO: Halutaanko tähän oikeasti se laatikko-->
 <h3>Kannanotto vastineeseen</h3>
 
 <p>{{#tyyppikohtaiset-tiedot}}{{statement-fi}}{{/tyyppikohtaiset-tiedot}}</p>
@@ -222,7 +220,6 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     ärendet. I brevet om hörande berättade ARA att vi-tesbeloppet är uppskattningsvis
     {{#aiemmat-toimenpiteet}}{{kuulemiskirje-fine}}{{/aiemmat-toimenpiteet}} euro.</p>
 
-<!--TODO: Halutaanko tähän oikeasti se laatikko-->
 <p>{{#omistaja-henkilo}}
     {{sukunimi}}
     {{/omistaja-henkilo}}
@@ -296,7 +293,6 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     med 24 § i lagen om energicertifikat meddela ett beslut genom vilket byggnadens ägare åläggs att skaffa ett
     energicertifikat. Ordern kan förenas med vite enligt viteslagen. </p>
 
-<!--TODO: Halutaanko tähän oikeasti se laatikko-->
 <h3>Ställningstagande till bemötandet</h3>
 
 <p>{{#tyyppikohtaiset-tiedot}}{{statement-sv}}{{/tyyppikohtaiset-tiedot}}</p>
