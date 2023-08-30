@@ -15,6 +15,7 @@
 
 (db/require-queries 'valvonta-kaytto)
 (db/require-queries 'geo)
+(db/require-queries 'hallinto-oikeus)
 
 (defn toimenpide-type->document [type-id]
   (let [type-key (toimenpide/type-key type-id )
@@ -71,57 +72,42 @@
                   first)]
     (zipmap (keys data) (map time/format-date (vals data)))))
 
-(defn hallinto-oikeus-id->formatted-fi-string [hallinto-oikeus-id]
-  (condp = hallinto-oikeus-id
-    0 "Helsingin hallinto-oikeudelta"
-    1 "Hämeenlinnan hallinto-oikeudelta"
-    2 "Itä-Suomen hallinto-oikeudelta"
-    3 "Pohjois-Suomen hallinto-oikeudelta"
-    4 "Turun hallinto-oikeudelta"
-    5 "Vaasan hallinto-oikeudelta"
-    (exception/throw-ex-info!
-      {:message (str "Unknown hallinto-oikeus-id: " hallinto-oikeus-id)})))
-
-(defn hallinto-oikeus-id->formatted-sv-string [hallinto-oikeus-id]
-  (condp = hallinto-oikeus-id
-    0 "Helsingfors"
-    1 "Tavastehus"
-    2 "Östra Finland"
-    3 "Norra Finland"
-    4 "Åbo"
-    5 "Vasa"
+(defn hallinto-oikeus-id->formatted-strings [db hallinto-oikeus-id]
+  (if-let [formatted-strings (first (hallinto-oikeus-db/find-document-template-wording-by-hallinto-oikeus-id db {:hallinto-oikeus-id hallinto-oikeus-id}))]
+    formatted-strings
     (exception/throw-ex-info!
       {:message (str "Unknown hallinto-oikeus-id: " hallinto-oikeus-id)})))
 
 (defmulti format-type-specific-data
-          (fn [toimenpide] (-> toimenpide :type-id toimenpide/type-key)))
+          (fn [_ toimenpide] (-> toimenpide :type-id toimenpide/type-key)))
 
-(defmethod format-type-specific-data :decision-order-actual-decision [toimenpide]
-  (let [recipient-answered? (-> toimenpide :type-specific-data :recipient-answered)]
-    {:vastaus-fi (str (if recipient-answered?
-                        "Asianosainen antoi vastineen kuulemiskirjeeseen."
-                        "Asianosainen ei vastannut kuulemiskirjeeseen.")
-                      " "
-                      (-> toimenpide :type-specific-data :answer-commentary-fi))
-     :vastaus-sv (str (if recipient-answered?
-                        "gav ett bemötande till brevet om hörande."
-                        "svarade inte på brevet om hörande.")
-                      " "
-                      (-> toimenpide :type-specific-data :answer-commentary-sv))
-     :oikeus-fi (hallinto-oikeus-id->formatted-fi-string (-> toimenpide
-                                                          :type-specific-data
-                                                          :court))
-     :oikeus-sv (hallinto-oikeus-id->formatted-sv-string (-> toimenpide
-                                                             :type-specific-data
-                                                             :court))
-     :fine (-> toimenpide :type-specific-data :fine)
-     :statement-fi (-> toimenpide :type-specific-data :statement-fi)
-     :statement-sv (-> toimenpide :type-specific-data :statement-sv)
-     :department-head-name (-> toimenpide :type-specific-data :department-head-name)
+(defmethod format-type-specific-data :decision-order-actual-decision [db toimenpide]
+  (let [recipient-answered? (-> toimenpide :type-specific-data :recipient-answered)
+        hallinto-oikeus-strings (hallinto-oikeus-id->formatted-strings
+                                  db
+                                  (-> toimenpide
+                                      :type-specific-data
+                                      :court))]
+    {:vastaus-fi               (str (if recipient-answered?
+                                      "Asianosainen antoi vastineen kuulemiskirjeeseen."
+                                      "Asianosainen ei vastannut kuulemiskirjeeseen.")
+                                    " "
+                                    (-> toimenpide :type-specific-data :answer-commentary-fi))
+     :vastaus-sv               (str (if recipient-answered?
+                                      "gav ett bemötande till brevet om hörande."
+                                      "svarade inte på brevet om hörande.")
+                                    " "
+                                    (-> toimenpide :type-specific-data :answer-commentary-sv))
+     :oikeus-fi                (:fi hallinto-oikeus-strings)
+     :oikeus-sv                (:sv hallinto-oikeus-strings)
+     :fine                     (-> toimenpide :type-specific-data :fine)
+     :statement-fi             (-> toimenpide :type-specific-data :statement-fi)
+     :statement-sv             (-> toimenpide :type-specific-data :statement-sv)
+     :department-head-name     (-> toimenpide :type-specific-data :department-head-name)
      :department-head-title-fi (-> toimenpide :type-specific-data :department-head-title-fi)
      :department-head-title-sv (-> toimenpide :type-specific-data :department-head-title-sv)}))
 
-(defmethod format-type-specific-data :default [toimenpide]
+(defmethod format-type-specific-data :default [_ toimenpide]
   (:type-specific-data toimenpide))
 
 (defn- template-data [db whoami valvonta toimenpide osapuoli dokumentit ilmoituspaikat tiedoksi roolit]
@@ -142,7 +128,7 @@
    :tietopyynto      {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
                       :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
    :tiedoksi         (map (partial tiedoksi-saaja roolit) tiedoksi)
-   :tyyppikohtaiset-tiedot (format-type-specific-data toimenpide)
+   :tyyppikohtaiset-tiedot (format-type-specific-data db toimenpide)
    :aiemmat-toimenpiteet (when (toimenpide/kaskypaatos-toimenpide? toimenpide)
                            (merge
                              (kuulemiskirje-data db (:id valvonta))
