@@ -120,10 +120,10 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 <p>Tähän päätökseen tyytymätön saa hakea siihen muutosta {{#tyyppikohtaiset-tiedot}}{{oikeus-fi}}{{/tyyppikohtaiset-tiedot}}. Valitus on tehtävä ja
     toimitettava edellä mainittuun hallinto-oikeuteen 30 päivän kuluessa tämän päätöksen tiedoksisaannista.</p>
 
-<hr/>
-<p class="viittaus mb-0"><sup>1</sup> ARAn energiatodistusrekisterissä ovat 1.5.2015 jälkeen laaditut
-    energiatodistukset.</p>
-<div class="sivunvaihto"></div>
+<div class="footnote">
+    <p class="mb-0"><sup>1</sup> ARAn energiatodistusrekisterissä ovat 1.5.2015 jälkeen laaditut
+        energiatodistukset.</p>
+</div>
 
 <p>Tarkemmat ohjeet valituksen tekemisestä ovat tämän päätöksen liitteenä.</p>
 
@@ -312,10 +312,10 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     {{#tyyppikohtaiset-tiedot}}{{oikeus-sv}}{{/tyyppikohtaiset-tiedot}}. Besvär måste göras och levereras till ovan nämnda
     förvaltnings-domstol inom 30 dagar från delgivningen av det här beslutet.</p>
 
-<hr/>
-<p class="viittaus mb-0"><sup>2</sup> I ARAs energicertifikatregister finns i regel alla energicertifikat som upprät-tats
-    efter 1 maj 2015.</p>
-<div class="sivunvaihto"></div>
+<div class="footnote">
+    <p class="mb-0"><sup>2</sup> I ARAs energicertifikatregister finns i regel alla energicertifikat som upprät-tats
+        efter 1 maj 2015.</p>
+</div>
 
 <p>Noggrannare anvisningar om inlämning av besvär finns med som bilaga till det här beslutet.</p>
 
