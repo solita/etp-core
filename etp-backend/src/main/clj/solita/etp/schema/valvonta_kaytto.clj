@@ -90,7 +90,7 @@
 (def Yritys (complete-valvonta-related-schema YritysSave))
 (def YritysStatus Yritys)
 
-(def Toimenpide
+(def ToimenpideBase
   {:type-id       common-schema/Key
    :deadline-date (schema/maybe common-schema/Date)
    :template-id   (schema/maybe common-schema/Key)
@@ -103,11 +103,18 @@
    :filename      (schema/maybe schema/Str)
    :valvonta-id   common-schema/Key
    :henkilot      [Henkilo]
-   :yritykset     [Yritys]
-   :type-specific-data schema/Any})
+   :yritykset     [Yritys]})
+
+(def Toimenpide (schema/conditional
+                  toimenpide/kaskypaatos-kuulemiskirje?
+                  (assoc ToimenpideBase :type-specific-data KaskypaatosKuulemiskirjeData)
+
+                  toimenpide/kaskypaatos-varsinainen-paatos?
+                  (assoc ToimenpideBase :type-specific-data KaskyPaatosVarsinainenPaatosData)
+                  :else (assoc ToimenpideBase :type-specific-data (schema/enum nil))))
 
 (def LastToimenpide
-  (schema-tools/select-keys Toimenpide
+  (schema-tools/select-keys ToimenpideBase
                             [:id :diaarinumero :type-id
                              :deadline-date :create-time
                              :publish-time :template-id]))
