@@ -85,7 +85,7 @@
                                "src/test/resources"
                                "src/dev/clj"]
                  :extra-deps {integrant/repl {:mvn/version "0.3.3"}
-                              eftest/eftest {:mvn/version "0.5.9"}
+                              eftest/eftest {:mvn/version "0.6.0"}
                               prismatic/schema-generators {:mvn/version "0.1.3"}
                               ring/ring-mock {:mvn/version "0.4.0"}
                               org.xmlunit/xmlunit-core {:mvn/version "2.9.1"}}
