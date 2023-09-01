@@ -11,7 +11,7 @@
         org.postgresql/postgresql {:mvn/version "42.6.0"}
         org.clojure/java.jdbc {:mvn/version "0.7.12"}
         org.clojure/data.csv {:mvn/version "1.0.1"}
-        http-kit/http-kit {:mvn/version "2.4.0-alpha6"}
+        http-kit/http-kit {:mvn/version "2.7.0"}
         ring/ring-core {:mvn/version "1.10.0"}
         javax.servlet/servlet-api {:mvn/version "2.5"}
         org.clojure/tools.logging {:mvn/version "1.0.0"}
