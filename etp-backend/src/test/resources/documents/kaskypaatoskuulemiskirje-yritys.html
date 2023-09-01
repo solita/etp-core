@@ -46,6 +46,12 @@
                 font-family: roboto;
                 content: element(document-footer)
             };
+
+            @footnote {
+                width: 100%;
+                border-top: 1px solid black;
+                margin-top: 1.2cm;
+            }
         }
 
         body {
@@ -87,6 +93,10 @@
         li.slim:before {
             margin-left: -0.4cm;
             width: 0.4cm;
+        }
+
+        li.no-indicator:before {
+            content:'';
         }
 
         p {
@@ -166,15 +176,20 @@
             width: 7.2cm;
         }
 
-        .viittaus {
+        .footnote {
             font-size: 10pt;
+            float: footnote;
         }
 
-        hr {
-            border: none;
-            height: 1px;
-            margin-top: 1.2cm;
-            background-color: black;
+        .respect-new-lines {
+            white-space: pre-line;
+        }
+        ::footnote-call {
+            counter-increment: footnote 1;
+            content: "";
+        }
+        ::footnote-marker {
+            content: "";
         }
     </style>
 

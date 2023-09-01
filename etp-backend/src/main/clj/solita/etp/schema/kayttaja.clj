@@ -55,7 +55,7 @@
           :organisaatio  schema/Str}))
 
 (def Whoami (-> Kayttaja
-                (dissoc :passivoitu :valvoja :puhelin :login :api-key)
+                (dissoc :passivoitu :valvoja :login :api-key)
                 (assoc :partner schema/Bool)))
 
 (def KayttajaHistory

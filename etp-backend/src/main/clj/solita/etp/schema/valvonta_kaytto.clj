@@ -3,6 +3,7 @@
             [solita.etp.schema.common :as common-schema]
             [solita.etp.schema.geo :as geo-schema]
             [solita.etp.schema.valvonta :as valvonta-schema]
+            [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
             [schema-tools.core :as schema-tools]))
 
 (defn complete-valvonta-related-schema [schema]
@@ -34,13 +35,36 @@
      :template-id   (schema/maybe common-schema/Key)
      :description   (schema/maybe schema/Str)}))
 
-(def ToimenpideAdd
+(def ToimenpideAddBase
   {:type-id                           common-schema/Key
    :deadline-date                     (schema/maybe common-schema/Date)
    :template-id                       (schema/maybe common-schema/Key)
    :description                       (schema/maybe schema/Str)
-   (schema/optional-key :bypass-asha) schema/Bool
-   (schema/optional-key :fine)        common-schema/NonNegative})
+   (schema/optional-key :bypass-asha) schema/Bool})
+
+(def KaskypaatosKuulemiskirjeData {:fine common-schema/NonNegative})
+
+(def HallintoOikeusId (schema/enum 0 1 2 3 4 5))
+
+(def KaskyPaatosVarsinainenPaatosData {:fine               common-schema/NonNegative
+                                       :recipient-answered schema/Bool
+                                       :answer-commentary-fi  schema/Str
+                                       :answer-commentary-sv  schema/Str
+                                       :statement-fi          schema/Str
+                                       :statement-sv          schema/Str
+                                       :court              HallintoOikeusId
+                                       :department-head-title-fi schema/Str
+                                       :department-head-title-sv schema/Str
+                                       :department-head-name schema/Str})
+
+(def ToimenpideAdd
+  (schema/conditional
+    toimenpide/kaskypaatos-kuulemiskirje?
+    (assoc ToimenpideAddBase :type-specific-data KaskypaatosKuulemiskirjeData)
+
+    toimenpide/kaskypaatos-varsinainen-paatos?
+    (assoc ToimenpideAddBase :type-specific-data KaskyPaatosVarsinainenPaatosData)
+    :else ToimenpideAddBase))
 
 (def Template
   (assoc valvonta-schema/Template
@@ -66,22 +90,31 @@
 (def Yritys (complete-valvonta-related-schema YritysSave))
 (def YritysStatus Yritys)
 
-(def Toimenpide
-  (-> ToimenpideAdd
-      (dissoc (schema/optional-key :bypass-asha))
-      (assoc
-        :id common-schema/Key
-        :diaarinumero (schema/maybe schema/Str)
-        :author common-schema/Kayttaja
-        :create-time common-schema/Instant
-        :publish-time common-schema/Instant
-        :filename (schema/maybe schema/Str)
-        :valvonta-id common-schema/Key
-        :henkilot [Henkilo]
-        :yritykset [Yritys])))
+(def ToimenpideBase
+  {:type-id       common-schema/Key
+   :deadline-date (schema/maybe common-schema/Date)
+   :template-id   (schema/maybe common-schema/Key)
+   :description   (schema/maybe schema/Str)
+   :id            common-schema/Key
+   :diaarinumero  (schema/maybe schema/Str)
+   :author        common-schema/Kayttaja
+   :create-time   common-schema/Instant
+   :publish-time  common-schema/Instant
+   :filename      (schema/maybe schema/Str)
+   :valvonta-id   common-schema/Key
+   :henkilot      [Henkilo]
+   :yritykset     [Yritys]})
+
+(def Toimenpide (schema/conditional
+                  toimenpide/kaskypaatos-kuulemiskirje?
+                  (assoc ToimenpideBase :type-specific-data KaskypaatosKuulemiskirjeData)
+
+                  toimenpide/kaskypaatos-varsinainen-paatos?
+                  (assoc ToimenpideBase :type-specific-data KaskyPaatosVarsinainenPaatosData)
+                  :else (assoc ToimenpideBase :type-specific-data (schema/enum nil))))
 
 (def LastToimenpide
-  (schema-tools/select-keys Toimenpide
+  (schema-tools/select-keys ToimenpideBase
                             [:id :diaarinumero :type-id
                              :deadline-date :create-time
                              :publish-time :template-id]))
@@ -111,3 +144,8 @@
     schema/Bool
     :allow-comments
     schema/Bool))
+
+(def Johtaja
+  {:department-head-title-fi (schema/maybe schema/Str)
+   :department-head-title-sv (schema/maybe schema/Str)
+   :department-head-name (schema/maybe schema/Str)})

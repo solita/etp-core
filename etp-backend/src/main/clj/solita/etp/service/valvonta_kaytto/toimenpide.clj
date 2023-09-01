@@ -16,7 +16,8 @@
    5 :closed
    ;; Uhkasakkoprosessi
    6 :court-hearing
-   7 :decision-order-hearing-letter})
+   7 :decision-order-hearing-letter
+   8 :decision-order-actual-decision})
 
 (defn type-key [type-id]
   (if-let [type-key (type-id->type-key type-id)]
@@ -32,10 +33,18 @@
 (def case-open? (partial type? :case))
 (def case-close? (partial type? :closed))
 (def send-tiedoksi? (partial type? :rfi-request))
+
 (def kaskypaatos-kuulemiskirje? (partial type? :decision-order-hearing-letter))
 
+(def kaskypaatos-varsinainen-paatos? (partial type? :decision-order-actual-decision))
+
+(def kaskypaatos-toimenpide?
+  (partial some-type? #{:decision-order-hearing-letter
+                        :decision-order-actual-decision}))
+
 (def asha-toimenpide?
-  (partial some-type? #{:rfi-request :rfi-order :rfi-warning :decision-order-hearing-letter}))
+  (partial some-type? #{:rfi-request :rfi-order :rfi-warning :decision-order-hearing-letter :decision-order-actual-decision}))
+
 
 (def with-diaarinumero? (comp not (partial type? :case)))
 

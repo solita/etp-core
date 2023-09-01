@@ -4,14 +4,15 @@
             [hikari-cp.core :as hikari]
             [jeesql.core :as jeesql]
             [jeesql.generate :as jeesql-generate]
+            [jsonista.core :as json]
             [clojure.string :as str]
             [solita.common.map :as map]
             [solita.common.jdbc :as common-jdbc]
             [solita.etp.exception :as exception])
-  (:import (org.postgresql.util PSQLException ServerErrorMessage)
+  (:import (org.postgresql.util PGobject PSQLException ServerErrorMessage)
            (java.time Instant)
            (java.sql Timestamp PreparedStatement Date)
-           (clojure.lang IPersistentVector)
+           (clojure.lang IPersistentMap IPersistentVector)
            (org.postgresql.jdbc PgArray)
            (java.util TimeZone)))
 
@@ -133,3 +134,31 @@
   Instant
   (set-parameter [^Instant instant ^PreparedStatement stmt ^long i]
     (.setObject stmt i (Timestamp/from instant))))
+
+
+
+;; JSONB support
+;; Heavily inspired by https://github.com/siscia/postgres-type
+
+(defn write-json [value]
+  (doto  (PGobject.)
+    (.setType "jsonb")
+    (.setValue (json/write-value-as-string value))))
+
+(defn read-json [value]
+  (json/read-value value json/keyword-keys-object-mapper))
+
+(extend-protocol jdbc/ISQLValue
+  IPersistentMap
+  (sql-value [value] (write-json value))
+  IPersistentVector
+  (sql-value [value] (write-json value)))
+
+(extend-protocol jdbc/IResultSetReadColumn
+  PGobject
+  (result-set-read-column [pgobj _metadata _index]
+    (let [type (.getType pgobj)
+          value (.getValue pgobj)]
+      (if (= type "jsonb")
+        (read-json value)
+        value))))

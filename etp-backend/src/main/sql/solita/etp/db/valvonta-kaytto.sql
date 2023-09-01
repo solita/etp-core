@@ -244,7 +244,7 @@ update vk_valvonta_liite set deleted = true where id = :id;
 select
     toimenpide.id, toimenpide.type_id, toimenpide.valvonta_id,
     toimenpide.create_time, toimenpide.publish_time, toimenpide.deadline_date,
-    toimenpide.template_id, toimenpide.diaarinumero, toimenpide.description,
+    toimenpide.template_id, toimenpide.diaarinumero, toimenpide.description, toimenpide.type_specific_data,
     toimenpide.author_id author$id, author.rooli_id author$rooli_id,
     author.etunimi author$etunimi, author.sukunimi author$sukunimi
 from vk_toimenpide toimenpide
@@ -333,22 +333,49 @@ SELECT id
 FROM vk_toimenpidetype
 WHERE manually_deliverable is true;
 
--- name: past-dates-for-kaskypaatos-kuulemiskirje
-with kehotus as (select create_time, deadline_date
+-- name: past-dates-for-kaskypaatos-toimenpiteet
+with kehotus as (select create_time, deadline_date, valvonta_id
                  from vk_toimenpide
                  where valvonta_id = :valvonta-id
                    and type_id = 2
                  order by create_time desc
                  LIMIT 1),
-     varoitus as (select create_time, deadline_date
+     varoitus as (select create_time, deadline_date, valvonta_id
                   from vk_toimenpide
                   where valvonta_id = :valvonta-id
                     and type_id = 3
                   order by create_time desc
-                  LIMIT 1)
-select kehotus.create_time::date  as kehotus_pvm,
-       kehotus.deadline_date      as kehotus_maarapaiva,
-       varoitus.create_time::date as varoitus_pvm,
-       varoitus.deadline_date     as varoitus_maarapaiva
-from kehotus,
-     varoitus;
+                  LIMIT 1),
+     kuulemiskirje as (select create_time, deadline_date, valvonta_id
+                       from vk_toimenpide
+                       where valvonta_id = :valvonta-id
+                         and type_id = 7
+                       order by create_time desc
+                       LIMIT 1)
+select kehotus.create_time::date       as kehotus_pvm,
+       kehotus.deadline_date           as kehotus_maarapaiva,
+       varoitus.create_time::date      as varoitus_pvm,
+       varoitus.deadline_date          as varoitus_maarapaiva,
+       kuulemiskirje.create_time::date as kuulemiskirje_pvm,
+       kuulemiskirje.deadline_date     as kuulemiskirje_maarapaiva
+from kehotus
+         left join varoitus on kehotus.valvonta_id = varoitus.valvonta_id
+         left join kuulemiskirje on kehotus.valvonta_id = kuulemiskirje.valvonta_id;
+
+-- name: kuulemiskirje-data
+select diaarinumero as kuulemiskirje_diaarinumero, type_specific_data->'fine' as kuulemiskirje_fine
+from vk_toimenpide
+where valvonta_id = :valvonta-id
+  and type_id = 7
+order by create_time desc
+limit 1;
+
+-- name: find-department-head-data
+select type_specific_data->'department-head-title-fi' as department_head_title_fi,
+       type_specific_data->'department-head-title-sv' as department_head_title_sv,
+       type_specific_data->'department-head-name'  as department_head_name
+from vk_toimenpide
+where type_id = 8
+order by create_time desc
+limit 1;
+

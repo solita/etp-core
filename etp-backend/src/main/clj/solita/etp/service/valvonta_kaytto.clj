@@ -41,6 +41,16 @@
    :limit 10
    :offset 0})
 
+(defn department-head-data
+  "Finds the previously used department head title
+   and name from the newest käskypäätös / varsinainen päätös toimenpide specific data"
+  [db]
+  (if-let [latest-department-head (first (valvonta-kaytto-db/find-department-head-data db))]
+    latest-department-head
+    {:department-head-title-fi nil
+     :department-head-title-sv nil
+     :department-head-name nil}))
+
 (defn- nil-if-not-exists [key object]
   (update object key (logic/when* (comp nil? :id) (constantly nil))))
 
@@ -113,6 +123,9 @@
 
 (defn find-toimitustavat [db]
   (luokittelu/find-vk-toimitustavat db))
+
+(defn find-hallinto-oikeudet [db]
+  (luokittelu/find-hallinto-oikeudet db))
 
 (defn find-yritys [db yritys-id]
   (first (valvonta-kaytto-db/select-yritys db {:id yritys-id})))
@@ -203,7 +216,7 @@
   (first (db/with-db-exception-translation
            jdbc/insert! db :vk-toimenpide
            (-> toimenpide-add
-               (dissoc :bypass-asha :fine)
+               (dissoc :bypass-asha)
                (assoc
                 :diaarinumero diaarinumero
                 :valvonta-id valvonta-id
@@ -260,7 +273,6 @@
                            (find-osapuolet tx valvonta-id)
                            ilmoituspaikat)
                          (find-diaarinumero tx valvonta-id toimenpide-add))
-          sakko (:fine toimenpide-add)
           toimenpide (insert-toimenpide! tx valvonta-id diaarinumero toimenpide-add)
           toimenpide-id (:id toimenpide)]
       (insert-toimenpide-osapuolet! tx valvonta-id toimenpide-id)
@@ -271,7 +283,7 @@
           (let [find-toimenpide-osapuolet (comp flatten (juxt find-toimenpide-henkilot find-toimenpide-yritykset))
                 osapuolet (find-toimenpide-osapuolet tx (:id toimenpide))]
             (asha/log-toimenpide!
-              tx aws-s3-client whoami valvonta (assoc toimenpide :fine sakko)
+              tx aws-s3-client whoami valvonta toimenpide
               osapuolet ilmoituspaikat roolit)
             (when-not (toimenpide/manually-deliverable? db (:type-id toimenpide))
               (send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
@@ -371,3 +383,4 @@
   (valvonta-kaytto-db/select-valvonta-by-rakennustunnus
     db
     {:rakennustunnus rakennustunnus}))
+

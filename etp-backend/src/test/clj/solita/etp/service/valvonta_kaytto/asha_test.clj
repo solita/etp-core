@@ -1,6 +1,7 @@
 (ns solita.etp.service.valvonta-kaytto.asha-test
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.test :as t]
+            [solita.etp.service.luokittelu :as luokittelu]
             [solita.etp.service.valvonta-kaytto :as valvonta-service]
             [solita.etp.service.valvonta-kaytto.asha :as asha]
             [solita.etp.test-system :as ts])
@@ -9,7 +10,7 @@
 (t/use-fixtures :each ts/fixture)
 
 (t/deftest past-dates-for-kaskypaatos-kuulemiskirje-test
-  (t/testing "Correct dates for the valvonta are found from database and they are formatted in Finnish date format"
+  (t/testing "Correct dates for the kehotus and valvonta are found from database and they are formatted in Finnish date format"
     (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite "Testitie 5"})
           kehotus-timestamp (-> (LocalDate/of 2023 6 12)
                                 (.atStartOfDay (ZoneId/systemDefault))
@@ -32,12 +33,15 @@
                                             :deadline_date (LocalDate/of 2023 8 13)})
 
       ;; Kehotus creation date and deadline and varoitus creation date
-      ;; and deadline are found and formatted correctly
-      (t/is (= (asha/past-dates-for-kaskypaatos-kuulemiskirje ts/*db* valvonta-id)
-               {:kehotus-pvm         "12.06.2023"
-                :kehotus-maarapaiva  "12.07.2023"
-                :varoitus-pvm        "13.07.2023"
-                :varoitus-maarapaiva "13.08.2023"}))))
+      ;; and deadline are found and formatted correctly.
+      ;; There is no kuulemiskirje toimenpide yet
+      (t/is (= (asha/past-dates-for-kaskypaatos-toimenpiteet ts/*db* valvonta-id)
+               {:kehotus-pvm              "12.06.2023"
+                :kehotus-maarapaiva       "12.07.2023"
+                :varoitus-pvm             "13.07.2023"
+                :varoitus-maarapaiva      "13.08.2023"
+                :kuulemiskirje-pvm        nil
+                :kuulemiskirje-maarapaiva nil}))))
 
   (t/testing "When there are multiple kehotus and varoitus toimenpide, the newest dates are found"
     (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite "Testitie 5"})
@@ -85,8 +89,182 @@
 
       ;; The newest kehotus creation date and deadline and varoitus creation date
       ;; and deadline are found and formatted correctly
-      (t/is (= (asha/past-dates-for-kaskypaatos-kuulemiskirje ts/*db* valvonta-id)
-               {:kehotus-pvm         "12.06.2023"
-                :kehotus-maarapaiva  "12.07.2023"
-                :varoitus-pvm        "13.07.2023"
-                :varoitus-maarapaiva "13.08.2023"})))))
+      ;; There is no kuulemiskirje toimenpide yet
+      (t/is (= (asha/past-dates-for-kaskypaatos-toimenpiteet ts/*db* valvonta-id)
+               {:kehotus-pvm              "12.06.2023"
+                :kehotus-maarapaiva       "12.07.2023"
+                :varoitus-pvm             "13.07.2023"
+                :varoitus-maarapaiva      "13.08.2023"
+                :kuulemiskirje-pvm        nil
+                :kuulemiskirje-maarapaiva nil}))))
+
+  (t/testing "Correct dates for kehotus, valvonta and kuulemiskirje are found from database and they are formatted in Finnish date format"
+    (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite "Testitie 5"})
+          kehotus-timestamp (-> (LocalDate/of 2023 6 12)
+                                (.atStartOfDay (ZoneId/systemDefault))
+                                .toInstant)
+          varoitus-timestamp (-> (LocalDate/of 2023 7 13)
+                                 (.atStartOfDay (ZoneId/systemDefault))
+                                 .toInstant)
+          kuulemiskirje-timestamp (-> (LocalDate/of 2023 8 14)
+                                      (.atStartOfDay (ZoneId/systemDefault))
+                                      .toInstant)]
+
+      ;; Add kehotus-toimenpide to the valvonta
+      (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id   valvonta-id
+                                            :type_id       2
+                                            :create_time   kehotus-timestamp
+                                            :publish_time  kehotus-timestamp
+                                            :deadline_date (LocalDate/of 2023 7 12)})
+      ;; Add varoitus-toimenpide to the valvonta
+      (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id   valvonta-id
+                                            :type_id       3
+                                            :create_time   varoitus-timestamp
+                                            :publish_time  varoitus-timestamp
+                                            :deadline_date (LocalDate/of 2023 8 13)})
+
+      ;; Add kuulemiskirje-toimenpide to the valvonta
+      (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id   valvonta-id
+                                            :type_id       7
+                                            :create_time   kuulemiskirje-timestamp
+                                            :publish_time  kuulemiskirje-timestamp
+                                            :deadline_date (LocalDate/of 2023 8 28)})
+      ;; Kehotus creation date and deadline and varoitus creation date
+      ;; and deadline are found and formatted correctly
+      (t/is (= (asha/past-dates-for-kaskypaatos-toimenpiteet ts/*db* valvonta-id)
+               {:kehotus-pvm              "12.06.2023"
+                :kehotus-maarapaiva       "12.07.2023"
+                :varoitus-pvm             "13.07.2023"
+                :varoitus-maarapaiva      "13.08.2023"
+                :kuulemiskirje-pvm        "14.08.2023"
+                :kuulemiskirje-maarapaiva "28.08.2023"})))))
+
+(t/deftest kuulemiskirje-data-test
+  (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite "Testitie 5"})
+        kuulemiskirje-timestamp (-> (LocalDate/of 2023 8 14)
+                                    (.atStartOfDay (ZoneId/systemDefault))
+                                    .toInstant)]
+    (jdbc/insert! ts/*db*
+                  :vk_toimenpide
+                  {:valvonta_id   valvonta-id
+                   :type_id       7
+                   :create_time   kuulemiskirje-timestamp
+                   :publish_time  kuulemiskirje-timestamp
+                   :deadline_date (LocalDate/of 2023 8 28)
+                   :diaarinumero  "ARA-05.03.01-2023-238"
+                   :type_specific_data {:fine 6100}})
+
+    (t/testing "When kuulemiskirje exists for the given valvonta, correct diaarinumero and fine are returned"
+      (t/is (= (asha/kuulemiskirje-data ts/*db* valvonta-id)
+               {:kuulemiskirje-diaarinumero "ARA-05.03.01-2023-238"
+                :kuulemiskirje-fine         6100})))
+
+    (t/testing "When multiple kuulemiskirje exists for the given valvonta, diaari of the newest is returned"
+      (jdbc/insert! ts/*db*
+                    :vk_toimenpide
+                    {:valvonta_id   valvonta-id
+                     :type_id       7
+                     :create_time   (-> (LocalDate/of 2023 8 10)
+                                        (.atStartOfDay (ZoneId/systemDefault))
+                                        .toInstant)
+                     :publish_time  (-> (LocalDate/of 2023 8 10)
+                                        (.atStartOfDay (ZoneId/systemDefault))
+                                        .toInstant)
+                     :deadline_date (LocalDate/of 2023 8 28)
+                     :diaarinumero  "ARA-05.03.01-2023-235"
+                     :type_specific_data {:fine 6100}})
+
+      (jdbc/insert! ts/*db*
+                    :vk_toimenpide
+                    {:valvonta_id   valvonta-id
+                     :type_id       7
+                     :create_time   (-> (LocalDate/of 2023 8 19)
+                                        (.atStartOfDay (ZoneId/systemDefault))
+                                        .toInstant)
+                     :publish_time  (-> (LocalDate/of 2023 8 19)
+                                        (.atStartOfDay (ZoneId/systemDefault))
+                                        .toInstant)
+                     :deadline_date (LocalDate/of 2023 8 28)
+                     :diaarinumero  "ARA-05.03.01-2023-245"
+                     :type_specific_data {:fine 3200}})
+      (t/is (= (asha/kuulemiskirje-data ts/*db* valvonta-id)
+               {:kuulemiskirje-diaarinumero "ARA-05.03.01-2023-245"
+                :kuulemiskirje-fine 3200})))))
+
+(t/deftest format-type-specific-data-test
+  (t/testing "For käskypäätös / varsinainen päätös toimenpide a new key vastaus is added and its value is based on values of :recipient-answered and :answer-commentary"
+    (t/is (= (asha/format-type-specific-data
+               ts/*db*
+               {:type-id            8
+                :type-specific-data {:fine               129
+                                     :recipient-answered true
+                                     :answer-commentary-fi  "Voi anteeksi, en tiennyt."
+                                     :answer-commentary-sv  "Jag vet inte, förlåt."
+                                     :statement-fi "Olisi pitänyt tietää."
+                                     :statement-sv "Du måste ha visst."
+                                     :court              0
+                                     :department-head-name "Jorma Jormanen"
+                                     :department-head-title-fi "Hallinto-oikeuden presidentti"
+                                     :department-head-title-sv "Hallinto-oikeuden kuningas"}})
+             {:fine               129
+              :vastaus-fi            "Asianosainen antoi vastineen kuulemiskirjeeseen. Voi anteeksi, en tiennyt."
+              :oikeus-fi              "Helsingin hallinto-oikeudelta"
+              :vastaus-sv "gav ett bemötande till brevet om hörande. Jag vet inte, förlåt."
+              :statement-fi "Olisi pitänyt tietää."
+              :statement-sv "Du måste ha visst."
+              :oikeus-sv "Helsingfors"
+              :department-head-name "Jorma Jormanen"
+              :department-head-title-fi "Hallinto-oikeuden presidentti"
+              :department-head-title-sv "Hallinto-oikeuden kuningas"}))
+
+    (t/testing "For käskypäätös / kuulemiskirje toimenpide :type-spefic-data map is returned as is, as no special formatting is needed"
+      (t/is (= (asha/format-type-specific-data
+                 ts/*db*
+                 {:type-id            7
+                  :type-specific-data {:fine 800}})
+               {:fine 800})))))
+
+(t/deftest hallinto-oikeus-id->formatted-string-test
+  (t/testing "id 0 results in Helsingin hallinto-oikeudelta"
+    (t/is (= (asha/hallinto-oikeus-id->formatted-strings ts/*db* 0)
+             {:fi "Helsingin hallinto-oikeudelta"
+              :sv "Helsingfors"})))
+
+  (t/testing "id 1 results in Hämeenlinnan hallinto-oikeudelta"
+    (t/is (= (asha/hallinto-oikeus-id->formatted-strings ts/*db* 1)
+             {:fi "Hämeenlinnan hallinto-oikeudelta"
+              :sv "Tavastehus"})))
+
+  (t/testing "id 2 results in Itä-Suomen hallinto-oikeudelta"
+    (t/is (= (asha/hallinto-oikeus-id->formatted-strings ts/*db* 2)
+             {:fi "Itä-Suomen hallinto-oikeudelta"
+              :sv "Östra Finland"})))
+
+  (t/testing "id 3 results in Pohjois-Suomen hallinto-oikeudelta"
+    (t/is (= (asha/hallinto-oikeus-id->formatted-strings ts/*db* 3)
+             {:fi "Pohjois-Suomen hallinto-oikeudelta"
+              :sv "Norra Finland"})))
+
+  (t/testing "id 4 results in Turun hallinto-oikeudelta"
+    (t/is (= (asha/hallinto-oikeus-id->formatted-strings ts/*db* 4)
+             {:fi "Turun hallinto-oikeudelta"
+              :sv "Åbo"})))
+
+  (t/testing "id 5 results in Vaasan hallinto-oikeudelta"
+    (t/is (= (asha/hallinto-oikeus-id->formatted-strings ts/*db* 5)
+             {:fi "Vaasan hallinto-oikeudelta"
+              :sv "Vasa"})))
+
+  (t/testing "Unknown id results in exception"
+    (t/is (thrown-with-msg?
+            Exception
+            #"Unknown hallinto-oikeus-id: 6" (asha/hallinto-oikeus-id->formatted-strings ts/*db* 6))))
+
+  (t/testing "All hallinto-oikeudet in database have a formatted string"
+    (let [hallinto-oikeudet (luokittelu/find-hallinto-oikeudet ts/*db*)]
+      (t/is (= (count hallinto-oikeudet)
+               6))
+
+      (doseq [hallinto-oikeus hallinto-oikeudet]
+        (t/is (not (nil? (:fi (asha/hallinto-oikeus-id->formatted-strings ts/*db* (:id hallinto-oikeus))))))
+        (t/is (not (nil? (:sv (asha/hallinto-oikeus-id->formatted-strings ts/*db* (:id hallinto-oikeus))))))))))

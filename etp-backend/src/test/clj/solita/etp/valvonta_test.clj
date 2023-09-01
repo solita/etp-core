@@ -80,37 +80,90 @@
           )))))
 
 (t/deftest fetching-valvonta
-  (t/testing "Yksittäisen valvonnan hakeminen palauttaa vastauksen")
-  (let [
-        kayttaja-id (test-kayttajat/insert-virtu-paakayttaja!)
-        valvonta-id (valvonta-service/add-valvonta! ts/*db*
-                                                    (-> {}
-                                                        (generators/complete valvonta-schema/ValvontaSave)
-                                                        (merge {
-                                                                :ilmoitustunnus             nil
-                                                                :rakennustunnus             "1035150826"
-                                                                :katuosoite                 "katu"
-                                                                :postinumero                "65100"
-                                                                :valvoja-id                 kayttaja-id
-                                                                :ilmoituspaikka-id          2
-                                                                :ilmoituspaikka-description "Netissä"
-                                                                :havaintopaiva              (LocalDate/of 2023 6 1)
-                                                                })))
-        response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s" valvonta-id))
-                              (test-kayttajat/with-virtu-user)
-                              (mock/header "Accept" "application/json")))
-        response-body (j/read-value (:body response) j/keyword-keys-object-mapper)
-        ]
-    (t/is (= (:status response) 200))
-    (t/is (= response-body {:valvoja-id                 kayttaja-id
-                            :katuosoite                 "katu"
-                            :ilmoitustunnus             nil
-                            :rakennustunnus             "1035150826"
-                            :postinumero                "65100"
-                            :id                         1
-                            :ilmoituspaikka-description "Netissä"
-                            :ilmoituspaikka-id          2
-                            :havaintopaiva              "2023-06-01"}))))
+  (let [kayttaja-id (test-kayttajat/insert-virtu-paakayttaja!)
+        valvonta-id (valvonta-service/add-valvonta!
+                      ts/*db*
+                      (-> {}
+                          (generators/complete valvonta-schema/ValvontaSave)
+                          (merge {
+                                  :ilmoitustunnus             nil
+                                  :rakennustunnus             "1035150826"
+                                  :katuosoite                 "katu"
+                                  :postinumero                "65100"
+                                  :valvoja-id                 kayttaja-id
+                                  :ilmoituspaikka-id          2
+                                  :ilmoituspaikka-description "Netissä"
+                                  :havaintopaiva              (LocalDate/of 2023 6 1)
+                                  })))]
+    (t/testing "Yksittäisen valvonnan hakeminen palauttaa vastauksen"
+      (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s" valvonta-id))
+                                     (test-kayttajat/with-virtu-user)
+                                     (mock/header "Accept" "application/json")))
+            response-body (j/read-value (:body response) j/keyword-keys-object-mapper)]
+        (t/is (= (:status response) 200))
+        (t/is (= response-body {:valvoja-id                 kayttaja-id
+                                :katuosoite                 "katu"
+                                :ilmoitustunnus             nil
+                                :rakennustunnus             "1035150826"
+                                :postinumero                "65100"
+                                :id                         1
+                                :ilmoituspaikka-description "Netissä"
+                                :ilmoituspaikka-id          2
+                                :havaintopaiva              "2023-06-01"}))))))
+
+(t/deftest fetching-johtaja-test
+  (let [kayttaja-id (test-kayttajat/insert-virtu-paakayttaja!)]
+    (t/testing "Kun käskypäätös / varsinainen päätös - toimenpidettä ei ole, osaston päällikön tietoja ei löydy"
+      (let [response (ts/handler (-> (mock/request :get "/api/private/valvonta/kaytto/johtaja")
+                                     (test-kayttajat/with-virtu-user)
+                                     (mock/header "Accept" "application/json")))
+            response-body (j/read-value (:body response) j/keyword-keys-object-mapper)]
+        (t/is (= (:status response) 200))
+        (t/is (= response-body {:department-head-name     nil
+                                :department-head-title-fi nil
+                                :department-head-title-sv nil}))))
+
+    (t/testing "käskypäätös / varsinainen päätös -toimenpiteen olemassaollessa osaston päällikön tiedot täydentyvät responseen"
+      (let [valvonta-id (valvonta-service/add-valvonta!
+                          ts/*db*
+                          (-> {}
+                              (generators/complete valvonta-schema/ValvontaSave)
+                              (merge {
+                                      :ilmoitustunnus             nil
+                                      :rakennustunnus             "1035150826"
+                                      :katuosoite                 "katu"
+                                      :postinumero                "65100"
+                                      :valvoja-id                 kayttaja-id
+                                      :ilmoituspaikka-id          2
+                                      :ilmoituspaikka-description "Netissä"
+                                      :havaintopaiva              (LocalDate/of 2023 6 1)
+                                      })))]
+        ;; Add käskypäätös / varsinainen päätös toimenpide so department-head-name
+        ;; and department-head-title are populated in the response
+        (jdbc/insert! ts/*db*
+                      :vk_toimenpide
+                      {:valvonta_id        valvonta-id
+                       :type_id            8
+                       :create_time        (-> (LocalDate/of 2023 8 10)
+                                               (.atStartOfDay (ZoneId/systemDefault))
+                                               .toInstant)
+                       :publish_time       (-> (LocalDate/of 2023 8 10)
+                                               (.atStartOfDay (ZoneId/systemDefault))
+                                               .toInstant)
+                       :deadline_date      (LocalDate/of 2023 8 28)
+                       :diaarinumero       "ARA-05.03.01-2023-235"
+                       :type_specific_data {:fine                     6100
+                                            :department-head-name     "Testi Testinen"
+                                            :department-head-title-fi "Ylitarkastaja"
+                                            :department-head-title-sv "Ylitarkastaja på svenska"}})
+        (let [response (ts/handler (-> (mock/request :get "/api/private/valvonta/kaytto/johtaja")
+                                       (test-kayttajat/with-virtu-user)
+                                       (mock/header "Accept" "application/json")))
+              response-body (j/read-value (:body response) j/keyword-keys-object-mapper)]
+          (t/is (= (:status response) 200))
+          (t/is (= response-body {:department-head-name     "Testi Testinen"
+                                  :department-head-title-fi "Ylitarkastaja"
+                                  :department-head-title-sv "Ylitarkastaja på svenska"})))))))
 
 (def original-html->pdf pdf/html->pdf)
 
@@ -123,19 +176,16 @@
   ;;Calling original implementation to ensure the functionality doesn't change
   (original-html->pdf html-doc output-stream))
 
-(t/deftest kaytonvalvonta-kuulemiskirje-test
+(t/deftest kaskypaatos-kuulemiskirje-test
   ;; Add the main user for the following tests
-  (first (test-kayttajat/insert!
-           [{:etunimi  "Asian"
-             :sukunimi "Tuntija"
-             :email    "testi@ara.fi"
-             :puhelin  "0504363675457"
-             :rooli    2
-             :virtu    {:localid      "vvirkamies"
-                        :organisaatio "testivirasto.fi"}}]))
-  (t/testing "Käytönvalvonta / Kuulemiskirje toimenpide is created successfully for yksityishenkilö and document is generated with correct information"
+  (test-kayttajat/insert-virtu-paakayttaja!
+    {:etunimi  "Asian"
+     :sukunimi "Tuntija"
+     :email    "testi@ara.fi"
+     :puhelin  "0504363675457"})
+  (t/testing "Käskypäätös / Kuulemiskirje toimenpide is created successfully for yksityishenkilö and document is generated with correct information"
     ;; Add the valvonta and previous toimenpides
-    ;; so that käytönvalvonta / kuulemiskirje toimenpide can be created
+    ;; so that käskypäätös / kuulemiskirje toimenpide can be created
     (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite        "Testitie 5"
                                                                :postinumero       "90100"
                                                                :ilmoituspaikka-id 0})
@@ -190,7 +240,7 @@
                               :deadline-date (str (LocalDate/of 2023 7 22))
                               :template-id   5
                               :description   "Lähetetään kuulemiskirje, kun myyjä ei ole hankkinut energiatodistusta eikä vastannut kehotukseen tai varoitukseen"
-                              :fine          800}
+                              :type-specific-data {:fine 800}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                     (mock/json-body new-toimenpide)
                                     (test-kayttajat/with-virtu-user)
@@ -198,9 +248,9 @@
           (t/is (true? @html->pdf-called?))
           (t/is (= (:status response) 201))))))
 
-  (t/testing "Käytönvalvonta / Kuulemiskirje toimenpide is created successfully for yritys and document is generated with correct information"
+  (t/testing "Käskypäätös / Kuulemiskirje toimenpide is created successfully for yritys and document is generated with correct information"
     ;; Add the valvonta and previous toimenpides
-    ;; so that käytönvalvonta / kuulemiskirje toimenpide can be created
+    ;; so that käskypäätös / kuulemiskirje toimenpide can be created
     (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite        "Testitie 5"
                                                                :postinumero       "90100"
                                                                :ilmoituspaikka-id 0})
@@ -253,13 +303,270 @@
                               :deadline-date (str (LocalDate/of 2023 7 22))
                               :template-id   5
                               :description   "Lähetetään kuulemiskirje, kun myyjä ei ole hankkinut energiatodistusta eikä vastannut kehotukseen tai varoitukseen"
-                              :fine          9000}
+                              :type-specific-data {:fine 9000}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                     (mock/json-body new-toimenpide)
                                     (test-kayttajat/with-virtu-user)
                                     (mock/header "Accept" "application/json")))]
           (t/is (true? @html->pdf-called?))
           (t/is (= (:status response) 201)))))))
+
+(t/deftest kaskypaatos-varsinainen-paatos-test
+  ;; Add the main user for the following tests
+  (test-kayttajat/insert-virtu-paakayttaja!
+    {:etunimi  "Asian"
+     :sukunimi "Tuntija"
+     :email    "testi@ara.fi"
+     :puhelin  "0504363675457"})
+  (t/testing "Käskypäätös / varsinainen päätös toimenpide is created successfully for yksityishenkilö and document is generated with correct information"
+    ;; Add the valvonta and previous toimenpides
+    ;; so that käskypäätös / kuulemiskirje toimenpide can be created
+    (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite        "Testitie 5"
+                                                               :postinumero       "90100"
+                                                               :ilmoituspaikka-id 0})
+          kehotus-timestamp (-> (LocalDate/of 2023 6 12)
+                                (.atStartOfDay (ZoneId/systemDefault))
+                                .toInstant)
+          varoitus-timestamp (-> (LocalDate/of 2023 7 13)
+                                 (.atStartOfDay (ZoneId/systemDefault))
+                                 .toInstant)
+          kuulemiskirje-timestamp (-> (LocalDate/of 2023 7 13)
+                                      (.atStartOfDay (ZoneId/systemDefault))
+                                      .toInstant)
+          html->pdf-called? (atom false)]
+
+      ;; Add osapuoli to the valvonta
+      (valvonta-service/add-henkilo! ts/*db*
+                                     valvonta-id
+                                     {:toimitustapa-description nil
+                                      :toimitustapa-id          0
+                                      :email                    nil
+                                      :rooli-id                 0
+                                      :jakeluosoite             "Testikatu 12"
+                                      :postitoimipaikka         "Helsinki"
+                                      :puhelin                  nil
+                                      :sukunimi                 "Talonomistaja"
+                                      :postinumero              "00100"
+                                      :henkilotunnus            "000000-0000"
+                                      :rooli-description        ""
+                                      :etunimi                  "Testi"
+                                      :vastaanottajan-tarkenne  nil
+                                      :maa                      "FI"})
+
+      ;; Add kehotus-toimenpide to the valvonta
+      (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id   valvonta-id
+                                            :type_id       2
+                                            :create_time   kehotus-timestamp
+                                            :publish_time  kehotus-timestamp
+                                            :deadline_date (LocalDate/of 2023 7 12)})
+      ;; Add varoitus-toimenpide to the valvonta
+      (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id   valvonta-id
+                                            :type_id       3
+                                            :create_time   varoitus-timestamp
+                                            :publish_time  varoitus-timestamp
+                                            :deadline_date (LocalDate/of 2023 8 13)})
+
+      ;; Add käskypäätös / kuulemiskirje toimenpide to the valvonta
+      (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id        valvonta-id
+                                            :type_id            7
+                                            :create_time        kuulemiskirje-timestamp
+                                            :publish_time       kuulemiskirje-timestamp
+                                            :deadline_date      (LocalDate/of 2023 8 27)
+                                            :type_specific_data {:fine 9000}
+                                            :diaarinumero "ARA-05.03.01-2023-159"})
+      ;; Mock the current time to ensure that the document has a fixed date
+      (with-bindings {#'time/clock    (Clock/fixed (-> (LocalDate/of 2023 8 28)
+                                                       (.atStartOfDay time/timezone)
+                                                       .toInstant)
+                                                   time/timezone)
+                      #'pdf/html->pdf (partial html->pdf-with-assertion
+                                               "documents/kaskypaatos-varsinainen-paatos-yksityishenkilo.html"
+                                               html->pdf-called?)}
+        (let [new-toimenpide {:type-id            8
+                              :deadline-date      (str (LocalDate/of 2023 10 4))
+                              :template-id        6
+                              :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
+                              :type-specific-data {:fine               857
+                                                   :recipient-answered true
+                                                   :answer-commentary-fi  "En tiennyt, että todistus tarvitaan :("
+                                                   :answer-commentary-sv "Jag visste inte att ett intyg behövs :("
+                                                   :statement-fi          "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."
+                                                   :statement-sv "Han vet inte. Vi förlotar."
+                                                   :court 1
+                                                   :department-head-title-fi "Apulaisjohtaja"
+                                                   :department-head-title-sv "Apulaisjohtaja på svenska"
+                                                   :department-head-name "Yli Päällikkö"}}
+              response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
+                                    (mock/json-body new-toimenpide)
+                                    (test-kayttajat/with-virtu-user)
+                                    (mock/header "Accept" "application/json")))]
+          (t/is (true? @html->pdf-called?))
+          (t/is (= (:status response) 201))))))
+
+  (t/testing "Käskypäätös / varsinainen päätös toimenpide is created successfully for yritys and document is generated with correct information"
+    ;; Add the valvonta and previous toimenpides
+    ;; so that käskypäätös / kuulemiskirje toimenpide can be created
+    (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite        "Testitie 5"
+                                                               :postinumero       "90100"
+                                                               :ilmoituspaikka-id 0})
+          kehotus-timestamp (-> (LocalDate/of 2023 6 12)
+                                (.atStartOfDay (ZoneId/systemDefault))
+                                .toInstant)
+          varoitus-timestamp (-> (LocalDate/of 2023 7 13)
+                                 (.atStartOfDay (ZoneId/systemDefault))
+                                 .toInstant)
+          kuulemiskirje-timestamp (-> (LocalDate/of 2023 7 13)
+                                      (.atStartOfDay (ZoneId/systemDefault))
+                                      .toInstant)
+          html->pdf-called? (atom false)]
+
+      ;; Add osapuoli to the valvonta
+      (valvonta-service/add-yritys! ts/*db*
+                                    valvonta-id
+                                    {:nimi                     "Yritysomistaja"
+                                     :toimitustapa-description nil
+                                     :toimitustapa-id          0
+                                     :email                    nil
+                                     :rooli-id                 0
+                                     :jakeluosoite             "Testikatu 12"
+                                     :vastaanottajan-tarkenne  "Lisäselite C/O"
+                                     :postitoimipaikka         "Helsinki"
+                                     :puhelin                  nil
+                                     :postinumero              "00100"
+                                     :rooli-description        ""
+                                     :maa                      "FI"})
+
+      ;; Add kehotus-toimenpide to the valvonta
+      (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id   valvonta-id
+                                            :type_id       2
+                                            :create_time   kehotus-timestamp
+                                            :publish_time  kehotus-timestamp
+                                            :deadline_date (LocalDate/of 2023 7 12)})
+      ;; Add varoitus-toimenpide to the valvonta
+      (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id   valvonta-id
+                                            :type_id       3
+                                            :create_time   varoitus-timestamp
+                                            :publish_time  varoitus-timestamp
+                                            :deadline_date (LocalDate/of 2023 8 13)})
+
+      ;; Add käskypäätös / kuulemiskirje toimenpide to the valvonta
+      (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id        valvonta-id
+                                            :type_id            7
+                                            :create_time        kuulemiskirje-timestamp
+                                            :publish_time       kuulemiskirje-timestamp
+                                            :deadline_date      (LocalDate/of 2023 8 27)
+                                            :diaarinumero       "ARA-05.03.01-2023-132"
+                                            :type_specific_data {:fine 9000}})
+      ;; Mock the current time to ensure that the document has a fixed date
+      (with-bindings {#'time/clock    (Clock/fixed (-> (LocalDate/of 2023 8 28)
+                                                       (.atStartOfDay time/timezone)
+                                                       .toInstant)
+                                                   time/timezone)
+                      #'pdf/html->pdf (partial html->pdf-with-assertion
+                                               "documents/kaskypaatos-varsinainen-paatos-yritys.html"
+                                               html->pdf-called?)}
+        (let [new-toimenpide {:type-id            8
+                              :deadline-date      (str (LocalDate/of 2023 10 4))
+                              :template-id        6
+                              :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
+                              :type-specific-data {:fine                     857
+                                                   :recipient-answered       false
+                                                   :answer-commentary-fi     "Yritys ei ollut tavoitettavissa ollenkaan asian tiimoilta."
+                                                   :answer-commentary-sv     "Företaget var inte nåbar alls angående ärendet."
+                                                   :statement-fi             "Yritys tuomitaan sakkoihin."
+                                                   :statement-sv             "Företaget döms till böter."
+                                                   :court                    2
+                                                   :department-head-title-fi "Senior Vice President"
+                                                   :department-head-title-sv "Kungen"
+                                                   :department-head-name     "Jane Doe"}}
+              response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
+                                       (mock/json-body new-toimenpide)
+                                       (test-kayttajat/with-virtu-user)
+                                       (mock/header "Accept" "application/json")))]
+          (t/is (true? @html->pdf-called?))
+          (t/is (= (:status response) 201))))))
+
+
+  (t/testing "Preview api call for käskypäätös / varsinainen päätös toimenpide succeeds"
+    (t/testing "for yksityishenkilö"
+      (let [valvonta-id (valvonta-service/add-valvonta! ts/*db*
+                                                        {:katuosoite        "Testitie 5"
+                                                         :postinumero       "90100"
+                                                         :ilmoituspaikka-id 0})
+            osapuoli-id (valvonta-service/add-henkilo! ts/*db*
+                                                       valvonta-id
+                                                       {:toimitustapa-description nil
+                                                        :toimitustapa-id          0
+                                                        :email                    nil
+                                                        :rooli-id                 0
+                                                        :jakeluosoite             "Testikatu 12"
+                                                        :postitoimipaikka         "Helsinki"
+                                                        :puhelin                  nil
+                                                        :sukunimi                 "Talonomistaja"
+                                                        :postinumero              "00100"
+                                                        :henkilotunnus            "000000-0000"
+                                                        :rooli-description        ""
+                                                        :etunimi                  "Testi"
+                                                        :vastaanottajan-tarkenne  nil
+                                                        :maa                      "FI"})
+            new-toimenpide {:type-id            8
+                            :deadline-date      (str (LocalDate/of 2023 10 4))
+                            :template-id        6
+                            :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
+                            :type-specific-data {:fine               857
+                                                 :recipient-answered false
+                                                 :answer-commentary-fi  "Hän ei vastannut ollenkaan"
+                                                 :answer-commentary-sv "Han svarade inte alls"
+                                                 :statement-fi          "Koska hän ei vastannut ollenkaan hän joutuu maksamaan paljon sakkoja."
+                                                 :statement-sv "Eftersom han inte svarade alls måste han betala mycket böter."
+                                                 :court 3
+                                                 :department-head-title-fi "Johtaja"
+                                                 :department-head-title-sv "Ledar"
+                                                 :department-head-name "Nimi Muutettu"}}
+            response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/henkilot/%s/preview" valvonta-id osapuoli-id))
+                                  (mock/json-body new-toimenpide)
+                                  (test-kayttajat/with-virtu-user)
+                                  (mock/header "Accept" "application/json")))]
+        (t/is (= (:status response) 200))))
+
+    (t/testing "for yritysomistaja"
+      (let [valvonta-id (valvonta-service/add-valvonta! ts/*db*
+                                                        {:katuosoite        "Testitie 5"
+                                                         :postinumero       "90100"
+                                                         :ilmoituspaikka-id 0})
+            osapuoli-id (valvonta-service/add-yritys! ts/*db*
+                                                      valvonta-id
+                                                      {:nimi                     "Yritysomistaja"
+                                                       :toimitustapa-description nil
+                                                       :toimitustapa-id          0
+                                                       :email                    nil
+                                                       :rooli-id                 0
+                                                       :jakeluosoite             "Testikatu 12"
+                                                       :vastaanottajan-tarkenne  "Lisäselite C/O"
+                                                       :postitoimipaikka         "Helsinki"
+                                                       :puhelin                  nil
+                                                       :postinumero              "00100"
+                                                       :rooli-description        ""
+                                                       :maa                      "FI"})
+            new-toimenpide {:type-id            8
+                            :deadline-date      (str (LocalDate/of 2023 10 4))
+                            :template-id        6
+                            :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
+                            :type-specific-data {:fine               857
+                                                 :recipient-answered true
+                                                 :answer-commentary-fi  "Yritykseni on niin iso, ettei minun tarvitse välittää tällaisista asioista"
+                                                 :answer-commentary-sv "Mitt företag är så stort att jag inte behöver bry mig om sådana saker"
+                                                 :statement-fi          "Vastaus oli väärä, joten saat isot sakot."
+                                                 :statement-sv "Svaret var fel, så du får stora böter."
+                                                 :court 5
+                                                 :department-head-title-fi "Titteli"
+                                                 :department-head-title-sv "Tittel"
+                                                 :department-head-name "Nimi"}}
+            response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/yritykset/%s/preview" valvonta-id osapuoli-id))
+                                  (mock/json-body new-toimenpide)
+                                  (test-kayttajat/with-virtu-user)
+                                  (mock/header "Accept" "application/json")))]
+        (t/is (= (:status response) 200))))))
 
 (t/deftest adding-and-fetching-valvonta
   (let [kayttaja-id (test-kayttajat/insert-virtu-paakayttaja!)
@@ -294,10 +601,9 @@
                                             :valvoja-id kayttaja-id)
                                      add-valvonta-and-map-id!))
         ;; Create 6 toimenpide for each valvonta
-        toimenpiteet (->> (repeatedly 12 (fn [] (generators/complete {} valvonta-schema/ToimenpideAdd)))
+        toimenpiteet (->> (repeatedly 12 (fn [] (generators/complete {:type-id 1} valvonta-schema/ToimenpideAdd)))
                           (map vector (flatten (repeatedly (constantly [1 2]))))
                           (map (fn [[template-id toimenpide]] (assoc toimenpide :template-id template-id)))
-                          (map (fn [toimenpide] (assoc toimenpide :type-id 1)))
                           (map vector (flatten (repeat (map :id valvonnat)))))]
     (doseq [[valvonta-id toimenpide] toimenpiteet]
       (add-toimenpide-and-map-id! valvonta-id toimenpide))
@@ -319,8 +625,7 @@
                                             :valvoja-id kayttaja-id)
                                      add-valvonta-and-map-id!))
         ;; Create a toimenpide for each valvonta
-        toimenpiteet (->> (repeatedly 2 (fn [] (generators/complete {} valvonta-schema/ToimenpideAdd)))
-                          (map (fn [toimenpide] (assoc toimenpide :type-id 1)))
+        toimenpiteet (->> (repeatedly 2 (fn [] (generators/complete {:type-id 1} valvonta-schema/ToimenpideAdd)))
                           (map vector (flatten (repeatedly (constantly [1 2])))) ; Use two different templates for every other toimenpide
                           (map (fn [[template-id toimenpide]] (assoc toimenpide :template-id template-id)))
                           (map vector (flatten (repeat (map :id valvonnat))))
