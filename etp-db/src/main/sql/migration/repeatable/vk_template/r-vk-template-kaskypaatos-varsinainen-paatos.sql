@@ -221,13 +221,13 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     ärendet. I brevet om hörande berättade ARA att vi-tesbeloppet är uppskattningsvis
     {{#aiemmat-toimenpiteet}}{{kuulemiskirje-fine}}{{/aiemmat-toimenpiteet}} euro.</p>
 
-<p class="respect-new-lines">{{#omistaja-henkilo}}
+<p>{{#omistaja-henkilo}}
     {{sukunimi}}
     {{/omistaja-henkilo}}
     {{#omistaja-yritys}}
     {{nimi}}
     {{/omistaja-yritys}}
-    {{#tyyppikohtaiset-tiedot}}{{vastaus-sv}}{{/tyyppikohtaiset-tiedot}}</p>
+    <span class="respect-new-lines">{{#tyyppikohtaiset-tiedot}}{{vastaus-sv}}{{/tyyppikohtaiset-tiedot}}</span></p>
 
 <h2>Motivering av beslutet</h2>
 
@@ -247,12 +247,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     kan ARA förena föreläggandet eller förbudet med vite eller med hot om tvångsutförande eller hot om avbrytande, om
     vilka det bestäms i vi-teslagen (1113/1990).</p>
 
-<p>ARA har skickat en uppmaning till {{#omistaja-henkilo}}
-    {{sukunimi}}
-    {{/omistaja-henkilo}}
-    {{#omistaja-yritys}}
-    {{nimi}}
-    {{/omistaja-yritys}}, eftersom den byggnaden som ägs av {{#omistaja-henkilo}}
+<p>ARA har skickat en uppmaning till {{#omistaja-henkilo}}{{sukunimi}}{{/omistaja-henkilo}}{{#omistaja-yritys}}{{nimi}}{{/omistaja-yritys}}, eftersom den byggnaden som ägs av {{#omistaja-henkilo}}
     {{sukunimi}}
     {{/omistaja-henkilo}}
     {{#omistaja-yritys}}
