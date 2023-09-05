@@ -18,13 +18,13 @@
 (db/require-queries 'hallinto-oikeus)
 
 (defn toimenpide-type->document [type-id]
-  (let [type-key (toimenpide/type-key type-id )
-        documents {:rfi-request {:type "Pyyntö" :filename "tietopyynto.pdf"}
-                   :rfi-order {:type "Kirje" :filename "kehotus.pdf"}
-                   :rfi-warning {:type "Kirje" :filename "varoitus.pdf"}
-                   :decision-order-hearing-letter {:type "Kirje"
-                                                   :filename "kuulemiskirje.pdf"}
-                   :decision-order-actual-decision {:type "Kirje"
+  (let [type-key (toimenpide/type-key type-id)
+        documents {:rfi-request                    {:type "Pyyntö" :filename "tietopyynto.pdf"}
+                   :rfi-order                      {:type "Kirje" :filename "kehotus.pdf"}
+                   :rfi-warning                    {:type "Kirje" :filename "varoitus.pdf"}
+                   :decision-order-hearing-letter  {:type     "Kirje"
+                                                    :filename "kuulemiskirje.pdf"}
+                   :decision-order-actual-decision {:type     "Kirje"
                                                     :filename "varsinainen-paatos.pdf"}}]
     (get documents type-key)))
 
@@ -41,7 +41,7 @@
     (->> ilmoituspaikat (filter #(= (:id %) (:ilmoituspaikka-id valvonta))) first :label-fi)))
 
 (defn- find-postitoimipaikka [db postinumero]
-  (-> (geo-db/select-postinumero-by-id db {:id (formats/string->int postinumero)}) first :label-fi ))
+  (-> (geo-db/select-postinumero-by-id db {:id (formats/string->int postinumero)}) first :label-fi))
 
 (defn- template-optional [value] (if (some? value) [value] []))
 
@@ -111,28 +111,28 @@
   (:type-specific-data toimenpide))
 
 (defn- template-data [db whoami valvonta toimenpide osapuoli dokumentit ilmoituspaikat tiedoksi roolit]
-  {:päivä            (time/today)
-   :määräpäivä       (time/format-date (:deadline-date toimenpide))
-   :diaarinumero     (:diaarinumero toimenpide)
-   :valvoja          (select-keys whoami [:etunimi :sukunimi :email :puhelin])
-   :omistaja-henkilo (when (osapuoli/henkilo? osapuoli)
-                       (select-keys osapuoli [:etunimi :sukunimi :jakeluosoite :postinumero :postitoimipaikka]))
-   :omistaja-yritys  (when (osapuoli/yritys? osapuoli)
-                       (select-keys osapuoli [:nimi :jakeluosoite :postinumero :postitoimipaikka :vastaanottajan-tarkenne]))
-   :kohde            {:katuosoite       (:katuosoite valvonta)
-                      :postinumero      (:postinumero valvonta)
-                      :postitoimipaikka (find-postitoimipaikka db (:postinumero valvonta))
-                      :ilmoituspaikka   (find-ilmoituspaikka ilmoituspaikat valvonta)
-                      :ilmoitustunnus   (:ilmoitustunnus valvonta)
-                      :havaintopäivä    (-> valvonta :havaintopaiva time/format-date)}
-   :tietopyynto      {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
-                      :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
-   :tiedoksi         (map (partial tiedoksi-saaja roolit) tiedoksi)
+  {:päivä                  (time/today)
+   :määräpäivä             (time/format-date (:deadline-date toimenpide))
+   :diaarinumero           (:diaarinumero toimenpide)
+   :valvoja                (select-keys whoami [:etunimi :sukunimi :email :puhelin])
+   :omistaja-henkilo       (when (osapuoli/henkilo? osapuoli)
+                             (select-keys osapuoli [:etunimi :sukunimi :jakeluosoite :postinumero :postitoimipaikka]))
+   :omistaja-yritys        (when (osapuoli/yritys? osapuoli)
+                             (select-keys osapuoli [:nimi :jakeluosoite :postinumero :postitoimipaikka :vastaanottajan-tarkenne]))
+   :kohde                  {:katuosoite       (:katuosoite valvonta)
+                            :postinumero      (:postinumero valvonta)
+                            :postitoimipaikka (find-postitoimipaikka db (:postinumero valvonta))
+                            :ilmoituspaikka   (find-ilmoituspaikka ilmoituspaikat valvonta)
+                            :ilmoitustunnus   (:ilmoitustunnus valvonta)
+                            :havaintopäivä    (-> valvonta :havaintopaiva time/format-date)}
+   :tietopyynto            {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
+                            :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
+   :tiedoksi               (map (partial tiedoksi-saaja roolit) tiedoksi)
    :tyyppikohtaiset-tiedot (format-type-specific-data db toimenpide)
-   :aiemmat-toimenpiteet (when (toimenpide/kaskypaatos-toimenpide? toimenpide)
-                           (merge
-                             (kuulemiskirje-data db (:id valvonta))
-                             (past-dates-for-kaskypaatos-toimenpiteet db (:id valvonta))))})
+   :aiemmat-toimenpiteet   (when (toimenpide/kaskypaatos-toimenpide? toimenpide)
+                             (merge
+                               (kuulemiskirje-data db (:id valvonta))
+                               (past-dates-for-kaskypaatos-toimenpiteet db (:id valvonta))))})
 
 (defn- request-id [valvonta-id toimenpide-id]
   (str valvonta-id "/" toimenpide-id))
@@ -152,41 +152,48 @@
      :email-address       (:email osapuoli)}))
 
 (defn- available-processing-actions [toimenpide osapuolet]
-  {:rfi-request {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                     :processing-action {:name-identity "Vireillepano"}}
-                 :processing-action {:name                 "Tietopyyntö"
-                                     :reception-date       (Instant/now)
-                                     :contacting-direction "SENT"
-                                     :contact              (map osapuoli->contact osapuolet)}
-                 :document          (toimenpide-type->document (:type-id toimenpide))}
-   :rfi-order   {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                     :processing-action {:name-identity "Käsittely"}}
-                 :processing-action {:name                 "Kehotuksen antaminen"
-                                     :reception-date       (Instant/now)
-                                     :contacting-direction "SENT"
-                                     :contact              (map osapuoli->contact osapuolet)}
-                 :document          (toimenpide-type->document (:type-id toimenpide))}
-   :rfi-warning {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                     :processing-action {:name-identity "Käsittely"}}
-                 :processing-action {:name                 "Varoituksen antaminen"
-                                     :reception-date       (Instant/now)
-                                     :contacting-direction "SENT"
-                                     :contact              (map osapuoli->contact osapuolet)}
-                 :document          (toimenpide-type->document (:type-id toimenpide))}
-   :decision-order-hearing-letter {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                       :processing-action {:name-identity "Päätöksenteko"}}
-                                   :document (toimenpide-type->document (:type-id toimenpide))
-                                   :processing-action {:name                 "Kuulemiskirje käskypäätöksestä"
-                                                       :reception-date       (Instant/now)
-                                                       :contacting-direction "SENT"
-                                                       :contact              (map osapuoli->contact osapuolet)}}
-   :decision-order-actual-decision {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                        :processing-action {:name-identity "Päätöksenteko"}}
-                                    :document (toimenpide-type->document (:type-id toimenpide))
-                                    :processing-action {:name                 "Käskypäätös"
-                                                        :reception-date       (Instant/now)
-                                                        :contacting-direction "SENT"
-                                                        :contact              (map osapuoli->contact osapuolet)}}})
+  {:rfi-request                         {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                             :processing-action {:name-identity "Vireillepano"}}
+                                         :processing-action {:name                 "Tietopyyntö"
+                                                             :reception-date       (Instant/now)
+                                                             :contacting-direction "SENT"
+                                                             :contact              (map osapuoli->contact osapuolet)}
+                                         :document          (toimenpide-type->document (:type-id toimenpide))}
+   :rfi-order                           {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                             :processing-action {:name-identity "Käsittely"}}
+                                         :processing-action {:name                 "Kehotuksen antaminen"
+                                                             :reception-date       (Instant/now)
+                                                             :contacting-direction "SENT"
+                                                             :contact              (map osapuoli->contact osapuolet)}
+                                         :document          (toimenpide-type->document (:type-id toimenpide))}
+   :rfi-warning                         {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                             :processing-action {:name-identity "Käsittely"}}
+                                         :processing-action {:name                 "Varoituksen antaminen"
+                                                             :reception-date       (Instant/now)
+                                                             :contacting-direction "SENT"
+                                                             :contact              (map osapuoli->contact osapuolet)}
+                                         :document          (toimenpide-type->document (:type-id toimenpide))}
+   :decision-order-hearing-letter       {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                             :processing-action {:name-identity "Päätöksenteko"}}
+                                         :document          (toimenpide-type->document (:type-id toimenpide))
+                                         :processing-action {:name                 "Kuulemiskirje käskypäätöksestä"
+                                                             :reception-date       (Instant/now)
+                                                             :contacting-direction "SENT"
+                                                             :contact              (map osapuoli->contact osapuolet)}}
+   :decision-order-actual-decision      {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                             :processing-action {:name-identity "Päätöksenteko"}}
+                                         :document          (toimenpide-type->document (:type-id toimenpide))
+                                         :processing-action {:name                 "Käskypäätös"
+                                                             :reception-date       (Instant/now)
+                                                             :contacting-direction "SENT"
+                                                             :contact              (map osapuoli->contact osapuolet)}}
+   :decision-order-notice-first-mailing {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                             :processing-action {:name-identity "Tiedoksianto/toimeenpano"}}
+                                         :document          (toimenpide-type->document (:type-id toimenpide))
+                                         :processing-action {:name                 "Tiedoksianto ja toimeenpano"
+                                                             :reception-date       (Instant/now)
+                                                             :contacting-direction "SENT"
+                                                             :contact              (map osapuoli->contact osapuolet)}}})
 
 (defn- resolve-processing-action [toimenpide osapuolet]
   (let [processing-actions (available-processing-actions toimenpide osapuolet)
