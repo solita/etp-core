@@ -1,12 +1,12 @@
 (ns solita.etp.aineisto-api-test
   (:require
-    [clojure.data.codec.base64 :as b64]
     [clojure.test :as t]
     [ring.mock.request :as mock]
     [solita.etp.service.aineisto :as aineisto-service]
     [solita.etp.test-data.kayttaja :as test-kayttajat]
     [solita.etp.test-system :as ts])
-  (:import (java.time Duration Instant)))
+  (:import (java.time Duration Instant)
+           (java.util Base64)))
 
 (def allowed-network "192.168.1.1/32")
 (def user-ip "192.168.1.1")
@@ -22,7 +22,7 @@
                                                                 ))))
         api-key (->> "yhteyshenkilo@example.com:password"
                      .getBytes
-                     (b64/encode)
+                     (.encode (Base64/getEncoder))
                      (String.))
         auth-header (str "Basic " api-key)
         aineisto-url "/api/external/aineistot/1/energiatodistukset.csv"]

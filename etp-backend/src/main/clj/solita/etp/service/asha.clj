@@ -7,9 +7,9 @@
             [schema-tools.coerce :as sc]
             [clojure.tools.logging :as log]
             [solita.etp.config :as config]
-            [solita.etp.exception :as exception]
-            [clojure.data.codec.base64 :as b64]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import (java.nio.charset StandardCharsets)
+           (java.util Base64)))
 
 (def toplevel-processing-actions
   ["Vireillepano"
@@ -31,7 +31,7 @@
                                             must-exist!))))
 
 (defn bytes->base64 [bytes]
-  (String. (b64/encode bytes) "UTF-8"))
+  (String. (.encode (Base64/getEncoder) bytes) StandardCharsets/UTF_8))
 
 (defn- request-create-xml [resource data]
   (clostache/render-resource (str "asha/" resource ".xml") data))
