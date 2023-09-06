@@ -276,19 +276,25 @@
           toimenpide (insert-toimenpide! tx valvonta-id diaarinumero toimenpide-add)
           toimenpide-id (:id toimenpide)]
       (insert-toimenpide-osapuolet! tx valvonta-id toimenpide-id)
-      (let [case-clase (toimenpide/case-close? toimenpide)
+      (let [case-close (toimenpide/case-close? toimenpide)
             bypass-asha (:bypass-asha toimenpide)
             asha-toimenpide (toimenpide/asha-toimenpide? toimenpide-add)]
         (cond
-          case-clase (when (not bypass-asha) (asha/close-case! whoami valvonta-id toimenpide))
-          asha-toimenpide (let [find-toimenpide-osapuolet (comp flatten (juxt find-toimenpide-henkilot find-toimenpide-yritykset))
-                                osapuolet (find-toimenpide-osapuolet tx (:id toimenpide))]
-                            (asha/log-toimenpide!
-                              tx aws-s3-client whoami valvonta toimenpide
-                              osapuolet ilmoituspaikat roolit)
-                            (when-not (toimenpide/manually-deliverable? db (:type-id toimenpide))
-                              (send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
-                              (send-toimenpide-email! db aws-s3-client valvonta toimenpide osapuolet)))))
+          ;; Close in asha unless bypassed
+          case-close
+          (when (not bypass-asha) (asha/close-case! whoami valvonta-id toimenpide))
+
+          ;; Log asha-toimenpide and send messages
+          asha-toimenpide
+          (let [find-toimenpide-osapuolet (comp flatten (juxt find-toimenpide-henkilot find-toimenpide-yritykset))
+                osapuolet (find-toimenpide-osapuolet tx (:id toimenpide))]
+            (asha/log-toimenpide!
+              tx aws-s3-client whoami valvonta toimenpide
+              osapuolet ilmoituspaikat roolit)
+            (when-not (toimenpide/manually-deliverable? db (:type-id toimenpide))
+              (send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
+              (send-toimenpide-email! db aws-s3-client valvonta toimenpide osapuolet)))))
+
       {:id toimenpide-id})))
 
 (defn update-toimenpide! [db toimenpide-id toimenpide]
