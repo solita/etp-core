@@ -103,5 +103,5 @@
                                 "target/etp-backend.jar"]}
            :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "2.5.1109"}}
                       :main-opts ["-m" "antq.core"]}
-           :lint {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2023.07.13"}}
+           :lint {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2023.09.07"}}
                   :main-opts ["-m" "clj-kondo.main" "--lint" "src"]}}}
