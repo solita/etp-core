@@ -98,7 +98,7 @@
                  :main-opts ["-m" "hf.depstar.jar" "target/etp-backend.jar"]}
            :uberjar {:extra-deps {uberdeps/uberdeps {:mvn/version "0.1.8"}}
                      :main-opts ["-m" "uberdeps.uberjar"]}
-           :deploy {:extra-deps {slipset/deps-deploy {:mvn/version "0.1.0"}}
+           :deploy {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.1"}}
                     :main-opts ["-m" "deps-deploy.deps-deploy" "deploy"
                                 "target/etp-backend.jar"]}
            :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "2.5.1109"}}
