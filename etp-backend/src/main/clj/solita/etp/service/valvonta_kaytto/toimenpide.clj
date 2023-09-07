@@ -17,7 +17,9 @@
    ;; Uhkasakkoprosessi
    6 :court-hearing
    7 :decision-order-hearing-letter
-   8 :decision-order-actual-decision})
+   8 :decision-order-actual-decision
+   9 :decision-order-notice-first-mailing
+   10 :decision-order-notice-second-mailing})
 
 (defn type-key [type-id]
   (if-let [type-key (type-id->type-key type-id)]
@@ -40,10 +42,12 @@
 
 (def kaskypaatos-toimenpide?
   (partial some-type? #{:decision-order-hearing-letter
-                        :decision-order-actual-decision}))
+                        :decision-order-actual-decision
+                        :decision-order-notice-first-mailing
+                        :decision-order-notice-second-mailing}))
 
 (def asha-toimenpide?
-  (partial some-type? #{:rfi-request :rfi-order :rfi-warning :decision-order-hearing-letter :decision-order-actual-decision}))
+  (partial some-type? #{:rfi-request :rfi-order :rfi-warning :decision-order-hearing-letter :decision-order-actual-decision :decision-order-notice-first-mailing}))
 
 
 (def with-diaarinumero? (comp not (partial type? :case)))

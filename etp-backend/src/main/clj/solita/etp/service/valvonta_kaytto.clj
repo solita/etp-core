@@ -32,14 +32,14 @@
   (update valvonta-db-row :postinumero (maybe/lift1 #(format "%05d" %))))
 
 (def ^:private default-valvonta-query
-  {:valvoja-id nil
-   :has-valvoja nil
-   :include-closed false
-   :keyword nil
+  {:valvoja-id        nil
+   :has-valvoja       nil
+   :include-closed    false
+   :keyword           nil
    :toimenpidetype-id nil
    :asiakirjapohja-id nil
-   :limit 10
-   :offset 0})
+   :limit             10
+   :offset            0})
 
 (defn department-head-data
   "Finds the previously used department head title
@@ -49,7 +49,7 @@
     latest-department-head
     {:department-head-title-fi nil
      :department-head-title-sv nil
-     :department-head-name nil}))
+     :department-head-name     nil}))
 
 (defn- nil-if-not-exists [key object]
   (update object key (logic/when* (comp nil? :id) (constantly nil))))
@@ -218,9 +218,9 @@
            (-> toimenpide-add
                (dissoc :bypass-asha)
                (assoc
-                :diaarinumero diaarinumero
-                :valvonta-id valvonta-id
-                :publish-time (Instant/now)))
+                 :diaarinumero diaarinumero
+                 :valvonta-id valvonta-id
+                 :publish-time (Instant/now)))
            db/default-opts)))
 
 (defn find-diaarinumero [db id toimenpide]
@@ -276,10 +276,16 @@
           toimenpide (insert-toimenpide! tx valvonta-id diaarinumero toimenpide-add)
           toimenpide-id (:id toimenpide)]
       (insert-toimenpide-osapuolet! tx valvonta-id toimenpide-id)
-      (if (toimenpide/case-close? toimenpide)
-        (when-not (-> toimenpide-add :bypass-asha)
-          (asha/close-case! whoami valvonta-id toimenpide))
-        (when (toimenpide/asha-toimenpide? toimenpide)
+      (let [case-close (toimenpide/case-close? toimenpide)
+            bypass-asha (:bypass-asha toimenpide)
+            asha-toimenpide (toimenpide/asha-toimenpide? toimenpide-add)]
+        (cond
+          ;; Close in asha unless bypassed
+          case-close
+          (when (not bypass-asha) (asha/close-case! whoami valvonta-id toimenpide))
+
+          ;; Log asha-toimenpide and send messages
+          asha-toimenpide
           (let [find-toimenpide-osapuolet (comp flatten (juxt find-toimenpide-henkilot find-toimenpide-yritykset))
                 osapuolet (find-toimenpide-osapuolet tx (:id toimenpide))]
             (asha/log-toimenpide!
@@ -288,6 +294,7 @@
             (when-not (toimenpide/manually-deliverable? db (:type-id toimenpide))
               (send-suomifi-viestit! aws-s3-client valvonta toimenpide osapuolet)
               (send-toimenpide-email! db aws-s3-client valvonta toimenpide osapuolet)))))
+
       {:id toimenpide-id})))
 
 (defn update-toimenpide! [db toimenpide-id toimenpide]
