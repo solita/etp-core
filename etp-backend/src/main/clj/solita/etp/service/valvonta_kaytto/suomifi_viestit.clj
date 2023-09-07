@@ -1,6 +1,5 @@
 (ns solita.etp.service.valvonta-kaytto.suomifi-viestit
   (:require [clostache.parser :as clostache]
-            [clojure.data.codec.base64 :as b64]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
             [solita.etp.service.suomifi-viestit :as suomifi]
             [clojure.java.io :as io]
@@ -9,7 +8,9 @@
             [solita.etp.service.valvonta-kaytto.store :as store]
             [solita.etp.service.valvonta-kaytto.osapuoli :as osapuoli]
             [clojure.string :as str])
-  (:import (java.time Instant)))
+  (:import (java.nio.charset StandardCharsets)
+           (java.time Instant)
+           (java.util Base64)))
 
 (def lahettaja {:nimi             "Asumisen rahoitus- ja kehittämiskeskus"
                 :jakeluosoite     "Kirkkokatu 12 / PL 30"
@@ -114,7 +115,7 @@
      (store/info-letter)]))
 
 (defn- ^:dynamic bytes->base64 [bytes]
-  (String. (b64/encode bytes) "UTF-8"))
+  (String. (.encode (Base64/getEncoder) bytes) StandardCharsets/UTF_8))
 
 (defn- document->tiedosto [type-key osapuoli document]
   (let [{:keys [nimi kuvaus]} (toimenpide->tiedosto type-key)

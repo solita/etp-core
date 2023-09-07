@@ -1,10 +1,11 @@
 (ns solita.etp.service.asha-test
-  (:require [clojure.test :as t]
-            [solita.etp.test-system :as ts]
-            [clojure.java.io :as io]
-            [solita.etp.service.asha :as asha-service]
+  (:require [clojure.java.io :as io]
             [clojure.string :as str]
-            [clojure.data.codec.base64 :as b64]))
+            [clojure.test :as t]
+            [solita.etp.service.asha :as asha-service]
+            [solita.etp.test-system :as ts])
+  (:import (java.nio.charset StandardCharsets)
+           (java.util Base64)))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -122,7 +123,7 @@
                                                                :processing-action {:name-identity "Tietopyyntö"}}
                                                   :attach     {:document [{:name    "Tietopyyntö.txt"
                                                                            :type    "Pyyntö"
-                                                                           :content (String. (b64/encode (.getBytes "Test")) "UTF-8")}]}})))))
+                                                                           :content (String. (.encode (Base64/getEncoder) (.getBytes "Test")) StandardCharsets/UTF_8)}]}})))))
 
 (t/deftest execute-operation-proceed-operation-test
   (binding [asha-service/post! (handle-request "asha/execute-operation-proceed-operation-request.xml"

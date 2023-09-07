@@ -1,13 +1,12 @@
 (ns solita.common.smtp
-  (:require [clojure.tools.logging :as log]
-            [clojure.data.codec.base64 :as b64])
+  (:require [clojure.tools.logging :as log])
   (:import (javax.mail Message$RecipientType Session Transport)
            (javax.mail.internet InternetAddress
                                 MimeMessage
                                 MimeBodyPart
                                 MimeMultipart
                                 InternetHeaders)
-           (java.util Properties)
+           (java.util Base64 Properties)
            (java.io File InputStream)
            (org.apache.commons.io IOUtils)))
 
@@ -27,8 +26,8 @@
   (Session/getDefaultInstance properties))
 
 (defn- mime-message [^Session session
-                    ^String from-email ^String from-name
-                    to ^String subject]
+                     ^String from-email ^String from-name
+                     to ^String subject]
   (doto (MimeMessage. session)
     (.setFrom (InternetAddress. from-email from-name))
     (.setSubject subject)
@@ -40,7 +39,7 @@
 
 (defn- send-email! [host port username password
                     from-email from-name to subject
-                    add-content  reply-to-email reply-to-name]
+                    add-content reply-to-email reply-to-name]
   (let [^Properties properties (mail-properties port)
         ^Session session (session properties)
         ^MimeMessage mime-message (mime-message session
@@ -76,7 +75,7 @@
     (.attachFile file)))
 
 (defn input-stream->attachment [^InputStream input-stream ^String name ^String content-type]
-  (doto (MimeBodyPart. (InternetHeaders.) (b64/encode (IOUtils/toByteArray input-stream)))
+  (doto (MimeBodyPart. (InternetHeaders.) (.encode (Base64/getEncoder) (IOUtils/toByteArray input-stream)))
     (.setFileName name)
     (.setHeader "Content-Type" content-type)
     (.setHeader "Content-Transfer-Encoding" "base64")
