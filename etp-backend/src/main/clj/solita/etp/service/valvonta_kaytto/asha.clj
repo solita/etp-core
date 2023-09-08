@@ -245,6 +245,19 @@
                                                            (find-court-id-from-court-data (:id osapuoli))))
       generated-pdf)))
 
+(defn filter-osapuolet-if-varsinainen-paatos
+  "If toimenpidetype of the toimenpide is käskypäätös / varsinainen päätös,
+  osapuolet will be filtered so that only those are returned that have a hallinto-oikeus
+  specified in type-specific-data of the toimenpide.
+  For all other toimenpidetypes all osapuolet are returned."
+  [toimenpide osapuolet]
+  (if (toimenpide/kaskypaatos-varsinainen-paatos? toimenpide)
+    (let [osapuolet-with-hallinto-oikeus (set (map :osapuoli-id (-> toimenpide
+                                                                    :type-specific-data
+                                                                    :courts)))]
+      (filter #(contains? osapuolet-with-hallinto-oikeus (:id %)) osapuolet))
+    osapuolet))
+
 (defn log-toimenpide! [db aws-s3-client whoami valvonta toimenpide osapuolet ilmoituspaikat roolit]
   (let [request-id (request-id (:id valvonta) (:id toimenpide))
         sender-id (:email whoami)
@@ -253,6 +266,7 @@
         documents (when (:document processing-action)
                     (->> osapuolet
                          (filter osapuoli/omistaja?)
+                         (filter-osapuolet-if-varsinainen-paatos toimenpide)
                          (map (fn [osapuoli]
                                 (let [document (generate-pdf-document db whoami valvonta toimenpide ilmoituspaikat
                                                                       osapuoli osapuolet roolit)]
