@@ -392,7 +392,8 @@
                                                    :statement-fi             "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."
                                                    :statement-sv             "Han vet inte. Vi förlotar."
                                                    :osapuoli-specific        [{:osapuoli-id        osapuoli-id
-                                                                               :hallinto-oikeus-id 1}]
+                                                                               :hallinto-oikeus-id 1
+                                                                               :document           true}]
                                                    :department-head-title-fi "Apulaisjohtaja"
                                                    :department-head-title-sv "Apulaisjohtaja på svenska"
                                                    :department-head-name     "Yli Päällikkö"}}
@@ -475,7 +476,8 @@
                                                    :statement-fi             "Yritys tuomitaan sakkoihin."
                                                    :statement-sv             "Företaget döms till böter."
                                                    :osapuoli-specific        [{:osapuoli-id        osapuoli-id
-                                                                               :hallinto-oikeus-id 2}]
+                                                                               :hallinto-oikeus-id 2
+                                                                               :document           true}]
                                                    :department-head-title-fi "Senior Vice President"
                                                    :department-head-title-sv "Kungen"
                                                    :department-head-name     "Jane Doe"}}
@@ -489,6 +491,7 @@
   (t/testing "Käskypäätös / varsinainen päätös toimenpide is created successfully when there are multiple osapuolis but one lives abroad and will not receive the document because of being outside court jurisdiction"
     ;; Add the valvonta and previous toimenpides
     ;; so that käskypäätös / kuulemiskirje toimenpide can be created
+    (println "Käskypäätös / varsinainen päätös toimenpide is created successfully when there are multiple osapuolis but one lives abroad and will not receive the document because of being outside court jurisdiction")
     (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite        "Testitie 5"
                                                                :postinumero       "90100"
                                                                :ilmoituspaikka-id 0})
@@ -520,23 +523,23 @@
                          :etunimi                  "Testi"
                          :vastaanottajan-tarkenne  nil
                          :maa                      "FI"})
-          _osapuoli-id-2 (valvonta-service/add-henkilo!
-                           ts/*db*
-                           valvonta-id
-                           {:toimitustapa-description nil
-                            :toimitustapa-id          0
-                            :email                    nil
-                            :rooli-id                 0
-                            :jakeluosoite             "Testikatu 13"
-                            :postitoimipaikka         "Stockholm"
-                            :puhelin                  nil
-                            :sukunimi                 "Omistaja"
-                            :postinumero              "00000"
-                            :henkilotunnus            "000000-0001"
-                            :rooli-description        ""
-                            :etunimi                  "Toinen"
-                            :vastaanottajan-tarkenne  nil
-                            :maa                      "SV"})]
+          osapuoli-id-2 (valvonta-service/add-henkilo!
+                          ts/*db*
+                          valvonta-id
+                          {:toimitustapa-description nil
+                           :toimitustapa-id          0
+                           :email                    nil
+                           :rooli-id                 0
+                           :jakeluosoite             "Testikatu 13"
+                           :postitoimipaikka         "Stockholm"
+                           :puhelin                  nil
+                           :sukunimi                 "Omistaja"
+                           :postinumero              "00000"
+                           :henkilotunnus            "000000-0001"
+                           :rooli-description        ""
+                           :etunimi                  "Toinen"
+                           :vastaanottajan-tarkenne  nil
+                           :maa                      "SV"})]
       ;; Add kehotus-toimenpide to the valvonta
       (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id   valvonta-id
                                             :type_id       2
@@ -578,10 +581,11 @@
                                                    :statement-fi             "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."
                                                    :statement-sv             "Han vet inte. Vi förlotar."
                                                    :osapuoli-specific        [{:osapuoli-id        osapuoli-id
-                                                                               :hallinto-oikeus-id 1}
-                                                                              ;; the second osapuoli is not here because of
-                                                                              ;; living outside the court jurisdiction
-                                                                              ]
+                                                                               :hallinto-oikeus-id 1
+                                                                               :document           true}
+                                                                              {:osapuoli-id     osapuoli-id-2
+                                                                               :hallinto-oikeus-id nil
+                                                                               :document        false}]
                                                    :department-head-title-fi "Apulaisjohtaja"
                                                    :department-head-title-sv "Apulaisjohtaja på svenska"
                                                    :department-head-name     "Yli Päällikkö"}}
@@ -626,7 +630,8 @@
                                                  :statement-fi             "Koska hän ei vastannut ollenkaan hän joutuu maksamaan paljon sakkoja."
                                                  :statement-sv             "Eftersom han inte svarade alls måste han betala mycket böter."
                                                  :osapuoli-specific        [{:osapuoli-id        osapuoli-id
-                                                                             :hallinto-oikeus-id 3}]
+                                                                             :hallinto-oikeus-id 3
+                                                                             :document           true}]
                                                  :department-head-title-fi "Johtaja"
                                                  :department-head-title-sv "Ledar"
                                                  :department-head-name     "Nimi Muutettu"}}
@@ -666,7 +671,8 @@
                                                  :statement-fi             "Vastaus oli väärä, joten saat isot sakot."
                                                  :statement-sv             "Svaret var fel, så du får stora böter."
                                                  :osapuoli-specific        [{:osapuoli-id        osapuoli-id
-                                                                             :hallinto-oikeus-id 5}]
+                                                                             :hallinto-oikeus-id 5
+                                                                             :document           true}]
                                                  :department-head-title-fi "Titteli"
                                                  :department-head-title-sv "Tittel"
                                                  :department-head-name     "Nimi"}}

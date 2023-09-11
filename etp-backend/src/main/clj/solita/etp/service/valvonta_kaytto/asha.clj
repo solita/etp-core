@@ -245,16 +245,19 @@
                                                            (find-court-id-from-court-data (:id osapuoli))))
       generated-pdf)))
 
-(defn filter-osapuolet-if-varsinainen-paatos
+(defn filter-osapuolet-if-kaskypaatos-varsinainen-paatos
   "If toimenpidetype of the toimenpide is käskypäätös / varsinainen päätös,
-  osapuolet will be filtered so that only those are returned that have a hallinto-oikeus
+  osapuolet will be filtered so that only those are returned that have a :document as true
   specified in type-specific-data of the toimenpide.
   For all other toimenpidetypes all osapuolet are returned."
   [toimenpide osapuolet]
   (if (toimenpide/kaskypaatos-varsinainen-paatos? toimenpide)
-    (let [osapuolet-with-hallinto-oikeus (set (map :osapuoli-id (-> toimenpide
-                                                                    :type-specific-data
-                                                                    :osapuoli-specific)))]
+    (let [osapuolet-with-hallinto-oikeus (->> toimenpide
+                                              :type-specific-data
+                                              :osapuoli-specific
+                                              (filter #(true? (:document %)))
+                                              (map :osapuoli-id)
+                                              set)]
       (filter #(contains? osapuolet-with-hallinto-oikeus (:id %)) osapuolet))
     osapuolet))
 
@@ -266,7 +269,7 @@
         documents (when (:document processing-action)
                     (->> osapuolet
                          (filter osapuoli/omistaja?)
-                         (filter-osapuolet-if-varsinainen-paatos toimenpide)
+                         (filter-osapuolet-if-kaskypaatos-varsinainen-paatos toimenpide)
                          (map (fn [osapuoli]
                                 (let [document (generate-pdf-document db whoami valvonta toimenpide ilmoituspaikat
                                                                       osapuoli osapuolet roolit)]

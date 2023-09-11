@@ -53,7 +53,8 @@
                                        :statement-fi             schema/Str
                                        :statement-sv             schema/Str
                                        :osapuoli-specific        [{:osapuoli-id        common-schema/Key
-                                                                   :hallinto-oikeus-id HallintoOikeusId}]
+                                                                   :hallinto-oikeus-id (schema/maybe HallintoOikeusId)
+                                                                   :document           schema/Bool}]
                                        :department-head-title-fi schema/Str
                                        :department-head-title-sv schema/Str
                                        :department-head-name     schema/Str})
