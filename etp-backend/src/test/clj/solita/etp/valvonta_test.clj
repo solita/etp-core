@@ -69,9 +69,9 @@
                     :description   "Tee jotain"
                     }
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
-                                    (mock/json-body body)
-                                    (test-kayttajat/with-virtu-user)
-                                    (mock/header "Accept" "application/json")))
+                                       (mock/json-body body)
+                                       (test-kayttajat/with-virtu-user)
+                                       (mock/header "Accept" "application/json")))
               response-body (j/read-value (:body response) j/keyword-keys-object-mapper)]
 
           (t/is (= (:status response) 201))
@@ -236,15 +236,15 @@
                       #'pdf/html->pdf (partial html->pdf-with-assertion
                                                "documents/kaskypaatoskuulemiskirje-yksityishenkilo.html"
                                                html->pdf-called?)}
-        (let [new-toimenpide {:type-id       7
-                              :deadline-date (str (LocalDate/of 2023 7 22))
-                              :template-id   5
-                              :description   "Lähetetään kuulemiskirje, kun myyjä ei ole hankkinut energiatodistusta eikä vastannut kehotukseen tai varoitukseen"
+        (let [new-toimenpide {:type-id            7
+                              :deadline-date      (str (LocalDate/of 2023 7 22))
+                              :template-id        5
+                              :description        "Lähetetään kuulemiskirje, kun myyjä ei ole hankkinut energiatodistusta eikä vastannut kehotukseen tai varoitukseen"
                               :type-specific-data {:fine 800}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
-                                    (mock/json-body new-toimenpide)
-                                    (test-kayttajat/with-virtu-user)
-                                    (mock/header "Accept" "application/json")))]
+                                       (mock/json-body new-toimenpide)
+                                       (test-kayttajat/with-virtu-user)
+                                       (mock/header "Accept" "application/json")))]
           (t/is (true? @html->pdf-called?))
           (t/is (= (:status response) 201))))))
 
@@ -264,19 +264,19 @@
 
       ;; Add osapuoli to the valvonta
       (valvonta-service/add-yritys! ts/*db*
-                                     valvonta-id
-                                     {:nimi                     "Yritysomistaja"
-                                      :toimitustapa-description nil
-                                      :toimitustapa-id          0
-                                      :email                    nil
-                                      :rooli-id                 0
-                                      :jakeluosoite             "Testikatu 12"
-                                      :vastaanottajan-tarkenne "Lisäselite C/O"
-                                      :postitoimipaikka         "Helsinki"
-                                      :puhelin                  nil
-                                      :postinumero              "00100"
-                                      :rooli-description        ""
-                                      :maa                      "FI"})
+                                    valvonta-id
+                                    {:nimi                     "Yritysomistaja"
+                                     :toimitustapa-description nil
+                                     :toimitustapa-id          0
+                                     :email                    nil
+                                     :rooli-id                 0
+                                     :jakeluosoite             "Testikatu 12"
+                                     :vastaanottajan-tarkenne  "Lisäselite C/O"
+                                     :postitoimipaikka         "Helsinki"
+                                     :puhelin                  nil
+                                     :postinumero              "00100"
+                                     :rooli-description        ""
+                                     :maa                      "FI"})
 
       ;; Add kehotus-toimenpide to the valvonta
       (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id   valvonta-id
@@ -299,15 +299,15 @@
                       #'pdf/html->pdf (partial html->pdf-with-assertion
                                                "documents/kaskypaatoskuulemiskirje-yritys.html"
                                                html->pdf-called?)}
-        (let [new-toimenpide {:type-id       7
-                              :deadline-date (str (LocalDate/of 2023 7 22))
-                              :template-id   5
-                              :description   "Lähetetään kuulemiskirje, kun myyjä ei ole hankkinut energiatodistusta eikä vastannut kehotukseen tai varoitukseen"
+        (let [new-toimenpide {:type-id            7
+                              :deadline-date      (str (LocalDate/of 2023 7 22))
+                              :template-id        5
+                              :description        "Lähetetään kuulemiskirje, kun myyjä ei ole hankkinut energiatodistusta eikä vastannut kehotukseen tai varoitukseen"
                               :type-specific-data {:fine 9000}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
-                                    (mock/json-body new-toimenpide)
-                                    (test-kayttajat/with-virtu-user)
-                                    (mock/header "Accept" "application/json")))]
+                                       (mock/json-body new-toimenpide)
+                                       (test-kayttajat/with-virtu-user)
+                                       (mock/header "Accept" "application/json")))]
           (t/is (true? @html->pdf-called?))
           (t/is (= (:status response) 201)))))))
 
@@ -391,8 +391,8 @@
                                                    :answer-commentary-sv     "Jag visste inte att ett intyg behövs :("
                                                    :statement-fi             "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."
                                                    :statement-sv             "Han vet inte. Vi förlotar."
-                                                   :courts [{:osapuoli-id osapuoli-id
-                                                             :hallinto-oikeus-id 1}]
+                                                   :osapuoli-specific        [{:osapuoli-id        osapuoli-id
+                                                                               :hallinto-oikeus-id 1}]
                                                    :department-head-title-fi "Apulaisjohtaja"
                                                    :department-head-title-sv "Apulaisjohtaja på svenska"
                                                    :department-head-name     "Yli Päällikkö"}}
@@ -474,8 +474,8 @@
                                                    :answer-commentary-sv     "Företaget var inte nåbar alls angående ärendet."
                                                    :statement-fi             "Yritys tuomitaan sakkoihin."
                                                    :statement-sv             "Företaget döms till böter."
-                                                   :courts [{:osapuoli-id osapuoli-id
-                                                             :hallinto-oikeus-id 2}]
+                                                   :osapuoli-specific        [{:osapuoli-id        osapuoli-id
+                                                                               :hallinto-oikeus-id 2}]
                                                    :department-head-title-fi "Senior Vice President"
                                                    :department-head-title-sv "Kungen"
                                                    :department-head-name     "Jane Doe"}}
@@ -521,22 +521,22 @@
                          :vastaanottajan-tarkenne  nil
                          :maa                      "FI"})
           _osapuoli-id-2 (valvonta-service/add-henkilo!
-                          ts/*db*
-                          valvonta-id
-                          {:toimitustapa-description nil
-                           :toimitustapa-id          0
-                           :email                    nil
-                           :rooli-id                 0
-                           :jakeluosoite             "Testikatu 13"
-                           :postitoimipaikka         "Stockholm"
-                           :puhelin                  nil
-                           :sukunimi                 "Omistaja"
-                           :postinumero              "00000"
-                           :henkilotunnus            "000000-0001"
-                           :rooli-description        ""
-                           :etunimi                  "Toinen"
-                           :vastaanottajan-tarkenne  nil
-                           :maa                      "SV"})]
+                           ts/*db*
+                           valvonta-id
+                           {:toimitustapa-description nil
+                            :toimitustapa-id          0
+                            :email                    nil
+                            :rooli-id                 0
+                            :jakeluosoite             "Testikatu 13"
+                            :postitoimipaikka         "Stockholm"
+                            :puhelin                  nil
+                            :sukunimi                 "Omistaja"
+                            :postinumero              "00000"
+                            :henkilotunnus            "000000-0001"
+                            :rooli-description        ""
+                            :etunimi                  "Toinen"
+                            :vastaanottajan-tarkenne  nil
+                            :maa                      "SV"})]
       ;; Add kehotus-toimenpide to the valvonta
       (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id   valvonta-id
                                             :type_id       2
@@ -559,10 +559,10 @@
                                             :type_specific_data {:fine 9000}
                                             :diaarinumero       "ARA-05.03.01-2023-159"})
       ;; Mock the current time to ensure that the document has a fixed date
-      (with-bindings {#'time/clock (Clock/fixed (-> (LocalDate/of 2023 8 28)
-                                                    (.atStartOfDay time/timezone)
-                                                    .toInstant)
-                                                time/timezone)
+      (with-bindings {#'time/clock    (Clock/fixed (-> (LocalDate/of 2023 8 28)
+                                                       (.atStartOfDay time/timezone)
+                                                       .toInstant)
+                                                   time/timezone)
                       ;; Assert that the created document is for the correct osapuoli
                       #'pdf/html->pdf (partial html->pdf-with-assertion
                                                "documents/kaskypaatos-varsinainen-paatos-yksityishenkilo.html"
@@ -577,7 +577,7 @@
                                                    :answer-commentary-sv     "Jag visste inte att ett intyg behövs :("
                                                    :statement-fi             "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."
                                                    :statement-sv             "Han vet inte. Vi förlotar."
-                                                   :courts                   [{:osapuoli-id        osapuoli-id
+                                                   :osapuoli-specific        [{:osapuoli-id        osapuoli-id
                                                                                :hallinto-oikeus-id 1}
                                                                               ;; the second osapuoli is not here because of
                                                                               ;; living outside the court jurisdiction
@@ -619,21 +619,21 @@
                             :deadline-date      (str (LocalDate/of 2023 10 4))
                             :template-id        6
                             :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
-                            :type-specific-data {:fine               857
-                                                 :recipient-answered false
-                                                 :answer-commentary-fi  "Hän ei vastannut ollenkaan"
-                                                 :answer-commentary-sv "Han svarade inte alls"
-                                                 :statement-fi          "Koska hän ei vastannut ollenkaan hän joutuu maksamaan paljon sakkoja."
-                                                 :statement-sv "Eftersom han inte svarade alls måste han betala mycket böter."
-                                                 :courts [{:osapuoli-id osapuoli-id
-                                                           :hallinto-oikeus-id 3}]
+                            :type-specific-data {:fine                     857
+                                                 :recipient-answered       false
+                                                 :answer-commentary-fi     "Hän ei vastannut ollenkaan"
+                                                 :answer-commentary-sv     "Han svarade inte alls"
+                                                 :statement-fi             "Koska hän ei vastannut ollenkaan hän joutuu maksamaan paljon sakkoja."
+                                                 :statement-sv             "Eftersom han inte svarade alls måste han betala mycket böter."
+                                                 :osapuoli-specific        [{:osapuoli-id        osapuoli-id
+                                                                             :hallinto-oikeus-id 3}]
                                                  :department-head-title-fi "Johtaja"
                                                  :department-head-title-sv "Ledar"
-                                                 :department-head-name "Nimi Muutettu"}}
+                                                 :department-head-name     "Nimi Muutettu"}}
             response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/henkilot/%s/preview" valvonta-id osapuoli-id))
-                                  (mock/json-body new-toimenpide)
-                                  (test-kayttajat/with-virtu-user)
-                                  (mock/header "Accept" "application/json")))]
+                                     (mock/json-body new-toimenpide)
+                                     (test-kayttajat/with-virtu-user)
+                                     (mock/header "Accept" "application/json")))]
         (t/is (= (:status response) 200))))
 
     (t/testing "for yritysomistaja"
@@ -659,17 +659,17 @@
                             :deadline-date      (str (LocalDate/of 2023 10 4))
                             :template-id        6
                             :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
-                            :type-specific-data {:fine               857
-                                                 :recipient-answered true
-                                                 :answer-commentary-fi  "Yritykseni on niin iso, ettei minun tarvitse välittää tällaisista asioista"
-                                                 :answer-commentary-sv "Mitt företag är så stort att jag inte behöver bry mig om sådana saker"
-                                                 :statement-fi          "Vastaus oli väärä, joten saat isot sakot."
-                                                 :statement-sv "Svaret var fel, så du får stora böter."
-                                                 :courts [{:osapuoli-id osapuoli-id
-                                                           :hallinto-oikeus-id 5}]
+                            :type-specific-data {:fine                     857
+                                                 :recipient-answered       true
+                                                 :answer-commentary-fi     "Yritykseni on niin iso, ettei minun tarvitse välittää tällaisista asioista"
+                                                 :answer-commentary-sv     "Mitt företag är så stort att jag inte behöver bry mig om sådana saker"
+                                                 :statement-fi             "Vastaus oli väärä, joten saat isot sakot."
+                                                 :statement-sv             "Svaret var fel, så du får stora böter."
+                                                 :osapuoli-specific        [{:osapuoli-id        osapuoli-id
+                                                                             :hallinto-oikeus-id 5}]
                                                  :department-head-title-fi "Titteli"
                                                  :department-head-title-sv "Tittel"
-                                                 :department-head-name "Nimi"}}
+                                                 :department-head-name     "Nimi"}}
             response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/yritykset/%s/preview" valvonta-id osapuoli-id))
                                      (mock/json-body new-toimenpide)
                                      (test-kayttajat/with-virtu-user)
@@ -680,21 +680,21 @@
   (let [kayttaja-id (test-kayttajat/insert-virtu-paakayttaja!)
         valvonta (-> {}
                      (generators/complete valvonta-schema/ValvontaSave)
-                     (non-nil-key->string :havaintopaiva) ; Jackson has problems encoding local date
+                     (non-nil-key->string :havaintopaiva)   ; Jackson has problems encoding local date
                      (assoc :ilmoituspaikka-id 1)
                      (assoc :valvoja-id kayttaja-id))]
     (t/testing "Uuden valvonnan luominen"
       (let [response (ts/handler (-> (mock/request :post "/api/private/valvonta/kaytto")
                                      (mock/json-body valvonta)
-                                  (test-kayttajat/with-virtu-user)
-                                  (mock/header "Accept" "application/json")))
+                                     (test-kayttajat/with-virtu-user)
+                                     (mock/header "Accept" "application/json")))
             response-body (j/read-value (:body response) j/keyword-keys-object-mapper)]
         (t/is (= (:status response) 201))
         (t/is (= response-body {:id 1}))))
     (t/testing "Luotu valvonta on tallennettu ja voidaan hakea"
       (let [fetch-response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/1"))
-                                        (test-kayttajat/with-virtu-user)
-                                        (mock/header "Accept" "application/json")))
+                                           (test-kayttajat/with-virtu-user)
+                                           (mock/header "Accept" "application/json")))
             fetched-valvonta (j/read-value (:body fetch-response) j/keyword-keys-object-mapper)
             expected-valvonta (assoc valvonta :id 1)]
         (t/is (= (:status fetch-response) 200))
@@ -717,8 +717,8 @@
       (add-toimenpide-and-map-id! valvonta-id toimenpide))
     (t/testing "Valvonnalle palautetaan 6 toimenpidettä"
       (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet" (-> valvonnat first :id)))
-                                  (test-kayttajat/with-virtu-user)
-                                  (mock/header "Accept" "application/json")))
+                                     (test-kayttajat/with-virtu-user)
+                                     (mock/header "Accept" "application/json")))
             response-body (j/read-value (:body response) j/keyword-keys-object-mapper)]
         (t/is (= (:status response) 200))
         (t/is (= (count response-body) 6))))))
@@ -740,17 +740,17 @@
                           (mapv #(apply add-toimenpide-and-map-id! %)))]
     (t/testing "Hae valvontojen määrä joissa on käytetty asiakirjapohjaa 1"
       (let [response (ts/handler (-> (mock/request :get "/api/private/valvonta/kaytto/count")
-                                  (mock/query-string {:asiakirjapohja-id 1})
-                                  (test-kayttajat/with-virtu-user)
-                                  (mock/header "Accept" "application/json")))
+                                     (mock/query-string {:asiakirjapohja-id 1})
+                                     (test-kayttajat/with-virtu-user)
+                                     (mock/header "Accept" "application/json")))
             response-body (j/read-value (:body response) j/keyword-keys-object-mapper)]
         (t/is (= (:status response) 200))
         (t/is (= response-body {:count 1}))))
     (t/testing "Hae valvonnat joissa on käytetty asiakirjapohjaa 1"
       (let [response (ts/handler (-> (mock/request :get "/api/private/valvonta/kaytto")
-                                  (mock/query-string {:asiakirjapohja-id 1})
-                                  (test-kayttajat/with-virtu-user)
-                                  (mock/header "Accept" "application/json")))
+                                     (mock/query-string {:asiakirjapohja-id 1})
+                                     (test-kayttajat/with-virtu-user)
+                                     (mock/header "Accept" "application/json")))
             response-body (j/read-value (:body response) j/keyword-keys-object-mapper)
             expected-valvonta (-> (first valvonnat)
                                   (assoc :henkilot []       ;Add synthetic fields

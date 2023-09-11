@@ -202,7 +202,7 @@
                                      :answer-commentary-sv     "Jag vet inte, förlåt."
                                      :statement-fi             "Olisi pitänyt tietää."
                                      :statement-sv             "Du måste ha visst."
-                                     :courts                   [{:osapuoli-id        1
+                                     :osapuoli-specific        [{:osapuoli-id        1
                                                                  :hallinto-oikeus-id 0}]
                                      :department-head-name     "Jorma Jormanen"
                                      :department-head-title-fi "Hallinto-oikeuden presidentti"
@@ -329,7 +329,7 @@
                       :type-specific-data
                       {:department-head-title-fi "Apulaisjohtaja"
                        :department-head-name     "Yli Päällikkö"
-                       :courts                   [{:hallinto-oikeus-id 1 :osapuoli-id 2}]
+                       :osapuoli-specific        [{:hallinto-oikeus-id 1 :osapuoli-id 2}]
                        :recipient-answered       true
                        :statement-sv             "Han vet inte. Vi förlotar."
                        :statement-fi             "Tämän kerran annetaan anteeksi kun hän ei tiennyt."
@@ -358,9 +358,9 @@
 
   (t/testing "Two osapuolis and two hallinto-oikeus selections, both osapuolet are returned"
     (t/is (= (asha/filter-osapuolet-if-varsinainen-paatos
-               {:type-id 8
-                :type-specific-data {:courts [{:hallinto-oikeus-id 1 :osapuoli-id 2}
-                                              {:hallinto-oikeus-id 3 :osapuoli-id 3}]}}
+               {:type-id            8
+                :type-specific-data {:osapuoli-specific [{:hallinto-oikeus-id 1 :osapuoli-id 2}
+                                                         {:hallinto-oikeus-id 3 :osapuoli-id 3}]}}
                [{:id 2}
                 {:id 3}])
              [{:id 2}

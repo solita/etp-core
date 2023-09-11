@@ -93,7 +93,7 @@
                                   db
                                   (-> toimenpide
                                       :type-specific-data
-                                      :courts
+                                      :osapuoli-specific
                                       (find-court-id-from-court-data osapuoli-id)))]
     {:vastaus-fi               (str (if recipient-answered?
                                       "Asianosainen antoi vastineen kuulemiskirjeeseen."
@@ -241,7 +241,7 @@
     (if (toimenpide/kaskypaatos-varsinainen-paatos? toimenpide)
       (add-hallinto-oikeus-attachment db generated-pdf (-> toimenpide
                                                            :type-specific-data
-                                                           :courts
+                                                           :osapuoli-specific
                                                            (find-court-id-from-court-data (:id osapuoli))))
       generated-pdf)))
 
@@ -254,7 +254,7 @@
   (if (toimenpide/kaskypaatos-varsinainen-paatos? toimenpide)
     (let [osapuolet-with-hallinto-oikeus (set (map :osapuoli-id (-> toimenpide
                                                                     :type-specific-data
-                                                                    :courts)))]
+                                                                    :osapuoli-specific)))]
       (filter #(contains? osapuolet-with-hallinto-oikeus (:id %)) osapuolet))
     osapuolet))
 

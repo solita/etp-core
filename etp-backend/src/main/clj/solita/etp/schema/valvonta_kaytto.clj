@@ -52,7 +52,7 @@
                                        :answer-commentary-sv     schema/Str
                                        :statement-fi             schema/Str
                                        :statement-sv             schema/Str
-                                       :courts                   [{:osapuoli-id        common-schema/Key
+                                       :osapuoli-specific        [{:osapuoli-id        common-schema/Key
                                                                    :hallinto-oikeus-id HallintoOikeusId}]
                                        :department-head-title-fi schema/Str
                                        :department-head-title-sv schema/Str
@@ -149,4 +149,4 @@
 (def Johtaja
   {:department-head-title-fi (schema/maybe schema/Str)
    :department-head-title-sv (schema/maybe schema/Str)
-   :department-head-name (schema/maybe schema/Str)})
+   :department-head-name     (schema/maybe schema/Str)})
