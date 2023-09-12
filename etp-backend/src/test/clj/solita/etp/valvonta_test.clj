@@ -491,7 +491,6 @@
   (t/testing "Käskypäätös / varsinainen päätös toimenpide is created successfully when there are multiple osapuolis but one lives abroad and will not receive the document because of being outside court jurisdiction"
     ;; Add the valvonta and previous toimenpides
     ;; so that käskypäätös / kuulemiskirje toimenpide can be created
-    (println "Käskypäätös / varsinainen päätös toimenpide is created successfully when there are multiple osapuolis but one lives abroad and will not receive the document because of being outside court jurisdiction")
     (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite        "Testitie 5"
                                                                :postinumero       "90100"
                                                                :ilmoituspaikka-id 0})
