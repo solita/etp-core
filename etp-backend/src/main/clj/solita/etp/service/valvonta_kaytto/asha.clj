@@ -78,8 +78,8 @@
     (exception/throw-ex-info!
       {:message (str "Unknown hallinto-oikeus-id: " hallinto-oikeus-id)})))
 
-(defn find-court-id-from-court-data [court-data osapuoli-id]
-  (->> court-data
+(defn find-court-id-from-osapuoli-specific-data [osapuoli-specific-data osapuoli-id]
+  (->> osapuoli-specific-data
        (filter #(= (:osapuoli-id %) osapuoli-id))
        first
        :hallinto-oikeus-id))
@@ -94,7 +94,7 @@
                                   (-> toimenpide
                                       :type-specific-data
                                       :osapuoli-specific
-                                      (find-court-id-from-court-data osapuoli-id)))]
+                                      (find-court-id-from-osapuoli-specific-data osapuoli-id)))]
     {:vastaus-fi               (str (if recipient-answered?
                                       "Asianosainen antoi vastineen kuulemiskirjeeseen."
                                       "Asianosainen ei vastannut kuulemiskirjeeseen.")
@@ -242,7 +242,7 @@
       (add-hallinto-oikeus-attachment db generated-pdf (-> toimenpide
                                                            :type-specific-data
                                                            :osapuoli-specific
-                                                           (find-court-id-from-court-data (:id osapuoli))))
+                                                           (find-court-id-from-osapuoli-specific-data (:id osapuoli))))
       generated-pdf)))
 
 (defn filter-osapuolet-if-kaskypaatos-varsinainen-paatos

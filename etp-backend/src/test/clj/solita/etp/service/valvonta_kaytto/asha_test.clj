@@ -273,9 +273,9 @@
         (t/is (not (nil? (:fi (asha/hallinto-oikeus-id->formatted-strings ts/*db* (:id hallinto-oikeus))))))
         (t/is (not (nil? (:sv (asha/hallinto-oikeus-id->formatted-strings ts/*db* (:id hallinto-oikeus))))))))))
 
-(t/deftest find-court-id-from-court-data-test
+(t/deftest find-court-id-from-osapuoli-specific-data-test
   (t/testing "Correct court id is found for the osapuoli"
-    (t/is (= (asha/find-court-id-from-court-data
+    (t/is (= (asha/find-court-id-from-osapuoli-specific-data
                [{:osapuoli-id        1
                  :hallinto-oikeus-id 0}
                 {:osapuoli-id        3
