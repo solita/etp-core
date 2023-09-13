@@ -391,7 +391,7 @@
                                                    :answer-commentary-sv     "Jag visste inte att ett intyg behövs :("
                                                    :statement-fi             "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."
                                                    :statement-sv             "Han vet inte. Vi förlotar."
-                                                   :osapuoli-specific        [{:osapuoli-id        osapuoli-id
+                                                   :osapuoli-specific-data   [{:osapuoli-id        osapuoli-id
                                                                                :hallinto-oikeus-id 1
                                                                                :document           true}]
                                                    :department-head-title-fi "Apulaisjohtaja"
@@ -475,7 +475,7 @@
                                                    :answer-commentary-sv     "Företaget var inte nåbar alls angående ärendet."
                                                    :statement-fi             "Yritys tuomitaan sakkoihin."
                                                    :statement-sv             "Företaget döms till böter."
-                                                   :osapuoli-specific        [{:osapuoli-id        osapuoli-id
+                                                   :osapuoli-specific-data   [{:osapuoli-id        osapuoli-id
                                                                                :hallinto-oikeus-id 2
                                                                                :document           true}]
                                                    :department-head-title-fi "Senior Vice President"
@@ -579,12 +579,12 @@
                                                    :answer-commentary-sv     "Jag visste inte att ett intyg behövs :("
                                                    :statement-fi             "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."
                                                    :statement-sv             "Han vet inte. Vi förlotar."
-                                                   :osapuoli-specific        [{:osapuoli-id        osapuoli-id
+                                                   :osapuoli-specific-data   [{:osapuoli-id        osapuoli-id
                                                                                :hallinto-oikeus-id 1
                                                                                :document           true}
-                                                                              {:osapuoli-id     osapuoli-id-2
+                                                                              {:osapuoli-id        osapuoli-id-2
                                                                                :hallinto-oikeus-id nil
-                                                                               :document        false}]
+                                                                               :document           false}]
                                                    :department-head-title-fi "Apulaisjohtaja"
                                                    :department-head-title-sv "Apulaisjohtaja på svenska"
                                                    :department-head-name     "Yli Päällikkö"}}
@@ -628,7 +628,7 @@
                                                  :answer-commentary-sv     "Han svarade inte alls"
                                                  :statement-fi             "Koska hän ei vastannut ollenkaan hän joutuu maksamaan paljon sakkoja."
                                                  :statement-sv             "Eftersom han inte svarade alls måste han betala mycket böter."
-                                                 :osapuoli-specific        [{:osapuoli-id        osapuoli-id
+                                                 :osapuoli-specific-data   [{:osapuoli-id        osapuoli-id
                                                                              :hallinto-oikeus-id 3
                                                                              :document           true}]
                                                  :department-head-title-fi "Johtaja"
@@ -669,7 +669,7 @@
                                                  :answer-commentary-sv     "Mitt företag är så stort att jag inte behöver bry mig om sådana saker"
                                                  :statement-fi             "Vastaus oli väärä, joten saat isot sakot."
                                                  :statement-sv             "Svaret var fel, så du får stora böter."
-                                                 :osapuoli-specific        [{:osapuoli-id        osapuoli-id
+                                                 :osapuoli-specific-data   [{:osapuoli-id        osapuoli-id
                                                                              :hallinto-oikeus-id 5
                                                                              :document           true}]
                                                  :department-head-title-fi "Titteli"

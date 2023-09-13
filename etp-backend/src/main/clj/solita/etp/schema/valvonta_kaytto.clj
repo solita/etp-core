@@ -52,7 +52,7 @@
                                        :answer-commentary-sv     schema/Str
                                        :statement-fi             schema/Str
                                        :statement-sv             schema/Str
-                                       :osapuoli-specific        [{:osapuoli-id        common-schema/Key
+                                       :osapuoli-specific-data   [{:osapuoli-id        common-schema/Key
                                                                    :hallinto-oikeus-id (schema/maybe HallintoOikeusId)
                                                                    :document           schema/Bool}]
                                        :department-head-title-fi schema/Str

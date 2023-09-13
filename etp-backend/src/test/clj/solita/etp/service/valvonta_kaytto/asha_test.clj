@@ -202,7 +202,7 @@
                                      :answer-commentary-sv     "Jag vet inte, förlåt."
                                      :statement-fi             "Olisi pitänyt tietää."
                                      :statement-sv             "Du måste ha visst."
-                                     :osapuoli-specific        [{:osapuoli-id        1
+                                     :osapuoli-specific-data   [{:osapuoli-id        1
                                                                  :hallinto-oikeus-id 0
                                                                  :document           true}]
                                      :department-head-name     "Jorma Jormanen"
@@ -330,12 +330,12 @@
                       :type-specific-data
                       {:department-head-title-fi "Apulaisjohtaja"
                        :department-head-name     "Yli Päällikkö"
-                       :osapuoli-specific        [{:hallinto-oikeus-id 1
-                                                   :osapuoli-id 2
-                                                   :document true}
+                       :osapuoli-specific-data   [{:hallinto-oikeus-id 1
+                                                   :osapuoli-id        2
+                                                   :document           true}
                                                   {:hallinto-oikeus-id nil
-                                                   :osapuoli-id 3
-                                                   :document false}]
+                                                   :osapuoli-id        3
+                                                   :document           false}]
                        :recipient-answered       true
                        :statement-sv             "Han vet inte. Vi förlotar."
                        :statement-fi             "Tämän kerran annetaan anteeksi kun hän ei tiennyt."
@@ -365,12 +365,12 @@
   (t/testing "Two osapuolis and two hallinto-oikeus selections, both osapuolet are returned"
     (t/is (= (asha/filter-osapuolet-if-kaskypaatos-varsinainen-paatos
                {:type-id            8
-                :type-specific-data {:osapuoli-specific [{:hallinto-oikeus-id 1
-                                                          :osapuoli-id 2
-                                                          :document true}
-                                                         {:hallinto-oikeus-id 3
-                                                          :osapuoli-id 3
-                                                          :document true}]}}
+                :type-specific-data {:osapuoli-specific-data [{:hallinto-oikeus-id 1
+                                                               :osapuoli-id        2
+                                                               :document           true}
+                                                              {:hallinto-oikeus-id 3
+                                                               :osapuoli-id        3
+                                                               :document           true}]}}
                [{:id 2}
                 {:id 3}])
              [{:id 2}
