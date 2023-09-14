@@ -102,7 +102,7 @@
              :deploy   {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.1"}}
                         :main-opts  ["-m" "deps-deploy.deps-deploy" "deploy"
                                      "target/etp-backend.jar"]}
-             :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "2.5.1109"}}
+             :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "2.6.1121"}}
                         :main-opts  ["-m" "antq.core"]}
              :lint     {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2023.09.07"}}
                         :main-opts  ["-m" "clj-kondo.main" "--lint" "src"]}}}
