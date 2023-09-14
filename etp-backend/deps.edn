@@ -7,7 +7,7 @@
              org.slf4j/log4j-over-slf4j                {:mvn/version "1.7.36"}
              flathead/flathead                         {:mvn/version "0.0.6"}
              integrant/integrant                       {:mvn/version "0.8.1"}
-             hikari-cp/hikari-cp                       {:mvn/version "2.14.0"}
+             hikari-cp/hikari-cp                       {:mvn/version "3.0.1"}
              org.postgresql/postgresql                 {:mvn/version "42.6.0"}
              org.clojure/java.jdbc                     {:mvn/version "0.7.12"}
              org.clojure/data.csv                      {:mvn/version "1.0.1"}
