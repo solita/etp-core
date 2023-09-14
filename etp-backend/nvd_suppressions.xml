@@ -41,6 +41,14 @@
         <packageUrl regex="true">^pkg:maven/org\.apache\.axis/axis@.*$</packageUrl>
         <vulnerabilityName>CVE-2007-2353</vulnerabilityName>
     </suppress>
+    <!-- ServiceFactory.getService is vulnerable. We don't use it. -->
+    <suppress>
+        <notes><![CDATA[
+   file name: axis-1.4.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.axis/axis@.*$</packageUrl>
+        <vulnerabilityName>CVE-2023-40743</vulnerabilityName>
+    </suppress>
 
     <!--  CVE itself is false  -->
     <suppress>
