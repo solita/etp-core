@@ -97,7 +97,7 @@
                         :main-opts  ["-m" "cloverage.coverage -p src/main -s src/test -e solita.etp.api.* -e user"]}
              :jar      {:extra-deps {seancorfield/depstar {:mvn/version "1.1.136"}}
                         :main-opts  ["-m" "hf.depstar.jar" "target/etp-backend.jar"]}
-             :uberjar  {:extra-deps {uberdeps/uberdeps {:mvn/version "0.1.8"}}
+             :uberjar  {:extra-deps {uberdeps/uberdeps {:mvn/version "0.1.11"}}
                         :main-opts  ["-m" "uberdeps.uberjar"]}
              :deploy   {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.1"}}
                         :main-opts  ["-m" "deps-deploy.deps-deploy" "deploy"
