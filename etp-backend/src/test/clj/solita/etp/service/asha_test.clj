@@ -4,7 +4,7 @@
             [clojure.test :as t]
             [solita.etp.service.asha :as asha-service]
             [solita.etp.test-system :as ts]
-            [clostache.parser])
+            [clostache.parser :refer [render-resource]])
   (:import (java.nio.charset StandardCharsets)
            (java.time Instant)
            (java.util Base64)))
@@ -157,23 +157,17 @@
                   "Vireillepano"
                   "Siirry käsittelyyn")))))
 
-(defn- read-resource [resource]
-  (-> resource io/resource slurp str/trim))
-
 (defn- info-request [context]
-  (clostache.parser/render-resource "asha/logtoimenpide/info-request-template.xml" context))
+  (render-resource "asha/logtoimenpide/info-request-template.xml" context))
 
 (defn- info-response [context]
-  (clostache.parser/render-resource "asha/logtoimenpide/info-response-template.xml" context))
+  (render-resource "asha/logtoimenpide/info-response-template.xml" context))
 
 (defn- take-processing-action-request [context]
-  (clostache.parser/render-resource "asha/logtoimenpide/take-processing-action-request-template.xml" context))
+  (render-resource "asha/logtoimenpide/take-processing-action-request-template.xml" context))
 
 (defn- processing-action-ready-request [context]
-  (clostache.parser/render-resource "asha/logtoimenpide/ready-request-template.xml" context))
-
-(defn- read-template [resource context]
-  (clostache.parser/render-resource resource context))
+  (render-resource "asha/logtoimenpide/ready-request-template.xml" context))
 
 (t/deftest log-toimenpide!-test
   (t/testing "The case is new. The processing action operation is set to Vireillepano, instead of the default Käsittely. The case is not moved"
@@ -212,7 +206,7 @@
             {:response-status  200
              :request-received take-processing-action-called}
 
-            (read-template "asha/logtoimenpide/create-processing-action-operation-template.xml"
+            (render-resource "asha/logtoimenpide/create-processing-action-operation-template.xml"
                            (merge render-context {:processing-action                used-processing-action
                                                   :processing-action-operation-name processing-action-operation-name
                                                   :description                      description
@@ -245,7 +239,7 @@
     (let [sender-id "sender-id"
           request-id "request-id"
           case-number 100]
-      (t/testing "Move ignores the toimenpide if the action if toimenpide is"
+      (t/testing "Move ignores the toimenpide if the action is"
         (t/testing "Vireillepano"
           (asha-service/move-processing-action! sender-id request-id case-number {} "Vireillepano"))
         (t/testing "Tiedoksianto ja toimeenpano"
@@ -259,7 +253,7 @@
           (binding
             [asha-service/post!
              (handle-requests
-               {(read-template "asha/moveaction/move-template.xml" {:sender-id         sender-id
+               {(render-resource "asha/moveaction/move-template.xml" {:sender-id         sender-id
                                                                     :request-id        request-id
                                                                     :case-number       case-number
                                                                     :processing-action "Vireillepano"
@@ -271,7 +265,7 @@
             (t/is (= 1 @move-called)))))
       (t/testing "Move from Päätöksenteko to Käsittely"
         (let [move-called (atom 0)]
-          (binding [asha-service/post! (handle-requests {(read-template "asha/moveaction/move-template.xml" {:sender-id         sender-id
+          (binding [asha-service/post! (handle-requests {(render-resource "asha/moveaction/move-template.xml" {:sender-id         sender-id
                                                                                                              :request-id        request-id
                                                                                                              :case-number       case-number
                                                                                                              :processing-action "Käsittely"
