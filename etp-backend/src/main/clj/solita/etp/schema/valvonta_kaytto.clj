@@ -46,16 +46,18 @@
 
 (def HallintoOikeusId (schema/enum 0 1 2 3 4 5))
 
-(def KaskyPaatosVarsinainenPaatosData {:fine               common-schema/NonNegative
-                                       :recipient-answered schema/Bool
-                                       :answer-commentary-fi  schema/Str
-                                       :answer-commentary-sv  schema/Str
-                                       :statement-fi          schema/Str
-                                       :statement-sv          schema/Str
-                                       :court              HallintoOikeusId
+(def KaskyPaatosVarsinainenPaatosData {:fine                     common-schema/NonNegative
+                                       :recipient-answered       schema/Bool
+                                       :answer-commentary-fi     schema/Str
+                                       :answer-commentary-sv     schema/Str
+                                       :statement-fi             schema/Str
+                                       :statement-sv             schema/Str
+                                       :osapuoli-specific-data   [{:osapuoli-id        common-schema/Key
+                                                                   :hallinto-oikeus-id (schema/maybe HallintoOikeusId)
+                                                                   :document           schema/Bool}]
                                        :department-head-title-fi schema/Str
                                        :department-head-title-sv schema/Str
-                                       :department-head-name schema/Str})
+                                       :department-head-name     schema/Str})
 
 (def ToimenpideAdd
   (schema/conditional
@@ -148,4 +150,4 @@
 (def Johtaja
   {:department-head-title-fi (schema/maybe schema/Str)
    :department-head-title-sv (schema/maybe schema/Str)
-   :department-head-name (schema/maybe schema/Str)})
+   :department-head-name     (schema/maybe schema/Str)})

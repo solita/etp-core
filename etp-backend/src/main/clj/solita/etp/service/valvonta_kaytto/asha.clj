@@ -78,16 +78,23 @@
     (exception/throw-ex-info!
       {:message (str "Unknown hallinto-oikeus-id: " hallinto-oikeus-id)})))
 
-(defmulti format-type-specific-data
-          (fn [_ toimenpide] (-> toimenpide :type-id toimenpide/type-key)))
+(defn find-court-id-from-osapuoli-specific-data [osapuoli-specific-data osapuoli-id]
+  (->> osapuoli-specific-data
+       (filter #(= (:osapuoli-id %) osapuoli-id))
+       first
+       :hallinto-oikeus-id))
 
-(defmethod format-type-specific-data :decision-order-actual-decision [db toimenpide]
+(defmulti format-type-specific-data
+          (fn [_db toimenpide _osapuoli-id] (-> toimenpide :type-id toimenpide/type-key)))
+
+(defmethod format-type-specific-data :decision-order-actual-decision [db toimenpide osapuoli-id]
   (let [recipient-answered? (-> toimenpide :type-specific-data :recipient-answered)
         hallinto-oikeus-strings (hallinto-oikeus-id->formatted-strings
                                   db
                                   (-> toimenpide
                                       :type-specific-data
-                                      :court))]
+                                      :osapuoli-specific-data
+                                      (find-court-id-from-osapuoli-specific-data osapuoli-id)))]
     {:vastaus-fi               (str (if recipient-answered?
                                       "Asianosainen antoi vastineen kuulemiskirjeeseen."
                                       "Asianosainen ei vastannut kuulemiskirjeeseen.")
@@ -107,7 +114,7 @@
      :department-head-title-fi (-> toimenpide :type-specific-data :department-head-title-fi)
      :department-head-title-sv (-> toimenpide :type-specific-data :department-head-title-sv)}))
 
-(defmethod format-type-specific-data :default [_ toimenpide]
+(defmethod format-type-specific-data :default [_ toimenpide _]
   (:type-specific-data toimenpide))
 
 (defn- template-data [db whoami valvonta toimenpide osapuoli dokumentit ilmoituspaikat tiedoksi roolit]
@@ -128,7 +135,7 @@
    :tietopyynto            {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
                             :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
    :tiedoksi               (map (partial tiedoksi-saaja roolit) tiedoksi)
-   :tyyppikohtaiset-tiedot (format-type-specific-data db toimenpide)
+   :tyyppikohtaiset-tiedot (format-type-specific-data db toimenpide (:id osapuoli))
    :aiemmat-toimenpiteet   (when (toimenpide/kaskypaatos-toimenpide? toimenpide)
                              (merge
                                (kuulemiskirje-data db (:id valvonta))
@@ -232,8 +239,27 @@
         generated-pdf (pdf/generate-pdf->bytes {:template (:content template)
                                                 :data     template-data})]
     (if (toimenpide/kaskypaatos-varsinainen-paatos? toimenpide)
-      (add-hallinto-oikeus-attachment db generated-pdf (-> toimenpide :type-specific-data :court))
+      (add-hallinto-oikeus-attachment db generated-pdf (-> toimenpide
+                                                           :type-specific-data
+                                                           :osapuoli-specific-data
+                                                           (find-court-id-from-osapuoli-specific-data (:id osapuoli))))
       generated-pdf)))
+
+(defn filter-osapuolet-if-kaskypaatos-varsinainen-paatos
+  "If toimenpidetype of the toimenpide is käskypäätös / varsinainen päätös,
+  osapuolet will be filtered so that only those are returned that have a :document as true
+  specified in type-specific-data of the toimenpide.
+  For all other toimenpidetypes all osapuolet are returned."
+  [toimenpide osapuolet]
+  (if (toimenpide/kaskypaatos-varsinainen-paatos? toimenpide)
+    (let [osapuolet-with-hallinto-oikeus (->> toimenpide
+                                              :type-specific-data
+                                              :osapuoli-specific-data
+                                              (filter #(true? (:document %)))
+                                              (map :osapuoli-id)
+                                              set)]
+      (filter #(contains? osapuolet-with-hallinto-oikeus (:id %)) osapuolet))
+    osapuolet))
 
 (defn log-toimenpide! [db aws-s3-client whoami valvonta toimenpide osapuolet ilmoituspaikat roolit]
   (let [request-id (request-id (:id valvonta) (:id toimenpide))
@@ -243,6 +269,7 @@
         documents (when (:document processing-action)
                     (->> osapuolet
                          (filter osapuoli/omistaja?)
+                         (filter-osapuolet-if-kaskypaatos-varsinainen-paatos toimenpide)
                          (map (fn [osapuoli]
                                 (let [document (generate-pdf-document db whoami valvonta toimenpide ilmoituspaikat
                                                                       osapuoli osapuolet roolit)]
