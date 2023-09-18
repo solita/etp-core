@@ -101,8 +101,8 @@
                  :label-fi             "Sakkopäätös / kuulemiskirje"
                  :label-sv             "Sakkopäätös / kuulemiskirje (sv)"
                  :valid                true
-                 :manually-deliverable false
-                 :allow-comments       false}
+                 :manually-deliverable true
+                 :allow-comments       true}
                 {:id                   15
                  :label-fi             "Sakkopäätös / varsinainen päätös"
                  :label-sv             "Sakkopäätös / varsinainen päätös (sv)"
