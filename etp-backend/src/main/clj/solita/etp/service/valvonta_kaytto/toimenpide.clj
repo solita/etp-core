@@ -50,7 +50,13 @@
 (def sakkopaatos-kuulemiskirje? (partial type? :penalty-decision-hearing-letter))
 
 (def asha-toimenpide?
-  (partial some-type? #{:rfi-request :rfi-order :rfi-warning :decision-order-hearing-letter :decision-order-actual-decision :decision-order-notice-first-mailing}))
+  (partial some-type? #{:rfi-request
+                        :rfi-order
+                        :rfi-warning
+                        :decision-order-hearing-letter
+                        :decision-order-actual-decision
+                        :decision-order-notice-first-mailing
+                        :penalty-decision-hearing-letter}))
 
 
 (def with-diaarinumero? (comp not (partial type? :case)))

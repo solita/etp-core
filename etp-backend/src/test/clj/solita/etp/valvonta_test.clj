@@ -710,7 +710,7 @@
                                                       :maa                      "FI"})
           new-toimenpide {:type-id            14
                           :deadline-date      (str (LocalDate/of 2023 11 4))
-                          :template-id        6
+                          :template-id        7
                           :description        "Tehdään sakkopäätöksen kuulemiskirje"
                           :type-specific-data {:fine 9000}}
           response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/henkilot/%s/preview" valvonta-id osapuoli-id))
