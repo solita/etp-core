@@ -5,21 +5,22 @@
 
 (def ^:private type-id->type-key
   {;; käytönvalvonnan asia avataan ashaan (case open)
-   0 :case
+   0  :case
    ;; tietopyynnön toimenpidetyypit
-   1 :rfi-request
-   2 :rfi-order
-   3 :rfi-warning
+   1  :rfi-request
+   2  :rfi-order
+   3  :rfi-warning
    ;; päätös
-   4 :decision-order
+   4  :decision-order
    ;; valvonnan sulkeminen (case closed)
-   5 :closed
+   5  :closed
    ;; Uhkasakkoprosessi
-   6 :court-hearing
-   7 :decision-order-hearing-letter
-   8 :decision-order-actual-decision
-   9 :decision-order-notice-first-mailing
-   10 :decision-order-notice-second-mailing})
+   6  :court-hearing
+   7  :decision-order-hearing-letter
+   8  :decision-order-actual-decision
+   9  :decision-order-notice-first-mailing
+   10 :decision-order-notice-second-mailing
+   14 :penalty-decision-hearing-letter})
 
 (defn type-key [type-id]
   (if-let [type-key (type-id->type-key type-id)]
@@ -45,6 +46,8 @@
                         :decision-order-actual-decision
                         :decision-order-notice-first-mailing
                         :decision-order-notice-second-mailing}))
+
+(def sakkopaatos-kuulemiskirje? (partial type? :penalty-decision-hearing-letter))
 
 (def asha-toimenpide?
   (partial some-type? #{:rfi-request :rfi-order :rfi-warning :decision-order-hearing-letter :decision-order-actual-decision :decision-order-notice-first-mailing}))

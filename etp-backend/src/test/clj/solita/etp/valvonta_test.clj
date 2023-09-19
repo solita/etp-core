@@ -681,6 +681,44 @@
                                      (mock/header "Accept" "application/json")))]
         (t/is (= (:status response) 200))))))
 
+(t/deftest sakkopaatos-kuulemiskirje-test
+  (test-kayttajat/insert-virtu-paakayttaja!
+    {:etunimi  "Asian"
+     :sukunimi "Tuntija"
+     :email    "testi@ara.fi"
+     :puhelin  "0504363675457"})
+  (t/testing "Preview api call for sakkopäätös / kuulemiskirje toimenpide succeeds"
+    (let [valvonta-id (valvonta-service/add-valvonta! ts/*db*
+                                                      {:katuosoite        "Testitie 5"
+                                                       :postinumero       "90100"
+                                                       :ilmoituspaikka-id 0})
+          osapuoli-id (valvonta-service/add-henkilo! ts/*db*
+                                                     valvonta-id
+                                                     {:toimitustapa-description nil
+                                                      :toimitustapa-id          0
+                                                      :email                    nil
+                                                      :rooli-id                 0
+                                                      :jakeluosoite             "Testikatu 12"
+                                                      :postitoimipaikka         "Helsinki"
+                                                      :puhelin                  nil
+                                                      :sukunimi                 "Talonomistaja"
+                                                      :postinumero              "00100"
+                                                      :henkilotunnus            "000000-0000"
+                                                      :rooli-description        ""
+                                                      :etunimi                  "Testi"
+                                                      :vastaanottajan-tarkenne  nil
+                                                      :maa                      "FI"})
+          new-toimenpide {:type-id            14
+                          :deadline-date      (str (LocalDate/of 2023 11 4))
+                          :template-id        6
+                          :description        "Tehdään sakkopäätöksen kuulemiskirje"
+                          :type-specific-data {:fine 9000}}
+          response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet/henkilot/%s/preview" valvonta-id osapuoli-id))
+                                   (mock/json-body new-toimenpide)
+                                   (test-kayttajat/with-virtu-user)
+                                   (mock/header "Accept" "application/json")))]
+      (t/is (= (:status response) 200)))))
+
 (t/deftest adding-and-fetching-valvonta
   (let [kayttaja-id (test-kayttajat/insert-virtu-paakayttaja!)
         valvonta (-> {}

@@ -59,6 +59,8 @@
                                        :department-head-title-sv schema/Str
                                        :department-head-name     schema/Str})
 
+(def SakkoPaatosKuulemiskirjeData {:fine common-schema/NonNegative})
+
 (def ToimenpideAdd
   (schema/conditional
     toimenpide/kaskypaatos-kuulemiskirje?
@@ -66,6 +68,10 @@
 
     toimenpide/kaskypaatos-varsinainen-paatos?
     (assoc ToimenpideAddBase :type-specific-data KaskyPaatosVarsinainenPaatosData)
+
+    toimenpide/sakkopaatos-kuulemiskirje?
+    (assoc ToimenpideAddBase :type-specific-data SakkoPaatosKuulemiskirjeData)
+
     :else ToimenpideAddBase))
 
 (def Template
