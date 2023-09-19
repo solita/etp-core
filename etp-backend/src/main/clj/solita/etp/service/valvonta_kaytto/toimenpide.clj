@@ -49,6 +49,9 @@
 
 (def sakkopaatos-kuulemiskirje? (partial type? :penalty-decision-hearing-letter))
 
+(def sakkopaatos-toimenpide?
+  (partial some-type? #{:penalty-decision-hearing-letter}))
+
 (def asha-toimenpide?
   (partial some-type? #{:rfi-request
                         :rfi-order

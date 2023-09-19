@@ -138,7 +138,8 @@
                             :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
    :tiedoksi               (map (partial tiedoksi-saaja roolit) tiedoksi)
    :tyyppikohtaiset-tiedot (format-type-specific-data db toimenpide (:id osapuoli))
-   :aiemmat-toimenpiteet   (when (toimenpide/kaskypaatos-toimenpide? toimenpide)
+   :aiemmat-toimenpiteet   (when (or (toimenpide/kaskypaatos-toimenpide? toimenpide)
+                                     (toimenpide/sakkopaatos-toimenpide? toimenpide))
                              (merge
                                (kuulemiskirje-data db (:id valvonta))
                                (past-dates-for-kaskypaatos-toimenpiteet db (:id valvonta))))})

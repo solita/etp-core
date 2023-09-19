@@ -39,8 +39,7 @@ values (7, 'Sakkopäätös / kuulemiskirje', 'Sakkopäätös / kuulemiskirje (sv
 
 <h2>Asian tausta</h2>
 
-<!-- TODO: Varmista, että tässä on tosiaan kyse käskypäätös / varsinainen päätös -toimenpiteen päivämäärästä -->
-<p>ARA on {{#aiemmat-toimenpiteet}}{{kaskypaatos-varsinainen-paatos-pvm}}{{/aiemmat-toimenpiteet}} tekemällään päätöksellä velvoittanut
+<p>ARA on {{#aiemmat-toimenpiteet}}{{varsinainen-paatos-pvm}}{{/aiemmat-toimenpiteet}} tekemällään päätöksellä velvoittanut
     {{#omistaja-henkilo}}
     {{etunimi}} {{sukunimi}}
     {{/omistaja-henkilo}}
@@ -48,7 +47,7 @@ values (7, 'Sakkopäätös / kuulemiskirje', 'Sakkopäätös / kuulemiskirje (sv
     {{nimi}}
     {{/omistaja-yritys}}
     hankkimaan osoitteessa {{#kohde}}{{katuosoite}} {{postinumero}} {{postitoimipaikka}}{{/kohde}} sijaitsevalle
-    rakennukselle energiatodistuksen viimeistään {{#aiemmat-toimenpiteet}}{{kaskypaatos-varsinainen-paatos-maarapaiva}}{{/aiemmat-toimenpiteet}} ja esittämään
+    rakennukselle energiatodistuksen viimeistään {{#aiemmat-toimenpiteet}}{{varsinainen-paatos-maarapaiva}}{{/aiemmat-toimenpiteet}} ja esittämään
     energiatodistuksen ARAlle. Päätöksen tehosteeksi ARA on asettanut
     {{#tyyppikohtaiset-tiedot}}{{fine}}{{/tyyppikohtaiset-tiedot}} euron suuruisen kiinteän uhkasakon.
     Päätöksen mukaan uhkasakko tuomitaan maksettavaksi, mikäli ARAn käskyä ei ole annetussa määräajassa noudatettu.</p>
@@ -76,7 +75,6 @@ energia-asiantuntija
 
 <div class="sivunvaihto"></div>
 
-<!--RUOTSI-->
 <div class="otsikko">
     <b>Brev om hörande</b>
     <b>{{päivä}}</b> <br/>
@@ -107,14 +105,14 @@ energia-asiantuntija
 
 <h2>Ärendets bakgrund</h2>
 
-<p>ARA har genom sitt beslut {{#aiemmat-toimenpiteet}}{{kaskypaatos-varsinainen-paatos-pvm}}{{/aiemmat-toimenpiteet}} ålagt
+<p>ARA har genom sitt beslut {{#aiemmat-toimenpiteet}}{{varsinainen-paatos-pvm}}{{/aiemmat-toimenpiteet}} ålagt
     {{#omistaja-henkilo}}
     {{etunimi}} {{sukunimi}}
     {{/omistaja-henkilo}}
     {{#omistaja-yritys}}
     {{nimi}}
     {{/omistaja-yritys}}
-    att senast {{#aiemmat-toimenpiteet}}{{kaskypaatos-varsinainen-paatos-maarapaiva}}{{/aiemmat-toimenpiteet}} skaffa ett energicertifikat till byggnaden på adressen
+    att senast {{#aiemmat-toimenpiteet}}{{varsinainen-paatos-maarapaiva}}{{/aiemmat-toimenpiteet}} skaffa ett energicertifikat till byggnaden på adressen
     {{#kohde}}{{katuosoite}} {{postinumero}} {{postitoimipaikka}}{{/kohde}} och visa upp energicertifikatet för ARA. ARA
     har förenat beslutet med ett fast vite på {{#tyyppikohtaiset-tiedot}}{{fine}}{{/tyyppikohtaiset-tiedot}} euro.
     Enligt beslutet döms vitet ut om ARAs order inte har iakttagits inom utsatt tid.</p>
