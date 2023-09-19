@@ -24,7 +24,7 @@
 
 (defn toplevel-processing-action-max [a b]
   (nth toplevel-processing-actions (max (-> toplevel-processing-actions
-                                            (.indexOf  a)
+                                            (.indexOf a)
                                             must-exist!)
                                         (-> toplevel-processing-actions
                                             (.indexOf b)
@@ -164,7 +164,9 @@
                                     :processing-action {:name-identity processing-action}}
                        :attach     {:document documents}}))
 
-(defn resolve-case-processing-action-state [sender-id request-id case-number]
+(defn resolve-case-processing-action-state
+  "Fetches states for all top level actions. Non-existing actions are not included in the result."
+  [sender-id request-id case-number]
   (->> toplevel-processing-actions
        (map (fn [processing-action]
               (try
@@ -177,13 +179,16 @@
        keys
        last))
 
-(defn move-processing-action! [sender-id request-id case-number
-                               processing-action-states processing-action]
-  (when-let [action (cond
-                      (= processing-action "Käsittely") {:processing-action "Vireillepano"
-                                                         :decision          "Siirry käsittelyyn"}
-                      (= processing-action "Päätöksenteko") {:processing-action "Käsittely"
-                                                             :decision          "Siirry päätöksentekoon"})]
+(defn move-processing-action!
+  "Move the case to the next step, if it the new action (processing-action parameter) is in Käsittely or Päätöksenteko
+  and the desired state is not already reached (not in processing-action-states)."
+  [sender-id request-id case-number processing-action-states processing-action]
+  (when-let [action (case processing-action
+                      "Käsittely" {:processing-action "Vireillepano"
+                                   :decision          "Siirry käsittelyyn"}
+                      "Päätöksenteko" {:processing-action "Käsittely"
+                                       :decision          "Siirry päätöksentekoon"}
+                      nil)]
     (when (not (get processing-action-states processing-action))
       (proceed-operation! sender-id request-id case-number (:processing-action action) (:decision action)))))
 
@@ -208,7 +213,7 @@
   (update-in processing-action
              [:identity :processing-action :name-identity]
              (fn [name-identity] (reduce toplevel-processing-action-max
-                                (cons name-identity (keys states))))))
+                                         (cons name-identity (keys states))))))
 
 (defn log-toimenpide! [sender-id request-id case-number processing-action & [documents]]
   (let [processing-action-states (resolve-case-processing-action-state sender-id
@@ -221,16 +226,16 @@
                               ;; Prevent going backwards in the process
                               (with-latest-processing-action processing-action-states))]
     (move-processing-action!
-     sender-id
-     request-id
-     case-number
-     processing-action-states
-     (-> processing-action :identity :processing-action :name-identity))
+      sender-id
+      request-id
+      case-number
+      processing-action-states
+      (-> processing-action :identity :processing-action :name-identity))
     (take-processing-action!
-     sender-id
-     request-id
-     case-number
-     (-> processing-action :identity :processing-action :name-identity))
+      sender-id
+      request-id
+      case-number
+      (-> processing-action :identity :processing-action :name-identity))
 
     (execute-operation! {:request-id        request-id
                          :sender-id         sender-id
@@ -239,19 +244,19 @@
 
     (doseq [document documents]
       (add-documents-to-processing-action!
-       sender-id
-       request-id
-       case-number
-       (-> processing-action :processing-action :name)
-       [{:content (bytes->base64 document)
-         :type    (-> processing-action :document :type)
-         :name    (-> processing-action :document :filename)}]))
+        sender-id
+        request-id
+        case-number
+        (-> processing-action :processing-action :name)
+        [{:content (bytes->base64 document)
+          :type    (-> processing-action :document :type)
+          :name    (-> processing-action :document :filename)}]))
     (take-processing-action! sender-id request-id case-number (-> processing-action :processing-action :name))
     (mark-processing-action-as-ready!
-     sender-id
-     request-id
-     case-number
-     (-> processing-action :processing-action :name))))
+      sender-id
+      request-id
+      case-number
+      (-> processing-action :processing-action :name))))
 
 (defn close-case! [sender-id request-id case-number description]
   (let [latest-prosessing-action (resolve-latest-case-processing-action-state sender-id request-id case-number)]
