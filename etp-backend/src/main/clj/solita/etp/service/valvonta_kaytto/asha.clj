@@ -167,7 +167,7 @@
                                                              :contact              (map osapuoli->contact osapuolet)}
                                          :document          (toimenpide-type->document (:type-id toimenpide))}
    :rfi-order                           {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                             :processing-action {:name-identity "Käsittely"}}
+                                                             :processing-action {:name-identity "Vireillepano"}}
                                          :processing-action {:name                 "Kehotuksen antaminen"
                                                              :reception-date       (Instant/now)
                                                              :contacting-direction "SENT"
