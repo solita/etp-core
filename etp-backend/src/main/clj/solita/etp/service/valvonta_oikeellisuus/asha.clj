@@ -146,7 +146,7 @@
                                        :contact              (osapuoli->contact laatija)}
                    :document          (toimenpide-type->document (:type-id toimenpide))}
    :rfi-order     {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                       :processing-action {:name-identity "Vireillepano"}}
+                                       :processing-action {:name-identity "Käsittely"}}
                    :processing-action {:name                 "Kehotuksen antaminen"
                                        :reception-date       (java.time.Instant/now)
                                        :contacting-direction "SENT"
