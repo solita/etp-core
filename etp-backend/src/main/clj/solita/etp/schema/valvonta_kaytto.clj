@@ -44,7 +44,9 @@
 
 (def KaskypaatosKuulemiskirjeData {:fine common-schema/NonNegative})
 
-(def HallintoOikeusId (schema/enum 0 1 2 3 4 5))
+(def HallintoOikeusId (apply schema/enum (range 0 6)))
+
+(def KarajaoikeusId (apply schema/enum (range 0 20)))
 
 (def KaskyPaatosVarsinainenPaatosData {:fine                     common-schema/NonNegative
                                        :recipient-answered       schema/Bool
@@ -59,6 +61,11 @@
                                        :department-head-title-sv schema/Str
                                        :department-head-name     schema/Str})
 
+(def KaskypaatosTiedoksiantoHaastemiesData {:osapuoli-specific-data [{:osapuoli-id      common-schema/Key
+                                                                      :karajaoikeus-id  (schema/maybe KarajaoikeusId)
+                                                                      :haastemies-email (schema/maybe common-schema/Email)
+                                                                      :document         schema/Bool}]})
+
 (def SakkoPaatosKuulemiskirjeData {:fine common-schema/NonNegative})
 
 (def ToimenpideAdd
@@ -68,6 +75,9 @@
 
     toimenpide/kaskypaatos-varsinainen-paatos?
     (assoc ToimenpideAddBase :type-specific-data KaskyPaatosVarsinainenPaatosData)
+
+    toimenpide/kaskypaatos-haastemies-tiedoksianto?
+    (assoc ToimenpideAddBase :type-specific-data KaskypaatosTiedoksiantoHaastemiesData)
 
     toimenpide/sakkopaatos-kuulemiskirje?
     (assoc ToimenpideAddBase :type-specific-data SakkoPaatosKuulemiskirjeData)
@@ -119,6 +129,9 @@
 
                   toimenpide/kaskypaatos-varsinainen-paatos?
                   (assoc ToimenpideBase :type-specific-data KaskyPaatosVarsinainenPaatosData)
+
+                  toimenpide/kaskypaatos-haastemies-tiedoksianto?
+                  (assoc ToimenpideBase :type-specific-data KaskypaatosTiedoksiantoHaastemiesData)
 
                   toimenpide/sakkopaatos-kuulemiskirje?
                   (assoc ToimenpideBase :type-specific-data SakkoPaatosKuulemiskirjeData)

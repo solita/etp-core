@@ -291,7 +291,7 @@
 
 (t/deftest find-court-id-from-osapuoli-specific-data-test
   (t/testing "Correct court id is found for the osapuoli"
-    (t/is (= (asha/find-court-id-from-osapuoli-specific-data
+    (t/is (= (asha/find-administrative-court-id-from-osapuoli-specific-data
                [{:osapuoli-id        1
                  :hallinto-oikeus-id 0}
                 {:osapuoli-id        3
@@ -360,7 +360,7 @@
                        :answer-commentary-sv     "Jag visste inte att ett intyg behövs :("
                        :answer-commentary-fi     "En tiennyt, että todistus tarvitaan :("}
                       :template-id  6}]
-      (t/is (= (asha/filter-osapuolet-if-kaskypaatos-varsinainen-paatos toimenpide osapuolet)
+      (t/is (= (asha/filter-osapuolet-with-no-document toimenpide osapuolet)
                [{:toimitustapa-description nil
                  :toimitustapa-id          0
                  :email                    nil
@@ -379,7 +379,7 @@
                  :maa                      "FI"}]))))
 
   (t/testing "Two osapuolis and two hallinto-oikeus selections, both osapuolet are returned"
-    (t/is (= (asha/filter-osapuolet-if-kaskypaatos-varsinainen-paatos
+    (t/is (= (asha/filter-osapuolet-with-no-document
                {:type-id            8
                 :type-specific-data {:osapuoli-specific-data [{:hallinto-oikeus-id 1
                                                                :osapuoli-id        2
@@ -393,7 +393,7 @@
               {:id 3}])))
 
   (t/testing "Two osapuolis and toimenpide is not varsinainen päätös, so both should be returned"
-    (t/is (= (asha/filter-osapuolet-if-kaskypaatos-varsinainen-paatos
+    (t/is (= (asha/filter-osapuolet-with-no-document
                {:type-id 7}
                [{:id 2}
                 {:id 3}])

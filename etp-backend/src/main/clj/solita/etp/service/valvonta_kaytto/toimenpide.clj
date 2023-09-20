@@ -20,6 +20,7 @@
    8  :decision-order-actual-decision
    9  :decision-order-notice-first-mailing
    10 :decision-order-notice-second-mailing
+   11 :decision-order-notice-bailiff
    12 :decision-order-waiting-for-deadline
    14 :penalty-decision-hearing-letter})
 
@@ -42,11 +43,14 @@
 
 (def kaskypaatos-varsinainen-paatos? (partial type? :decision-order-actual-decision))
 
+(def kaskypaatos-haastemies-tiedoksianto? (partial type? :decision-order-notice-bailiff))
+
 (def kaskypaatos-toimenpide?
   (partial some-type? #{:decision-order-hearing-letter
                         :decision-order-actual-decision
                         :decision-order-notice-first-mailing
-                        :decision-order-notice-second-mailing}))
+                        :decision-order-notice-second-mailing
+                        :decision-order-notice-bailiff}))
 
 (def sakkopaatos-kuulemiskirje? (partial type? :penalty-decision-hearing-letter))
 
@@ -59,7 +63,8 @@
                         :rfi-warning
                         :decision-order-hearing-letter
                         :decision-order-actual-decision
-                        :decision-order-notice-first-mailing
+                        :decision-order-notice-first-mailing11
+                        :decision-order-notice-bailiff
                         :decision-order-waiting-for-deadline
                         :penalty-decision-hearing-letter}))
 

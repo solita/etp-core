@@ -127,6 +127,9 @@
 (defn find-hallinto-oikeudet [db]
   (luokittelu/find-hallinto-oikeudet db))
 
+(defn find-karajaoikeudet [db]
+  (luokittelu/find-karajaoikeudet db))
+
 (defn find-yritys [db yritys-id]
   (first (valvonta-kaytto-db/select-yritys db {:id yritys-id})))
 

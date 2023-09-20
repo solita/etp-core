@@ -733,6 +733,106 @@
                                      (mock/header "Accept" "application/json")))]
         (t/is (= (:status response) 200))))))
 
+(t/deftest kaskypaatos-tiedoksianto-haastemies-test
+  ;; Add the main user for the following tests
+  (test-kayttajat/insert-virtu-paakayttaja!
+    {:etunimi  "Asian"
+     :sukunimi "Tuntija"
+     :email    "testi@ara.fi"
+     :puhelin  "0504363675457"})
+  (t/testing "Käskypäätös / Haastemies toimenpide is created successfully for yksityishenkilö and document is generated with correct information"
+    (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite        "Testitie 5"
+                                                               :postinumero       "90100"
+                                                               :ilmoituspaikka-id 0})
+          html->pdf-called? (atom false)]
+
+      ;; Add osapuoli to the valvonta
+      (valvonta-service/add-henkilo! ts/*db*
+                                     valvonta-id
+                                     {:toimitustapa-description nil
+                                      :toimitustapa-id          0
+                                      :email                    nil
+                                      :rooli-id                 0
+                                      :jakeluosoite             "Testikatu 12"
+                                      :postitoimipaikka         "Helsinki"
+                                      :puhelin                  nil
+                                      :sukunimi                 "Talonomistaja"
+                                      :postinumero              "00100"
+                                      :henkilotunnus            "000000-0000"
+                                      :rooli-description        ""
+                                      :etunimi                  "Testi"
+                                      :vastaanottajan-tarkenne  nil
+                                      :maa                      "FI"})
+
+      ;; Mock the current time to ensure that the document has a fixed date
+      (with-bindings {#'time/clock    (Clock/fixed (-> (LocalDate/of 2023 6 26)
+                                                       (.atStartOfDay time/timezone)
+                                                       .toInstant)
+                                                   time/timezone)
+                      #'pdf/html->pdf (partial html->pdf-with-assertion
+                                               "documents/kaskypaatos-haastemies-yksityishenkilo.html"
+                                               html->pdf-called?)}
+        (let [new-toimenpide {:type-id            11
+                              :deadline-date      (str (LocalDate/of 2023 7 22))
+                              :template-id        8
+                              :description        "Kuvaus"
+                              :type-specific-data {:osapuoli-specific-data [{:osapuoli-id      1
+                                                                             :karajaoikeus-id  1
+                                                                             :haastemies-email "haaste@mie.het"
+                                                                             :document         true}]}}
+              response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
+                                       (mock/json-body new-toimenpide)
+                                       (test-kayttajat/with-virtu-user)
+                                       (mock/header "Accept" "application/json")))]
+          (t/is (true? @html->pdf-called?))
+          (t/is (= (:status response) 201))))))
+
+  (t/testing "Käskypäätös / Tiedoksianto (Haastemies) toimenpide is created successfully for yritys and document is generated with correct information"
+    ;; Add the valvonta
+    (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite        "Testitie 5"
+                                                               :postinumero       "90100"
+                                                               :ilmoituspaikka-id 0})
+          html->pdf-called? (atom false)]
+
+      ;; Add osapuoli to the valvonta
+      (valvonta-service/add-yritys! ts/*db*
+                                    valvonta-id
+                                    {:nimi                     "Yritysomistaja"
+                                     :toimitustapa-description nil
+                                     :toimitustapa-id          0
+                                     :email                    nil
+                                     :rooli-id                 0
+                                     :jakeluosoite             "Testikatu 12"
+                                     :vastaanottajan-tarkenne  "Lisäselite C/O"
+                                     :postitoimipaikka         "Helsinki"
+                                     :puhelin                  nil
+                                     :postinumero              "00100"
+                                     :rooli-description        ""
+                                     :maa                      "FI"})
+
+      ;; Mock the current time to ensure that the document has a fixed date
+      (with-bindings {#'time/clock    (Clock/fixed (-> (LocalDate/of 2023 6 26)
+                                                       (.atStartOfDay time/timezone)
+                                                       .toInstant)
+                                                   time/timezone)
+                      #'pdf/html->pdf (partial html->pdf-with-assertion
+                                               "documents/kaskypaatos-haastemies-yritys.html"
+                                               html->pdf-called?)}
+        (let [new-toimenpide {:type-id            11
+                              :deadline-date      (str (LocalDate/of 2023 7 22))
+                              :template-id        8
+                              :description        "Kuvaus"
+                              :type-specific-data {:osapuoli-specific-data [{:osapuoli-id      1
+                                                                             :karajaoikeus-id  1
+                                                                             :haastemies-email "haaste@mie.het"
+                                                                             :document         true}]}}
+              response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
+                                       (mock/json-body new-toimenpide)
+                                       (test-kayttajat/with-virtu-user)
+                                       (mock/header "Accept" "application/json")))]
+          (t/is (true? @html->pdf-called?))
+          (t/is (= (:status response) 201)))))))
+
 (t/deftest sakkopaatos-kuulemiskirje-test
   (test-kayttajat/insert-virtu-paakayttaja!
     {:etunimi  "Asian"

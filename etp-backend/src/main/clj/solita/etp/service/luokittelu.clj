@@ -29,6 +29,7 @@
 (def find-vk-toimitustavat #(select-luokittelu % "vk_toimitustapa"))
 
 (def find-hallinto-oikeudet #(select-luokittelu % "hallinto_oikeus"))
+(def find-karajaoikeudet #(select-luokittelu % "karajaoikeus"))
 
 (defn- path= [value path object]
   (= value (get-in object path)))
