@@ -198,9 +198,9 @@
                                                              :contacting-direction "SENT"
                                                              :contact              (map osapuoli->contact osapuolet)}}
    :decision-order-notice-first-mailing {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                             :processing-action {:name-identity "Tiedoksianto/toimeenpano"}}
+                                                             :processing-action {:name-identity "Tiedoksianto ja toimeenpano"}}
                                          :document          (toimenpide-type->document (:type-id toimenpide))
-                                         :processing-action {:name                 "Tiedoksianto ja toimeenpano"
+                                         :processing-action {:name                 "Päätös tiedoksi - ensimmäinen postitus"
                                                              :reception-date       (Instant/now)
                                                              :contacting-direction "SENT"
                                                              :contact              (map osapuoli->contact osapuolet)}}
