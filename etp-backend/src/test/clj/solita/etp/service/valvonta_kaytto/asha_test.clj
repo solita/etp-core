@@ -34,14 +34,16 @@
 
       ;; Kehotus creation date and deadline and varoitus creation date
       ;; and deadline are found and formatted correctly.
-      ;; There is no kuulemiskirje toimenpide yet
+      ;; There is no kuulemiskirje or varsinainen päätös toimenpide yet
       (t/is (= (asha/past-dates-for-kaskypaatos-toimenpiteet ts/*db* valvonta-id)
-               {:kehotus-pvm              "12.06.2023"
-                :kehotus-maarapaiva       "12.07.2023"
-                :varoitus-pvm             "13.07.2023"
-                :varoitus-maarapaiva      "13.08.2023"
-                :kuulemiskirje-pvm        nil
-                :kuulemiskirje-maarapaiva nil}))))
+               {:kehotus-pvm                   "12.06.2023"
+                :kehotus-maarapaiva            "12.07.2023"
+                :varoitus-pvm                  "13.07.2023"
+                :varoitus-maarapaiva           "13.08.2023"
+                :kuulemiskirje-pvm             nil
+                :kuulemiskirje-maarapaiva      nil
+                :varsinainen-paatos-pvm        nil
+                :varsinainen-paatos-maarapaiva nil}))))
 
   (t/testing "When there are multiple kehotus and varoitus toimenpide, the newest dates are found"
     (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite "Testitie 5"})
@@ -91,14 +93,16 @@
       ;; and deadline are found and formatted correctly
       ;; There is no kuulemiskirje toimenpide yet
       (t/is (= (asha/past-dates-for-kaskypaatos-toimenpiteet ts/*db* valvonta-id)
-               {:kehotus-pvm              "12.06.2023"
-                :kehotus-maarapaiva       "12.07.2023"
-                :varoitus-pvm             "13.07.2023"
-                :varoitus-maarapaiva      "13.08.2023"
-                :kuulemiskirje-pvm        nil
-                :kuulemiskirje-maarapaiva nil}))))
+               {:kehotus-pvm                   "12.06.2023"
+                :kehotus-maarapaiva            "12.07.2023"
+                :varoitus-pvm                  "13.07.2023"
+                :varoitus-maarapaiva           "13.08.2023"
+                :kuulemiskirje-pvm             nil
+                :kuulemiskirje-maarapaiva      nil
+                :varsinainen-paatos-pvm        nil
+                :varsinainen-paatos-maarapaiva nil}))))
 
-  (t/testing "Correct dates for kehotus, valvonta and kuulemiskirje are found from database and they are formatted in Finnish date format"
+  (t/testing "Correct dates for all käskypäätös toimeenpiteet are found from database and they are formatted in Finnish date format"
     (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite "Testitie 5"})
           kehotus-timestamp (-> (LocalDate/of 2023 6 12)
                                 (.atStartOfDay (ZoneId/systemDefault))
@@ -107,6 +111,9 @@
                                  (.atStartOfDay (ZoneId/systemDefault))
                                  .toInstant)
           kuulemiskirje-timestamp (-> (LocalDate/of 2023 8 14)
+                                      (.atStartOfDay (ZoneId/systemDefault))
+                                      .toInstant)
+          varsinainen-paatos-timestamp (-> (LocalDate/of 2023 9 14)
                                       (.atStartOfDay (ZoneId/systemDefault))
                                       .toInstant)]
 
@@ -129,15 +136,24 @@
                                             :create_time   kuulemiskirje-timestamp
                                             :publish_time  kuulemiskirje-timestamp
                                             :deadline_date (LocalDate/of 2023 8 28)})
+
+      ;; Add varsinainen päätös -toimenpide to the valvonta
+      (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id   valvonta-id
+                                            :type_id       8
+                                            :create_time   varsinainen-paatos-timestamp
+                                            :publish_time  varsinainen-paatos-timestamp
+                                            :deadline_date (LocalDate/of 2023 10 28)})
       ;; Kehotus creation date and deadline and varoitus creation date
       ;; and deadline are found and formatted correctly
       (t/is (= (asha/past-dates-for-kaskypaatos-toimenpiteet ts/*db* valvonta-id)
-               {:kehotus-pvm              "12.06.2023"
-                :kehotus-maarapaiva       "12.07.2023"
-                :varoitus-pvm             "13.07.2023"
-                :varoitus-maarapaiva      "13.08.2023"
-                :kuulemiskirje-pvm        "14.08.2023"
-                :kuulemiskirje-maarapaiva "28.08.2023"})))))
+               {:kehotus-pvm                   "12.06.2023"
+                :kehotus-maarapaiva            "12.07.2023"
+                :varoitus-pvm                  "13.07.2023"
+                :varoitus-maarapaiva           "13.08.2023"
+                :kuulemiskirje-pvm             "14.08.2023"
+                :kuulemiskirje-maarapaiva      "28.08.2023"
+                :varsinainen-paatos-pvm        "14.09.2023"
+                :varsinainen-paatos-maarapaiva "28.10.2023"})))))
 
 (t/deftest kuulemiskirje-data-test
   (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite "Testitie 5"})

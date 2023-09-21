@@ -14,7 +14,7 @@ values
 (11, 'Käskypäätös / tiedoksianto (Haastemies)', 'Käskypäätös / tiedoksianto (Haastemies) (sv)', 12, true, false, false),
 (12, 'Käskypäätös / odotetaan valitusajan umpeutumista', 'Käskypäätös / odotetaan valitusajan umpeutumista (sv)', 13, true, false, false),
 (13, 'Käskypäätös / valitusaika umpeutunut', 'Käskypäätös / valitusaika umpeutunut (sv)', 14, true, false, false),
-(14, 'Sakkopäätös / kuulemiskirje', 'Sakkopäätös / kuulemiskirje (sv)', 15, true, false, false),
+(14, 'Sakkopäätös / kuulemiskirje', 'Sakkopäätös / kuulemiskirje (sv)', 15, true, true, true),
 (15, 'Sakkopäätös / varsinainen päätös', 'Sakkopäätös / varsinainen päätös (sv)', 16, true, false, false),
 (16, 'Sakkopäätös / tiedoksianto (ensimmäinen postitus)', 'Sakkopäätös / tiedoksianto (ensimmäinen postitus) (sv)', 17, true, false, false),
 (17, 'Sakkopäätös / tiedoksianto (toinen postitus)', 'Sakkopäätös / tiedoksianto (toinen postitus) (sv)', 18, true, false, false),

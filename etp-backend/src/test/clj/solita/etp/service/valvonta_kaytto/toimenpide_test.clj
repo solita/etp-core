@@ -54,3 +54,9 @@
   (t/testing "Toimepidetypes with id 0-6 are not recognized as kaskypäätös-toimenpide?"
     (doseq [toimenpide-type (range 7)]
       (t/is (false? (toimenpide/kaskypaatos-toimenpide? {:type-id toimenpide-type}))))))
+
+(t/deftest sakkopaatos-toimenpide?-test
+  (t/testing "Sakko-päätös / kuulemiskirje is recognized as sakkopäätös-toimenpide?"
+    (t/is (true? (toimenpide/sakkopaatos-toimenpide? {:type-id 14}))))
+  (t/testing "Käskypäätös / kuulemiskirje is not recognized as sakkopäätös-toimenpide?"
+    (t/is (false? (toimenpide/sakkopaatos-toimenpide? {:type-id 7})))))
