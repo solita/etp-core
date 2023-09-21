@@ -90,7 +90,7 @@
                  :label-sv             "Käskypäätös / odotetaan valitusajan umpeutumista (sv)"
                  :valid                true
                  :manually-deliverable false
-                 :allow-comments       false}
+                 :allow-comments       true}
                 {:id                   13
                  :label-fi             "Käskypäätös / valitusaika umpeutunut"
                  :label-sv             "Käskypäätös / valitusaika umpeutunut (sv)"

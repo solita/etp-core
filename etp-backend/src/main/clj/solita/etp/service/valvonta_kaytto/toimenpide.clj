@@ -20,6 +20,7 @@
    8  :decision-order-actual-decision
    9  :decision-order-notice-first-mailing
    10 :decision-order-notice-second-mailing
+   12 :decision-order-waiting-for-deadline
    14 :penalty-decision-hearing-letter})
 
 (defn type-key [type-id]
@@ -59,6 +60,7 @@
                         :decision-order-hearing-letter
                         :decision-order-actual-decision
                         :decision-order-notice-first-mailing
+                        :decision-order-waiting-for-deadline
                         :penalty-decision-hearing-letter}))
 
 

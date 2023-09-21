@@ -204,6 +204,13 @@
                                                              :reception-date       (Instant/now)
                                                              :contacting-direction "SENT"
                                                              :contact              (map osapuoli->contact osapuolet)}}
+   :decision-order-waiting-for-deadline {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                             :processing-action {:name-identity "Tiedoksianto ja toimeenpano"}}
+                                         :document          (toimenpide-type->document (:type-id toimenpide))
+                                         :processing-action {:name                 "Tiedoksianto/toimeenpano"
+                                                             :reception-date       (Instant/now)
+                                                             :contacting-direction "SENT"
+                                                             :contact              (map osapuoli->contact osapuolet)}}
    :penalty-decision-hearing-letter     {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                                              :processing-action {:name-identity "Päätöksenteko"}}
                                          :document          (toimenpide-type->document (:type-id toimenpide))
