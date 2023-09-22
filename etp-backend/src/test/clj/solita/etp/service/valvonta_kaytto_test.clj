@@ -96,7 +96,7 @@
                  :label-sv             "Käskypäätös / valitusaika umpeutunut (sv)"
                  :valid                true
                  :manually-deliverable false
-                 :allow-comments       false}
+                 :allow-comments       true}
                 {:id                   14
                  :label-fi             "Sakkopäätös / kuulemiskirje"
                  :label-sv             "Sakkopäätös / kuulemiskirje (sv)"

@@ -838,6 +838,27 @@
                                    (mock/header "Accept" "application/json")))]
       (t/is (= (:status response) 201)))))
 
+(t/deftest kaskypaatos-valitusaika-umpeutunut-test
+  (test-kayttajat/insert-virtu-paakayttaja!
+    {:etunimi  "Asian"
+     :sukunimi "Tuntija"
+     :email    "testi@ara.fi"
+     :puhelin  "0504363675457"})
+  (t/testing "Käskypäätös / valitusaika umpeutunut toimenpide is created successfully"
+    (let [valvonta-id (valvonta-service/add-valvonta! ts/*db*
+                                                      {:katuosoite        "Testitie 5"
+                                                       :postinumero       "90100"
+                                                       :ilmoituspaikka-id 0})
+          new-toimenpide {:type-id       13
+                          :deadline-date nil
+                          :template-id   nil
+                          :description   "Valitusaika umpeutui"}
+          response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
+                                   (mock/json-body new-toimenpide)
+                                   (test-kayttajat/with-virtu-user)
+                                   (mock/header "Accept" "application/json")))]
+      (t/is (= (:status response) 201)))))
+
 (t/deftest adding-and-fetching-valvonta
   (let [kayttaja-id (test-kayttajat/insert-virtu-paakayttaja!)
         valvonta (-> {}

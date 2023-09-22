@@ -21,6 +21,7 @@
    9  :decision-order-notice-first-mailing
    10 :decision-order-notice-second-mailing
    12 :decision-order-waiting-for-deadline
+   13 :decision-order-deadline-reached
    14 :penalty-decision-hearing-letter})
 
 (defn type-key [type-id]
