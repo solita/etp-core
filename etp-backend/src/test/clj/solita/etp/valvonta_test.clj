@@ -434,7 +434,7 @@
                          :postitoimipaikka         "Helsinki"
                          :puhelin                  nil
                          :postinumero              "00100"
-                         :rooli-description        ""
+                         :rooli-description        "Omistaja"
                          :maa                      "FI"})]
       ;; Add kehotus-toimenpide to the valvonta
       (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id   valvonta-id
@@ -486,7 +486,59 @@
                                        (test-kayttajat/with-virtu-user)
                                        (mock/header "Accept" "application/json")))]
           (t/is (true? @html->pdf-called?))
-          (t/is (= (:status response) 201))))))
+          (t/is (= (:status response) 201))
+
+          (t/testing "Toimenpide is returned through the api"
+            (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
+                                           (test-kayttajat/with-virtu-user)
+                                           (mock/header "Accept" "application/json")))
+                  response-body (j/read-value (:body response) j/keyword-keys-object-mapper)]
+              (t/is (= (:status response) 200))
+              (t/is (= (count response-body) 4))
+              (t/is (contains? (->> response-body
+                                    (map #(dissoc % :publish-time :create-time))
+                                    set)
+                               {:description
+                                "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen",
+                                :henkilot      [],
+                                :yritykset
+                                [{:toimitustapa-description nil,
+                                  :toimitustapa-id          0,
+                                  :email                    nil,
+                                  :rooli-id                 0,
+                                  :jakeluosoite             "Testikatu 12",
+                                  :valvonta-id              2,
+                                  :postitoimipaikka         "Helsinki",
+                                  :ytunnus                  nil,
+                                  :puhelin                  nil,
+                                  :nimi                     "Yritysomistaja",
+                                  :postinumero              "00100",
+                                  :id                       1,
+                                  :rooli-description        "Omistaja",
+                                  :vastaanottajan-tarkenne  "Lisäselite C/O",
+                                  :maa                      "FI"}],
+                                :type-id       8,
+                                :valvonta-id   2,
+                                :author        {:rooli-id 2, :sukunimi "Tuntija", :id 1, :etunimi "Asian"},
+                                :filename      "kaskypaatos.pdf",
+                                :diaarinumero  "ARA-05.03.01-2023-132",
+                                :id            8,
+                                :deadline-date "2023-10-04",
+                                :type-specific-data
+                                {:department-head-title-fi "Senior Vice President",
+                                 :department-head-name     "Jane Doe",
+                                 :osapuoli-specific-data
+                                 [{:hallinto-oikeus-id 2, :osapuoli-id 1, :document true}],
+                                 :recipient-answered       false,
+                                 :statement-sv             "Företaget döms till böter.",
+                                 :statement-fi             "Yritys tuomitaan sakkoihin.",
+                                 :department-head-title-sv "Kungen",
+                                 :fine                     857,
+                                 :answer-commentary-sv
+                                 "Företaget var inte nåbar alls angående ärendet.",
+                                 :answer-commentary-fi
+                                 "Yritys ei ollut tavoitettavissa ollenkaan asian tiimoilta."},
+                                :template-id   6}))))))))
 
   (t/testing "Käskypäätös / varsinainen päätös toimenpide is created successfully when there are multiple osapuolis but one lives abroad and will not receive the document because of being outside court jurisdiction"
     ;; Add the valvonta and previous toimenpides
