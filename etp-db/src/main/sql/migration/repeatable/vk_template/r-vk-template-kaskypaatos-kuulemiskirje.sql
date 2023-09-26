@@ -77,7 +77,7 @@ values (5, 'Käskypäätös / kuulemiskirje', 'Käskypäätös / kuulemiskirje (
     Vastaus on annettava viimeistään {{määräpäivä}}. Vastauksen antamatta jättäminen ei estä
     asian ratkaisemista.</p>
 
-<p>Vastaus pyydetään toimittamaan ARAn kirjaamoon joko sähköpostitse kirjaamo.ara@ara.fi tai postitse Asumisen rahoitus-
+<p>Vastaus pyydetään toimittamaan ARAn kirjaamoon joko sähköpostitse <br/>kirjaamo.ara@ara.fi tai postitse Asumisen rahoitus-
     ja kehittämiskeskus, PL 30, 15141 Lahti.</p>
 
 {{#valvoja}}
@@ -157,7 +157,7 @@ energia-asiantuntija
     samt att ge en förklaring till sådana yrkanden och utredningar som kan inverka på avgöran-det av ärendet. Svaret ska
     ges senast {{määräpäivä}}. Avsaknaden av svar hindrar inte att ärendet avgörs. </p>
 
-<p>Vi ber Er skicka svaret till ARAs registratorskontor antingen per e-post till kirjaamo.ara@ara.fi eller per post till
+<p>Vi ber Er skicka svaret till ARAs registratorskontor antingen per e-post till <br/>kirjaamo.ara@ara.fi eller per post till
     Finansierings- och ut-vecklingscentralen för boendet, PB 30, 15141 Lahtis.</p>
 
 {{#valvoja}}
