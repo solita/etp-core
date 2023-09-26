@@ -41,7 +41,7 @@ $$
         Havaintopäivä/Observationsdatum: {{havaintopäivä}} <br/>
     {{/kohde}}
     Tietopyynnön päivämäärä/Begäran om uppgifter: {{#tietopyynto}} {{tietopyynto-pvm}} {{/tietopyynto}} <br/>
-    Kehotuksen päivämäärä/Kehotuksen päivämäärä (sv): {{#tietopyynto}} {{tietopyynto-kehotus-pvm}} {{/tietopyynto}}
+    Kehotuksen päivämäärä/Uppmaningsdatum: {{#tietopyynto}} {{tietopyynto-kehotus-pvm}} {{/tietopyynto}}
 </div>
 
 <h1>Energiatodistusvalvonnan varoitus</h1>
