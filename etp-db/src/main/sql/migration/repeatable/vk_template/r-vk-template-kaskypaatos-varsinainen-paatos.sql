@@ -128,7 +128,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 <p>Tarkemmat ohjeet valituksen tekemisestä ovat tämän päätöksen liitteenä.</p>
 
 {{#valvoja}}
-<p>Lisätietoja päätöksestä antaa energia-asiantuntija {{etunimi}} {{sukunimi}}, puh. {{puhelin}} / s-posti
+<p>Lisätietoja päätöksestä antaa energia-asiantuntija {{etunimi}} {{sukunimi}}, <br/>puh. {{puhelin}} / s-posti
     {{email}}. </p>
 {{/valvoja}}
 
@@ -315,7 +315,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 <p>Noggrannare anvisningar om inlämning av besvär finns med som bilaga till det här beslutet.</p>
 
 {{#valvoja}}
-<p>Mer information om besslutet ges av energiexpert {{etunimi}} {{sukunimi}}, tfn {{puhelin}} / e-post
+<p>Mer information om besslutet ges av energiexpert {{etunimi}} {{sukunimi}}, <br/>tfn {{puhelin}} / e-post
     {{email}}.</p>
 {{/valvoja}}
 
