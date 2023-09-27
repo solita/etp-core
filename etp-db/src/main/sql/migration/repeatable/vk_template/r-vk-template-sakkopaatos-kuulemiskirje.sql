@@ -71,8 +71,6 @@ values (7, 'Sakkopäätös / kuulemiskirje', 'Sakkopäätös / kuulemiskirje (sv
 {{/valvoja}}<br/>
 energia-asiantuntija
 
-<p class="small-text"><i>Asiakirja on allekirjoitettu sähköisesti asianhallintajärjestelmässä.</i></p>
-
 <div class="sivunvaihto"></div>
 
 <div class="otsikko">
@@ -135,7 +133,6 @@ energia-asiantuntija
 {{/valvoja}}<br/>
 energiexpert
 
-<p class="small-text"><i>Handlingen har undertecknats elektroniskt i ärendehanteringssystemet.</i></p>
 $$)
 on conflict (id) do update set label_fi          = excluded.label_fi,
                                label_sv          = excluded.label_sv,
