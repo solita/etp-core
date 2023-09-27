@@ -150,6 +150,8 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     </tr>
 </table>
 
+<p class="small-text"><i>Asiakirja on allekirjoitettu sähköisesti asianhallintajärjestelmässä.</i></p>
+
 <div class="sivunvaihto"></div>
 
 <div class="otsikko">
@@ -336,6 +338,8 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
         </td>
     </tr>
 </table>
+
+<p class="small-text"><i>Handlingen har undertecknats elektroniskt i ärendehanteringssystemet.</i></p>
 $$)
 on conflict (id) do update set label_fi          = excluded.label_fi,
                                label_sv          = excluded.label_sv,
