@@ -123,8 +123,8 @@ energia-asiantuntija
 
 <h2>Hörande av parter</h2>
 
-<p>Innan ärendet avgörs ger ARA Er tillfälle enligt 34 § i förvaltningsla-gen (434/2003) att uttala Er åsikt i ärendet
-    samt att ge en förklaring till sådana yrkanden och utredningar som kan inverka på avgöran-det av ärendet. Svaret ska
+<p>Innan ärendet avgörs ger ARA Er tillfälle enligt 34 § i förvaltningslagen (434/2003) att uttala Er åsikt i ärendet
+    samt att ge en förklaring till sådana yrkanden och utredningar som kan inverka på avgörandet av ärendet. Svaret ska
     ges senast {{määräpäivä}}. Avsaknaden av svar hindrar inte att ärendet avgörs.</p>
 
 <p>Vi ber Er skicka svaret till ARAs registratorskontor antingen per e-post till kirjaamo.ara@ara.fi eller per post till
