@@ -119,20 +119,20 @@ energia-asiantuntija
 <h2>Ärendets bakgrund</h2>
 
 <p>Enligt 6 § i lagen om energicertifikat för byggnader (50/2013, lagen om energicertifikat för byggnader) ska det
-    finnas ett energicertifikat vid försäljning eller uthyrning av en byggnad eller lägenhet eller be-sittningsrätten
-    till dem. Energicertifikatet ska överlämnas till köpa-ren eller hyrestagaren antingen i original eller som kopia. I
-    en of-fentlig anmälan om försäljning eller uthyrning av ett objekt ska energieffektivitetsklassen för det objekt som
-    säljs eller hyrs ut nämnas. Byggnadens ägare eller innehavare ansvarar för att bygg-nadens energicertifikat skaffas
-    och används i de situationer som re-gleras i lagen (2 § i lagen om energicertifikat).</p>
+    finnas ett energicertifikat vid försäljning eller uthyrning av en byggnad eller lägenhet eller besittningsrätten
+    till dem. Energicertifikatet ska överlämnas till köparen eller hyrestagaren antingen i original eller som kopia. I
+    en offentlig anmälan om försäljning eller uthyrning av ett objekt ska energieffektivitetsklassen för det objekt som
+    säljs eller hyrs ut nämnas. Byggnadens ägare eller innehavare ansvarar för att byggnadens energicertifikat skaffas
+    och används i de situationer som regleras i lagen (2 § i lagen om energicertifikat).</p>
 
-<p>Bestämmelser om påföljderna finns i 24 § i lagen om energicertifi-kat. Om byggnadens ägare inte fullgör sina
-    skyldigheter enligt lagen om energicertifikat eller i övrigt handlar i strid med lagen om ener-gicertifikat eller
+<p>Bestämmelser om påföljderna finns i 24 § i lagen om energicertifikat. Om byggnadens ägare inte fullgör sina
+    skyldigheter enligt lagen om energicertifikat eller i övrigt handlar i strid med lagen om energicertifikat eller
     bestämmelserna som utfärdats med stöd av den, ska ARA uppmana ägaren att rätta till situationen och ange en
-    tids-frist inom vilken situationen ska rättas till. Om saken inte rättas till inom tidsfristen ska ARA ge den som
+    tidsfrist inom vilken situationen ska rättas till. Om saken inte rättas till inom tidsfristen ska ARA ge den som
     saken gäller en varning och ange en ny tidsfrist. Om situationen inte rättas till inom tidsfristen ska ARA enligt
-    vad situationen kräver meddela beslut om föreläg-gande eller förbud. Vid allvarliga eller väsentliga överträdelser
+    vad situationen kräver meddela beslut om föreläggande eller förbud. Vid allvarliga eller väsentliga överträdelser
     kan ARA förena föreläggandet eller förbudet med vite eller med hot om tvångsutförande eller hot om avbrytande, om
-    vilka det bestäms i vi-teslagen (1113/1990).</p>
+    vilka det bestäms i viteslagen (1113/1990).</p>
 
 {{#kohde}}
 <p>Ert egnahemshus på {{katuosoite}} {{postinumero}} {{postitoimipaikka}} har marknadsförts offentligt på webbplatsen
@@ -148,13 +148,13 @@ energia-asiantuntija
     adressen<sup>2</sup>.</p>
 {{/aiemmat-toimenpiteet}}
 
-<p>ARA kan som sista utväg i enlighet med 24 § i lagen om energicerti-fikat meddela ett beslut genom vilket Ni åläggs
-    att skaffa ett energi-certifikat. Ordern kan förenas med vite som uppgår till uppskatt-ningsvis {{#tyyppikohtaiset-tiedot}}{{fine}}{{/tyyppikohtaiset-tiedot}} euro.</p>
+<p>ARA kan som sista utväg i enlighet med 24 § i lagen om energicertifikat meddela ett beslut genom vilket Ni åläggs
+    att skaffa ett energicertifikat. Ordern kan förenas med vite som uppgår till uppskattningsvis {{#tyyppikohtaiset-tiedot}}{{fine}}{{/tyyppikohtaiset-tiedot}} euro.</p>
 
 <h2>Hörande av parter</h2>
 
-<p>Innan ärendet avgörs ger ARA Er tillfälle enligt 34 § i förvaltningsla-gen (434/2003) att uttala Er åsikt i ärendet
-    samt att ge en förklaring till sådana yrkanden och utredningar som kan inverka på avgöran-det av ärendet. Svaret ska
+<p>Innan ärendet avgörs ger ARA Er tillfälle enligt 34 § i förvaltningslagen (434/2003) att uttala Er åsikt i ärendet
+    samt att ge en förklaring till sådana yrkanden och utredningar som kan inverka på avgörandet av ärendet. Svaret ska
     ges senast {{määräpäivä}}. Avsaknaden av svar hindrar inte att ärendet avgörs. </p>
 
 <p>Vi ber Er skicka svaret till ARAs registratorskontor antingen per e-post till <br/>kirjaamo.ara@ara.fi eller per post till
