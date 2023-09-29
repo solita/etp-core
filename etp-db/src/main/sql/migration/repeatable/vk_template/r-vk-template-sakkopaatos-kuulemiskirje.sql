@@ -71,8 +71,6 @@ values (7, 'Sakkopäätös / kuulemiskirje', 'Sakkopäätös / kuulemiskirje (sv
 {{/valvoja}}<br/>
 energia-asiantuntija
 
-<p class="small-text"><i>Asiakirja on allekirjoitettu sähköisesti asianhallintajärjestelmässä.</i></p>
-
 <div class="sivunvaihto"></div>
 
 <div class="otsikko">
@@ -123,8 +121,8 @@ energia-asiantuntija
 
 <h2>Hörande av parter</h2>
 
-<p>Innan ärendet avgörs ger ARA Er tillfälle enligt 34 § i förvaltningsla-gen (434/2003) att uttala Er åsikt i ärendet
-    samt att ge en förklaring till sådana yrkanden och utredningar som kan inverka på avgöran-det av ärendet. Svaret ska
+<p>Innan ärendet avgörs ger ARA Er tillfälle enligt 34 § i förvaltningslagen (434/2003) att uttala Er åsikt i ärendet
+    samt att ge en förklaring till sådana yrkanden och utredningar som kan inverka på avgörandet av ärendet. Svaret ska
     ges senast {{määräpäivä}}. Avsaknaden av svar hindrar inte att ärendet avgörs.</p>
 
 <p>Vi ber Er skicka svaret till ARAs registratorskontor antingen per e-post till kirjaamo.ara@ara.fi eller per post till
@@ -135,7 +133,6 @@ energia-asiantuntija
 {{/valvoja}}<br/>
 energiexpert
 
-<p class="small-text"><i>Handlingen har undertecknats elektroniskt i ärendehanteringssystemet.</i></p>
 $$)
 on conflict (id) do update set label_fi          = excluded.label_fi,
                                label_sv          = excluded.label_sv,

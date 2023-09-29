@@ -25,7 +25,7 @@
                    :decision-order-hearing-letter   {:type     "Kirje"
                                                      :filename "kuulemiskirje.pdf"}
                    :decision-order-actual-decision  {:type     "Kirje"
-                                                     :filename "varsinainen-paatos.pdf"}
+                                                     :filename "kaskypaatos.pdf"}
                    :penalty-decision-hearing-letter {:type     "Kirje"
                                                      :filename "sakkopaatos-kuulemiskirje.pdf"}}]
     (get documents type-key)))

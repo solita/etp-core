@@ -40,7 +40,7 @@ $$
         Ilmoitustunnus/Meddelandekod: {{ilmoitustunnus}} <br/>
         Havaintopäivä/Observationsdatum: {{havaintopäivä}} <br/>
     {{/kohde}}
-    Kehotuksen päivämäärä/Kehotuksen päivämäärä (sv): {{#tietopyynto}} {{tietopyynto-kehotus-pvm}} {{/tietopyynto}}
+    Kehotuksen päivämäärä/Uppmaningsdatum: {{#tietopyynto}} {{tietopyynto-kehotus-pvm}} {{/tietopyynto}}
 </div>
 
 <h1>Energiatodistusvalvonnan varoitus</h1>

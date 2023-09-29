@@ -128,7 +128,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 <p>Tarkemmat ohjeet valituksen tekemisestä ovat tämän päätöksen liitteenä.</p>
 
 {{#valvoja}}
-<p>Lisätietoja päätöksestä antaa energia-asiantuntija {{etunimi}} {{sukunimi}}, puh. {{puhelin}} / s-posti
+<p>Lisätietoja päätöksestä antaa energia-asiantuntija {{etunimi}} {{sukunimi}}, <br/>puh. {{puhelin}} / s-posti
     {{email}}. </p>
 {{/valvoja}}
 
@@ -149,6 +149,8 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
         </td>
     </tr>
 </table>
+
+<p class="small-text"><i>Asiakirja on allekirjoitettu sähköisesti asianhallintajärjestelmässä.</i></p>
 
 <div class="sivunvaihto"></div>
 
@@ -189,8 +191,8 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     {{nimi}}
     {{/omistaja-yritys}}
     har försummat skyldigheten enligt 6 § i lagen om energicertifikat för byggnader (50/2013, lagen om energicertifikat)
-    att använda energi-certifikat vid försäljning av byggnaden. Enligt 2 § i lagen om energi-certifikat ansvarar
-    byggnadens ägare för att byggnadens energicer-tifikat skaffas och att certifikatet eller uppgifterna i det används i
+    att använda energicertifikat vid försäljning av byggnaden. Enligt 2 § i lagen om energicertifikat ansvarar
+    byggnadens ägare för att byggnadens energicertifikat skaffas och att certifikatet eller uppgifterna i det används i
     lagstadgade situationer.</p>
 
 <p>Med stöd av 24 § i lagen om energicertifikat beordrar ARA {{#omistaja-henkilo}}
@@ -216,9 +218,9 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     {{#omistaja-yritys}}
     {{nimi}}
     {{/omistaja-yritys}}
-    i enlighet med 22 § i viteslagen och den hänvisade34 § i förvalt-ningslagen (434/2003) möjlighet
+    i enlighet med 22 § i viteslagen och den hänvisade34 § i förvaltningslagen (434/2003) möjlighet
     att yttra sig i ärendet samt ge sin förklaring till sådana yrkanden och utredningar som kan påverka avgörandet av
-    ärendet. I brevet om hörande berättade ARA att vi-tesbeloppet är uppskattningsvis
+    ärendet. I brevet om hörande berättade ARA att vitesbeloppet är uppskattningsvis
     {{#aiemmat-toimenpiteet}}{{kuulemiskirje-fine}}{{/aiemmat-toimenpiteet}} euro.</p>
 
 <p>{{#omistaja-henkilo}}
@@ -235,17 +237,17 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     energicertifikat enligt 6§ i lagen om energicertifikat. Energicertifikatet ska överlämnas till köparen eller
     hyrestagaren antingen i original eller som kopia. I en offentlig anmälan om försäljning eller uthyrning av ett
     objekt ska energieffektivitetsklassen för det objekt som säljs eller hyrs ut nämnas. Byggnadens ägare eller
-    innehavare ansvarar för att byggnadens energicertifikat skaffas och används i de situationer som re-gleras i lagen
+    innehavare ansvarar för att byggnadens energicertifikat skaffas och används i de situationer som regleras i lagen
     (2 § i lagen om energicertifikat).</p>
 
-<p>Bestämmelser om påföljderna finns i 24 § i lagen om energicertifi-kat. Om byggnadens ägare inte fullgör sina
-    skyldigheter enligt lagen om energicertifikat eller i övrigt handlar i strid med lagen om ener-gicertifikat eller
+<p>Bestämmelser om påföljderna finns i 24 § i lagen om energicertifikat. Om byggnadens ägare inte fullgör sina
+    skyldigheter enligt lagen om energicertifikat eller i övrigt handlar i strid med lagen om energicertifikat eller
     bestämmelserna som utfärdats med stöd av den, ska ARA uppmana ägaren att rätta till situationen och ange en
-    tids-frist inom vilken situationen ska rättas till. Om saken inte rättas till inom tidsfristen ska ARA ge den som
+    tidsfrist inom vilken situationen ska rättas till. Om saken inte rättas till inom tidsfristen ska ARA ge den som
     saken gäller en varning och ange en ny tidsfrist. Om situationen inte rättas till inom tidsfristen ska ARA enligt
-    vad situationen kräver meddela beslut om föreläg-gande eller förbud. Vid allvarliga eller väsentliga överträdelser
+    vad situationen kräver meddela beslut om föreläggande eller förbud. Vid allvarliga eller väsentliga överträdelser
     kan ARA förena föreläggandet eller förbudet med vite eller med hot om tvångsutförande eller hot om avbrytande, om
-    vilka det bestäms i vi-teslagen (1113/1990).</p>
+    vilka det bestäms i viteslagen (1113/1990).</p>
 
 <p>ARA har skickat en uppmaning till {{#omistaja-henkilo}}{{sukunimi}}{{/omistaja-henkilo}}{{#omistaja-yritys}}{{nimi}}{{/omistaja-yritys}}, eftersom den byggnaden som ägs av {{#omistaja-henkilo}}
     {{sukunimi}}
@@ -305,17 +307,17 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 
 <p> Den som är missnöjd med detta beslut kan söka ändring i det hos förvaltningsdomstolen i
     {{#tyyppikohtaiset-tiedot}}{{oikeus-sv}}{{/tyyppikohtaiset-tiedot}}. Besvär måste göras och levereras till ovan nämnda
-    förvaltnings-domstol inom 30 dagar från delgivningen av det här beslutet.</p>
+    förvaltningsdomstol inom 30 dagar från delgivningen av det här beslutet.</p>
 
 <div class="footnote">
-    <p class="mb-0"><sup>2</sup> I ARAs energicertifikatregister finns i regel alla energicertifikat som upprät-tats
+    <p class="mb-0"><sup>2</sup> I ARAs energicertifikatregister finns i regel alla energicertifikat som upprättats
         efter 1 maj 2015.</p>
 </div>
 
 <p>Noggrannare anvisningar om inlämning av besvär finns med som bilaga till det här beslutet.</p>
 
 {{#valvoja}}
-<p>Mer information om besslutet ges av energiexpert {{etunimi}} {{sukunimi}}, tfn {{puhelin}} / e-post
+<p>Mer information om besslutet ges av energiexpert {{etunimi}} {{sukunimi}}, <br/>tfn {{puhelin}} / e-post
     {{email}}.</p>
 {{/valvoja}}
 
@@ -336,6 +338,8 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
         </td>
     </tr>
 </table>
+
+<p class="small-text"><i>Handlingen har undertecknats elektroniskt i ärendehanteringssystemet.</i></p>
 $$)
 on conflict (id) do update set label_fi          = excluded.label_fi,
                                label_sv          = excluded.label_sv,
