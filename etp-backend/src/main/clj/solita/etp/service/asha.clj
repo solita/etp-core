@@ -15,7 +15,8 @@
   ["Vireillepano"
    "Käsittely"
    "Päätöksenteko"
-   "Tiedoksianto ja toimeenpano"])
+   "Tiedoksianto ja toimeenpano"
+   "Valitusajan umpeutuminen"])
 
 (defn- must-exist! [n]
   (when (< n 0)
