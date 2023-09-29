@@ -91,12 +91,6 @@
                  :valid                true
                  :manually-deliverable false
                  :allow-comments       true}
-                {:id                   13
-                 :label-fi             "Käskypäätös / valitusaika umpeutunut"
-                 :label-sv             "Käskypäätös / valitusaika umpeutunut (sv)"
-                 :valid                false
-                 :manually-deliverable false
-                 :allow-comments       false}
                 {:id                   14
                  :label-fi             "Sakkopäätös / kuulemiskirje"
                  :label-sv             "Sakkopäätös / kuulemiskirje (sv)"
@@ -131,12 +125,6 @@
                  :label-fi             "Sakkopäätös / valitusajan odotus ja umpeutuminen"
                  :label-sv             "Sakkopäätös / valitusajan odotus ja umpeutuminen (sv)"
                  :valid                true
-                 :manually-deliverable false
-                 :allow-comments       false}
-                {:id                   20
-                 :label-fi             "Sakkopäätös / valitusaika umpeutunut"
-                 :label-sv             "Sakkopäätös / valitusaika umpeutunut (sv)"
-                 :valid                false
                  :manually-deliverable false
                  :allow-comments       false}
                 {:id                   21
