@@ -189,6 +189,8 @@
                                    :decision          "Siirry käsittelyyn"}
                       "Päätöksenteko" {:processing-action "Käsittely"
                                        :decision          "Siirry päätöksentekoon"}
+                      "Valitusajan umpeutuminen" {:processing-action "Tiedoksianto ja toimeenpano"
+                                                  :decision          "Valmis"}
                       nil)]
     (when (not (get processing-action-states processing-action))
       (proceed-operation! sender-id request-id case-number (:processing-action action) (:decision action)))))
