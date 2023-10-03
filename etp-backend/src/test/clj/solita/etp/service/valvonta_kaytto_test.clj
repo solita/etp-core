@@ -86,17 +86,11 @@
                  :manually-deliverable false
                  :allow-comments       false}
                 {:id                   12
-                 :label-fi             "Käskypäätös / odotetaan valitusajan umpeutumista"
-                 :label-sv             "Käskypäätös / odotetaan valitusajan umpeutumista (sv)"
+                 :label-fi             "Käskypäätös / valitusajan odotus ja umpeutuminen"
+                 :label-sv             "Käskypäätös / valitusajan odotus ja umpeutuminen (sv)"
                  :valid                true
                  :manually-deliverable false
                  :allow-comments       true}
-                {:id                   13
-                 :label-fi             "Käskypäätös / valitusaika umpeutunut"
-                 :label-sv             "Käskypäätös / valitusaika umpeutunut (sv)"
-                 :valid                true
-                 :manually-deliverable false
-                 :allow-comments       false}
                 {:id                   14
                  :label-fi             "Sakkopäätös / kuulemiskirje"
                  :label-sv             "Sakkopäätös / kuulemiskirje (sv)"
@@ -128,14 +122,8 @@
                  :manually-deliverable false
                  :allow-comments       false}
                 {:id                   19
-                 :label-fi             "Sakkopäätös / odotetaan valitusajan umpeutumista"
-                 :label-sv             "Sakkopäätös / odotetaan valitusajan umpeutumista (sv)"
-                 :valid                true
-                 :manually-deliverable false
-                 :allow-comments       false}
-                {:id                   20
-                 :label-fi             "Sakkopäätös / valitusaika umpeutunut"
-                 :label-sv             "Sakkopäätös / valitusaika umpeutunut (sv)"
+                 :label-fi             "Sakkopäätös / valitusajan odotus ja umpeutuminen"
+                 :label-sv             "Sakkopäätös / valitusajan odotus ja umpeutuminen (sv)"
                  :valid                true
                  :manually-deliverable false
                  :allow-comments       false}

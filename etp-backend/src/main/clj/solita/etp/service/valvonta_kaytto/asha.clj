@@ -205,9 +205,9 @@
                                                              :contacting-direction "SENT"
                                                              :contact              (map osapuoli->contact osapuolet)}}
    :decision-order-waiting-for-deadline {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                             :processing-action {:name-identity "Tiedoksianto ja toimeenpano"}}
+                                                             :processing-action {:name-identity "Valitusajan umpeutuminen"}}
                                          :document          (toimenpide-type->document (:type-id toimenpide))
-                                         :processing-action {:name                 "Tiedoksianto/toimeenpano"
+                                         :processing-action {:name                 "Valitusajan umpeutuminen"
                                                              :reception-date       (Instant/now)
                                                              :contacting-direction "SENT"
                                                              :contact              (map osapuoli->contact osapuolet)}}

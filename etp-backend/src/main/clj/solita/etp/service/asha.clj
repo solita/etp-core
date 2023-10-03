@@ -15,7 +15,8 @@
   ["Vireillepano"
    "Käsittely"
    "Päätöksenteko"
-   "Tiedoksianto ja toimeenpano"])
+   "Tiedoksianto ja toimeenpano"
+   "Valitusajan umpeutuminen"])
 
 (defn- must-exist! [n]
   (when (< n 0)
@@ -188,6 +189,8 @@
                                    :decision          "Siirry käsittelyyn"}
                       "Päätöksenteko" {:processing-action "Käsittely"
                                        :decision          "Siirry päätöksentekoon"}
+                      "Valitusajan umpeutuminen" {:processing-action "Tiedoksianto ja toimeenpano"
+                                                  :decision          "Valmis"}
                       nil)]
     (when (not (get processing-action-states processing-action))
       (proceed-operation! sender-id request-id case-number (:processing-action action) (:decision action)))))
