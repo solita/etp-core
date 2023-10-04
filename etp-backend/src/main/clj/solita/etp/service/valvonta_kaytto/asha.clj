@@ -144,7 +144,7 @@
    :valvoja                (select-keys whoami [:etunimi :sukunimi :email :puhelin])
    :omistaja-henkilo       (when (osapuoli/henkilo? osapuoli)
                              (-> (select-keys osapuoli [:etunimi :sukunimi :jakeluosoite :postinumero :postitoimipaikka :henkilotunnus])
-                                 (update-in [:henkilotunnus] (fn [henkilotunnus] (string/replace henkilotunnus "-" "‑"))))) ; Replace hyphen with non-breaking variant
+                                 (update-in [:henkilotunnus] (fn [henkilotunnus] (when henkilotunnus (string/replace henkilotunnus "-" "‑")))))) ; Replace hyphen with non-breaking variant
    :omistaja-yritys        (when (osapuoli/yritys? osapuoli)
                              (select-keys osapuoli [:nimi :jakeluosoite :postinumero :postitoimipaikka :vastaanottajan-tarkenne]))
    :kohde                  {:katuosoite       (:katuosoite valvonta)
