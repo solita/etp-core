@@ -793,7 +793,6 @@
               response-body (j/read-value (:body response) j/keyword-keys-object-mapper)]
           (t/is (= (:status response) 200))
           (t/is (= (count response-body) 1))
-          (println response-body)
           (t/is (= (-> response-body
                        first
                        (dissoc :publish-time :create-time))
@@ -881,7 +880,6 @@
                                        (test-kayttajat/with-virtu-user)
                                        (mock/header "Accept" "application/json")))
               response-body (j/read-value (:body response) j/keyword-keys-object-mapper)]
-          (println response-body)
           (t/is (= (:status response) 200))
           (t/is (= (count response-body) 1))
           (t/is (= (-> response-body
