@@ -1,5 +1,6 @@
 (ns solita.etp.service.valvonta-kaytto.asha
   (:require [clojure.java.io :as io]
+            [clojure.string :as string]
             [solita.common.time :as time]
             [solita.etp.exception :as exception]
             [solita.etp.service.asha :as asha]
@@ -16,6 +17,7 @@
 (db/require-queries 'valvonta-kaytto)
 (db/require-queries 'geo)
 (db/require-queries 'hallinto-oikeus)
+(db/require-queries 'karajaoikeus)
 
 (defn toimenpide-type->document [type-id]
   (let [type-key (toimenpide/type-key type-id)
@@ -26,6 +28,8 @@
                                                      :filename "kuulemiskirje.pdf"}
                    :decision-order-actual-decision  {:type     "Kirje"
                                                      :filename "kaskypaatos.pdf"}
+                   :decision-order-notice-bailiff   {:type     "Kirje"
+                                                     :filename "haastemies-tiedoksianto.pdf"}
                    :penalty-decision-hearing-letter {:type     "Kirje"
                                                      :filename "sakkopaatos-kuulemiskirje.pdf"}}]
     (get documents type-key)))
@@ -80,7 +84,7 @@
     (exception/throw-ex-info!
       {:message (str "Unknown hallinto-oikeus-id: " hallinto-oikeus-id)})))
 
-(defn find-court-id-from-osapuoli-specific-data [osapuoli-specific-data osapuoli-id]
+(defn find-administrative-court-id-from-osapuoli-specific-data [osapuoli-specific-data osapuoli-id]
   (->> osapuoli-specific-data
        (filter #(= (:osapuoli-id %) osapuoli-id))
        first
@@ -96,7 +100,7 @@
                                   (-> toimenpide
                                       :type-specific-data
                                       :osapuoli-specific-data
-                                      (find-court-id-from-osapuoli-specific-data osapuoli-id)))]
+                                      (find-administrative-court-id-from-osapuoli-specific-data osapuoli-id)))]
     {:vastaus-fi               (str (if recipient-answered?
                                       "Asianosainen antoi vastineen kuulemiskirjeeseen."
                                       "Asianosainen ei vastannut kuulemiskirjeeseen.")
@@ -116,6 +120,20 @@
      :department-head-title-fi (-> toimenpide :type-specific-data :department-head-title-fi)
      :department-head-title-sv (-> toimenpide :type-specific-data :department-head-title-sv)}))
 
+(defn- karajaoikeus-id->name [db id]
+  (first (karajaoikeus-db/find-karajaoikeus-name-by-id db {:karajaoikeus-id id})))
+
+(defmethod format-type-specific-data :decision-order-notice-bailiff [db toimenpide osapuoli-id]
+  (let [osapuoli (->> toimenpide
+                      :type-specific-data
+                      :osapuoli-specific-data
+                      (filter #(= (:osapuoli-id %) osapuoli-id))
+                      first)
+        karajaoikeus-id (:karajaoikeus-id osapuoli)
+        haastemies-email (:haastemies-email osapuoli)]
+    {:karajaoikeus     (karajaoikeus-id->name db karajaoikeus-id)
+     :haastemies-email haastemies-email}))
+
 (defmethod format-type-specific-data :default [_ toimenpide _]
   (:type-specific-data toimenpide))
 
@@ -125,7 +143,8 @@
    :diaarinumero           (:diaarinumero toimenpide)
    :valvoja                (select-keys whoami [:etunimi :sukunimi :email :puhelin])
    :omistaja-henkilo       (when (osapuoli/henkilo? osapuoli)
-                             (select-keys osapuoli [:etunimi :sukunimi :jakeluosoite :postinumero :postitoimipaikka]))
+                             (-> (select-keys osapuoli [:etunimi :sukunimi :jakeluosoite :postinumero :postitoimipaikka :henkilotunnus])
+                                 (update-in [:henkilotunnus] (fn [henkilotunnus] (when henkilotunnus (string/replace henkilotunnus "-" "‑")))))) ; Replace hyphen with non-breaking variant
    :omistaja-yritys        (when (osapuoli/yritys? osapuoli)
                              (select-keys osapuoli [:nimi :jakeluosoite :postinumero :postitoimipaikka :vastaanottajan-tarkenne]))
    :kohde                  {:katuosoite       (:katuosoite valvonta)
@@ -204,6 +223,13 @@
                                                              :reception-date       (Instant/now)
                                                              :contacting-direction "SENT"
                                                              :contact              (map osapuoli->contact osapuolet)}}
+   :decision-order-notice-bailiff       {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                             :processing-action {:name-identity "Tiedoksianto ja toimeenpano"}}
+                                         :document          (toimenpide-type->document (:type-id toimenpide))
+                                         :processing-action {:name                 "Asiakirjan toimituspyyntö haastemiehelle"
+                                                             :reception-date       (Instant/now)
+                                                             :contacting-direction "SENT"
+                                                             :contact              (map osapuoli->contact osapuolet)}}
    :decision-order-waiting-for-deadline {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                                              :processing-action {:name-identity "Valitusajan umpeutuminen"}}
                                          :document          (toimenpide-type->document (:type-id toimenpide))
@@ -259,23 +285,23 @@
       (add-hallinto-oikeus-attachment db generated-pdf (-> toimenpide
                                                            :type-specific-data
                                                            :osapuoli-specific-data
-                                                           (find-court-id-from-osapuoli-specific-data (:id osapuoli))))
+                                                           (find-administrative-court-id-from-osapuoli-specific-data (:id osapuoli))))
       generated-pdf)))
 
-(defn filter-osapuolet-if-kaskypaatos-varsinainen-paatos
-  "If toimenpidetype of the toimenpide is käskypäätös / varsinainen päätös,
+(defn filter-osapuolet-with-no-document
+  "If toimenpidetype of the toimenpide is such that the document might not be created for some,
   osapuolet will be filtered so that only those are returned that have a :document as true
   specified in type-specific-data of the toimenpide.
   For all other toimenpidetypes all osapuolet are returned."
   [toimenpide osapuolet]
-  (if (toimenpide/kaskypaatos-varsinainen-paatos? toimenpide)
-    (let [osapuolet-with-hallinto-oikeus (->> toimenpide
-                                              :type-specific-data
-                                              :osapuoli-specific-data
-                                              (filter #(true? (:document %)))
-                                              (map :osapuoli-id)
-                                              set)]
-      (filter #(contains? osapuolet-with-hallinto-oikeus (:id %)) osapuolet))
+  (if ((some-fn toimenpide/kaskypaatos-varsinainen-paatos? toimenpide/kaskypaatos-haastemies-tiedoksianto?) toimenpide)
+    (let [osapuolet-with-document (->> toimenpide
+                                       :type-specific-data
+                                       :osapuoli-specific-data
+                                       (filter #(true? (:document %)))
+                                       (map :osapuoli-id)
+                                       set)]
+      (filter #(contains? osapuolet-with-document (:id %)) osapuolet))
     osapuolet))
 
 (defn log-toimenpide! [db aws-s3-client whoami valvonta toimenpide osapuolet ilmoituspaikat roolit]
@@ -286,7 +312,7 @@
         documents (when (:document processing-action)
                     (->> osapuolet
                          (filter osapuoli/omistaja?)
-                         (filter-osapuolet-if-kaskypaatos-varsinainen-paatos toimenpide)
+                         (filter-osapuolet-with-no-document toimenpide)
                          (map (fn [osapuoli]
                                 (let [document (generate-pdf-document db whoami valvonta toimenpide ilmoituspaikat
                                                                       osapuoli osapuolet roolit)]

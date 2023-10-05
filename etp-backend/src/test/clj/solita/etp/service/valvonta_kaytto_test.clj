@@ -83,8 +83,8 @@
                  :label-fi             "Käskypäätös / tiedoksianto (Haastemies)"
                  :label-sv             "Käskypäätös / tiedoksianto (Haastemies) (sv)"
                  :valid                true
-                 :manually-deliverable false
-                 :allow-comments       false}
+                 :manually-deliverable true
+                 :allow-comments       true}
                 {:id                   12
                  :label-fi             "Käskypäätös / valitusajan odotus ja umpeutuminen"
                  :label-sv             "Käskypäätös / valitusajan odotus ja umpeutuminen (sv)"

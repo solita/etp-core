@@ -44,6 +44,15 @@
                     :access    rooli-service/paakayttaja?
                     :handler   (fn [{:keys [db]}]
                                  (r/response (valvonta-service/find-hallinto-oikeudet db)))}}]
+
+    ["/karajaoikeudet"
+     {:conflicting true
+      :get         {:summary   "Hae käräjäoikeudet."
+                    :responses {200 {:body [common-schema/Luokittelu]}}
+                    :access    rooli-service/paakayttaja?
+                    :handler   (fn [{:keys [db]}]
+                                 (r/response (valvonta-service/find-karajaoikeudet db)))}}]
+
     ["/johtaja"
      {:conflicting true
       :get {:summary   "Hae viimeksi käskypäätös / varsinainen päätös -toimenpiteellä käytetyn johtajan tiedot"
