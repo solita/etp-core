@@ -22,7 +22,8 @@
    10 :decision-order-notice-second-mailing
    11 :decision-order-notice-bailiff
    12 :decision-order-waiting-for-deadline
-   14 :penalty-decision-hearing-letter})
+   14 :penalty-decision-hearing-letter
+   15 :penalty-decision-notice-first-mailing})
 
 (defn type-key [type-id]
   (if-let [type-key (type-id->type-key type-id)]
@@ -55,7 +56,8 @@
 (def sakkopaatos-kuulemiskirje? (partial type? :penalty-decision-hearing-letter))
 
 (def sakkopaatos-toimenpide?
-  (partial some-type? #{:penalty-decision-hearing-letter}))
+  (partial some-type? #{:penalty-decision-hearing-letter
+                        :penalty-decision-notice-first-mailing}))
 
 (def asha-toimenpide?
   (partial some-type? #{:rfi-request
@@ -66,7 +68,8 @@
                         :decision-order-notice-first-mailing11
                         :decision-order-notice-bailiff
                         :decision-order-waiting-for-deadline
-                        :penalty-decision-hearing-letter}))
+                        :penalty-decision-hearing-letter
+                        :penalty-decision-notice-first-mailing}))
 
 
 (def with-diaarinumero? (comp not (partial type? :case)))
