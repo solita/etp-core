@@ -107,8 +107,8 @@
                  :label-fi             "Sakkopäätös / tiedoksianto (ensimmäinen postitus)"
                  :label-sv             "Sakkopäätös / tiedoksianto (ensimmäinen postitus) (sv)"
                  :valid                true
-                 :manually-deliverable false
-                 :allow-comments       false}
+                 :manually-deliverable true
+                 :allow-comments       true}
                 {:id                   17
                  :label-fi             "Sakkopäätös / tiedoksianto (toinen postitus)"
                  :label-sv             "Sakkopäätös / tiedoksianto (toinen postitus) (sv)"
@@ -167,7 +167,7 @@
     (t/is (= (valvonta-kaytto/department-head-data ts/*db*)
              {:department-head-title-fi nil
               :department-head-title-sv nil
-              :department-head-name  nil})))
+              :department-head-name     nil})))
 
   (t/testing "When there is previous käskypäätös / varsinainen päätös toimenpide, the title and name used in it is returned"
     (let [valvonta-id (valvonta-kaytto/add-valvonta! ts/*db* {:katuosoite "Testitie 5"})]
@@ -183,15 +183,15 @@
                                              .toInstant)
                      :deadline_date      (LocalDate/of 2023 8 28)
                      :diaarinumero       "ARA-05.03.01-2023-235"
-                     :type_specific_data {:fine                  6100
-                                          :department-head-name  "Testi Testinen"
+                     :type_specific_data {:fine                     6100
+                                          :department-head-name     "Testi Testinen"
                                           :department-head-title-fi "Ylitarkastaja"
                                           :department-head-title-sv "Övertillsyningsman"}})
 
       (t/is (= (valvonta-kaytto/department-head-data ts/*db*)
                {:department-head-title-fi "Ylitarkastaja"
                 :department-head-title-sv "Övertillsyningsman"
-                :department-head-name  "Testi Testinen"}))))
+                :department-head-name     "Testi Testinen"}))))
 
   (t/testing "When there are multiple previous käskypäätös / varsinainen päätös toimenpide, the title and name used in the latest one is returned"
     (let [valvonta-id (valvonta-kaytto/add-valvonta! ts/*db* {:katuosoite "Testitie 5"})]
@@ -207,8 +207,8 @@
                                              .toInstant)
                      :deadline_date      (LocalDate/of 2022 8 28)
                      :diaarinumero       "ARA-05.03.01-2022-235"
-                     :type_specific_data {:fine                  6100
-                                          :department-head-name  "Keskivanhan Tarkastaja"
+                     :type_specific_data {:fine                     6100
+                                          :department-head-name     "Keskivanhan Tarkastaja"
                                           :department-head-title-fi "Keskitason tarkastaja"
                                           :department-head-title-sv "Keskitason tarkastaja ruotsiksi"}})
 
@@ -224,8 +224,8 @@
                                              .toInstant)
                      :deadline_date      (LocalDate/of 2021 8 28)
                      :diaarinumero       "ARA-05.03.01-2021-235"
-                     :type_specific_data {:fine                  6100
-                                          :department-head-name  "Vanhin Tarkastaja"
+                     :type_specific_data {:fine                     6100
+                                          :department-head-name     "Vanhin Tarkastaja"
                                           :department-head-title-fi "Alimman tason tarkastaja"
                                           :department-head-title-sv "Alimman tason tarkastaja ruotsiksi"}})
 
@@ -241,15 +241,15 @@
                                              .toInstant)
                      :deadline_date      (LocalDate/of 2023 8 28)
                      :diaarinumero       "ARA-05.03.01-2023-235"
-                     :type_specific_data {:fine                  6100
-                                          :department-head-name  "Uusin Tarkastaja"
+                     :type_specific_data {:fine                     6100
+                                          :department-head-name     "Uusin Tarkastaja"
                                           :department-head-title-fi "Yliylitarkastaja"
                                           :department-head-title-sv "Yliylitarkastaja på svenska"}})
 
       (t/is (= (valvonta-kaytto/department-head-data ts/*db*)
                {:department-head-title-fi "Yliylitarkastaja"
                 :department-head-title-sv "Yliylitarkastaja på svenska"
-                :department-head-name  "Uusin Tarkastaja"}))
+                :department-head-name     "Uusin Tarkastaja"}))
 
       (t/testing "related valvonta does not affect that the newest of them all is returned"
         (let [valvonta-id-2 (valvonta-kaytto/add-valvonta! ts/*db* {:katuosoite "Testitie 5"})]
@@ -265,11 +265,11 @@
                                                  .toInstant)
                          :deadline_date      (LocalDate/of 2023 8 28)
                          :diaarinumero       "ARA-05.03.01-2023-235"
-                         :type_specific_data {:fine                  6100
-                                              :department-head-name  "Vielä Uudempi Tarkastaja"
+                         :type_specific_data {:fine                     6100
+                                              :department-head-name     "Vielä Uudempi Tarkastaja"
                                               :department-head-title-fi "Yliyliylitarkastaja"
                                               :department-head-title-sv "Yliyliylitarkastaja på svenska"}})
           (t/is (= (valvonta-kaytto/department-head-data ts/*db*)
                    {:department-head-title-fi "Yliyliylitarkastaja"
                     :department-head-title-sv "Yliyliylitarkastaja på svenska"
-                    :department-head-name  "Vielä Uudempi Tarkastaja"})))))))
+                    :department-head-name     "Vielä Uudempi Tarkastaja"})))))))
