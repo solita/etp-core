@@ -213,14 +213,14 @@
                ts/*db*
                {:type-id            8
                 :type-specific-data {:fine                     129
-                                     :recipient-answered       true
-                                     :answer-commentary-fi     "Voi anteeksi, en tiennyt."
-                                     :answer-commentary-sv     "Jag vet inte, förlåt."
-                                     :statement-fi             "Olisi pitänyt tietää."
-                                     :statement-sv             "Du måste ha visst."
                                      :osapuoli-specific-data   [{:osapuoli-id        1
                                                                  :hallinto-oikeus-id 0
-                                                                 :document           true}]
+                                                                 :document           true
+                                                                 :recipient-answered       true
+                                                                 :answer-commentary-fi     "Voi anteeksi, en tiennyt."
+                                                                 :answer-commentary-sv     "Jag vet inte, förlåt."
+                                                                 :statement-fi             "Olisi pitänyt tietää."
+                                                                 :statement-sv             "Du måste ha visst."}]
                                      :department-head-name     "Jorma Jormanen"
                                      :department-head-title-fi "Hallinto-oikeuden presidentti"
                                      :department-head-title-sv "Hallinto-oikeuden kuningas"}}
@@ -234,7 +234,8 @@
               :oikeus-sv                "Helsingfors"
               :department-head-name     "Jorma Jormanen"
               :department-head-title-fi "Hallinto-oikeuden presidentti"
-              :department-head-title-sv "Hallinto-oikeuden kuningas"}))
+              :department-head-title-sv "Hallinto-oikeuden kuningas"
+              :recipient-answered true}))
 
     (t/testing "For käskypäätös / kuulemiskirje toimenpide :type-spefic-data map is returned as is, as no special formatting is needed"
       (t/is (= (asha/format-type-specific-data

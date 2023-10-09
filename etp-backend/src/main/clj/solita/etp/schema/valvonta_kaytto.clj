@@ -49,14 +49,15 @@
 (def KarajaoikeusId (apply schema/enum (range 0 20)))
 
 (def KaskyPaatosVarsinainenPaatosData {:fine                     common-schema/NonNegative
-                                       :recipient-answered       schema/Bool
-                                       :answer-commentary-fi     schema/Str
-                                       :answer-commentary-sv     schema/Str
-                                       :statement-fi             schema/Str
-                                       :statement-sv             schema/Str
-                                       :osapuoli-specific-data   [{:osapuoli-id        common-schema/Key
-                                                                   :hallinto-oikeus-id (schema/maybe HallintoOikeusId)
-                                                                   :document           schema/Bool}]
+                                       :osapuoli-specific-data   [{:osapuoli-id          common-schema/Key
+                                                                   :hallinto-oikeus-id   (schema/maybe HallintoOikeusId)
+                                                                   :document             schema/Bool
+                                                                   ;; Conditional-skeema documentin perusteella, jos false niin seuraavia ei vaadita / saa olla?
+                                                                   :recipient-answered   schema/Bool
+                                                                   :answer-commentary-fi (schema/maybe schema/Str)
+                                                                   :answer-commentary-sv (schema/maybe schema/Str)
+                                                                   :statement-fi         (schema/maybe schema/Str)
+                                                                   :statement-sv         (schema/maybe schema/Str)}]
                                        :department-head-title-fi schema/Str
                                        :department-head-title-sv schema/Str
                                        :department-head-name     schema/Str})
