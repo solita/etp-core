@@ -181,69 +181,76 @@
      :email-address       (:email osapuoli)}))
 
 (defn- available-processing-actions [toimenpide osapuolet]
-  {:rfi-request                         {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                             :processing-action {:name-identity "Vireillepano"}}
-                                         :processing-action {:name                 "Tietopyyntö"
-                                                             :reception-date       (Instant/now)
-                                                             :contacting-direction "SENT"
-                                                             :contact              (map osapuoli->contact osapuolet)}
-                                         :document          (toimenpide-type->document (:type-id toimenpide))}
-   :rfi-order                           {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                             :processing-action {:name-identity "Vireillepano"}}
-                                         :processing-action {:name                 "Kehotuksen antaminen"
-                                                             :reception-date       (Instant/now)
-                                                             :contacting-direction "SENT"
-                                                             :contact              (map osapuoli->contact osapuolet)}
-                                         :document          (toimenpide-type->document (:type-id toimenpide))}
-   :rfi-warning                         {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                             :processing-action {:name-identity "Käsittely"}}
-                                         :processing-action {:name                 "Varoituksen antaminen"
-                                                             :reception-date       (Instant/now)
-                                                             :contacting-direction "SENT"
-                                                             :contact              (map osapuoli->contact osapuolet)}
-                                         :document          (toimenpide-type->document (:type-id toimenpide))}
-   :decision-order-hearing-letter       {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                             :processing-action {:name-identity "Päätöksenteko"}}
-                                         :document          (toimenpide-type->document (:type-id toimenpide))
-                                         :processing-action {:name                 "Kuulemiskirje käskypäätöksestä"
-                                                             :reception-date       (Instant/now)
-                                                             :contacting-direction "SENT"
-                                                             :contact              (map osapuoli->contact osapuolet)}}
-   :decision-order-actual-decision      {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                             :processing-action {:name-identity "Päätöksenteko"}}
-                                         :document          (toimenpide-type->document (:type-id toimenpide))
-                                         :processing-action {:name                 "Käskypäätös"
-                                                             :reception-date       (Instant/now)
-                                                             :contacting-direction "SENT"
-                                                             :contact              (map osapuoli->contact osapuolet)}}
-   :decision-order-notice-first-mailing {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                             :processing-action {:name-identity "Tiedoksianto ja toimeenpano"}}
-                                         :document          (toimenpide-type->document (:type-id toimenpide))
-                                         :processing-action {:name                 "Päätös tiedoksi - ensimmäinen postitus"
-                                                             :reception-date       (Instant/now)
-                                                             :contacting-direction "SENT"
-                                                             :contact              (map osapuoli->contact osapuolet)}}
-   :decision-order-notice-bailiff       {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                             :processing-action {:name-identity "Tiedoksianto ja toimeenpano"}}
-                                         :document          (toimenpide-type->document (:type-id toimenpide))
-                                         :processing-action {:name                 "Asiakirjan toimituspyyntö haastemiehelle"
-                                                             :reception-date       (Instant/now)
-                                                             :contacting-direction "SENT"
-                                                             :contact              (map osapuoli->contact osapuolet)}}
-   :decision-order-waiting-for-deadline {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                             :processing-action {:name-identity "Valitusajan umpeutuminen"}}
-                                         :document          (toimenpide-type->document (:type-id toimenpide))
-                                         :processing-action {:name                 "Valitusajan umpeutuminen"
-                                                             :reception-date       (Instant/now)
-                                                             :contacting-direction "SENT"
-                                                             :contact              (map osapuoli->contact osapuolet)}}
-   :penalty-decision-hearing-letter     {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                             :processing-action {:name-identity "Päätöksenteko"}}
-                                         :document          (toimenpide-type->document (:type-id toimenpide))
-                                         :processing-action {:name                 "Kuulemiskirje uhkasakkopäätöksestä"
-                                                             :reception-date       (Instant/now)
-                                                             :contacting-direction "SENT"
-                                                             :contact              (map osapuoli->contact osapuolet)}}})
+  {:rfi-request                           {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                               :processing-action {:name-identity "Vireillepano"}}
+                                           :processing-action {:name                 "Tietopyyntö"
+                                                               :reception-date       (Instant/now)
+                                                               :contacting-direction "SENT"
+                                                               :contact              (map osapuoli->contact osapuolet)}
+                                           :document          (toimenpide-type->document (:type-id toimenpide))}
+   :rfi-order                             {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                               :processing-action {:name-identity "Vireillepano"}}
+                                           :processing-action {:name                 "Kehotuksen antaminen"
+                                                               :reception-date       (Instant/now)
+                                                               :contacting-direction "SENT"
+                                                               :contact              (map osapuoli->contact osapuolet)}
+                                           :document          (toimenpide-type->document (:type-id toimenpide))}
+   :rfi-warning                           {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                               :processing-action {:name-identity "Käsittely"}}
+                                           :processing-action {:name                 "Varoituksen antaminen"
+                                                               :reception-date       (Instant/now)
+                                                               :contacting-direction "SENT"
+                                                               :contact              (map osapuoli->contact osapuolet)}
+                                           :document          (toimenpide-type->document (:type-id toimenpide))}
+   :decision-order-hearing-letter         {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                               :processing-action {:name-identity "Päätöksenteko"}}
+                                           :document          (toimenpide-type->document (:type-id toimenpide))
+                                           :processing-action {:name                 "Kuulemiskirje käskypäätöksestä"
+                                                               :reception-date       (Instant/now)
+                                                               :contacting-direction "SENT"
+                                                               :contact              (map osapuoli->contact osapuolet)}}
+   :decision-order-actual-decision        {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                               :processing-action {:name-identity "Päätöksenteko"}}
+                                           :document          (toimenpide-type->document (:type-id toimenpide))
+                                           :processing-action {:name                 "Käskypäätös"
+                                                               :reception-date       (Instant/now)
+                                                               :contacting-direction "SENT"
+                                                               :contact              (map osapuoli->contact osapuolet)}}
+   :decision-order-notice-first-mailing   {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                               :processing-action {:name-identity "Tiedoksianto ja toimeenpano"}}
+                                           :document          (toimenpide-type->document (:type-id toimenpide))
+                                           :processing-action {:name                 "Päätös tiedoksi - ensimmäinen postitus"
+                                                               :reception-date       (Instant/now)
+                                                               :contacting-direction "SENT"
+                                                               :contact              (map osapuoli->contact osapuolet)}}
+   :decision-order-notice-bailiff         {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                               :processing-action {:name-identity "Tiedoksianto ja toimeenpano"}}
+                                           :document          (toimenpide-type->document (:type-id toimenpide))
+                                           :processing-action {:name                 "Asiakirjan toimituspyyntö haastemiehelle"
+                                                               :reception-date       (Instant/now)
+                                                               :contacting-direction "SENT"
+                                                               :contact              (map osapuoli->contact osapuolet)}}
+   :decision-order-waiting-for-deadline   {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                               :processing-action {:name-identity "Valitusajan umpeutuminen"}}
+                                           :document          (toimenpide-type->document (:type-id toimenpide))
+                                           :processing-action {:name                 "Valitusajan umpeutuminen"
+                                                               :reception-date       (Instant/now)
+                                                               :contacting-direction "SENT"
+                                                               :contact              (map osapuoli->contact osapuolet)}}
+   :penalty-decision-hearing-letter       {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                               :processing-action {:name-identity "Päätöksenteko"}}
+                                           :document          (toimenpide-type->document (:type-id toimenpide))
+                                           :processing-action {:name                 "Kuulemiskirje uhkasakkopäätöksestä"
+                                                               :reception-date       (Instant/now)
+                                                               :contacting-direction "SENT"
+                                                               :contact              (map osapuoli->contact osapuolet)}}
+   :penalty-decision-notice-first-mailing {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                               :processing-action {:name-identity "Päätöksenteko"}}
+                                           :document          (toimenpide-type->document (:type-id toimenpide))
+                                           :processing-action {:name                 "Uhkasakkopäätös tiedoksi - ensimmäinen postitus"
+                                                               :reception-date       (Instant/now)
+                                                               :contacting-direction "SENT"
+                                                               :contact              (map osapuoli->contact osapuolet)}}})
 
 (defn- resolve-processing-action [toimenpide osapuolet]
   (let [processing-actions (available-processing-actions toimenpide osapuolet)
