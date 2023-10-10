@@ -48,16 +48,33 @@
 
 (def KarajaoikeusId (apply schema/enum (range 0 20)))
 
-(def KaskyPaatosVarsinainenPaatosData {:fine                     common-schema/NonNegative
-                                       :osapuoli-specific-data   [{:osapuoli-id          common-schema/Key
-                                                                   :hallinto-oikeus-id   (schema/maybe HallintoOikeusId)
-                                                                   :document             schema/Bool
-                                                                   ;; Conditional-skeema documentin perusteella, jos false niin seuraavia ei vaadita / saa olla?
-                                                                   :recipient-answered   schema/Bool
-                                                                   :answer-commentary-fi (schema/maybe schema/Str)
-                                                                   :answer-commentary-sv (schema/maybe schema/Str)
-                                                                   :statement-fi         (schema/maybe schema/Str)
-                                                                   :statement-sv         (schema/maybe schema/Str)}]
+(def KaskypaatosVarsinainenPaatosOsapuoliSpecificData
+  (schema/conditional
+    ;; Osapuoli has a document and has answered to kuulemiskirje, so all fields are required
+    (every-pred toimenpide/osapuoli-has-document? toimenpide/recipient-answered?)
+    {:osapuoli-id          common-schema/Key
+     :hallinto-oikeus-id   HallintoOikeusId
+     :document             schema/Bool
+     :recipient-answered   schema/Bool
+     :answer-commentary-fi schema/Str
+     :answer-commentary-sv schema/Str
+     :statement-fi         schema/Str
+     :statement-sv         schema/Str}
+
+    ;; Osapuoli has document but has not answered to kuulemiskirje, so answer and statement are not allowed
+    toimenpide/osapuoli-has-document?
+    {:osapuoli-id        common-schema/Key
+     :hallinto-oikeus-id HallintoOikeusId
+     :document           schema/Bool
+     :recipient-answered schema/Bool}
+
+    ;; Osapuoli has no document so no other fields are allowed
+    :else
+    {:osapuoli-id common-schema/Key
+     :document    schema/Bool}))
+
+(def KaskypaatosVarsinainenPaatosData {:fine                     common-schema/NonNegative
+                                       :osapuoli-specific-data   [KaskypaatosVarsinainenPaatosOsapuoliSpecificData]
                                        :department-head-title-fi schema/Str
                                        :department-head-title-sv schema/Str
                                        :department-head-name     schema/Str})
@@ -75,7 +92,7 @@
     (assoc ToimenpideAddBase :type-specific-data KaskypaatosKuulemiskirjeData)
 
     toimenpide/kaskypaatos-varsinainen-paatos?
-    (assoc ToimenpideAddBase :type-specific-data KaskyPaatosVarsinainenPaatosData)
+    (assoc ToimenpideAddBase :type-specific-data KaskypaatosVarsinainenPaatosData)
 
     toimenpide/kaskypaatos-haastemies-tiedoksianto?
     (assoc ToimenpideAddBase :type-specific-data KaskypaatosTiedoksiantoHaastemiesData)
@@ -129,7 +146,7 @@
                   (assoc ToimenpideBase :type-specific-data KaskypaatosKuulemiskirjeData)
 
                   toimenpide/kaskypaatos-varsinainen-paatos?
-                  (assoc ToimenpideBase :type-specific-data KaskyPaatosVarsinainenPaatosData)
+                  (assoc ToimenpideBase :type-specific-data KaskypaatosVarsinainenPaatosData)
 
                   toimenpide/kaskypaatos-haastemies-tiedoksianto?
                   (assoc ToimenpideBase :type-specific-data KaskypaatosTiedoksiantoHaastemiesData)

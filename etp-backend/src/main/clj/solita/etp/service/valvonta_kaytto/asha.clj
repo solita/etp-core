@@ -326,7 +326,8 @@
     (let [osapuolet-with-document (->> toimenpide
                                        :type-specific-data
                                        :osapuoli-specific-data
-                                       (filter #(true? (:document %)))
+
+                                       (filter toimenpide/osapuoli-has-document?)
                                        (map :osapuoli-id)
                                        set)]
       (filter #(contains? osapuolet-with-document (:id %)) osapuolet))
