@@ -302,7 +302,7 @@
                3)
              5))))
 
-(t/deftest filter-osapuolet-if-varsinainen-paatos-test
+(t/deftest remove-osapuolet-with-no-document-if-varsinainen-paatos-test
   (t/testing "Two osapuolis, one hallinto-oikeus, only the osapuoli with the hallinto-oikeus should be returned"
     (let [osapuolet [{:toimitustapa-description nil
                       :toimitustapa-id          0
@@ -361,7 +361,7 @@
                        :answer-commentary-sv     "Jag visste inte att ett intyg behövs :("
                        :answer-commentary-fi     "En tiennyt, että todistus tarvitaan :("}
                       :template-id  6}]
-      (t/is (= (asha/filter-osapuolet-with-no-document toimenpide osapuolet)
+      (t/is (= (asha/remove-osapuolet-with-no-document toimenpide osapuolet)
                [{:toimitustapa-description nil
                  :toimitustapa-id          0
                  :email                    nil
@@ -380,7 +380,7 @@
                  :maa                      "FI"}]))))
 
   (t/testing "Two osapuolis and two hallinto-oikeus selections, both osapuolet are returned"
-    (t/is (= (asha/filter-osapuolet-with-no-document
+    (t/is (= (asha/remove-osapuolet-with-no-document
                {:type-id            8
                 :type-specific-data {:osapuoli-specific-data [{:hallinto-oikeus-id 1
                                                                :osapuoli-id        2
@@ -394,7 +394,7 @@
               {:id 3}])))
 
   (t/testing "Two osapuolis and toimenpide is not varsinainen päätös, so both should be returned"
-    (t/is (= (asha/filter-osapuolet-with-no-document
+    (t/is (= (asha/remove-osapuolet-with-no-document
                {:type-id 7}
                [{:id 2}
                 {:id 3}])

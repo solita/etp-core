@@ -316,7 +316,7 @@
                                                            (find-administrative-court-id-from-osapuoli-specific-data (:id osapuoli))))
       generated-pdf)))
 
-(defn filter-osapuolet-with-no-document
+(defn remove-osapuolet-with-no-document
   "If toimenpidetype of the toimenpide is such that the document might not be created for some,
   osapuolet will be filtered so that only those are returned that have a :document as true
   specified in type-specific-data of the toimenpide.
@@ -326,7 +326,6 @@
     (let [osapuolet-with-document (->> toimenpide
                                        :type-specific-data
                                        :osapuoli-specific-data
-
                                        (filter toimenpide/osapuoli-has-document?)
                                        (map :osapuoli-id)
                                        set)]
@@ -341,7 +340,7 @@
         documents (when (:document processing-action)
                     (->> osapuolet
                          (filter osapuoli/omistaja?)
-                         (filter-osapuolet-with-no-document toimenpide)
+                         (remove-osapuolet-with-no-document toimenpide)
                          (map (fn [osapuoli]
                                 (let [document (generate-pdf-document db whoami valvonta toimenpide ilmoituspaikat
                                                                       osapuoli osapuolet roolit)]
