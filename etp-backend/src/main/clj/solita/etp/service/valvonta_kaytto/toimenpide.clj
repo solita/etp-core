@@ -23,7 +23,7 @@
    11 :decision-order-notice-bailiff
    12 :decision-order-waiting-for-deadline
    14 :penalty-decision-hearing-letter
-   15 :penalty-decision-notice-first-mailing})
+   16 :penalty-decision-notice-first-mailing})
 
 (defn type-key [type-id]
   (if-let [type-key (type-id->type-key type-id)]
