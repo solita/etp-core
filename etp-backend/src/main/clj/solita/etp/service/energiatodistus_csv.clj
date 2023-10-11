@@ -322,9 +322,10 @@
                 :kaukojaahdytys-kertoimella
                 :kaukojaahdytys-nettoala-kertoimella]]
      [:tulokset :kaytettavat-energiamuodot child])
-   (for [child [:nimi :ostoenergia :muotokerroin :ostoenergia-nettoala
+   (for [idx (range 3)
+         child [:nimi :ostoenergia :muotokerroin :ostoenergia-nettoala
                 :ostoenergia-kertoimella :ostoenergia-nettoala-kertoimella]]
-     [:tulokset :kaytettavat-energiamuodot :muu 0 child])
+     [:tulokset :kaytettavat-energiamuodot :muu idx child])
    [[:tulokset :kaytettavat-energiamuodot :summa]
     [:tulokset :kaytettavat-energiamuodot :kertoimella-summa]]
    (for [child [:aurinkosahko :aurinkosahko-nettoala :aurinkolampo
