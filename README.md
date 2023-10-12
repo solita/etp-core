@@ -97,6 +97,11 @@ Check outdated dependencies
     cd etp-backend
     clojure -M:outdated
 
+Documentation
+---
+When the server is running, the API documentation can be found at
+http://localhost:8080/api/documentation/index.html
+
 About database usage
 --------------------
 
