@@ -79,10 +79,20 @@
                                        :department-head-title-sv schema/Str
                                        :department-head-name     schema/Str})
 
-(def KaskypaatosTiedoksiantoHaastemiesData {:osapuoli-specific-data [{:osapuoli-id      common-schema/Key
-                                                                      :karajaoikeus-id  (schema/maybe KarajaoikeusId)
-                                                                      :haastemies-email (schema/maybe common-schema/Email)
-                                                                      :document         schema/Bool}]})
+(def KaskypaatosTiedoksiantoHaastemiesOsapuoliSpecificData
+  (schema/conditional
+    toimenpide/osapuoli-has-document?
+    {:osapuoli-id      common-schema/Key
+     :karajaoikeus-id  KarajaoikeusId
+     :haastemies-email common-schema/Email
+     :document         schema/Bool}
+
+    :else
+    {:osapuoli-id common-schema/Key
+     :document    schema/Bool}))
+
+(def KaskypaatosTiedoksiantoHaastemiesData
+  {:osapuoli-specific-data [KaskypaatosTiedoksiantoHaastemiesOsapuoliSpecificData]})
 
 (def SakkoPaatosKuulemiskirjeData {:fine common-schema/NonNegative})
 

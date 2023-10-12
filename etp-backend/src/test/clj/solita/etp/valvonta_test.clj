@@ -766,7 +766,9 @@
                               :type-specific-data {:osapuoli-specific-data [{:osapuoli-id      1
                                                                              :karajaoikeus-id  1
                                                                              :haastemies-email "haaste@mie.het"
-                                                                             :document         true}]}}
+                                                                             :document         true}
+                                                                            {:osapuoli-id 2
+                                                                             :document    false}]}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                        (mock/json-body new-toimenpide)
                                        (test-kayttajat/with-virtu-user)
@@ -813,7 +815,9 @@
                     :type-specific-data {:osapuoli-specific-data [{:document         true
                                                                    :haastemies-email "haaste@mie.het"
                                                                    :karajaoikeus-id  1
-                                                                   :osapuoli-id      1}]}
+                                                                   :osapuoli-id      1}
+                                                                  {:document    false
+                                                                   :osapuoli-id 2}]}
                     :valvonta-id        valvonta-id
                     :yritykset          []}))))))
 
