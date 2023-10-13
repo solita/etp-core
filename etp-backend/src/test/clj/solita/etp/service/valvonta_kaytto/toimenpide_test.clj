@@ -60,3 +60,16 @@
     (t/is (true? (toimenpide/sakkopaatos-toimenpide? {:type-id 14}))))
   (t/testing "Käskypäätös / kuulemiskirje is not recognized as sakkopäätös-toimenpide?"
     (t/is (false? (toimenpide/sakkopaatos-toimenpide? {:type-id 7})))))
+
+(t/deftest sakkopaatos-tiedoksianto-toinen-postitus-test
+  (let [sakkopaatos-toinen-postitus-type-id 17
+        sakkopaatos-toinen-postitus-type-key :penalty-decision-notice-second-mailing]
+    (t/testing "Sakkopäätös / tiedoksianto (toinen postitus) has type-key 17"
+      (t/is (= (toimenpide/type-key sakkopaatos-toinen-postitus-type-id)
+               sakkopaatos-toinen-postitus-type-key)))
+    (t/testing "Sakkopäätös / tiedoksianto (toinen postitus) is recognized as sakkopaatos-toimenpide?"
+      (t/is (true? (toimenpide/sakkopaatos-toimenpide? {:type-id sakkopaatos-toinen-postitus-type-id}))))
+    (t/testing "Sakkopäätös / tiedoksianto (toinen postitus) is not recognized as asha-toimenpide?"
+      (t/is (false? (toimenpide/asha-toimenpide? {:type-id sakkopaatos-toinen-postitus-type-id}))))))
+
+

@@ -10,7 +10,6 @@
     [solita.etp.service.pdf :as pdf]
     [solita.etp.service.suomifi-viestit :as suomifi-viestit]
     [solita.etp.service.valvonta-kaytto :as valvonta-service]
-    [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
     [solita.etp.test-data.generators :as generators]
     [solita.etp.test-data.kayttaja :as test-kayttajat]
     [solita.etp.test-system :as ts])
@@ -1264,8 +1263,6 @@
                                    (test-kayttajat/with-virtu-user)
                                    (mock/header "Accept" "application/json")))]
       (t/is (= (:status response) 201))
-      (t/is (toimenpide/sakkopaatos-toimenpide? {:type-id sakkopaatos-toinen-postitus-type-id}))
-      (t/is (not (toimenpide/asha-toimenpide? {:type-id sakkopaatos-toinen-postitus-type-id})))
       (t/testing "Toimenpide is returned through the api"
         (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                        (test-kayttajat/with-virtu-user)
