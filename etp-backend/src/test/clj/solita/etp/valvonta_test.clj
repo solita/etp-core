@@ -1253,8 +1253,7 @@
                                                       {:katuosoite        "Testitie 5"
                                                        :postinumero       "90100"
                                                        :ilmoituspaikka-id 0})
-          sakkopaatos-toinen-postitus-type-id 17
-          new-toimenpide {:type-id       sakkopaatos-toinen-postitus-type-id
+          new-toimenpide {:type-id       17
                           :deadline-date (str (LocalDate/of 2023 11 4))
                           :template-id   nil
                           :description   "Sakkopäätös postitetaan uudestaan liitteineen (mukana myös sakkolappu) kirjeitse kirjaamon kautta saantitodistuksella, jos ensimmäinen kirje palautuu takaisin."}
@@ -1284,7 +1283,7 @@
                     :henkilot           []
                     :id                 1
                     :template-id        nil
-                    :type-id            sakkopaatos-toinen-postitus-type-id
+                    :type-id            17
                     :type-specific-data nil
                     :valvonta-id        1
                     :yritykset          []})))))))
