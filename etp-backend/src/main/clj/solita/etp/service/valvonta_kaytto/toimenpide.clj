@@ -23,7 +23,8 @@
    11 :decision-order-notice-bailiff
    12 :decision-order-waiting-for-deadline
    14 :penalty-decision-hearing-letter
-   16 :penalty-decision-notice-first-mailing})
+   16 :penalty-decision-notice-first-mailing
+   17 :penalty-decision-notice-second-mailing})
 
 (defn type-key [type-id]
   (if-let [type-key (type-id->type-key type-id)]
@@ -57,7 +58,8 @@
 
 (def sakkopaatos-toimenpide?
   (partial some-type? #{:penalty-decision-hearing-letter
-                        :penalty-decision-notice-first-mailing}))
+                        :penalty-decision-notice-first-mailing
+                        :penalty-decision-notice-second-mailing}))
 
 (def asha-toimenpide?
   (partial some-type? #{:rfi-request

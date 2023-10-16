@@ -113,8 +113,8 @@
                  :label-fi             "Sakkopäätös / tiedoksianto (toinen postitus)"
                  :label-sv             "Sakkopäätös / tiedoksianto (toinen postitus) (sv)"
                  :valid                true
-                 :manually-deliverable false
-                 :allow-comments       false}
+                 :manually-deliverable true
+                 :allow-comments       true}
                 {:id                   18
                  :label-fi             "Sakkopäätös / tiedoksianto (Haastemies)"
                  :label-sv             "Sakkopäätös / tiedoksianto (Haastemies) (sv)"
