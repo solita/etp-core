@@ -9,24 +9,26 @@ insert into vk_template (id,
                          content)
 values (7, 'Sakkopäätös / kuulemiskirje', 'Sakkopäätös / kuulemiskirje (sv)', 1, 14, 'fi', true, true,
         $$
-<div class="otsikko">
-    <b>Kuulemiskirje</b>
-    <b>{{päivä}}</b> <br/>
-    Dnro: {{diaarinumero}}
-</div>
+<div class="otsikko-ja-vastaanottaja-container">
+    <div class="otsikko">
+        <b>Kuulemiskirje</b>
+        <b>{{päivä}}</b> <br/>
+        Dnro: {{diaarinumero}}
+    </div>
 
-<div class="vastaanottaja">
-    {{#omistaja-henkilo}}
-    {{sukunimi}} {{etunimi}}<br/>
-    {{jakeluosoite}}<br/>
-    {{postinumero}} {{postitoimipaikka}}
-    {{/omistaja-henkilo}}
-    {{#omistaja-yritys}}
-    {{nimi}}<br/>
-    {{vastaanottajan-tarkenne}}<br/>
-    {{jakeluosoite}}<br/>
-    {{postinumero}} {{postitoimipaikka}}
-    {{/omistaja-yritys}}
+    <div class="vastaanottaja">
+        {{#omistaja-henkilo}}
+        {{sukunimi}} {{etunimi}}<br/>
+        {{jakeluosoite}}<br/>
+        {{postinumero}} {{postitoimipaikka}}
+        {{/omistaja-henkilo}}
+        {{#omistaja-yritys}}
+        {{nimi}}<br/>
+        {{vastaanottajan-tarkenne}}<br/>
+        {{jakeluosoite}}<br/>
+        {{postinumero}} {{postitoimipaikka}}
+        {{/omistaja-yritys}}
+    </div>
 </div>
 
 <h1>Kuuleminen uhkasakon tuomitsemisesta</h1>
