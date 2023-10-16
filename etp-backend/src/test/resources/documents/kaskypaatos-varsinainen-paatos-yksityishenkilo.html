@@ -24,9 +24,19 @@
 
         }
 
+        .otsikko-ja-vastaanottaja-container {
+            position: relative;
+            height: 160px;
+        }
+
         .otsikko {
             margin-left: 9.30cm;
             text-transform: uppercase;
+        }
+
+        .otsikko-ja-vastaanottaja-container .otsikko {
+            position: absolute;
+            top: 0;
         }
 
         @page {
@@ -176,6 +186,11 @@
             width: 7.2cm;
         }
 
+        .otsikko-ja-vastaanottaja-container .vastaanottaja {
+            position: absolute;
+            top: 0;
+        }
+
         .footnote {
             font-size: 10pt;
             float: footnote;
@@ -313,16 +328,18 @@
 </div>
 
 
-<div class="otsikko">
-    <b>Päätös</b>
-    <b>28.08.2023</b> <br/>
-    Dnro: ARA-05.03.01-2023-159
-</div>
+<div class="otsikko-ja-vastaanottaja-container">
+    <div class="otsikko">
+        <b>Päätös</b>
+        <b>28.08.2023</b> <br/>
+        Dnro: ARA-05.03.01-2023-159
+    </div>
 
-<div class="vastaanottaja">
-    Testi Talonomistaja<br/>
-    Testikatu 12<br/>
-    00100 Helsinki
+    <div class="vastaanottaja">
+        Testi Talonomistaja<br/>
+        Testikatu 12<br/>
+        00100 Helsinki
+    </div>
 </div>
 
 <h1>Käsky hankkia energiatodistus ja uhkasakon asettaminen</h1>
