@@ -74,3 +74,8 @@
             [(-> % first process-key) (-> % second type-description)] %))
        (walk/postwalk
          #(if (xschema/map-literal? %) (into (sorted-map) %) %))))
+
+(defn generate-energiatodistukset [count]
+  (require 'solita.etp.energiatodistus-generator)
+  ((resolve 'solita.etp.energiatodistus-generator/add-energiatodistukset-for-performance-testing)
+   (db 2) count))
