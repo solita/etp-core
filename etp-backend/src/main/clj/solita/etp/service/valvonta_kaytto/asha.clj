@@ -72,11 +72,10 @@
   "Retrieves the dates of kehotus, varoitus and kuulemiskirje toimenpiteet with
    the given valvonta-id and formats them for displaying in a document"
   [db valvonta-id]
-  ;; TODO: Kun päivitetään Clojure 1.11:een, voidaan käyttää vain update-vals-funktiota
   (let [data (->> {:valvonta-id valvonta-id}
                   (valvonta-kaytto-db/past-dates-for-kaskypaatos-toimenpiteet db)
                   first)]
-    (zipmap (keys data) (map time/format-date (vals data)))))
+    (update-vals data time/format-date)))
 
 (defn hallinto-oikeus-id->formatted-strings [db hallinto-oikeus-id]
   (if-let [formatted-strings (first (hallinto-oikeus-db/find-document-template-wording-by-hallinto-oikeus-id db {:hallinto-oikeus-id hallinto-oikeus-id}))]
