@@ -124,6 +124,16 @@ both databases with a single call.
 Tests will utilize ```postgres``` database as template extensively as each test
 will create their own database from it.
 
+### Generating data
+
+The  function `user/generate-energiatodistukset`
+can be used to add multiple energiatodistus into the database.
+
+For example, to generate 2000 energiatodistus you can run:
+```clojure
+(user/generate-energiatodistukset 2000)
+```
+
 Third-party licenses
 --------------------
 
