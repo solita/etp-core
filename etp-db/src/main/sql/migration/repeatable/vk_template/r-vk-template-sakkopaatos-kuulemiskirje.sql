@@ -75,24 +75,26 @@ energia-asiantuntija
 
 <div class="sivunvaihto"></div>
 
-<div class="otsikko">
-    <b>Brev om hörande</b>
-    <b>{{päivä}}</b> <br/>
-    Dnr: {{diaarinumero}}
-</div>
+<div class="otsikko-ja-vastaanottaja-container">
+    <div class="otsikko">
+        <b>Brev om hörande</b>
+        <b>{{päivä}}</b> <br/>
+        Dnr: {{diaarinumero}}
+    </div>
 
-<div class="vastaanottaja">
-    {{#omistaja-henkilo}}
-    {{sukunimi}} {{etunimi}}<br/>
-    {{jakeluosoite}}<br/>
-    {{postinumero}} {{postitoimipaikka}}
-    {{/omistaja-henkilo}}
-    {{#omistaja-yritys}}
-    {{nimi}}<br/>
-    {{vastaanottajan-tarkenne}}<br/>
-    {{jakeluosoite}}<br/>
-    {{postinumero}} {{postitoimipaikka}}
-    {{/omistaja-yritys}}
+    <div class="vastaanottaja">
+        {{#omistaja-henkilo}}
+        {{sukunimi}} {{etunimi}}<br/>
+        {{jakeluosoite}}<br/>
+        {{postinumero}} {{postitoimipaikka}}
+        {{/omistaja-henkilo}}
+        {{#omistaja-yritys}}
+        {{nimi}}<br/>
+        {{vastaanottajan-tarkenne}}<br/>
+        {{jakeluosoite}}<br/>
+        {{postinumero}} {{postitoimipaikka}}
+        {{/omistaja-yritys}}
+    </div>
 </div>
 
 <h1>Hörande om utdömande av vite</h1>
