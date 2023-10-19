@@ -75,7 +75,9 @@
        (walk/postwalk
          #(if (xschema/map-literal? %) (into (sorted-map) %) %))))
 
-(defn generate-energiatodistukset [count]
+(defn generate-energiatodistukset-for-performance-testing!
+  "Adds `count` new energiatodistukset that are sufficient for performance testing into the database."
+  [count]
   (require 'solita.etp.energiatodistus-generator)
-  ((resolve 'solita.etp.energiatodistus-generator/add-energiatodistukset-for-performance-testing)
+  ((resolve 'solita.etp.energiatodistus-generator/generate-and-insert-energiatodistukset-for-performance-testing!)
    (db 2) count))

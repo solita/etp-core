@@ -126,12 +126,15 @@ will create their own database from it.
 
 ### Generating data
 
-The  function `user/generate-energiatodistukset`
-can be used to add multiple energiatodistus into the database.
+##### Manual performance testing
+The  function `user/generate-energiatodistukset-for-performance-testing!`
+can be used to add multiple signed energiatodistus into the database. For
+performance testing purpose most strings are just randomly generated and
+signing the documents is done by just directly inserting signed documents.
 
 For example, to generate 2000 energiatodistus you can run:
 ```clojure
-(user/generate-energiatodistukset 2000)
+(user/generate-energiatodistukset-for-performance-testing! 2000)
 ```
 
 Third-party licenses
