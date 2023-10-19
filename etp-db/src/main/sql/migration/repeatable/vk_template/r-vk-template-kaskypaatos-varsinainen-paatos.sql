@@ -9,24 +9,26 @@ insert into vk_template (id,
                          content)
 values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsinainen päätös (sv)', 1, 8, 'fi', true, true,
         $$
-<div class="otsikko">
-    <b>Päätös</b>
-    <b>{{päivä}}</b> <br/>
-    Dnro: {{diaarinumero}}
-</div>
+<div class="otsikko-ja-vastaanottaja-container">
+    <div class="otsikko">
+        <b>Päätös</b>
+        <b>{{päivä}}</b> <br/>
+        Dnro: {{diaarinumero}}
+    </div>
 
-<div class="vastaanottaja">
-    {{#omistaja-henkilo}}
-    {{etunimi}} {{sukunimi}}<br/>
-    {{jakeluosoite}}<br/>
-    {{postinumero}} {{postitoimipaikka}}
-    {{/omistaja-henkilo}}
-    {{#omistaja-yritys}}
-    {{nimi}}<br/>
-    {{vastaanottajan-tarkenne}}<br/>
-    {{jakeluosoite}}<br/>
-    {{postinumero}} {{postitoimipaikka}}
-    {{/omistaja-yritys}}
+    <div class="vastaanottaja">
+        {{#omistaja-henkilo}}
+        {{etunimi}} {{sukunimi}}<br/>
+        {{jakeluosoite}}<br/>
+        {{postinumero}} {{postitoimipaikka}}
+        {{/omistaja-henkilo}}
+        {{#omistaja-yritys}}
+        {{nimi}}<br/>
+        {{vastaanottajan-tarkenne}}<br/>
+        {{jakeluosoite}}<br/>
+        {{postinumero}} {{postitoimipaikka}}
+        {{/omistaja-yritys}}
+    </div>
 </div>
 
 <h1>Käsky hankkia energiatodistus ja uhkasakon asettaminen</h1>
@@ -154,24 +156,27 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 
 <div class="sivunvaihto"></div>
 
-<div class="otsikko">
-    <b>Beslut</b>
-    <b>{{päivä}}</b> <br/>
-    Dnr: {{diaarinumero}}
-</div>
 
-<div class="vastaanottaja">
-    {{#omistaja-henkilo}}
-    {{etunimi}} {{sukunimi}}<br/>
-    {{jakeluosoite}}<br/>
-    {{postinumero}} {{postitoimipaikka}}
-    {{/omistaja-henkilo}}
-    {{#omistaja-yritys}}
-    {{nimi}}<br/>
-    {{vastaanottajan-tarkenne}}<br/>
-    {{jakeluosoite}}<br/>
-    {{postinumero}} {{postitoimipaikka}}
-    {{/omistaja-yritys}}
+<div class="otsikko-ja-vastaanottaja-container">
+    <div class="otsikko">
+        <b>Beslut</b>
+        <b>{{päivä}}</b> <br/>
+        Dnr: {{diaarinumero}}
+    </div>
+
+    <div class="vastaanottaja">
+        {{#omistaja-henkilo}}
+        {{etunimi}} {{sukunimi}}<br/>
+        {{jakeluosoite}}<br/>
+        {{postinumero}} {{postitoimipaikka}}
+        {{/omistaja-henkilo}}
+        {{#omistaja-yritys}}
+        {{nimi}}<br/>
+        {{vastaanottajan-tarkenne}}<br/>
+        {{jakeluosoite}}<br/>
+        {{postinumero}} {{postitoimipaikka}}
+        {{/omistaja-yritys}}
+    </div>
 </div>
 
 <h1>Order att skaffa energicertifikat och föreläg-gande av vite</h1>

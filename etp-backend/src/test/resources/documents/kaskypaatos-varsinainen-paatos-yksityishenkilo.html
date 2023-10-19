@@ -24,9 +24,22 @@
 
         }
 
+        .otsikko-ja-vastaanottaja-container {
+            position: relative;
+            height: 4.24cm;
+            width: 18.0cm;
+        }
+
         .otsikko {
             margin-left: 9.30cm;
             text-transform: uppercase;
+        }
+
+        .otsikko-ja-vastaanottaja-container .otsikko {
+            position: absolute;
+            top: 0;
+            width: 7.2cm;
+            height: 3cm;
         }
 
         @page {
@@ -176,6 +189,11 @@
             width: 7.2cm;
         }
 
+        .otsikko-ja-vastaanottaja-container .vastaanottaja {
+            position: absolute;
+            top: 0;
+        }
+
         .footnote {
             font-size: 10pt;
             float: footnote;
@@ -313,16 +331,18 @@
 </div>
 
 
-<div class="otsikko">
-    <b>Päätös</b>
-    <b>28.08.2023</b> <br/>
-    Dnro: ARA-05.03.01-2023-159
-</div>
+<div class="otsikko-ja-vastaanottaja-container">
+    <div class="otsikko">
+        <b>Päätös</b>
+        <b>28.08.2023</b> <br/>
+        Dnro: ARA-05.03.01-2023-159
+    </div>
 
-<div class="vastaanottaja">
-    Testi Talonomistaja<br/>
-    Testikatu 12<br/>
-    00100 Helsinki
+    <div class="vastaanottaja">
+        Testi Talonomistaja<br/>
+        Testikatu 12<br/>
+        00100 Helsinki
+    </div>
 </div>
 
 <h1>Käsky hankkia energiatodistus ja uhkasakon asettaminen</h1>
@@ -435,16 +455,19 @@
 
 <div class="sivunvaihto"></div>
 
-<div class="otsikko">
-    <b>Beslut</b>
-    <b>28.08.2023</b> <br/>
-    Dnr: ARA-05.03.01-2023-159
-</div>
 
-<div class="vastaanottaja">
-    Testi Talonomistaja<br/>
-    Testikatu 12<br/>
-    00100 Helsinki
+<div class="otsikko-ja-vastaanottaja-container">
+    <div class="otsikko">
+        <b>Beslut</b>
+        <b>28.08.2023</b> <br/>
+        Dnr: ARA-05.03.01-2023-159
+    </div>
+
+    <div class="vastaanottaja">
+        Testi Talonomistaja<br/>
+        Testikatu 12<br/>
+        00100 Helsinki
+    </div>
 </div>
 
 <h1>Order att skaffa energicertifikat och föreläg-gande av vite</h1>

@@ -24,9 +24,22 @@
 
         }
 
+        .otsikko-ja-vastaanottaja-container {
+            position: relative;
+            height: 4.24cm;
+            width: 18.0cm;
+        }
+
         .otsikko {
             margin-left: 9.30cm;
             text-transform: uppercase;
+        }
+
+        .otsikko-ja-vastaanottaja-container .otsikko {
+            position: absolute;
+            top: 0;
+            width: 7.2cm;
+            height: 3cm;
         }
 
         @page {
@@ -174,6 +187,11 @@
         .vastaanottaja {
             height: 3cm;
             width: 7.2cm;
+        }
+
+        .otsikko-ja-vastaanottaja-container .vastaanottaja {
+            position: absolute;
+            top: 0;
         }
 
         .footnote {

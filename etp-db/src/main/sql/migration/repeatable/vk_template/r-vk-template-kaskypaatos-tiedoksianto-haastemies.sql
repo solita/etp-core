@@ -10,19 +10,21 @@ insert into vk_template (id,
 values (8, 'Käskypäätös / tiedoksianto (Haastemies)', 'Käskypäätös / tiedoksianto (Haastemies) (sv)', 1, 11, 'fi', true,
         true,
         $$
-<div class="otsikko">
-    <b>Lähete {{päivä}}</b><br/>
-    {{diaarinumero}}<br/>
-</div>
+<div class="otsikko-ja-vastaanottaja-container">
+    <div class="otsikko">
+        <b>Lähete {{päivä}}</b><br/>
+        {{diaarinumero}}<br/>
+    </div>
 
-<div class="vastaanottaja">
-{{#tyyppikohtaiset-tiedot}}
-    {{#karajaoikeus}}
-    {{label-fi}}<br/>
-    {{/karajaoikeus}}
-    Haastemiehet<br/>
-    {{haastemies-email}}<br/>
-{{/tyyppikohtaiset-tiedot}}
+    <div class="vastaanottaja">
+    {{#tyyppikohtaiset-tiedot}}
+        {{#karajaoikeus}}
+        {{label-fi}}<br/>
+        {{/karajaoikeus}}
+        Haastemiehet<br/>
+        {{haastemies-email}}<br/>
+    {{/tyyppikohtaiset-tiedot}}
+    </div>
 </div>
 
 <h1>Asiakirjan toimituspyyntö</h1>

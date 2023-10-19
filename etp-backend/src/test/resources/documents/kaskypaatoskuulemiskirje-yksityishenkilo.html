@@ -24,9 +24,22 @@
 
         }
 
+        .otsikko-ja-vastaanottaja-container {
+            position: relative;
+            height: 4.24cm;
+            width: 18.0cm;
+        }
+
         .otsikko {
             margin-left: 9.30cm;
             text-transform: uppercase;
+        }
+
+        .otsikko-ja-vastaanottaja-container .otsikko {
+            position: absolute;
+            top: 0;
+            width: 7.2cm;
+            height: 3cm;
         }
 
         @page {
@@ -176,6 +189,11 @@
             width: 7.2cm;
         }
 
+        .otsikko-ja-vastaanottaja-container .vastaanottaja {
+            position: absolute;
+            top: 0;
+        }
+
         .footnote {
             font-size: 10pt;
             float: footnote;
@@ -313,16 +331,18 @@
 </div>
 
 
-<div class="otsikko">
-    <b>Kuulemiskirje</b>
-    <b>26.06.2023</b> <br/>
-    Dnro: 
-</div>
+<div class="otsikko-ja-vastaanottaja-container">
+    <div class="otsikko">
+        <b>Kuulemiskirje</b>
+        <b>26.06.2023</b> <br/>
+        Dnro: 
+    </div>
 
-<div class="vastaanottaja">
-    Talonomistaja Testi<br/>
-    Testikatu 12<br/>
-    00100 Helsinki
+    <div class="vastaanottaja">
+        Talonomistaja Testi<br/>
+        Testikatu 12<br/>
+        00100 Helsinki
+    </div>
 </div>
 
 <h1>Kuuleminen uhkasakon asettamisesta</h1>
@@ -380,16 +400,18 @@ energia-asiantuntija
 
 <div class="sivunvaihto"></div>
 
-<div class="otsikko">
-    <b>Brew om hörande</b>
-    <b>26.06.2023</b> <br/>
-    Dnro: 
-</div>
+<div class="otsikko-ja-vastaanottaja-container">
+    <div class="otsikko">
+        <b>Brew om hörande</b>
+        <b>26.06.2023</b> <br/>
+        Dnro: 
+    </div>
 
-<div class="vastaanottaja">
-    Talonomistaja Testi<br/>
-    Testikatu 12<br/>
-    00100 Helsinki
+    <div class="vastaanottaja">
+        Talonomistaja Testi<br/>
+        Testikatu 12<br/>
+        00100 Helsinki
+    </div>
 </div>
 
 <h1>Hörande om föreläggande av vite</h1>
