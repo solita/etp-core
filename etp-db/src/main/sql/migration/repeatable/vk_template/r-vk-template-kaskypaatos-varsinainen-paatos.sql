@@ -105,9 +105,13 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     mukaisena viimesijaisena keinona antaa käskypäätöksen, jolla rakennuksen omistaja velvoitetaan hankkimaan
     energiatodistus. Käskyä voidaan tehostaa uhkasakolla, josta säädetään uhkasakkolaissa.</p>
 
+{{#tyyppikohtaiset-tiedot}}
+{{#recipient-answered}}
 <h3>Kannanotto vastineeseen</h3>
 
-<p class="respect-new-lines">{{#tyyppikohtaiset-tiedot}}{{statement-fi}}{{/tyyppikohtaiset-tiedot}}</p>
+<p class="respect-new-lines">{{statement-fi}}</p>
+{{/recipient-answered}}
+{{/tyyppikohtaiset-tiedot}}
 
 <h2>Sovelletut oikeusohjeet</h2>
 
@@ -296,9 +300,13 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     med 24 § i lagen om energicertifikat meddela ett beslut genom vilket byggnadens ägare åläggs att skaffa ett
     energicertifikat. Ordern kan förenas med vite enligt viteslagen. </p>
 
+{{#tyyppikohtaiset-tiedot}}
+{{#recipient-answered}}
 <h3>Ställningstagande till bemötandet</h3>
 
-<p class="respect-new-lines">{{#tyyppikohtaiset-tiedot}}{{statement-sv}}{{/tyyppikohtaiset-tiedot}}</p>
+<p class="respect-new-lines">{{statement-sv}}</p>
+{{/recipient-answered}}
+{{/tyyppikohtaiset-tiedot}}
 
 <h2>Tillämpliga rättsnormer</h2>
 

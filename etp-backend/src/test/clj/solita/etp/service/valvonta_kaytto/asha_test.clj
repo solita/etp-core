@@ -213,14 +213,14 @@
                ts/*db*
                {:type-id            8
                 :type-specific-data {:fine                     129
-                                     :recipient-answered       true
-                                     :answer-commentary-fi     "Voi anteeksi, en tiennyt."
-                                     :answer-commentary-sv     "Jag vet inte, förlåt."
-                                     :statement-fi             "Olisi pitänyt tietää."
-                                     :statement-sv             "Du måste ha visst."
                                      :osapuoli-specific-data   [{:osapuoli-id        1
                                                                  :hallinto-oikeus-id 0
-                                                                 :document           true}]
+                                                                 :document           true
+                                                                 :recipient-answered       true
+                                                                 :answer-commentary-fi     "Voi anteeksi, en tiennyt."
+                                                                 :answer-commentary-sv     "Jag vet inte, förlåt."
+                                                                 :statement-fi             "Olisi pitänyt tietää."
+                                                                 :statement-sv             "Du måste ha visst."}]
                                      :department-head-name     "Jorma Jormanen"
                                      :department-head-title-fi "Hallinto-oikeuden presidentti"
                                      :department-head-title-sv "Hallinto-oikeuden kuningas"}}
@@ -234,7 +234,8 @@
               :oikeus-sv                "Helsingfors"
               :department-head-name     "Jorma Jormanen"
               :department-head-title-fi "Hallinto-oikeuden presidentti"
-              :department-head-title-sv "Hallinto-oikeuden kuningas"}))
+              :department-head-title-sv "Hallinto-oikeuden kuningas"
+              :recipient-answered true}))
 
     (t/testing "For käskypäätös / kuulemiskirje toimenpide :type-spefic-data map is returned as is, as no special formatting is needed"
       (t/is (= (asha/format-type-specific-data
@@ -301,7 +302,7 @@
                3)
              5))))
 
-(t/deftest filter-osapuolet-if-varsinainen-paatos-test
+(t/deftest remove-osapuolet-with-no-document-if-varsinainen-paatos-test
   (t/testing "Two osapuolis, one hallinto-oikeus, only the osapuoli with the hallinto-oikeus should be returned"
     (let [osapuolet [{:toimitustapa-description nil
                       :toimitustapa-id          0
@@ -360,7 +361,7 @@
                        :answer-commentary-sv     "Jag visste inte att ett intyg behövs :("
                        :answer-commentary-fi     "En tiennyt, että todistus tarvitaan :("}
                       :template-id  6}]
-      (t/is (= (asha/filter-osapuolet-with-no-document toimenpide osapuolet)
+      (t/is (= (asha/remove-osapuolet-with-no-document toimenpide osapuolet)
                [{:toimitustapa-description nil
                  :toimitustapa-id          0
                  :email                    nil
@@ -379,7 +380,7 @@
                  :maa                      "FI"}]))))
 
   (t/testing "Two osapuolis and two hallinto-oikeus selections, both osapuolet are returned"
-    (t/is (= (asha/filter-osapuolet-with-no-document
+    (t/is (= (asha/remove-osapuolet-with-no-document
                {:type-id            8
                 :type-specific-data {:osapuoli-specific-data [{:hallinto-oikeus-id 1
                                                                :osapuoli-id        2
@@ -393,7 +394,7 @@
               {:id 3}])))
 
   (t/testing "Two osapuolis and toimenpide is not varsinainen päätös, so both should be returned"
-    (t/is (= (asha/filter-osapuolet-with-no-document
+    (t/is (= (asha/remove-osapuolet-with-no-document
                {:type-id 7}
                [{:id 2}
                 {:id 3}])

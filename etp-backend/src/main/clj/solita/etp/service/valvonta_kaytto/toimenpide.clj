@@ -83,3 +83,10 @@
              (map :id)
              set)]
     (contains? manually-deliverable-toimenpidetypes type-id)))
+
+
+(defn osapuoli-has-document? [osapuoli-specific-data]
+  (boolean (:document osapuoli-specific-data)))
+
+(defn recipient-answered? [osapuoli-specific-data]
+  (boolean (:recipient-answered osapuoli-specific-data)))

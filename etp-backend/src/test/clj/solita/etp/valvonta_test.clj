@@ -386,14 +386,14 @@
                               :template-id        6
                               :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                               :type-specific-data {:fine                     857
-                                                   :recipient-answered       true
-                                                   :answer-commentary-fi     "En tiennyt, että todistus tarvitaan :("
-                                                   :answer-commentary-sv     "Jag visste inte att ett intyg behövs :("
-                                                   :statement-fi             "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."
-                                                   :statement-sv             "Han vet inte. Vi förlotar."
-                                                   :osapuoli-specific-data   [{:osapuoli-id        osapuoli-id
-                                                                               :hallinto-oikeus-id 1
-                                                                               :document           true}]
+                                                   :osapuoli-specific-data   [{:osapuoli-id          osapuoli-id
+                                                                               :hallinto-oikeus-id   1
+                                                                               :document             true
+                                                                               :recipient-answered   true
+                                                                               :answer-commentary-fi "En tiennyt, että todistus tarvitaan :("
+                                                                               :answer-commentary-sv "Jag visste inte att ett intyg behövs :("
+                                                                               :statement-fi         "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."
+                                                                               :statement-sv         "Han vet inte. Vi förlotar."}]
                                                    :department-head-title-fi "Apulaisjohtaja"
                                                    :department-head-title-sv "Apulaisjohtaja på svenska"
                                                    :department-head-name     "Yli Päällikkö"}}
@@ -470,14 +470,10 @@
                               :template-id        6
                               :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                               :type-specific-data {:fine                     857
-                                                   :recipient-answered       false
-                                                   :answer-commentary-fi     "Yritys ei ollut tavoitettavissa ollenkaan asian tiimoilta."
-                                                   :answer-commentary-sv     "Företaget var inte nåbar alls angående ärendet."
-                                                   :statement-fi             "Yritys tuomitaan sakkoihin."
-                                                   :statement-sv             "Företaget döms till böter."
                                                    :osapuoli-specific-data   [{:osapuoli-id        osapuoli-id
                                                                                :hallinto-oikeus-id 2
-                                                                               :document           true}]
+                                                                               :document           true
+                                                                               :recipient-answered false}]
                                                    :department-head-title-fi "Senior Vice President"
                                                    :department-head-title-sv "Kungen"
                                                    :department-head-name     "Jane Doe"}}
@@ -528,16 +524,12 @@
                                 {:department-head-title-fi "Senior Vice President",
                                  :department-head-name     "Jane Doe",
                                  :osapuoli-specific-data
-                                 [{:hallinto-oikeus-id 2, :osapuoli-id 1, :document true}],
-                                 :recipient-answered       false,
-                                 :statement-sv             "Företaget döms till böter.",
-                                 :statement-fi             "Yritys tuomitaan sakkoihin.",
-                                 :department-head-title-sv "Kungen",
-                                 :fine                     857,
-                                 :answer-commentary-sv
-                                 "Företaget var inte nåbar alls angående ärendet.",
-                                 :answer-commentary-fi
-                                 "Yritys ei ollut tavoitettavissa ollenkaan asian tiimoilta."},
+                                 [{:hallinto-oikeus-id 2
+                                   :osapuoli-id        1
+                                   :document           true
+                                   :recipient-answered false}]
+                                 :department-head-title-sv "Kungen"
+                                 :fine                     857,},
                                 :template-id   6}))))))))
 
   (t/testing "Käskypäätös / varsinainen päätös toimenpide is created successfully when there are multiple osapuolis but one lives abroad and will not receive the document because of being outside court jurisdiction"
@@ -626,17 +618,16 @@
                               :template-id        6
                               :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                               :type-specific-data {:fine                     857
-                                                   :recipient-answered       true
-                                                   :answer-commentary-fi     "En tiennyt, että todistus tarvitaan :("
-                                                   :answer-commentary-sv     "Jag visste inte att ett intyg behövs :("
-                                                   :statement-fi             "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."
-                                                   :statement-sv             "Han vet inte. Vi förlotar."
-                                                   :osapuoli-specific-data   [{:osapuoli-id        osapuoli-id
-                                                                               :hallinto-oikeus-id 1
-                                                                               :document           true}
-                                                                              {:osapuoli-id        osapuoli-id-2
-                                                                               :hallinto-oikeus-id nil
-                                                                               :document           false}]
+                                                   :osapuoli-specific-data   [{:osapuoli-id          osapuoli-id
+                                                                               :hallinto-oikeus-id   1
+                                                                               :document             true
+                                                                               :recipient-answered   true
+                                                                               :answer-commentary-fi "En tiennyt, että todistus tarvitaan :("
+                                                                               :answer-commentary-sv "Jag visste inte att ett intyg behövs :("
+                                                                               :statement-fi         "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."
+                                                                               :statement-sv         "Han vet inte. Vi förlotar."}
+                                                                              {:osapuoli-id osapuoli-id-2
+                                                                               :document    false}]
                                                    :department-head-title-fi "Apulaisjohtaja"
                                                    :department-head-title-sv "Apulaisjohtaja på svenska"
                                                    :department-head-name     "Yli Päällikkö"}}
@@ -675,14 +666,10 @@
                             :template-id        6
                             :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                             :type-specific-data {:fine                     857
-                                                 :recipient-answered       false
-                                                 :answer-commentary-fi     "Hän ei vastannut ollenkaan"
-                                                 :answer-commentary-sv     "Han svarade inte alls"
-                                                 :statement-fi             "Koska hän ei vastannut ollenkaan hän joutuu maksamaan paljon sakkoja."
-                                                 :statement-sv             "Eftersom han inte svarade alls måste han betala mycket böter."
                                                  :osapuoli-specific-data   [{:osapuoli-id        osapuoli-id
                                                                              :hallinto-oikeus-id 3
-                                                                             :document           true}]
+                                                                             :document           true
+                                                                             :recipient-answered false}]
                                                  :department-head-title-fi "Johtaja"
                                                  :department-head-title-sv "Ledar"
                                                  :department-head-name     "Nimi Muutettu"}}
@@ -716,14 +703,14 @@
                             :template-id        6
                             :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                             :type-specific-data {:fine                     857
-                                                 :recipient-answered       true
-                                                 :answer-commentary-fi     "Yritykseni on niin iso, ettei minun tarvitse välittää tällaisista asioista"
-                                                 :answer-commentary-sv     "Mitt företag är så stort att jag inte behöver bry mig om sådana saker"
-                                                 :statement-fi             "Vastaus oli väärä, joten saat isot sakot."
-                                                 :statement-sv             "Svaret var fel, så du får stora böter."
-                                                 :osapuoli-specific-data   [{:osapuoli-id        osapuoli-id
-                                                                             :hallinto-oikeus-id 5
-                                                                             :document           true}]
+                                                 :osapuoli-specific-data   [{:osapuoli-id          osapuoli-id
+                                                                             :hallinto-oikeus-id   5
+                                                                             :document             true
+                                                                             :recipient-answered   true
+                                                                             :answer-commentary-fi "Yritykseni on niin iso, ettei minun tarvitse välittää tällaisista asioista"
+                                                                             :answer-commentary-sv "Mitt företag är så stort att jag inte behöver bry mig om sådana saker"
+                                                                             :statement-fi         "Vastaus oli väärä, joten saat isot sakot."
+                                                                             :statement-sv         "Svaret var fel, så du får stora böter."}]
                                                  :department-head-title-fi "Titteli"
                                                  :department-head-title-sv "Tittel"
                                                  :department-head-name     "Nimi"}}
@@ -779,7 +766,9 @@
                               :type-specific-data {:osapuoli-specific-data [{:osapuoli-id      1
                                                                              :karajaoikeus-id  1
                                                                              :haastemies-email "haaste@mie.het"
-                                                                             :document         true}]}}
+                                                                             :document         true}
+                                                                            {:osapuoli-id 2
+                                                                             :document    false}]}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                        (mock/json-body new-toimenpide)
                                        (test-kayttajat/with-virtu-user)
@@ -826,7 +815,9 @@
                     :type-specific-data {:osapuoli-specific-data [{:document         true
                                                                    :haastemies-email "haaste@mie.het"
                                                                    :karajaoikeus-id  1
-                                                                   :osapuoli-id      1}]}
+                                                                   :osapuoli-id      1}
+                                                                  {:document    false
+                                                                   :osapuoli-id 2}]}
                     :valvonta-id        valvonta-id
                     :yritykset          []}))))))
 

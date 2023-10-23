@@ -83,38 +83,59 @@
     (exception/throw-ex-info!
       {:message (str "Unknown hallinto-oikeus-id: " hallinto-oikeus-id)})))
 
-(defn find-administrative-court-id-from-osapuoli-specific-data [osapuoli-specific-data osapuoli-id]
+(defn- find-value-from-osapuoli-specific-data [key osapuoli-specific-data osapuoli-id]
   (->> osapuoli-specific-data
        (filter #(= (:osapuoli-id %) osapuoli-id))
        first
-       :hallinto-oikeus-id))
+       key))
+
+(def find-administrative-court-id-from-osapuoli-specific-data
+  (partial find-value-from-osapuoli-specific-data :hallinto-oikeus-id))
+
+(def find-recipient-answered-from-osapuoli-specific-data
+  (partial find-value-from-osapuoli-specific-data :recipient-answered))
 
 (defmulti format-type-specific-data
           (fn [_db toimenpide _osapuoli-id] (-> toimenpide :type-id toimenpide/type-key)))
 
 (defmethod format-type-specific-data :decision-order-actual-decision [db toimenpide osapuoli-id]
-  (let [recipient-answered? (-> toimenpide :type-specific-data :recipient-answered)
+  (let [recipient-answered? (-> toimenpide
+                                :type-specific-data
+                                :osapuoli-specific-data
+                                (find-recipient-answered-from-osapuoli-specific-data osapuoli-id))
         hallinto-oikeus-strings (hallinto-oikeus-id->formatted-strings
                                   db
                                   (-> toimenpide
                                       :type-specific-data
                                       :osapuoli-specific-data
                                       (find-administrative-court-id-from-osapuoli-specific-data osapuoli-id)))]
-    {:vastaus-fi               (str (if recipient-answered?
-                                      "Asianosainen antoi vastineen kuulemiskirjeeseen."
-                                      "Asianosainen ei vastannut kuulemiskirjeeseen.")
-                                    " "
-                                    (-> toimenpide :type-specific-data :answer-commentary-fi))
-     :vastaus-sv               (str (if recipient-answered?
-                                      "gav ett bemötande till brevet om hörande."
-                                      "svarade inte på brevet om hörande.")
-                                    " "
-                                    (-> toimenpide :type-specific-data :answer-commentary-sv))
+    {:recipient-answered       recipient-answered?
+     :vastaus-fi               (if recipient-answered?
+                                 (str "Asianosainen antoi vastineen kuulemiskirjeeseen. "
+                                      (-> toimenpide
+                                          :type-specific-data
+                                          :osapuoli-specific-data
+                                          ((partial find-value-from-osapuoli-specific-data :answer-commentary-fi) osapuoli-id)))
+                                 "Asianosainen ei vastannut kuulemiskirjeeseen.")
+
+     :vastaus-sv               (if recipient-answered?
+                                 (str "gav ett bemötande till brevet om hörande. "
+                                      (-> toimenpide
+                                          :type-specific-data
+                                          :osapuoli-specific-data
+                                          ((partial find-value-from-osapuoli-specific-data :answer-commentary-sv) osapuoli-id)))
+                                 "svarade inte på brevet om hörande.")
      :oikeus-fi                (:fi hallinto-oikeus-strings)
      :oikeus-sv                (:sv hallinto-oikeus-strings)
      :fine                     (-> toimenpide :type-specific-data :fine)
-     :statement-fi             (-> toimenpide :type-specific-data :statement-fi)
-     :statement-sv             (-> toimenpide :type-specific-data :statement-sv)
+     :statement-fi             (-> toimenpide
+                                   :type-specific-data
+                                   :osapuoli-specific-data
+                                   ((partial find-value-from-osapuoli-specific-data :statement-fi) osapuoli-id))
+     :statement-sv             (-> toimenpide
+                                   :type-specific-data
+                                   :osapuoli-specific-data
+                                   ((partial find-value-from-osapuoli-specific-data :statement-sv) osapuoli-id))
      :department-head-name     (-> toimenpide :type-specific-data :department-head-name)
      :department-head-title-fi (-> toimenpide :type-specific-data :department-head-title-fi)
      :department-head-title-sv (-> toimenpide :type-specific-data :department-head-title-sv)}))
@@ -294,7 +315,7 @@
                                                            (find-administrative-court-id-from-osapuoli-specific-data (:id osapuoli))))
       generated-pdf)))
 
-(defn filter-osapuolet-with-no-document
+(defn remove-osapuolet-with-no-document
   "If toimenpidetype of the toimenpide is such that the document might not be created for some,
   osapuolet will be filtered so that only those are returned that have a :document as true
   specified in type-specific-data of the toimenpide.
@@ -304,7 +325,7 @@
     (let [osapuolet-with-document (->> toimenpide
                                        :type-specific-data
                                        :osapuoli-specific-data
-                                       (filter #(true? (:document %)))
+                                       (filter toimenpide/osapuoli-has-document?)
                                        (map :osapuoli-id)
                                        set)]
       (filter #(contains? osapuolet-with-document (:id %)) osapuolet))
@@ -318,7 +339,7 @@
         documents (when (:document processing-action)
                     (->> osapuolet
                          (filter osapuoli/omistaja?)
-                         (filter-osapuolet-with-no-document toimenpide)
+                         (remove-osapuolet-with-no-document toimenpide)
                          (map (fn [osapuoli]
                                 (let [document (generate-pdf-document db whoami valvonta toimenpide ilmoituspaikat
                                                                       osapuoli osapuolet roolit)]
