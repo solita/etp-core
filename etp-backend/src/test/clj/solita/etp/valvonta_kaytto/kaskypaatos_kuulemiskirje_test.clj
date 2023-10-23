@@ -1,10 +1,10 @@
 (ns solita.etp.valvonta-kaytto.kaskypaatos-kuulemiskirje-test
   (:require
-    [clojure.java.io :as io]
     [clojure.java.jdbc :as jdbc]
     [clojure.test :as t]
     [ring.mock.request :as mock]
     [solita.common.time :as time]
+    [solita.etp.document-assertion :refer [html->pdf-with-assertion]]
     [solita.etp.service.pdf :as pdf]
     [solita.etp.service.valvonta-kaytto :as valvonta-service]
     [solita.etp.test-data.kayttaja :as test-kayttajat]
@@ -12,17 +12,6 @@
   (:import (java.time Clock LocalDate ZoneId)))
 
 (t/use-fixtures :each ts/fixture)
-
-(def original-html->pdf pdf/html->pdf)
-
-(defn html->pdf-with-assertion [doc-path-to-compare-to html->pdf-called? html-doc output-stream]
-  ;; Mocking the pdf rendering function so that the document contents can be asserted
-  ;; Compare the created document to the snapshot
-  (t/is (= html-doc
-           (slurp (io/resource doc-path-to-compare-to))))
-  (reset! html->pdf-called? true)
-  ;;Calling original implementation to ensure the functionality doesn't change
-  (original-html->pdf html-doc output-stream))
 
 (t/deftest kaskypaatos-kuulemiskirje-test
   ;; Add the main user for the following tests
