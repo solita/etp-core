@@ -6,8 +6,10 @@
     [ring.mock.request :as mock]
     [solita.common.time :as time]
     [solita.etp.document-assertion :refer [html->pdf-with-assertion]]
+    [solita.etp.schema.valvonta-kaytto :as valvonta-schema]
     [solita.etp.service.pdf :as pdf]
     [solita.etp.service.valvonta-kaytto :as valvonta-service]
+    [solita.etp.test-data.generators :as generators]
     [solita.etp.test-data.kayttaja :as test-kayttajat]
     [solita.etp.test-system :as ts])
   (:import (java.time Clock LocalDate ZoneId)))
@@ -422,3 +424,57 @@
                                      (test-kayttajat/with-virtu-user)
                                      (mock/header "Accept" "application/json")))]
         (t/is (= (:status response) 200))))))
+
+(t/deftest fetching-johtaja-test
+  (let [kayttaja-id (test-kayttajat/insert-virtu-paakayttaja!)]
+    (t/testing "Kun käskypäätös / varsinainen päätös - toimenpidettä ei ole, osaston päällikön tietoja ei löydy"
+      (let [response (ts/handler (-> (mock/request :get "/api/private/valvonta/kaytto/johtaja")
+                                     (test-kayttajat/with-virtu-user)
+                                     (mock/header "Accept" "application/json")))
+            response-body (j/read-value (:body response) j/keyword-keys-object-mapper)]
+        (t/is (= (:status response) 200))
+        (t/is (= response-body {:department-head-name     nil
+                                :department-head-title-fi nil
+                                :department-head-title-sv nil}))))
+
+    (t/testing "käskypäätös / varsinainen päätös -toimenpiteen olemassaollessa osaston päällikön tiedot täydentyvät responseen"
+      (let [valvonta-id (valvonta-service/add-valvonta!
+                          ts/*db*
+                          (-> {}
+                              (generators/complete valvonta-schema/ValvontaSave)
+                              (merge {
+                                      :ilmoitustunnus             nil
+                                      :rakennustunnus             "1035150826"
+                                      :katuosoite                 "katu"
+                                      :postinumero                "65100"
+                                      :valvoja-id                 kayttaja-id
+                                      :ilmoituspaikka-id          2
+                                      :ilmoituspaikka-description "Netissä"
+                                      :havaintopaiva              (LocalDate/of 2023 6 1)
+                                      })))]
+        ;; Add käskypäätös / varsinainen päätös toimenpide so department-head-name
+        ;; and department-head-title are populated in the response
+        (jdbc/insert! ts/*db*
+                      :vk_toimenpide
+                      {:valvonta_id        valvonta-id
+                       :type_id            8
+                       :create_time        (-> (LocalDate/of 2023 8 10)
+                                               (.atStartOfDay (ZoneId/systemDefault))
+                                               .toInstant)
+                       :publish_time       (-> (LocalDate/of 2023 8 10)
+                                               (.atStartOfDay (ZoneId/systemDefault))
+                                               .toInstant)
+                       :deadline_date      (LocalDate/of 2023 8 28)
+                       :diaarinumero       "ARA-05.03.01-2023-235"
+                       :type_specific_data {:fine                     6100
+                                            :department-head-name     "Testi Testinen"
+                                            :department-head-title-fi "Ylitarkastaja"
+                                            :department-head-title-sv "Ylitarkastaja på svenska"}})
+        (let [response (ts/handler (-> (mock/request :get "/api/private/valvonta/kaytto/johtaja")
+                                       (test-kayttajat/with-virtu-user)
+                                       (mock/header "Accept" "application/json")))
+              response-body (j/read-value (:body response) j/keyword-keys-object-mapper)]
+          (t/is (= (:status response) 200))
+          (t/is (= response-body {:department-head-name     "Testi Testinen"
+                                  :department-head-title-fi "Ylitarkastaja"
+                                  :department-head-title-sv "Ylitarkastaja på svenska"})))))))
