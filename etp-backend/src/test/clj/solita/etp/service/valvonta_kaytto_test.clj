@@ -101,8 +101,8 @@
                  :label-fi             "Sakkopäätös / varsinainen päätös"
                  :label-sv             "Sakkopäätös / varsinainen päätös (sv)"
                  :valid                true
-                 :manually-deliverable false
-                 :allow-comments       false}
+                 :manually-deliverable true
+                 :allow-comments       true}
                 {:id                   16
                  :label-fi             "Sakkopäätös / tiedoksianto (ensimmäinen postitus)"
                  :label-sv             "Sakkopäätös / tiedoksianto (ensimmäinen postitus) (sv)"
