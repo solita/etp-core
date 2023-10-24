@@ -1,12 +1,10 @@
 (ns solita.etp.valvonta-test
   (:require
-    [clojure.java.io :as io]
     [clojure.java.jdbc :as jdbc]
     [clojure.test :as t]
     [jsonista.core :as j]
     [ring.mock.request :as mock]
     [solita.etp.schema.valvonta-kaytto :as valvonta-schema]
-    [solita.etp.service.pdf :as pdf]
     [solita.etp.service.suomifi-viestit :as suomifi-viestit]
     [solita.etp.service.valvonta-kaytto :as valvonta-service]
     [solita.etp.test-data.generators :as generators]
@@ -163,17 +161,6 @@
           (t/is (= response-body {:department-head-name     "Testi Testinen"
                                   :department-head-title-fi "Ylitarkastaja"
                                   :department-head-title-sv "Ylitarkastaja på svenska"})))))))
-
-(def original-html->pdf pdf/html->pdf)
-
-(defn html->pdf-with-assertion [doc-path-to-compare-to html->pdf-called? html-doc output-stream]
-  ;; Mocking the pdf rendering function so that the document contents can be asserted
-  ;; Compare the created document to the snapshot
-  (t/is (= html-doc
-           (slurp (io/resource doc-path-to-compare-to))))
-  (reset! html->pdf-called? true)
-  ;;Calling original implementation to ensure the functionality doesn't change
-  (original-html->pdf html-doc output-stream))
 
 (t/deftest adding-and-fetching-valvonta
   (let [kayttaja-id (test-kayttajat/insert-virtu-paakayttaja!)
