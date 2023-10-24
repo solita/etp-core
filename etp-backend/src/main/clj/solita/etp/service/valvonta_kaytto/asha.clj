@@ -21,17 +21,19 @@
 
 (defn toimenpide-type->document [type-id]
   (let [type-key (toimenpide/type-key type-id)
-        documents {:rfi-request                     {:type "Pyyntö" :filename "tietopyynto.pdf"}
-                   :rfi-order                       {:type "Kirje" :filename "kehotus.pdf"}
-                   :rfi-warning                     {:type "Kirje" :filename "varoitus.pdf"}
-                   :decision-order-hearing-letter   {:type     "Kirje"
-                                                     :filename "kuulemiskirje.pdf"}
-                   :decision-order-actual-decision  {:type     "Kirje"
-                                                     :filename "kaskypaatos.pdf"}
-                   :decision-order-notice-bailiff   {:type     "Kirje"
-                                                     :filename "haastemies-tiedoksianto.pdf"}
-                   :penalty-decision-hearing-letter {:type     "Kirje"
-                                                     :filename "sakkopaatos-kuulemiskirje.pdf"}}]
+        documents {:rfi-request                      {:type "Pyyntö" :filename "tietopyynto.pdf"}
+                   :rfi-order                        {:type "Kirje" :filename "kehotus.pdf"}
+                   :rfi-warning                      {:type "Kirje" :filename "varoitus.pdf"}
+                   :decision-order-hearing-letter    {:type     "Kirje"
+                                                      :filename "kuulemiskirje.pdf"}
+                   :decision-order-actual-decision   {:type     "Kirje"
+                                                      :filename "kaskypaatos.pdf"}
+                   :decision-order-notice-bailiff    {:type     "Kirje"
+                                                      :filename "haastemies-tiedoksianto.pdf"}
+                   :penalty-decision-hearing-letter  {:type     "Kirje"
+                                                      :filename "sakkopaatos-kuulemiskirje.pdf"}
+                   :penalty-decision-actual-decision {:type     "Kirje"
+                                                      :filename "sakkopaatos.pdf"}}]
     (get documents type-key)))
 
 (defn find-kaytto-valvonta-documents [db valvonta-id]
@@ -261,6 +263,13 @@
                                                                :processing-action {:name-identity "Päätöksenteko"}}
                                            :document          (toimenpide-type->document (:type-id toimenpide))
                                            :processing-action {:name                 "Kuulemiskirje uhkasakkopäätöksestä"
+                                                               :reception-date       (Instant/now)
+                                                               :contacting-direction "SENT"
+                                                               :contact              (map osapuoli->contact osapuolet)}}
+   :penalty-decision-actual-decision      {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                               :processing-action {:name-identity "Päätöksenteko"}}
+                                           :document          (toimenpide-type->document (:type-id toimenpide))
+                                           :processing-action {:name                 "Sakkopäätös"
                                                                :reception-date       (Instant/now)
                                                                :contacting-direction "SENT"
                                                                :contact              (map osapuoli->contact osapuolet)}}

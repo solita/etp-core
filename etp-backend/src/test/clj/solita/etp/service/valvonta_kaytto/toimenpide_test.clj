@@ -57,8 +57,10 @@
       (t/is (false? (toimenpide/kaskypaatos-toimenpide? {:type-id toimenpide-type}))))))
 
 (t/deftest sakkopaatos-toimenpide?-test
-  (t/testing "Sakko-päätös / kuulemiskirje is recognized as sakkopäätös-toimenpide?"
+  (t/testing "Sakkopäätös / kuulemiskirje is recognized as sakkopäätös-toimenpide?"
     (t/is (true? (toimenpide/sakkopaatos-toimenpide? {:type-id 14}))))
+  (t/testing "Sakkopäätös / varsinainen päätös is recognized as sakkopäätös-toimenpide?"
+    (t/is (true? (toimenpide/sakkopaatos-toimenpide? {:type-id 15}))))
   (t/testing "Käskypäätös / kuulemiskirje is not recognized as sakkopäätös-toimenpide?"
     (t/is (false? (toimenpide/sakkopaatos-toimenpide? {:type-id 7})))))
 
