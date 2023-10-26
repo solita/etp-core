@@ -81,18 +81,10 @@
                    :secure    true})
 
 (def system-routes
-  [["/swagger.json"
+  [["/openapi.json"
     {:get {:no-doc  true
            :swagger {:info {:title       "Energiatodistuspalvelu API"
                             :description ""}}
-           :handler (swagger/create-swagger-handler)}}]
-   ["/openapi.json"
-    {:get {:no-doc  true
-           :openapi {:info {:title       "my-api"
-                            :description "reitit + openapi3"
-                            :version     "0.0.1"}
-                     :tags [{:name        "api"
-                             :description "the api"}]}
            :handler (openapi/create-openapi-handler)}}]
    ["/health"
     {:get {:summary "Health check"
@@ -211,7 +203,7 @@
                      (ring/routes
                        (swagger-ui/create-swagger-ui-handler
                          {:path             "/api/documentation"
-                          :url              "/api/swagger.json"
+                          :url              "/api/openapi.json"
                           :config           {:validationUrl nil}
                           :operationsSorter "alpha"})
                        (swagger-ui/create-swagger-ui-handler
