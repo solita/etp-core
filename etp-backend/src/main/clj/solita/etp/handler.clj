@@ -11,7 +11,7 @@
             [reitit.ring.middleware.muuntaja :as muuntaja]
             [reitit.ring.middleware.parameters :as parameters]
             [reitit.spec :as rs]
-            [reitit.swagger :as swagger]
+            [schema.coerce]
             [reitit.swagger-ui :as swagger-ui]
             [ring.middleware.cookies :as cookies]
             [schema.core]
@@ -178,13 +178,17 @@
                                             :handler (openapi/create-openapi-handler)}}]
     (openapi-id "Palveluväylä" palveluvayla/routes)]])
 
+(def default-string-coercion-options-with-project-specific-ones
+  "Add more schemas that support coercion to default configuration in addition to those supported by schema coercion out of the box"
+  (assoc-in reitit.coercion.schema/default-options [:matchers :string :default] (some-fn (some-fn {schema.common/AcceptLanguage (schema.coerce/safe schema.common/parse-accept-language)})
+                                                                                         (get-in reitit.coercion.schema/default-options [:matchers :string :default]))))
+
 (def route-opts
   {;; Uncomment line below to see diffs of requests in middleware chain
    ;;:reitit.middleware/transform dev/print-request-diffs
    :exception pretty/exception
    :validate  rs/validate
-   :data      {:coercion   (reitit.coercion.schema/create (assoc-in reitit.coercion.schema/default-options [:matchers :string :default] (some-fn (some-fn {schema.common/AcceptLanguage schema.common/parse-locales})
-                                                                                                                                                 (get-in reitit.coercion.schema/default-options [:matchers :string :default]))))
+   :data      {:coercion   (reitit.coercion.schema/create default-string-coercion-options-with-project-specific-ones)
                :muuntaja   m/instance
                :middleware [openapi/openapi-feature
                             parameters/parameters-middleware
