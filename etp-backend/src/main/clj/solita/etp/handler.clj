@@ -192,7 +192,7 @@
    :exception pretty/exception
    :validate  rs/validate
    :data      {:coercion   (reitit.coercion.schema/create (assoc-in reitit.coercion.schema/default-options [:matchers :string :default] (some-fn (some-fn {schema.common/AcceptLanguage schema.common/parse-locales})
-                                                                                                                                            (get-in reitit.coercion.schema/default-options [:matchers :string :default]))))
+                                                                                                                                                 (get-in reitit.coercion.schema/default-options [:matchers :string :default]))))
                :muuntaja   m/instance
                :middleware [openapi/openapi-feature
                             parameters/parameters-middleware
@@ -215,7 +215,7 @@
                           :config           {:validationUrl nil}
                           :operationsSorter "alpha"})
                        (swagger-ui/create-swagger-ui-handler
-                         {:path             "/api/openapi"
+                         {:path             "/api/palveluvayla/openapi"
                           :url              "/api/palveluvayla/openapi.json"
                           :config           {:validationUrl nil}
                           :operationsSorter "alpha"})
