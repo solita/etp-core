@@ -6,10 +6,12 @@
 (def accept-language-header {(s/optional-key :accept-language) schema.common/AcceptLanguage})
 
 (def routes ["/energiatodistukset"
-             ["/pdf"
-              ["" {:get {:summary    "Hae PDF-muotaisia energiatodistuksia"
-                         :parameters {:query  {:rakennustunnus schema.common/Rakennustunnus}
+             ["/pdf/:id"
+              ["" {:get {:summary    "Hae PDF-muotoinen energiatodistus tunnuksen id:llä"
+                         :parameters {:path   {:id schema.common/Key}
                                       :header accept-language-header}
+                         :responses  {200 {:body nil}
+                                      404 {:body s/Str}}
                          :handler    (constantly {:status 200})
                          :openapi    {:responses {200 {:description "PDF-muotoinen energiatodistus"
                                                        :content     {:application/pdf {:schema {:type   "string"
