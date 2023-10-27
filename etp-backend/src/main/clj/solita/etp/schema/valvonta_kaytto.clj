@@ -199,6 +199,9 @@
                   toimenpide/sakkopaatos-kuulemiskirje?
                   (assoc ToimenpideBase :type-specific-data SakkoPaatosKuulemiskirjeData)
 
+                  toimenpide/sakkopaatos-varsinainen-paatos?
+                  (assoc ToimenpideBase :type-specific-data SakkopaatosVarsinainenPaatosData)
+
                   :else (assoc ToimenpideBase :type-specific-data (schema/enum nil))))
 
 (def LastToimenpide

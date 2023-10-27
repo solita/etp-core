@@ -2,6 +2,7 @@
   (:require
     [clojure.java.jdbc :as jdbc]
     [clojure.test :as t]
+    [jsonista.core :as j]
     [ring.mock.request :as mock]
     [solita.common.time :as time]
     [solita.etp.document-assertion :refer [html->pdf-with-assertion]]
@@ -56,7 +57,7 @@
                          :sukunimi                 "Talonomistaja"
                          :postinumero              "00100"
                          :henkilotunnus            "000000-0000"
-                         :rooli-description        ""
+                         :rooli-description        "Omistaja"
                          :etunimi                  "Testi"
                          :vastaanottajan-tarkenne  nil
                          :maa                      "FI"})]
@@ -145,7 +146,61 @@
                                        (test-kayttajat/with-virtu-user)
                                        (mock/header "Accept" "application/json")))]
           (t/is (true? @html->pdf-called?))
-          (t/is (= (:status response) 201))))))
+          (t/is (= (:status response) 201))
+
+          (t/testing "Toimenpide is returned through the api"
+            (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
+                                           (test-kayttajat/with-virtu-user)
+                                           (mock/header "Accept" "application/json")))
+                  response-body (j/read-value (:body response) j/keyword-keys-object-mapper)]
+              (t/is (= (:status response) 200))
+              (t/is (= (count response-body) 6))
+              (t/is (contains? (->> response-body
+                                    (map #(dissoc % :publish-time :create-time))
+                                    set)
+                               {:description
+                                "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
+                                :henkilot
+                                [{:toimitustapa-description nil
+                                  :toimitustapa-id          0
+                                  :email                    nil
+                                  :rooli-id                 0
+                                  :jakeluosoite             "Testikatu 12"
+                                  :valvonta-id              1
+                                  :postitoimipaikka         "Helsinki"
+                                  :puhelin                  nil
+                                  :sukunimi                 "Talonomistaja"
+                                  :postinumero              "00100"
+                                  :id                       1
+                                  :henkilotunnus            "000000-0000"
+                                  :rooli-description        "Omistaja"
+                                  :etunimi                  "Testi"
+                                  :vastaanottajan-tarkenne  nil
+                                  :maa                      "FI"}]
+                                :yritykset     []
+                                :type-id       15
+                                :valvonta-id   1
+                                :author        {:rooli-id 2 :sukunimi "Tuntija", :id 1 :etunimi "Asian"}
+                                :filename      "sakkopaatos.pdf"
+                                :diaarinumero  "ARA-05.03.01-2023-159"
+                                :id            6
+                                :deadline-date "2023-12-10"
+                                :type-specific-data
+                                {:department-head-title-fi "Apulaisjohtaja"
+                                 :department-head-name     "Yli Päällikkö"
+                                 :osapuoli-specific-data
+                                 [{:hallinto-oikeus-id   3
+                                   :osapuoli-id          1
+                                   :recipient-answered   true
+                                   :document             true
+                                   :statement-sv         "Han vet inte. Vi förlotar."
+                                   :statement-fi
+                                   "ARAn päätökseen ei ole haettu muutosta, eli päätös on lainvoimainen. Maksuun tuomittavan uhkasakon määrä on sama kuin mitä se on ollut ARAn päätöksessä. ARAn näkemyksen mukaan uhkasakko tuomitaan maksuun täysimääräisenä, koska Asianosainen ei ole noudattanut päävelvoitetta lainkaan, eikä ole myöskään esittänyt noudattamatta jättämiselle pätevää syytä."
+                                   :answer-commentary-sv "Jag visste inte att ett intyg behövs :("
+                                   :answer-commentary-fi "En tiennyt, että todistus tarvitaan :("}]
+                                 :department-head-title-sv "Apulaisjohtaja på svenska"
+                                 :fine                     8572}
+                                :template-id   9}))))))))
 
   (t/testing "Preview api call for Sakkopäätös / varsinainen päätös toimenpide succeeds"
     (t/testing "for yksityishenkilö"
