@@ -1,46 +1,61 @@
 (ns solita.etp.handler
   (:require [clojure.string :as str]
             [clojure.walk :as w]
-            [ring.middleware.cookies :as cookies]
-            [reitit.ring :as ring]
-            [reitit.swagger :as swagger]
-            [reitit.swagger-ui :as swagger-ui]
-            [reitit.coercion.schema]
-            [reitit.ring.coercion :as coercion]
-            [reitit.ring.middleware.parameters :as parameters]
-            [reitit.ring.middleware.muuntaja :as muuntaja]
-            [reitit.ring.middleware.multipart :as multipart]
-            [reitit.spec :as rs]
-            [reitit.dev.pretty :as pretty]
             [muuntaja.core :as m]
+            [reitit.coercion.schema]
+            [reitit.dev.pretty :as pretty]
+            [reitit.openapi :as openapi]
+            [reitit.ring :as ring]
+            [reitit.ring.coercion :as coercion]
+            [reitit.ring.middleware.multipart :as multipart]
+            [reitit.ring.middleware.muuntaja :as muuntaja]
+            [reitit.ring.middleware.parameters :as parameters]
+            [reitit.spec :as rs]
+            [schema.coerce]
+            [reitit.swagger-ui :as swagger-ui]
+            [ring.middleware.cookies :as cookies]
+            [schema.core]
             [schema.core :as s]
+            [solita.common.cf-signed-url :as signed-url]
             [solita.etp.api.aineisto :as aineisto-api]
-            [solita.etp.api.kayttaja :as kayttaja-api]
-            [solita.etp.api.yritys :as yritys-api]
-            [solita.etp.api.laatija :as laatija-api]
-            [solita.etp.api.geo :as geo-api]
             [solita.etp.api.energiatodistus :as energiatodistus-api]
-            [solita.etp.api.valvonta :as valvonta-api]
-            [solita.etp.api.valvonta-oikeellisuus :as valvonta-oikeellisuus-api]
-            [solita.etp.api.valvonta-kaytto :as valvonta-kaytto-api]
+            [solita.etp.api.geo :as geo-api]
+            [solita.etp.api.kayttaja :as kayttaja-api]
+            [solita.etp.api.laatija :as laatija-api]
             [solita.etp.api.laskutus :as laskutus-api]
-            [solita.etp.api.viesti :as viesti-api]
+            [solita.etp.api.palveluvayla :as palveluvayla]
             [solita.etp.api.sivu :as sivu-api]
             [solita.etp.api.statistics :as statistics-api]
+            [solita.etp.api.valvonta :as valvonta-api]
+            [solita.etp.api.valvonta-kaytto :as valvonta-kaytto-api]
+            [solita.etp.api.valvonta-oikeellisuus :as valvonta-oikeellisuus-api]
+            [solita.etp.api.viesti :as viesti-api]
+            [solita.etp.api.yritys :as yritys-api]
             [solita.etp.config :as config]
-            [solita.etp.security :as security]
-            [solita.etp.jwt :as jwt]
-            [solita.etp.header-middleware :as header-middleware]
             [solita.etp.exception :as exception]
-            [solita.common.cf-signed-url :as signed-url])
-  (:import [java.net URLEncoder]
-           [java.nio.charset StandardCharsets]))
+            [solita.etp.header-middleware :as header-middleware]
+            [solita.etp.jwt :as jwt]
+            [solita.etp.schema.common :as schema.common]
+            [solita.etp.security :as security])
+  (:import (java.net URLEncoder)
+           (java.nio.charset StandardCharsets)))
 
 (defn tag [tag routes]
   (w/prewalk
-   #(if (and (map? %) (contains? % :summary))
-      (assoc % :tags #{tag}) %)
-   routes))
+    #(if (and (map? %) (contains? % :summary))
+       (assoc % :tags #{tag}) %)
+    routes))
+
+(defn openapi-id
+  "Adds an openapi and swagger id to all given routes. The id is used by openapi and swagger generators to include the routes in the generated documentation."
+  [id routes]
+  (w/prewalk
+    #(if (and (map? %) ((some-fn :get :post :patch :delete :options :head) %))
+       (-> %
+           (assoc :swagger {:id #{id}})
+           (assoc :openapi {:id #{id}}))
+       %)
+    routes))
 
 (defn- req->jwt [request]
   (try
@@ -52,41 +67,41 @@
     (if-let [id-token (:custom:id_token data)]
       (if (:custom:VIRTU_localID data)
         (str config/keycloak-virtu-logout-url
-            "?id_token_hint=" id-token
-            "&post_logout_redirect_uri=" (URLEncoder/encode config/cognito-logout-url StandardCharsets/UTF_8))
+             "?id_token_hint=" id-token
+             "&post_logout_redirect_uri=" (URLEncoder/encode config/cognito-logout-url StandardCharsets/UTF_8))
         (str config/keycloak-suomifi-logout-url
-              "?id_token_hint=" id-token
-              "&post_logout_redirect_uri=" (URLEncoder/encode config/cognito-logout-url StandardCharsets/UTF_8)))
+             "?id_token_hint=" id-token
+             "&post_logout_redirect_uri=" (URLEncoder/encode config/cognito-logout-url StandardCharsets/UTF_8)))
       (str config/index-url "/uloskirjauduttu"))))
 
-(def empty-cookie {:value ""
-                   :path "/"
-                   :max-age 0
+(def empty-cookie {:value     ""
+                   :path      "/"
+                   :max-age   0
                    :http-only true
-                   :secure true})
+                   :secure    true})
 
 (def system-routes
-  [["/swagger.json"
-    {:get {:no-doc true
-           :swagger {:info {:title "Energiatodistuspalvelu API"
+  [["/openapi.json"
+    {:get {:no-doc  true
+           :swagger {:info {:title       "Energiatodistuspalvelu API"
                             :description ""}}
-           :handler (swagger/create-swagger-handler)}}]
+           :handler (openapi/create-openapi-handler)}}]
    ["/health"
     {:get {:summary "Health check"
-           :tags #{"System"}
+           :tags    #{"System"}
            :handler (constantly {:status 200})}}]
    ["/login"
-    {:get {:summary "Callback used to redirect user back to where they were"
-           :tags #{"System"}
+    {:get {:summary    "Callback used to redirect user back to where they were"
+           :tags       #{"System"}
            :parameters {:query {:redirect s/Str}}
-           :handler (fn [{:keys [parameters]}]
-                      (let [redirect (-> parameters :query :redirect)]
-                        {:status 302
-                         :headers {"Location" (if (str/starts-with?
+           :handler    (fn [{:keys [parameters]}]
+                         (let [redirect (-> parameters :query :redirect)]
+                           {:status  302
+                            :headers {"Location" (if (str/starts-with?
+                                                       redirect
+                                                       config/index-url)
                                                    redirect
-                                                   config/index-url)
-                                                redirect
-                                                config/index-url)}}))}}]
+                                                   config/index-url)}}))}}]
    ["/logout"
     {:get {:summary    "Callback used to redirect user to cognito logout"
            :tags       #{"System"}
@@ -99,10 +114,10 @@
    ;; TODO Temporary endpoint for seeing headers added by load balancer
    ["/headers"
     {:get {:summary "Endpoint for seeing request headers"
-           :tags #{"System"}
+           :tags    #{"System"}
            :handler (fn [{:keys [headers]}]
                       {:status 200
-                       :body headers})}}]])
+                       :body   headers})}}]])
 
 (def routes
   ["/api" {:middleware [[header-middleware/wrap-default-cache]
@@ -145,8 +160,8 @@
                               [security/wrap-whoami-from-signed
                                config/public-index-url
                                {:key-pair-id config/url-signing-key-id
-                                :public-key (signed-url/pem-string->public-key
-                                             config/url-signing-public-key)}]
+                                :public-key  (signed-url/pem-string->public-key
+                                               config/url-signing-public-key)}]
                               ;; Otherwise, assume that the reverse
                               ;; proxies on front of the backend
                               ;; service have verified the signature.
@@ -156,33 +171,48 @@
     (concat (tag "Aineisto API" aineisto-api/signed-routes))]
    ["/internal"
     (concat (tag "Laskutus API" laskutus-api/routes)
-            (tag "Laatija Internal API" laatija-api/internal-routes))]])
+            (tag "Laatija Internal API" laatija-api/internal-routes))]
+   ["/palveluvayla" ["/openapi.json" {:get {:no-doc  true
+                                            :openapi {:info {:title "Energiatodistuspalvelu API" :description "Hae energiatodistuksia pdf tai json muodoissa"}
+                                                      :id   "Palveluväylä"}
+                                            :handler (openapi/create-openapi-handler)}}]
+    (openapi-id "Palveluväylä" palveluvayla/routes)]])
+
+(def default-string-coercion-options-with-project-specific-ones
+  "Add more schemas that support coercion to default configuration in addition to those supported by schema coercion out of the box"
+  (assoc-in reitit.coercion.schema/default-options [:matchers :string :default] (some-fn (some-fn {schema.common/AcceptLanguage (schema.coerce/safe schema.common/parse-accept-language)})
+                                                                                         (get-in reitit.coercion.schema/default-options [:matchers :string :default]))))
 
 (def route-opts
   {;; Uncomment line below to see diffs of requests in middleware chain
    ;;:reitit.middleware/transform dev/print-request-diffs
    :exception pretty/exception
-   :validate rs/validate
-   :data {:coercion reitit.coercion.schema/coercion
-          :muuntaja m/instance
-          :middleware [swagger/swagger-feature
-                       parameters/parameters-middleware
-                       muuntaja/format-negotiate-middleware
-                       muuntaja/format-response-middleware
-                       exception/exception-middleware
-                       muuntaja/format-request-middleware
-                       coercion/coerce-response-middleware
-                       coercion/coerce-request-middleware
-                       multipart/multipart-middleware]}})
+   :validate  rs/validate
+   :data      {:coercion   (reitit.coercion.schema/create default-string-coercion-options-with-project-specific-ones)
+               :muuntaja   m/instance
+               :middleware [openapi/openapi-feature
+                            parameters/parameters-middleware
+                            muuntaja/format-negotiate-middleware
+                            muuntaja/format-response-middleware
+                            exception/exception-middleware
+                            muuntaja/format-request-middleware
+                            coercion/coerce-response-middleware
+                            coercion/coerce-request-middleware
+                            multipart/multipart-middleware]}})
 
 (def router (ring/router routes route-opts))
 
 (def handler
   (ring/ring-handler router
                      (ring/routes
-                        (swagger-ui/create-swagger-ui-handler
-                          {:path "/api/documentation"
-                           :url "/api/swagger.json"
-                           :config {:validationUrl nil}
-                           :operationsSorter "alpha"})
-                        (ring/create-default-handler))))
+                       (swagger-ui/create-swagger-ui-handler
+                         {:path             "/api/documentation"
+                          :url              "/api/openapi.json"
+                          :config           {:validationUrl nil}
+                          :operationsSorter "alpha"})
+                       (swagger-ui/create-swagger-ui-handler
+                         {:path             "/api/palveluvayla/openapi"
+                          :url              "/api/palveluvayla/openapi.json"
+                          :config           {:validationUrl nil}
+                          :operationsSorter "alpha"})
+                       (ring/create-default-handler))))

@@ -11,9 +11,9 @@
 (def Id {:id Key})
 
 (def IdAndWarnings (assoc Id :warnings [{:property schema/Str
-                                         :value schema/Num
-                                         :min schema/Num
-                                         :max schema/Num}]))
+                                         :value    schema/Num
+                                         :min      schema/Num
+                                         :max      schema/Num}]))
 
 (defn StringBase [max]
   (schema/constrained schema/Str #(<= 1 (count %) max) (str "[1, " max "]")))
@@ -56,7 +56,7 @@
 
 (def Luokittelu (merge Id {:label-fi schema/Str
                            :label-sv schema/Str
-                           :valid schema/Bool}))
+                           :valid    schema/Bool}))
 
 (def Date java.time.LocalDate)
 (def Instant java.time.Instant)
@@ -71,10 +71,10 @@
 
 (defn valid-henkilotunnus? [s]
   (try
-    (let [date-part         (subs s 0 6)
-          century-sign      (nth s 6)
+    (let [date-part (subs s 0 6)
+          century-sign (nth s 6)
           individual-number (subs s 7 10)
-          checksum          (last s)]
+          checksum (last s)]
       (and (= 11 (count s))
            (contains? #{\+ \- \A} century-sign)
            (= checksum (henkilotunnus-checksum (str date-part individual-number)))))
@@ -100,11 +100,11 @@
                                  "y-tunnus"))
 
 (def ConstraintError
-  { :type schema/Keyword
-    :constraint schema/Keyword})
+  {:type       schema/Keyword
+   :constraint schema/Keyword})
 
 (def GeneralError
-  {:type schema/Keyword
+  {:type    schema/Keyword
    :message schema/Str})
 
 (defn valid-ovt-tunnus? [s]
@@ -117,7 +117,7 @@
                                    "ovt-tunnus"))
 
 (def iban-char-map (zipmap (map char (range (int \a) (inc (int \z))))
-                           (range 10 36) ))
+                           (range 10 36)))
 
 (defn valid-iban? [s]
   (try
@@ -169,7 +169,7 @@
 (defn valid-rakennustunnus? [s]
   (try
     (let [number-part (subs s 0 9)
-          checksum    (last s)]
+          checksum (last s)]
       (and (= 10 (count s))
            (= checksum (henkilotunnus-checksum number-part))))
     (catch StringIndexOutOfBoundsException _ false)))
@@ -197,3 +197,24 @@
                 schema))
 
 (def Language (schema/enum "fi" "sv"))
+
+(schema/defschema WeightedLocale
+  "A single locale with weight for Accept-Language header"
+  [(schema/one (schema/constrained schema/Str #(re-matches #"(?i)([*]|[a-z]{2,3})" %)) "lang") (schema/one (schema/constrained schema/Num #(and (>= % 0) (<= % 1))) "weight")])
+(schema/defschema AcceptLanguage
+  "Define a schema for Accept-Language header. The header can contain multiple locales with preferred weights, for example Accept-Language: fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5"
+  [WeightedLocale])
+
+(defn parse-lang
+  "Parse a language from language tag i.e. drop subtags such as region separated by -"
+  [s]
+  (-> s (str/split #"-") first))
+
+(defn parse-locale [s]
+  (let [parts (str/split s #";q=")]
+    (case (count parts)
+      1 [(parse-lang s) 1.0]
+      2 [(-> parts first parse-lang) (Double/parseDouble (second parts))])))
+
+(defn parse-accept-language [s]
+  (map parse-locale (str/split s #",")))
