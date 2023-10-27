@@ -43,7 +43,9 @@
                 :kuulemiskirje-pvm             nil
                 :kuulemiskirje-maarapaiva      nil
                 :varsinainen-paatos-pvm        nil
-                :varsinainen-paatos-maarapaiva nil}))))
+                :varsinainen-paatos-maarapaiva nil
+                :sakkopaatos-kuulemiskirje-pvm nil
+                :sakkopaatos-kuulemiskirje-maarapaiva nil}))))
 
   (t/testing "When there are multiple kehotus and varoitus toimenpide, the newest dates are found"
     (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite "Testitie 5"})
@@ -100,7 +102,9 @@
                 :kuulemiskirje-pvm             nil
                 :kuulemiskirje-maarapaiva      nil
                 :varsinainen-paatos-pvm        nil
-                :varsinainen-paatos-maarapaiva nil}))))
+                :varsinainen-paatos-maarapaiva nil
+                :sakkopaatos-kuulemiskirje-pvm nil
+                :sakkopaatos-kuulemiskirje-maarapaiva nil}))))
 
   (t/testing "Correct dates for all käskypäätös toimeenpiteet are found from database and they are formatted in Finnish date format"
     (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite "Testitie 5"})
@@ -115,7 +119,10 @@
                                       .toInstant)
           varsinainen-paatos-timestamp (-> (LocalDate/of 2023 9 14)
                                       (.atStartOfDay (ZoneId/systemDefault))
-                                      .toInstant)]
+                                      .toInstant)
+          sakkopaatos-kuulemiskirje-timestamp (-> (LocalDate/of 2023 11 1)
+                                                  (.atStartOfDay (ZoneId/systemDefault))
+                                                  .toInstant)]
 
       ;; Add kehotus-toimenpide to the valvonta
       (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id   valvonta-id
@@ -143,6 +150,14 @@
                                             :create_time   varsinainen-paatos-timestamp
                                             :publish_time  varsinainen-paatos-timestamp
                                             :deadline_date (LocalDate/of 2023 10 28)})
+
+      ;; Add sakkopäätös / kuulemiskirje -toimenpide to the valvonta
+      (jdbc/insert! ts/*db* :vk_toimenpide {:valvonta_id   valvonta-id
+                                            :type_id       14
+                                            :create_time   sakkopaatos-kuulemiskirje-timestamp
+                                            :publish_time  sakkopaatos-kuulemiskirje-timestamp
+                                            :deadline_date (LocalDate/of 2023 11 12)})
+
       ;; Kehotus creation date and deadline and varoitus creation date
       ;; and deadline are found and formatted correctly
       (t/is (= (asha/past-dates-for-kaskypaatos-toimenpiteet ts/*db* valvonta-id)
@@ -153,7 +168,9 @@
                 :kuulemiskirje-pvm             "14.08.2023"
                 :kuulemiskirje-maarapaiva      "28.08.2023"
                 :varsinainen-paatos-pvm        "14.09.2023"
-                :varsinainen-paatos-maarapaiva "28.10.2023"})))))
+                :varsinainen-paatos-maarapaiva "28.10.2023"
+                :sakkopaatos-kuulemiskirje-pvm "01.11.2023"
+                :sakkopaatos-kuulemiskirje-maarapaiva "12.11.2023"})))))
 
 (t/deftest kuulemiskirje-data-test
   (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite "Testitie 5"})

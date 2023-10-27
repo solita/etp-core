@@ -70,6 +70,20 @@
        (valvonta-kaytto-db/kuulemiskirje-data db)
        first))
 
+(defn sakkopaatos-kuulemiskirje-data [db valvonta-id]
+  (->> {:valvonta-id valvonta-id}
+       (valvonta-kaytto-db/sakkopaatos-kuulemiskirje-data db)
+       first))
+
+(defn kaskypaatos-varsinainen-paatos-data
+  "Returns diaarinumero and fine amount of the newest
+   kuulemiskirje-toimenpide associated with the given valvonta-id."
+  [db valvonta-id]
+  (->> {:valvonta-id valvonta-id}
+       (valvonta-kaytto-db/varsinainen-paatos-data db)
+       first))
+
+;; TODO: Tarkempi nimi
 (defn past-dates-for-kaskypaatos-toimenpiteet
   "Retrieves the dates of kehotus, varoitus and kuulemiskirje toimenpiteet with
    the given valvonta-id and formats them for displaying in a document"
@@ -100,7 +114,7 @@
 (defmulti format-type-specific-data
           (fn [_db toimenpide _osapuoli-id] (-> toimenpide :type-id toimenpide/type-key)))
 
-(defmethod format-type-specific-data :decision-order-actual-decision [db toimenpide osapuoli-id]
+(defn format-actual-decision-data [db toimenpide osapuoli-id]
   (let [recipient-answered? (-> toimenpide
                                 :type-specific-data
                                 :osapuoli-specific-data
@@ -142,6 +156,12 @@
      :department-head-title-fi (-> toimenpide :type-specific-data :department-head-title-fi)
      :department-head-title-sv (-> toimenpide :type-specific-data :department-head-title-sv)}))
 
+(defmethod format-type-specific-data :decision-order-actual-decision [db toimenpide osapuoli-id]
+  (format-actual-decision-data db toimenpide osapuoli-id))
+
+(defmethod format-type-specific-data :penalty-decision-actual-decision [db toimenpide osapuoli-id]
+  (format-actual-decision-data db toimenpide osapuoli-id))
+
 (defn- karajaoikeus-id->name [db id]
   (first (karajaoikeus-db/find-karajaoikeus-name-by-id db {:karajaoikeus-id id})))
 
@@ -181,8 +201,11 @@
    :tyyppikohtaiset-tiedot (format-type-specific-data db toimenpide (:id osapuoli))
    :aiemmat-toimenpiteet   (when (or (toimenpide/kaskypaatos-toimenpide? toimenpide)
                                      (toimenpide/sakkopaatos-toimenpide? toimenpide))
+                             ;; TODO: Refaktoroi multimetodiksi jolloin tätä tarvitseville toimenpiteille voi antaa spesifin toteutuksen?
                              (merge
                                (kuulemiskirje-data db (:id valvonta))
+                               (kaskypaatos-varsinainen-paatos-data db (:id valvonta))
+                               (sakkopaatos-kuulemiskirje-data db (:id valvonta))
                                (past-dates-for-kaskypaatos-toimenpiteet db (:id valvonta))))})
 
 (defn- request-id [valvonta-id toimenpide-id]
