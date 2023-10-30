@@ -126,7 +126,7 @@
                  :label-sv             "Sakkopäätös / valitusajan odotus ja umpeutuminen (sv)"
                  :valid                true
                  :manually-deliverable false
-                 :allow-comments       false}
+                 :allow-comments       true}
                 {:id                   21
                  :label-fi             "Sakkoluettelon lähetys menossa"
                  :label-sv             "Sakkoluettelon lähetys menossa (sv)"

@@ -18,7 +18,7 @@ values
 (16, 'Sakkopäätös / tiedoksianto (ensimmäinen postitus)', 'Sakkopäätös / tiedoksianto (ensimmäinen postitus) (sv)', 17, true, true, true),
 (17, 'Sakkopäätös / tiedoksianto (toinen postitus)', 'Sakkopäätös / tiedoksianto (toinen postitus) (sv)', 18, true, true, true),
 (18, 'Sakkopäätös / tiedoksianto (Haastemies)', 'Sakkopäätös / tiedoksianto (Haastemies) (sv)', 19, true, false, false),
-(19, 'Sakkopäätös / valitusajan odotus ja umpeutuminen', 'Sakkopäätös / valitusajan odotus ja umpeutuminen (sv)', 20, true, false, false),
+(19, 'Sakkopäätös / valitusajan odotus ja umpeutuminen', 'Sakkopäätös / valitusajan odotus ja umpeutuminen (sv)', 20, true, false, true),
 (21, 'Sakkoluettelon lähetys menossa', 'Sakkoluettelon lähetys menossa (sv)', 22, true, false, false)
 on conflict (id) do update set
   label_fi = excluded.label_fi,
