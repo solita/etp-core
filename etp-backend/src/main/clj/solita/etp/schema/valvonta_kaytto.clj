@@ -115,7 +115,9 @@
     {:osapuoli-id        common-schema/Key
      :hallinto-oikeus-id HallintoOikeusId
      :document           schema/Bool
-     :recipient-answered schema/Bool}
+     :recipient-answered schema/Bool
+     :statement-fi         schema/Str
+     :statement-sv         schema/Str}
 
     ;; Osapuoli has no document so no other fields are allowed
     :else
