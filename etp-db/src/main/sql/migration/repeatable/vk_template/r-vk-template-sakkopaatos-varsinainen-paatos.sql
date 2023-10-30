@@ -140,6 +140,178 @@ values (9, 'Sakkopäätös / varsinainen päätös', 'Sakkopäätös / varsinain
         </td>
     </tr>
 </table>
+
+<p class="small-text">Tämä asiakirja on allekirjoitettu sähköisesti asianhallintajärjestelmässä.</p>
+
+<div class="sivunvaihto"></div>
+
+<div class="otsikko-ja-vastaanottaja-container">
+    <div class="otsikko">
+        <b>Beslut</b>
+        <b>{{päivä}}</b> <br />
+        Dnr {{diaarinumero}}
+    </div>
+
+    <div class="vastaanottaja">
+        {{#omistaja-henkilo}}
+        {{etunimi}} {{sukunimi}}<br />
+        {{jakeluosoite}}<br />
+        {{postinumero}} {{postitoimipaikka}}
+        {{/omistaja-henkilo}}
+        {{#omistaja-yritys}}
+        {{nimi}}<br />
+        {{vastaanottajan-tarkenne}}<br />
+        {{jakeluosoite}}<br />
+        {{postinumero}} {{postitoimipaikka}}
+        {{/omistaja-yritys}}
+    </div>
+</div>
+
+<h1>Utdömande av vite</h1>
+
+<div>
+    Mottagare: {{#omistaja-henkilo}}{{etunimi}}
+    {{sukunimi}}{{/omistaja-henkilo}}{{#omistaja-yritys}}{{nimi}}{{/omistaja-yritys}}<br />
+</div>
+
+<h2>Beslut</h2>
+
+<p>Finansierings- och utvecklingscentralen för boendet (ARA) dömer
+    {{#omistaja-henkilo}}
+    {{etunimi}} {{sukunimi}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-yritys}}
+    {{nimi}}
+    {{/omistaja-yritys}}
+    att betala det fasta vite på {{#tyyppikohtaiset-tiedot}}{{fine}}{{/tyyppikohtaiset-tiedot}} euro som fastställts i
+    ARAs beslut {{#aiemmat-toimenpiteet}}{{varsinainen-paatos-pvm}} (dnr {{varsinainen-paatos-diaarinumero}}, nedan ARAs
+    beslut){{/aiemmat-toimenpiteet}}, eftersom huvudförpliktelsen inte har iakttagits och det inte finns någon giltig
+    orsak för varför den inte har iakttagits. Vitet döms ut på en gång.
+</p>
+
+<p>Gireringsblanketten för betalning av vite finns som bilaga till detta beslut. </p>
+
+<h2>Hörande</h2>
+
+{{#aiemmat-toimenpiteet}}
+<p>AARA gav i sitt brev (dnr {{sakkopaatos-kuulemiskirje-diaarinumero}}) daterat {{sakkopaatos-kuulemiskirje-pvm}}
+    {{#omistaja-henkilo}}
+    {{sukunimi}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-yritys}}
+    {{nimi}}
+    {{/omistaja-yritys}} i enlighet med 22 § i viteslagen och den hänvisade34 § i förvaltningslagen (434/2003) möjlighet att
+    yttra sig i ärendet samt ge sin förklaring till sådana yrkanden och utredningar som kan påverka avgörandet av
+    ärendet.</p>
+{{/aiemmat-toimenpiteet}}
+
+<p class="respect-new-lines">    {{#omistaja-henkilo}}
+    {{sukunimi}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-yritys}}
+    {{nimi}}
+    {{/omistaja-yritys}} {{#tyyppikohtaiset-tiedot}}{{vastaus-sv}}{{/tyyppikohtaiset-tiedot}}</p>
+
+<h3>Motivering av beslutet</h3>
+
+<p>Enligt 6 § i lagen om energicertifikat för byggnader (50/2013, lagen om energicertifikat för byggnader) ska det
+    finnas ett energicertifikat vid försäljning eller uthyrning av en byggnad eller lägenhet eller besittningsrätten
+    till dem. Energicertifikatet ska överlämnas till köparen eller hyrestagaren antingen i original eller som kopia. I
+    en offentlig anmälan om försäljning eller uthyrning av ett objekt ska energieffektivitetsklassen för det objekt som
+    säljs eller hyrs ut nämnas. Byggnadens ägare eller innehavare ansvarar för att byggnadens energicertifikat skaffas
+    och används i de situationer som regleras i lagen (2 § i lagen om energicertifikat).</p>
+
+<p>Bestämmelser om påföljderna finns i 24 § i lagen om energicertifikat. Om byggnadens ägare inte fullgör sina
+    skyldigheter enligt lagen om energicertifikat eller i övrigt handlar i strid med lagen om energicertifikat eller
+    bestämmelserna som utfärdats med stöd av den, ska ARA uppmana ägaren att rätta till situationen och ange en
+    tidsfrist inom vilken situationen ska rättas till. Om saken inte rättas till inom tidsfristen ska ARA ge den som
+    saken gäller en varning och ange en ny tidsfrist. Om situationen inte rättas till inom tidsfristen ska ARA enligt
+    vad situationen kräver meddela beslut om föreläggande eller förbud. Vid allvarliga eller väsentliga överträdelser
+    kan ARA förena föreläggandet eller förbudet med vite eller med hot om tvångsutförande eller hot om avbrytande, om
+    vilka det bestäms i viteslagen (1113/1990).</p>
+
+<p>Enligt 10 § i viteslagen (1113/1990) kan den myndighet som har förelagt vitet döma ut vitet, om huvudförpliktelsen
+    inte har iakttagits och det inte finns någon giltig orsak till försummelsen. En förutsättning för utdömande av vite
+    är också att beslutet om föreläggande av vite har vunnit laga kraft, om det inte har föreskrivits eller bestämts att
+    beslutet skall iakttas trots att ändring har sökts.
+    Enligt 7 § lagen ska olika vitesföreläggande bestämmas för varje inblandad part, om vitet åläggs flera parter.
+</p>
+
+<p> {{#omistaja-henkilo}}
+    {{etunimi}} {{sukunimi}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-yritys}}
+    {{nimi}}
+    {{/omistaja-yritys}} har försummat skyldigheten enligt 6 § i lagen om energicertifikat att använda energicertifikat
+    vid försäljning av en byggnad. På grund av försummelsen gav ARA
+    {{#omistaja-henkilo}}
+    {{sukunimi}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-yritys}}
+    {{nimi}}
+    {{/omistaja-yritys}} en uppmaning och varning enligt 24 § i
+    lagen om energicertifikat om att skaffa energicertifikat, men dessa efterlevdes inte. Således fattade ARA ett beslut
+    {{#aiemmat-toimenpiteet}}{{varsinainen-paatos-pvm}}{{/aiemmat-toimenpiteet}} päätöksen, genom vilket ARA beordrade
+    {{#omistaja-henkilo}}
+    {{etunimi}} {{sukunimi}}
+    {{/omistaja-henkilo}}
+    {{#omistaja-yritys}}
+    {{nimi}}
+    {{/omistaja-yritys}} att skaffa ett energicertifikat för byggnaden på adressen {{#kohde}}{{katuosoite}}
+    {{postinumero}} {{postitoimipaikka}}{{/kohde}}
+    senast {{#aiemmat-toimenpiteet}}{{varsinainen-paatos-maarapaiva}}{{/aiemmat-toimenpiteet}} och visa upp
+    energicertifikatet för ARA. ARA förenade beslutet med ett fast vite på
+    {{#aiemmat-toimenpiteet}}{{varsinainen-paatos-fine}}{{/aiemmat-toimenpiteet}} euro. Enligt beslutet döms vitet ut om
+    ARAs order inte iakttas inom utsatt tid.</p>
+
+<!-- TODO: Esimerkkitekstin sisällä on viittaus sukunimeen -->
+{{#tyyppikohtaiset-tiedot}}
+<p class="respect-new-lines">{{statement-sv}}</p>
+{{/tyyppikohtaiset-tiedot}}
+
+<h2>Betalningsanvisningar</h2>
+
+<p>Gireringsblanketten för betalning av vite finns som bilaga till detta beslut.</p>
+
+<h2>Tillämpliga rättsnormer</h2>
+
+<ul>
+    <li class="no-indicator">2 §, 6 § och 24 § i lagen om energicertifikat för byggnader (50/2013)</li>
+    <li class="no-indicator">10 § i viteslagen (1113/1990)</li>
+</ul>
+
+<h2>Ändringssökande</h2>
+
+<p> Den som är missnöjd med detta beslut kan söka ändring i det
+    hos{{#tyyppikohtaiset-tiedot}}{{oikeus-sv}}{{/tyyppikohtaiset-tiedot}} förvaltningsdomstolen. Besvär måste göras och
+    levereras till ovan nämnda förvaltningsdomstol inom 30 dagar från delgivningen av det här beslutet.</p>
+
+<p>Närmare anvisningar om anförande av besvär finns som bilaga till detta beslut.</p>
+
+{{#valvoja}}
+<p>LMer information om beslutet ges av energiexpert {{etunimi}} {{sukunimi}}, <br />tfn {{puhelin}} / e-post
+    {{email}}.</p>
+{{/valvoja}}
+
+<table class="max-width">
+    <tr>
+        <td>
+            {{#tyyppikohtaiset-tiedot}}
+            <div>{{department-head-name}}</div>
+            <div>{{department-head-title-sv}}</div>
+            {{/tyyppikohtaiset-tiedot}}
+        </td>
+
+        <td>
+            {{#valvoja}}
+            <div>{{etunimi}} {{sukunimi}}</div>
+            {{/valvoja}}
+            <div>energiexpert</div>
+        </td>
+    </tr>
+</table>
+
+<p class="small-text">Denna handling har undertecknats elektroniskt i ärendehanterings- systemet</p>
 $$)
 on conflict (id) do update set label_fi          = excluded.label_fi,
                                label_sv          = excluded.label_sv,
