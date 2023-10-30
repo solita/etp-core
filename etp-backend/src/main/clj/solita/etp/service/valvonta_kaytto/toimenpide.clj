@@ -56,14 +56,16 @@
                         :decision-order-actual-decision
                         :decision-order-notice-first-mailing
                         :decision-order-notice-second-mailing
-                        :decision-order-notice-bailiff}))
+                        :decision-order-notice-bailiff
+                        :decision-order-waiting-for-deadline}))
 
 (def sakkopaatos-kuulemiskirje? (partial type? :penalty-decision-hearing-letter))
 
 (def sakkopaatos-toimenpide?
   (partial some-type? #{:penalty-decision-hearing-letter
                         :penalty-decision-notice-first-mailing
-                        :penalty-decision-notice-second-mailing}))
+                        :penalty-decision-notice-second-mailing
+                        :penalty-decision-waiting-for-deadline}))
 
 (def asha-toimenpide?
   (partial some-type? #{:rfi-request
@@ -71,11 +73,12 @@
                         :rfi-warning
                         :decision-order-hearing-letter
                         :decision-order-actual-decision
-                        :decision-order-notice-first-mailing11
+                        :decision-order-notice-first-mailing
                         :decision-order-notice-bailiff
                         :decision-order-waiting-for-deadline
                         :penalty-decision-hearing-letter
-                        :penalty-decision-notice-first-mailing}))
+                        :penalty-decision-notice-first-mailing
+                        :penalty-decision-waiting-for-deadline}))
 
 
 (def with-diaarinumero? (comp not (partial type? :case)))
