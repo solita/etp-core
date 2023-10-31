@@ -11,9 +11,13 @@
 
 (defn format-date-values [data]
   (update-vals data (fn [value]
-                        (if (= (type value) LocalDate)
-                          (time/format-date value)
-                          value))))
+                      (if (= (type value) LocalDate)
+                        (time/format-date value)
+                        value))))
+
+(defmethod previous-toimenpide-data :decision-order-actual-decision [db _toimenpide valvonta-id]
+  (let [values (first (previous-toimenpide-data-db/kaskypaatos-varsinainen-paatos db {:valvonta-id valvonta-id}))]
+    (format-date-values values)))
 
 (defmethod previous-toimenpide-data :penalty-decision-hearing-letter [db _toimenpide valvonta-id]
   (let [values (first (previous-toimenpide-data-db/sakkopaatos-kuulemiskirje db {:valvonta-id valvonta-id}))]

@@ -1,3 +1,34 @@
+-- name: kaskypaatos-varsinainen-paatos
+with kehotus as (select deadline_date, valvonta_id
+                 from vk_toimenpide
+                 where valvonta_id = :valvonta-id
+                   and type_id = 2
+                 order by create_time desc
+                 LIMIT 1),
+     varoitus as (select deadline_date, valvonta_id
+                  from vk_toimenpide
+                  where valvonta_id = :valvonta-id
+                    and type_id = 3
+                  order by create_time desc
+                  LIMIT 1),
+     kuulemiskirje as (select create_time,
+                              valvonta_id,
+                              diaarinumero,
+                              type_specific_data -> 'fine' as kuulemiskirje_fine
+                       from vk_toimenpide
+                       where valvonta_id = :valvonta-id
+                         and type_id = 7
+                       order by create_time desc
+                       LIMIT 1)
+select kehotus.deadline_date            as kehotus_maarapaiva,
+       varoitus.deadline_date           as varoitus_maarapaiva,
+       kuulemiskirje.create_time::date  as kuulemiskirje_pvm,
+       kuulemiskirje.diaarinumero       as kuulemiskirje_diaarinumero,
+       kuulemiskirje.kuulemiskirje_fine as kuulemiskirje_fine
+from kehotus
+         left join varoitus on kehotus.valvonta_id = varoitus.valvonta_id
+         left join kuulemiskirje on kehotus.valvonta_id = kuulemiskirje.valvonta_id;
+
 -- name: sakkopaatos-kuulemiskirje
 select create_time::date as varsinainen_paatos_pvm,
        deadline_date varsinainen_paatos_maarapaiva
