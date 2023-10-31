@@ -2,10 +2,10 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as string]
             [solita.common.time :as time]
-            [solita.etp.exception :as exception]
             [solita.etp.service.asha :as asha]
             [solita.etp.service.valvonta-kaytto.hallinto-oikeus-attachment :as hao-attachment]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
+            [solita.etp.service.valvonta-kaytto.toimenpide-type-specific-data :as type-specific-data]
             [solita.etp.service.valvonta-kaytto.template :as template]
             [solita.etp.service.valvonta-kaytto.store :as store]
             [solita.etp.service.valvonta-kaytto.osapuoli :as osapuoli]
@@ -16,8 +16,6 @@
 
 (db/require-queries 'valvonta-kaytto)
 (db/require-queries 'geo)
-(db/require-queries 'hallinto-oikeus)
-(db/require-queries 'karajaoikeus)
 
 (defn toimenpide-type->document [type-id]
   (let [type-key (toimenpide/type-key type-id)
@@ -93,92 +91,6 @@
                   first)]
     (update-vals data time/format-date)))
 
-(defn hallinto-oikeus-id->formatted-strings [db hallinto-oikeus-id]
-  (if-let [formatted-strings (first (hallinto-oikeus-db/find-document-template-wording-by-hallinto-oikeus-id db {:hallinto-oikeus-id hallinto-oikeus-id}))]
-    formatted-strings
-    (exception/throw-ex-info!
-      {:message (str "Unknown hallinto-oikeus-id: " hallinto-oikeus-id)})))
-
-(defn- find-value-from-osapuoli-specific-data [key osapuoli-specific-data osapuoli-id]
-  (->> osapuoli-specific-data
-       (filter #(= (:osapuoli-id %) osapuoli-id))
-       first
-       key))
-
-(def find-administrative-court-id-from-osapuoli-specific-data
-  (partial find-value-from-osapuoli-specific-data :hallinto-oikeus-id))
-
-(def find-recipient-answered-from-osapuoli-specific-data
-  (partial find-value-from-osapuoli-specific-data :recipient-answered))
-
-(defmulti format-type-specific-data
-          (fn [_db toimenpide _osapuoli-id] (-> toimenpide :type-id toimenpide/type-key)))
-
-(defn format-actual-decision-data [db toimenpide osapuoli-id]
-  (let [recipient-answered? (-> toimenpide
-                                :type-specific-data
-                                :osapuoli-specific-data
-                                (find-recipient-answered-from-osapuoli-specific-data osapuoli-id))
-        hallinto-oikeus-strings (hallinto-oikeus-id->formatted-strings
-                                  db
-                                  (-> toimenpide
-                                      :type-specific-data
-                                      :osapuoli-specific-data
-                                      (find-administrative-court-id-from-osapuoli-specific-data osapuoli-id)))]
-    {:recipient-answered       recipient-answered?
-     :vastaus-fi               (if recipient-answered?
-                                 (str "Asianosainen antoi vastineen kuulemiskirjeeseen. "
-                                      (-> toimenpide
-                                          :type-specific-data
-                                          :osapuoli-specific-data
-                                          ((partial find-value-from-osapuoli-specific-data :answer-commentary-fi) osapuoli-id)))
-                                 "Asianosainen ei vastannut kuulemiskirjeeseen.")
-
-     :vastaus-sv               (if recipient-answered?
-                                 (str "gav ett bemötande till brevet om hörande. "
-                                      (-> toimenpide
-                                          :type-specific-data
-                                          :osapuoli-specific-data
-                                          ((partial find-value-from-osapuoli-specific-data :answer-commentary-sv) osapuoli-id)))
-                                 "svarade inte på brevet om hörande.")
-     :oikeus-fi                (:fi hallinto-oikeus-strings)
-     :oikeus-sv                (:sv hallinto-oikeus-strings)
-     :fine                     (-> toimenpide :type-specific-data :fine)
-     :statement-fi             (-> toimenpide
-                                   :type-specific-data
-                                   :osapuoli-specific-data
-                                   ((partial find-value-from-osapuoli-specific-data :statement-fi) osapuoli-id))
-     :statement-sv             (-> toimenpide
-                                   :type-specific-data
-                                   :osapuoli-specific-data
-                                   ((partial find-value-from-osapuoli-specific-data :statement-sv) osapuoli-id))
-     :department-head-name     (-> toimenpide :type-specific-data :department-head-name)
-     :department-head-title-fi (-> toimenpide :type-specific-data :department-head-title-fi)
-     :department-head-title-sv (-> toimenpide :type-specific-data :department-head-title-sv)}))
-
-(defmethod format-type-specific-data :decision-order-actual-decision [db toimenpide osapuoli-id]
-  (format-actual-decision-data db toimenpide osapuoli-id))
-
-(defmethod format-type-specific-data :penalty-decision-actual-decision [db toimenpide osapuoli-id]
-  (format-actual-decision-data db toimenpide osapuoli-id))
-
-(defn- karajaoikeus-id->name [db id]
-  (first (karajaoikeus-db/find-karajaoikeus-name-by-id db {:karajaoikeus-id id})))
-
-(defmethod format-type-specific-data :decision-order-notice-bailiff [db toimenpide osapuoli-id]
-  (let [osapuoli (->> toimenpide
-                      :type-specific-data
-                      :osapuoli-specific-data
-                      (filter #(= (:osapuoli-id %) osapuoli-id))
-                      first)
-        karajaoikeus-id (:karajaoikeus-id osapuoli)
-        haastemies-email (:haastemies-email osapuoli)]
-    {:karajaoikeus     (karajaoikeus-id->name db karajaoikeus-id)
-     :haastemies-email haastemies-email}))
-
-(defmethod format-type-specific-data :default [_ toimenpide _]
-  (:type-specific-data toimenpide))
-
 (defn- template-data [db whoami valvonta toimenpide osapuoli dokumentit ilmoituspaikat tiedoksi roolit]
   {:päivä                  (time/today)
    :määräpäivä             (time/format-date (:deadline-date toimenpide))
@@ -198,7 +110,7 @@
    :tietopyynto            {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
                             :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
    :tiedoksi               (map (partial tiedoksi-saaja roolit) tiedoksi)
-   :tyyppikohtaiset-tiedot (format-type-specific-data db toimenpide (:id osapuoli))
+   :tyyppikohtaiset-tiedot (type-specific-data/format-type-specific-data db toimenpide (:id osapuoli))
    :aiemmat-toimenpiteet   (when (or (toimenpide/kaskypaatos-toimenpide? toimenpide)
                                      (toimenpide/sakkopaatos-toimenpide? toimenpide))
                              ;; TODO: Refaktoroi multimetodiksi jolloin tätä tarvitseville toimenpiteille voi antaa spesifin toteutuksen?
@@ -351,7 +263,7 @@
       (add-hallinto-oikeus-attachment db generated-pdf (-> toimenpide
                                                            :type-specific-data
                                                            :osapuoli-specific-data
-                                                           (find-administrative-court-id-from-osapuoli-specific-data (:id osapuoli))))
+                                                           (type-specific-data/find-administrative-court-id-from-osapuoli-specific-data (:id osapuoli))))
       generated-pdf)))
 
 (defn remove-osapuolet-with-no-document
