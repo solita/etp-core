@@ -4,6 +4,7 @@
             [solita.common.time :as time]
             [solita.etp.service.asha :as asha]
             [solita.etp.service.valvonta-kaytto.hallinto-oikeus-attachment :as hao-attachment]
+            [solita.etp.service.valvonta-kaytto.previous-toimenpide-data :as previous-toimenpide]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
             [solita.etp.service.valvonta-kaytto.toimenpide-type-specific-data :as type-specific-data]
             [solita.etp.service.valvonta-kaytto.template :as template]
@@ -111,14 +112,7 @@
                             :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
    :tiedoksi               (map (partial tiedoksi-saaja roolit) tiedoksi)
    :tyyppikohtaiset-tiedot (type-specific-data/format-type-specific-data db toimenpide (:id osapuoli))
-   :aiemmat-toimenpiteet   (when (or (toimenpide/kaskypaatos-toimenpide? toimenpide)
-                                     (toimenpide/sakkopaatos-toimenpide? toimenpide))
-                             ;; TODO: Refaktoroi multimetodiksi jolloin tätä tarvitseville toimenpiteille voi antaa spesifin toteutuksen?
-                             (merge
-                               (kuulemiskirje-data db (:id valvonta))
-                               (kaskypaatos-varsinainen-paatos-data db (:id valvonta))
-                               (sakkopaatos-kuulemiskirje-data db (:id valvonta))
-                               (past-dates-for-kaskypaatos-toimenpiteet db (:id valvonta))))})
+   :aiemmat-toimenpiteet   (previous-toimenpide/previous-toimenpide-data db toimenpide  (:id valvonta))})
 
 (defn- request-id [valvonta-id toimenpide-id]
   (str valvonta-id "/" toimenpide-id))

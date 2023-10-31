@@ -9,7 +9,7 @@
 (t/use-fixtures :each ts/fixture)
 
 (t/deftest previous-toimenpide-data-for-decision-order-hearing-letter-test
-  (t/testing "Käskypäätös / kuulemiskirje needs"
+  (t/testing "Käskypäätös / kuulemiskirje needs kehotus pvm, deadline and varoitus deadline"
     (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite "Testitie 5"})
           kehotus-timestamp (-> (LocalDate/of 2023 6 12)
                                 (.atStartOfDay (ZoneId/systemDefault))
