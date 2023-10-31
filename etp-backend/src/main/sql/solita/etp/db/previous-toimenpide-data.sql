@@ -1,3 +1,12 @@
+-- name: sakkopaatos-kuulemiskirje
+select create_time::date as varsinainen_paatos_pvm,
+       deadline_date varsinainen_paatos_maarapaiva
+from vk_toimenpide
+where valvonta_id = :valvonta-id
+  and type_id = 8
+order by create_time desc
+LIMIT 1;
+
 -- name: sakkopaatos-varsinainen-paatos
 with varsinainen_paatos as (select create_time,
                                    deadline_date,
