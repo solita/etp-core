@@ -15,6 +15,11 @@
                         (time/format-date value)
                         value))))
 
+(defmethod previous-toimenpide-data :decision-order-hearing-letter [db _toimenpide valvonta-id]
+  (let [values (first (previous-toimenpide-data-db/kaskypaatos-kuulemiskirje db {:valvonta-id valvonta-id}))]
+    (format-date-values values)))
+
+
 (defmethod previous-toimenpide-data :decision-order-actual-decision [db _toimenpide valvonta-id]
   (let [values (first (previous-toimenpide-data-db/kaskypaatos-varsinainen-paatos db {:valvonta-id valvonta-id}))]
     (format-date-values values)))
