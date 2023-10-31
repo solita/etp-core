@@ -61,37 +61,6 @@
                 (when (some? rooli) (str (:label-fi rooli) "/" (:label-sv rooli)))))
      :email (template-optional (:email osapuoli))}))
 
-(defn kuulemiskirje-data
-  "Returns diaarinumero and fine amount of the newest
-   kuulemiskirje-toimenpide associated with the given valvonta-id."
-  [db valvonta-id]
-  (->> {:valvonta-id valvonta-id}
-       (valvonta-kaytto-db/kuulemiskirje-data db)
-       first))
-
-(defn sakkopaatos-kuulemiskirje-data [db valvonta-id]
-  (->> {:valvonta-id valvonta-id}
-       (valvonta-kaytto-db/sakkopaatos-kuulemiskirje-data db)
-       first))
-
-(defn kaskypaatos-varsinainen-paatos-data
-  "Returns diaarinumero and fine amount of the newest
-   kuulemiskirje-toimenpide associated with the given valvonta-id."
-  [db valvonta-id]
-  (->> {:valvonta-id valvonta-id}
-       (valvonta-kaytto-db/varsinainen-paatos-data db)
-       first))
-
-;; TODO: Tarkempi nimi
-(defn past-dates-for-kaskypaatos-toimenpiteet
-  "Retrieves the dates of kehotus, varoitus and kuulemiskirje toimenpiteet with
-   the given valvonta-id and formats them for displaying in a document"
-  [db valvonta-id]
-  (let [data (->> {:valvonta-id valvonta-id}
-                  (valvonta-kaytto-db/past-dates-for-kaskypaatos-toimenpiteet db)
-                  first)]
-    (update-vals data time/format-date)))
-
 (defn- template-data [db whoami valvonta toimenpide osapuoli dokumentit ilmoituspaikat tiedoksi roolit]
   {:päivä                  (time/today)
    :määräpäivä             (time/format-date (:deadline-date toimenpide))
