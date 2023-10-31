@@ -23,8 +23,12 @@
    11 :decision-order-notice-bailiff
    12 :decision-order-waiting-for-deadline
    14 :penalty-decision-hearing-letter
+   15 :change-when-implement-penalty-decision-actual-decision
    16 :penalty-decision-notice-first-mailing
-   17 :penalty-decision-notice-second-mailing})
+   17 :penalty-decision-notice-second-mailing
+   18 :change-when-implement-penalty-decision-notice-bailiff
+   19 :penalty-decision-waiting-for-deadline
+   21 :change-when-implement-sakkoluettelo-delivery-ongoing})
 
 (defn type-key [type-id]
   (if-let [type-key (type-id->type-key type-id)]
@@ -52,14 +56,16 @@
                         :decision-order-actual-decision
                         :decision-order-notice-first-mailing
                         :decision-order-notice-second-mailing
-                        :decision-order-notice-bailiff}))
+                        :decision-order-notice-bailiff
+                        :decision-order-waiting-for-deadline}))
 
 (def sakkopaatos-kuulemiskirje? (partial type? :penalty-decision-hearing-letter))
 
 (def sakkopaatos-toimenpide?
   (partial some-type? #{:penalty-decision-hearing-letter
                         :penalty-decision-notice-first-mailing
-                        :penalty-decision-notice-second-mailing}))
+                        :penalty-decision-notice-second-mailing
+                        :penalty-decision-waiting-for-deadline}))
 
 (def asha-toimenpide?
   (partial some-type? #{:rfi-request
@@ -67,11 +73,12 @@
                         :rfi-warning
                         :decision-order-hearing-letter
                         :decision-order-actual-decision
-                        :decision-order-notice-first-mailing11
+                        :decision-order-notice-first-mailing
                         :decision-order-notice-bailiff
                         :decision-order-waiting-for-deadline
                         :penalty-decision-hearing-letter
-                        :penalty-decision-notice-first-mailing}))
+                        :penalty-decision-notice-first-mailing
+                        :penalty-decision-waiting-for-deadline}))
 
 
 (def with-diaarinumero? (comp not (partial type? :case)))
