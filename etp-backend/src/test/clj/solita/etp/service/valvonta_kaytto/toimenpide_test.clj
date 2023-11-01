@@ -266,8 +266,8 @@
       (t/is (true? (toimenpide/asha-toimenpide? {:type-id 19})))))
 
   (t/testing "Sakkoluettelon lähetys menossa"
-    (t/testing "has type-id 21 and type-key :change-when-implement-sakkoluettelo-delivery-ongoing"
-      (t/is (= (toimenpide/type-key 21) :change-when-implement-sakkoluettelo-delivery-ongoing)))
+    (t/testing "has type-id 21 and type-key :penalty-list-delivery-in-progress"
+      (t/is (= (toimenpide/type-key 21) :penalty-list-delivery-in-progress)))
     (t/testing "is not kaskypaatos-toimenpide?"
       (t/is (false? (toimenpide/kaskypaatos-toimenpide? {:type-id 21}))))
     (t/testing "is not sakkopaatos-toimenpide?"

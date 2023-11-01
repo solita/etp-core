@@ -28,7 +28,7 @@
    17 :penalty-decision-notice-second-mailing
    18 :change-when-implement-penalty-decision-notice-bailiff
    19 :penalty-decision-waiting-for-deadline
-   21 :change-when-implement-sakkoluettelo-delivery-ongoing})
+   21 :penalty-list-delivery-in-progress})
 
 (defn type-key [type-id]
   (if-let [type-key (type-id->type-key type-id)]
