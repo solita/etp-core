@@ -30,7 +30,7 @@
                                             :publish_time  varoitus-timestamp
                                             :deadline_date (LocalDate/of 2023 8 13)})
 
-      (t/is (= (previous-toimenpide/previous-toimenpide-data ts/*db* {:type-id 7} valvonta-id)
+      (t/is (= (previous-toimenpide/formatted-previous-toimenpide-data ts/*db* {:type-id 7} valvonta-id)
                {:kehotus-pvm        "12.06.2023"
                 :kehotus-maarapaiva "12.07.2023"
                 :varoitus-maarapaiva "13.08.2023"}))))
@@ -82,7 +82,7 @@
       ;; The newest kehotus creation date and deadline and varoitus creation date
       ;; and deadline are found and formatted correctly
       ;; There is no kuulemiskirje toimenpide yet
-      (t/is (= (previous-toimenpide/previous-toimenpide-data ts/*db* {:type-id 7} valvonta-id)
+      (t/is (= (previous-toimenpide/formatted-previous-toimenpide-data ts/*db* {:type-id 7} valvonta-id)
                {:kehotus-pvm                   "12.06.2023"
                 :kehotus-maarapaiva            "12.07.2023"
                 :varoitus-maarapaiva           "13.08.2023"})))))
@@ -121,7 +121,7 @@
                                             :diaarinumero "ARA-XKC-24232"
                                             :type_specific_data {:fine 800}})
 
-      (t/is (= (previous-toimenpide/previous-toimenpide-data ts/*db* {:type-id 8} valvonta-id)
+      (t/is (= (previous-toimenpide/formatted-previous-toimenpide-data ts/*db* {:type-id 8} valvonta-id)
                {:kuulemiskirje-diaarinumero "ARA-XKC-24232"
                 :kuulemiskirje-pvm "14.08.2023"
                 :kuulemiskirje-fine 800
@@ -156,7 +156,7 @@
                        :deadline_date      (LocalDate/of 2023 8 28)
                        :diaarinumero       "ARA-05.03.01-2023-245"
                        :type_specific_data {:fine 3200}})
-        (t/is (= (previous-toimenpide/previous-toimenpide-data ts/*db* {:type-id 8} valvonta-id)
+        (t/is (= (previous-toimenpide/formatted-previous-toimenpide-data ts/*db* {:type-id 8} valvonta-id)
                  {:kuulemiskirje-diaarinumero  "ARA-05.03.01-2023-245"
                   :kuulemiskirje-pvm "19.08.2023"
                   :kuulemiskirje-fine 3200
@@ -189,7 +189,7 @@
                                             :diaarinumero  "ARA 21345-XSW"
                                             :deadline_date (LocalDate/of 2023 11 12)})
 
-      (t/is (= (previous-toimenpide/previous-toimenpide-data ts/*db* {:type-id 15} valvonta-id)
+      (t/is (= (previous-toimenpide/formatted-previous-toimenpide-data ts/*db* {:type-id 15} valvonta-id)
                {:varsinainen-paatos-pvm                 "14.09.2023"
                 :varsinainen-paatos-maarapaiva          "28.10.2023"
                 :varsinainen-paatos-diaarinumero        "ARA-2132-X"
@@ -212,6 +212,6 @@
                                             :diaarinumero       "ARA-2132-X"
                                             :type_specific_data {:fine 902}})
 
-      (t/is (= (previous-toimenpide/previous-toimenpide-data ts/*db* {:type-id 14} valvonta-id)
+      (t/is (= (previous-toimenpide/formatted-previous-toimenpide-data ts/*db* {:type-id 14} valvonta-id)
                {:varsinainen-paatos-pvm        "14.09.2023"
                 :varsinainen-paatos-maarapaiva "28.10.2023"})))))

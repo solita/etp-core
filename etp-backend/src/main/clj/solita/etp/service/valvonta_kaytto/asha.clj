@@ -81,7 +81,7 @@
                             :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
    :tiedoksi               (map (partial tiedoksi-saaja roolit) tiedoksi)
    :tyyppikohtaiset-tiedot (type-specific-data/format-type-specific-data db toimenpide (:id osapuoli))
-   :aiemmat-toimenpiteet   (previous-toimenpide/previous-toimenpide-data db toimenpide  (:id valvonta))})
+   :aiemmat-toimenpiteet   (previous-toimenpide/formatted-previous-toimenpide-data db toimenpide (:id valvonta))})
 
 (defn- request-id [valvonta-id toimenpide-id]
   (str valvonta-id "/" toimenpide-id))
@@ -235,6 +235,7 @@
   specified in type-specific-data of the toimenpide.
   For all other toimenpidetypes all osapuolet are returned."
   [toimenpide osapuolet]
+  ;; TODO: Poista sakkopäätös / varsinainen päätös -toimenpiteestä
   (if ((some-fn toimenpide/kaskypaatos-varsinainen-paatos? toimenpide/kaskypaatos-haastemies-tiedoksianto?) toimenpide)
     (let [osapuolet-with-document (->> toimenpide
                                        :type-specific-data
