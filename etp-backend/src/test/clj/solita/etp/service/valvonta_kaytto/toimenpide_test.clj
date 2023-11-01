@@ -218,14 +218,14 @@
       (t/is (true? (toimenpide/asha-toimenpide? {:type-id 14})))))
 
   (t/testing "Sakkopäätös / varsinainen päätös"
-    (t/testing "has type-id 15 and type-key :change-when-implement-penalty-decision-actual-decision"
-      (t/is (= (toimenpide/type-key 15) :change-when-implement-penalty-decision-actual-decision)))
+    (t/testing "has type-id 15 and type-key :penalty-decision-actual-decision"
+      (t/is (= (toimenpide/type-key 15) :penalty-decision-actual-decision)))
     (t/testing "is not kaskypaatos-toimenpide?"
       (t/is (false? (toimenpide/kaskypaatos-toimenpide? {:type-id 15}))))
-    (t/testing "is not sakkopaatos-toimenpide?"
-      (t/is (false? (toimenpide/sakkopaatos-toimenpide? {:type-id 15}))))
-    (t/testing "is not asha-toimenpide?"
-      (t/is (false? (toimenpide/asha-toimenpide? {:type-id 15})))))
+    (t/testing "is sakkopaatos-toimenpide?"
+      (t/is (true? (toimenpide/sakkopaatos-toimenpide? {:type-id 15}))))
+    (t/testing "is asha-toimenpide?"
+      (t/is (true? (toimenpide/asha-toimenpide? {:type-id 15})))))
 
   (t/testing "Sakkopäätös / tiedoksianto (ensimmäinen postitus)"
     (t/testing "has type-id 16 and type-key :penalty-decision-notice-first-mailing"
