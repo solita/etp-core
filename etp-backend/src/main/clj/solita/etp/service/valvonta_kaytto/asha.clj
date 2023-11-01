@@ -236,7 +236,9 @@
   For all other toimenpidetypes all osapuolet are returned."
   [toimenpide osapuolet]
   ;; TODO: Poista sakkopäätös / varsinainen päätös -toimenpiteestä
-  (if ((some-fn toimenpide/kaskypaatos-varsinainen-paatos? toimenpide/kaskypaatos-haastemies-tiedoksianto?) toimenpide)
+  (if ((some-fn toimenpide/kaskypaatos-varsinainen-paatos?
+                toimenpide/kaskypaatos-haastemies-tiedoksianto?
+                toimenpide/sakkopaatos-varsinainen-paatos?) toimenpide)
     (let [osapuolet-with-document (->> toimenpide
                                        :type-specific-data
                                        :osapuoli-specific-data
