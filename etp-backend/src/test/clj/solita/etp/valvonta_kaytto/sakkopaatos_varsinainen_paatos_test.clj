@@ -307,12 +307,14 @@
                               :template-id        9
                               :description        "Tehdään varsinainen päätös, omistaja ei vastannut kuulemiskirjeeseen"
                               :type-specific-data {:fine                     857
-                                                   :osapuoli-specific-data   [{:osapuoli-id        osapuoli-id
-                                                                               :hallinto-oikeus-id 4
-                                                                               :statement-fi       "ARAn päätökseen ei ole haettu muutosta, eli päätös on lainvoimainen. Maksuun tuomittavan uhkasakon määrä on sama kuin mitä se on ollut ARAn päätöksessä. ARAn näkemyksen mukaan uhkasakko tuomitaan maksuun täysimääräisenä, koska Asianosainen ei ole noudattanut päävelvoitetta lainkaan, eikä ole myöskään esittänyt noudattamatta jättämiselle pätevää syytä."
-                                                                               :statement-sv       "Placeholder"
-                                                                               :document           true
-                                                                               :recipient-answered false}]
+                                                   :osapuoli-specific-data   [{:osapuoli-id          osapuoli-id
+                                                                               :hallinto-oikeus-id   4
+                                                                               :statement-fi         "ARAn päätökseen ei ole haettu muutosta, eli päätös on lainvoimainen. Maksuun tuomittavan uhkasakon määrä on sama kuin mitä se on ollut ARAn päätöksessä. ARAn näkemyksen mukaan uhkasakko tuomitaan maksuun täysimääräisenä, koska Asianosainen ei ole noudattanut päävelvoitetta lainkaan, eikä ole myöskään esittänyt noudattamatta jättämiselle pätevää syytä."
+                                                                               :statement-sv         "Placeholder"
+                                                                               :answer-commentary-fi "Asianosainen ei vastannut."
+                                                                               :answer-commentary-sv "Nej ansverat han."
+                                                                               :document             true
+                                                                               :recipient-answered   false}]
                                                    :department-head-title-fi "Senior Vice President"
                                                    :department-head-title-sv "Kungen"
                                                    :department-head-name     "Jane Doe"}}
@@ -320,6 +322,7 @@
                                        (mock/json-body new-toimenpide)
                                        (test-kayttajat/with-virtu-user)
                                        (mock/header "Accept" "application/json")))]
+          (println (j/read-value (:body response) j/keyword-keys-object-mapper))
           (t/is (true? @html->pdf-called?))
           (t/is (= (:status response) 201))
 
@@ -364,13 +367,15 @@
                         {:department-head-title-fi "Senior Vice President",
                          :department-head-name     "Jane Doe",
                          :osapuoli-specific-data
-                         [{:hallinto-oikeus-id 4,
-                           :osapuoli-id        1,
-                           :recipient-answered false,
-                           :document           true,
-                           :statement-sv       "Placeholder",
+                         [{:hallinto-oikeus-id   4,
+                           :osapuoli-id          1,
+                           :recipient-answered   false,
+                           :document             true,
+                           :statement-sv         "Placeholder",
                            :statement-fi
-                           "ARAn päätökseen ei ole haettu muutosta, eli päätös on lainvoimainen. Maksuun tuomittavan uhkasakon määrä on sama kuin mitä se on ollut ARAn päätöksessä. ARAn näkemyksen mukaan uhkasakko tuomitaan maksuun täysimääräisenä, koska Asianosainen ei ole noudattanut päävelvoitetta lainkaan, eikä ole myöskään esittänyt noudattamatta jättämiselle pätevää syytä."}],
+                           "ARAn päätökseen ei ole haettu muutosta, eli päätös on lainvoimainen. Maksuun tuomittavan uhkasakon määrä on sama kuin mitä se on ollut ARAn päätöksessä. ARAn näkemyksen mukaan uhkasakko tuomitaan maksuun täysimääräisenä, koska Asianosainen ei ole noudattanut päävelvoitetta lainkaan, eikä ole myöskään esittänyt noudattamatta jättämiselle pätevää syytä."
+                           :answer-commentary-fi "Asianosainen ei vastannut."
+                           :answer-commentary-sv "Nej ansverat han."}],
                          :department-head-title-sv "Kungen",
                          :fine                     857},
                         :template-id   9}))))))))
@@ -402,12 +407,14 @@
                             :template-id        9
                             :description        "Tehdään varsinainen päätös, omistaja ei vastannut kuulemiskirjeeseen"
                             :type-specific-data {:fine                     857
-                                                 :osapuoli-specific-data   [{:osapuoli-id        osapuoli-id
-                                                                             :hallinto-oikeus-id 3
-                                                                             :document           true
-                                                                             :recipient-answered false
-                                                                             :statement-fi       "Päätöstä ei muuteta."
-                                                                             :statement-sv       "Beslutet kommer inte att ändras."}]
+                                                 :osapuoli-specific-data   [{:osapuoli-id          osapuoli-id
+                                                                             :hallinto-oikeus-id   3
+                                                                             :document             true
+                                                                             :recipient-answered   false
+                                                                             :statement-fi         "Päätöstä ei muuteta."
+                                                                             :statement-sv         "Beslutet kommer inte att ändras."
+                                                                             :answer-commentary-fi "Vastausta ei annettu"
+                                                                             :answer-commentary-sv "Svar gavs inte"}]
                                                  :department-head-title-fi "Johtaja"
                                                  :department-head-title-sv "Ledar"
                                                  :department-head-name     "Nimi Muutettu"}}

@@ -96,26 +96,16 @@
 
 (def SakkoPaatosKuulemiskirjeData {:fine common-schema/NonNegative})
 
-;; TODO: Tarkasta kenttien tarpeellisuus
 (def SakkopaatosVarsinainenPaatosOsapuoliSpecificData
   (schema/conditional
-    ;; Osapuoli has a document and has answered to kuulemiskirje, so all fields are required
-    (every-pred toimenpide/osapuoli-has-document? toimenpide/recipient-answered?)
+    ;; Osapuoli has a document so all fields are required
+    toimenpide/osapuoli-has-document?
     {:osapuoli-id          common-schema/Key
      :hallinto-oikeus-id   HallintoOikeusId
      :document             schema/Bool
      :recipient-answered   schema/Bool
      :answer-commentary-fi schema/Str
      :answer-commentary-sv schema/Str
-     :statement-fi         schema/Str
-     :statement-sv         schema/Str}
-
-    ;; Osapuoli has document but has not answered to kuulemiskirje, so answer and statement are not allowed
-    toimenpide/osapuoli-has-document?
-    {:osapuoli-id        common-schema/Key
-     :hallinto-oikeus-id HallintoOikeusId
-     :document           schema/Bool
-     :recipient-answered schema/Bool
      :statement-fi         schema/Str
      :statement-sv         schema/Str}
 
