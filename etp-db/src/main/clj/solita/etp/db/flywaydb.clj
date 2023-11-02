@@ -64,4 +64,25 @@
         (println "Unsupported command:" command)
         (println guide)))))
 
+(def dev-configs
+  [{:user     "etp"
+    :password "etp"
+    :url      (add-application-name "jdbc:postgresql://localhost:5432/postgres")}
+   {:user "etp"
+    :password "etp"
+    :url (add-application-name "jdbc:postgresql://localhost:5432/etp_dev")}])
+
+(defn runboth [command]
+  (run!
+    (fn [db]
+      (let [flyway (configure-flyway db)]
+        (case command
+          "clean" (.clean flyway)
+          "migrate" (.migrate flyway)
+          "repair" (.repair flyway)
+          (do
+            (println "Unsupported command:" command)
+            (println guide)))))
+    dev-configs))
+
 (defn -main [& args] (run args))
