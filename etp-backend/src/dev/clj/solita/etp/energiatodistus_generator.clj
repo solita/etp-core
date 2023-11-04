@@ -8,12 +8,17 @@
   (:import (java.time Instant)))
 
 (defn- energiatodistukset->signed-energiatodistukset-db-rows
-  "Transform energiatodistukset into db-rows that are signed.
-  This is perhaps not 100% accurate representation on how production data
-  looks, but it should be close enough for performance testing purposes."
+  "Transform generated energiatodistukset into db-rows that are signed."
   [laatija-id versio energiatodistukset]
-  (map #(-> % (assoc :versio versio
-                     :laatija-id laatija-id
+  (map #(-> % (assoc :laatija-id laatija-id
+                     :versio versio
+                     ;; The members above are items simply not set by the direct
+                     ;; generator function, so they are inserted here. The items
+                     ;; below mock the signing.
+                     ;;
+                     ;; This is perhaps not 100% accurate representation on how a signed ET
+                     ;; in production data looks, but it should be close enough for
+                     ;; performance testing purposes.
                      :tila-id 2
                      :allekirjoitusaika (Instant/now)
                      ;; Set voimassaolo-paattymisaika 10 years into the future.
