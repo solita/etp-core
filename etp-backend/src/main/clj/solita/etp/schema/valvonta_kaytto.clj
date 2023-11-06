@@ -98,16 +98,17 @@
 
 (def SakkopaatosVarsinainenPaatosOsapuoliSpecificData
   (schema/conditional
-    ;; Osapuoli has a document so all fields are required
+    ;; Osapuoli has a document so all fields are required to have values
+    ;; answer-commentary fields are optional but if present, values are required
     toimenpide/osapuoli-has-document?
     {:osapuoli-id          common-schema/Key
      :hallinto-oikeus-id   HallintoOikeusId
      :document             schema/Bool
      :recipient-answered   schema/Bool
-     :answer-commentary-fi schema/Str
-     :answer-commentary-sv schema/Str
-     :statement-fi         schema/Str
-     :statement-sv         schema/Str}
+     (schema/optional-key :answer-commentary-fi) schema/Str
+     (schema/optional-key :answer-commentary-sv) schema/Str
+     :statement-fi schema/Str
+     :statement-sv schema/Str}
 
     ;; Osapuoli has no document so no other fields are allowed
     :else
