@@ -264,7 +264,6 @@ values (9, 'Sakkopäätös / varsinainen päätös', 'Sakkopäätös / varsinain
     {{#aiemmat-toimenpiteet}}{{varsinainen-paatos-fine}}{{/aiemmat-toimenpiteet}} euro. Enligt beslutet döms vitet ut om
     ARAs order inte iakttas inom utsatt tid.</p>
 
-<!-- TODO: Esimerkkitekstin sisällä on viittaus sukunimeen -->
 {{#tyyppikohtaiset-tiedot}}
 <p class="respect-new-lines">{{statement-sv}}</p>
 {{/tyyppikohtaiset-tiedot}}
