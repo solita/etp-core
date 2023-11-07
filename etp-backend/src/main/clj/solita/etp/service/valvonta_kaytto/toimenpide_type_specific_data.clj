@@ -39,21 +39,22 @@
                                       :osapuoli-specific-data
                                       (find-administrative-court-id-from-osapuoli-specific-data osapuoli-id)))]
     {:recipient-answered       recipient-answered?
-     :vastaus-fi               (if recipient-answered?
-                                 (str "Asianosainen antoi vastineen kuulemiskirjeeseen. "
-                                      (-> toimenpide
-                                          :type-specific-data
-                                          :osapuoli-specific-data
-                                          ((partial find-value-from-osapuoli-specific-data :answer-commentary-fi) osapuoli-id)))
-                                 "Asianosainen ei vastannut kuulemiskirjeeseen.")
-
-     :vastaus-sv               (if recipient-answered?
-                                 (str "gav ett bemötande till brevet om hörande. "
-                                      (-> toimenpide
-                                          :type-specific-data
-                                          :osapuoli-specific-data
-                                          ((partial find-value-from-osapuoli-specific-data :answer-commentary-sv) osapuoli-id)))
-                                 "svarade inte på brevet om hörande.")
+     :vastaus-fi               (let [answer-commentary (-> toimenpide
+                                                           :type-specific-data
+                                                           :osapuoli-specific-data
+                                                           ((partial find-value-from-osapuoli-specific-data :answer-commentary-fi) osapuoli-id))
+                                     recipient-answered-string (if recipient-answered?
+                                                                 "Asianosainen antoi vastineen kuulemiskirjeeseen. "
+                                                                 "Asianosainen ei vastannut kuulemiskirjeeseen. ")]
+                                 (str recipient-answered-string answer-commentary))
+     :vastaus-sv               (let [answer-commentary (-> toimenpide
+                                                           :type-specific-data
+                                                           :osapuoli-specific-data
+                                                           ((partial find-value-from-osapuoli-specific-data :answer-commentary-sv) osapuoli-id))
+                                     recipient-answered-string (if recipient-answered?
+                                                                 "gav ett bemötande till brevet om hörande. "
+                                                                 "svarade inte på brevet om hörande. ")]
+                                 (str recipient-answered-string answer-commentary))
      :oikeus-fi                (:fi hallinto-oikeus-strings)
      :oikeus-sv                (:sv hallinto-oikeus-strings)
      :fine                     (-> toimenpide :type-specific-data :fine)
