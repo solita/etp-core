@@ -63,7 +63,13 @@ values (9, 'Sakkopäätös / varsinainen päätös', 'Sakkopäätös / varsinain
     vaikuttaa asian ratkaisuun.</p>
 {{/aiemmat-toimenpiteet}}
 
-<p class="respect-new-lines">{{#tyyppikohtaiset-tiedot}}{{vastaus-fi}}{{/tyyppikohtaiset-tiedot}}</p>
+{{#tyyppikohtaiset-tiedot}}
+<p class="respect-new-lines">{{vastaus-fi}}</p>
+
+{{^recipient-answered}}
+<div class="sivunvaihto"></div>
+{{/recipient-answered}}
+{{/tyyppikohtaiset-tiedot}}
 
 <h3>Päätöksen perustelut</h3>
 
@@ -211,6 +217,12 @@ values (9, 'Sakkopäätös / varsinainen päätös', 'Sakkopäätös / varsinain
     {{#omistaja-yritys}}
     {{nimi}}
     {{/omistaja-yritys}} {{#tyyppikohtaiset-tiedot}}{{vastaus-sv}}{{/tyyppikohtaiset-tiedot}}</p>
+
+{{#tyyppikohtaiset-tiedot}}
+{{^recipient-answered}}
+<div class="sivunvaihto"></div>
+{{/recipient-answered}}
+{{/tyyppikohtaiset-tiedot}}
 
 <h3>Motivering av beslutet</h3>
 
