@@ -201,6 +201,7 @@
 (schema/defschema WeightedLocale
   "A single locale with weight for Accept-Language header"
   [(schema/one (schema/constrained schema/Str #(re-matches #"(?i)([*]|[a-z]{2,3})" %)) "lang") (schema/one (schema/constrained schema/Num #(and (>= % 0) (<= % 1))) "weight")])
+
 (schema/defschema AcceptLanguage
   "Define a schema for Accept-Language header. The header can contain multiple locales with preferred weights, for example Accept-Language: fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5"
   [WeightedLocale])
@@ -217,4 +218,4 @@
       2 [(-> parts first parse-lang) (Double/parseDouble (second parts))])))
 
 (defn parse-accept-language [s]
-  (map parse-locale (str/split s #",")))
+  (map parse-locale (map str/trim (str/split s #","))))
