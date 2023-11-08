@@ -122,7 +122,6 @@
                                                        .toInstant)
                                                    time/timezone)
                       #'pdf/html->pdf (partial html->pdf-with-assertion
-                                               ;; Tähän oikea
                                                "documents/sakkopaatos-varsinainen-paatos-yksityishenkilo.html"
                                                html->pdf-called?)}
         (let [new-toimenpide {:type-id            15
