@@ -107,7 +107,13 @@
                                        (test-kayttajat/with-virtu-user)
                                        (mock/header "Accept" "application/json")))]
           (t/is (true? @html->pdf-called?))
-          (t/is (= (:status response) 201))))))
+          (t/is (= (:status response) 201))))
+
+      (t/testing "Created document can be downloaded through the api"
+        (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet/%s/henkilot/%s/document/kaskypaatos.pdf" valvonta-id 4 osapuoli-id))
+                                       (test-kayttajat/with-virtu-user)
+                                       (mock/header "Accept" "application/pdf")))]
+          (t/is (= (:status response) 200))))))
 
   (t/testing "Käskypäätös / varsinainen päätös toimenpide is created successfully for yritys and document is generated with correct information"
     ;; Add the valvonta and previous toimenpides
@@ -234,8 +240,14 @@
                                    :document           true
                                    :recipient-answered false}]
                                  :department-head-title-sv "Kungen"
-                                 :fine                     857,},
-                                :template-id   6}))))))))
+                                 :fine                     857},
+                                :template-id   6}))))
+
+          (t/testing "Created document can be downloaded through the api"
+            (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet/%s/yritykset/%s/document/kaskypaatos.pdf" valvonta-id 8 osapuoli-id))
+                                           (test-kayttajat/with-virtu-user)
+                                           (mock/header "Accept" "application/pdf")))]
+              (t/is (= (:status response) 200))))))))
 
   (t/testing "Käskypäätös / varsinainen päätös toimenpide is created successfully when there are multiple osapuolis but one lives abroad and will not receive the document because of being outside court jurisdiction"
     ;; Add the valvonta and previous toimenpides
