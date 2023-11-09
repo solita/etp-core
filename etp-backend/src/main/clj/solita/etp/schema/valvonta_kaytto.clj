@@ -96,6 +96,31 @@
 
 (def SakkoPaatosKuulemiskirjeData {:fine common-schema/NonNegative})
 
+(def SakkopaatosVarsinainenPaatosOsapuoliSpecificData
+  (schema/conditional
+    ;; Osapuoli has a document so all fields are required to have values
+    ;; answer-commentary fields are optional but if present, values are required
+    toimenpide/osapuoli-has-document?
+    {:osapuoli-id          common-schema/Key
+     :hallinto-oikeus-id   HallintoOikeusId
+     :document             schema/Bool
+     :recipient-answered   schema/Bool
+     (schema/optional-key :answer-commentary-fi) schema/Str
+     (schema/optional-key :answer-commentary-sv) schema/Str
+     :statement-fi schema/Str
+     :statement-sv schema/Str}
+
+    ;; Osapuoli has no document so no other fields are allowed
+    :else
+    {:osapuoli-id common-schema/Key
+     :document    schema/Bool}))
+
+(def SakkopaatosVarsinainenPaatosData {:fine                     common-schema/NonNegative
+                                       :osapuoli-specific-data   [SakkopaatosVarsinainenPaatosOsapuoliSpecificData]
+                                       :department-head-title-fi schema/Str
+                                       :department-head-title-sv schema/Str
+                                       :department-head-name     schema/Str})
+
 (def ToimenpideAdd
   (schema/conditional
     toimenpide/kaskypaatos-kuulemiskirje?
@@ -109,6 +134,9 @@
 
     toimenpide/sakkopaatos-kuulemiskirje?
     (assoc ToimenpideAddBase :type-specific-data SakkoPaatosKuulemiskirjeData)
+
+    toimenpide/sakkopaatos-varsinainen-paatos?
+    (assoc ToimenpideAddBase :type-specific-data SakkopaatosVarsinainenPaatosData)
 
     :else ToimenpideAddBase))
 
@@ -163,6 +191,9 @@
 
                   toimenpide/sakkopaatos-kuulemiskirje?
                   (assoc ToimenpideBase :type-specific-data SakkoPaatosKuulemiskirjeData)
+
+                  toimenpide/sakkopaatos-varsinainen-paatos?
+                  (assoc ToimenpideBase :type-specific-data SakkopaatosVarsinainenPaatosData)
 
                   :else (assoc ToimenpideBase :type-specific-data (schema/enum nil))))
 

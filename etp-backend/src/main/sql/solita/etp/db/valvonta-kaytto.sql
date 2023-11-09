@@ -310,7 +310,6 @@ where note.valvonta_id = :valvonta-id
   and note.deleted = false
 order by note.id, a.modifytime asc, a.event_id desc
 
-
 -- name: select-valvonta-by-rakennustunnus
 select valvonta.id, coalesce(last_toimenpide.publish_time, last_toimenpide.create_time) as end_time
 from vk_valvonta valvonta
@@ -332,52 +331,6 @@ ORDER BY ordinal ASC;
 SELECT id
 FROM vk_toimenpidetype
 WHERE manually_deliverable is true;
-
--- name: past-dates-for-kaskypaatos-toimenpiteet
-with kehotus as (select create_time, deadline_date, valvonta_id
-                 from vk_toimenpide
-                 where valvonta_id = :valvonta-id
-                   and type_id = 2
-                 order by create_time desc
-                 LIMIT 1),
-     varoitus as (select create_time, deadline_date, valvonta_id
-                  from vk_toimenpide
-                  where valvonta_id = :valvonta-id
-                    and type_id = 3
-                  order by create_time desc
-                  LIMIT 1),
-     kuulemiskirje as (select create_time, deadline_date, valvonta_id
-                       from vk_toimenpide
-                       where valvonta_id = :valvonta-id
-                         and type_id = 7
-                       order by create_time desc
-                       LIMIT 1),
-     varsinainen_paatos as (select create_time, deadline_date, valvonta_id
-                            from vk_toimenpide
-                            where valvonta_id = :valvonta-id
-                              and type_id = 8
-                            order by create_time desc
-                            LIMIT 1)
-select kehotus.create_time::date            as kehotus_pvm,
-       kehotus.deadline_date                as kehotus_maarapaiva,
-       varoitus.create_time::date           as varoitus_pvm,
-       varoitus.deadline_date               as varoitus_maarapaiva,
-       kuulemiskirje.create_time::date      as kuulemiskirje_pvm,
-       kuulemiskirje.deadline_date          as kuulemiskirje_maarapaiva,
-       varsinainen_paatos.create_time::date as varsinainen_paatos_pvm,
-       varsinainen_paatos.deadline_date     as varsinainen_paatos_maarapaiva
-from kehotus
-         left join varoitus on kehotus.valvonta_id = varoitus.valvonta_id
-         left join kuulemiskirje on kehotus.valvonta_id = kuulemiskirje.valvonta_id
-         left join varsinainen_paatos on kehotus.valvonta_id = varsinainen_paatos.valvonta_id;
-
--- name: kuulemiskirje-data
-select diaarinumero as kuulemiskirje_diaarinumero, type_specific_data->'fine' as kuulemiskirje_fine
-from vk_toimenpide
-where valvonta_id = :valvonta-id
-  and type_id = 7
-order by create_time desc
-limit 1;
 
 -- name: find-department-head-data
 select type_specific_data->'department-head-title-fi' as department_head_title_fi,

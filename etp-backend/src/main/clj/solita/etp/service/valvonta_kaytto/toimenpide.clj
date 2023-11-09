@@ -23,7 +23,7 @@
    11 :decision-order-notice-bailiff
    12 :decision-order-waiting-for-deadline
    14 :penalty-decision-hearing-letter
-   15 :change-when-implement-penalty-decision-actual-decision
+   15 :penalty-decision-actual-decision
    16 :penalty-decision-notice-first-mailing
    17 :penalty-decision-notice-second-mailing
    18 :change-when-implement-penalty-decision-notice-bailiff
@@ -61,8 +61,11 @@
 
 (def sakkopaatos-kuulemiskirje? (partial type? :penalty-decision-hearing-letter))
 
+(def sakkopaatos-varsinainen-paatos? (partial type? :penalty-decision-actual-decision))
+
 (def sakkopaatos-toimenpide?
   (partial some-type? #{:penalty-decision-hearing-letter
+                        :penalty-decision-actual-decision
                         :penalty-decision-notice-first-mailing
                         :penalty-decision-notice-second-mailing
                         :penalty-decision-waiting-for-deadline}))
@@ -77,6 +80,7 @@
                         :decision-order-notice-bailiff
                         :decision-order-waiting-for-deadline
                         :penalty-decision-hearing-letter
+                        :penalty-decision-actual-decision
                         :penalty-decision-notice-first-mailing
                         :penalty-decision-waiting-for-deadline}))
 
