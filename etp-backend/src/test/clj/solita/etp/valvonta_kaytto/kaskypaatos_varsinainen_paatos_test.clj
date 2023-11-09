@@ -9,12 +9,15 @@
     [solita.etp.schema.valvonta-kaytto :as valvonta-schema]
     [solita.etp.service.pdf :as pdf]
     [solita.etp.service.valvonta-kaytto :as valvonta-service]
+    [solita.etp.service.valvonta-kaytto.store :as file-store]
     [solita.etp.test-data.generators :as generators]
     [solita.etp.test-data.kayttaja :as test-kayttajat]
     [solita.etp.test-system :as ts])
   (:import (java.time Clock LocalDate ZoneId)))
 
 (t/use-fixtures :each ts/fixture)
+
+(def original-store-hallinto-oikeus-attachment file-store/store-hallinto-oikeus-attachment)
 
 (t/deftest kaskypaatos-varsinainen-paatos-test
   ;; Add the main user for the following tests
@@ -39,6 +42,7 @@
                                       (.atStartOfDay (ZoneId/systemDefault))
                                       .toInstant)
           html->pdf-called? (atom false)
+          store-hallinto-oikeus-attachment-called? (atom false)
           ;; Add osapuoli to the valvonta
           osapuoli-id (valvonta-service/add-henkilo!
                         ts/*db*
@@ -85,7 +89,11 @@
                                                    time/timezone)
                       #'pdf/html->pdf (partial html->pdf-with-assertion
                                                "documents/kaskypaatos-varsinainen-paatos-yksityishenkilo.html"
-                                               html->pdf-called?)}
+                                               html->pdf-called?)
+                      #'file-store/store-hallinto-oikeus-attachment
+                      (fn [aws-s3-client valvonta-id toimenpide-id osapuoli document]
+                        (reset! store-hallinto-oikeus-attachment-called? true)
+                        (original-store-hallinto-oikeus-attachment aws-s3-client valvonta-id toimenpide-id osapuoli document))}
         (let [new-toimenpide {:type-id            8
                               :deadline-date      (str (LocalDate/of 2023 10 4))
                               :template-id        6
@@ -107,6 +115,7 @@
                                        (test-kayttajat/with-virtu-user)
                                        (mock/header "Accept" "application/json")))]
           (t/is (true? @html->pdf-called?))
+          (t/is (true? @store-hallinto-oikeus-attachment-called?))
           (t/is (= (:status response) 201))))
 
       (t/testing "Created document can be downloaded through the api"

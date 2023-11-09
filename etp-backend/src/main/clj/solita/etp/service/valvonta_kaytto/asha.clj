@@ -251,6 +251,14 @@
       (filter #(contains? osapuolet-with-document (:id %)) osapuolet))
     osapuolet))
 
+(defn store-hallinto-oikeus-attachment! [db aws-s3-client valvonta-id toimenpide osapuoli]
+  (let [hallinto-oikeus-id (-> toimenpide
+                               :type-specific-data
+                               :osapuoli-specific-data
+                               (type-specific-data/find-administrative-court-id-from-osapuoli-specific-data (:id osapuoli)))
+        attachment (hao-attachment/attachment-for-hallinto-oikeus-id db hallinto-oikeus-id)]
+    (store/store-hallinto-oikeus-attachment aws-s3-client valvonta-id (:id toimenpide) osapuoli attachment)))
+
 (defn log-toimenpide! [db aws-s3-client whoami valvonta toimenpide osapuolet ilmoituspaikat roolit]
   (let [request-id (request-id (:id valvonta) (:id toimenpide))
         sender-id (:email whoami)
@@ -264,6 +272,10 @@
                                 (let [document (generate-pdf-document db whoami valvonta toimenpide ilmoituspaikat
                                                                       osapuoli osapuolet roolit)]
                                   (store/store-document aws-s3-client (:id valvonta) (:id toimenpide) osapuoli document)
+
+                                  (when (toimenpide/kaskypaatos-varsinainen-paatos? toimenpide)
+                                    (store-hallinto-oikeus-attachment! db aws-s3-client (:id valvonta) toimenpide osapuoli))
+
                                   document)))))]
     (asha/log-toimenpide!
       sender-id
