@@ -228,15 +228,9 @@
         tiedoksi (if (template/send-tiedoksi? template) (filter osapuoli/tiedoksi? osapuolet) [])
         template-data (template-data db whoami valvonta toimenpide
                                      osapuoli documents ilmoituspaikat
-                                     tiedoksi roolit)
-        generated-pdf (pdf/generate-pdf->bytes {:template (:content template)
-                                                :data     template-data})]
-    (if (toimenpide/kaskypaatos-varsinainen-paatos? toimenpide)
-      (add-hallinto-oikeus-attachment db generated-pdf (-> toimenpide
-                                                           :type-specific-data
-                                                           :osapuoli-specific-data
-                                                           (type-specific-data/find-administrative-court-id-from-osapuoli-specific-data (:id osapuoli))))
-      generated-pdf)))
+                                     tiedoksi roolit)]
+    (pdf/generate-pdf->bytes {:template (:content template)
+                              :data     template-data})))
 
 (defn remove-osapuolet-with-no-document
   "If toimenpidetype of the toimenpide is such that the document might not be created for some,
