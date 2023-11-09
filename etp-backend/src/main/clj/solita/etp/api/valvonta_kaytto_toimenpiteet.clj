@@ -82,36 +82,38 @@
                             (valvonta-service/update-toimenpide!
                               db toimenpide-id body)
                             (toimenpide-404-msg id toimenpide-id)))}}]
-
-    ["/henkilot/:henkilo-id/document/:filename"
-     {:get {:summary    "Henkilö-osapuolen toimenpiteen esikatselu tai lataus"
-            :parameters {:path {:id            common-schema/Key
-                                :toimenpide-id common-schema/Key
-                                :henkilo-id    common-schema/Key
-                                :filename      schema/Str}}
-            :access     rooli-service/paakayttaja?
-            :responses  {200 {:body nil}
-                         404 {:body schema/Str}}
-            :handler    (fn [{{{:keys [id toimenpide-id henkilo-id filename]} :path}
-                              :parameters :keys [db aws-s3-client]}]
-                          (api-response/pdf-response
-                            (valvonta-service/find-toimenpide-henkilo-document
-                              db aws-s3-client id toimenpide-id henkilo-id)
-                            filename
-                            (api-response/msg-404 "henkilo" id toimenpide-id henkilo-id)))}}]
-    ["/yritykset/:yritys-id/document/:filename"
-     {:get {:summary    "Yritys-osapuolen toimenpiteen esikatselu tai lataus"
-            :parameters {:path {:id            common-schema/Key
-                                :toimenpide-id common-schema/Key
-                                :yritys-id     common-schema/Key
-                                :filename      schema/Str}}
-            :access     rooli-service/paakayttaja?
-            :responses  {200 {:body nil}
-                         404 {:body schema/Str}}
-            :handler    (fn [{{{:keys [id toimenpide-id yritys-id filename]} :path}
-                              :parameters :keys [db aws-s3-client]}]
-                          (api-response/pdf-response
-                            (valvonta-service/find-toimenpide-yritys-document
-                              db aws-s3-client id toimenpide-id yritys-id)
-                            filename
-                            (api-response/msg-404 "yritys "id toimenpide-id yritys-id)))}}]]])
+    ;; TODO: Lisää näiden alle hallinto-oikeuden liitteen hakemista varten olevat routet
+    ["/henkilot"
+     ["/:henkilo-id/document/:filename"
+      {:get {:summary    "Henkilö-osapuolen toimenpiteen dokumentin lataus"
+             :parameters {:path {:id            common-schema/Key
+                                 :toimenpide-id common-schema/Key
+                                 :henkilo-id    common-schema/Key
+                                 :filename      schema/Str}}
+             :access     rooli-service/paakayttaja?
+             :responses  {200 {:body nil}
+                          404 {:body schema/Str}}
+             :handler    (fn [{{{:keys [id toimenpide-id henkilo-id filename]} :path}
+                               :parameters :keys [db aws-s3-client]}]
+                           (api-response/pdf-response
+                             (valvonta-service/find-toimenpide-henkilo-document
+                               db aws-s3-client id toimenpide-id henkilo-id)
+                             filename
+                             (api-response/msg-404 "henkilo" id toimenpide-id henkilo-id)))}}]]
+    ["/yritykset"
+     ["/:yritys-id/document/:filename"
+      {:get {:summary    "Yritys-osapuolen toimenpiteen esikatselu tai lataus"
+             :parameters {:path {:id            common-schema/Key
+                                 :toimenpide-id common-schema/Key
+                                 :yritys-id     common-schema/Key
+                                 :filename      schema/Str}}
+             :access     rooli-service/paakayttaja?
+             :responses  {200 {:body nil}
+                          404 {:body schema/Str}}
+             :handler    (fn [{{{:keys [id toimenpide-id yritys-id filename]} :path}
+                               :parameters :keys [db aws-s3-client]}]
+                           (api-response/pdf-response
+                             (valvonta-service/find-toimenpide-yritys-document
+                               db aws-s3-client id toimenpide-id yritys-id)
+                             filename
+                             (api-response/msg-404 "yritys " id toimenpide-id yritys-id)))}}]]]])
