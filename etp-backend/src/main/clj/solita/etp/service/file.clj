@@ -1,9 +1,10 @@
 (ns solita.etp.service.file
   (:require [clojure.java.io :as io]
             [solita.common.aws :as aws])
-  (:import (java.io FileInputStream)))
+  (:import (clojure.lang ExceptionInfo)
+           (java.io File FileInputStream)))
 
-(defn file->byte-array [file]
+(defn file->byte-array [^File file]
   (-> file FileInputStream. .readAllBytes))
 
 (defn upsert-file-from-bytes [aws-s3-client key bytes]
@@ -23,7 +24,7 @@
   (try
     (aws/get-object-head aws-s3-client key)
     true
-    (catch clojure.lang.ExceptionInfo e
+    (catch ExceptionInfo e
       (let [{:keys [type]} (ex-data e)]
         (if (= type :resource-not-found)
           false

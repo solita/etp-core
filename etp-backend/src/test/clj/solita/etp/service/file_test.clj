@@ -2,7 +2,9 @@
   (:require [clojure.java.io :as io]
             [clojure.test :as t]
             [solita.etp.test-system :as ts]
-            [solita.etp.service.file :as service]))
+            [solita.etp.service.file :as service])
+  (:import (clojure.lang ExceptionInfo)
+           (java.io InputStream)))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -36,10 +38,10 @@
                                          (-> file-info-3 :path io/input-stream))
   (doseq [file-info [file-info-1 file-info-2 file-info-3]
           :let [content (service/find-file ts/*aws-s3-client* (:id file-info))]]
-    (t/is (true? (instance? java.io.InputStream content)))
+    (t/is (true? (instance? InputStream content)))
     (t/is (= (into [] (:bytes file-info))
              (into [] (.readAllBytes content)))))
-  (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
+  (t/is (thrown-with-msg? ExceptionInfo
                           #"The specified key does not exist."
                           (service/find-file ts/*aws-s3-client* "nonexisting"))))
 
@@ -52,6 +54,6 @@
                                            id
                                            (-> file-info-2 :path io/input-stream))
     (let [content (service/find-file ts/*aws-s3-client* id)]
-      (t/is (true? (instance? java.io.InputStream content)))
+      (t/is (true? (instance? InputStream content)))
       (t/is (= (into [] (:bytes file-info-2))
                (into [] (.readAllBytes content)))))))
