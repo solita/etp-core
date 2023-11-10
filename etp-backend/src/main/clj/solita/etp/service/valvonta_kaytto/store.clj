@@ -34,3 +34,8 @@
     aws-s3-client
     (file-path hallinto-oikeus-attachment-file-key-prefix valvonta-id toimenpide-id osapuoli)
     document))
+
+(defn find-hallinto-oikeus-attachment
+  "Retrieve the hallinto-oikeus attachment of the käytönvalvonta toimenpide from the object storage"
+  [aws-s3-client valvonta-id toimenpide-id osapuoli]
+  (file-service/find-file aws-s3-client (file-path hallinto-oikeus-attachment-file-key-prefix valvonta-id toimenpide-id osapuoli)))

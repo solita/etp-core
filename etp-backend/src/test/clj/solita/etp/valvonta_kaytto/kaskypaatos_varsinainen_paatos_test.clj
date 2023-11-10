@@ -129,7 +129,7 @@
         (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet/%s/henkilot/%s/attachment/hallinto-oikeus.pdf" valvonta-id 4 osapuoli-id))
                                        (test-kayttajat/with-virtu-user)
                                        (mock/header "Accept" "application/pdf")))]
-          #_(t/is (= (-> response :headers (get "Content-Type")) "application/pdf"))
+          (t/is (= (-> response :headers (get "Content-Type")) "application/pdf"))
           (t/is (= (:status response) 200))))))
 
   (t/testing "Käskypäätös / varsinainen päätös toimenpide is created successfully for yritys and document is generated with correct information"

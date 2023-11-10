@@ -16,13 +16,13 @@
     {:get  {:summary    "Hae käytönvalvonnan toimenpiteet."
             :parameters {:path {:id common-schema/Key}}
             :responses  {200 {:body [kaytto-schema/Toimenpide]}}
-            :access     rooli-service/paakayttaja? 
+            :access     rooli-service/paakayttaja?
             :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                           (api-response/get-response
                             (valvonta-service/find-toimenpiteet db id)
                             (api-response/msg-404 "kaytonvalvonta" id)))}
      :post {:summary    "Lisää käytönvalvonnan toimenpide."
-            :access     rooli-service/paakayttaja? 
+            :access     rooli-service/paakayttaja?
             :parameters {:path {:id common-schema/Key}
                          :body kaytto-schema/ToimenpideAdd}
             :responses  {201 {:body common-schema/Id}
@@ -31,7 +31,7 @@
                               :parameters :keys [db aws-s3-client whoami uri]}]
                           (api-response/with-exceptions
                             #(api-response/created uri
-                               (valvonta-service/add-toimenpide! db aws-s3-client whoami id body))
+                                                   (valvonta-service/add-toimenpide! db aws-s3-client whoami id body))
                             [{:constraint :toimenpide-vk-valvonta-id-fkey
                               :response   404}]))}}]
    ["/henkilot/:henkilo-id/preview"
@@ -69,19 +69,19 @@
    ["/:toimenpide-id"
     [""
      {:conflicting true
-      :put {:summary    "Muuta toimenpiteen tietoja."
-            :access     rooli-service/paakayttaja?
-            :parameters {:path {:id            common-schema/Key
-                                :toimenpide-id common-schema/Key}
-                         :body kaytto-schema/ToimenpideUpdate}
-            :responses  {200 {:body nil}
-                         404 {:body schema/Str}}
-            :handler    (fn [{{{:keys [id toimenpide-id]} :path :keys [body]}
-                              :parameters :keys [db]}]
-                          (api-response/ok|not-found
-                            (valvonta-service/update-toimenpide!
-                              db toimenpide-id body)
-                            (toimenpide-404-msg id toimenpide-id)))}}]
+      :put         {:summary    "Muuta toimenpiteen tietoja."
+                    :access     rooli-service/paakayttaja?
+                    :parameters {:path {:id            common-schema/Key
+                                        :toimenpide-id common-schema/Key}
+                                 :body kaytto-schema/ToimenpideUpdate}
+                    :responses  {200 {:body nil}
+                                 404 {:body schema/Str}}
+                    :handler    (fn [{{{:keys [id toimenpide-id]} :path :keys [body]}
+                                      :parameters :keys [db]}]
+                                  (api-response/ok|not-found
+                                    (valvonta-service/update-toimenpide!
+                                      db toimenpide-id body)
+                                    (toimenpide-404-msg id toimenpide-id)))}}]
     ["/henkilot"
      ["/:henkilo-id"
       ["/document/:filename"
@@ -109,9 +109,12 @@
                :access     rooli-service/paakayttaja?
                :responses  {200 {:body nil}
                             404 {:body schema/Str}}
-               :handler    (fn [{{{:keys [id toimenpide-id henkilo-id filename]} :path}
+               :handler    (fn [{{{:keys [id toimenpide-id henkilo-id]} :path}
                                  :parameters :keys [db aws-s3-client]}]
-                             {:status 200})}}]]]]
+                             (api-response/pdf-response
+                               (valvonta-service/find-henkilo-hallinto-oikeus-attachment db aws-s3-client id toimenpide-id henkilo-id)
+                               "hallinto-oikeus.pdf"
+                               (api-response/msg-404 "henkilo" id toimenpide-id henkilo-id)))}}]]]]
     ["/yritykset"
      ["/:yritys-id"
       ;; TODO: Hallinto-oikeus-liitteen hakeminen yritysosapuolelle
