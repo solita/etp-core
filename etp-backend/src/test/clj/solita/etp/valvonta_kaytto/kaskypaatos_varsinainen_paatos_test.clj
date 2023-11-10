@@ -1,5 +1,6 @@
 (ns solita.etp.valvonta-kaytto.kaskypaatos-varsinainen-paatos-test
   (:require
+    [clojure.java.io :as io]
     [clojure.java.jdbc :as jdbc]
     [clojure.test :as t]
     [jsonista.core :as j]
@@ -130,7 +131,11 @@
                                        (test-kayttajat/with-virtu-user)
                                        (mock/header "Accept" "application/pdf")))]
           (t/is (= (-> response :headers (get "Content-Type")) "application/pdf"))
-          (t/is (= (:status response) 200))))))
+          (t/is (= (:status response) 200))
+
+          (t/testing "hallinto-oikeus-liite is the correct one"
+            (t/is (= (slurp (io/input-stream (io/resource "pdf/hallinto-oikeudet/Valitusosoitus_30_pv_HAMEENLINNAN_HAO.pdf")))
+                     (slurp (:body response)))))))))
 
   (t/testing "Käskypäätös / varsinainen päätös toimenpide is created successfully for yritys and document is generated with correct information"
     ;; Add the valvonta and previous toimenpides
@@ -272,7 +277,11 @@
                                            (test-kayttajat/with-virtu-user)
                                            (mock/header "Accept" "application/pdf")))]
               (t/is (= (-> response :headers (get "Content-Type")) "application/pdf"))
-              (t/is (= (:status response) 200))))))))
+              (t/is (= (:status response) 200))
+
+              (t/testing "hallinto-oikeus-liite is the correct one"
+                (t/is (= (slurp (io/input-stream (io/resource "pdf/hallinto-oikeudet/Valitusosoitus_30_pv_ITA-SUOMEN_HAO.pdf")))
+                         (slurp (:body response)))))))))))
 
   (t/testing "Käskypäätös / varsinainen päätös toimenpide is created successfully when there are multiple osapuolis but one lives abroad and will not receive the document because of being outside court jurisdiction"
     ;; Add the valvonta and previous toimenpides
