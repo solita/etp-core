@@ -13,7 +13,7 @@
             [solita.etp.config :as config]
             [solita.etp.db :as db]
             [solita.etp.service.file :as file-service])
-  (:import (java.time Instant LocalDate ZoneId)
+  (:import (java.time Instant LocalDate Month ZoneId)
            (java.time.temporal ChronoUnit)
            (java.time.format DateTimeFormatter)))
 
@@ -209,6 +209,7 @@
                                      laatijat]}]
   (let [today (LocalDate/ofInstant now timezone)
         last-month (.minusMonths today 1)
+        december-laskutus? (-> last-month .getMonth (= Month/DECEMBER))
         formatted-last-day-of-last-month (->> (.lengthOfMonth last-month)
                                               (.withDayOfMonth last-month)
                                               (.format date-formatter-xml))]
@@ -217,6 +218,7 @@
           ["SektoriKoodi" "01"]
           ["TilausLajiKoodi" "Z001"]
           ["PalveluLuontiPvm" formatted-last-day-of-last-month]
+          (if december-laskutus? ["LaskuPvm" formatted-last-day-of-last-month] nil)
           ["HinnoitteluPvm" formatted-last-day-of-last-month]
           ["TilausAsiakasTyyppi"
            ["AsiakasNro" laskutus-asiakastunnus]]
@@ -238,6 +240,7 @@
                         ["NimikeNro" "RA0001"]]
                        (mapcat #(tilausrivit-for-laatija % laskutuskieli)
                                (->> laatijat vals (sort-by :nimi)))))]
+         (filterv #(not (nil? %)))
          xml/simple-elements
          (apply (fn [& elements]
                   (xml/element (xml/qname laskutustieto-ns "Myyntitilaus")
