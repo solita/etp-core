@@ -153,6 +153,7 @@
                                       (.atStartOfDay (ZoneId/systemDefault))
                                       .toInstant)
           html->pdf-called? (atom false)
+          store-hallinto-oikeus-attachment-called? (atom false)
           ;; Add osapuoli to the valvonta
           osapuoli-id (valvonta-service/add-yritys!
                         ts/*db*
@@ -197,7 +198,11 @@
                                                    time/timezone)
                       #'pdf/html->pdf (partial html->pdf-with-assertion
                                                "documents/kaskypaatos-varsinainen-paatos-yritys.html"
-                                               html->pdf-called?)}
+                                               html->pdf-called?)
+                      #'file-store/store-hallinto-oikeus-attachment
+                      (fn [aws-s3-client valvonta-id toimenpide-id osapuoli document]
+                        (reset! store-hallinto-oikeus-attachment-called? true)
+                        (original-store-hallinto-oikeus-attachment aws-s3-client valvonta-id toimenpide-id osapuoli document))}
         (let [new-toimenpide {:type-id            8
                               :deadline-date      (str (LocalDate/of 2023 10 4))
                               :template-id        6
@@ -215,6 +220,7 @@
                                        (test-kayttajat/with-virtu-user)
                                        (mock/header "Accept" "application/json")))]
           (t/is (true? @html->pdf-called?))
+          (t/is (true? @store-hallinto-oikeus-attachment-called?))
           (t/is (= (:status response) 201))
 
           (t/testing "Toimenpide is returned through the api"
