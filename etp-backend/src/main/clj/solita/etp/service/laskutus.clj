@@ -240,8 +240,7 @@
                         ["NimikeNro" "RA0001"]]
                        (mapcat #(tilausrivit-for-laatija % laskutuskieli)
                                (->> laatijat vals (sort-by :nimi)))))]
-         (filter #(not (nil? %)))
-         vec
+         (filterv #(not (nil? %)))
          xml/simple-elements
          (apply (fn [& elements]
                   (xml/element (xml/qname laskutustieto-ns "Myyntitilaus")

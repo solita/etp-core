@@ -15,7 +15,7 @@
             [solita.etp.service.laskutus :as laskutus-service]
             [solita.etp.service.file :as file-service]
             [solita.common.smtp-test :as smtp-test])
-  (:import (java.time Instant)))
+  (:import (java.time Instant OffsetDateTime ZoneOffset)))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -240,6 +240,13 @@
                    ".*"
                    allekirjoitusaika)))
 
+
+(def laskupvm-cases
+  [{:now                (Instant/from (OffsetDateTime/of 2023 12 1 4 0 0 0 (ZoneOffset/ofTotalSeconds 0)))
+    :laskupvm-expected? false}
+   {:now                (Instant/from (OffsetDateTime/of 2024 1 1 4 0 0 0 (ZoneOffset/ofTotalSeconds 0)))
+    :laskupvm-expected? true}])
+
 (t/deftest laskutustiedot-xml-test
   (let [{:keys [yritykset]} (test-data-set 0)
         laskutus (laskutus-service/find-kuukauden-laskutus ts/*db*)
@@ -254,31 +261,34 @@
                                              :laatijat
                                              vals
                                              first
-                                             :energiatodistukset)
-        xml-str (->> laskutustieto
-                     (laskutus-service/laskutustieto-xml (Instant/now))
-                     xml/emit-str)]
-    (t/is (str/includes? xml-str (str "<AsiakasNro>"
-                                      laskutus-asiakastunnus
-                                      "</AsiakasNro")))
-    (t/is (str/includes? xml-str "<TilausMaaraArvo>4</TilausMaaraArvo>"))
-    (t/is (re-find (tilausrivi-pattern (-> laskutustieto-energiatodistukset
-                                           first
-                                           :id)
-                                       (->> laskutustieto-energiatodistukset
-                                            first
-                                            :allekirjoitusaika
-                                            (.format laskutus-service/date-formatter-fi)))
-                   xml-str))
-    (t/is (re-find (tilausrivi-pattern (-> laskutustieto-energiatodistukset
-                                           second
-                                           :id)
-                                       (->> laskutustieto-energiatodistukset
-                                            second
-                                            :allekirjoitusaika
-                                            (.format laskutus-service/date-formatter-fi)))
-                   xml-str))
-    (t/is (str/includes? xml-str "<KumppaniNro>ETP</KumppaniNro>"))))
+                                             :energiatodistukset)]
+    (run! (fn [{:keys [now laskupvm-expected?]}]
+            (let [xml-str (->> laskutustieto
+                               (laskutus-service/laskutustieto-xml now)
+                               xml/emit-str)]
+              (t/is (str/includes? xml-str (str "<AsiakasNro>"
+                                                laskutus-asiakastunnus
+                                                "</AsiakasNro")))
+              (t/is (str/includes? xml-str "<TilausMaaraArvo>4</TilausMaaraArvo>"))
+              (t/is (re-find (tilausrivi-pattern (-> laskutustieto-energiatodistukset
+                                                     first
+                                                     :id)
+                                                 (->> laskutustieto-energiatodistukset
+                                                      first
+                                                      :allekirjoitusaika
+                                                      (.format laskutus-service/date-formatter-fi)))
+                             xml-str))
+              (t/is (re-find (tilausrivi-pattern (-> laskutustieto-energiatodistukset
+                                                     second
+                                                     :id)
+                                                 (->> laskutustieto-energiatodistukset
+                                                      second
+                                                      :allekirjoitusaika
+                                                      (.format laskutus-service/date-formatter-fi)))
+                             xml-str))
+              (t/is (= laskupvm-expected? (str/includes? xml-str "<LaskuPvm>")))
+              (t/is (str/includes? xml-str "<KumppaniNro>ETP</KumppaniNro>"))))
+          laskupvm-cases)))
 
 (t/deftest tasmaytysraportti-test
   (let [{:keys [yritykset laatijat]} (test-data-set 0)
