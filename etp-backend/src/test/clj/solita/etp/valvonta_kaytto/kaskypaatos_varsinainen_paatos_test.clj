@@ -126,6 +126,12 @@
           (t/is (= (-> response :headers (get "Content-Type")) "application/pdf"))
           (t/is (= (:status response) 200))))
 
+      (t/testing "Created document is not available without authentication"
+        (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet/%s/henkilot/%s/document/kaskypaatos.pdf" valvonta-id 4 osapuoli-id))
+                                       (mock/header "Accept" "application/pdf")))]
+          (t/is (= (:status response) 403))
+          (t/is (= (:body response) "Forbidden"))))
+
       (t/testing "hallinto-oikeus-liite can be downloaded through the api"
         (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet/%s/henkilot/%s/attachment/hallinto-oikeus.pdf" valvonta-id 4 osapuoli-id))
                                        (test-kayttajat/with-virtu-user)
@@ -135,7 +141,13 @@
 
           (t/testing "hallinto-oikeus-liite is the correct one"
             (t/is (= (slurp (io/input-stream (io/resource "pdf/hallinto-oikeudet/Valitusosoitus_30_pv_HAMEENLINNAN_HAO.pdf")))
-                     (slurp (:body response)))))))))
+                     (slurp (:body response)))))))
+
+      (t/testing "hallinto-oikeus-liite is not available without authentication"
+        (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet/%s/henkilot/%s/attachment/hallinto-oikeus.pdf" valvonta-id 4 osapuoli-id))
+                                       (mock/header "Accept" "application/pdf")))]
+          (t/is (= (:status response) 403))
+          (t/is (= (:body response) "Forbidden"))))))
 
   (t/testing "Käskypäätös / varsinainen päätös toimenpide is created successfully for yritys and document is generated with correct information"
     ;; Add the valvonta and previous toimenpides
@@ -278,6 +290,12 @@
               (t/is (= (-> response :headers (get "Content-Type")) "application/pdf"))
               (t/is (= (:status response) 200))))
 
+          (t/testing "Created document is not available without authentication"
+            (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet/%s/yritykset/%s/document/kaskypaatos.pdf" valvonta-id 8 osapuoli-id))
+                                           (mock/header "Accept" "application/pdf")))]
+              (t/is (= (:status response) 403))
+              (t/is (= (:body response) "Forbidden"))))
+
           (t/testing "hallinto-oikeus-liite can be downloaded through the api"
             (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet/%s/yritykset/%s/attachment/hallinto-oikeus.pdf" valvonta-id 8 osapuoli-id))
                                            (test-kayttajat/with-virtu-user)
@@ -287,7 +305,13 @@
 
               (t/testing "hallinto-oikeus-liite is the correct one"
                 (t/is (= (slurp (io/input-stream (io/resource "pdf/hallinto-oikeudet/Valitusosoitus_30_pv_ITA-SUOMEN_HAO.pdf")))
-                         (slurp (:body response)))))))))))
+                         (slurp (:body response)))))))
+
+          (t/testing "hallinto-oikeus-liite is not available without authentication"
+            (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet/%s/yritykset/%s/attachment/hallinto-oikeus.pdf" valvonta-id 8 osapuoli-id))
+                                           (mock/header "Accept" "application/pdf")))]
+              (t/is (= (:status response) 403))
+              (t/is (= (:body response) "Forbidden"))))))))
 
   (t/testing "Käskypäätös / varsinainen päätös toimenpide is created successfully when there are multiple osapuolis but one lives abroad and will not receive the document because of being outside court jurisdiction"
     ;; Add the valvonta and previous toimenpides
