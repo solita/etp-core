@@ -345,6 +345,9 @@
 (defn find-henkilo-hallinto-oikeus-attachment [db aws-s3-client valvonta-id toimenpide-id henkilo-id]
   (store/find-hallinto-oikeus-attachment aws-s3-client valvonta-id toimenpide-id (find-henkilo db henkilo-id)))
 
+(defn find-yritys-hallinto-oikeus-attachment [db aws-s3-client valvonta-id toimenpide-id yritys-id]
+  (store/find-hallinto-oikeus-attachment aws-s3-client valvonta-id toimenpide-id (find-yritys db yritys-id)))
+
 (defn find-notes [db id]
   (valvonta-kaytto-db/select-valvonta-notes
     db {:valvonta-id id}))

@@ -117,7 +117,6 @@
                                (api-response/msg-404 "henkilo" id toimenpide-id henkilo-id)))}}]]]]
     ["/yritykset"
      ["/:yritys-id"
-      ;; TODO: Hallinto-oikeus-liitteen hakeminen yritysosapuolelle
       ["/document/:filename"
        {:get {:summary    "Yritys-osapuolen toimenpiteen esikatselu tai lataus"
               :parameters {:path {:id            common-schema/Key
@@ -133,4 +132,19 @@
                               (valvonta-service/find-toimenpide-yritys-document
                                 db aws-s3-client id toimenpide-id yritys-id)
                               filename
-                              (api-response/msg-404 "yritys " id toimenpide-id yritys-id)))}}]]]]])
+                              (api-response/msg-404 "yritys " id toimenpide-id yritys-id)))}}]
+      ["/attachment"
+       ["/hallinto-oikeus.pdf"
+        {:get {:summary    "Yritys-osapuolen toimenpiteeseen liittyvän hallinto-oikeus-liitteen lataus"
+               :parameters {:path {:id            common-schema/Key
+                                   :toimenpide-id common-schema/Key
+                                   :yritys-id     common-schema/Key}}
+               :access     rooli-service/paakayttaja?
+               :responses  {200 {:body nil}
+                            404 {:body schema/Str}}
+               :handler    (fn [{{{:keys [id toimenpide-id yritys-id]} :path}
+                                 :parameters :keys [db aws-s3-client]}]
+                             (api-response/pdf-response
+                               (valvonta-service/find-yritys-hallinto-oikeus-attachment db aws-s3-client id toimenpide-id yritys-id)
+                               "hallinto-oikeus.pdf"
+                               (api-response/msg-404 "yritys " id toimenpide-id yritys-id)))}}]]]]]])
