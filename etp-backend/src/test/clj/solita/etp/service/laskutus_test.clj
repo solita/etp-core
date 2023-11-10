@@ -286,7 +286,12 @@
                                                       :allekirjoitusaika
                                                       (.format laskutus-service/date-formatter-fi)))
                              xml-str))
-              (t/is (= laskupvm-expected? (str/includes? xml-str "<LaskuPvm>")))
+              (if laskupvm-expected?
+                (t/testing (str "Test that LaskuPvm is present, as expected on " now)
+                  (t/is (str/includes? xml-str "<LaskuPvm>")))
+                (t/testing (str "Test that LaskuPvm is absent, as expected on " now)
+                  (t/is (not (str/includes? xml-str "<LaskuPvm>")))))
+
               (t/is (str/includes? xml-str "<KumppaniNro>ETP</KumppaniNro>"))))
           laskupvm-cases)))
 
