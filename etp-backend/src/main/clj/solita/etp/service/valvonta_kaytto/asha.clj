@@ -214,12 +214,6 @@
                                                             (:ilmoitustunnus valvonta)])
                     :attach         {:contact (map osapuoli->contact osapuolet)}}))
 
-(defn add-hallinto-oikeus-attachment
-  "Adds hallinto-oikeus specific attachment to the end of the given pdf"
-  [db pdf hallinto-oikeus-id]
-  (pdf/merge-pdf [(io/input-stream pdf)
-                  (hao-attachment/attachment-for-hallinto-oikeus-id db hallinto-oikeus-id)]))
-
 (defn generate-pdf-document
   [db whoami valvonta toimenpide ilmoituspaikat osapuoli osapuolet roolit]
   (let [template-id (:template-id toimenpide)
