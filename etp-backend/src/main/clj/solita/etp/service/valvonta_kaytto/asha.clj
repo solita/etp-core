@@ -178,6 +178,13 @@
                                                                :reception-date       (Instant/now)
                                                                :contacting-direction "SENT"
                                                                :contact              (map osapuoli->contact osapuolet)}}
+   :penalty-decision-notice-bailiff       {:identity          {:case              {:number (:diaarinumero toimenpide)}
+                                                               :processing-action {:name-identity "Tiedoksianto ja toimeenpano"}}
+                                           :document          (toimenpide-type->document (:type-id toimenpide))
+                                           :processing-action {:name                 "Asiakirjan toimituspyyntö haastemiehelle"
+                                                               :reception-date       (Instant/now)
+                                                               :contacting-direction "SENT"
+                                                               :contact              (map osapuoli->contact osapuolet)}}
    :penalty-decision-waiting-for-deadline {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                                                :processing-action {:name-identity "Valitusajan umpeutuminen"}}
                                            :document          (toimenpide-type->document (:type-id toimenpide))
@@ -237,7 +244,8 @@
   [toimenpide osapuolet]
   (if ((some-fn toimenpide/kaskypaatos-varsinainen-paatos?
                 toimenpide/kaskypaatos-haastemies-tiedoksianto?
-                toimenpide/sakkopaatos-varsinainen-paatos?) toimenpide)
+                toimenpide/sakkopaatos-varsinainen-paatos?
+                toimenpide/sakkopaatos-haastemies-tiedoksianto?) toimenpide)
     (let [osapuolet-with-document (->> toimenpide
                                        :type-specific-data
                                        :osapuoli-specific-data
