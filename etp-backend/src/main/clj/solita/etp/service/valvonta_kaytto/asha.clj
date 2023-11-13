@@ -32,7 +32,9 @@
                    :penalty-decision-hearing-letter  {:type     "Kirje"
                                                       :filename "sakkopaatos-kuulemiskirje.pdf"}
                    :penalty-decision-actual-decision {:type     "Kirje"
-                                                      :filename "sakkopaatos.pdf"}}]
+                                                      :filename "sakkopaatos.pdf"}
+                   :penalty-decision-notice-bailiff  {:type     "Kirje"
+                                                      :filename "haastemies-tiedoksianto.pdf"}}]
     (get documents type-key)))
 
 (defn find-kaytto-valvonta-documents [db valvonta-id]
