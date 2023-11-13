@@ -3,6 +3,7 @@
             [clojure.string :as str]
             [clojure.test :as t]
             [solita.etp.service.asha :as asha-service]
+            [solita.etp.service.valvonta-kaytto.hallinto-oikeus-attachment :as hao]
             [solita.etp.test-system :as ts]
             [clostache.parser :refer [render-resource]])
   (:import (java.nio.charset StandardCharsets)
@@ -207,10 +208,10 @@
              :request-received take-processing-action-called}
 
             (render-resource "asha/logtoimenpide/create-processing-action-operation-template.xml"
-                           (merge render-context {:processing-action                used-processing-action
-                                                  :processing-action-operation-name processing-action-operation-name
-                                                  :description                      description
-                                                  :reception-date                   now}))
+                             (merge render-context {:processing-action                used-processing-action
+                                                    :processing-action-operation-name processing-action-operation-name
+                                                    :description                      description
+                                                    :reception-date                   now}))
             {:response-status  200
              :request-received create-processing-action-operation}
 
@@ -232,7 +233,31 @@
       (t/is (= 1 @take-processing-action-called))
       (t/is (= 1 @create-processing-action-operation))
       (t/is (= 1 @take-processing-action-for-operation))
-      (t/is (= 1 @mark-processing-action-operation-ready)))))
+      (t/is (= 1 @mark-processing-action-operation-ready))))
+
+  (t/testing "Exception is thrown when log-toimenpide is called with attachments but the toimenpidetype doesn't have attachments defined"
+    (let [request-id "request-id"
+          case-number 100
+          sender-id "solita"
+          original-processing-action "Käsittely"
+          processing-action-operation-name "Kehotus"
+          description "Kuvaus"
+          now (Instant/now)]
+      (t/is (thrown-with-msg?
+              Exception
+              #"Received attachment for processing action Kehotus but it has no attachments defined"
+              (asha-service/log-toimenpide! sender-id
+                                            request-id
+                                            case-number
+                                            {:identity          {:case              {:number case-number}
+                                                                 :processing-action {:name-identity original-processing-action}}
+                                             :processing-action {:name           processing-action-operation-name
+                                                                 :reception-date now
+                                                                 :description    description}}
+                                            ;; Using hallinto-oikeus attachment as a document and an attachment
+                                            ;; here to just have some file
+                                            [(hao/attachment-for-hallinto-oikeus-id ts/*db* 3)]
+                                            (hao/attachment-for-hallinto-oikeus-id ts/*db* 4)))))))
 
 (t/deftest move-processing-action-test
   (binding [asha-service/post! (handle-requests {})]        ;; There should be no requests - fail all
@@ -254,10 +279,10 @@
             [asha-service/post!
              (handle-requests
                {(render-resource "asha/moveaction/move-template.xml" {:sender-id         sender-id
-                                                                    :request-id        request-id
-                                                                    :case-number       case-number
-                                                                    :processing-action "Vireillepano"
-                                                                    :proceed-decision  "Siirry käsittelyyn"})
+                                                                      :request-id        request-id
+                                                                      :case-number       case-number
+                                                                      :processing-action "Vireillepano"
+                                                                      :proceed-decision  "Siirry käsittelyyn"})
                 {:response-body    "Irrelevant"
                  :response-status  200
                  :request-received move-called}})]
@@ -266,10 +291,10 @@
       (t/testing "Move from Päätöksenteko to Käsittely"
         (let [move-called (atom 0)]
           (binding [asha-service/post! (handle-requests {(render-resource "asha/moveaction/move-template.xml" {:sender-id         sender-id
-                                                                                                             :request-id        request-id
-                                                                                                             :case-number       case-number
-                                                                                                             :processing-action "Käsittely"
-                                                                                                             :proceed-decision  "Siirry päätöksentekoon"})
+                                                                                                               :request-id        request-id
+                                                                                                               :case-number       case-number
+                                                                                                               :processing-action "Käsittely"
+                                                                                                               :proceed-decision  "Siirry päätöksentekoon"})
                                                          {:response-body    "Irrelevant"
                                                           :response-status  200
                                                           :request-received move-called}})]

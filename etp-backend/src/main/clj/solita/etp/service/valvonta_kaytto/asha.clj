@@ -37,6 +37,12 @@
                                                       :filename "haastemies-tiedoksianto.pdf"}}]
     (get documents type-key)))
 
+(defn toimenpide-type->attachment [type-id]
+  (let [type-key (toimenpide/type-key type-id)
+        attachments {:decision-order-actual-decision {:type     "Kirje"
+                                                      :filename "hallinto-oikeus.pdf"}}]
+    (get attachments type-key)))
+
 (defn find-kaytto-valvonta-documents [db valvonta-id]
   (->> (valvonta-kaytto-db/select-valvonta-documents db {:valvonta-id valvonta-id})
        (map (fn [toimenpide]
@@ -134,6 +140,7 @@
    :decision-order-actual-decision        {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                                                :processing-action {:name-identity "Päätöksenteko"}}
                                            :document          (toimenpide-type->document (:type-id toimenpide))
+                                           :attachment        (toimenpide-type->attachment (:type-id toimenpide))
                                            :processing-action {:name                 "Käskypäätös"
                                                                :reception-date       (Instant/now)
                                                                :contacting-direction "SENT"
@@ -251,7 +258,8 @@
                                :osapuoli-specific-data
                                (type-specific-data/find-administrative-court-id-from-osapuoli-specific-data (:id osapuoli)))
         attachment (hao-attachment/attachment-for-hallinto-oikeus-id db hallinto-oikeus-id)]
-    (store/store-hallinto-oikeus-attachment aws-s3-client valvonta-id (:id toimenpide) osapuoli attachment)))
+    (store/store-hallinto-oikeus-attachment aws-s3-client valvonta-id (:id toimenpide) osapuoli attachment)
+    attachment))
 
 (defn log-toimenpide! [db aws-s3-client whoami valvonta toimenpide osapuolet ilmoituspaikat roolit]
   (let [request-id (request-id (:id valvonta) (:id toimenpide))
@@ -270,13 +278,20 @@
                                   (when (toimenpide/kaskypaatos-varsinainen-paatos? toimenpide)
                                     (store-hallinto-oikeus-attachment! db aws-s3-client (:id valvonta) toimenpide osapuoli))
 
-                                  document)))))]
+                                  document)))))
+        attachments (when (toimenpide/kaskypaatos-varsinainen-paatos? toimenpide)
+                      (->> osapuolet
+                           (filter osapuoli/omistaja?)
+                           (remove-osapuolet-with-no-document toimenpide)
+                           (mapv (fn [osapuoli]
+                                   (store-hallinto-oikeus-attachment! db aws-s3-client (:id valvonta) toimenpide osapuoli)))))]
     (asha/log-toimenpide!
       sender-id
       request-id
       case-number
       processing-action
-      documents)))
+      documents
+      attachments)))
 
 (defn close-case! [whoami valvonta-id toimenpide]
   (asha/close-case!
