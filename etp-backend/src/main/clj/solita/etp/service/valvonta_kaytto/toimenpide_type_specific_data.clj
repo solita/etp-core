@@ -79,7 +79,7 @@
 (defn- karajaoikeus-id->name [db id]
   (first (karajaoikeus-db/find-karajaoikeus-name-by-id db {:karajaoikeus-id id})))
 
-(defmethod format-type-specific-data :decision-order-notice-bailiff [db toimenpide osapuoli-id]
+(defn- format-notice-bailiff [db toimenpide osapuoli-id]
   (let [osapuoli (->> toimenpide
                       :type-specific-data
                       :osapuoli-specific-data
@@ -89,6 +89,12 @@
         haastemies-email (:haastemies-email osapuoli)]
     {:karajaoikeus     (karajaoikeus-id->name db karajaoikeus-id)
      :haastemies-email haastemies-email}))
+
+(defmethod format-type-specific-data :decision-order-notice-bailiff [db toimenpide osapuoli-id]
+  (format-notice-bailiff db toimenpide osapuoli-id))
+
+(defmethod format-type-specific-data :penalty-decision-notice-bailiff [db toimenpide osapuoli-id]
+  (format-notice-bailiff db toimenpide osapuoli-id))
 
 (defmethod format-type-specific-data :default [_ toimenpide _]
   (:type-specific-data toimenpide))
