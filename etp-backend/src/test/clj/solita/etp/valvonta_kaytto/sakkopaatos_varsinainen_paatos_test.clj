@@ -99,6 +99,7 @@
                                             :diaarinumero       "ARA-05.03.01-2023-159"
                                             :type_specific_data {:fine                     857
                                                                  :osapuoli-specific-data   [{:osapuoli-id          osapuoli-id
+                                                                                             :osapuoli-type        "henkilo"
                                                                                              :hallinto-oikeus-id   1
                                                                                              :document             true
                                                                                              :recipient-answered   true
@@ -139,6 +140,7 @@
                               :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                               :type-specific-data {:fine                     8572
                                                    :osapuoli-specific-data   [{:osapuoli-id          osapuoli-id
+                                                                               :osapuoli-type        "henkilo"
                                                                                :hallinto-oikeus-id   3
                                                                                :document             true
                                                                                :recipient-answered   true
@@ -200,6 +202,7 @@
                                  :osapuoli-specific-data
                                  [{:hallinto-oikeus-id   3
                                    :osapuoli-id          1
+                                   :osapuoli-type        "henkilo"
                                    :recipient-answered   true
                                    :document             true
                                    :statement-sv         "Han vet inte. Vi förlotar."
@@ -299,6 +302,7 @@
                                             :diaarinumero       "ARA-05.03.01-2023-159"
                                             :type_specific_data {:fine                     857
                                                                  :osapuoli-specific-data   [{:osapuoli-id          osapuoli-id
+                                                                                             :osapuoli-type        "yritys"
                                                                                              :hallinto-oikeus-id   1
                                                                                              :document             true
                                                                                              :recipient-answered   true
@@ -335,6 +339,7 @@
                               :description        "Tehdään varsinainen päätös, omistaja ei vastannut kuulemiskirjeeseen"
                               :type-specific-data {:fine                     857
                                                    :osapuoli-specific-data   [{:osapuoli-id          osapuoli-id
+                                                                               :osapuoli-type        "yritys"
                                                                                :hallinto-oikeus-id   4
                                                                                :statement-fi         "ARAn päätökseen ei ole haettu muutosta, eli päätös on lainvoimainen. Maksuun tuomittavan uhkasakon määrä on sama kuin mitä se on ollut ARAn päätöksessä. ARAn näkemyksen mukaan uhkasakko tuomitaan maksuun täysimääräisenä, koska Asianosainen ei ole noudattanut päävelvoitetta lainkaan, eikä ole myöskään esittänyt noudattamatta jättämiselle pätevää syytä."
                                                                                :statement-sv         "Placeholder"
@@ -396,6 +401,7 @@
                          :osapuoli-specific-data
                          [{:hallinto-oikeus-id   4,
                            :osapuoli-id          1,
+                           :osapuoli-type        "yritys",
                            :recipient-answered   false,
                            :document             true,
                            :statement-sv         "Placeholder",
@@ -435,6 +441,7 @@
                             :description        "Tehdään varsinainen päätös, omistaja ei vastannut kuulemiskirjeeseen"
                             :type-specific-data {:fine                     857
                                                  :osapuoli-specific-data   [{:osapuoli-id          osapuoli-id
+                                                                             :osapuoli-type        "henkilo"
                                                                              :hallinto-oikeus-id   3
                                                                              :document             true
                                                                              :recipient-answered   false
@@ -476,6 +483,7 @@
                             :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                             :type-specific-data {:fine                     857
                                                  :osapuoli-specific-data   [{:osapuoli-id          osapuoli-id
+                                                                             :osapuoli-type        "yritys"
                                                                              :hallinto-oikeus-id   5
                                                                              :document             true
                                                                              :recipient-answered   true

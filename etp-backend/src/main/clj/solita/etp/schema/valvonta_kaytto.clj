@@ -48,11 +48,14 @@
 
 (def KarajaoikeusId (apply schema/enum (range 0 20)))
 
+(def OsapuoliType (schema/enum "henkilo" "yritys"))
+
 (def KaskypaatosVarsinainenPaatosOsapuoliSpecificData
   (schema/conditional
     ;; Osapuoli has a document and has answered to kuulemiskirje, so all fields are required
     (every-pred toimenpide/osapuoli-has-document? toimenpide/recipient-answered?)
     {:osapuoli-id          common-schema/Key
+     :osapuoli-type        OsapuoliType
      :hallinto-oikeus-id   HallintoOikeusId
      :document             schema/Bool
      :recipient-answered   schema/Bool
@@ -64,14 +67,16 @@
     ;; Osapuoli has document but has not answered to kuulemiskirje, so answer and statement are not allowed
     toimenpide/osapuoli-has-document?
     {:osapuoli-id        common-schema/Key
+     :osapuoli-type      OsapuoliType
      :hallinto-oikeus-id HallintoOikeusId
      :document           schema/Bool
      :recipient-answered schema/Bool}
 
     ;; Osapuoli has no document so no other fields are allowed
     :else
-    {:osapuoli-id common-schema/Key
-     :document    schema/Bool}))
+    {:osapuoli-id   common-schema/Key
+     :osapuoli-type OsapuoliType
+     :document      schema/Bool}))
 
 (def KaskypaatosVarsinainenPaatosData {:fine                     common-schema/NonNegative
                                        :osapuoli-specific-data   [KaskypaatosVarsinainenPaatosOsapuoliSpecificData]
@@ -83,13 +88,15 @@
   (schema/conditional
     toimenpide/osapuoli-has-document?
     {:osapuoli-id      common-schema/Key
+     :osapuoli-type    OsapuoliType
      :karajaoikeus-id  KarajaoikeusId
      :haastemies-email common-schema/Email
      :document         schema/Bool}
 
     :else
-    {:osapuoli-id common-schema/Key
-     :document    schema/Bool}))
+    {:osapuoli-id   common-schema/Key
+     :osapuoli-type OsapuoliType
+     :document      schema/Bool}))
 
 (def KaskypaatosTiedoksiantoHaastemiesData
   {:osapuoli-specific-data [KaskypaatosTiedoksiantoHaastemiesOsapuoliSpecificData]})
@@ -101,19 +108,21 @@
     ;; Osapuoli has a document so all fields are required to have values
     ;; answer-commentary fields are optional but if present, values are required
     toimenpide/osapuoli-has-document?
-    {:osapuoli-id          common-schema/Key
-     :hallinto-oikeus-id   HallintoOikeusId
-     :document             schema/Bool
-     :recipient-answered   schema/Bool
+    {:osapuoli-id                                common-schema/Key
+     :osapuoli-type                              OsapuoliType
+     :hallinto-oikeus-id                         HallintoOikeusId
+     :document                                   schema/Bool
+     :recipient-answered                         schema/Bool
      (schema/optional-key :answer-commentary-fi) schema/Str
      (schema/optional-key :answer-commentary-sv) schema/Str
-     :statement-fi schema/Str
-     :statement-sv schema/Str}
+     :statement-fi                               schema/Str
+     :statement-sv                               schema/Str}
 
     ;; Osapuoli has no document so no other fields are allowed
     :else
-    {:osapuoli-id common-schema/Key
-     :document    schema/Bool}))
+    {:osapuoli-id   common-schema/Key
+     :osapuoli-type OsapuoliType
+     :document      schema/Bool}))
 
 (def SakkopaatosVarsinainenPaatosData {:fine                     common-schema/NonNegative
                                        :osapuoli-specific-data   [SakkopaatosVarsinainenPaatosOsapuoliSpecificData]
@@ -125,13 +134,15 @@
   (schema/conditional
     toimenpide/osapuoli-has-document?
     {:osapuoli-id      common-schema/Key
+     :osapuoli-type    OsapuoliType
      :karajaoikeus-id  KarajaoikeusId
      :haastemies-email common-schema/Email
      :document         schema/Bool}
 
     :else
-    {:osapuoli-id common-schema/Key
-     :document    schema/Bool}))
+    {:osapuoli-id   common-schema/Key
+     :osapuoli-type OsapuoliType
+     :document      schema/Bool}))
 
 (def SakkopaatosTiedoksiantoHaastemiesData
   {:osapuoli-specific-data [SakkopaatosTiedoksiantoHaastemiesOsapuoliSpecificData]})

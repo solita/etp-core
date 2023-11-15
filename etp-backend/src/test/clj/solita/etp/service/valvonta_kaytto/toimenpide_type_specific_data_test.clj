@@ -13,6 +13,7 @@
                {:type-id            8
                 :type-specific-data {:fine                     129
                                      :osapuoli-specific-data   [{:osapuoli-id          1
+                                                                 :osapuoli-type        "henkilo"
                                                                  :hallinto-oikeus-id   0
                                                                  :document             true
                                                                  :recipient-answered   true
@@ -23,7 +24,8 @@
                                      :department-head-name     "Jorma Jormanen"
                                      :department-head-title-fi "Hallinto-oikeuden presidentti"
                                      :department-head-title-sv "Hallinto-oikeuden kuningas"}}
-               1)
+               1
+               "henkilo")
              {:fine                     129
               :vastaus-fi               "Asianosainen antoi vastineen kuulemiskirjeeseen. Voi anteeksi, en tiennyt."
               :oikeus-fi                "Helsingin hallinto-oikeudelta"
@@ -41,6 +43,7 @@
                  ts/*db*
                  {:type-id            7
                   :type-specific-data {:fine 800}}
+                 nil
                  nil)
                {:fine 800})))))
 
@@ -93,10 +96,14 @@
   (t/testing "Correct court id is found for the osapuoli"
     (t/is (= (type-specific-data/find-administrative-court-id-from-osapuoli-specific-data
                [{:osapuoli-id        1
+                 :osapuoli-type      "henkilo"
                  :hallinto-oikeus-id 0}
                 {:osapuoli-id        3
+                 :osapuoli-type      "henkilo"
                  :hallinto-oikeus-id 5}
                 {:osapuoli-id        643
+                 :osapuoli-type      "yritys"
                  :hallinto-oikeus-id 2}]
-               3)
+               3
+               "henkilo")
              5))))

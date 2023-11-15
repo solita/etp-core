@@ -15,3 +15,10 @@
 
 (defn ilmoituspaikka-other? [valvonta]
   (= (:ilmoituspaikka-id valvonta) 2))
+
+(defn osapuoli->osapuoli-type
+  "Given osapuoli map, returns whether the osapuoli is henkilo or yritys"
+  [osapuoli]
+  (if (henkilo? osapuoli)
+    "henkilo"
+    "yritys"))

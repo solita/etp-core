@@ -90,7 +90,11 @@
    :tietopyynto            {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
                             :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
    :tiedoksi               (map (partial tiedoksi-saaja roolit) tiedoksi)
-   :tyyppikohtaiset-tiedot (type-specific-data/format-type-specific-data db toimenpide (:id osapuoli))
+   :tyyppikohtaiset-tiedot (type-specific-data/format-type-specific-data
+                             db
+                             toimenpide
+                             (:id osapuoli)
+                             (osapuoli/osapuoli->osapuoli-type osapuoli))
    :aiemmat-toimenpiteet   (previous-toimenpide/formatted-previous-toimenpide-data db toimenpide (:id valvonta))})
 
 (defn- request-id [valvonta-id toimenpide-id]
@@ -250,16 +254,20 @@
                                        :type-specific-data
                                        :osapuoli-specific-data
                                        (filter toimenpide/osapuoli-has-document?)
-                                       (map :osapuoli-id)
-                                       set)]
-      (filter #(contains? osapuolet-with-document (:id %)) osapuolet))
+                                       (map #(select-keys % [:osapuoli-id :osapuoli-type])))
+          henkilo-osapuolet-with-documents (map :osapuoli-id (filter #(= (:osapuoli-type %) "henkilo") osapuolet-with-document))
+          yritys-osapuolet-with-documents (map :osapuoli-id (filter #(= (:osapuoli-type %) "yritys") osapuolet-with-document))]
+      (concat
+        (filter #(contains? (set henkilo-osapuolet-with-documents) (:id %)) (filter osapuoli/henkilo? osapuolet))
+        (filter #(contains? (set yritys-osapuolet-with-documents) (:id %)) (filter osapuoli/yritys? osapuolet))))
     osapuolet))
 
 (defn store-hallinto-oikeus-attachment! [db aws-s3-client valvonta-id toimenpide osapuoli]
-  (let [hallinto-oikeus-id (-> toimenpide
+  (let [osapuoli-type (osapuoli/osapuoli->osapuoli-type osapuoli)
+        hallinto-oikeus-id (-> toimenpide
                                :type-specific-data
                                :osapuoli-specific-data
-                               (type-specific-data/find-administrative-court-id-from-osapuoli-specific-data (:id osapuoli)))
+                               (type-specific-data/find-administrative-court-id-from-osapuoli-specific-data (:id osapuoli) osapuoli-type))
         attachment (hao-attachment/attachment-for-hallinto-oikeus-id db hallinto-oikeus-id)]
     (store/store-hallinto-oikeus-attachment! aws-s3-client valvonta-id (:id toimenpide) osapuoli attachment)
     attachment))
