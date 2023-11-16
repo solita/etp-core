@@ -26,7 +26,7 @@
    15 :penalty-decision-actual-decision
    16 :penalty-decision-notice-first-mailing
    17 :penalty-decision-notice-second-mailing
-   18 :change-when-implement-penalty-decision-notice-bailiff
+   18 :penalty-decision-notice-bailiff
    19 :penalty-decision-waiting-for-deadline
    21 :penalty-list-delivery-in-progress})
 
@@ -51,6 +51,8 @@
 
 (def kaskypaatos-haastemies-tiedoksianto? (partial type? :decision-order-notice-bailiff))
 
+(def sakkopaatos-haastemies-tiedoksianto? (partial type? :penalty-decision-notice-bailiff))
+
 (def kaskypaatos-toimenpide?
   (partial some-type? #{:decision-order-hearing-letter
                         :decision-order-actual-decision
@@ -68,6 +70,7 @@
                         :penalty-decision-actual-decision
                         :penalty-decision-notice-first-mailing
                         :penalty-decision-notice-second-mailing
+                        :penalty-decision-notice-bailiff
                         :penalty-decision-waiting-for-deadline}))
 
 (def asha-toimenpide?
@@ -82,6 +85,7 @@
                         :penalty-decision-hearing-letter
                         :penalty-decision-actual-decision
                         :penalty-decision-notice-first-mailing
+                        :penalty-decision-notice-bailiff
                         :penalty-decision-waiting-for-deadline}))
 
 

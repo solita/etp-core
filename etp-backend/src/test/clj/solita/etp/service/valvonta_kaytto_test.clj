@@ -119,8 +119,8 @@
                  :label-fi             "Sakkopäätös / tiedoksianto (Haastemies)"
                  :label-sv             "Sakkopäätös / tiedoksianto (Haastemies) (sv)"
                  :valid                true
-                 :manually-deliverable false
-                 :allow-comments       false}
+                 :manually-deliverable true
+                 :allow-comments       true}
                 {:id                   19
                  :label-fi             "Sakkopäätös / valitusajan odotus ja umpeutuminen"
                  :label-sv             "Sakkopäätös / valitusajan odotus ja umpeutuminen (sv)"

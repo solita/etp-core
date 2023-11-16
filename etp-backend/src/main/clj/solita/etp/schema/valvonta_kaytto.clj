@@ -121,6 +121,21 @@
                                        :department-head-title-sv schema/Str
                                        :department-head-name     schema/Str})
 
+(def SakkopaatosTiedoksiantoHaastemiesOsapuoliSpecificData
+  (schema/conditional
+    toimenpide/osapuoli-has-document?
+    {:osapuoli-id      common-schema/Key
+     :karajaoikeus-id  KarajaoikeusId
+     :haastemies-email common-schema/Email
+     :document         schema/Bool}
+
+    :else
+    {:osapuoli-id common-schema/Key
+     :document    schema/Bool}))
+
+(def SakkopaatosTiedoksiantoHaastemiesData
+  {:osapuoli-specific-data [SakkopaatosTiedoksiantoHaastemiesOsapuoliSpecificData]})
+
 (def ToimenpideAdd
   (schema/conditional
     toimenpide/kaskypaatos-kuulemiskirje?
@@ -137,6 +152,9 @@
 
     toimenpide/sakkopaatos-varsinainen-paatos?
     (assoc ToimenpideAddBase :type-specific-data SakkopaatosVarsinainenPaatosData)
+
+    toimenpide/sakkopaatos-haastemies-tiedoksianto?
+    (assoc ToimenpideAddBase :type-specific-data SakkopaatosTiedoksiantoHaastemiesData)
 
     :else ToimenpideAddBase))
 
@@ -194,6 +212,9 @@
 
                   toimenpide/sakkopaatos-varsinainen-paatos?
                   (assoc ToimenpideBase :type-specific-data SakkopaatosVarsinainenPaatosData)
+
+                  toimenpide/sakkopaatos-haastemies-tiedoksianto?
+                  (assoc ToimenpideBase :type-specific-data SakkopaatosTiedoksiantoHaastemiesData)
 
                   :else (assoc ToimenpideBase :type-specific-data (schema/enum nil))))
 

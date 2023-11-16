@@ -248,14 +248,16 @@
       (t/is (false? (toimenpide/asha-toimenpide? {:type-id 17})))))
 
   (t/testing "Sakkopäätös / tiedoksianto (Haastemies)"
-    (t/testing "has type-id 18 and type-key :change-when-implement-penalty-decision-notice-bailiff"
-      (t/is (= (toimenpide/type-key 18) :change-when-implement-penalty-decision-notice-bailiff)))
+    (t/testing "has type-id 18 and type-key :penalty-decision-notice-bailiff"
+      (t/is (= (toimenpide/type-key 18) :penalty-decision-notice-bailiff)))
+    (t/testing "is sakkopaatos-haastemies-tiedoksianto?"
+      (t/is (true? (toimenpide/sakkopaatos-haastemies-tiedoksianto? {:type-id 18}))))
     (t/testing "is not kaskypaatos-toimenpide?"
       (t/is (false? (toimenpide/kaskypaatos-toimenpide? {:type-id 18}))))
-    (t/testing "is not sakkopaatos-toimenpide?"
-      (t/is (false? (toimenpide/sakkopaatos-toimenpide? {:type-id 18}))))
-    (t/testing "is not asha-toimenpide?"
-      (t/is (false? (toimenpide/asha-toimenpide? {:type-id 18})))))
+    (t/testing "is sakkopaatos-toimenpide?"
+      (t/is (true? (toimenpide/sakkopaatos-toimenpide? {:type-id 18}))))
+    (t/testing "is asha-toimenpide?"
+      (t/is (true? (toimenpide/asha-toimenpide? {:type-id 18})))))
 
   (t/testing "Sakkopäätös / valitusajan odotus ja umpeutuminen"
     (t/testing "has type-id 19 and type-key :penalty-decision-waiting-for-deadline"
