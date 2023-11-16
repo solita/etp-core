@@ -18,7 +18,7 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(def original-store-hallinto-oikeus-attachment file-store/store-hallinto-oikeus-attachment)
+(def original-store-hallinto-oikeus-attachment file-store/store-hallinto-oikeus-attachment!)
 
 (t/deftest kaskypaatos-varsinainen-paatos-test
   ;; Add the main user for the following tests
@@ -91,7 +91,7 @@
                       #'pdf/html->pdf (partial html->pdf-with-assertion
                                                "documents/kaskypaatos-varsinainen-paatos-yksityishenkilo.html"
                                                html->pdf-called?)
-                      #'file-store/store-hallinto-oikeus-attachment
+                      #'file-store/store-hallinto-oikeus-attachment!
                       (fn [aws-s3-client valvonta-id toimenpide-id osapuoli document]
                         (reset! store-hallinto-oikeus-attachment-called? true)
                         (original-store-hallinto-oikeus-attachment aws-s3-client valvonta-id toimenpide-id osapuoli document))}
@@ -211,7 +211,7 @@
                       #'pdf/html->pdf (partial html->pdf-with-assertion
                                                "documents/kaskypaatos-varsinainen-paatos-yritys.html"
                                                html->pdf-called?)
-                      #'file-store/store-hallinto-oikeus-attachment
+                      #'file-store/store-hallinto-oikeus-attachment!
                       (fn [aws-s3-client valvonta-id toimenpide-id osapuoli document]
                         (reset! store-hallinto-oikeus-attachment-called? true)
                         (original-store-hallinto-oikeus-attachment aws-s3-client valvonta-id toimenpide-id osapuoli document))}

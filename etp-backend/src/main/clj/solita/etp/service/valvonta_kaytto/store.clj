@@ -11,7 +11,7 @@
     (osapuoli/henkilo? osapuoli) (str file-key-prefix "/" valvonta-id "/" toimenpide-id "/henkilo/" (:id osapuoli))
     (osapuoli/yritys? osapuoli) (str file-key-prefix "/" valvonta-id "/" toimenpide-id "/yritys/" (:id osapuoli))))
 
-(defn store-document
+(defn store-document!
   "Store the main document of the käytönvalvonta toimenpide to the object storage"
   [aws-s3-client valvonta-id toimenpide-id osapuoli document]
   (file-service/upsert-file-from-bytes
@@ -27,7 +27,7 @@
 (defn info-letter []
   (-> "pdf/Saate_rakennuksen_omistaja_su_ru.pdf" io/resource io/input-stream))
 
-(defn ^:dynamic store-hallinto-oikeus-attachment
+(defn ^:dynamic store-hallinto-oikeus-attachment!
   "Store the hallinto-oikeus attachment of the käytönvalvonta toimenpide to the object storage"
   [aws-s3-client valvonta-id toimenpide-id osapuoli document]
   (file-service/upsert-file-from-bytes
