@@ -39,8 +39,10 @@
 
 (defn toimenpide-type->attachment [type-id]
   (let [type-key (toimenpide/type-key type-id)
-        attachments {:decision-order-actual-decision {:type     "Kirje"
-                                                      :filename "hallinto-oikeus.pdf"}}]
+        attachments {:decision-order-actual-decision   {:type     "Kirje"
+                                                        :filename "hallinto-oikeus.pdf"}
+                     :penalty-decision-actual-decision {:type     "Kirje"
+                                                        :filename "hallinto-oikeus.pdf"}}]
     (get attachments type-key)))
 
 (defn find-kaytto-valvonta-documents [db valvonta-id]
@@ -176,6 +178,7 @@
    :penalty-decision-actual-decision      {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                                                :processing-action {:name-identity "Päätöksenteko"}}
                                            :document          (toimenpide-type->document (:type-id toimenpide))
+                                           :attachment        (toimenpide-type->attachment (:type-id toimenpide))
                                            :processing-action {:name                 "Sakkopäätös"
                                                                :reception-date       (Instant/now)
                                                                :contacting-direction "SENT"
@@ -274,12 +277,8 @@
                                 (let [document (generate-pdf-document db whoami valvonta toimenpide ilmoituspaikat
                                                                       osapuoli osapuolet roolit)]
                                   (store/store-document! aws-s3-client (:id valvonta) (:id toimenpide) osapuoli document)
-
-                                  (when (toimenpide/kaskypaatos-varsinainen-paatos? toimenpide)
-                                    (store-hallinto-oikeus-attachment! db aws-s3-client (:id valvonta) toimenpide osapuoli))
-
                                   document)))))
-        attachments (when (toimenpide/kaskypaatos-varsinainen-paatos? toimenpide)
+        attachments (when (toimenpide/has-hallinto-oikeus-liite? toimenpide)
                       (->> osapuolet
                            (filter osapuoli/omistaja?)
                            (remove-osapuolet-with-no-document toimenpide)

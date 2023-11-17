@@ -73,6 +73,10 @@
                         :penalty-decision-notice-bailiff
                         :penalty-decision-waiting-for-deadline}))
 
+(def has-hallinto-oikeus-liite?
+  (partial some-type? #{:decision-order-actual-decision
+                        :penalty-decision-actual-decision}))
+
 (def asha-toimenpide?
   (partial some-type? #{:rfi-request
                         :rfi-order
