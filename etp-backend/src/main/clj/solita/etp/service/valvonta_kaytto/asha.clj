@@ -37,6 +37,14 @@
                                                       :filename "haastemies-tiedoksianto.pdf"}}]
     (get documents type-key)))
 
+(defn toimenpide-type->attachment [type-id]
+  (let [type-key (toimenpide/type-key type-id)
+        attachments {:decision-order-actual-decision   {:type     "Kirje"
+                                                        :filename "hallinto-oikeus.pdf"}
+                     :penalty-decision-actual-decision {:type     "Kirje"
+                                                        :filename "hallinto-oikeus.pdf"}}]
+    (get attachments type-key)))
+
 (defn find-kaytto-valvonta-documents [db valvonta-id]
   (->> (valvonta-kaytto-db/select-valvonta-documents db {:valvonta-id valvonta-id})
        (map (fn [toimenpide]
@@ -134,6 +142,7 @@
    :decision-order-actual-decision        {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                                                :processing-action {:name-identity "Päätöksenteko"}}
                                            :document          (toimenpide-type->document (:type-id toimenpide))
+                                           :attachment        (toimenpide-type->attachment (:type-id toimenpide))
                                            :processing-action {:name                 "Käskypäätös"
                                                                :reception-date       (Instant/now)
                                                                :contacting-direction "SENT"
@@ -169,6 +178,7 @@
    :penalty-decision-actual-decision      {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                                                :processing-action {:name-identity "Päätöksenteko"}}
                                            :document          (toimenpide-type->document (:type-id toimenpide))
+                                           :attachment        (toimenpide-type->attachment (:type-id toimenpide))
                                            :processing-action {:name                 "Sakkopäätös"
                                                                :reception-date       (Instant/now)
                                                                :contacting-direction "SENT"
@@ -214,12 +224,6 @@
                                                             (:ilmoitustunnus valvonta)])
                     :attach         {:contact (map osapuoli->contact osapuolet)}}))
 
-(defn add-hallinto-oikeus-attachment
-  "Adds hallinto-oikeus specific attachment to the end of the given pdf"
-  [db pdf hallinto-oikeus-id]
-  (pdf/merge-pdf [(io/input-stream pdf)
-                  (hao-attachment/attachment-for-hallinto-oikeus-id db hallinto-oikeus-id)]))
-
 (defn generate-pdf-document
   [db whoami valvonta toimenpide ilmoituspaikat osapuoli osapuolet roolit]
   (let [template-id (:template-id toimenpide)
@@ -228,15 +232,9 @@
         tiedoksi (if (template/send-tiedoksi? template) (filter osapuoli/tiedoksi? osapuolet) [])
         template-data (template-data db whoami valvonta toimenpide
                                      osapuoli documents ilmoituspaikat
-                                     tiedoksi roolit)
-        generated-pdf (pdf/generate-pdf->bytes {:template (:content template)
-                                                :data     template-data})]
-    (if (toimenpide/kaskypaatos-varsinainen-paatos? toimenpide)
-      (add-hallinto-oikeus-attachment db generated-pdf (-> toimenpide
-                                                           :type-specific-data
-                                                           :osapuoli-specific-data
-                                                           (type-specific-data/find-administrative-court-id-from-osapuoli-specific-data (:id osapuoli))))
-      generated-pdf)))
+                                     tiedoksi roolit)]
+    (pdf/generate-pdf->bytes {:template (:content template)
+                              :data     template-data})))
 
 (defn remove-osapuolet-with-no-document
   "If toimenpidetype of the toimenpide is such that the document might not be created for some,
@@ -257,6 +255,15 @@
       (filter #(contains? osapuolet-with-document (:id %)) osapuolet))
     osapuolet))
 
+(defn store-hallinto-oikeus-attachment! [db aws-s3-client valvonta-id toimenpide osapuoli]
+  (let [hallinto-oikeus-id (-> toimenpide
+                               :type-specific-data
+                               :osapuoli-specific-data
+                               (type-specific-data/find-administrative-court-id-from-osapuoli-specific-data (:id osapuoli)))
+        attachment (hao-attachment/attachment-for-hallinto-oikeus-id db hallinto-oikeus-id)]
+    (store/store-hallinto-oikeus-attachment! aws-s3-client valvonta-id (:id toimenpide) osapuoli attachment)
+    attachment))
+
 (defn log-toimenpide! [db aws-s3-client whoami valvonta toimenpide osapuolet ilmoituspaikat roolit]
   (let [request-id (request-id (:id valvonta) (:id toimenpide))
         sender-id (:email whoami)
@@ -269,14 +276,21 @@
                          (map (fn [osapuoli]
                                 (let [document (generate-pdf-document db whoami valvonta toimenpide ilmoituspaikat
                                                                       osapuoli osapuolet roolit)]
-                                  (store/store-document aws-s3-client (:id valvonta) (:id toimenpide) osapuoli document)
-                                  document)))))]
+                                  (store/store-document! aws-s3-client (:id valvonta) (:id toimenpide) osapuoli document)
+                                  document)))))
+        attachments (when (toimenpide/has-hallinto-oikeus-liite? toimenpide)
+                      (->> osapuolet
+                           (filter osapuoli/omistaja?)
+                           (remove-osapuolet-with-no-document toimenpide)
+                           (mapv (fn [osapuoli]
+                                   (store-hallinto-oikeus-attachment! db aws-s3-client (:id valvonta) toimenpide osapuoli)))))]
     (asha/log-toimenpide!
       sender-id
       request-id
       case-number
       processing-action
-      documents)))
+      documents
+      attachments)))
 
 (defn close-case! [whoami valvonta-id toimenpide]
   (asha/close-case!

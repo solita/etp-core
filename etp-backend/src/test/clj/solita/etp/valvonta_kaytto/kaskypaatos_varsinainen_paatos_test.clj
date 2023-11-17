@@ -1,5 +1,6 @@
 (ns solita.etp.valvonta-kaytto.kaskypaatos-varsinainen-paatos-test
   (:require
+    [clojure.java.io :as io]
     [clojure.java.jdbc :as jdbc]
     [clojure.test :as t]
     [jsonista.core :as j]
@@ -9,12 +10,15 @@
     [solita.etp.schema.valvonta-kaytto :as valvonta-schema]
     [solita.etp.service.pdf :as pdf]
     [solita.etp.service.valvonta-kaytto :as valvonta-service]
+    [solita.etp.service.valvonta-kaytto.store :as file-store]
     [solita.etp.test-data.generators :as generators]
     [solita.etp.test-data.kayttaja :as test-kayttajat]
     [solita.etp.test-system :as ts])
   (:import (java.time Clock LocalDate ZoneId)))
 
 (t/use-fixtures :each ts/fixture)
+
+(def original-store-hallinto-oikeus-attachment file-store/store-hallinto-oikeus-attachment!)
 
 (t/deftest kaskypaatos-varsinainen-paatos-test
   ;; Add the main user for the following tests
@@ -39,6 +43,7 @@
                                       (.atStartOfDay (ZoneId/systemDefault))
                                       .toInstant)
           html->pdf-called? (atom false)
+          store-hallinto-oikeus-attachment-called? (atom false)
           ;; Add osapuoli to the valvonta
           osapuoli-id (valvonta-service/add-henkilo!
                         ts/*db*
@@ -85,7 +90,11 @@
                                                    time/timezone)
                       #'pdf/html->pdf (partial html->pdf-with-assertion
                                                "documents/kaskypaatos-varsinainen-paatos-yksityishenkilo.html"
-                                               html->pdf-called?)}
+                                               html->pdf-called?)
+                      #'file-store/store-hallinto-oikeus-attachment!
+                      (fn [aws-s3-client valvonta-id toimenpide-id osapuoli document]
+                        (reset! store-hallinto-oikeus-attachment-called? true)
+                        (original-store-hallinto-oikeus-attachment aws-s3-client valvonta-id toimenpide-id osapuoli document))}
         (let [new-toimenpide {:type-id            8
                               :deadline-date      (str (LocalDate/of 2023 10 4))
                               :template-id        6
@@ -107,7 +116,38 @@
                                        (test-kayttajat/with-virtu-user)
                                        (mock/header "Accept" "application/json")))]
           (t/is (true? @html->pdf-called?))
-          (t/is (= (:status response) 201))))))
+          (t/is (true? @store-hallinto-oikeus-attachment-called?))
+          (t/is (= (:status response) 201))))
+
+      (t/testing "Created document can be downloaded through the api"
+        (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet/%s/henkilot/%s/document/kaskypaatos.pdf" valvonta-id 4 osapuoli-id))
+                                       (test-kayttajat/with-virtu-user)
+                                       (mock/header "Accept" "application/pdf")))]
+          (t/is (= (-> response :headers (get "Content-Type")) "application/pdf"))
+          (t/is (= (:status response) 200))))
+
+      (t/testing "Created document is not available without authentication"
+        (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet/%s/henkilot/%s/document/kaskypaatos.pdf" valvonta-id 4 osapuoli-id))
+                                       (mock/header "Accept" "application/pdf")))]
+          (t/is (= (:status response) 403))
+          (t/is (= (:body response) "Forbidden"))))
+
+      (t/testing "hallinto-oikeus-liite can be downloaded through the api"
+        (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet/%s/henkilot/%s/attachment/hallinto-oikeus.pdf" valvonta-id 4 osapuoli-id))
+                                       (test-kayttajat/with-virtu-user)
+                                       (mock/header "Accept" "application/pdf")))]
+          (t/is (= (-> response :headers (get "Content-Type")) "application/pdf"))
+          (t/is (= (:status response) 200))
+
+          (t/testing "hallinto-oikeus-liite is the correct one"
+            (t/is (= (slurp (io/input-stream (io/resource "pdf/hallinto-oikeudet/Valitusosoitus_30_pv_HAMEENLINNAN_HAO.pdf")))
+                     (slurp (:body response)))))))
+
+      (t/testing "hallinto-oikeus-liite is not available without authentication"
+        (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet/%s/henkilot/%s/attachment/hallinto-oikeus.pdf" valvonta-id 4 osapuoli-id))
+                                       (mock/header "Accept" "application/pdf")))]
+          (t/is (= (:status response) 403))
+          (t/is (= (:body response) "Forbidden"))))))
 
   (t/testing "Käskypäätös / varsinainen päätös toimenpide is created successfully for yritys and document is generated with correct information"
     ;; Add the valvonta and previous toimenpides
@@ -125,6 +165,7 @@
                                       (.atStartOfDay (ZoneId/systemDefault))
                                       .toInstant)
           html->pdf-called? (atom false)
+          store-hallinto-oikeus-attachment-called? (atom false)
           ;; Add osapuoli to the valvonta
           osapuoli-id (valvonta-service/add-yritys!
                         ts/*db*
@@ -169,7 +210,11 @@
                                                    time/timezone)
                       #'pdf/html->pdf (partial html->pdf-with-assertion
                                                "documents/kaskypaatos-varsinainen-paatos-yritys.html"
-                                               html->pdf-called?)}
+                                               html->pdf-called?)
+                      #'file-store/store-hallinto-oikeus-attachment!
+                      (fn [aws-s3-client valvonta-id toimenpide-id osapuoli document]
+                        (reset! store-hallinto-oikeus-attachment-called? true)
+                        (original-store-hallinto-oikeus-attachment aws-s3-client valvonta-id toimenpide-id osapuoli document))}
         (let [new-toimenpide {:type-id            8
                               :deadline-date      (str (LocalDate/of 2023 10 4))
                               :template-id        6
@@ -187,6 +232,7 @@
                                        (test-kayttajat/with-virtu-user)
                                        (mock/header "Accept" "application/json")))]
           (t/is (true? @html->pdf-called?))
+          (t/is (true? @store-hallinto-oikeus-attachment-called?))
           (t/is (= (:status response) 201))
 
           (t/testing "Toimenpide is returned through the api"
@@ -234,8 +280,38 @@
                                    :document           true
                                    :recipient-answered false}]
                                  :department-head-title-sv "Kungen"
-                                 :fine                     857,},
-                                :template-id   6}))))))))
+                                 :fine                     857},
+                                :template-id   6}))))
+
+          (t/testing "Created document can be downloaded through the api"
+            (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet/%s/yritykset/%s/document/kaskypaatos.pdf" valvonta-id 8 osapuoli-id))
+                                           (test-kayttajat/with-virtu-user)
+                                           (mock/header "Accept" "application/pdf")))]
+              (t/is (= (-> response :headers (get "Content-Type")) "application/pdf"))
+              (t/is (= (:status response) 200))))
+
+          (t/testing "Created document is not available without authentication"
+            (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet/%s/yritykset/%s/document/kaskypaatos.pdf" valvonta-id 8 osapuoli-id))
+                                           (mock/header "Accept" "application/pdf")))]
+              (t/is (= (:status response) 403))
+              (t/is (= (:body response) "Forbidden"))))
+
+          (t/testing "hallinto-oikeus-liite can be downloaded through the api"
+            (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet/%s/yritykset/%s/attachment/hallinto-oikeus.pdf" valvonta-id 8 osapuoli-id))
+                                           (test-kayttajat/with-virtu-user)
+                                           (mock/header "Accept" "application/pdf")))]
+              (t/is (= (-> response :headers (get "Content-Type")) "application/pdf"))
+              (t/is (= (:status response) 200))
+
+              (t/testing "hallinto-oikeus-liite is the correct one"
+                (t/is (= (slurp (io/input-stream (io/resource "pdf/hallinto-oikeudet/Valitusosoitus_30_pv_ITA-SUOMEN_HAO.pdf")))
+                         (slurp (:body response)))))))
+
+          (t/testing "hallinto-oikeus-liite is not available without authentication"
+            (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet/%s/yritykset/%s/attachment/hallinto-oikeus.pdf" valvonta-id 8 osapuoli-id))
+                                           (mock/header "Accept" "application/pdf")))]
+              (t/is (= (:status response) 403))
+              (t/is (= (:body response) "Forbidden"))))))))
 
   (t/testing "Käskypäätös / varsinainen päätös toimenpide is created successfully when there are multiple osapuolis but one lives abroad and will not receive the document because of being outside court jurisdiction"
     ;; Add the valvonta and previous toimenpides

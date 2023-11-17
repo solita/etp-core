@@ -11,5 +11,8 @@
                                 (hallinto-oikeus-db/find-attachment-name-by-hallinto-oikeus-id db)
                                 first
                                 :attachment-name)]
-    (io/input-stream (io/resource (str attachment-directory-path attachment-name)))
+    (-> (str attachment-directory-path attachment-name)
+        io/resource
+        io/input-stream
+        .readAllBytes)
     (throw (Exception. (str "Attachment not found for hallinto-oikeus-id: " hallinto-oikeus-id)))))

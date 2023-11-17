@@ -9,6 +9,7 @@
             [solita.etp.config :as config]
             [clojure.string :as str])
   (:import (java.nio.charset StandardCharsets)
+           (java.time Instant)
            (java.util Base64)))
 
 (def toplevel-processing-actions
@@ -218,48 +219,68 @@
              (fn [name-identity] (reduce toplevel-processing-action-max
                                          (cons name-identity (keys states))))))
 
-(defn log-toimenpide! [sender-id request-id case-number processing-action & [documents]]
-  (let [processing-action-states (resolve-case-processing-action-state sender-id
-                                                                       request-id
-                                                                       case-number)
-        require-vireillepano (= {"Vireillepano" "NEW"} processing-action-states)
-        processing-action (-> processing-action
-                              ;; Possibly redirect the processing action to Vireillepano
-                              (with-vireillepano require-vireillepano)
-                              ;; Prevent going backwards in the process
-                              (with-latest-processing-action processing-action-states))]
-    (move-processing-action!
-      sender-id
-      request-id
-      case-number
-      processing-action-states
-      (-> processing-action :identity :processing-action :name-identity))
-    (take-processing-action!
-      sender-id
-      request-id
-      case-number
-      (-> processing-action :identity :processing-action :name-identity))
+(defn log-toimenpide!
+  ([sender-id request-id case-number processing-action]
+   (log-toimenpide! sender-id request-id case-number processing-action [] []))
+  ([sender-id request-id case-number processing-action documents]
+   (log-toimenpide! sender-id request-id case-number processing-action documents []))
+  ([sender-id request-id case-number processing-action documents attachments]
+   (let [processing-action-states (resolve-case-processing-action-state sender-id
+                                                                        request-id
+                                                                        case-number)
+         require-vireillepano (= {"Vireillepano" "NEW"} processing-action-states)
+         processing-action (-> processing-action
+                               ;; Possibly redirect the processing action to Vireillepano
+                               (with-vireillepano require-vireillepano)
+                               ;; Prevent going backwards in the process
+                               (with-latest-processing-action processing-action-states))]
+     (move-processing-action!
+       sender-id
+       request-id
+       case-number
+       processing-action-states
+       (-> processing-action :identity :processing-action :name-identity))
+     (take-processing-action!
+       sender-id
+       request-id
+       case-number
+       (-> processing-action :identity :processing-action :name-identity))
 
-    (execute-operation! {:request-id        request-id
-                         :sender-id         sender-id
-                         :identity          (:identity processing-action)
-                         :processing-action (:processing-action processing-action)})
+     (execute-operation! {:request-id        request-id
+                          :sender-id         sender-id
+                          :identity          (:identity processing-action)
+                          :processing-action (:processing-action processing-action)})
 
-    (doseq [document documents]
-      (add-documents-to-processing-action!
-        sender-id
-        request-id
-        case-number
-        (-> processing-action :processing-action :name)
-        [{:content (bytes->base64 document)
-          :type    (-> processing-action :document :type)
-          :name    (-> processing-action :document :filename)}]))
-    (take-processing-action! sender-id request-id case-number (-> processing-action :processing-action :name))
-    (mark-processing-action-as-ready!
-      sender-id
-      request-id
-      case-number
-      (-> processing-action :processing-action :name))))
+     (doseq [document documents]
+       (add-documents-to-processing-action!
+         sender-id
+         request-id
+         case-number
+         (-> processing-action :processing-action :name)
+         [{:content (bytes->base64 document)
+           :type    (-> processing-action :document :type)
+           :name    (-> processing-action :document :filename)}]))
+
+     (doseq [attachment attachments]
+       (when (nil? (-> processing-action :attachment))
+         (throw (Exception.
+                  (format "Received attachment for processing action %s but it has no attachments defined"
+                          (-> processing-action :processing-action :name)))))
+       (add-documents-to-processing-action!
+         sender-id
+         request-id
+         case-number
+         (-> processing-action :processing-action :name)
+         [{:content (bytes->base64 attachment)
+           :type    (-> processing-action :attachment :type)
+           :name    (-> processing-action :attachment :filename)}]))
+
+     (take-processing-action! sender-id request-id case-number (-> processing-action :processing-action :name))
+     (mark-processing-action-as-ready!
+       sender-id
+       request-id
+       case-number
+       (-> processing-action :processing-action :name)))))
 
 (defn close-case! [sender-id request-id case-number description]
   (let [latest-prosessing-action (resolve-latest-case-processing-action-state sender-id request-id case-number)]
@@ -271,7 +292,7 @@
         {:identity          {:case              {:number case-number}
                              :processing-action {:name-identity latest-prosessing-action}}
          :processing-action {:name           "Asian sulkeminen"
-                             :reception-date (java.time.Instant/now)
+                             :reception-date (Instant/now)
                              :description    description}}))
     (proceed-operation! sender-id request-id case-number latest-prosessing-action "Sulje asia")))
 
