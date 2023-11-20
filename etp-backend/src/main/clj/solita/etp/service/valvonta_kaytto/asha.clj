@@ -1,8 +1,8 @@
 (ns solita.etp.service.valvonta-kaytto.asha
-  (:require [clojure.java.io :as io]
-            [clojure.string :as string]
+  (:require [clojure.string :as string]
             [solita.common.time :as time]
             [solita.etp.service.asha :as asha]
+            [solita.etp.schema.valvonta-kaytto :as vk-schema]
             [solita.etp.service.valvonta-kaytto.hallinto-oikeus-attachment :as hao-attachment]
             [solita.etp.service.valvonta-kaytto.previous-toimenpide-data :as previous-toimenpide]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
@@ -255,8 +255,8 @@
                                        :osapuoli-specific-data
                                        (filter toimenpide/osapuoli-has-document?)
                                        (map #(select-keys % [:osapuoli-id :osapuoli-type])))
-          henkilo-osapuolet-with-documents (map :osapuoli-id (filter #(= (:osapuoli-type %) "henkilo") osapuolet-with-document))
-          yritys-osapuolet-with-documents (map :osapuoli-id (filter #(= (:osapuoli-type %) "yritys") osapuolet-with-document))]
+          henkilo-osapuolet-with-documents (map :osapuoli-id (filter #(= (:osapuoli-type %) vk-schema/henkilo) osapuolet-with-document))
+          yritys-osapuolet-with-documents (map :osapuoli-id (filter #(= (:osapuoli-type %) vk-schema/yritys) osapuolet-with-document))]
       (concat
         (filter #(contains? (set henkilo-osapuolet-with-documents) (:id %)) (filter osapuoli/henkilo? osapuolet))
         (filter #(contains? (set yritys-osapuolet-with-documents) (:id %)) (filter osapuoli/yritys? osapuolet))))

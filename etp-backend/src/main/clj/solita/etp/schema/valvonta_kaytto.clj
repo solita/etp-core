@@ -48,7 +48,10 @@
 
 (def KarajaoikeusId (apply schema/enum (range 0 20)))
 
-(def OsapuoliType (schema/enum "henkilo" "yritys"))
+(def henkilo "henkilo")
+(def yritys "yritys")
+
+(def OsapuoliType (schema/enum henkilo yritys))
 
 (def KaskypaatosVarsinainenPaatosOsapuoliSpecificData
   (schema/conditional

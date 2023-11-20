@@ -1,4 +1,5 @@
-(ns solita.etp.service.valvonta-kaytto.osapuoli)
+(ns solita.etp.service.valvonta-kaytto.osapuoli
+  (:require [solita.etp.schema.valvonta-kaytto :as vk-schema]))
 
 (def omistaja? #(= (:rooli-id %) 0))
 (def tiedoksi? (complement omistaja?))
@@ -20,5 +21,5 @@
   "Given osapuoli map, returns whether the osapuoli is henkilo or yritys"
   [osapuoli]
   (if (henkilo? osapuoli)
-    "henkilo"
-    "yritys"))
+    vk-schema/henkilo
+    vk-schema/yritys))
