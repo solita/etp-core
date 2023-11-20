@@ -100,8 +100,8 @@
                               :template-id        6
                               :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                               :type-specific-data {:fine                     857
-                                                   :osapuoli-specific-data   [{:osapuoli-id          osapuoli-id
-                                                                               :osapuoli-type        "henkilo"
+                                                   :osapuoli-specific-data   [{:osapuoli             {:id   osapuoli-id
+                                                                                                      :type "henkilo"}
                                                                                :hallinto-oikeus-id   1
                                                                                :document             true
                                                                                :recipient-answered   true
@@ -221,8 +221,8 @@
                               :template-id        6
                               :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                               :type-specific-data {:fine                     857
-                                                   :osapuoli-specific-data   [{:osapuoli-id        osapuoli-id
-                                                                               :osapuoli-type      "yritys"
+                                                   :osapuoli-specific-data   [{:osapuoli           {:id   osapuoli-id
+                                                                                                    :type "yritys"}
                                                                                :hallinto-oikeus-id 2
                                                                                :document           true
                                                                                :recipient-answered false}]
@@ -278,8 +278,8 @@
                                  :department-head-name     "Jane Doe",
                                  :osapuoli-specific-data
                                  [{:hallinto-oikeus-id 2
-                                   :osapuoli-id        1
-                                   :osapuoli-type      "yritys"
+                                   :osapuoli           {:id   1
+                                                        :type "yritys"}
                                    :document           true
                                    :recipient-answered false}]
                                  :department-head-title-sv "Kungen"
@@ -402,8 +402,8 @@
                               :template-id        6
                               :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                               :type-specific-data {:fine                     857
-                                                   :osapuoli-specific-data   [{:osapuoli-id          osapuoli-id
-                                                                               :osapuoli-type        "henkilo"
+                                                   :osapuoli-specific-data   [{:osapuoli             {:id   osapuoli-id
+                                                                                                      :type "henkilo"}
                                                                                :hallinto-oikeus-id   1
                                                                                :document             true
                                                                                :recipient-answered   true
@@ -411,9 +411,9 @@
                                                                                :answer-commentary-sv "Jag visste inte att ett intyg behövs :("
                                                                                :statement-fi         "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."
                                                                                :statement-sv         "Han vet inte. Vi förlotar."}
-                                                                              {:osapuoli-id   osapuoli-id-2
-                                                                               :osapuoli-type "henkilo"
-                                                                               :document      false}]
+                                                                              {:osapuoli {:id   osapuoli-id-2
+                                                                                          :type "henkilo"}
+                                                                               :document false}]
                                                    :department-head-title-fi "Apulaisjohtaja"
                                                    :department-head-title-sv "Apulaisjohtaja på svenska"
                                                    :department-head-name     "Yli Päällikkö"}}
@@ -452,8 +452,8 @@
                             :template-id        6
                             :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                             :type-specific-data {:fine                     857
-                                                 :osapuoli-specific-data   [{:osapuoli-id        osapuoli-id
-                                                                             :osapuoli-type      "henkilo"
+                                                 :osapuoli-specific-data   [{:osapuoli           {:id   osapuoli-id
+                                                                                                  :type "henkilo"}
                                                                              :hallinto-oikeus-id 3
                                                                              :document           true
                                                                              :recipient-answered false}]
@@ -490,8 +490,8 @@
                             :template-id        6
                             :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                             :type-specific-data {:fine                     857
-                                                 :osapuoli-specific-data   [{:osapuoli-id          osapuoli-id
-                                                                             :osapuoli-type        "yritys"
+                                                 :osapuoli-specific-data   [{:osapuoli             {:id   osapuoli-id
+                                                                                                    :type "yritys"}
                                                                              :hallinto-oikeus-id   5
                                                                              :document             true
                                                                              :recipient-answered   true
@@ -662,11 +662,11 @@
                               :template-id        6
                               :description        "Tehdään varsinainen päätös, omistaja vastasi kuulemiskirjeeseen"
                               :type-specific-data {:fine                     857
-                                                   :osapuoli-specific-data   [{:osapuoli-id        yritysosapuoli-id
-                                                                               :osapuoli-type      "yritys"
-                                                                               :document           false}
-                                                                              {:osapuoli-id          osapuoli-id
-                                                                               :osapuoli-type        "henkilo"
+                                                   :osapuoli-specific-data   [{:osapuoli {:id   yritysosapuoli-id
+                                                                                          :type "yritys"}
+                                                                               :document false}
+                                                                              {:osapuoli             {:id   osapuoli-id
+                                                                                                      :type "henkilo"}
                                                                                :hallinto-oikeus-id   1
                                                                                :document             true
                                                                                :recipient-answered   true

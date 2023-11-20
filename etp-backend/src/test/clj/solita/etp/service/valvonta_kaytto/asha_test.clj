@@ -51,12 +51,12 @@
                       {:department-head-title-fi "Apulaisjohtaja"
                        :department-head-name     "Yli Päällikkö"
                        :osapuoli-specific-data   [{:hallinto-oikeus-id 1
-                                                   :osapuoli-id        2
-                                                   :osapuoli-type      "henkilo"
+                                                   :osapuoli           {:id   2
+                                                                        :type "henkilo"}
                                                    :document           true}
-                                                  {:osapuoli-id   3
-                                                   :osapuoli-type "henkilo"
-                                                   :document      false}]
+                                                  {:osapuoli {:id   3
+                                                              :type "henkilo"}
+                                                   :document false}]
                        :recipient-answered       true
                        :statement-sv             "Han vet inte. Vi förlotar."
                        :statement-fi             "Tämän kerran annetaan anteeksi kun hän ei tiennyt."
@@ -119,12 +119,12 @@
         (t/is (= (asha/remove-osapuolet-with-no-document
                    {:type-id            8
                     :type-specific-data {:osapuoli-specific-data [{:hallinto-oikeus-id 1
-                                                                   :osapuoli-id        1
-                                                                   :osapuoli-type      "henkilo"
+                                                                   :osapuoli           {:id   1
+                                                                                        :type "henkilo"}
                                                                    :document           true}
                                                                   {:hallinto-oikeus-id 3
-                                                                   :osapuoli-id        1
-                                                                   :osapuoli-type      "yritys"
+                                                                   :osapuoli           {:id   1
+                                                                                        :type "yritys"}
                                                                    :document           false}]}}
                    osapuolet)
                  [{:toimitustapa-description nil,
@@ -148,12 +148,12 @@
         (t/is (= (asha/remove-osapuolet-with-no-document
                    {:type-id            8
                     :type-specific-data {:osapuoli-specific-data [{:hallinto-oikeus-id 1
-                                                                   :osapuoli-id        1
-                                                                   :osapuoli-type      "henkilo"
+                                                                   :osapuoli           {:id   1
+                                                                                        :type "henkilo"}
                                                                    :document           false}
                                                                   {:hallinto-oikeus-id 3
-                                                                   :osapuoli-id        1
-                                                                   :osapuoli-type      "yritys"
+                                                                   :osapuoli           {:id   1
+                                                                                        :type "yritys"}
                                                                    :document           true}]}}
                    osapuolet)
                  [{:toimitustapa-description nil,
@@ -176,12 +176,12 @@
         (t/is (= (asha/remove-osapuolet-with-no-document
                    {:type-id            8
                     :type-specific-data {:osapuoli-specific-data [{:hallinto-oikeus-id 1
-                                                                   :osapuoli-id        1
-                                                                   :osapuoli-type      "henkilo"
+                                                                   :osapuoli           {:id   1
+                                                                                        :type "henkilo"}
                                                                    :document           true}
                                                                   {:hallinto-oikeus-id 3
-                                                                   :osapuoli-id        1
-                                                                   :osapuoli-type      "yritys"
+                                                                   :osapuoli           {:id   1
+                                                                                        :type "yritys"}
                                                                    :document           true}]}}
                    osapuolet)
                  osapuolet)))))
@@ -190,12 +190,12 @@
     (t/is (= (asha/remove-osapuolet-with-no-document
                {:type-id            8
                 :type-specific-data {:osapuoli-specific-data [{:hallinto-oikeus-id 1
-                                                               :osapuoli-id        2
-                                                               :osapuoli-type      "henkilo"
+                                                               :osapuoli           {:id   2
+                                                                                    :type "henkilo"}
                                                                :document           true}
                                                               {:hallinto-oikeus-id 3
-                                                               :osapuoli-id        3
-                                                               :osapuoli-type      "yritys"
+                                                               :osapuoli           {:id   3
+                                                                                    :type "yritys"}
                                                                :document           true}]}}
                [{:id       2
                  :etunimi  "Testi"

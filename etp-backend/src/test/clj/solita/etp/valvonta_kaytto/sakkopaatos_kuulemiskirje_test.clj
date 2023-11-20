@@ -122,8 +122,8 @@
                                                                  :answer-commentary-sv     "Jag visste inte att ett intyg behövs :("
                                                                  :statement-fi             "Tämän kerran annetaan anteeksi, kun hän ei tiennyt."
                                                                  :statement-sv             "Han vet inte. Vi förlotar."
-                                                                 :osapuoli-specific-data   [{:osapuoli-id        osapuoli-id
-                                                                                             :osapuoli-type      "henkilo"
+                                                                 :osapuoli-specific-data   [{:osapuoli           {:id   osapuoli-id
+                                                                                                                  :type "henkilo"}
                                                                                              :hallinto-oikeus-id 1
                                                                                              :document           true}]
                                                                  :department-head-title-fi "Apulaisjohtaja"

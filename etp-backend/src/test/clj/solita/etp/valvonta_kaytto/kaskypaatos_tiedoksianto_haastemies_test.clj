@@ -56,14 +56,14 @@
                               :deadline-date      (str (LocalDate/of 2023 7 22))
                               :template-id        8
                               :description        "Kuvaus"
-                              :type-specific-data {:osapuoli-specific-data [{:osapuoli-id      1
-                                                                             :osapuoli-type    "henkilo"
+                              :type-specific-data {:osapuoli-specific-data [{:osapuoli         {:id   1
+                                                                                                :type "henkilo"}
                                                                              :karajaoikeus-id  1
                                                                              :haastemies-email "haaste@mie.het"
                                                                              :document         true}
-                                                                            {:osapuoli-id   2
-                                                                             :osapuoli-type "yritys"
-                                                                             :document      false}]}}
+                                                                            {:osapuoli {:id   2
+                                                                                        :type "yritys"}
+                                                                             :document false}]}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                        (mock/json-body new-toimenpide)
                                        (test-kayttajat/with-virtu-user)
@@ -110,12 +110,11 @@
                     :type-specific-data {:osapuoli-specific-data [{:document         true
                                                                    :haastemies-email "haaste@mie.het"
                                                                    :karajaoikeus-id  1
-                                                                   :osapuoli-id      1
-                                                                   :osapuoli-type    "henkilo"
-                                                                   }
-                                                                  {:document      false
-                                                                   :osapuoli-id   2
-                                                                   :osapuoli-type "yritys"}]}
+                                                                   :osapuoli         {:id   1
+                                                                                      :type "henkilo"}}
+                                                                  {:document false
+                                                                   :osapuoli {:id   2
+                                                                              :type "yritys"}}]}
                     :valvonta-id        valvonta-id
                     :yritykset          []}))))))
 
@@ -154,8 +153,8 @@
                               :deadline-date      (str (LocalDate/of 2023 7 22))
                               :template-id        8
                               :description        "Kuvaus"
-                              :type-specific-data {:osapuoli-specific-data [{:osapuoli-id      1
-                                                                             :osapuoli-type    "yritys"
+                              :type-specific-data {:osapuoli-specific-data [{:osapuoli         {:id   1
+                                                                                                :type "yritys"}
                                                                              :karajaoikeus-id  1
                                                                              :haastemies-email "haaste@mie.het"
                                                                              :document         true}]}}
@@ -190,8 +189,8 @@
                     :type-specific-data {:osapuoli-specific-data [{:document         true
                                                                    :haastemies-email "haaste@mie.het"
                                                                    :karajaoikeus-id  1
-                                                                   :osapuoli-id      1
-                                                                   :osapuoli-type    "yritys"}]}
+                                                                   :osapuoli         {:id   1
+                                                                                      :type "yritys"}}]}
                     :valvonta-id        valvonta-id
                     :yritykset          [{:toimitustapa-description nil,
                                           :toimitustapa-id          0,

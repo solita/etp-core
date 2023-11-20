@@ -93,8 +93,8 @@
    :tyyppikohtaiset-tiedot (type-specific-data/format-type-specific-data
                              db
                              toimenpide
-                             (:id osapuoli)
-                             (osapuoli/osapuoli->osapuoli-type osapuoli))
+                             {:id   (:id osapuoli)
+                              :type (osapuoli/osapuoli->osapuoli-type osapuoli)})
    :aiemmat-toimenpiteet   (previous-toimenpide/formatted-previous-toimenpide-data db toimenpide (:id valvonta))})
 
 (defn- request-id [valvonta-id toimenpide-id]
@@ -254,9 +254,9 @@
                                        :type-specific-data
                                        :osapuoli-specific-data
                                        (filter toimenpide/osapuoli-has-document?)
-                                       (map #(select-keys % [:osapuoli-id :osapuoli-type])))
-          henkilo-osapuolet-with-documents (map :osapuoli-id (filter #(= (:osapuoli-type %) vk-schema/henkilo) osapuolet-with-document))
-          yritys-osapuolet-with-documents (map :osapuoli-id (filter #(= (:osapuoli-type %) vk-schema/yritys) osapuolet-with-document))]
+                                       (map :osapuoli))
+          henkilo-osapuolet-with-documents (map :id (filter #(= (:type %) vk-schema/henkilo) osapuolet-with-document))
+          yritys-osapuolet-with-documents (map :id (filter #(= (:type %) vk-schema/yritys) osapuolet-with-document))]
       (concat
         (filter #(contains? (set henkilo-osapuolet-with-documents) (:id %)) (filter osapuoli/henkilo? osapuolet))
         (filter #(contains? (set yritys-osapuolet-with-documents) (:id %)) (filter osapuoli/yritys? osapuolet))))
@@ -267,7 +267,8 @@
         hallinto-oikeus-id (-> toimenpide
                                :type-specific-data
                                :osapuoli-specific-data
-                               (type-specific-data/find-administrative-court-id-from-osapuoli-specific-data (:id osapuoli) osapuoli-type))
+                               (type-specific-data/find-administrative-court-id-from-osapuoli-specific-data {:id   (:id osapuoli)
+                                                                                                             :type osapuoli-type}))
         attachment (hao-attachment/attachment-for-hallinto-oikeus-id db hallinto-oikeus-id)]
     (store/store-hallinto-oikeus-attachment! aws-s3-client valvonta-id (:id toimenpide) osapuoli attachment)
     attachment))
