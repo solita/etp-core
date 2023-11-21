@@ -129,6 +129,8 @@ energia-asiantuntija
     samt att ge en förklaring till sådana yrkanden och utredningar som kan inverka på avgörandet av ärendet. Svaret ska
     ges senast {{määräpäivä}}. Avsaknaden av svar hindrar inte att ärendet avgörs.</p>
 
+<div class="sivunvaihto"></div>
+
 <p>Vi ber Er skicka svaret till ARAs registratorskontor antingen per e-post till <br/>kirjaamo.ara@ara.fi eller per post till
     Finansierings- och ut-vecklingscentralen för boendet, PB 30, 15141 Lahtis.</p>
 

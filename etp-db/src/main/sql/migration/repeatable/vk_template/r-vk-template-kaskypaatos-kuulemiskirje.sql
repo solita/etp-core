@@ -93,7 +93,7 @@ energia-asiantuntija
 
 <div class="otsikko-ja-vastaanottaja-container">
     <div class="otsikko">
-        <b>Brew om hörande</b>
+        <b>Brev om hörande</b>
         <b>{{päivä}}</b> <br/>
         Dnro: {{diaarinumero}}
     </div>
