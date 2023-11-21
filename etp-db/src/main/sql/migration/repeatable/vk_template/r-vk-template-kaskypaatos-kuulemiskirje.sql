@@ -34,7 +34,7 @@ values (5, 'Käskypäätös / kuulemiskirje', 'Käskypäätös / kuulemiskirje (
 <h1>Kuuleminen uhkasakon asettamisesta</h1>
 
 <div>
-    Rakennuksen omistaja: {{#omistaja-henkilo}}{{sukunimi}} {{etunimi}}{{/omistaja-henkilo}}{{#omistaja-yritys}}{{nimi}}{{/omistaja-yritys}}<br/>
+    Rakennuksen omistaja: {{#tyyppikohtaiset-tiedot}}{{omistajat}}{{/tyyppikohtaiset-tiedot}}<br/>
     Rakennus: {{#kohde}}{{katuosoite}} {{postinumero}} {{postitoimipaikka}}{{/kohde}}
 </div>
 
@@ -116,7 +116,7 @@ energia-asiantuntija
 <h1>Hörande om föreläggande av vite</h1>
 
 <div>
-    Byggnadens ägare: {{#omistaja-henkilo}}{{sukunimi}} {{etunimi}}{{/omistaja-henkilo}}{{#omistaja-yritys}}{{nimi}}{{/omistaja-yritys}}<br/>
+    Byggnadens ägare: {{#tyyppikohtaiset-tiedot}}{{omistajat}}{{/tyyppikohtaiset-tiedot}}<br/>
     Byggnad: {{#kohde}}{{katuosoite}} {{postinumero}} {{postitoimipaikka}}{{/kohde}}
 </div>
 
