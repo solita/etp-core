@@ -6,7 +6,7 @@
 (t/use-fixtures :each ts/fixture)
 
 (t/deftest remove-osapuolet-with-no-document-if-varsinainen-paatos-test
-  (t/testing "Two osapuolis, one hallinto-oikeus, only the osapuoli with the hallinto-oikeus should be returned"
+  (t/testing "Two osapuolis, only the osapuoli with document set to true should be returned"
     (let [osapuolet [{:toimitustapa-description nil
                       :toimitustapa-id          0
                       :email                    nil
@@ -51,11 +51,12 @@
                       {:department-head-title-fi "Apulaisjohtaja"
                        :department-head-name     "Yli Päällikkö"
                        :osapuoli-specific-data   [{:hallinto-oikeus-id 1
-                                                   :osapuoli-id        2
+                                                   :osapuoli           {:id   2
+                                                                        :type "henkilo"}
                                                    :document           true}
-                                                  {:hallinto-oikeus-id nil
-                                                   :osapuoli-id        3
-                                                   :document           false}]
+                                                  {:osapuoli {:id   3
+                                                              :type "henkilo"}
+                                                   :document false}]
                        :recipient-answered       true
                        :statement-sv             "Han vet inte. Vi förlotar."
                        :statement-fi             "Tämän kerran annetaan anteeksi kun hän ei tiennyt."
@@ -82,24 +83,141 @@
                  :vastaanottajan-tarkenne  nil
                  :maa                      "FI"}]))))
 
-  (t/testing "Two osapuolis and two hallinto-oikeus selections, both osapuolet are returned"
+  (t/testing "Henkilo-osapuoli and yritysosapuoli with the same id"
+    (let [osapuolet [{:toimitustapa-description nil,
+                      :toimitustapa-id          0,
+                      :email                    nil,
+                      :rooli-id                 0,
+                      :jakeluosoite             "Testikatu 12",
+                      :valvonta-id              1,
+                      :postitoimipaikka         "Helsinki",
+                      :puhelin                  nil,
+                      :sukunimi                 "Talonomistaja",
+                      :postinumero              "00100",
+                      :id                       1,
+                      :henkilotunnus            "000000-0000",
+                      :rooli-description        "",
+                      :etunimi                  "Testi",
+                      :vastaanottajan-tarkenne  nil,
+                      :maa                      "FI"}
+                     {:toimitustapa-description nil,
+                      :toimitustapa-id          0,
+                      :email                    nil,
+                      :rooli-id                 0,
+                      :jakeluosoite             "Testikatu 12",
+                      :valvonta-id              1,
+                      :postitoimipaikka         "Helsinki",
+                      :ytunnus                  nil,
+                      :puhelin                  nil,
+                      :nimi                     "Yritysomistaja",
+                      :postinumero              "00100",
+                      :id                       1,
+                      :rooli-description        "Omistaja",
+                      :vastaanottajan-tarkenne  "Lisäselite C/O",
+                      :maa                      "FI"}]]
+      (t/testing "only the henkilo-osapuoli has a document so it should be returned"
+        (t/is (= (asha/remove-osapuolet-with-no-document
+                   {:type-id            8
+                    :type-specific-data {:osapuoli-specific-data [{:hallinto-oikeus-id 1
+                                                                   :osapuoli           {:id   1
+                                                                                        :type "henkilo"}
+                                                                   :document           true}
+                                                                  {:hallinto-oikeus-id 3
+                                                                   :osapuoli           {:id   1
+                                                                                        :type "yritys"}
+                                                                   :document           false}]}}
+                   osapuolet)
+                 [{:toimitustapa-description nil,
+                   :toimitustapa-id          0,
+                   :email                    nil,
+                   :rooli-id                 0,
+                   :jakeluosoite             "Testikatu 12",
+                   :valvonta-id              1,
+                   :postitoimipaikka         "Helsinki",
+                   :puhelin                  nil,
+                   :sukunimi                 "Talonomistaja",
+                   :postinumero              "00100",
+                   :id                       1,
+                   :henkilotunnus            "000000-0000",
+                   :rooli-description        "",
+                   :etunimi                  "Testi",
+                   :vastaanottajan-tarkenne  nil,
+                   :maa                      "FI"}])))
+
+      (t/testing "only the yritys-osapuoli has a document so it should be returned"
+        (t/is (= (asha/remove-osapuolet-with-no-document
+                   {:type-id            8
+                    :type-specific-data {:osapuoli-specific-data [{:hallinto-oikeus-id 1
+                                                                   :osapuoli           {:id   1
+                                                                                        :type "henkilo"}
+                                                                   :document           false}
+                                                                  {:hallinto-oikeus-id 3
+                                                                   :osapuoli           {:id   1
+                                                                                        :type "yritys"}
+                                                                   :document           true}]}}
+                   osapuolet)
+                 [{:toimitustapa-description nil,
+                   :toimitustapa-id          0,
+                   :email                    nil,
+                   :rooli-id                 0,
+                   :jakeluosoite             "Testikatu 12",
+                   :valvonta-id              1,
+                   :postitoimipaikka         "Helsinki",
+                   :ytunnus                  nil,
+                   :puhelin                  nil,
+                   :nimi                     "Yritysomistaja",
+                   :postinumero              "00100",
+                   :id                       1,
+                   :rooli-description        "Omistaja",
+                   :vastaanottajan-tarkenne  "Lisäselite C/O",
+                   :maa                      "FI"}])))
+
+      (t/testing "both have a document so both should be returned"
+        (t/is (= (asha/remove-osapuolet-with-no-document
+                   {:type-id            8
+                    :type-specific-data {:osapuoli-specific-data [{:hallinto-oikeus-id 1
+                                                                   :osapuoli           {:id   1
+                                                                                        :type "henkilo"}
+                                                                   :document           true}
+                                                                  {:hallinto-oikeus-id 3
+                                                                   :osapuoli           {:id   1
+                                                                                        :type "yritys"}
+                                                                   :document           true}]}}
+                   osapuolet)
+                 osapuolet)))))
+
+  (t/testing "Two osapuolis and two documents, both osapuolet are returned"
     (t/is (= (asha/remove-osapuolet-with-no-document
                {:type-id            8
                 :type-specific-data {:osapuoli-specific-data [{:hallinto-oikeus-id 1
-                                                               :osapuoli-id        2
+                                                               :osapuoli           {:id   2
+                                                                                    :type "henkilo"}
                                                                :document           true}
                                                               {:hallinto-oikeus-id 3
-                                                               :osapuoli-id        3
+                                                               :osapuoli           {:id   3
+                                                                                    :type "yritys"}
                                                                :document           true}]}}
-               [{:id 2}
-                {:id 3}])
-             [{:id 2}
-              {:id 3}])))
+               [{:id       2
+                 :etunimi  "Testi"
+                 :sukunimi "Testerson"}
+                {:id   3
+                 :nimi "Testiyritys"}])
+             [{:id       2
+               :etunimi  "Testi"
+               :sukunimi "Testerson"}
+              {:id   3
+               :nimi "Testiyritys"}])))
 
   (t/testing "Two osapuolis and toimenpide is not varsinainen päätös, so both should be returned"
     (t/is (= (asha/remove-osapuolet-with-no-document
                {:type-id 7}
-               [{:id 2}
-                {:id 3}])
-             [{:id 2}
-              {:id 3}]))))
+               [{:id       2
+                 :etunimi  "Testi"
+                 :sukunimi "Testerson"}
+                {:id   3
+                 :nimi "Testiyritys"}])
+             [{:id       2
+               :etunimi  "Testi"
+               :sukunimi "Testerson"}
+              {:id   3
+               :nimi "Testiyritys"}]))))

@@ -48,11 +48,20 @@
 
 (def KarajaoikeusId (apply schema/enum (range 0 20)))
 
+(def henkilo "henkilo")
+(def yritys "yritys")
+
+(def OsapuoliType (schema/enum henkilo yritys))
+
+(def OsapuoliSpecificDataOsapuoli
+  {:id   common-schema/Key
+   :type OsapuoliType})
+
 (def KaskypaatosVarsinainenPaatosOsapuoliSpecificData
   (schema/conditional
     ;; Osapuoli has a document and has answered to kuulemiskirje, so all fields are required
     (every-pred toimenpide/osapuoli-has-document? toimenpide/recipient-answered?)
-    {:osapuoli-id          common-schema/Key
+    {:osapuoli             OsapuoliSpecificDataOsapuoli
      :hallinto-oikeus-id   HallintoOikeusId
      :document             schema/Bool
      :recipient-answered   schema/Bool
@@ -63,15 +72,15 @@
 
     ;; Osapuoli has document but has not answered to kuulemiskirje, so answer and statement are not allowed
     toimenpide/osapuoli-has-document?
-    {:osapuoli-id        common-schema/Key
+    {:osapuoli           OsapuoliSpecificDataOsapuoli
      :hallinto-oikeus-id HallintoOikeusId
      :document           schema/Bool
      :recipient-answered schema/Bool}
 
     ;; Osapuoli has no document so no other fields are allowed
     :else
-    {:osapuoli-id common-schema/Key
-     :document    schema/Bool}))
+    {:osapuoli OsapuoliSpecificDataOsapuoli
+     :document schema/Bool}))
 
 (def KaskypaatosVarsinainenPaatosData {:fine                     common-schema/NonNegative
                                        :osapuoli-specific-data   [KaskypaatosVarsinainenPaatosOsapuoliSpecificData]
@@ -82,14 +91,14 @@
 (def KaskypaatosTiedoksiantoHaastemiesOsapuoliSpecificData
   (schema/conditional
     toimenpide/osapuoli-has-document?
-    {:osapuoli-id      common-schema/Key
+    {:osapuoli         OsapuoliSpecificDataOsapuoli
      :karajaoikeus-id  KarajaoikeusId
      :haastemies-email common-schema/Email
      :document         schema/Bool}
 
     :else
-    {:osapuoli-id common-schema/Key
-     :document    schema/Bool}))
+    {:osapuoli OsapuoliSpecificDataOsapuoli
+     :document schema/Bool}))
 
 (def KaskypaatosTiedoksiantoHaastemiesData
   {:osapuoli-specific-data [KaskypaatosTiedoksiantoHaastemiesOsapuoliSpecificData]})
@@ -101,19 +110,19 @@
     ;; Osapuoli has a document so all fields are required to have values
     ;; answer-commentary fields are optional but if present, values are required
     toimenpide/osapuoli-has-document?
-    {:osapuoli-id          common-schema/Key
-     :hallinto-oikeus-id   HallintoOikeusId
-     :document             schema/Bool
-     :recipient-answered   schema/Bool
+    {:osapuoli                                   OsapuoliSpecificDataOsapuoli
+     :hallinto-oikeus-id                         HallintoOikeusId
+     :document                                   schema/Bool
+     :recipient-answered                         schema/Bool
      (schema/optional-key :answer-commentary-fi) schema/Str
      (schema/optional-key :answer-commentary-sv) schema/Str
-     :statement-fi schema/Str
-     :statement-sv schema/Str}
+     :statement-fi                               schema/Str
+     :statement-sv                               schema/Str}
 
     ;; Osapuoli has no document so no other fields are allowed
     :else
-    {:osapuoli-id common-schema/Key
-     :document    schema/Bool}))
+    {:osapuoli OsapuoliSpecificDataOsapuoli
+     :document schema/Bool}))
 
 (def SakkopaatosVarsinainenPaatosData {:fine                     common-schema/NonNegative
                                        :osapuoli-specific-data   [SakkopaatosVarsinainenPaatosOsapuoliSpecificData]
@@ -124,14 +133,14 @@
 (def SakkopaatosTiedoksiantoHaastemiesOsapuoliSpecificData
   (schema/conditional
     toimenpide/osapuoli-has-document?
-    {:osapuoli-id      common-schema/Key
+    {:osapuoli         OsapuoliSpecificDataOsapuoli
      :karajaoikeus-id  KarajaoikeusId
      :haastemies-email common-schema/Email
      :document         schema/Bool}
 
     :else
-    {:osapuoli-id common-schema/Key
-     :document    schema/Bool}))
+    {:osapuoli OsapuoliSpecificDataOsapuoli
+     :document schema/Bool}))
 
 (def SakkopaatosTiedoksiantoHaastemiesData
   {:osapuoli-specific-data [SakkopaatosTiedoksiantoHaastemiesOsapuoliSpecificData]})

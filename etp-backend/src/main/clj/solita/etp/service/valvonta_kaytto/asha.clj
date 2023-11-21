@@ -1,8 +1,8 @@
 (ns solita.etp.service.valvonta-kaytto.asha
-  (:require [clojure.java.io :as io]
-            [clojure.string :as string]
+  (:require [clojure.string :as string]
             [solita.common.time :as time]
             [solita.etp.service.asha :as asha]
+            [solita.etp.schema.valvonta-kaytto :as vk-schema]
             [solita.etp.service.valvonta-kaytto.hallinto-oikeus-attachment :as hao-attachment]
             [solita.etp.service.valvonta-kaytto.previous-toimenpide-data :as previous-toimenpide]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]
@@ -90,7 +90,11 @@
    :tietopyynto            {:tietopyynto-pvm         (time/format-date (:rfi-request dokumentit))
                             :tietopyynto-kehotus-pvm (time/format-date (:rfi-order dokumentit))}
    :tiedoksi               (map (partial tiedoksi-saaja roolit) tiedoksi)
-   :tyyppikohtaiset-tiedot (type-specific-data/format-type-specific-data db toimenpide (:id osapuoli))
+   :tyyppikohtaiset-tiedot (type-specific-data/format-type-specific-data
+                             db
+                             toimenpide
+                             {:id   (:id osapuoli)
+                              :type (osapuoli/osapuoli->osapuoli-type osapuoli)})
    :aiemmat-toimenpiteet   (previous-toimenpide/formatted-previous-toimenpide-data db toimenpide (:id valvonta))})
 
 (defn- request-id [valvonta-id toimenpide-id]
@@ -250,16 +254,21 @@
                                        :type-specific-data
                                        :osapuoli-specific-data
                                        (filter toimenpide/osapuoli-has-document?)
-                                       (map :osapuoli-id)
-                                       set)]
-      (filter #(contains? osapuolet-with-document (:id %)) osapuolet))
+                                       (map :osapuoli))
+          henkilo-osapuolet-with-documents (map :id (filter #(= (:type %) vk-schema/henkilo) osapuolet-with-document))
+          yritys-osapuolet-with-documents (map :id (filter #(= (:type %) vk-schema/yritys) osapuolet-with-document))]
+      (concat
+        (filter #(contains? (set henkilo-osapuolet-with-documents) (:id %)) (filter osapuoli/henkilo? osapuolet))
+        (filter #(contains? (set yritys-osapuolet-with-documents) (:id %)) (filter osapuoli/yritys? osapuolet))))
     osapuolet))
 
 (defn store-hallinto-oikeus-attachment! [db aws-s3-client valvonta-id toimenpide osapuoli]
-  (let [hallinto-oikeus-id (-> toimenpide
+  (let [osapuoli-type (osapuoli/osapuoli->osapuoli-type osapuoli)
+        hallinto-oikeus-id (-> toimenpide
                                :type-specific-data
                                :osapuoli-specific-data
-                               (type-specific-data/find-administrative-court-id-from-osapuoli-specific-data (:id osapuoli)))
+                               (type-specific-data/find-administrative-court-id-from-osapuoli-specific-data {:id   (:id osapuoli)
+                                                                                                             :type osapuoli-type}))
         attachment (hao-attachment/attachment-for-hallinto-oikeus-id db hallinto-oikeus-id)]
     (store/store-hallinto-oikeus-attachment! aws-s3-client valvonta-id (:id toimenpide) osapuoli attachment)
     attachment))
