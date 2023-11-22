@@ -85,12 +85,10 @@
                         :decision-order-actual-decision
                         :decision-order-notice-first-mailing
                         :decision-order-notice-bailiff
-                        :decision-order-waiting-for-deadline
                         :penalty-decision-hearing-letter
                         :penalty-decision-actual-decision
                         :penalty-decision-notice-first-mailing
-                        :penalty-decision-notice-bailiff
-                        :penalty-decision-waiting-for-deadline}))
+                        :penalty-decision-notice-bailiff}))
 
 
 (def with-diaarinumero? (comp not (partial type? :case)))
