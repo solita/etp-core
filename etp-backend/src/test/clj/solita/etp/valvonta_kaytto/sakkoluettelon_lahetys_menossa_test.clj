@@ -24,7 +24,7 @@
           new-toimenpide {:type-id       21
                           :deadline-date (str (LocalDate/of 2023 11 4))
                           :template-id   nil
-                          :description   "Sakkoluettelo täytetään ja allekirjoitus tapahtuu tämän järjestelmän ulkopuolella. Sakkoluettelo lähetetään sähköpostitse seuraamusmaksut.org (at) om.fi.sec"}
+                          :description   "Sakkoluettelo täytetään ja allekirjoitus tapahtuu tämän järjestelmän ulkopuolella. Sakkoluettelo lähetetään sähköpostitse seuraamusmaksut.ork (at) om.fi.sec"}
           response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
                                    (mock/json-body new-toimenpide)
                                    (test-kayttajat/with-virtu-user)
@@ -46,7 +46,7 @@
                                          :rooli-id 2
                                          :sukunimi "Tuntija"}
                     :deadline-date      "2023-11-04"
-                    :description        "Sakkoluettelo täytetään ja allekirjoitus tapahtuu tämän järjestelmän ulkopuolella. Sakkoluettelo lähetetään sähköpostitse seuraamusmaksut.org (at) om.fi.sec"
+                    :description        "Sakkoluettelo täytetään ja allekirjoitus tapahtuu tämän järjestelmän ulkopuolella. Sakkoluettelo lähetetään sähköpostitse seuraamusmaksut.ork (at) om.fi.sec"
                     :diaarinumero       nil
                     :filename           nil
                     :henkilot           []
