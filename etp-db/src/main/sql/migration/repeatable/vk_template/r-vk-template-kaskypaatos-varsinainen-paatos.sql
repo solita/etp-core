@@ -133,6 +133,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 
 <p>Tarkemmat ohjeet valituksen tekemisestä ovat tämän päätöksen liitteenä.</p>
 
+<div class="page-break-avoid">
 {{#valvoja}}
 <p>Lisätietoja päätöksestä antaa energia-asiantuntija {{etunimi}} {{sukunimi}}, <br/>puh. {{puhelin}} / s-posti
     {{email}}. </p>
@@ -157,6 +158,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 </table>
 
 <p class="small-text"><i>Asiakirja on allekirjoitettu sähköisesti asianhallintajärjestelmässä.</i></p>
+</div>
 
 <div class="sivunvaihto"></div>
 
@@ -329,6 +331,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 
 <p>Noggrannare anvisningar om inlämning av besvär finns med som bilaga till det här beslutet.</p>
 
+<div class="page-break-avoid">
 {{#valvoja}}
 <p>Mer information om besslutet ges av energiexpert {{etunimi}} {{sukunimi}}, <br/>tfn {{puhelin}} / e-post
     {{email}}.</p>
@@ -353,6 +356,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
 </table>
 
 <p class="small-text"><i>Handlingen har undertecknats elektroniskt i ärendehanteringssystemet.</i></p>
+</div>
 $$)
 on conflict (id) do update set label_fi          = excluded.label_fi,
                                label_sv          = excluded.label_sv,
