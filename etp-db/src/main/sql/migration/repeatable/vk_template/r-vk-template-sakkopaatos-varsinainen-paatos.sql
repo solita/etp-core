@@ -211,12 +211,7 @@ values (9, 'Sakkopäätös / varsinainen päätös', 'Sakkopäätös / varsinain
     ärendet.</p>
 {{/aiemmat-toimenpiteet}}
 
-<p class="respect-new-lines">    {{#omistaja-henkilo}}
-    {{sukunimi}}
-    {{/omistaja-henkilo}}
-    {{#omistaja-yritys}}
-    {{nimi}}
-    {{/omistaja-yritys}} {{#tyyppikohtaiset-tiedot}}{{vastaus-sv}}{{/tyyppikohtaiset-tiedot}}</p>
+<p class="respect-new-lines">{{#omistaja-henkilo}}{{sukunimi}}{{/omistaja-henkilo}}{{#omistaja-yritys}}{{nimi}}{{/omistaja-yritys}} {{#tyyppikohtaiset-tiedot}}{{vastaus-sv}}{{/tyyppikohtaiset-tiedot}}</p>
 
 {{#tyyppikohtaiset-tiedot}}
 {{^recipient-answered}}
