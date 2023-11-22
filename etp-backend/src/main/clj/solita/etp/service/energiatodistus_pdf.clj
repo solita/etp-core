@@ -613,13 +613,13 @@
         filename (.getName file)
         dir (.getParent file)
         result-pdf (str/replace path #".xlsx$" ".pdf")
-        {:keys [exit err] :as sh-result} (libreoffice/run-with-args
+        {:keys [exit] :as sh-result} (libreoffice/run-with-args
                                            "--convert-to"
                                            "pdf"
                                            filename
                                            :dir
                                            dir)]
-    (if (and (zero? exit) (str/blank? err) (.exists (io/as-file result-pdf)))
+    (if (and (zero? exit) (.exists (io/as-file result-pdf)))
       result-pdf
       (throw (ex-info "XLSX to PDF conversion failed"
                       (assoc sh-result
