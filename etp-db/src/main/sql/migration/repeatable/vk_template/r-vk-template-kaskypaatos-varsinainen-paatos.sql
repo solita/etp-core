@@ -227,7 +227,7 @@ values (6, 'Käskypäätös / varsinainen päätös', 'Käskypäätös / varsina
     {{#omistaja-yritys}}
     {{nimi}}
     {{/omistaja-yritys}}
-    i enlighet med 22 § i viteslagen och den hänvisade34 § i förvaltningslagen (434/2003) möjlighet
+    i enlighet med 22 § i viteslagen och den hänvisade 34 § i förvaltningslagen (434/2003) möjlighet
     att yttra sig i ärendet samt ge sin förklaring till sådana yrkanden och utredningar som kan påverka avgörandet av
     ärendet. I brevet om hörande berättade ARA att vitesbeloppet är uppskattningsvis
     {{#aiemmat-toimenpiteet}}{{kuulemiskirje-fine}}{{/aiemmat-toimenpiteet}} euro.</p>
