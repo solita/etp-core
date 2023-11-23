@@ -3,15 +3,17 @@
             [solita.etp.api.response :as api-response]
             [solita.etp.schema.common :as schema.common]
             [solita.etp.schema.energiatodistus :as schema.energiatodistus]
-            [solita.etp.service.energiatodistus :as service.energiatodistus]
-            [solita.etp.service.energiatodistus-pdf :as service.energiatodistus-pdf]
-            [solita.etp.service.energiatodistus-search :as service.energiatodistus-search]))
+            [solita.etp.service.palveluvayla :as service.palveluvayla]))
 
 (def accept-language-header {(s/optional-key :accept-language) schema.common/AcceptLanguage})
 
-(def i-am-paakayttaja {:rooli 2})
-(def version-equals-2013 ["=" "energiatodistus.versio" 2013])
-(def version-equals-2018 ["=" "energiatodistus.versio" 2018])
+(defn parse-preferred-language-order
+  "Sort Accept-Language headers by quality and return only the languages tags in order of preference"
+  [accept-language]
+  (some->> accept-language
+           (sort-by second)
+           (reverse)
+           (map first)))
 
 (def routes ["/energiatodistukset"
              ["/pdf/:id"
@@ -23,19 +25,9 @@
                          :handler    (fn [{:keys                               [db aws-s3-client],
                                            {{:keys [accept-language]} :header} :parameters
                                            {{:keys [id]} :path}                :parameters}]
-                                       (let [language-preference-order (if accept-language
-                                                                         (->> accept-language
-                                                                              (sort-by second)
-                                                                              (reverse)
-                                                                              (map first))
-                                                                         ["fi" "sv"])]
+                                       (let [language-preference-order (parse-preferred-language-order accept-language)]
                                          (api-response/pdf-response ; Return the first language version that exists if any
-                                           (some identity (->> language-preference-order
-                                                               (map #(service.energiatodistus-pdf/find-energiatodistus-pdf db
-                                                                                                                           aws-s3-client
-                                                                                                                           i-am-paakayttaja
-                                                                                                                           id
-                                                                                                                           %))))
+                                           (service.palveluvayla/find-first-existing-pdf id language-preference-order db aws-s3-client)
                                            "energiatodistus.pdf"
                                            (str "Energiatodistus " id " does not exists."))))
                          :openapi    {:responses {200 {:description "PDF-muotoinen energiatodistus"
@@ -48,11 +40,7 @@
                           :responses  {200 {:body [schema.energiatodistus/EnergiatodistusForAnyLaatija]}}
                           :handler    (fn [{{:keys [query]} :parameters :keys [db]}]
                                         (api-response/get-response
-                                          (service.energiatodistus-search/search
-                                            db
-                                            i-am-paakayttaja
-                                            {:where [[["=" "energiatodistus.perustiedot.rakennustunnus" (:rakennustunnus query)]]]}
-                                            schema.energiatodistus/EnergiatodistusForAnyLaatija)
+                                          (service.palveluvayla/search-by-rakennustunnus (:rakennustunnus query) schema.energiatodistus/EnergiatodistusForAnyLaatija db)
                                           (str "Virhe haussa")))}}]
                ["/:id" {:get {:summary    "Hae yksittäinen energiatodistus todistuksen tunnuksen perusteella. Vastaus sisältää vain kentät jotka ovat yhteisiä 2013 ja 2018 versioille."
                               :parameters {:path {:id schema.common/Key}}
@@ -60,7 +48,7 @@
                                            404 {:body s/Str}}
                               :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                                             (api-response/get-response
-                                              (service.energiatodistus/find-energiatodistus-any-laatija db id)
+                                              (service.palveluvayla/get-by-id id db)
                                               (str "Energiatodistus " id " does not exists.")))}}]]
               ["/2013"
                ["" {:get {:summary    "Hae energiatodistuksia, jotka on laadittu vuoden 2013 säännösten mukaan"
@@ -68,12 +56,7 @@
                           :responses  {200 {:body [schema.energiatodistus/Energiatodistus2013]}}
                           :handler    (fn [{{:keys [query]} :parameters :keys [db]}]
                                         (api-response/get-response
-                                          (service.energiatodistus-search/search
-                                            db
-                                            i-am-paakayttaja
-                                            {:where [[["=" "energiatodistus.perustiedot.rakennustunnus" (:rakennustunnus query)]
-                                                      version-equals-2013]]}
-                                            schema.energiatodistus/Energiatodistus2013)
+                                          (service.palveluvayla/search-by-rakennustunnus (:rakennustunnus query) schema.energiatodistus/Energiatodistus2013 db 2013)
                                           (str "Virhe haussa")))}}]
                ["/:id" {:get {:summary    "Hae yksittäinen vuoden 2013 säännösten mukainen energiatodistus todistuksen tunnuksen perusteella"
                               :parameters {:path {:id schema.common/Key}}
@@ -81,8 +64,7 @@
                                            404 {:body s/Str}}
                               :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                                             (api-response/get-response
-                                              (-> (service.energiatodistus/find-energiatodistus db id)
-                                                  (#(if (= (:versio %) 2013) % nil)))
+                                              (service.palveluvayla/get-by-id id db 2013)
                                               (str "Energiatodistus " id " does not exists.")))}}]]
               ["/2018"
                ["" {:get {:summary    "Hae energiatodistuksia, jotka on laadittu vuoden 2018 säännösten mukaan"
@@ -90,12 +72,7 @@
                           :responses  {200 {:body [schema.energiatodistus/Energiatodistus2018]}}
                           :handler    (fn [{{:keys [query]} :parameters :keys [db]}]
                                         (api-response/get-response
-                                          (service.energiatodistus-search/search
-                                            db
-                                            i-am-paakayttaja
-                                            {:where [[["=" "energiatodistus.perustiedot.rakennustunnus" (:rakennustunnus query)]
-                                                      version-equals-2018]]}
-                                            schema.energiatodistus/Energiatodistus2018)
+                                          (service.palveluvayla/search-by-rakennustunnus (:rakennustunnus query) schema.energiatodistus/Energiatodistus2018 db 2018)
                                           (str "Virhe haussa")))}}]
                ["/:id" {:get {:summary    "Hae yksittäinen vuoden 2018 säännösten mukainen energiatodistus todistuksen tunnuksen perusteella"
                               :parameters {:path {:id schema.common/Key}}
@@ -103,6 +80,5 @@
                                            404 {:body s/Str}}
                               :handler    (fn [{{{:keys [id]} :path} :parameters :keys [db]}]
                                             (api-response/get-response
-                                              (-> (service.energiatodistus/find-energiatodistus db id)
-                                                  (#(if (= (:versio %) 2018) % nil)))
+                                              (service.palveluvayla/get-by-id id db 2018)
                                               (str "Energiatodistus " id " does not exists.")))}}]]]])

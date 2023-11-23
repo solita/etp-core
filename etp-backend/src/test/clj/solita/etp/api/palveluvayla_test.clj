@@ -16,20 +16,32 @@
 (def palveluvayla-basepath "/api/palveluvayla/energiatodistukset")
 
 (t/deftest test-palveluvayla-api
-  (let [laatija-id (first (keys (test-data.laatija/generate-and-insert! 1)))
+  (let [; Add laatija
+        laatija-id (first (keys (test-data.laatija/generate-and-insert! 1)))
+
+        ; Generate two different rakennustunnus
         rakennustunnus-1 (generators/generate-rakennustunnus)
         rakennustunnus-2 (generators/generate-rakennustunnus)
+
+        ; Create six energiatodistus. Eech with rakennustunnus 1, all language options (fi, sv, multilingual) in both versions (2013, 2018)
         todistus-2013-fi (-> (test-data.energiatodistus/generate-add 2013 true) (assoc-in [:perustiedot :rakennustunnus] rakennustunnus-1) (assoc-in [:perustiedot :kieli] 0))
         todistus-2018-fi (-> (test-data.energiatodistus/generate-add 2018 true) (assoc-in [:perustiedot :rakennustunnus] rakennustunnus-1) (assoc-in [:perustiedot :kieli] 0))
         todistus-2013-sv (-> (test-data.energiatodistus/generate-add 2013 true) (assoc-in [:perustiedot :rakennustunnus] rakennustunnus-1) (assoc-in [:perustiedot :kieli] 1))
         todistus-2018-sv (-> (test-data.energiatodistus/generate-add 2018 true) (assoc-in [:perustiedot :rakennustunnus] rakennustunnus-1) (assoc-in [:perustiedot :kieli] 1))
         todistus-2013-multilingual (-> (test-data.energiatodistus/generate-add 2013 true) (assoc-in [:perustiedot :rakennustunnus] rakennustunnus-1) (assoc-in [:perustiedot :kieli] 2))
         todistus-2018-multilingual (-> (test-data.energiatodistus/generate-add 2018 true) (assoc-in [:perustiedot :rakennustunnus] rakennustunnus-1) (assoc-in [:perustiedot :kieli] 2))
+
+        ; Create two energiatodistus with rakennustunnus 2
         todistus-2013-rakennustunnus-2 (-> (test-data.energiatodistus/generate-add 2013 true) (assoc-in [:perustiedot :rakennustunnus] rakennustunnus-2))
         todistus-2018-rakennustunnus-2 (-> (test-data.energiatodistus/generate-add 2018 true) (assoc-in [:perustiedot :rakennustunnus] rakennustunnus-2))
+
+        ; Insert all energiatodistus
         [todistus-2013-fi-id todistus-2018-fi-id todistus-2013-sv-id todistus-2018-sv-id todistus-2013-multilingual-id todistus-2018-multilingual-id todistus-2013-rakennustunnus-2-id todistus-2018-rakennustunnus-2-id] (test-data.energiatodistus/insert! [todistus-2013-fi todistus-2018-fi todistus-2013-sv todistus-2018-sv todistus-2013-multilingual todistus-2018-multilingual todistus-2013-rakennustunnus-2 todistus-2018-rakennustunnus-2] laatija-id)]
+
+    ; Sign all energiatodistus
     ; LibreOffice is quite slow so do signing in parallel
     (doall (pmap #(test-data.energiatodistus/sign! % laatija-id false) [todistus-2013-fi-id todistus-2018-fi-id todistus-2013-sv-id todistus-2018-sv-id todistus-2013-multilingual-id todistus-2018-multilingual-id todistus-2013-rakennustunnus-2-id todistus-2018-rakennustunnus-2-id]))
+
     (t/testing "Fetching energiatodistus basic information by id returns it"
       (let [response (ts/handler (-> (mock/request :get (str palveluvayla-basepath (format "/json/any/%s" todistus-2013-fi-id)))))
             body (j/read-value (:body response) j/keyword-keys-object-mapper)]

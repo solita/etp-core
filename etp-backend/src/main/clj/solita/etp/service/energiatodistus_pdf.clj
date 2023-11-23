@@ -705,7 +705,7 @@
 (defn find-energiatodistus-pdf [db aws-s3-client whoami id kieli]
   (when-let [{:keys [allekirjoitusaika] :as complete-energiatodistus}
              (-> (complete-energiatodistus-service/find-complete-energiatodistus db whoami id)
-                 (#(when (or (= (-> % :perustiedot :kieli) 2)
+                 (#(when (or (= (-> % :perustiedot :kieli) 2) ; Accept the todistus if it's multilingual (kieli is 2) or the language code matches
                              (contains? (-> % :perustiedot :kieli energiatodistus-service/language-id->codes set) kieli)) %)))]
     (if allekirjoitusaika
       (find-existing-pdf aws-s3-client id kieli)
