@@ -79,6 +79,7 @@ values (5, 'Käskypäätös / kuulemiskirje', 'Käskypäätös / kuulemiskirje (
     Vastaus on annettava viimeistään {{määräpäivä}}. Vastauksen antamatta jättäminen ei estä
     asian ratkaisemista.</p>
 
+<div class="page-break-avoid">
 <p>Vastaus pyydetään toimittamaan ARAn kirjaamoon joko sähköpostitse <br/>kirjaamo.ara@ara.fi tai postitse Asumisen rahoitus-
     ja kehittämiskeskus, PL 30, 15141 Lahti.</p>
 
@@ -86,6 +87,7 @@ values (5, 'Käskypäätös / kuulemiskirje', 'Käskypäätös / kuulemiskirje (
 {{etunimi}} {{sukunimi}}
 {{/valvoja}}<br/>
 energia-asiantuntija
+</div>
 
 <p class="footnote mb-0"><sup>1</sup> ARAn energiatodistusrekisterissä ovat 1.5.2015 jälkeen laaditut energiatodistukset.</p>
 
@@ -161,6 +163,7 @@ energia-asiantuntija
     samt att ge en förklaring till sådana yrkanden och utredningar som kan inverka på avgörandet av ärendet. Svaret ska
     ges senast {{määräpäivä}}. Avsaknaden av svar hindrar inte att ärendet avgörs. </p>
 
+<div class="page-break-avoid">
 <p>Vi ber Er skicka svaret till ARAs registratorskontor antingen per e-post till <br/>kirjaamo.ara@ara.fi eller per post till
     Finansierings- och ut-vecklingscentralen för boendet, PB 30, 15141 Lahtis.</p>
 
@@ -168,6 +171,7 @@ energia-asiantuntija
 {{etunimi}} {{sukunimi}}
 {{/valvoja}}<br/>
 energiexpert
+</div>
 
 <p class="footnote mb-0"><sup>2</sup> I ARAs energicertifikatregister finns energicertifikat som upprättats efter 1 maj 2015.</p>
 $$)
