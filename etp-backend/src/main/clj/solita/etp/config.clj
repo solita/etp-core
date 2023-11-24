@@ -10,8 +10,17 @@
 (def use-local-env-credentials?
   (not (System/getenv "FILES_BUCKET_NAME")))
 
-(defn env [name default]
-  (or (System/getenv name) default))
+(defn find-configuration
+  "Return configuration value for given key. Returns first hit in order from given reader"
+  ([key readers default]
+   (-> (some identity (->> readers (map #(% key)))) (or default))))
+
+(defn env
+  ([name] (env name nil))
+  ([name default] (or (System/getenv name) default)))
+
+(defn property
+  [name] (System/getProperty name))
 
 (defn env-or-resource [env-name resource-path]
   (or (System/getenv env-name)
@@ -24,23 +33,23 @@
 (defn db
   ([] (db {}))
   ([opts]
-   {:solita.etp/db (merge {:adapter "postgresql"
-                           :server-name (env "DB_HOST" "localhost")
-                           :port-number (env "DB_PORT" 5432)
-                           :username (env "DB_USER" "etp_app")
-                           :password (env "DB_PASSWORD" "etp")
-                           :database-name (env "DB_DATABASE" "etp_dev")
+   {:solita.etp/db (merge {:adapter        "postgresql"
+                           :server-name    (env "DB_HOST" "localhost")
+                           :port-number    (env "DB_PORT" 5432)
+                           :username       (env "DB_USER" "etp_app")
+                           :password       (env "DB_PASSWORD" "etp")
+                           :database-name  (env "DB_DATABASE" "etp_dev")
                            :current-schema (env "DB_SCHEMA" "etp")}
                           opts)}))
 
 (defn http-server
   ([] (http-server {}))
   ([opts]
-   {:solita.etp/http-server (merge {:port (env "HTTP_SERVER_PORT" 8080)
+   {:solita.etp/http-server (merge {:port     (env "HTTP_SERVER_PORT" 8080)
                                     :max-body (* 1024 1024 50)
-                                    :thread 20
-                                    :ctx {:db (ig/ref :solita.etp/db)
-                                          :aws-s3-client (ig/ref :solita.etp/aws-s3-client)}}
+                                    :thread   20
+                                    :ctx      {:db            (ig/ref :solita.etp/db)
+                                               :aws-s3-client (ig/ref :solita.etp/aws-s3-client)}}
                                    opts)}))
 
 (defn aws-s3-client
@@ -48,16 +57,16 @@
   ([{:keys [client bucket]}]
    {:solita.etp/aws-s3-client
     {:client (merge
-              {:api :s3
-               :region "eu-central-1"}
-              (when use-local-env-credentials?
-                {:credentials-provider (credentials/basic-credentials-provider
-                                        {:access-key-id     "minio"
-                                         :secret-access-key "minio123"})
-                 :endpoint-override    {:protocol :http
-                                        :hostname "localhost"
-                                        :port     9000}})
-              client)
+               {:api    :s3
+                :region "eu-central-1"}
+               (when use-local-env-credentials?
+                 {:credentials-provider (credentials/basic-credentials-provider
+                                          {:access-key-id     "minio"
+                                           :secret-access-key "minio123"})
+                  :endpoint-override    {:protocol :http
+                                         :hostname "localhost"
+                                         :port     9000}})
+               client)
      :bucket (or bucket (env "FILES_BUCKET_NAME" "files"))}}))
 
 (defn- prepare-emails [name default]
@@ -121,7 +130,7 @@
 
 (def suomifi-viestit-proxy? (edn/read-string (env "SUOMIFI_VIESTIT_PROXY" "false")))
 (def suomifi-viestit-paperitoimitus? (edn/read-string (env "SUOMIFI_VIESTIT_PAPERITOIMITUS" "false")))
-(def suomifi-viestit-laheta-tulostukseen?  (edn/read-string (env "SUOMIFI_VIESTIT_LAHETA_TULOSTUKSEEN" "false")))
+(def suomifi-viestit-laheta-tulostukseen? (edn/read-string (env "SUOMIFI_VIESTIT_LAHETA_TULOSTUKSEEN" "false")))
 (def suomifi-viestit-endpoint-url (env "SUOMIFI_VIESTIT_ENDPOINT_URL" nil))
 (def suomifi-viestit-viranomaistunnus (env "SUOMIFI_VIESTIT_VIRANOMAISTUNNUS" nil))
 (def suomifi-viestit-palvelutunnus (env "SUOMIFI_VIESTIT_PALVELUTUNNUS" nil))
@@ -139,3 +148,6 @@
 (def url-signing-key-id (env "URL_SIGNING_KEY_ID" "DEVENV_KEY_ID"))
 (def url-signing-public-key (env-or-resource "URL_SIGNING_PUBLIC_KEY" "cf-signed-url/example.pub.pem"))
 (def url-signing-private-key (env-or-resource "URL_SIGNING_PRIVATE_KEY" "cf-signed-url/example.key.pem"))
+
+;; Feature flags
+(def allow-palveluvayla-api (Boolean/parseBoolean (find-configuration "ALLOW_PALVELUVAYLA_API" [env property] "false")))
