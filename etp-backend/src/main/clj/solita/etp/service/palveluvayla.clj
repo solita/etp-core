@@ -38,4 +38,4 @@
    (service.energiatodistus/find-energiatodistus-any-laatija db id))
   ([id db version]
    (-> (service.energiatodistus/find-energiatodistus db id)
-       (#(drop-wrong-version % version)))))
+       (drop-wrong-version version))))
