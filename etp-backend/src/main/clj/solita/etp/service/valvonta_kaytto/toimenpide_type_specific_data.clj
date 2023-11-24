@@ -1,10 +1,13 @@
 (ns solita.etp.service.valvonta-kaytto.toimenpide-type-specific-data
-  (:require [solita.etp.db :as db]
+  (:require [clojure.string :as string]
+            [solita.etp.db :as db]
             [solita.etp.exception :as exception]
+            [solita.etp.service.valvonta-kaytto.osapuoli :as osapuoli]
             [solita.etp.service.valvonta-kaytto.toimenpide :as toimenpide]))
 
 (db/require-queries 'hallinto-oikeus)
 (db/require-queries 'karajaoikeus)
+(db/require-queries 'valvonta-kaytto)
 
 (defmulti format-type-specific-data
           (fn [_db toimenpide _osapuoli] (-> toimenpide :type-id toimenpide/type-key)))
@@ -97,6 +100,18 @@
 
 (defmethod format-type-specific-data :penalty-decision-notice-bailiff [db toimenpide osapuoli]
   (format-notice-bailiff db toimenpide osapuoli))
+
+(defmethod format-type-specific-data :decision-order-hearing-letter [db toimenpide _osapuoli]
+  (let [henkilo-osapuolet (valvonta-kaytto-db/select-henkilot db {:valvonta-id (:valvonta-id toimenpide)})
+        yritys-osapuolet (valvonta-kaytto-db/select-yritykset db {:valvonta-id (:valvonta-id toimenpide)})
+        omistajat (filter osapuoli/omistaja? (concat henkilo-osapuolet yritys-osapuolet))
+        omistaja-strings (map (fn [omistaja]
+                                (if (osapuoli/henkilo? omistaja)
+                                  (str (:sukunimi omistaja) " " (:etunimi omistaja))
+                                  (:nimi omistaja)))
+                              omistajat)]
+    {:fine (-> toimenpide :type-specific-data :fine)
+     :omistajat (string/join ", " omistaja-strings)}))
 
 (defmethod format-type-specific-data :default [_ toimenpide _]
   (:type-specific-data toimenpide))

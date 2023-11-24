@@ -204,8 +204,8 @@
       (t/is (true? (toimenpide/kaskypaatos-toimenpide? {:type-id 12}))))
     (t/testing "is not sakkopaatos-toimenpide?"
       (t/is (false? (toimenpide/sakkopaatos-toimenpide? {:type-id 12}))))
-    (t/testing "is asha-toimenpide?"
-      (t/is (true? (toimenpide/asha-toimenpide? {:type-id 12})))))
+    (t/testing "is not asha-toimenpide?"
+      (t/is (false? (toimenpide/asha-toimenpide? {:type-id 12})))))
 
   (t/testing "Käskypäätös / kuulemiskirje"
     (t/testing "has type-id 14 and type-key :penalty-decision-hering-letter"
@@ -266,8 +266,8 @@
       (t/is (false? (toimenpide/kaskypaatos-toimenpide? {:type-id 19}))))
     (t/testing "is sakkopaatos-toimenpide?"
       (t/is (true? (toimenpide/sakkopaatos-toimenpide? {:type-id 19}))))
-    (t/testing "is asha-toimenpide?"
-      (t/is (true? (toimenpide/asha-toimenpide? {:type-id 19})))))
+    (t/testing "is not asha-toimenpide?"
+      (t/is (false? (toimenpide/asha-toimenpide? {:type-id 19})))))
 
   (t/testing "Sakkoluettelon lähetys menossa"
     (t/testing "has type-id 21 and type-key :penalty-list-delivery-in-progress"

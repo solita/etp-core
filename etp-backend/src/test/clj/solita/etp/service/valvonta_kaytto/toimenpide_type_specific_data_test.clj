@@ -1,6 +1,7 @@
 (ns solita.etp.service.valvonta-kaytto.toimenpide-type-specific-data-test
   (:require [clojure.test :as t]
             [solita.etp.service.luokittelu :as luokittelu]
+            [solita.etp.service.valvonta-kaytto :as valvonta-service]
             [solita.etp.service.valvonta-kaytto.toimenpide-type-specific-data :as type-specific-data]
             [solita.etp.test-system :as ts]))
 
@@ -36,15 +37,51 @@
               :department-head-name     "Jorma Jormanen"
               :department-head-title-fi "Hallinto-oikeuden presidentti"
               :department-head-title-sv "Hallinto-oikeuden kuningas"
-              :recipient-answered       true}))
+              :recipient-answered       true})))
 
-    (t/testing "For käskypäätös / kuulemiskirje toimenpide :type-spefic-data map is returned as is, as no special formatting is needed"
+  (t/testing "For käskypäätös / kuulemiskirje toimenpide fine and all owner names are returned"
+    (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite        "Testitie 5"
+                                                               :postinumero       "90100"
+                                                               :ilmoituspaikka-id 0})]
+      (valvonta-service/add-henkilo! ts/*db*
+                                     valvonta-id
+                                     {:toimitustapa-description nil
+                                      :toimitustapa-id          0
+                                      :email                    nil
+                                      :rooli-id                 0
+                                      :jakeluosoite             "Testikatu 12"
+                                      :postitoimipaikka         "Helsinki"
+                                      :puhelin                  nil
+                                      :sukunimi                 "Talonomistaja"
+                                      :postinumero              "00100"
+                                      :henkilotunnus            "000000-0000"
+                                      :rooli-description        ""
+                                      :etunimi                  "Testi"
+                                      :vastaanottajan-tarkenne  nil
+                                      :maa                      "FI"})
+
+      (valvonta-service/add-yritys! ts/*db*
+                                    valvonta-id
+                                    {:nimi                     "Yritysomistaja"
+                                     :toimitustapa-description nil
+                                     :toimitustapa-id          0
+                                     :email                    nil
+                                     :rooli-id                 0
+                                     :jakeluosoite             "Testikatu 12"
+                                     :vastaanottajan-tarkenne  "Lisäselite C/O"
+                                     :postitoimipaikka         "Helsinki"
+                                     :puhelin                  nil
+                                     :postinumero              "00100"
+                                     :rooli-description        ""
+                                     :maa                      "FI"})
       (t/is (= (type-specific-data/format-type-specific-data
                  ts/*db*
                  {:type-id            7
+                  :valvonta-id        valvonta-id
                   :type-specific-data {:fine 800}}
                  nil)
-               {:fine 800})))))
+               {:fine      800
+                :omistajat "Talonomistaja Testi, Yritysomistaja"})))))
 
 (t/deftest hallinto-oikeus-id->formatted-string-test
   (t/testing "id 0 results in Helsingin hallinto-oikeudelta"

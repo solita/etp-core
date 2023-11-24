@@ -47,7 +47,7 @@
                                      :parameters :keys [db whoami]}]
                                  (api-response/pdf-response
                                    (valvonta-service/preview-henkilo-toimenpide
-                                     db whoami id body henkilo-id)
+                                     db whoami id (assoc body :valvonta-id id) henkilo-id)
                                    (valvonta-service/toimenpide-filename body)
                                    (api-response/msg-404 "henkilo" id henkilo-id)))}}]
    ["/yritykset/:yritys-id/preview"
@@ -63,7 +63,7 @@
                                      :parameters :keys [db whoami]}]
                                  (api-response/pdf-response
                                    (valvonta-service/preview-yritys-toimenpide
-                                     db whoami id body yritys-id)
+                                     db whoami id (assoc body :valvonta-id id) yritys-id)
                                    (valvonta-service/toimenpide-filename body)
                                    (api-response/msg-404 "yritys" id yritys-id)))}}]
    ["/:toimenpide-id"

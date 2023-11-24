@@ -107,8 +107,18 @@
 
 (def SakkopaatosVarsinainenPaatosOsapuoliSpecificData
   (schema/conditional
-    ;; Osapuoli has a document so all fields are required to have values
-    ;; answer-commentary fields are optional but if present, values are required
+    ;; Osapuoli has a document and has answered to kuulemiskirje, so all fields are required
+    (every-pred toimenpide/osapuoli-has-document? toimenpide/recipient-answered?)
+    {:osapuoli             OsapuoliSpecificDataOsapuoli
+     :hallinto-oikeus-id   HallintoOikeusId
+     :document             schema/Bool
+     :recipient-answered   schema/Bool
+     :answer-commentary-fi schema/Str
+     :answer-commentary-sv schema/Str
+     :statement-fi         schema/Str
+     :statement-sv         schema/Str}
+
+    ;; Osapuoli has document but has not answered to kuulemiskirje, so answer-commentary is optional
     toimenpide/osapuoli-has-document?
     {:osapuoli                                   OsapuoliSpecificDataOsapuoli
      :hallinto-oikeus-id                         HallintoOikeusId

@@ -165,13 +165,6 @@
                                                                :reception-date       (Instant/now)
                                                                :contacting-direction "SENT"
                                                                :contact              (map osapuoli->contact osapuolet)}}
-   :decision-order-waiting-for-deadline   {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                               :processing-action {:name-identity "Valitusajan umpeutuminen"}}
-                                           :document          (toimenpide-type->document (:type-id toimenpide))
-                                           :processing-action {:name                 "Valitusajan umpeutuminen"
-                                                               :reception-date       (Instant/now)
-                                                               :contacting-direction "SENT"
-                                                               :contact              (map osapuoli->contact osapuolet)}}
    :penalty-decision-hearing-letter       {:identity          {:case              {:number (:diaarinumero toimenpide)}
                                                                :processing-action {:name-identity "Päätöksenteko"}}
                                            :document          (toimenpide-type->document (:type-id toimenpide))
@@ -198,13 +191,6 @@
                                                                :processing-action {:name-identity "Tiedoksianto ja toimeenpano"}}
                                            :document          (toimenpide-type->document (:type-id toimenpide))
                                            :processing-action {:name                 "Asiakirjan toimituspyyntö haastemiehelle"
-                                                               :reception-date       (Instant/now)
-                                                               :contacting-direction "SENT"
-                                                               :contact              (map osapuoli->contact osapuolet)}}
-   :penalty-decision-waiting-for-deadline {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                               :processing-action {:name-identity "Valitusajan umpeutuminen"}}
-                                           :document          (toimenpide-type->document (:type-id toimenpide))
-                                           :processing-action {:name                 "Valitusajan umpeutuminen"
                                                                :reception-date       (Instant/now)
                                                                :contacting-direction "SENT"
                                                                :contact              (map osapuoli->contact osapuolet)}}})

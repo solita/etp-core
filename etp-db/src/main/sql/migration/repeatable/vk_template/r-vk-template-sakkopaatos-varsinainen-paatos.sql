@@ -124,6 +124,7 @@ values (9, 'Sakkopäätös / varsinainen päätös', 'Sakkopäätös / varsinain
 
 <p>Tarkemmat ohjeet valituksen tekemisestä ovat tämän päätöksen liitteenä.</p>
 
+<div class="page-break-avoid">
 {{#valvoja}}
 <p>Lisätietoja päätöksestä antaa energia-asiantuntija {{etunimi}} {{sukunimi}}, <br/>puh. {{puhelin}} / s-posti
     {{email}}.</p>
@@ -148,6 +149,7 @@ values (9, 'Sakkopäätös / varsinainen päätös', 'Sakkopäätös / varsinain
 </table>
 
 <p class="small-text">Tämä asiakirja on allekirjoitettu sähköisesti asianhallintajärjestelmässä.</p>
+</div>
 
 <div class="sivunvaihto"></div>
 
@@ -206,17 +208,12 @@ values (9, 'Sakkopäätös / varsinainen päätös', 'Sakkopäätös / varsinain
     {{/omistaja-henkilo}}
     {{#omistaja-yritys}}
     {{nimi}}
-    {{/omistaja-yritys}} i enlighet med 22 § i viteslagen och den hänvisade34 § i förvaltningslagen (434/2003) möjlighet att
+    {{/omistaja-yritys}} i enlighet med 22 § i viteslagen och den hänvisade 34 § i förvaltningslagen (434/2003) möjlighet att
     yttra sig i ärendet samt ge sin förklaring till sådana yrkanden och utredningar som kan påverka avgörandet av
     ärendet.</p>
 {{/aiemmat-toimenpiteet}}
 
-<p class="respect-new-lines">    {{#omistaja-henkilo}}
-    {{sukunimi}}
-    {{/omistaja-henkilo}}
-    {{#omistaja-yritys}}
-    {{nimi}}
-    {{/omistaja-yritys}} {{#tyyppikohtaiset-tiedot}}{{vastaus-sv}}{{/tyyppikohtaiset-tiedot}}</p>
+<p class="respect-new-lines">{{#omistaja-henkilo}}{{sukunimi}}{{/omistaja-henkilo}}{{#omistaja-yritys}}{{nimi}}{{/omistaja-yritys}} {{#tyyppikohtaiset-tiedot}}{{vastaus-sv}}{{/tyyppikohtaiset-tiedot}}</p>
 
 {{#tyyppikohtaiset-tiedot}}
 {{^recipient-answered}}
@@ -294,13 +291,14 @@ values (9, 'Sakkopäätös / varsinainen päätös', 'Sakkopäätös / varsinain
 <h2>Ändringssökande</h2>
 
 <p> Den som är missnöjd med detta beslut kan söka ändring i det
-    hos{{#tyyppikohtaiset-tiedot}}{{oikeus-sv}}{{/tyyppikohtaiset-tiedot}} förvaltningsdomstolen. Besvär måste göras och
+    hos {{#tyyppikohtaiset-tiedot}}{{oikeus-sv}}{{/tyyppikohtaiset-tiedot}} förvaltningsdomstolen. Besvär måste göras och
     levereras till ovan nämnda förvaltningsdomstol inom 30 dagar från delgivningen av det här beslutet.</p>
 
 <p>Närmare anvisningar om anförande av besvär finns som bilaga till detta beslut.</p>
 
+<div class="page-break-avoid">
 {{#valvoja}}
-<p>LMer information om beslutet ges av energiexpert {{etunimi}} {{sukunimi}}, <br />tfn {{puhelin}} / e-post
+<p>Mer information om beslutet ges av energiexpert {{etunimi}} {{sukunimi}}, <br />tfn {{puhelin}} / e-post
     {{email}}.</p>
 {{/valvoja}}
 
@@ -323,6 +321,7 @@ values (9, 'Sakkopäätös / varsinainen päätös', 'Sakkopäätös / varsinain
 </table>
 
 <p class="small-text">Denna handling har undertecknats elektroniskt i ärendehanterings- systemet</p>
+</div>
 $$)
 on conflict (id) do update set label_fi          = excluded.label_fi,
                                label_sv          = excluded.label_sv,
