@@ -48,26 +48,31 @@
         (t/is (= 200 (:status response)))
         (t/is (= todistus-2013-fi-id (:id body)))
         (schema-tools.coerce/coerce body schema.energiatodistus/EnergiatodistusForAnyLaatija schema-tools.coerce/json-coercion-matcher)))
+
     (t/testing "Fetching energiatodistus by id returns it when fetching correct version"
       (t/testing "when fetching 2013"
         (let [response (ts/handler (-> (mock/request :get (str palveluvayla-basepath (format "/json/2013/%s" todistus-2013-fi-id)))))
               body (j/read-value (:body response) j/keyword-keys-object-mapper)]
           (t/is (= 200 (:status response)))
           (t/is (= todistus-2013-fi-id (:id body)))
-          (schema-tools.coerce/coerce body schema.energiatodistus/Energiatodistus2013 schema-tools.coerce/json-coercion-matcher))))
-    (t/testing "when fetching 2018"
-      (let [response (ts/handler (-> (mock/request :get (str palveluvayla-basepath (format "/json/2018/%s" todistus-2018-fi-id)))))
-            body (j/read-value (:body response) j/keyword-keys-object-mapper)]
-        (t/is (= 200 (:status response)))
-        (t/is (= todistus-2018-fi-id (:id body)))
-        (schema-tools.coerce/coerce body schema.energiatodistus/Energiatodistus2018 schema-tools.coerce/json-coercion-matcher)))
+          (schema-tools.coerce/coerce body schema.energiatodistus/Energiatodistus2013 schema-tools.coerce/json-coercion-matcher)))
+
+      (t/testing "when fetching 2018"
+        (let [response (ts/handler (-> (mock/request :get (str palveluvayla-basepath (format "/json/2018/%s" todistus-2018-fi-id)))))
+              body (j/read-value (:body response) j/keyword-keys-object-mapper)]
+          (t/is (= 200 (:status response)))
+          (t/is (= todistus-2018-fi-id (:id body)))
+          (schema-tools.coerce/coerce body schema.energiatodistus/Energiatodistus2018 schema-tools.coerce/json-coercion-matcher))))
+
     (t/testing "Fetching wrong version by id returns 404"
       (t/testing "for 2013"
         (let [response (ts/handler (-> (mock/request :get (str palveluvayla-basepath (format "/json/2013/%s" todistus-2018-fi-id)))))]
           (t/is (= 404 (:status response)))))
+
       (t/testing "for 2018"
         (let [response (ts/handler (-> (mock/request :get (str palveluvayla-basepath (format "/json/2018/%s" todistus-2013-fi-id)))))]
           (t/is (= 404 (:status response))))))
+
     (t/testing "Fetching pdf"
       (t/testing "for version 2013"
         (let [response (ts/handler (-> (mock/request :get (str palveluvayla-basepath (format "/pdf/%s" todistus-2013-fi-id)))))
@@ -75,12 +80,14 @@
               correct-pdf (file/find-file ts/*aws-s3-client* (format "energiatodistukset/energiatodistus-%s-%s" todistus-2013-fi-id "fi"))]
           (t/is (= 200 (:status response)))
           (t/is (IOUtils/contentEquals body correct-pdf))))
+
       (t/testing "for version 2018"
         (let [response (ts/handler (-> (mock/request :get (str palveluvayla-basepath (format "/pdf/%s" todistus-2018-fi-id)))))
               body (-> response :body io/input-stream)
               correct-pdf (file/find-file ts/*aws-s3-client* (format "energiatodistukset/energiatodistus-%s-%s" todistus-2018-fi-id "fi"))]
           (t/is (= 200 (:status response)))
           (t/is (IOUtils/contentEquals body correct-pdf))))
+
       (t/testing "Accept-Language is honored"
         (t/testing "when asking for existing Finnish pdf"
           (let [response (ts/handler (-> (mock/request :get (str palveluvayla-basepath (format "/pdf/%s" todistus-2018-multilingual-id)))
@@ -89,6 +96,7 @@
                 correct-pdf (file/find-file ts/*aws-s3-client* (format "energiatodistukset/energiatodistus-%s-%s" todistus-2018-multilingual-id "fi"))]
             (t/is (= 200 (:status response)))
             (t/is (IOUtils/contentEquals body correct-pdf))))
+
         (t/testing "when asking for existing Swedish pdf"
           (let [response (ts/handler (-> (mock/request :get (str palveluvayla-basepath (format "/pdf/%s" todistus-2018-multilingual-id)))
                                          (mock/header "Accept-Language" "sv")))
@@ -96,6 +104,7 @@
                 correct-pdf (file/find-file ts/*aws-s3-client* (format "energiatodistukset/energiatodistus-%s-%s" todistus-2018-multilingual-id "sv"))]
             (t/is (= 200 (:status response)))
             (t/is (IOUtils/contentEquals body correct-pdf))))
+
         (t/testing "when prioritising Swedish pdf"
           (let [response (ts/handler (-> (mock/request :get (str palveluvayla-basepath (format "/pdf/%s" todistus-2018-multilingual-id)))
                                          (mock/header "Accept-Language" "fi;q=0.5, sv")))
@@ -103,6 +112,7 @@
                 correct-pdf (file/find-file ts/*aws-s3-client* (format "energiatodistukset/energiatodistus-%s-%s" todistus-2018-multilingual-id "sv"))]
             (t/is (= 200 (:status response)))
             (t/is (IOUtils/contentEquals body correct-pdf))))
+
         (t/testing "when prioritising Finnish pdf"
           (let [response (ts/handler (-> (mock/request :get (str palveluvayla-basepath (format "/pdf/%s" todistus-2018-multilingual-id)))
                                          (mock/header "Accept-Language" "fi, sv;q=0.5")))
@@ -110,41 +120,58 @@
                 correct-pdf (file/find-file ts/*aws-s3-client* (format "energiatodistukset/energiatodistus-%s-%s" todistus-2018-multilingual-id "fi"))]
             (t/is (= 200 (:status response)))
             (t/is (IOUtils/contentEquals body correct-pdf)))))
+
       (t/testing "Asking for a multilingual pdf without Accept-Language returns Finnish pdf"
         (let [response (ts/handler (mock/request :get (str palveluvayla-basepath (format "/pdf/%s" todistus-2018-multilingual-id))))
               body (-> response :body io/input-stream)
               correct-pdf (file/find-file ts/*aws-s3-client* (format "energiatodistukset/energiatodistus-%s-%s" todistus-2018-multilingual-id "fi"))]
           (t/is (= 200 (:status response)))
           (t/is (IOUtils/contentEquals body correct-pdf))))
+
       (t/testing "Asking for a Swedish pdf without Accept-Language returns it"
         (let [response (ts/handler (mock/request :get (str palveluvayla-basepath (format "/pdf/%s" todistus-2018-sv-id))))
               body (-> response :body io/input-stream)
               correct-pdf (file/find-file ts/*aws-s3-client* (format "energiatodistukset/energiatodistus-%s-%s" todistus-2018-sv-id "sv"))]
           (t/is (= 200 (:status response)))
           (t/is (IOUtils/contentEquals body correct-pdf))))
+
       (t/testing "Asking for pdf in non-existing language returns 404"
         (let [response (ts/handler (-> (mock/request :get (str palveluvayla-basepath (format "/pdf/%s" todistus-2018-fi-id)))
                                        (mock/header "Accept-Language" "sv")))]
           (t/is (= 404 (:status response))))))
+
     (t/testing "Searching for basic information by rakennustunnus returns all versions"
       (let [response (ts/handler (-> (mock/request :get (str palveluvayla-basepath (format "/json/any?rakennustunnus=%s" rakennustunnus-1)))))
             body (j/read-value (:body response) j/keyword-keys-object-mapper)]
         (t/is (= 200 (:status response)))
         (t/is (= 6 (count body)))
-        (t/is (= #{todistus-2013-fi-id todistus-2018-fi-id todistus-2013-sv-id todistus-2018-sv-id todistus-2013-multilingual-id todistus-2018-multilingual-id} (set (map :id body))))
+        (t/is (= #{todistus-2013-fi-id
+                   todistus-2018-fi-id
+                   todistus-2013-sv-id
+                   todistus-2018-sv-id
+                   todistus-2013-multilingual-id
+                   todistus-2018-multilingual-id}
+                 (set (map :id body))))
         (schema-tools.coerce/coerce body [schema.energiatodistus/EnergiatodistusForAnyLaatija] schema-tools.coerce/json-coercion-matcher)))
+
     (t/testing "Searching for specific version by rakennustunnus returns only that version"
       (t/testing "when searching for 2013"
         (let [response (ts/handler (-> (mock/request :get (str palveluvayla-basepath (format "/json/2013?rakennustunnus=%s" rakennustunnus-1)))))
               body (j/read-value (:body response) j/keyword-keys-object-mapper)]
           (t/is (= 200 (:status response)))
           (t/is (= 3 (count body)))
-          (t/is (= #{todistus-2013-fi-id todistus-2013-sv-id todistus-2013-multilingual-id} (set (map :id body))))
+          (t/is (= #{todistus-2013-fi-id
+                     todistus-2013-sv-id
+                     todistus-2013-multilingual-id} (set (map :id body))))
           (schema-tools.coerce/coerce body [schema.energiatodistus/Energiatodistus2013] schema-tools.coerce/json-coercion-matcher)))
+
       (t/testing "when searching for 2018"
         (let [response (ts/handler (-> (mock/request :get (str palveluvayla-basepath (format "/json/2018?rakennustunnus=%s" rakennustunnus-1)))))
               body (j/read-value (:body response) j/keyword-keys-object-mapper)]
           (t/is (= 200 (:status response)))
           (t/is (= 3 (count body)))
-          (t/is (= #{todistus-2018-fi-id todistus-2018-sv-id todistus-2018-multilingual-id} (set (map :id body))))
+          (t/is (= #{todistus-2018-fi-id
+                     todistus-2018-sv-id
+                     todistus-2018-multilingual-id}
+                   (set (map :id body))))
           (schema-tools.coerce/coerce body [schema.energiatodistus/Energiatodistus2018] schema-tools.coerce/json-coercion-matcher))))))
