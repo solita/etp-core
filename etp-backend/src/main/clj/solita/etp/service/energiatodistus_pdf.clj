@@ -96,8 +96,8 @@
              "☒ för en befintlig byggnad, datum för iakttagelser på plats"
              "☐ för en befintlig byggnad, datum för iakttagelser på plats")}
       {:f #(some->> % :perustiedot :havainnointikaynti (.format date-formatter))}
-      {:path  [:tulokset :e-luku]}
-      {:path  [:tulokset :e-luokka-rajat :raja-uusi-2018]}
+      {:path [:tulokset :e-luku]}
+      {:path [:tulokset :e-luokka-rajat :raja-uusi-2018]}
       {:path [:laatija-fullname]}
       {:path [:perustiedot :yritys :nimi]}
       {:f (fn [_] (.format date-formatter (LocalDate/now)))}
@@ -533,41 +533,41 @@
       {:path [:huomiot :suositukset-sv]}
       {:path [:huomiot :lisatietoja-fi]}
       {:path [:huomiot :lisatietoja-sv]}]
-   7  (concat [{:path [:id]}
-               {:path [:lisamerkintoja-fi]}
-               {:path [:lisamerkintoja-sv]}
-               {:path [:lahtotiedot :rakennusvaippa :lampokapasiteetti] :dp 1}
-               {:path [:lahtotiedot :rakennusvaippa :ilmatilavuus] :dp 1}
-               {:path [:lahtotiedot :ilmanvaihto :tuloilma-lampotila] :dp 1}
-               {:path [:lahtotiedot :lammitys :tilat-ja-iv :lampopumppu-tuotto-osuus] :dp 0 :percent? true}
-               {:path [:lahtotiedot :lammitys :lammin-kayttovesi :lampopumppu-tuotto-osuus] :dp 0 :percent? true}
-               {:path [:lahtotiedot :lammitys :lampohavio-lammittamaton-tila] :dp 1}
-               ;; The repeating item below is just to fill in some
-               ;; value, to keep the next items starting at cell
-               ;; A11. A10 was expected to be required, but the value
-               ;; inserted there turned out to be unnecessary.
-               {:path [:lahtotiedot :lammitys :lampohavio-lammittamaton-tila] :dp 1}]
-              (flatten (for [i (range 12)]
-                         [{:path [:tulokset :kuukausierittely i :tuotto :aurinkosahko] :dp 0}
-                          {:path [:tulokset :kuukausierittely i :tuotto :tuulisahko] :dp 0}
-                          {:path [:tulokset :kuukausierittely i :tuotto :muusahko] :dp 0}
-                          {:path [:tulokset :kuukausierittely i :tuotto :aurinkolampo] :dp 0}
-                          {:path [:tulokset :kuukausierittely i :tuotto :lampopumppu] :dp 0}
-                          {:path [:tulokset :kuukausierittely i :tuotto :muulampo] :dp 0}
-                          {:path [:tulokset :kuukausierittely i :kulutus :sahko] :dp 0}
-                          {:path [:tulokset :kuukausierittely i :kulutus :lampo] :dp 0}
-                          {:path [:tulokset :kuukausierittely i :hyoty :sahko] :dp 0}
-                          {:path [:tulokset :kuukausierittely i :hyoty :lampo] :dp 0}]))
-              [{:path [:tulokset :kuukausierittely-summat :tuotto :aurinkosahko] :dp 0}
-               {:path [:tulokset :kuukausierittely-summat :tuotto :tuulisahko] :dp 0}
-               {:path [:tulokset :kuukausierittely-summat :tuotto :muusahko] :dp 0}
-               {:path [:tulokset :kuukausierittely-summat :tuotto :aurinkolampo] :dp 0}
-               {:path [:tulokset :kuukausierittely-summat :tuotto :lampopumppu] :dp 0}
-               {:path [:tulokset :kuukausierittely-summat :tuotto :muulampo] :dp 0}
-               {:path [:tulokset :kuukausierittely-summat :kulutus :sahko] :dp 0}
-               {:path [:tulokset :kuukausierittely-summat :kulutus :lampo] :dp 0}
-               {:path [:tulokset :kuukausierittely-summat :hyoty :sahko] :dp 0}
-               {:path [:tulokset :kuukausierittely-summat :hyoty :lampo] :dp 0}])})
+   7 (concat [{:path [:id]}
+              {:path [:lisamerkintoja-fi]}
+              {:path [:lisamerkintoja-sv]}
+              {:path [:lahtotiedot :rakennusvaippa :lampokapasiteetti] :dp 1}
+              {:path [:lahtotiedot :rakennusvaippa :ilmatilavuus] :dp 1}
+              {:path [:lahtotiedot :ilmanvaihto :tuloilma-lampotila] :dp 1}
+              {:path [:lahtotiedot :lammitys :tilat-ja-iv :lampopumppu-tuotto-osuus] :dp 0 :percent? true}
+              {:path [:lahtotiedot :lammitys :lammin-kayttovesi :lampopumppu-tuotto-osuus] :dp 0 :percent? true}
+              {:path [:lahtotiedot :lammitys :lampohavio-lammittamaton-tila] :dp 1}
+              ;; The repeating item below is just to fill in some
+              ;; value, to keep the next items starting at cell
+              ;; A11. A10 was expected to be required, but the value
+              ;; inserted there turned out to be unnecessary.
+              {:path [:lahtotiedot :lammitys :lampohavio-lammittamaton-tila] :dp 1}]
+             (flatten (for [i (range 12)]
+                        [{:path [:tulokset :kuukausierittely i :tuotto :aurinkosahko] :dp 0}
+                         {:path [:tulokset :kuukausierittely i :tuotto :tuulisahko] :dp 0}
+                         {:path [:tulokset :kuukausierittely i :tuotto :muusahko] :dp 0}
+                         {:path [:tulokset :kuukausierittely i :tuotto :aurinkolampo] :dp 0}
+                         {:path [:tulokset :kuukausierittely i :tuotto :lampopumppu] :dp 0}
+                         {:path [:tulokset :kuukausierittely i :tuotto :muulampo] :dp 0}
+                         {:path [:tulokset :kuukausierittely i :kulutus :sahko] :dp 0}
+                         {:path [:tulokset :kuukausierittely i :kulutus :lampo] :dp 0}
+                         {:path [:tulokset :kuukausierittely i :hyoty :sahko] :dp 0}
+                         {:path [:tulokset :kuukausierittely i :hyoty :lampo] :dp 0}]))
+             [{:path [:tulokset :kuukausierittely-summat :tuotto :aurinkosahko] :dp 0}
+              {:path [:tulokset :kuukausierittely-summat :tuotto :tuulisahko] :dp 0}
+              {:path [:tulokset :kuukausierittely-summat :tuotto :muusahko] :dp 0}
+              {:path [:tulokset :kuukausierittely-summat :tuotto :aurinkolampo] :dp 0}
+              {:path [:tulokset :kuukausierittely-summat :tuotto :lampopumppu] :dp 0}
+              {:path [:tulokset :kuukausierittely-summat :tuotto :muulampo] :dp 0}
+              {:path [:tulokset :kuukausierittely-summat :kulutus :sahko] :dp 0}
+              {:path [:tulokset :kuukausierittely-summat :kulutus :lampo] :dp 0}
+              {:path [:tulokset :kuukausierittely-summat :hyoty :sahko] :dp 0}
+              {:path [:tulokset :kuukausierittely-summat :hyoty :lampo] :dp 0}])})
 
 (defn fill-xlsx-template [{:keys [versio] :as complete-energiatodistus} kieli draft?]
   (with-open [is (-> xlsx-template-paths
@@ -613,19 +613,19 @@
         filename (.getName file)
         dir (.getParent file)
         result-pdf (str/replace path #".xlsx$" ".pdf")
-        {:keys [exit err] :as sh-result} (libreoffice/run-with-args
-                                          "--convert-to"
-                                          "pdf"
-                                          filename
-                                          :dir
-                                          dir)]
-    (if (and (zero? exit) (str/blank? err) (.exists (io/as-file result-pdf)))
+        {:keys [exit] :as sh-result} (libreoffice/run-with-args
+                                           "--convert-to"
+                                           "pdf"
+                                           filename
+                                           :dir
+                                           dir)]
+    (if (and (zero? exit) (.exists (io/as-file result-pdf)))
       result-pdf
       (throw (ex-info "XLSX to PDF conversion failed"
-                (assoc sh-result
-                  :type :xlsx-pdf-conversion-failure
-                  :xlsx filename
-                  :pdf-result? (.exists (io/as-file result-pdf))))))))
+                      (assoc sh-result
+                        :type :xlsx-pdf-conversion-failure
+                        :xlsx filename
+                        :pdf-result? (.exists (io/as-file result-pdf))))))))
 
 (defn input-stream->bytes [is]
   (with-open [is is
@@ -668,11 +668,11 @@
                                              (get kieli)
                                              io/resource
                                              io/input-stream))
-              overlay   (doto (Overlay.)
-                          (.setInputFile pdf-path)
-                          (.setDefaultOverlayPDF watermark)
-                          (.setOverlayPosition Overlay$Position/FOREGROUND))
-              result    (.overlay overlay (HashMap.))]
+              overlay (doto (Overlay.)
+                        (.setInputFile pdf-path)
+                        (.setDefaultOverlayPDF watermark)
+                        (.setOverlayPosition Overlay$Position/FOREGROUND))
+              result (.overlay overlay (HashMap.))]
     (.save result pdf-path)
     pdf-path))
 
@@ -682,8 +682,8 @@
     (io/delete-file xlsx-path)
     (add-e-luokka-image pdf-path
                         (-> complete-energiatodistus
-                              :tulokset
-                              :e-luokka)
+                            :tulokset
+                            :e-luokka)
                         (:versio complete-energiatodistus))
 
     (if draft?
@@ -697,14 +697,16 @@
     is))
 
 (defn find-existing-pdf [aws-s3-client id kieli]
-  (file-service/file-exists? aws-s3-client  (energiatodistus-service/file-key id kieli))
+  (file-service/file-exists? aws-s3-client (energiatodistus-service/file-key id kieli))
   (->> (energiatodistus-service/file-key id kieli)
        (file-service/find-file aws-s3-client)
        io/input-stream))
 
 (defn find-energiatodistus-pdf [db aws-s3-client whoami id kieli]
   (when-let [{:keys [allekirjoitusaika] :as complete-energiatodistus}
-             (complete-energiatodistus-service/find-complete-energiatodistus db whoami id)]
+             (-> (complete-energiatodistus-service/find-complete-energiatodistus db whoami id)
+                 (#(when (or (= (-> % :perustiedot :kieli) 2) ; Accept the todistus if it's multilingual (kieli is 2) or the language code matches
+                             (contains? (-> % :perustiedot :kieli energiatodistus-service/language-id->codes set) kieli)) %)))]
     (if allekirjoitusaika
       (find-existing-pdf aws-s3-client id kieli)
       (generate-pdf-as-input-stream complete-energiatodistus kieli true))))
@@ -733,28 +735,28 @@
   (when-let [{:keys [laatija-fullname versio] :as complete-energiatodistus}
              (complete-energiatodistus-service/find-complete-energiatodistus db id)]
     (do-when-signing
-     complete-energiatodistus
-     #(let [pdf-path (generate-pdf-as-file complete-energiatodistus language false)
-            signable-pdf-path (str/replace pdf-path #".pdf" "-signable.pdf")
-            signature-png-path (str/replace pdf-path #".pdf" "-signature.png")
-            _ (signature-as-png signature-png-path laatija-fullname)
-            signable-pdf-path (puumerkki/add-watermarked-signature-space
-                               pdf-path
-                               signable-pdf-path
-                               laatija-fullname
-                               signature-png-path
-                               75
-                               (case versio 2013 648 2018 666))
-            signable-pdf-data (puumerkki/read-file signable-pdf-path)
-            digest (puumerkki/compute-base64-pkcs signable-pdf-data)
-            key (energiatodistus-service/file-key id language)]
-        (file-service/upsert-file-from-bytes aws-s3-client
-                                             key
-                                             signable-pdf-data)
-        (io/delete-file pdf-path)
-        (io/delete-file signable-pdf-path)
-        (io/delete-file signature-png-path)
-        {:digest digest}))))
+      complete-energiatodistus
+      #(let [pdf-path (generate-pdf-as-file complete-energiatodistus language false)
+             signable-pdf-path (str/replace pdf-path #".pdf" "-signable.pdf")
+             signature-png-path (str/replace pdf-path #".pdf" "-signature.png")
+             _ (signature-as-png signature-png-path laatija-fullname)
+             signable-pdf-path (puumerkki/add-watermarked-signature-space
+                                 pdf-path
+                                 signable-pdf-path
+                                 laatija-fullname
+                                 signature-png-path
+                                 75
+                                 (case versio 2013 648 2018 666))
+             signable-pdf-data (puumerkki/read-file signable-pdf-path)
+             digest (puumerkki/compute-base64-pkcs signable-pdf-data)
+             key (energiatodistus-service/file-key id language)]
+         (file-service/upsert-file-from-bytes aws-s3-client
+                                              key
+                                              signable-pdf-data)
+         (io/delete-file pdf-path)
+         (io/delete-file signable-pdf-path)
+         (io/delete-file signature-png-path)
+         {:digest digest}))))
 
 (defn comparable-name [s]
   (-> s
@@ -769,20 +771,20 @@
     (when-not (= (comparable-name last-name) (comparable-name surname))
       (log/warn "Last name from certificate did not match with whoami info when signing energiatodistus PDF.")
       (exception/throw-ex-info!
-       {:type :name-does-not-match
-        :message (format "Last names did not match. Whoami has '%s' and certificate has '%s'"
-                         last-name
-                         surname)}))))
+        {:type    :name-does-not-match
+         :message (format "Last names did not match. Whoami has '%s' and certificate has '%s'"
+                          last-name
+                          surname)}))))
 
 (defn validate-not-after! [^Date now certificate]
   (let [not-after (-> certificate certificates/not-after)]
     (when (.after now not-after)
       (log/warn "Signing certificate validity ended at" not-after)
       (exception/throw-ex-info!
-       {:type :expired-signing-certificate
-        :message (format "ET Signing certificate expired at %s, would have needed to be valid at least until %s"
-                         not-after
-                         now)}))))
+        {:type    :expired-signing-certificate
+         :message (format "ET Signing certificate expired at %s, would have needed to be valid at least until %s"
+                          not-after
+                          now)}))))
 
 (defn validate-certificate! [last-name now certificate-str]
   (let [certificate (certificates/pem-str->certificate certificate-str)]

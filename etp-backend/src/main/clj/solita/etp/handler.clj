@@ -172,11 +172,11 @@
    ["/internal"
     (concat (tag "Laskutus API" laskutus-api/routes)
             (tag "Laatija Internal API" laatija-api/internal-routes))]
-   ["/palveluvayla" ["/openapi.json" {:get {:no-doc  true
-                                            :openapi {:info {:title "Energiatodistuspalvelu API" :description "Hae energiatodistuksia pdf tai json muodoissa"}
-                                                      :id   "Palveluväylä"}
-                                            :handler (openapi/create-openapi-handler)}}]
-    (openapi-id "Palveluväylä" palveluvayla/routes)]])
+   (when config/allow-palveluvayla-api
+     ["/palveluvayla" ["/openapi.json" {:get {:no-doc  true :openapi {:info {:title "Energiatodistuspalvelu API" :description "Hae energiatodistuksia pdf tai json muodoissa"}
+                                                                      :id   "Palveluväylä"}
+                                              :handler (openapi/create-openapi-handler)}}]
+      (openapi-id "Palveluväylä" palveluvayla/routes)])])
 
 (def default-string-coercion-options-with-project-specific-ones
   "Add more schemas that support coercion to default configuration in addition to those supported by schema coercion out of the box"

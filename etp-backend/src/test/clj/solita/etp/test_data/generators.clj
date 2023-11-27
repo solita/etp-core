@@ -34,41 +34,49 @@
 (defn generate-password [_]
   (apply str (take (+ 8 (rand-int 192)) (repeatedly random-printable-ascii-char))))
 
-(def kuukausierittely {:tuotto {:aurinkosahko 1M
-                                :tuulisahko   2M
-                                :aurinkolampo nil
-                                :muulampo     3.5M
-                                :muusahko     4M
-                                :lampopumppu  5.6789M}
-                       :kulutus {:sahko       nil
-                                 :lampo       6.789M}})
+(def kuukausierittely {:tuotto  {:aurinkosahko 1M
+                                 :tuulisahko   2M
+                                 :aurinkolampo nil
+                                 :muulampo     3.5M
+                                 :muusahko     4M
+                                 :lampopumppu  5.6789M}
+                       :kulutus {:sahko nil
+                                 :lampo 6.789M}})
+
+(defn- rakennustunnus-generator [_]
+  (let [number-part (apply str (repeatedly 9 #(rand-nth "0123456789")))
+        checksum (common/henkilotunnus-checksum number-part)]
+    (str number-part checksum)))
+
+(defn generate-rakennustunnus []
+  (rakennustunnus-generator nil))
 
 (def generators
-  {common/Num1              (test-generators/choose 0 1)
-   common/NonNegative       test-generators/nat
-   common/IntNonNegative    test-generators/nat
-   common/Year              (test-generators/choose 2018 2025)
-   common/Henkilotunnus     (g/always "130200A892S")
-   common/Ytunnus           (g/always "0000000-0")
-   common/Verkkolaskuosoite (g/always "003712345671")
-   common/Date              (g/always (java.time.LocalDate/now))
-   common/Instant           (g/always (java.time.Instant/now))
-   common/Url               (g/always "https://example.com")
+  {common/Num1                              (test-generators/choose 0 1)
+   common/NonNegative                       test-generators/nat
+   common/IntNonNegative                    test-generators/nat
+   common/Year                              (test-generators/choose 2018 2025)
+   common/Henkilotunnus                     (g/always "130200A892S")
+   common/Ytunnus                           (g/always "0000000-0")
+   common/Verkkolaskuosoite                 (g/always "003712345671")
+   common/Date                              (g/always (java.time.LocalDate/now))
+   common/Instant                           (g/always (java.time.Instant/now))
+   common/Url                               (g/always "https://example.com")
 
-   geo/Maa           (test-generators/elements ["FI" "SV"])
-   geo/PostinumeroFI (test-generators/elements ["00100" "33100"])
+   geo/Maa                                  (test-generators/elements ["FI" "SV"])
+   geo/PostinumeroFI                        (test-generators/elements ["00100" "33100"])
 
-   laatija/MuutToimintaalueet (test-generators/list-distinct
-                               (test-generators/elements (range 18))
-                               {:min-elements 0
-                                :max-elements 5})
+   laatija/MuutToimintaalueet               (test-generators/list-distinct
+                                              (test-generators/elements (range 18))
+                                              {:min-elements 0
+                                               :max-elements 5})
 
-   common/Rakennustunnus                    (g/always "1035150826")
+   common/Rakennustunnus                    (test-generators/fmap rakennustunnus-generator test-generators/boolean)
    energiatodistus/YritysPostinumero        (g/always "33100")
    energiatodistus/OptionalKuukausierittely (test-generators/one-of
-                                             [(g/always (vec (repeat 12 kuukausierittely)))
-                                              (g/always [])])
-   solita.etp.schema.kayttaja/Password (test-generators/fmap generate-password test-generators/boolean)})
+                                              [(g/always (vec (repeat 12 kuukausierittely)))
+                                               (g/always [])])
+   solita.etp.schema.kayttaja/Password      (test-generators/fmap generate-password test-generators/boolean)})
 
 (defn complete
   ([x schema]
