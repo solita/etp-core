@@ -13,7 +13,7 @@
 
 (t/use-fixtures :each ts/fixture)
 
-(def palveluvayla-basepath "/api/palveluvayla/energiatodistukset")
+(def palveluvayla-basepath "/palveluvayla/v1/energiatodistukset")
 
 (t/deftest test-palveluvayla-api
   (let [; Add laatija
