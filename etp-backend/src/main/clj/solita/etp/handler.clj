@@ -120,58 +120,59 @@
                        :body   headers})}}]])
 
 (def routes
-  ["/api" {:middleware [[header-middleware/wrap-default-cache]
-                        [header-middleware/wrap-default-content-type]]}
-   system-routes
-   ["/public" {:middleware [[security/wrap-db-application-name]]}
-    (concat (tag "Laatijat Public API" laatija-api/public-routes)
-            (tag "Geo Public API" geo-api/routes)
-            (tag "Energiatodistus Public API"
-                 energiatodistus-api/public-routes)
-            (tag "Tilastointi Public API"
-                 statistics-api/routes))]
-   ["/private" {:middleware [[header-middleware/wrap-disable-cache]
-                             [security/wrap-jwt-payloads]
-                             [security/wrap-whoami-from-jwt-payloads]
-                             [security/wrap-access]
-                             [security/wrap-db-application-name]]}
-    (concat (tag "Käyttäjä API" kayttaja-api/routes)
-            (tag "Yritys API" yritys-api/routes)
-            (tag "Laatijat Private API" laatija-api/private-routes)
-            (tag "Geo Private API" geo-api/routes)
-            (tag "Energiatodistus API" energiatodistus-api/private-routes)
-            (tag "Oikeellisuuden valvonta API" valvonta-oikeellisuus-api/routes)
-            (tag "Käytönvalvonta API" valvonta-kaytto-api/routes)
-            (tag "Valvonta API" valvonta-api/routes)
-            (tag "Viesti API" viesti-api/routes)
-            (tag "Sivu API" sivu-api/routes)
-            (tag "Tilastointi API" statistics-api/routes))]
-   ["/external" {:middleware [[security/wrap-whoami-from-basic-auth
-                               "Access to external API"]
+  ["" {:middleware [[header-middleware/wrap-default-cache]
+                 [header-middleware/wrap-default-content-type]]}
+   ["/api"
+    system-routes
+    ["/public" {:middleware [[security/wrap-db-application-name]]}
+     (concat (tag "Laatijat Public API" laatija-api/public-routes)
+             (tag "Geo Public API" geo-api/routes)
+             (tag "Energiatodistus Public API"
+                  energiatodistus-api/public-routes)
+             (tag "Tilastointi Public API"
+                  statistics-api/routes))]
+    ["/private" {:middleware [[header-middleware/wrap-disable-cache]
+                              [security/wrap-jwt-payloads]
+                              [security/wrap-whoami-from-jwt-payloads]
                               [security/wrap-access]
                               [security/wrap-db-application-name]]}
-    (concat (tag "Energiatodistus API" energiatodistus-api/external-routes)
-            (tag "Aineisto API" aineisto-api/external-routes))]
-   ["/signed" {:middleware [(if (every? (comp not empty?)
-                                        [config/public-index-url
-                                         config/url-signing-public-key])
-                              ;; Parameters for checking the signature are available,
-                              ;; so make use of them
-                              [security/wrap-whoami-from-signed
-                               config/public-index-url
-                               {:key-pair-id config/url-signing-key-id
-                                :public-key  (signed-url/pem-string->public-key
-                                               config/url-signing-public-key)}]
-                              ;; Otherwise, assume that the reverse
-                              ;; proxies on front of the backend
-                              ;; service have verified the signature.
-                              [security/wrap-whoami-assume-verified-signature])
-                            [security/wrap-access]
-                            [security/wrap-db-application-name]]}
-    (concat (tag "Aineisto API" aineisto-api/signed-routes))]
-   ["/internal"
-    (concat (tag "Laskutus API" laskutus-api/routes)
-            (tag "Laatija Internal API" laatija-api/internal-routes))]
+     (concat (tag "Käyttäjä API" kayttaja-api/routes)
+             (tag "Yritys API" yritys-api/routes)
+             (tag "Laatijat Private API" laatija-api/private-routes)
+             (tag "Geo Private API" geo-api/routes)
+             (tag "Energiatodistus API" energiatodistus-api/private-routes)
+             (tag "Oikeellisuuden valvonta API" valvonta-oikeellisuus-api/routes)
+             (tag "Käytönvalvonta API" valvonta-kaytto-api/routes)
+             (tag "Valvonta API" valvonta-api/routes)
+             (tag "Viesti API" viesti-api/routes)
+             (tag "Sivu API" sivu-api/routes)
+             (tag "Tilastointi API" statistics-api/routes))]
+    ["/external" {:middleware [[security/wrap-whoami-from-basic-auth
+                                "Access to external API"]
+                               [security/wrap-access]
+                               [security/wrap-db-application-name]]}
+     (concat (tag "Energiatodistus API" energiatodistus-api/external-routes)
+             (tag "Aineisto API" aineisto-api/external-routes))]
+    ["/signed" {:middleware [(if (every? (comp not empty?)
+                                         [config/public-index-url
+                                          config/url-signing-public-key])
+                               ;; Parameters for checking the signature are available,
+                               ;; so make use of them
+                               [security/wrap-whoami-from-signed
+                                config/public-index-url
+                                {:key-pair-id config/url-signing-key-id
+                                 :public-key  (signed-url/pem-string->public-key
+                                                config/url-signing-public-key)}]
+                               ;; Otherwise, assume that the reverse
+                               ;; proxies on front of the backend
+                               ;; service have verified the signature.
+                               [security/wrap-whoami-assume-verified-signature])
+                             [security/wrap-access]
+                             [security/wrap-db-application-name]]}
+     (concat (tag "Aineisto API" aineisto-api/signed-routes))]
+    ["/internal"
+     (concat (tag "Laskutus API" laskutus-api/routes)
+             (tag "Laatija Internal API" laatija-api/internal-routes))]]
    (when config/allow-palveluvayla-api
      ["/palveluvayla" ["/openapi.json" {:get {:no-doc  true :openapi {:info {:title "Energiatodistuspalvelu API" :description "Hae energiatodistuksia pdf tai json muodoissa"}
                                                                       :id   "Palveluväylä"}

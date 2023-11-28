@@ -15,7 +15,7 @@
            (reverse)
            (map first)))
 
-(def routes ["/energiatodistukset"
+(def routes ["/v1/energiatodistukset"
              ["/pdf/:id"
               ["" {:get {:summary    "Hae PDF-muotoinen energiatodistus tunnuksen id:llä"
                          :parameters {:path   {:id schema.common/Key}
