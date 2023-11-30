@@ -1,5 +1,6 @@
 (ns solita.etp.schema.common
   (:require [clojure.string :as str]
+            [schema-tools.core :as schema-tools]
             [schema-tools.walk :as walk]
             [solita.common.schema :as xschema]
             [schema.core :as schema]))
@@ -198,24 +199,12 @@
 
 (def Language (schema/enum "fi" "sv"))
 
-(schema/defschema WeightedLocale
-  "A single locale with weight for Accept-Language header"
-  [(schema/one (schema/constrained schema/Str #(re-matches #"(?i)([*]|[a-z]{2,3})" %)) "lang") (schema/one (schema/constrained schema/Num #(and (>= % 0) (<= % 1))) "weight")])
-
 (schema/defschema AcceptLanguage
   "Define a schema for Accept-Language header. The header can contain multiple locales with preferred weights, for example Accept-Language: fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5"
-  [WeightedLocale])
+  (schema-tools/schema
+    ; Matches the docstring above. Case invariant (?i) list of languages (like fr or *), with optional region (like -CH) and optional weight (;q=0.9) separated by optional comma and optional whitespace.
+    (schema/constrained schema/Str #(re-matches #"(?i)(([*]|([a-z]{2,3}(-[a-z]{2,3})?))(;q=\d.\d)?,?\s?)+" %))
+    {:openapi/description "Standardin mukainen Accept-Language otsikko. Jos otsikkoa ei ole asetettu, palautetaan ensisijaisesti suomenkielinen todistus"
+     :openapi/example     "Accept-Language: fi-FI,sv;q=0.5"}))
 
-(defn parse-lang
-  "Parse a language from language tag i.e. drop subtags such as region separated by -"
-  [s]
-  (-> s (str/split #"-") first))
-
-(defn parse-locale [s]
-  (let [parts (str/split s #";q=")]
-    (case (count parts)
-      1 [(parse-lang s) 1.0]
-      2 [(-> parts first parse-lang) (Double/parseDouble (second parts))])))
-
-(defn parse-accept-language [s]
-  (map parse-locale (map str/trim (str/split s #","))))
+(schema/defschema EnergiatodistusId (schema-tools/schema Key {:openapi/description "Energiatodistuksen tunniste"}))

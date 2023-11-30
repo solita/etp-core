@@ -179,17 +179,12 @@
                                               :handler (openapi/create-openapi-handler)}}]
       (openapi-id "Palveluväylä" palveluvayla/routes)])])
 
-(def default-string-coercion-options-with-project-specific-ones
-  "Add more schemas that support coercion to default configuration in addition to those supported by schema coercion out of the box"
-  (assoc-in reitit.coercion.schema/default-options [:matchers :string :default] (some-fn (some-fn {schema.common/AcceptLanguage (schema.coerce/safe schema.common/parse-accept-language)})
-                                                                                         (get-in reitit.coercion.schema/default-options [:matchers :string :default]))))
-
 (def route-opts
   {;; Uncomment line below to see diffs of requests in middleware chain
    ;;:reitit.middleware/transform dev/print-request-diffs
    :exception pretty/exception
    :validate  rs/validate
-   :data      {:coercion   (reitit.coercion.schema/create default-string-coercion-options-with-project-specific-ones)
+   :data      {:coercion   reitit.coercion.schema/coercion
                :muuntaja   m/instance
                :middleware [openapi/openapi-feature
                             parameters/parameters-middleware
