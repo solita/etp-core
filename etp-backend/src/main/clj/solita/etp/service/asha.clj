@@ -185,14 +185,32 @@
   "Move the case to the next step, if it the new action (processing-action parameter) is in Käsittely or Päätöksenteko
   and the desired state is not already reached (not in processing-action-states)."
   [sender-id request-id case-number processing-action-states processing-action]
-  (when-let [action (case processing-action
-                      "Käsittely" {:processing-action "Vireillepano"
-                                   :decision          "Siirry käsittelyyn"}
-                      "Päätöksenteko" {:processing-action "Käsittely"
-                                       :decision          "Siirry päätöksentekoon"}
-                      "Valitusajan umpeutuminen" {:processing-action "Tiedoksianto ja toimeenpano"
-                                                  :decision          "Valmis"}
-                      nil)]
+  (when-let [action (cond
+                      (and (= processing-action "Käsittely")
+                           (every? #(not= ["Tiedoksianto ja toimeenpano" "UNFINISHED"] %) processing-action-states))
+                      {:processing-action "Vireillepano"
+                       :decision          "Siirry käsittelyyn"}
+
+                      (= processing-action "Päätöksenteko")
+                      {:processing-action "Käsittely"
+                       :decision          "Siirry päätöksentekoon"}
+
+                      (= processing-action "Valitusajan umpeutuminen")
+                      {:processing-action "Tiedoksianto ja toimeenpano"
+                       :decision          "Valmis"}
+
+                      (= processing-action "Tiedoksianto ja toimeenpano")
+                      {:processing-action "Päätöksenteko"
+                       :decision          "Siirry tiedoksiantoon"}
+
+
+                      (and (= processing-action "Käsittely")
+                           (some #(= ["Tiedoksianto ja toimeenpano" "UNFINISHED"] %) processing-action-states))
+                      {:processing-action "Tiedoksianto ja toimeenpano"
+                       :decision          "Uudelleenkäsittele asia"}
+
+                      :else nil)]
+
     (when (not (get processing-action-states processing-action))
       (proceed-operation! sender-id request-id case-number (:processing-action action) (:decision action)))))
 
@@ -231,9 +249,8 @@
          require-vireillepano (= {"Vireillepano" "NEW"} processing-action-states)
          processing-action (-> processing-action
                                ;; Possibly redirect the processing action to Vireillepano
-                               (with-vireillepano require-vireillepano)
-                               ;; Prevent going backwards in the process
-                               (with-latest-processing-action processing-action-states))]
+                               (with-vireillepano require-vireillepano))
+         _ (println "toteutettava processing-action" processing-action)]
      (move-processing-action!
        sender-id
        request-id
