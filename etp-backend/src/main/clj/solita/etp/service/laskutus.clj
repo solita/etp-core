@@ -297,7 +297,7 @@
         (xlsx/set-sheet-landscape sheet true)
         (xlsx/fill-sheet! xlsx sheet tasmaytysraportti [5000 5000 7000 5000 5000])
         (xlsx/save-xlsx xlsx xlsx-path)))
-    (let [{:keys [exit err] :as sh-result} (libreoffice/run-with-args
+    (let [{:keys [exit] :as sh-result} (libreoffice/run-with-args
                                             "--convert-to"
                                             "pdf"
                                             (.getName xlsx-file)
@@ -305,7 +305,7 @@
                                             (.getParent xlsx-file))
           pdf-exists? (.exists pdf-file)]
       (io/delete-file xlsx-path)
-      (if (and (zero? exit) (str/blank? err) pdf-exists?)
+      (if (and (zero? exit) pdf-exists?)
         pdf-file
         (throw (ex-info "Creating tasmaytysraportti PDF failed."
                         (assoc sh-result
