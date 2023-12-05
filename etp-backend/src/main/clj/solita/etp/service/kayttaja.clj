@@ -94,4 +94,5 @@
 (def system-kayttaja
   {:communication -3
    :laskutus -2
-   :presigned -4})
+   :presigned -4
+   :aineisto -5})
