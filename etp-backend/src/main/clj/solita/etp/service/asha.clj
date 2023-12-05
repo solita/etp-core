@@ -16,8 +16,7 @@
   ["Vireillepano"
    "Käsittely"
    "Päätöksenteko"
-   "Tiedoksianto ja toimeenpano"
-   "Valitusajan umpeutuminen"])
+   "Tiedoksianto ja toimeenpano"])
 
 (defn- must-exist! [n]
   (when (< n 0)
@@ -182,36 +181,35 @@
        last))
 
 (defn move-processing-action!
-  "Move the case to the next step, if it the new action (processing-action parameter) is in Käsittely or Päätöksenteko
-  and the desired state is not already reached (not in processing-action-states)."
-  [sender-id request-id case-number processing-action-states processing-action]
+  "Move the case to the next step, if the new action (wanted-processing-action parameter) is in Käsittely or Päätöksenteko
+  and the desired state is not already reached (not in processing-action-states).
+
+  `processing-action-states` parameter is a map containing the processing actions that are already made and their states.
+
+  Note that this is used for both käytönvalvonta and oikeellisuuden valvonta."
+  [sender-id request-id case-number processing-action-states wanted-processing-action]
   (when-let [action (cond
-                      (and (= processing-action "Käsittely")
+                      (and (= wanted-processing-action "Käsittely")
                            (every? #(not= ["Tiedoksianto ja toimeenpano" "UNFINISHED"] %) processing-action-states))
                       {:processing-action "Vireillepano"
                        :decision          "Siirry käsittelyyn"}
 
-                      (= processing-action "Päätöksenteko")
+                      (= wanted-processing-action "Päätöksenteko")
                       {:processing-action "Käsittely"
                        :decision          "Siirry päätöksentekoon"}
 
-                      (= processing-action "Valitusajan umpeutuminen")
-                      {:processing-action "Tiedoksianto ja toimeenpano"
-                       :decision          "Valmis"}
-
-                      (= processing-action "Tiedoksianto ja toimeenpano")
+                      (= wanted-processing-action "Tiedoksianto ja toimeenpano")
                       {:processing-action "Päätöksenteko"
                        :decision          "Siirry tiedoksiantoon"}
 
-
-                      (and (= processing-action "Käsittely")
+                      (and (= wanted-processing-action "Käsittely")
                            (some #(= ["Tiedoksianto ja toimeenpano" "UNFINISHED"] %) processing-action-states))
                       {:processing-action "Tiedoksianto ja toimeenpano"
                        :decision          "Uudelleenkäsittele asia"}
 
                       :else nil)]
 
-    (when (not (get processing-action-states processing-action))
+    (when (not (get processing-action-states wanted-processing-action))
       (proceed-operation! sender-id request-id case-number (:processing-action action) (:decision action)))))
 
 (defn mark-processing-action-as-ready! [sender-id request-id case-number processing-action]
@@ -249,8 +247,7 @@
          require-vireillepano (= {"Vireillepano" "NEW"} processing-action-states)
          processing-action (-> processing-action
                                ;; Possibly redirect the processing action to Vireillepano
-                               (with-vireillepano require-vireillepano))
-         _ (println "toteutettava processing-action" processing-action)]
+                               (with-vireillepano require-vireillepano))]
      (move-processing-action!
        sender-id
        request-id

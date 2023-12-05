@@ -297,4 +297,30 @@
                                                           :response-status  200
                                                           :request-received move-called}})]
             (asha-service/move-processing-action! sender-id request-id case-number {} "Päätöksenteko")
+            (t/is (= 1 @move-called)))))
+
+      (t/testing "Move from Päätöksenteko to Tiedoksianto ja toimeenpano"
+        (let [move-called (atom 0)]
+          (binding [asha-service/post! (handle-requests {(render-resource "asha/moveaction/move-template.xml" {:sender-id         sender-id
+                                                                                                               :request-id        request-id
+                                                                                                               :case-number       case-number
+                                                                                                               :processing-action "Päätöksenteko"
+                                                                                                               :proceed-decision  "Siirry tiedoksiantoon"})
+                                                         {:response-body    "Irrelevant"
+                                                          :response-status  200
+                                                          :request-received move-called}})]
+            (asha-service/move-processing-action! sender-id request-id case-number {} "Tiedoksianto ja toimeenpano")
+            (t/is (= 1 @move-called)))))
+
+      (t/testing "Move from Tiedoksianto ja toimeenpano to Käsittely using 'uudelleenkäsittele asia' decision"
+        (let [move-called (atom 0)]
+          (binding [asha-service/post! (handle-requests {(render-resource "asha/moveaction/move-template.xml" {:sender-id         sender-id
+                                                                                                               :request-id        request-id
+                                                                                                               :case-number       case-number
+                                                                                                               :processing-action "Tiedoksianto ja toimeenpano"
+                                                                                                               :proceed-decision  "Uudelleenkäsittele asia"})
+                                                         {:response-body    "Irrelevant"
+                                                          :response-status  200
+                                                          :request-received move-called}})]
+            (asha-service/move-processing-action! sender-id request-id case-number {"Tiedoksianto ja toimeenpano" "UNFINISHED"} "Käsittely")
             (t/is (= 1 @move-called))))))))
