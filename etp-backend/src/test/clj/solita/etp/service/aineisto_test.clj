@@ -74,3 +74,21 @@
                                 (.plusSeconds 86400))
                             actual-ip])
     (t/is (true? (aineisto/check-access ts/*db*, user-id-with-allowed-ip, allowed-aineisto-type, actual-ip)))))
+
+(t/deftest update-aineistot-test
+  (let []
+    (t/testing "Aineistot don't exist before generating"
+      (t/is (not (solita.etp.service.file/file-exists? ts/*aws-s3-client* "/aineistot/1/energiatodistukset.csv")))
+      (t/is (not (solita.etp.service.file/file-exists? ts/*aws-s3-client* "/aineistot/2/energiatodistukset.csv")))
+      (t/is (not (solita.etp.service.file/file-exists? ts/*aws-s3-client* "/aineistot/3/energiatodistukset.csv"))))
+    (t/testing "Aineistot exist after generating"
+      (aineisto/update-aineistot-in-s3! ts/*db* {:id -5 :rooli 2} ts/*aws-s3-client*)
+      (t/is (solita.etp.service.file/file-exists? ts/*aws-s3-client* "/aineistot/1/energiatodistukset.csv"))
+      (t/is (solita.etp.service.file/file-exists? ts/*aws-s3-client* "/aineistot/2/energiatodistukset.csv"))
+      (t/is (solita.etp.service.file/file-exists? ts/*aws-s3-client* "/aineistot/3/energiatodistukset.csv")))
+    #_(t/testing "Adding some new energiatodistus has an effect on the aineistot"
+      ;;TODO: Could get object size via GetObjectAttributes request parameter `x-amz-object-attributes ObjectSize`
+      ;;      and look that the size increases when energiatodistus is added and aineistot generated again.
+      ;;      Might be too heavy of an operation and takes time to implement.
+      (aineisto/update-aineistot-in-s3! ts/*db* {:id -5 :rooli 2} ts/*aws-s3-client*)
+      )))
