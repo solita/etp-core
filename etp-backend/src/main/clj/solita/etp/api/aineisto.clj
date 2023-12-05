@@ -1,5 +1,8 @@
 (ns solita.etp.api.aineisto
   (:require [clojure.string :as str]
+            [ring.util.response :as r]
+            [solita.etp.security :as security]
+            [solita.etp.service.concurrent :as concurrent]
             [clojure.tools.logging :as log]
             [solita.etp.config :as config]
             [solita.etp.exception :as exception]
@@ -72,3 +75,18 @@
                                     "x-forwarded-for" x-forwarded-for)
                           {:status 302
                            :headers {"Location" signed-url}}))}}]]]])
+
+(def internal-routes
+  [["/aineistot"
+    ["/update"
+     {:post {:summary    "Päivitä kaikkien aineistojen CSV-tiedostot S3:ssa."
+             :middleware [[security/wrap-whoami-for-internal-aineisto-api]]
+             :responses  {200 {:body nil}}
+             :handler    (fn [{:keys [db whoami aws-s3-client]}]
+                           (concurrent/run-background
+                             #(aineisto-service/update-aineistot-in-s3!
+                                db
+                                whoami
+                                aws-s3-client)
+                             "Aineistot update failed")
+                           (r/response {}))}}]]])

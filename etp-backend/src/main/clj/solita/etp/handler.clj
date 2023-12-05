@@ -172,7 +172,8 @@
      (concat (tag "Aineisto API" aineisto-api/signed-routes))]
     ["/internal"
      (concat (tag "Laskutus API" laskutus-api/routes)
-             (tag "Laatija Internal API" laatija-api/internal-routes))]]
+             (tag "Laatija Internal API" laatija-api/internal-routes)
+             (tag "Aineisto API" aineisto-api/internal-routes))]]
    (when config/allow-palveluvayla-api
      ["/palveluvayla" ["/openapi.json" {:get {:no-doc  true :openapi {:info {:title "Energiatodistuspalvelu API" :description "Hae energiatodistuksia pdf tai json muodoissa"}
                                                                       :id   "Palveluväylä"}
