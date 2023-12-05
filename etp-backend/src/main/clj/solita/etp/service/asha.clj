@@ -229,12 +229,6 @@
               "Vireillepano")
     processing-action))
 
-(defn with-latest-processing-action [processing-action states]
-  (update-in processing-action
-             [:identity :processing-action :name-identity]
-             (fn [name-identity] (reduce toplevel-processing-action-max
-                                         (cons name-identity (keys states))))))
-
 (defn log-toimenpide!
   ([sender-id request-id case-number processing-action]
    (log-toimenpide! sender-id request-id case-number processing-action [] []))
