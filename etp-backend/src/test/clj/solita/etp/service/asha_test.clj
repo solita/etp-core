@@ -266,9 +266,7 @@
           case-number 100]
       (t/testing "Move ignores the toimenpide if the action is"
         (t/testing "Vireillepano"
-          (asha-service/move-processing-action! sender-id request-id case-number {} "Vireillepano"))
-        (t/testing "Tiedoksianto ja toimeenpano"
-          (asha-service/move-processing-action! sender-id request-id case-number {} "Tiedoksianto ja toimeenpano")))
+          (asha-service/move-processing-action! sender-id request-id case-number {} "Vireillepano")))
       (t/testing "Move is skipped if the toimenpide is already in correct state"
         (let [processing-action-states {"Vireillepano" "READY" "Käsittely" "NEW"}
               processing-action "Käsittely"]
@@ -288,7 +286,7 @@
                  :request-received move-called}})]
             (asha-service/move-processing-action! sender-id request-id case-number {} "Käsittely")
             (t/is (= 1 @move-called)))))
-      (t/testing "Move from Päätöksenteko to Käsittely"
+      (t/testing "Move from Käsittely to Päätöksenteko"
         (let [move-called (atom 0)]
           (binding [asha-service/post! (handle-requests {(render-resource "asha/moveaction/move-template.xml" {:sender-id         sender-id
                                                                                                                :request-id        request-id
