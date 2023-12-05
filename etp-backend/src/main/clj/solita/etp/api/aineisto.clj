@@ -6,21 +6,9 @@
             [solita.common.cf-signed-url :as signed-url]
             [solita.etp.schema.common :as common-schema]
             [solita.etp.service.aineisto :as aineisto-service]
-            [solita.etp.service.energiatodistus-csv :as energiatodistus-csv]
             [solita.etp.service.rooli :as rooli-service]
             [solita.etp.api.response :as api-response]
             [solita.etp.api.stream :as api-stream]))
-
-(def aineisto-sources
-  {:banks energiatodistus-csv/energiatodistukset-bank-csv
-   :tilastokeskus energiatodistus-csv/energiatodistukset-tilastokeskus-csv
-   :anonymized-set energiatodistus-csv/energiatodistukset-anonymized-csv})
-
-(defn not-nil-aineisto-source! [x]
-  (when (nil? x)
-    (throw (ex-info "Expected not-nil aineisto source"
-                    {:type :nil-aineisto-source})))
-  x)
 
 (def search-exceptions [{:type :nil-aineisto-source :response 404}])
 
@@ -31,25 +19,20 @@
   [["/aineistot"
     ["/:aineisto-id"
      ["/energiatodistukset.csv"
-      {:get {:summary "Hae energiatodistusaineisto CSV-tiedostona"
+      {:get {:summary    "Hae energiatodistusaineisto CSV-tiedostona"
              ;; Note - there is a body, but it is produced through async channel
-             :responses {200 {:body nil}}
-             :access rooli-service/system?
+             :responses  {200 {:body nil}}
+             :access     rooli-service/system?
              :parameters {:path {:aineisto-id common-schema/Key}}
-             :handler (fn [{{{:keys [aineisto-id]} :path} :parameters :keys [db whoami] :as request}]
-                        (log/info "Producing aineisto" aineisto-id)
-                        (api-response/with-exceptions
-                          #(let [energiatodistukset-csv (-> aineisto-id
-                                                            aineisto-service/aineisto-key
-                                                            aineisto-sources
-                                                            not-nil-aineisto-source!)
-                                 result (energiatodistukset-csv db whoami)]
-                             (api-stream/result->async-channel
-                              request
-                              (merge (api-response/csv-response-headers "energiatodistukset.csv" false)
-                                     (api-response/async-cache-headers 86400))
-                              result))
-                          search-exceptions))}}]]]])
+             :handler    (fn [{{{:keys [aineisto-id]} :path} :parameters :keys [db whoami] :as request}]
+                           (log/info "Producing aineisto" aineisto-id)
+                           (api-response/with-exceptions
+                             #(api-stream/result->async-channel
+                                request
+                                (merge (api-response/csv-response-headers "energiatodistukset.csv" false)
+                                       (api-response/async-cache-headers 86400))
+                                (aineisto-service/aineisto-reducible-query! db whoami aineisto-id))
+                             search-exceptions))}}]]]])
 
 (def external-routes
   [["/aineistot"

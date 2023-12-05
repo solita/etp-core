@@ -65,3 +65,28 @@
       (doseq [aineisto aineistot]
         (set-access! db kayttaja-id aineisto))
       1)))
+
+(defn extract-byte-array-and-reset! [buf]
+  (let [arr (byte-array (.position buf))]
+    (System/arraycopy (.array buf) 0 arr 0 (count arr))
+    (.clear buf)
+    arr))
+
+(defn not-nil-aineisto-source! [x]
+  (when (nil? x)
+    (throw (ex-info "Expected not-nil aineisto source"
+                    {:type :nil-aineisto-source})))
+  x)
+
+(def aineisto-sources
+  {:banks          energiatodistus-csv/energiatodistukset-bank-csv
+   :tilastokeskus  energiatodistus-csv/energiatodistukset-tilastokeskus-csv
+   :anonymized-set energiatodistus-csv/energiatodistukset-anonymized-csv})
+
+(defn aineisto-reducible-query! [db whoami aineisto-id]
+  (as-> aineisto-id val
+        (aineisto-key val)
+        (aineisto-sources val)
+        (not-nil-aineisto-source! val)
+        (val db whoami)))
+
