@@ -93,3 +93,8 @@
                                        (mock/header "X-Forwarded-For" "192.168.2.100")
                                        (mock/header "Accept" "application/json")))]
           (t/is (= (:status response) 403)))))))
+
+(t/deftest generate-aineistot
+  (t/testing "Aineistot generation endpoint responds with status code 200"
+    (let [response (ts/handler (-> (mock/request :post "/api/internal/aineistot/update")))]
+      (t/is (= (:status response) 200)))))
