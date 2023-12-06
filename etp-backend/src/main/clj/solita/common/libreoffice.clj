@@ -43,10 +43,19 @@
            "--headless"
            args)))
 
-(defn run-with-args [& args]
-  (let [tmpdir (make-tmpdir)]
-    (try
-      (populate-tmpdir tmpdir)
-      (exec-libreoffice tmpdir args)
-      (finally (rm-path tmpdir)))))
+(defn exec-libreoffice-on-windows [args]
+  ;; On windows, it seems to be difficult to get the UserInstallation parameter
+  ;; to work at all. Because this is strictcly a development situation, we
+  ;; ignore the usual need of having a per-process configuration. Instead, we
+  ;; expect the developer to not run multiple PDF generaion operations
+  ;; concurrently
+  (apply shell/sh "C:\\Program Files\\LibreOffice\\program\\soffice.bin" "--headless" args))
 
+(defn run-with-args [& args]
+  (if  (-> "os.name" System/getProperty (.startsWith "Windows "))
+    (exec-libreoffice-on-windows args)
+    (let [tmpdir (make-tmpdir)]
+      (try
+        (populate-tmpdir tmpdir)
+        (exec-libreoffice tmpdir args)
+        (finally (println (str 'rm-path tmpdir)))))))
