@@ -6,13 +6,14 @@
             [solita.etp.service.valvonta-kaytto.hallinto-oikeus-attachment :as hao]
             [solita.etp.test-system :as ts]
             [clostache.parser :refer [render-resource]])
-  (:import (java.nio.charset StandardCharsets)
+  (:import (clojure.lang ExceptionInfo)
+           (java.nio.charset StandardCharsets)
            (java.time Instant)
            (java.util Base64)))
 
 (t/use-fixtures :each ts/fixture)
 
-(defn- handle-request [request-resource response-resource response-status & [exception]]
+(defn- handle-request [request-resource response-resource response-status & [^String exception]]
   (fn [request]
     (t/is (= (str/trim request) (-> request-resource io/resource slurp str/trim)))
     (if exception
@@ -99,7 +100,7 @@
                                                "asha/case-create-response-without-sender-id.xml"
                                                400
                                                "clj-http: status 400")]
-    (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
+    (t/is (thrown-with-msg? ExceptionInfo
                             #"Asiahallinta request failed. Posting the request failed."
                             (asha-service/open-case!
                               {:request-id     "ETP-1"
