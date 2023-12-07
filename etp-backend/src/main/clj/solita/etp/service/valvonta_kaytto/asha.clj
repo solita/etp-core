@@ -234,6 +234,7 @@
   [toimenpide osapuolet]
   (if ((some-fn toimenpide/kaskypaatos-varsinainen-paatos?
                 toimenpide/kaskypaatos-haastemies-tiedoksianto?
+                toimenpide/sakkopaatos-kuulemiskirje?
                 toimenpide/sakkopaatos-varsinainen-paatos?
                 toimenpide/sakkopaatos-haastemies-tiedoksianto?) toimenpide)
     (let [osapuolet-with-document (->> toimenpide
