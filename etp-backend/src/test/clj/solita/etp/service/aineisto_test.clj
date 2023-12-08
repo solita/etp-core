@@ -1,9 +1,15 @@
 (ns solita.etp.service.aineisto-test
   (:require [solita.etp.service.aineisto :as aineisto]
-            [solita.etp.test-system :as ts]
+            [solita.etp.test-data.generators :as generators]
+            [solita.etp.test-data.laatija :as test-data.laatija]
             [clojure.test :as t]
-            [clojure.java.jdbc :as jdbc])
-  (:import (java.time Instant)))
+            [clojure.string :as str]
+            [solita.etp.test-system :as ts]
+            [clojure.java.jdbc :as jdbc]
+            [solita.etp.test-data.energiatodistus :as test-data.energiatodistus]
+            [solita.etp.service.file :as file])
+  (:import (java.time Instant)
+           (java.io BufferedReader InputStreamReader)))
 
 (t/use-fixtures :each ts/fixture)
 
@@ -75,20 +81,83 @@
                             actual-ip])
     (t/is (true? (aineisto/check-access ts/*db*, user-id-with-allowed-ip, allowed-aineisto-type, actual-ip)))))
 
+(defn- get-first-two-energiatodistus-lines-from-aineisto [key]
+  (with-open [aineisto (file/find-file ts/*aws-s3-client* key)]
+    (let [reader (BufferedReader. (InputStreamReader. aineisto))
+          ;; CSV headers
+          _ (.readLine reader)
+          second-line (.readLine reader)
+          third-line (.readLine reader)]
+      [second-line third-line])))
+
 (t/deftest update-aineistot-test
-  (let []
-    (t/testing "Aineistot don't exist before generating"
-      (t/is (not (solita.etp.service.file/file-exists? ts/*aws-s3-client* "/aineistot/1/energiatodistukset.csv")))
-      (t/is (not (solita.etp.service.file/file-exists? ts/*aws-s3-client* "/aineistot/2/energiatodistukset.csv")))
-      (t/is (not (solita.etp.service.file/file-exists? ts/*aws-s3-client* "/aineistot/3/energiatodistukset.csv"))))
-    (t/testing "Aineistot exist after generating"
+  (t/testing "Aineistot don't exist before generating"
+    (t/is (false? (file/file-exists? ts/*aws-s3-client* "/aineistot/1/energiatodistukset.csv")))
+    (t/is (false? (file/file-exists? ts/*aws-s3-client* "/aineistot/2/energiatodistukset.csv")))
+    (t/is (false? (file/file-exists? ts/*aws-s3-client* "/aineistot/3/energiatodistukset.csv"))))
+  (t/testing "Aineistot exist after generating"
+    (aineisto/update-aineistot-in-s3! ts/*db* {:id -5 :rooli 2} ts/*aws-s3-client*)
+    (t/is (true? (file/file-exists? ts/*aws-s3-client* "/aineistot/1/energiatodistukset.csv")))
+    (t/is (true? (file/file-exists? ts/*aws-s3-client* "/aineistot/2/energiatodistukset.csv")))
+    (t/is (true? (file/file-exists? ts/*aws-s3-client* "/aineistot/3/energiatodistukset.csv"))))
+  (t/testing "New energiatodistus shows up correctly when updating aineistot"
+    (let [;; Add laatija
+          laatija-id (first (keys (test-data.laatija/generate-and-insert! 1)))
+
+          ;; Generate two different rakennustunnus
+          rakennustunnus-1 (generators/generate-rakennustunnus)
+          rakennustunnus-2 (generators/generate-rakennustunnus)
+
+          ;; Create two energiatodistus. One with rakennustunnus-1, one with rakennustunnus-2.
+          todistus-1 (-> (test-data.energiatodistus/generate-add 2018 true) (assoc-in [:perustiedot :rakennustunnus] rakennustunnus-1))
+          todistus-2 (-> (test-data.energiatodistus/generate-add 2018 true) (assoc-in [:perustiedot :rakennustunnus] rakennustunnus-2))
+
+          ;; Insert todistus-1
+          [todistus-1-id] (test-data.energiatodistus/insert! [todistus-1] laatija-id)]
+
+      ;; Sign todistus-1
+      (test-data.energiatodistus/sign! todistus-1-id laatija-id true)
+
+      ;; Update aineistot
       (aineisto/update-aineistot-in-s3! ts/*db* {:id -5 :rooli 2} ts/*aws-s3-client*)
-      (t/is (solita.etp.service.file/file-exists? ts/*aws-s3-client* "/aineistot/1/energiatodistukset.csv"))
-      (t/is (solita.etp.service.file/file-exists? ts/*aws-s3-client* "/aineistot/2/energiatodistukset.csv"))
-      (t/is (solita.etp.service.file/file-exists? ts/*aws-s3-client* "/aineistot/3/energiatodistukset.csv")))
-    #_(t/testing "Adding some new energiatodistus has an effect on the aineistot"
-      ;;TODO: Could get object size via GetObjectAttributes request parameter `x-amz-object-attributes ObjectSize`
-      ;;      and look that the size increases when energiatodistus is added and aineistot generated again.
-      ;;      Might be too heavy of an operation and takes time to implement.
-      (aineisto/update-aineistot-in-s3! ts/*db* {:id -5 :rooli 2} ts/*aws-s3-client*)
-      )))
+
+      ;; Aineisto 1
+      (let [[first second] (get-first-two-energiatodistus-lines-from-aineisto "/aineistot/1/energiatodistukset.csv")]
+        (t/is (true? (str/includes? first rakennustunnus-1)))
+        (t/is (nil? second)))
+
+      ;; Aineisto 2
+      (let [[first second] (get-first-two-energiatodistus-lines-from-aineisto "/aineistot/2/energiatodistukset.csv")]
+        (t/is (true? (str/includes? first rakennustunnus-1)))
+        (t/is (nil? second)))
+
+      ;; Aineisto 3
+      (let [[first second] (get-first-two-energiatodistus-lines-from-aineisto "/aineistot/3/energiatodistukset.csv")]
+        ;; Anonymized sets should not contain the rows with this few energiatodistus.
+        (t/is (nil? first))
+        (t/is (nil? second)))
+
+      (let [;; Insert todistus-2
+            [todistus-2-id] (test-data.energiatodistus/insert! [todistus-2] laatija-id)]
+
+        ;; Sign todistus-2
+        (test-data.energiatodistus/sign! todistus-2-id laatija-id true)
+
+        ;; Update aineistot
+        (aineisto/update-aineistot-in-s3! ts/*db* {:id -5 :rooli 2} ts/*aws-s3-client*)
+
+        ;; Aineisto 1
+        (let [[first second] (get-first-two-energiatodistus-lines-from-aineisto "/aineistot/1/energiatodistukset.csv")]
+          (t/is (true? (str/includes? first rakennustunnus-1)))
+          (t/is (true? (str/includes? second rakennustunnus-2))))
+
+        ;; Aineisto 2
+        (let [[first second] (get-first-two-energiatodistus-lines-from-aineisto "/aineistot/2/energiatodistukset.csv")]
+          (t/is (true? (str/includes? first rakennustunnus-1)))
+          (t/is (true? (str/includes? second rakennustunnus-2))))
+
+        ;; Aineisto 3
+        (let [[first second] (get-first-two-energiatodistus-lines-from-aineisto "/aineistot/3/energiatodistukset.csv")]
+          ;; Anonymized sets should not contain the rows with this few energiatodistus.
+          (t/is (nil? first))
+          (t/is (nil? second)))))))
