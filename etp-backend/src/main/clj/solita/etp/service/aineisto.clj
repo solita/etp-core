@@ -7,7 +7,8 @@
     [solita.etp.db :as db]
     [solita.etp.service.luokittelu :as luokittelu-service])
   (:import (java.time Instant)
-           (java.nio.charset StandardCharsets)))
+           (java.nio.charset StandardCharsets)
+           (java.nio ByteBuffer)))
 
 (db/require-queries 'aineisto)
 
@@ -68,7 +69,7 @@
         (set-access! db kayttaja-id aineisto))
       1)))
 
-(defn extract-byte-array-and-reset! [buf]
+(defn extract-byte-array-and-reset! [^ByteBuffer buf]
   (let [arr (byte-array (.position buf))]
     (System/arraycopy (.array buf) 0 arr 0 (count arr))
     (.clear buf)
@@ -98,7 +99,7 @@
         key (str "/aineistot/" aineisto-id "/energiatodistukset.csv")
         ;; This part is used to store rows until it reaches 5MB which
         ;; is the minimum requirement by `upload-part-fn`.
-        current-part (java.nio.ByteBuffer/allocate (* 8 1024 1024))
+        current-part (ByteBuffer/allocate (* 8 1024 1024))
         upload-parts-fn (fn [upload-part-fn] (csv-reducible-query (fn [row]
                                                                     (let [row-bytes (.getBytes row (StandardCharsets/UTF_8))]
                                                                       (.put current-part row-bytes)
