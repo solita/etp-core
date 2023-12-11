@@ -75,7 +75,7 @@
     (.clear buf)
     arr))
 
-(defn not-nil-aineisto-source! [x]
+(defn not-nil-aineisto-source [x]
   (when (nil? x)
     (throw (ex-info "Expected not-nil aineisto source"
                     {:type :nil-aineisto-source})))
@@ -90,7 +90,7 @@
   (as-> aineisto-id val
         (aineisto-key val)
         (aineisto-sources val)
-        (not-nil-aineisto-source! val)
+        (not-nil-aineisto-source val)
         (val db whoami)))
 
 (defn update-aineisto-in-s3! [db whoami aws-s3-client aineisto-id]
