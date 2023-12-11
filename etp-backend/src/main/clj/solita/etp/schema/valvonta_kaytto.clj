@@ -103,7 +103,9 @@
 (def KaskypaatosTiedoksiantoHaastemiesData
   {:osapuoli-specific-data [KaskypaatosTiedoksiantoHaastemiesOsapuoliSpecificData]})
 
-(def SakkoPaatosKuulemiskirjeData {:fine common-schema/NonNegative})
+(def SakkoPaatosKuulemiskirjeData {:fine                   common-schema/NonNegative
+                                   :osapuoli-specific-data [{:osapuoli OsapuoliSpecificDataOsapuoli
+                                                             :document schema/Bool}]})
 
 (def SakkopaatosVarsinainenPaatosOsapuoliSpecificData
   (schema/conditional

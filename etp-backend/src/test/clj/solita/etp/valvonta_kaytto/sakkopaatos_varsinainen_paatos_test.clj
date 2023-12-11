@@ -120,7 +120,10 @@
                                             :template_id        7
                                             :description        "Tehdään sakkopäätöksen kuulemiskirje"
                                             :diaarinumero       "ARA-05.03.01-2023-159"
-                                            :type_specific_data {:fine 9000}})
+                                            :type_specific_data {:fine                   9000
+                                                                 :osapuoli-specific-data [{:osapuoli {:id   osapuoli-id
+                                                                                                      :type "henkilo"}
+                                                                                           :document true}]}})
 
       ;; Mock the current time to ensure that the document has a fixed date
       (with-bindings {#'time/clock    (Clock/fixed (-> (LocalDate/of 2023 11 25)
@@ -323,7 +326,10 @@
                                             :template_id        7
                                             :description        "Tehdään sakkopäätöksen kuulemiskirje"
                                             :diaarinumero       "ARA-05.03.01-2023-159"
-                                            :type_specific_data {:fine 932}})
+                                            :type_specific_data {:fine 932
+                                                                 :osapuoli-specific-data [{:osapuoli {:id   osapuoli-id
+                                                                                                      :type "yritys"}
+                                                                                           :document true}]}})
 
       ;; Mock the current time to ensure that the document has a fixed date
       (with-bindings {#'time/clock    (Clock/fixed (-> (LocalDate/of 2023 11 28)
