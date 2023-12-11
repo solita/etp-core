@@ -54,7 +54,9 @@
     (user/aws-s3-client)
     \"foo/bar/baz.txt\"
     (fn [upload-part]
+           ;; Uploading a part of size 5MB (the minimum requirement).
            (upload-part (byte-array (repeatedly (* 5 1024 1024) #(rand-int 256))))
+           ;; The last part can be less than 5MB.
            (upload-part (byte-array (repeatedly (* 2 1024 1024) #(rand-int 256))))))"
   [aws-s3-client key upload-parts-fn]
   (let [{:keys [UploadId]} (aws/create-multipart-upload aws-s3-client key)
@@ -70,11 +72,9 @@
                                                                 :part-number part-number
                                                                 :upload-id   UploadId
                                                                 :body        content-byte-array})]
-                           (swap! uploaded-parts-vec conj [(str part-number) ETag])))]
+                           (swap! uploaded-parts-vec conj {:ETag ETag :PartNumber (str part-number)})))]
     (upload-parts-fn upload-part-fn)
-    (let [uploaded-parts (->> @uploaded-parts-vec
-                              (reduce (fn [result [part-number etag]] (conj result {:ETag       etag
-                                                                                    :PartNumber part-number})) []))]
-      (aws/complete-multipart-upload aws-s3-client {:key            key
-                                                    :upload-id      UploadId
-                                                    :uploaded-parts uploaded-parts}))))
+    (aws/complete-multipart-upload aws-s3-client {:key            key
+                                                  :upload-id      UploadId
+                                                  :uploaded-parts @uploaded-parts-vec}))
+  nil)
