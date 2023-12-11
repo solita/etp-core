@@ -85,7 +85,7 @@
    :tilastokeskus  energiatodistus-csv/energiatodistukset-tilastokeskus-csv
    :anonymized-set energiatodistus-csv/energiatodistukset-anonymized-csv})
 
-(defn aineisto-reducible-query! [db whoami aineisto-id]
+(defn aineisto-reducible-query [db whoami aineisto-id]
   (as-> aineisto-id val
         (aineisto-key val)
         (aineisto-sources val)
@@ -94,7 +94,7 @@
 
 (defn update-aineisto-in-s3! [db whoami aws-s3-client aineisto-id]
   (log/info (str "Starting updating of aineisto (id: " aineisto-id ")."))
-  (let [csv-reducible-query (aineisto-reducible-query! db whoami aineisto-id)
+  (let [csv-reducible-query (aineisto-reducible-query db whoami aineisto-id)
         key (str "/aineistot/" aineisto-id "/energiatodistukset.csv")
         ;; This part is used to store rows until it reaches 5MB which
         ;; is the minimum requirement by `upload-part-fn`.

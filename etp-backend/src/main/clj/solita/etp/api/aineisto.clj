@@ -34,7 +34,7 @@
                                 request
                                 (merge (api-response/csv-response-headers "energiatodistukset.csv" false)
                                        (api-response/async-cache-headers 86400))
-                                (aineisto-service/aineisto-reducible-query! db whoami aineisto-id))
+                                (aineisto-service/aineisto-reducible-query db whoami aineisto-id))
                              search-exceptions))}}]]]])
 
 (def external-routes
