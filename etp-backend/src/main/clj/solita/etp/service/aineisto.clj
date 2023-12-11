@@ -100,11 +100,12 @@
         ;; This part is used to store rows until it reaches 5MB which
         ;; is the minimum requirement by `upload-part-fn`.
         current-part (ByteBuffer/allocate (* 8 1024 1024))
-        upload-parts-fn (fn [upload-part-fn] (csv-reducible-query (fn [row]
-                                                                    (let [row-bytes (.getBytes row (StandardCharsets/UTF_8))]
-                                                                      (.put current-part row-bytes)
-                                                                      (when (< (* 5 1024 1024) (.position current-part))
-                                                                        (upload-part-fn (extract-byte-array-and-reset! current-part))))))
+        upload-parts-fn (fn [upload-part-fn]
+                          (csv-reducible-query (fn [row]
+                                                 (let [row-bytes (.getBytes row (StandardCharsets/UTF_8))]
+                                                   (.put current-part row-bytes)
+                                                   (when (< (* 5 1024 1024) (.position current-part))
+                                                     (upload-part-fn (extract-byte-array-and-reset! current-part))))))
                           ;;The last part needs to be uploaded separately (unless the size was a multiple of 5MB)
                           (when (not= 0 (.position current-part))
                             (upload-part-fn (extract-byte-array-and-reset! current-part))))]
