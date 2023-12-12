@@ -83,10 +83,10 @@
              :middleware [[security/wrap-whoami-for-internal-aineisto-api]]
              :responses  {200 {:body nil}}
              :handler    (fn [{:keys [db whoami aws-s3-client]}]
-                           (concurrent/run-background
-                             #(aineisto-service/update-aineistot-in-s3!
-                                db
-                                whoami
-                                aws-s3-client)
-                             "Aineistot update failed")
-                           (r/response {}))}}]]])
+                           (r/response
+                             (concurrent/run-background
+                               #(aineisto-service/update-aineistot-in-s3!
+                                  db
+                                  whoami
+                                  aws-s3-client)
+                               "Aineistot update failed")))}}]]])
