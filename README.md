@@ -102,6 +102,13 @@ Documentation
 When the server is running, the API documentation can be found at
 http://localhost:8080/api/documentation/index.html
 
+MinIO
+---
+[MinIO](https://github.com/minio/minio) is used as a replacement for S3 in
+local development environment. MinIO Console can be accessed through
+http://localhost:9001/ (user: minio pw: minio123).
+
+
 About database usage
 --------------------
 
