@@ -10,6 +10,7 @@
             [solita.etp.schema.common :as common-schema]
             [solita.etp.service.aineisto :as aineisto-service]
             [solita.etp.service.rooli :as rooli-service]
+            [solita.etp.service.kayttaja :as kayttaja-service]
             [solita.etp.api.response :as api-response]
             [solita.etp.api.stream :as api-stream]))
 
@@ -80,7 +81,9 @@
   [["/aineistot"
     ["/update"
      {:post {:summary    "Päivitä kaikkien aineistojen CSV-tiedostot S3:ssa."
-             :middleware [[security/wrap-whoami-for-internal-aineisto-api]]
+             :middleware [[security/wrap-db-application-name
+                           (kayttaja-service/system-kayttaja :aineisto)]
+                          [security/wrap-whoami-for-internal-aineisto-api]]
              :responses  {200 {:body nil}}
              :handler    (fn [{:keys [db whoami aws-s3-client]}]
                            (r/response
