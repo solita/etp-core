@@ -181,8 +181,8 @@
        last))
 
 (defn move-processing-action!
-  "Move the case to the next step, if the new action (wanted-processing-action parameter) is in Käsittely or Päätöksenteko
-  and the desired state is not already reached (not in processing-action-states).
+  "Move the case to the next step, if the new action (wanted-processing-action parameter) if the action is valid and
+   the case is not already in that state.
 
   `processing-action-states` parameter is a map containing the processing actions that are already made and their states.
 
@@ -209,7 +209,9 @@
 
                       :else nil)]
 
-    (when (not (get processing-action-states wanted-processing-action))
+    ;; If the action is already in the desired state, do nothing. It is allowed to move to a state that
+    ;; has already been handled previously (state is READY).
+    (when-not (contains? #{"NEW" "UNFINISHED"} (get processing-action-states wanted-processing-action))
       (proceed-operation! sender-id request-id case-number (:processing-action action) (:decision action)))))
 
 (defn mark-processing-action-as-ready! [sender-id request-id case-number processing-action]
