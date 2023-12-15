@@ -56,11 +56,13 @@
                               :deadline-date      (str (LocalDate/of 2023 7 22))
                               :template-id        10
                               :description        "Kuvaus"
-                              :type-specific-data {:osapuoli-specific-data [{:osapuoli         {:id   1
-                                                                                                :type "henkilo"}
-                                                                             :karajaoikeus-id  1
-                                                                             :haastemies-email "haaste@mie.het"
-                                                                             :document         true}
+                              :type-specific-data {:osapuoli-specific-data [{:osapuoli           {:id   1
+                                                                                                  :type "henkilo"}
+                                                                             :karajaoikeus-id    1
+                                                                             :haastemies-email   "haaste@mie.het"
+                                                                             ;; Hallinto-oikeus-id is only present if it has changed for the osapuoli
+                                                                             :hallinto-oikeus-id 1
+                                                                             :document           true}
                                                                             {:osapuoli {:id   2
                                                                                         :type "henkilo"}
                                                                              :document false}]}}
@@ -107,11 +109,12 @@
                     :id                 1
                     :template-id        10
                     :type-id            18
-                    :type-specific-data {:osapuoli-specific-data [{:document         true
-                                                                   :haastemies-email "haaste@mie.het"
-                                                                   :karajaoikeus-id  1
-                                                                   :osapuoli         {:id   1
-                                                                                      :type "henkilo"}}
+                    :type-specific-data {:osapuoli-specific-data [{:document           true
+                                                                   :haastemies-email   "haaste@mie.het"
+                                                                   :karajaoikeus-id    1
+                                                                   :hallinto-oikeus-id 1
+                                                                   :osapuoli           {:id   1
+                                                                                        :type "henkilo"}}
                                                                   {:document false
                                                                    :osapuoli {:id   2
                                                                               :type "henkilo"}}]}
@@ -156,6 +159,8 @@
                               :type-specific-data {:osapuoli-specific-data [{:osapuoli         {:id   1
                                                                                                 :type "yritys"}
                                                                              :karajaoikeus-id  1
+                                                                             ;; hallinto-oikeus has not changed for the osapuoli,
+                                                                             ;; so there's no hallinto-oikeus-id
                                                                              :haastemies-email "haaste@mie.het"
                                                                              :document         true}]}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))
