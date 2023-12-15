@@ -145,10 +145,11 @@
 (def SakkopaatosTiedoksiantoHaastemiesOsapuoliSpecificData
   (schema/conditional
     toimenpide/osapuoli-has-document?
-    {:osapuoli         OsapuoliSpecificDataOsapuoli
-     :karajaoikeus-id  KarajaoikeusId
-     :haastemies-email common-schema/Email
-     :document         schema/Bool}
+    {:osapuoli                                 OsapuoliSpecificDataOsapuoli
+     :karajaoikeus-id                          KarajaoikeusId
+     (schema/optional-key :hallinto-oikeus-id) HallintoOikeusId
+     :haastemies-email                         common-schema/Email
+     :document                                 schema/Bool}
 
     :else
     {:osapuoli OsapuoliSpecificDataOsapuoli
