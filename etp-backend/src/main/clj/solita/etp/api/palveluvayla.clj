@@ -53,7 +53,7 @@
                                                                                                 :format "binary"}}}}}}}}]]
              ["/json"
               ["/any"
-               ["" {:get {:summary    "Hae energiatodisten perustietoja. Palauttaa tiedot sekä 2013, että 2018 lain mukaisista energiatodistuksista. Tarkemmat tiedot saa hakemalla todistuksen oikean version"
+               ["" {:get {:summary    "Hae energiatodistusten perustietoja. Palauttaa tiedot sekä 2013, että 2018 lain mukaisista energiatodistuksista. Tarkemmat tiedot saa hakemalla todistuksen oikean version"
                           :parameters {:query {:rakennustunnus schema.common/Rakennustunnus}}
                           :responses  {200 {:body [schema.energiatodistus/EnergiatodistusForAnyLaatija]}}
                           :handler    (fn [{{:keys [query]} :parameters :keys [db]}]
