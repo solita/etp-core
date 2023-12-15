@@ -31,6 +31,15 @@
     (exception/throw-ex-info!
       {:message (str "Unknown hallinto-oikeus-id: " hallinto-oikeus-id)})))
 
+(defn hallinto-oikeus-id-exists-for-osapuoli? [toimenpide osapuoli]
+  (boolean
+    (find-administrative-court-id-from-osapuoli-specific-data
+      (-> toimenpide
+          :type-specific-data
+          :osapuoli-specific-data)
+      {:id   (:id osapuoli)
+       :type (osapuoli/osapuoli->osapuoli-type osapuoli)})))
+
 (defn format-actual-decision-data [db toimenpide osapuoli]
   (let [recipient-answered? (-> toimenpide
                                 :type-specific-data
@@ -110,7 +119,7 @@
                                   (str (:sukunimi omistaja) " " (:etunimi omistaja))
                                   (:nimi omistaja)))
                               omistajat)]
-    {:fine (-> toimenpide :type-specific-data :fine)
+    {:fine      (-> toimenpide :type-specific-data :fine)
      :omistajat (string/join ", " omistaja-strings)}))
 
 (defmethod format-type-specific-data :default [_ toimenpide _]
