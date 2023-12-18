@@ -181,7 +181,7 @@
        last))
 
 (defn move-processing-action!
-  "Move the case to the next step, if the new action (wanted-processing-action parameter) if the action is valid and
+  "Move the case to the next step, if the new action (wanted-processing-action parameter) is valid and
    the case is not already in that state.
 
   `processing-action-states` parameter is a map containing the processing actions that are already made and their states.
@@ -189,19 +189,31 @@
   Note that this is used for both käytönvalvonta and oikeellisuuden valvonta."
   [sender-id request-id case-number processing-action-states wanted-processing-action]
   (when-let [action (cond
+                      ;; First time going to käsittely, Tiedoksianto ja toimeenpano toimenpide doesn't exist yet
+                      ;; Transition from Vireillepano to Käsittely is Siirry käsittelyyn
                       (and (= wanted-processing-action "Käsittely")
                            (every? #(not= ["Tiedoksianto ja toimeenpano" "UNFINISHED"] %) processing-action-states))
                       {:processing-action "Vireillepano"
                        :decision          "Siirry käsittelyyn"}
 
+                      ;; Moving from Käsittely to Päätöksenteko is done by Siirry päätöksentekoon transition.
+                      ;; The transition is the same no matter if it's the first or second or
+                      ;; nth time moving to Päätöksenteko
                       (= wanted-processing-action "Päätöksenteko")
                       {:processing-action "Käsittely"
                        :decision          "Siirry päätöksentekoon"}
 
+                      ;; Moving from Päätöksenteko to Tiedoksianto ja toimeenpano is done by Siirry tiedoksiantoon transition.
+                      ;; The transition is the same no matter if it's the first or second or
+                      ;; nth time moving to Tiedoksianto ja toimeenpano
                       (= wanted-processing-action "Tiedoksianto ja toimeenpano")
                       {:processing-action "Päätöksenteko"
                        :decision          "Siirry tiedoksiantoon"}
 
+                      ;; Moving from Tiedoksianto ja toimeenpano to Käsittely is done by Uudelleenkäsittele asia transition.
+                      ;; If wanted-processing-action is Käsittely and Tiedoksianto ja toimeenpano toimenpide exists
+                      ;; and is UNFINISHED, Uudelleenkäsittele asia transition is used.
+                      ;; This is used in käytönvalvonta when moving to Sakkopäätös / kuulemiskirje toimenpide.
                       (and (= wanted-processing-action "Käsittely")
                            (some #(= ["Tiedoksianto ja toimeenpano" "UNFINISHED"] %) processing-action-states))
                       {:processing-action "Tiedoksianto ja toimeenpano"
