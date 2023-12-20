@@ -83,11 +83,9 @@
                         :rfi-warning
                         :decision-order-hearing-letter
                         :decision-order-actual-decision
-                        :decision-order-notice-first-mailing
                         :decision-order-notice-bailiff
                         :penalty-decision-hearing-letter
                         :penalty-decision-actual-decision
-                        :penalty-decision-notice-first-mailing
                         :penalty-decision-notice-bailiff}))
 
 

@@ -6,13 +6,14 @@
             [solita.etp.service.valvonta-kaytto.hallinto-oikeus-attachment :as hao]
             [solita.etp.test-system :as ts]
             [clostache.parser :refer [render-resource]])
-  (:import (java.nio.charset StandardCharsets)
+  (:import (clojure.lang ExceptionInfo)
+           (java.nio.charset StandardCharsets)
            (java.time Instant)
            (java.util Base64)))
 
 (t/use-fixtures :each ts/fixture)
 
-(defn- handle-request [request-resource response-resource response-status & [exception]]
+(defn- handle-request [request-resource response-resource response-status & [^String exception]]
   (fn [request]
     (t/is (= (str/trim request) (-> request-resource io/resource slurp str/trim)))
     (if exception
@@ -99,7 +100,7 @@
                                                "asha/case-create-response-without-sender-id.xml"
                                                400
                                                "clj-http: status 400")]
-    (t/is (thrown-with-msg? clojure.lang.ExceptionInfo
+    (t/is (thrown-with-msg? ExceptionInfo
                             #"Asiahallinta request failed. Posting the request failed."
                             (asha-service/open-case!
                               {:request-id     "ETP-1"
@@ -266,9 +267,7 @@
           case-number 100]
       (t/testing "Move ignores the toimenpide if the action is"
         (t/testing "Vireillepano"
-          (asha-service/move-processing-action! sender-id request-id case-number {} "Vireillepano"))
-        (t/testing "Tiedoksianto ja toimeenpano"
-          (asha-service/move-processing-action! sender-id request-id case-number {} "Tiedoksianto ja toimeenpano")))
+          (asha-service/move-processing-action! sender-id request-id case-number {} "Vireillepano")))
       (t/testing "Move is skipped if the toimenpide is already in correct state"
         (let [processing-action-states {"Vireillepano" "READY" "Käsittely" "NEW"}
               processing-action "Käsittely"]
@@ -288,7 +287,7 @@
                  :request-received move-called}})]
             (asha-service/move-processing-action! sender-id request-id case-number {} "Käsittely")
             (t/is (= 1 @move-called)))))
-      (t/testing "Move from Päätöksenteko to Käsittely"
+      (t/testing "Move from Käsittely to Päätöksenteko"
         (let [move-called (atom 0)]
           (binding [asha-service/post! (handle-requests {(render-resource "asha/moveaction/move-template.xml" {:sender-id         sender-id
                                                                                                                :request-id        request-id
@@ -299,4 +298,31 @@
                                                           :response-status  200
                                                           :request-received move-called}})]
             (asha-service/move-processing-action! sender-id request-id case-number {} "Päätöksenteko")
+            (t/is (= 1 @move-called)))))
+
+      (t/testing "Move from Päätöksenteko to Tiedoksianto ja toimeenpano"
+        (let [move-called (atom 0)]
+          (binding [asha-service/post! (handle-requests {(render-resource "asha/moveaction/move-template.xml" {:sender-id         sender-id
+                                                                                                               :request-id        request-id
+                                                                                                               :case-number       case-number
+                                                                                                               :processing-action "Päätöksenteko"
+                                                                                                               :proceed-decision  "Siirry tiedoksiantoon"})
+                                                         {:response-body    "Irrelevant"
+                                                          :response-status  200
+                                                          :request-received move-called}})]
+            (asha-service/move-processing-action! sender-id request-id case-number {} "Tiedoksianto ja toimeenpano")
+            (t/is (= 1 @move-called)))))
+
+      (t/testing "Move from Tiedoksianto ja toimeenpano to Käsittely using 'uudelleenkäsittele asia' decision"
+        (let [move-called (atom 0)]
+          (binding [asha-service/post! (handle-requests {(render-resource "asha/moveaction/move-template.xml" {:sender-id         sender-id
+                                                                                                               :request-id        request-id
+                                                                                                               :case-number       case-number
+                                                                                                               :processing-action "Tiedoksianto ja toimeenpano"
+                                                                                                               :proceed-decision  "Uudelleenkäsittele asia"})
+                                                         {:response-body    "Irrelevant"
+                                                          :response-status  200
+                                                          :request-received move-called}})]
+            (asha-service/move-processing-action! sender-id request-id case-number {"Tiedoksianto ja toimeenpano" "UNFINISHED"
+                                                                                    "Käsittely" "FINISHED"} "Käsittely")
             (t/is (= 1 @move-called))))))))

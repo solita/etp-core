@@ -16,8 +16,7 @@
   ["Vireillepano"
    "Käsittely"
    "Päätöksenteko"
-   "Tiedoksianto ja toimeenpano"
-   "Valitusajan umpeutuminen"])
+   "Tiedoksianto ja toimeenpano"])
 
 (defn- must-exist! [n]
   (when (< n 0)
@@ -182,18 +181,49 @@
        last))
 
 (defn move-processing-action!
-  "Move the case to the next step, if it the new action (processing-action parameter) is in Käsittely or Päätöksenteko
-  and the desired state is not already reached (not in processing-action-states)."
-  [sender-id request-id case-number processing-action-states processing-action]
-  (when-let [action (case processing-action
-                      "Käsittely" {:processing-action "Vireillepano"
-                                   :decision          "Siirry käsittelyyn"}
-                      "Päätöksenteko" {:processing-action "Käsittely"
-                                       :decision          "Siirry päätöksentekoon"}
-                      "Valitusajan umpeutuminen" {:processing-action "Tiedoksianto ja toimeenpano"
-                                                  :decision          "Valmis"}
-                      nil)]
-    (when (not (get processing-action-states processing-action))
+  "Move the case to the next step, if the new action (wanted-processing-action parameter) is valid and
+   the case is not already in that state.
+
+  `processing-action-states` parameter is a map containing the processing actions that are already made and their states.
+
+  Note that this is used for both käytönvalvonta and oikeellisuuden valvonta."
+  [sender-id request-id case-number processing-action-states wanted-processing-action]
+  (when-let [action (cond
+                      ;; First time going to käsittely, Tiedoksianto ja toimeenpano toimenpide doesn't exist yet
+                      ;; Transition from Vireillepano to Käsittely is Siirry käsittelyyn
+                      (and (= wanted-processing-action "Käsittely")
+                           (every? #(not= ["Tiedoksianto ja toimeenpano" "UNFINISHED"] %) processing-action-states))
+                      {:processing-action "Vireillepano"
+                       :decision          "Siirry käsittelyyn"}
+
+                      ;; Moving from Käsittely to Päätöksenteko is done by Siirry päätöksentekoon transition.
+                      ;; The transition is the same no matter if it's the first or second or
+                      ;; nth time moving to Päätöksenteko
+                      (= wanted-processing-action "Päätöksenteko")
+                      {:processing-action "Käsittely"
+                       :decision          "Siirry päätöksentekoon"}
+
+                      ;; Moving from Päätöksenteko to Tiedoksianto ja toimeenpano is done by Siirry tiedoksiantoon transition.
+                      ;; The transition is the same no matter if it's the first or second or
+                      ;; nth time moving to Tiedoksianto ja toimeenpano
+                      (= wanted-processing-action "Tiedoksianto ja toimeenpano")
+                      {:processing-action "Päätöksenteko"
+                       :decision          "Siirry tiedoksiantoon"}
+
+                      ;; Moving from Tiedoksianto ja toimeenpano to Käsittely is done by Uudelleenkäsittele asia transition.
+                      ;; If wanted-processing-action is Käsittely and Tiedoksianto ja toimeenpano toimenpide exists
+                      ;; and is UNFINISHED, Uudelleenkäsittele asia transition is used.
+                      ;; This is used in käytönvalvonta when moving to Sakkopäätös / kuulemiskirje toimenpide.
+                      (and (= wanted-processing-action "Käsittely")
+                           (some #(= ["Tiedoksianto ja toimeenpano" "UNFINISHED"] %) processing-action-states))
+                      {:processing-action "Tiedoksianto ja toimeenpano"
+                       :decision          "Uudelleenkäsittele asia"}
+
+                      :else nil)]
+
+    ;; If the action is already in the desired state, do nothing. It is allowed to move to a state that
+    ;; has already been handled previously (state is READY).
+    (when-not (contains? #{"NEW" "UNFINISHED"} (get processing-action-states wanted-processing-action))
       (proceed-operation! sender-id request-id case-number (:processing-action action) (:decision action)))))
 
 (defn mark-processing-action-as-ready! [sender-id request-id case-number processing-action]
@@ -213,12 +243,6 @@
               "Vireillepano")
     processing-action))
 
-(defn with-latest-processing-action [processing-action states]
-  (update-in processing-action
-             [:identity :processing-action :name-identity]
-             (fn [name-identity] (reduce toplevel-processing-action-max
-                                         (cons name-identity (keys states))))))
-
 (defn log-toimenpide!
   ([sender-id request-id case-number processing-action]
    (log-toimenpide! sender-id request-id case-number processing-action [] []))
@@ -231,9 +255,7 @@
          require-vireillepano (= {"Vireillepano" "NEW"} processing-action-states)
          processing-action (-> processing-action
                                ;; Possibly redirect the processing action to Vireillepano
-                               (with-vireillepano require-vireillepano)
-                               ;; Prevent going backwards in the process
-                               (with-latest-processing-action processing-action-states))]
+                               (with-vireillepano require-vireillepano))]
      (move-processing-action!
        sender-id
        request-id

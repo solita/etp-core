@@ -137,9 +137,9 @@
                                                                :contact              (map osapuoli->contact osapuolet)}
                                            :document          (toimenpide-type->document (:type-id toimenpide))}
    :decision-order-hearing-letter         {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                               :processing-action {:name-identity "Päätöksenteko"}}
+                                                               :processing-action {:name-identity "Käsittely"}}
                                            :document          (toimenpide-type->document (:type-id toimenpide))
-                                           :processing-action {:name                 "Kuulemiskirje käskypäätöksestä"
+                                           :processing-action {:name                 "Kuuleminen uhkasakon asettamisesta"
                                                                :reception-date       (Instant/now)
                                                                :contacting-direction "SENT"
                                                                :contact              (map osapuoli->contact osapuolet)}}
@@ -147,14 +147,7 @@
                                                                :processing-action {:name-identity "Päätöksenteko"}}
                                            :document          (toimenpide-type->document (:type-id toimenpide))
                                            :attachment        (toimenpide-type->attachment (:type-id toimenpide))
-                                           :processing-action {:name                 "Käskypäätös"
-                                                               :reception-date       (Instant/now)
-                                                               :contacting-direction "SENT"
-                                                               :contact              (map osapuoli->contact osapuolet)}}
-   :decision-order-notice-first-mailing   {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                               :processing-action {:name-identity "Tiedoksianto ja toimeenpano"}}
-                                           :document          (toimenpide-type->document (:type-id toimenpide))
-                                           :processing-action {:name                 "Päätös tiedoksi - ensimmäinen postitus"
+                                           :processing-action {:name                 "Uhkasakon asettaminen"
                                                                :reception-date       (Instant/now)
                                                                :contacting-direction "SENT"
                                                                :contact              (map osapuoli->contact osapuolet)}}
@@ -166,9 +159,9 @@
                                                                :contacting-direction "SENT"
                                                                :contact              (map osapuoli->contact osapuolet)}}
    :penalty-decision-hearing-letter       {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                               :processing-action {:name-identity "Päätöksenteko"}}
+                                                               :processing-action {:name-identity "Käsittely"}}
                                            :document          (toimenpide-type->document (:type-id toimenpide))
-                                           :processing-action {:name                 "Kuulemiskirje uhkasakkopäätöksestä"
+                                           :processing-action {:name                 "Kuuleminen uhkasakon tuomitsemisesta"
                                                                :reception-date       (Instant/now)
                                                                :contacting-direction "SENT"
                                                                :contact              (map osapuoli->contact osapuolet)}}
@@ -176,14 +169,7 @@
                                                                :processing-action {:name-identity "Päätöksenteko"}}
                                            :document          (toimenpide-type->document (:type-id toimenpide))
                                            :attachment        (toimenpide-type->attachment (:type-id toimenpide))
-                                           :processing-action {:name                 "Sakkopäätös"
-                                                               :reception-date       (Instant/now)
-                                                               :contacting-direction "SENT"
-                                                               :contact              (map osapuoli->contact osapuolet)}}
-   :penalty-decision-notice-first-mailing {:identity          {:case              {:number (:diaarinumero toimenpide)}
-                                                               :processing-action {:name-identity "Päätöksenteko"}}
-                                           :document          (toimenpide-type->document (:type-id toimenpide))
-                                           :processing-action {:name                 "Uhkasakkopäätös tiedoksi - ensimmäinen postitus"
+                                           :processing-action {:name                 "Uhkasakon tuomitseminen maksettavaksi"
                                                                :reception-date       (Instant/now)
                                                                :contacting-direction "SENT"
                                                                :contact              (map osapuoli->contact osapuolet)}}

@@ -174,8 +174,8 @@
       (t/is (true? (toimenpide/kaskypaatos-toimenpide? {:type-id 9}))))
     (t/testing "is not sakkopaatos-toimenpide?"
       (t/is (false? (toimenpide/sakkopaatos-toimenpide? {:type-id 9}))))
-    (t/testing "is asha-toimenpide?"
-      (t/is (true? (toimenpide/asha-toimenpide? {:type-id 9})))))
+    (t/testing "is not asha-toimenpide?"
+      (t/is (false? (toimenpide/asha-toimenpide? {:type-id 9})))))
 
   (t/testing "Käskypäätös / tiedoksianto (toinen postitus)"
     (t/testing "has type-id 10 and type-key :decision-order-notice-second-mailing"
@@ -234,8 +234,8 @@
       (t/is (false? (toimenpide/kaskypaatos-toimenpide? {:type-id 16}))))
     (t/testing "is sakkopaatos-toimenpide?"
       (t/is (true? (toimenpide/sakkopaatos-toimenpide? {:type-id 16}))))
-    (t/testing "is asha-toimenpide?"
-      (t/is (true? (toimenpide/asha-toimenpide? {:type-id 16})))))
+    (t/testing "is not asha-toimenpide?"
+      (t/is (false? (toimenpide/asha-toimenpide? {:type-id 16})))))
 
   (t/testing "Sakkopäätös / tiedoksianto (toinen postitus)"
     (t/testing "has type-id 17 and type-key :penalty-decision-notice-second-mailing"
