@@ -1,5 +1,6 @@
 (ns solita.etp.valvonta-kaytto.sakkopaatos-tiedoksianto-haastemies-test
   (:require
+    [clojure.java.io :as io]
     [clojure.test :as t]
     [jsonista.core :as j]
     [ring.mock.request :as mock]
@@ -24,26 +25,24 @@
     (let [valvonta-id (valvonta-service/add-valvonta! ts/*db* {:katuosoite        "Testitie 5"
                                                                :postinumero       "90100"
                                                                :ilmoituspaikka-id 0})
-          html->pdf-called? (atom false)]
-
-      ;; Add osapuoli to the valvonta
-      (valvonta-service/add-henkilo! ts/*db*
-                                     valvonta-id
-                                     {:toimitustapa-description nil
-                                      :toimitustapa-id          0
-                                      :email                    nil
-                                      :rooli-id                 0
-                                      :jakeluosoite             "Testikatu 12"
-                                      :postitoimipaikka         "Helsinki"
-                                      :puhelin                  nil
-                                      :sukunimi                 "Talonomistaja"
-                                      :postinumero              "00100"
-                                      :henkilotunnus            "000000-0000"
-                                      :rooli-description        "Omistaja"
-                                      :etunimi                  "Testi"
-                                      :vastaanottajan-tarkenne  nil
-                                      :maa                      "FI"})
-
+          html->pdf-called? (atom false)
+          ;; Add osapuoli to the valvonta
+          osapuoli-id (valvonta-service/add-henkilo! ts/*db*
+                                                     valvonta-id
+                                                     {:toimitustapa-description nil
+                                                      :toimitustapa-id          0
+                                                      :email                    nil
+                                                      :rooli-id                 0
+                                                      :jakeluosoite             "Testikatu 12"
+                                                      :postitoimipaikka         "Helsinki"
+                                                      :puhelin                  nil
+                                                      :sukunimi                 "Talonomistaja"
+                                                      :postinumero              "00100"
+                                                      :henkilotunnus            "000000-0000"
+                                                      :rooli-description        "Omistaja"
+                                                      :etunimi                  "Testi"
+                                                      :vastaanottajan-tarkenne  nil
+                                                      :maa                      "FI"})]
       ;; Mock the current time to ensure that the document has a fixed date
       (with-bindings {#'time/clock    (Clock/fixed (-> (LocalDate/of 2023 6 26)
                                                        (.atStartOfDay time/timezone)
@@ -56,11 +55,13 @@
                               :deadline-date      (str (LocalDate/of 2023 7 22))
                               :template-id        10
                               :description        "Kuvaus"
-                              :type-specific-data {:osapuoli-specific-data [{:osapuoli         {:id   1
-                                                                                                :type "henkilo"}
-                                                                             :karajaoikeus-id  1
-                                                                             :haastemies-email "haaste@mie.het"
-                                                                             :document         true}
+                              :type-specific-data {:osapuoli-specific-data [{:osapuoli           {:id   1
+                                                                                                  :type "henkilo"}
+                                                                             :karajaoikeus-id    1
+                                                                             :haastemies-email   "haaste@mie.het"
+                                                                             ;; Hallinto-oikeus-id is only present if it has changed for the osapuoli
+                                                                             :hallinto-oikeus-id 1
+                                                                             :document           true}
                                                                             {:osapuoli {:id   2
                                                                                         :type "henkilo"}
                                                                              :document false}]}}
@@ -107,16 +108,28 @@
                     :id                 1
                     :template-id        10
                     :type-id            18
-                    :type-specific-data {:osapuoli-specific-data [{:document         true
-                                                                   :haastemies-email "haaste@mie.het"
-                                                                   :karajaoikeus-id  1
-                                                                   :osapuoli         {:id   1
-                                                                                      :type "henkilo"}}
+                    :type-specific-data {:osapuoli-specific-data [{:document           true
+                                                                   :haastemies-email   "haaste@mie.het"
+                                                                   :karajaoikeus-id    1
+                                                                   :hallinto-oikeus-id 1
+                                                                   :osapuoli           {:id   1
+                                                                                        :type "henkilo"}}
                                                                   {:document false
                                                                    :osapuoli {:id   2
                                                                               :type "henkilo"}}]}
                     :valvonta-id        valvonta-id
-                    :yritykset          []}))))))
+                    :yritykset          []}))))
+
+      (t/testing "hallinto-oikeus-liite can be downloaded through the api"
+        (let [response (ts/handler (-> (mock/request :get (format "/api/private/valvonta/kaytto/%s/toimenpiteet/%s/henkilot/%s/attachment/hallinto-oikeus.pdf" valvonta-id 1 osapuoli-id))
+                                       (test-kayttajat/with-virtu-user)
+                                       (mock/header "Accept" "application/pdf")))]
+          (t/is (= (-> response :headers (get "Content-Type")) "application/pdf"))
+          (t/is (= (:status response) 200))
+
+          (t/testing "hallinto-oikeus-liite is the correct one"
+            (t/is (= (slurp (io/input-stream (io/resource "pdf/hallinto-oikeudet/Valitusosoitus_30_pv_HAMEENLINNAN_HAO.pdf")))
+                     (slurp (:body response)))))))))
 
   (t/testing "Sakkopäätös / Tiedoksianto (Haastemies) toimenpide is created successfully for yritys and document is generated with correct information"
     ;; Add the valvonta
@@ -156,6 +169,8 @@
                               :type-specific-data {:osapuoli-specific-data [{:osapuoli         {:id   1
                                                                                                 :type "yritys"}
                                                                              :karajaoikeus-id  1
+                                                                             ;; hallinto-oikeus has not changed for the osapuoli,
+                                                                             ;; so there's no hallinto-oikeus-id
                                                                              :haastemies-email "haaste@mie.het"
                                                                              :document         true}]}}
               response (ts/handler (-> (mock/request :post (format "/api/private/valvonta/kaytto/%s/toimenpiteet" valvonta-id))

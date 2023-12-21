@@ -75,7 +75,8 @@
 
 (def has-hallinto-oikeus-liite?
   (partial some-type? #{:decision-order-actual-decision
-                        :penalty-decision-actual-decision}))
+                        :penalty-decision-actual-decision
+                        :penalty-decision-notice-bailiff}))
 
 (def asha-toimenpide?
   (partial some-type? #{:rfi-request
